@@ -12,6 +12,7 @@ Fonte das decisões: instruções e respostas explícitas de Matheus na conversa
 | 20/10 | “Conteúdo gerado na ferramenta” | Geração, revisão e edição no aplicativo; skills usadas internamente |
 | 20/10 | Aplicativo Electron, baixável e usado internamente, como referência de experiência ao Perssua | Plataforma desktop confirmada; não se presume a arquitetura ou as funcionalidades do produto citado |
 | 20/10 | Repositório privado para construir o app, com mini documentação | Este repositório concentra a construção; o fork público preserva o processo acadêmico |
+| 20/10 | “Não implemente”, apenas specs no repositório privado, usando `to-spec` | Esta execução fica restrita à síntese documental; sem código, dependências ou instaladores |
 
 ## Evolução do escopo
 
