@@ -18,6 +18,7 @@ flowchart LR
 
 ## Documentação curta
 
+- [Spec da experiência desktop](docs/specs/experiencia-desktop-oficina.md): histórias, contratos, aceites e limites, sem implementação.
 - [Produto e fluxo](docs/produto.md): experiência, saídas e recorte inicial proposto.
 - [Arquitetura inicial](docs/arquitetura.md): Electron, contexto interno e geração por formato.
 - [Decisões e origem](docs/decisoes.md): escolhas do autor, histórico e pontos em aberto.
