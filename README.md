@@ -22,6 +22,7 @@ flowchart LR
 
 ## Documentação curta
 
+- [Orientações para a designer](docs/briefing-designer-primeira-versao.md): proposta de valor, fluxo, quatro telas e estados da primeira versão proposta.
 - [Spec da experiência desktop](docs/specs/experiencia-desktop-oficina.md): 36 histórias preservadas e 14 complementos propostos, contratos e aceites.
 - [Produto e fluxo](docs/produto.md): experiência, saídas e recorte inicial proposto.
 - [Arquitetura inicial](docs/arquitetura.md): Electron, contexto interno e geração por formato.
