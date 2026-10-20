@@ -1,0 +1,15 @@
+{
+  "baselineCommit": "9c8bfedd780d613519accdb93c0752e5234a687e",
+  "date": "2026-10-20",
+  "timeZone": "America/Recife",
+  "files": {
+    "README.md": "a7e91a9c412871a83ac37d97858bd547092d2c0af71682bf3aaeb5cf381a886a",
+    "docs/produto.md": "a33789ec2925d0176b4b7abb46ecb3be9e8c0fdb1d7faf0255f2aaaa3e7267b8",
+    "docs/arquitetura.md": "900c6c7b3088e81a90eafdf32f3e77ef696204224ee09129c4a1be175910fa2c",
+    "docs/decisoes.md": "f5696c8e2e9cc1d5aeaf76b39b4839b227f804259fcf4c2cabf7ddb88edf1bbf",
+    "docs/specs/experiencia-desktop-oficina.md": "6f53caafa34370260d59164cad2734cfe14a05eaeb7e87f05eabb1840bbfd0ec"
+  },
+  "rcdCommit": "1942760c2242f609bf63ce2c97204f5a1791bd68",
+  "licenseSha256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32",
+  "scope": "Documentation, specs, implementation and sales plans only; no execution of product or commercial actions."
+}

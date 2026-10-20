@@ -1,0 +1,9 @@
+Mediação após réplicas. Recarregue a skill Revenue-Centric Design e as três referências locais conforme brief.md. Leia rcd/02-replica.md e usuario/02-replica.md, além dos originais e das evidências. Grave apenas engenharia/02-desenho-consolidado.md, preservando as rodadas.
+
+Produza recomendação coerente de serviço operado pelo usuário no app Electron, não agência externa nem SaaS web. Resolva explicitamente concessões, desacordos e condições. Diferencie invariantes do autor, propostas dos agentes e evidência real. Inclua cliente/pagador/operador, ocasião/exclusões, oferta de entrada vs produto completo, termos propostos e lacunas impeditivas, jornada e contratos de confiança, objeções com aceites observáveis, implementação por marcos/dependências/estimativas condicionais/capacidade desconhecida e plano de venda/validação.
+
+Audite especialmente a economia RCD revisada: caixa não equivale a lucro se horas do fundador foram omitidas; aquisição deve incluir vendas perdidas; custos não cotados não são zero. Quantidades de venda são cenários, nunca previsão. A redução de peças não prova redução proporcional de custo. Informe a decisão sobre avançar, testar ou não vender, sem fabricar consenso ou garantir retorno.
+
+Preserve os três formatos no desenho completo e mapeie sugestões de novas histórias sem apagar as 36 da baseline. Privacidade precisa de filtragem antes da geração pública, alterações seletivas e preservação de edições; arquivos existentes acessíveis sem nova geração. Instalação, exportações, dados do provedor e capacidade são gates reais. Não afirmar autonomia se a assistência fizer o trabalho.
+
+Até 2.000 palavras mais fontes/termos. No final, formule no máximo três questões decisivas para auditoria final de RCD e do usuário sintético. O orquestrador consolidará depois, sem implementação, contato ou compra.

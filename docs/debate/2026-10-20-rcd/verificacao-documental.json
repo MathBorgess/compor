@@ -1,0 +1,24 @@
+{
+  "date": "2026-10-20",
+  "scope": "Documentation checks only; no app behavior, market, installer or commercial outcome verified",
+  "status": "pass",
+  "originalStoriesLiterallyPreserved": 36,
+  "totalStories": 50,
+  "toSpecSections": 7,
+  "relativeLinksChecked": 179,
+  "brokenRelativeLinks": [],
+  "jsonFilesParsed": 7,
+  "originalRawOutputsUnchanged": 11,
+  "allRawHashesMatchManifest": true,
+  "rcdLicenseMatchesPinnedHash": true,
+  "arithmetic": {
+    "unitCash": 601,
+    "unitContributionQ3": 151,
+    "historicalUnitEconomicQ10": -161,
+    "technicalSensitivityQ10": [
+      -269,
+      -785
+    ]
+  },
+  "methods": "Ad hoc Python standard library assertions; git diff --check. No executable product tests or dependencies added."
+}

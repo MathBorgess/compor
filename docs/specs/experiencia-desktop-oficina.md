@@ -1,22 +1,29 @@
 # Especificação: experiência desktop da Oficina em Prancha
 
-**Data:** 20/10/2026. **Estado:** especificação para revisão; sem implementação. Síntese da conversa com o autor e dos documentos do projeto. A instrução mais recente autoriza somente escrever as specs no repositório privado.
+**20/10/2026 · Proposta para revisão, apenas documentação.** Invariantes do autor preservados; recorte comercial e novos contratos derivados do debate RCD. Não há app, instalador, teste de uso ou oferta disponível. `ready-for-agent` não autoriza implementar.
 
 ## Problem Statement
 
-Quem prepara uma palestra ou oficina precisa desenvolver uma narrativa, escolher referências visuais e adaptar essa base a diferentes materiais. Ao recomeçar cada peça com um novo briefing, decisões sobre mensagem, voz, imagens, formas e cores podem se perder ou ficar inconsistentes.
+Quem prepara uma palestra/oficina precisa desenvolver a narrativa, escolher referências visuais e adaptá-la a diferentes materiais. Recomeçar o briefing de cada peça pode perder decisões, repetir revisão e introduzir inconsistências. Frequência, prioridade e custo desse problema ainda não foram medidos.
 
-O público inicial proposto é formado por facilitadores e palestrantes que fazem esse trabalho profissionalmente. A frequência da dor, a economia de tempo e a disposição a pagar ainda não foram medidas. A seleção morfológica anterior não valida demanda para este novo escopo.
+O debate propôs como caso P1 uma pessoa fundadora de microconsultoria de uma a três pessoas, sem designer dedicado, que vende oficinas B2B de feedback/conversas difíceis para líderes e tem uma oferta para apresentar a RH/T&D em até 30 dias. A consultoria compra e a pessoa facilitadora opera; RH compra a oficina dela. Recife metropolitano é recorte de pesquisa, sem acesso demonstrado. P1 é sintético e não prova demanda ou desatendimento.
+
+Depois desse debate, o autor pediu investigar **outros perfis que vendem produtos ou serviços e outros materiais de venda**. P1 passa a ser controle, sem público definitivo fechado. A generalização de contexto de oficina para contexto de oferta é proposta de investigação; não autoriza um produto genérico para qualquer vendedor. As combinações e critérios ficam no documento de variações.
+
+O novo agente recomenda descobrir primeiro o trabalho de fotógrafos de alimentos que respondem a restaurantes com proposta/portfólio, e cerâmica para lojistas como contraste de produto, com catálogo/condições. Branding e templates digitais ficam como alternativas investigadas. Nenhuma recomendação é escolha do autor ou prova de demanda; custos e critérios P1 não são herdados por esses casos.
+
+Gamma/Canva já cobrem apresentações, posts e materiais reutilizáveis. Uma skill interna não basta como diferença. A hipótese testável é facilitar a revisão de uma mudança entre materiais, preservando fatos, permissões e adaptações deliberadas, com menor esforço total e qualidade equivalente. Gerar material não resolve automaticamente falta de leads ou vendas.
 
 ## Solution
 
-Um aplicativo desktop em Electron, baixável para uso interno. A pessoa constrói a narrativa enquanto vê e escolhe imagens, formas e cores. O app preserva o contexto e os recursos visuais numa skill interna por palestra/oficina.
+Aplicativo desktop em **Electron**, baixável para uso interno, em que a pessoa constrói a narrativa enquanto vê imagens, formas e cores. O contexto e os recursos da palestra/oficina ficam numa skill interna. Ao selecionar formato e objetivo, contexto + prompt + skill de formato produzem conteúdo **dentro do app**. Revisão e edição internas são requisitos derivados propostos.
 
-Ao escolher uma saída, o app combina o contexto da oficina com um prompt e uma skill próprios daquele formato. O conteúdo é gerado, revisado, editado e salvo no próprio aplicativo. Pitch deck, LinkedIn e Instagram são os formatos citados pelo autor.
+O desenho completo conserva os formatos citados pelo autor: pitch deck, LinkedIn e Instagram. Para testar o caso P1, a recomendação final dos agentes é **deck comercial + LinkedIn primeiro**; Instagram fica em marco posterior. Não oferecer escolha de social antes de verificar ambos. Essa ordem limita investimento, sem provar preferência do mercado ou constituir aprovação humana.
 
-O primeiro recorte proposto usa blocos editáveis e templates limitados. A primeira demonstração deve reutilizar uma oficina salva em duas saídas; a meta proposta do ciclo completo inclui os três formatos. Esse recorte é planejamento, não uma decisão adicional do autor sobre acabamento ou exportadores.
+O serviço proposto para P1 é compra pontual por oficina, operada pelo cliente no app, com acompanhamento limitado, materiais exportáveis e projeto recuperável. Não é operação terceirizada em outra ferramenta. Preço, prazo e suporte são hipóteses: **não vender agora**, pois custo completo, dados, instalação, capacidade e teto de valor estão abertos. Variações de usuário/tarefa exigem nova avaliação de escopo e economia.
 
 ## User Stories
+
 
 As histórias detalham o comportamento discutido. Requisitos de operação e robustez derivados pelo agente estão identificados como propostas; não equivalem a funcionalidades já implementadas ou a novas decisões explícitas do autor.
 
@@ -57,77 +64,90 @@ As histórias detalham o comportamento discutido. Requisitos de operação e rob
 35. Como autor, quero identificar a versão da oficina que originou uma saída para entender qual base foi utilizada. **Rastreabilidade proposta.**
 36. Como autor, quero manter o trabalho salvo quando uma geração falhar para poder retomar sem reconstruir a oficina. **Robustez proposta.**
 
+37. Como autor, quero ver lacunas e aprovar os fatos da oferta para não transformar uma informação ausente em afirmação comercial inventada. **Proposta do debate.**
+38. Como autor, quero definir o que cada peça pode divulgar para manter condições privadas fora da divulgação pública. **Proposta.**
+39. Como autor, quero conhecer e autorizar os dados enviados ao provedor em cada tarefa para controlar o processamento externo independentemente de quem verá a peça. **Proposta.**
+40. Como autor, quero manter conteúdo marcado como somente local fora de chamadas externas, inclusive de preparação da narrativa e deck, para não enviá-lo indiretamente antes da geração social. **Proposta.**
+41. Como autor, quero ver a mudança da base junto das peças e suas versões para revisar impactos mesmo quando o app não identificar automaticamente uma relação. **Proposta.**
+42. Como autor, quero aceitar, rejeitar ou desfazer atualizações por peça para preservar edições e omissões deliberadas. **Proposta.**
+43. Como autor, quero indicar adaptações intencionais para que uma versão social não seja tratada como erro só por omitir um detalhe do deck. **Proposta.**
+44. Como autor, quero exportar e abrir os materiais no destino e conhecer suas limitações de edição para verificar se atendem ao comprador. **Proposta.**
+45. Como autor, quero criar e restaurar uma cópia da oficina com seus recursos para recuperar o trabalho sem depender do histórico de chat. **Proposta.**
+46. Como cliente, quero continuar abrindo, editando e exportando trabalho existente após a janela do serviço, sem nova inferência ou renovação, para não perder acesso ao que produzi. **Proposta.**
+47. Como cliente, quero conhecer compatibilidade, rede, provedor, custos e limites antes de iniciar para decidir se consigo usar o serviço na minha ocasião. **Proposta.**
+48. Como cliente, quero conhecer entregas, participação, revisões, suporte, correção e encerramento antes de contratar para comparar a oferta com meu fluxo atual. **Proposta.**
+49. Como autor, quero cancelar ou retomar uma geração falha sem apagar trabalho aprovado nem disparar repetição/custo silenciosos para manter controle do projeto. **Proposta.**
+50. Como cliente, quero relatar uma falha em linguagem comum e conhecer seu acompanhamento mesmo perto do fim da janela para não precisar diagnosticar o app ou pagar novamente pela correção contratada. **Proposta.**
+
+As histórias 1–36 preservam a baseline. A história 27 permanece no produto completo e não na primeira construção proposta de P1. As demais histórias acrescentadas são recomendações, sem funcionalidade implementada. O eventual uso em produtos/serviços diferentes não se considera coberto apenas por trocar o nome do ator: requer escolher e testar uma combinação de perfil, oferta e material.
+
 ## Implementation Decisions
 
-### Decisões confirmadas pelo autor
+### Confirmado pelo autor
 
-- **Plataforma:** Electron, com aplicativo baixável para uso interno. Perssua é referência de experiência citada pelo autor; não se presume sua arquitetura ou equivalência de funcionalidades.
-- **Criação:** imagens, formas e cores ficam visíveis enquanto o usuário constrói a narrativa.
-- **Contexto:** cada palestra/oficina tem uma skill interna que carrega seu contexto narrativo e visual.
-- **Geração:** cada formato usa prompt + skill, combinados com o contexto da oficina; o conteúdo é gerado na ferramenta.
-- **Repositório:** a construção e estas specs ficam em repositório privado. O repositório acadêmico mantém o experimento original.
-- **Limite desta execução:** apenas especificação e documentação, sem implementação.
+- Electron, aplicativo baixável e utilizado internamente; Perssua é referência de experiência, sem presumir arquitetura ou equivalência de funcionalidades.
+- Imagens, formas e cores durante a construção da narrativa.
+- Contexto narrativo e visual por palestra/oficina numa skill interna, com os recursos preservados.
+- Conteúdo gerado no app por contexto + prompt + skill de formato; exemplos pitch deck, LinkedIn e Instagram.
+- Construção em repositório privado. Nesta execução, somente specs e planos, sem implementação.
+- Investigação adicional de perfis que vendem produtos/serviços e de outros materiais comerciais. Não houve escolha humana de novo nicho, preço ou primeiro adaptador.
 
-### Fronteiras e contratos propostos
+### Contratos propostos
 
-- **Gestão da oficina:** receber briefing, narrativa e escolhas visuais; salvar e recuperar uma oficina com seus recursos. Persistência local é a proposta inicial, sem esquema ou tecnologia de armazenamento fechados.
-- **Editor narrativo e visual:** apresentar os blocos e as referências, permitir escolhas e edições e preservar o que foi aprovado. Sugestões não substituem silenciosamente trabalho manual.
-- **Revisão das saídas:** permitir revisar e editar o conteúdo no app como requisito derivado do fluxo documentado; a confirmação explícita do autor foi sobre o local de geração.
-- **Contexto interno:** separar instruções de uso, conteúdo da oficina, recursos visuais e versões. Preservar os arquivos de imagem e suas relações, em vez de guardar somente nomes ou descrições.
-- **Adaptadores de formato:** receber uma versão aprovada da oficina, formato e objetivo do material; usar prompt e skill próprios; produzir um rascunho adequado ao formato para revisão no app.
-- **Resultado e versão:** salvar a saída e sua origem sem apagar versões anteriores. Comportamento de cancelamento, repetição de chamadas e sincronização não foi fechado.
-- **Serviço de geração:** encapsular a integração com o fornecedor que for escolhido. Credenciais não pertencem ao contexto da oficina. Geração no app descreve a experiência; não estabelece inferência offline ou modelo executado na máquina.
-- **Desktop:** separar interface e operações privilegiadas conforme a arquitetura do Electron. React/TypeScript, divisão de responsabilidades e mecanismo de comunicação são propostas, sem assinatura de API ou esquema definitivo aprovado.
-- **Entregas por formato:** deck com sequência e composição em template; LinkedIn com texto editável e arte opcional; Instagram com cartões e legenda. Quantidades, limites de texto, dimensões e extensões de arquivo permanecem abertos.
+- **Oficina recuperável:** briefing, blocos, fatos, voz, imagens/formas/cores, relações, permissões e versões sobrevivem a fechar/reabrir e restaurar cópia. Persistência local é proposta. Conteúdo não depende só do chat ou de um link externo de imagem.
+- **Base aprovada:** tema, público, objetivo, duração/modalidade/escopo e condições fornecidas orientam a peça. Lacunas continuam explícitas; não inventar credenciais, clientes, resultados, agenda, investimento ou prova social. Aprovação do usuário define a versão de origem.
+- **Duas permissões:** autorização para processar dados no provedor por tarefa é distinta de autorização para divulgar em cada saída. Não inferir uma da outra nem reaproveitar silenciosamente permissão entre provedores/tarefas. Sem autorização válida, bloquear envio e manter trabalho local. Dado local pode ser inserido manualmente na peça sem entrar em IA externa.
+- **Cadeia de dados completa:** cobrir entrada, preparação/narrativa, deck, social, atendimento/registros e cópia/exportação. Filtrar antes de todo envio conforme sua autorização; não basta filtrar o social depois de expor o conteúdo na preparação. Credenciais não entram em contexto, prompts, exportação ou logs. Antes de conteúdo real, definir fornecedor, dados/imagens enviados, finalidade, retenção/exclusão e acesso do atendimento; até lá, usar dados sintéticos.
+- **Geração por formato:** receber base aprovada, objetivo e permissões; compor contexto permitido + prompt + skill versionados. Conteúdo aparece para revisão/edição no app. Registrar origem e custo/limite informado. Falha ou cancelamento preserva edições; repetição é explícita. Não confundir teste simulado com integração real.
+- **Mudança seletiva:** nova base não sobrescreve saídas aprovadas. Mostrar diferença, versões e todas as peças; marcar possível impacto sem prometer detecção semântica infalível. Aplicar/rejeitar/desfazer por peça; preservar adaptações/omissões deliberadas. Pedir revisão quando houver incerteza.
+- **Visual e edição:** referências fornecidas e autorizadas, formas e cores acompanham blocos desde a criação. Templates limitados são proposta inicial; exibir imagem não implica gerar imagem por IA. Revisão deve permitir corrigir texto e composição antes de salvar/exportar.
+- **Entregas P1:** deck comercial até seis slides PDF; LinkedIn até 1.800 caracteres e uma arte PNG; posteriormente Instagram até quatro PNGs e legenda até 1.000 caracteres. Um template por formato, textos exportáveis e cópia recuperável do projeto. Quantidades/extensões são propostas de agentes. Não é deck completo da aula; PDF/PNG não garantem edição em PPTX/Canva.
+- **Continuidade:** abrir/editar/exportar material existente sem nova inferência, renovação ou conexão de cobrança. Nova geração exige acesso e custo declarados. Cópia privada da oficina não é anexada automaticamente a peça pública; exportação não carrega contexto privado/credenciais por acidente.
+- **Desktop e limites:** separar interface, operações privilegiadas e ponte restrita, com entradas validadas e isolamento. React/TypeScript, persistência e organização interna continuam propostas. Escolher SO, instalador/assinatura/atualização, provedor e acesso antes de distribuir; não exigir desativação de proteções. Geração no app não significa offline.
+- **Serviço assistido P1:** uma oficina/público/identidade, sessão e suporte limitados, uma rodada consolidada; correção de defeito não consome ajuste. Reprodução/diagnóstico cabem ao prestador, com relato simples do cliente. Definir canal, contagem, continuidade de casos, pagamento, cancelamento e prazo/meio de reembolso antes de contratar. Termos e preço não estão vigentes. Assistência não comprova autonomia.
+- **Fatiamento e variações:** primeira proposta P1 é deck + LinkedIn; os três formatos pertencem ao desenho completo. Outro perfil/material pode exigir outra ordem, contexto, dados e exportação; investigar e reestimar antes de construir. Não introduzir integrações comerciais ou editor genérico apenas para atender todos os perfis.
 
-Nenhuma interface executável, migração, contrato de API ou componente já existe no repositório. Estas fronteiras descrevem responsabilidades esperadas, sem fixar organização de arquivos ou código.
+Não há API, migração, interface executável, biblioteca ou código escolhido por estes contratos. A faixa técnica de 98–184h de entrada e 106–200h completa é julgamento condicional, com capacidade desconhecida e necessidade de reestimativa; não é orçamento, autorização ou cronograma prometido.
 
 ## Testing Decisions
 
-### Fronteira principal proposta para conferência do autor
+### Fronteira principal proposta, ainda sem confirmação técnica do autor
 
-Preferir **uma fronteira de teste do comportamento completo do aplicativo**, pela experiência do usuário: criar → compor narrativa e visual → salvar → encerrar/reabrir → gerar formatos → revisar/editar → salvar e recuperar saídas. A proposta se apoia no ciclo já discutido; ainda não houve confirmação explícita do autor sobre a fronteira técnica de testes.
+Uma fronteira do comportamento completo do aplicativo: criar base e visual → aprovar fatos/permissões → salvar/reabrir → gerar duas peças → revisar/editar → exportar → mudar um fato → revisar impacto seletivamente → restaurar e recuperar o material. Reaproveitar essa fronteira para verificar os responsáveis de edição, contexto/persistência, geração e saídas. O repositório não possui testes ou infraestrutura anterior; não criar testes executáveis nesta execução.
 
-O repositório contém somente documentos. Não há testes anteriores, framework ou infraestrutura de teste a reaproveitar. Não introduzir um framework ou testes executáveis nesta etapa de specs.
+Bom teste observa resultado e preservação do trabalho, sem espelhar componentes, arquivos internos da skill ou chamadas IPC. Usar fatos e marcadores sintéticos conhecidos, imagens autorizadas e gerador substituível para o fluxo determinístico.
 
-### O que um bom teste observa
-
-- Verificar resultados visíveis e conteúdo recuperado, preservado ou gerado, em vez de espelhar componentes da interface, estrutura interna da skill ou chamadas entre processos.
-- Usar uma oficina sintética com fatos, blocos e referências visuais conhecidos. Tornar armazenamento e geração substituíveis no ambiente de teste, sem expor detalhes internos como contrato de aceite do produto.
-- Exercitar a mesma fronteira nos casos abaixo, evitando criar um conjunto separado de testes para cada módulo. Os responsáveis cobertos são editor, contexto/persistência, geração por formato e revisão/salvamento das saídas.
-
-| Caso de aceite proposto | Resultado observável |
+| Caso proposto | Aceite observável |
 | --- | --- |
-| Construção visual | Imagens, formas e cores podem ser vistas e escolhidas antes de selecionar uma saída |
-| Persistência completa | Após fechar/reabrir, briefing, narrativa, decisões e arquivos visuais continuam disponíveis |
-| Reutilização | Duas saídas da primeira demonstração usam a mesma oficina sem novo briefing; a meta completa cobre os três formatos |
-| Geração interna | O conteúdo aparece no app e pode ser revisado, editado e salvo ali, sem execução em outro agente |
-| Fidelidade | Os fatos esperados, a voz e as referências aprovadas são comparados com critérios definidos antes da avaliação |
-| Preservação | Uma geração nova e uma reabertura não eliminam edições ou saídas anteriores |
-| Rastreabilidade proposta | É possível relacionar a saída à versão da oficina utilizada |
-| Falha proposta | Uma falha do serviço de geração deixa o trabalho salvo recuperável; o tratamento detalhado ainda precisa ser definido |
+| Criação visual | Imagens, formas e cores visíveis/editáveis antes de escolher saída |
+| Persistência/cópia | Após fechar/reabrir e restaurar, contexto, imagens, relações e edições continuam recuperáveis |
+| Reutilização | Deck e LinkedIn usam a base sem repetir briefing; Instagram recebe os mesmos critérios em seu marco |
+| Fatos e lacunas | Ausência permanece pendente; resultado aceito não contém afirmação comercial crítica inventada |
+| Permissões em toda a cadeia | Inspeção de entradas/saídas sintéticas de narrativa, deck, social, registros e atendimento mostra cumprimento de autorização por tarefa e peça; dado somente local não sai à IA |
+| Mudança e adaptação | Alterar duração mantendo uma omissão social deliberada; ver diferenças/todas as peças, aceitar/rejeitar/desfazer sem apagar aprovado |
+| Falha/cancelamento | Trabalho salvo recuperável; nenhuma repetição/custo silencioso; nova geração preserva a anterior |
+| Portabilidade/encerramento | Abrir PDF/PNG/texto no destino; editar/reexportar existente e restaurar sem inferência/renovação; perdas de editabilidade declaradas |
+| Instalação | Começar pelo instalador no SO declarado sem desativar proteções; registrar impedimentos desde antes da instalação |
+| Atendimento | Relato simples próximo do fim da janela recebe acompanhamento/correção ou encerramento previsto; cliente não precisa diagnosticar; custo registrado |
 
-### Evidências separadas
+Separar quatro evidências: simulação determinística verifica o fluxo; IA real verifica integração/adequação/custo/latência; uso independente observa esforço e autonomia; compra/entrega verifica demanda e economia. Uma não substitui outra. Zero erro no material final testado não é garantia geral de IA infalível ou privacidade.
 
-- **Simulação determinística:** verifica fluxo, persistência e preservação sob entradas conhecidas. Não comprova a qualidade de um modelo real.
-- **Integração com IA real:** verifica acesso ao fornecedor, adequação do resultado, erros, custo e latência quando fornecedor e acesso forem definidos. Não há limiares numéricos aprovados.
-- **Uso por outra pessoa:** observar conclusão sem orientação por cima do ombro e registrar dificuldades, tempo e correções. Essa observação ainda não foi realizada.
-- **Validação comercial:** disposição a pagar, custo total, benefício e receita exigem evidências próprias. Passar testes do app não estabelece esses resultados.
+No plano P1, os limiares 4/5 testados concluindo e mediana de 30% menos tempo são hipóteses exploratórias, não benchmarks, aprovação do autor ou prova estatística. Contar preparação, instalação, revisão, espera, ajuda e exportação; comparar com briefing mestre e ferramentas habituais. Relatar também recebidas/qualificadas/recusadas/excluídas: 4/5 testes não significa atender 4/5 oportunidades. Reestabelecer a tarefa para cada variação de perfil/material antes de comparar.
 
 ## Out of Scope
 
-**Nesta execução:** implementar o app, criar código de produto, instalar dependências, criar testes executáveis, empacotar instaladores, publicar downloads ou iniciar testes com compradores.
+Nesta execução: código do app, dependências, testes executáveis, instaladores/downloads, contato, divulgação, testes com compradores, contratação ou cobrança. As novas variações são investigação documental.
 
-**No primeiro recorte proposto:** publicação automática nas redes, colaboração simultânea, editor visual genérico, sincronização em nuvem e integração obrigatória com outro cliente de agentes. Geração de imagens por modelo é uma extensão a avaliar; exibir e preservar imagens já pertence ao fluxo central.
+Na entrada P1 proposta: Instagram ainda não verificado, PPTX/Canva editável, slides completos de aula, publicação, leads, venda garantida, editor genérico, colaboração simultânea, sincronização, geração de imagens e funcionamento offline presumido. Exibir/preservar imagens e os três formatos completos permanecem no desenho; o fatiamento não os remove silenciosamente.
 
-Não fazem parte desta spec promessas de funcionamento offline, suporte a sistemas operacionais ainda não escolhidos, formatos editáveis de exportação não definidos ou retorno financeiro garantido.
+Não prometer receita, retorno, menor objeção, confidencialidade, qualidade ou prazo ainda não observados. Produto/serviço distinto pode exigir outro escopo; não pressupor integração com estoque, CRM, loja, anúncios, pagamentos ou rede social.
 
 ## Further Notes
 
-- A direção atual substitui a entrega original de roteiro curto + prancha PNG. O sorteio, as três propostas e o parecer permanecem preservados no projeto acadêmico; não houve nova seleção dos agentes para este recorte.
-- O preço, a contribuição e o esforço da antiga prancha não foram transferidos para o app. Custos, capacidade, cronograma de construção e oferta comercial precisam de nova avaliação.
-- Permanecem abertos sistemas-alvo, distribuição/assinatura, fornecedor/modelo de IA, credenciais e rede, exportadores, persistência definitiva, geração de imagens e capacidade do grupo.
-- Esta spec não decide marca definitiva, licença do futuro código, desenho de interface ou critérios numéricos de desempenho.
-- A skill `morphological-project-design` seleciona projetos; a skill interna de cada oficina pertence ao produto. Nenhuma delas deve ser confundida com um pacote que o usuário precise executar fora do app.
-- O rótulo de triagem `ready-for-agent` identifica a especificação no tracker. Não substitui a instrução explícita de manter esta execução restrita às specs.
-- Fonte canônica para revisões: [esta especificação no repositório privado](https://github.com/MathBorgess/oficina-em-prancha/blob/main/docs/specs/experiencia-desktop-oficina.md). Sua publicação inicial no tracker reproduz o conteúdo desta versão.
+- A entrega original de roteiro curto + prancha PNG foi alterada pelo autor; experimento original continua preservado. Preço/esforço antigos não são válidos para este app.
+- As 36 histórias da baseline foram mantidas; novos contratos decorrem do debate, sem decisão humana inventada. A proposta de variar perfis/tarefas reabre a escolha comercial; não apaga P1 nem torna todos os públicos alvo simultaneamente.
+- R$790 pertence à rodada inicial; R$690 é estímulo experimental. Com os custos hipotéticos e a sensibilidade técnica, o cenário de dez entregas ainda perde R$269–785 por unidade antes de custos não cotados. Não é preço sustentável demonstrado; piso, teto, custo e alocação precisam de medição.
+- Permanecem abertos nicho prioritário, SO/distribuição, provedor/dados/rede/credenciais, persistência definitiva, exportação necessária, capacidade, orçamento, preço e condições do serviço. A próxima decisão é sobre descoberta delimitada; nada autoriza construir ou vender.
+- A skill interna do produto não é a skill genérica `morphological-project-design` nem um pacote a executar em outro agente.
+- Documentos: [oferta e economia](../servico/oferta-e-economia.md), [GTM e validação](../servico/gtm-e-validacao.md), [implementação](../servico/plano-implementacao.md), [variações de usuário/tarefa](../servico/variacoes-escopo.md), [debate e rastreabilidade](../debate/2026-10-20-rcd/README.md).
+- Método: **Revenue-Centric Design, Richard (@richardrx)**, [fonte fixada](https://github.com/heliocosta-dev/revenue-centric-design/tree/1942760c2242f609bf63ce2c97204f5a1791bd68), [termos integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). Prova antes da promessa, nicho, custo/valor e qualidade do sinal; não aplicar a apostas/cassinos/jogos de azar. Sem garantia de retorno financeiro. Licença do código futuro não escolhida.

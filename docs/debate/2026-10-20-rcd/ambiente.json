@@ -1,0 +1,15 @@
+{
+  "date": "2026-10-20",
+  "client": "Codex Desktop (tool surface observed)",
+  "host": "Darwin",
+  "architecture": "arm64",
+  "rootModel": "unknown; no model identity inferred from agent role",
+  "policyInstalledRevisionDeclared": "5a05f7da2b62b5a8fecc11b2e1e0da0da75c520b",
+  "policyFilesObserved": [
+    {
+      "path": "/Users/matheusborges/github/mathai-agent-config/AGENTS.md",
+      "sha256": "e878452db2389109204ef01b265ecd0dc97ef98531124a946d6688b78d0cecb3"
+    }
+  ],
+  "verificationLimit": "File hashes and declared revision record observed instructions; they do not prove behavior across all clients."
+}

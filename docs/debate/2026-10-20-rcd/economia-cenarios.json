@@ -1,0 +1,105 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "currency": "BRL",
+  "status": "synthetic_scenarios_not_offer_not_market_validation",
+  "source": "rcd/02-replica.md",
+  "inputs": {
+    "priceStimulus": 690,
+    "planningReserveRateNotTaxRate": 0.1,
+    "aiToolsRetriesPerDelivery": 20,
+    "humanHoursPerDelivery": 3.5,
+    "economicHourlyRate": 60,
+    "acquisitionHoursEntireCohortIncludingLosses": 12,
+    "developmentHoursScenarioNotEngineeringEstimate": 80,
+    "maxOffersInCohort": 10,
+    "unquotedDistributionMaintenanceFixed": null,
+    "unrecoveredCancellationReworkCosts": null
+  },
+  "cohortAcquisition": 720,
+  "developmentScenario": 4800,
+  "rows": [
+    {
+      "netPaidDeliveredNotRefunded": 0,
+      "modeledGrossReceipts": 0,
+      "cashBeforeHumanAcquisitionFixedPerUnit": null,
+      "contributionAfterHumanAcquisitionPerUnit": null,
+      "economicAfterDevelopmentPerUnitBeforeUnknownCosts": null,
+      "cohortEconomicBalanceBeforeUnknownCosts": null,
+      "acquisitionAllocationPerAcceptedDelivery": null
+    },
+    {
+      "netPaidDeliveredNotRefunded": 1,
+      "modeledGrossReceipts": 690,
+      "cashBeforeHumanAcquisitionFixedPerUnit": 601.0,
+      "contributionAfterHumanAcquisitionPerUnit": -329.0,
+      "economicAfterDevelopmentPerUnitBeforeUnknownCosts": -5129.0,
+      "cohortEconomicBalanceBeforeUnknownCosts": -5129.0,
+      "acquisitionAllocationPerAcceptedDelivery": 720.0
+    },
+    {
+      "netPaidDeliveredNotRefunded": 3,
+      "modeledGrossReceipts": 2070,
+      "cashBeforeHumanAcquisitionFixedPerUnit": 601.0,
+      "contributionAfterHumanAcquisitionPerUnit": 151.0,
+      "economicAfterDevelopmentPerUnitBeforeUnknownCosts": -1449.0,
+      "cohortEconomicBalanceBeforeUnknownCosts": -4347.0,
+      "acquisitionAllocationPerAcceptedDelivery": 240.0
+    },
+    {
+      "netPaidDeliveredNotRefunded": 10,
+      "modeledGrossReceipts": 6900,
+      "cashBeforeHumanAcquisitionFixedPerUnit": 601.0,
+      "contributionAfterHumanAcquisitionPerUnit": 319.0,
+      "economicAfterDevelopmentPerUnitBeforeUnknownCosts": -161.0,
+      "cohortEconomicBalanceBeforeUnknownCosts": -1610.0,
+      "acquisitionAllocationPerAcceptedDelivery": 72.0
+    }
+  ],
+  "formulas": {
+    "unitCash": "P*(1-r)-I; excludes human work/acquisition/fixed costs",
+    "unitContribution": "P*(1-r)-I-H-C/q",
+    "unitEconomic": "P*(1-r)-I-H-(C+K+D+L)/q",
+    "breakEvenPrice": "(I+H+(C+K+D+L)/q)/(1-r)",
+    "targetMarginPrice": "(I+H+(C+K+D+L)/q)/(1-r-m)"
+  },
+  "zeroBuyers": "Unit metrics undefined. Actual incurred acquisition, development, refunds and fixed costs must still be recorded. No negative balance is asserted without actual incurred amounts.",
+  "verification": {
+    "independentArithmeticCheckedBy": "orchestrator Python standard library",
+    "cash601": true,
+    "q3Contribution151": true,
+    "q10AfterDevMinus161": true
+  },
+  "methodAttribution": "Richard (@richardrx), Revenue-Centric Design",
+  "methodCommit": "1942760c2242f609bf63ce2c97204f5a1791bd68",
+  "methodLicense": "RCD-LICENSE.txt",
+  "metricDefinitions": {
+    "n": "Acquired paying buyers before refunds; actual count unknown",
+    "q": "Paid, delivered, not refunded units in this synthetic cohort",
+    "CAC": "Entire incurred acquisition cost divided by n. Undefined when n=0.",
+    "allocation": "C/q allocates cohort acquisition cost across accepted net deliveries. It is not necessarily CAC when refunds exist."
+  },
+  "laterEngineeringSensitivity": {
+    "source": "engenharia/02-desenho-consolidado.md",
+    "effortHoursEntryRange": [
+      98,
+      184
+    ],
+    "fullProductEffortHoursRange": [
+      106,
+      200
+    ],
+    "conditionalJudgmentNotQuote": true,
+    "economicRateScenario": 60,
+    "developmentCostIfEntireRangeAllocatedToK": [
+      5880,
+      11040
+    ],
+    "netPaidDeliveredNotRefundedScenario": 10,
+    "perUnitEconomicBeforeUnknownCosts": [
+      -269.0,
+      -785.0
+    ],
+    "allocationCaution": "Each hour/cost belongs to K/C/H/D/L once. M0/M5 may overlap with activities budgeted elsewhere; remove overlap before actual accounting. Entire engineering range in K is sensitivity, not final budget."
+  }
+}

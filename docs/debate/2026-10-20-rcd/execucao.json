@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 1,
+  "date": "2026-10-20",
+  "timeZone": "America/Recife",
+  "status": "documentation_prepared_pending_github_readback",
+  "baselineCommit": "9c8bfedd780d613519accdb93c0752e5234a687e",
+  "method": "revenue-centric-design",
+  "methodCommit": "1942760c2242f609bf63ce2c97204f5a1791bd68",
+  "agents": [
+    {
+      "role": "Revenue-Centric Design",
+      "agentId": "/root/debate_receita",
+      "initialPrompt": "prompts/01-rcd.md",
+      "forkTurns": "none",
+      "requestedModel": "inherit/default",
+      "observedModel": "unknown"
+    },
+    {
+      "role": "Software and AI engineer, mediator",
+      "agentId": "/root/debate_engenharia",
+      "initialPrompt": "prompts/03-engenharia-inicial.md",
+      "forkTurns": "none",
+      "requestedModel": "inherit/default",
+      "observedModel": "unknown"
+    },
+    {
+      "role": "Synthetic user based on RCD profile P1",
+      "agentId": "/root/debate_usuario",
+      "initialPrompt": "prompts/02-usuario.md",
+      "forkTurns": "none",
+      "requestedModel": "inherit/default",
+      "observedModel": "unknown"
+    },
+    {
+      "role": "Additional RCD investigation of user DNA and commercial outputs, explicitly requested after initial debate",
+      "agentId": "/root/variacoes_dna_receita",
+      "initialPrompt": "prompts/11-variacoes-dna-rcd.md",
+      "forkTurns": "all",
+      "requestedModel": "inherit/default",
+      "observedModel": "unknown"
+    }
+  ],
+  "userRole": "Synthetic objection generator, not an interview or market validation",
+  "executionBoundary": "Documentation only; no application code, dependencies, outreach, payment or launch",
+  "coverageAudit": "auditoria-do-objetivo.md; external readback pending",
+  "phases": [
+    {
+      "id": "01-profile",
+      "state": "complete",
+      "outputs": [
+        "rcd/01-perfil.md",
+        "rcd/01-proposta.md"
+      ],
+      "causality": "P1 profile saved before synthetic user was started"
+    },
+    {
+      "id": "02-initial-roles",
+      "state": "complete",
+      "outputs": [
+        "engenharia/00-fronteiras.md",
+        "usuario/01-objecoes.md"
+      ],
+      "causality": "User initially saw profile, not complete offer/price"
+    },
+    {
+      "id": "03-mediation",
+      "state": "complete",
+      "outputs": [
+        "engenharia/01-mediacao.md"
+      ],
+      "inputs": [
+        "rcd/01-proposta.md",
+        "usuario/01-objecoes.md"
+      ]
+    },
+    {
+      "id": "04-replies",
+      "state": "complete",
+      "outputs": [
+        "rcd/02-replica.md",
+        "usuario/02-replica.md"
+      ],
+      "causality": "Parallel replies; user had not yet read RCD02; RCD received user02 during drafting"
+    },
+    {
+      "id": "05-technical-consolidation",
+      "state": "complete",
+      "outputs": [
+        "engenharia/02-desenho-consolidado.md"
+      ]
+    },
+    {
+      "id": "06-final-challenge",
+      "state": "complete",
+      "outputs": [
+        "rcd/03-auditoria-final.md",
+        "usuario/03-contestacao-final.md"
+      ],
+      "causality": "Both evaluated revised terms and engineering02; synthetic user still rejected purchase"
+    },
+    {
+      "id": "07-debate-closure",
+      "state": "complete",
+      "outputs": [
+        "engenharia/03-fechamento.md",
+        "verificacao-pre-consolidacao.json"
+      ],
+      "causality": "Five canonical docs unchanged until closure; original raw outputs hashed"
+    },
+    {
+      "id": "08-human-steering",
+      "state": "complete",
+      "instruction": "Investigate sellers of products/services and materials beyond workshops; new agent explicitly requested",
+      "prompt": "prompts/11-variacoes-dna-rcd.md"
+    },
+    {
+      "id": "09-variation-investigation",
+      "state": "complete",
+      "outputs": [
+        "variacoes/01-dna-usuario-e-trabalho.md",
+        "variacoes/01-matriz.json"
+      ],
+      "finding": "V2 photography first and V3 ceramics as product contrast are hypotheses for discovery, not selected ICP or joint MVP"
+    },
+    {
+      "id": "10-document-consolidation-review",
+      "state": "complete",
+      "outputs": [
+        "rcd/04-revisao-documental.md",
+        "engenharia/04-revisao-documental.md",
+        "variacoes/02-revisao-consolidacao.md"
+      ],
+      "corrections": [
+        "P1 labeled control in all three service plans",
+        "M2 covers entire data chain",
+        "No forced second output in variations",
+        "No automatic transfer of P1 price or effort"
+      ]
+    },
+    {
+      "id": "11-github-delivery",
+      "state": "pending",
+      "description": "Private PR, tracker republication and remote readback before objective completion"
+    }
+  ],
+  "profile": "rcd/01-perfil.md",
+  "prompts": [
+    "prompts/01-rcd.md",
+    "prompts/02-usuario.md",
+    "prompts/03-engenharia-inicial.md",
+    "prompts/04-mediacao.md",
+    "prompts/05-rcd-replica.md",
+    "prompts/06-usuario-replica.md",
+    "prompts/07-consolidacao-engenharia.md",
+    "prompts/08-auditoria-rcd.md",
+    "prompts/09-contestacao-usuario.md",
+    "prompts/10-fechamento-engenharia.md",
+    "prompts/11-variacoes-dna-rcd.md",
+    "prompts/12-revisao-documental-rcd.md",
+    "prompts/13-revisao-documental-engenharia.md",
+    "prompts/14-revisao-variacoes.md"
+  ],
+  "rawOutputsSha256": {
+    "rcd/01-perfil.md": "c628359c9bf5f8d226c6325e8f0035a7e92dc02f9620da4c744fef014741fce9",
+    "rcd/01-proposta.md": "fa872729fd8259bb2830161edc30ddd9b938509ade29ea09dd294fd389df6aa7",
+    "rcd/02-replica.md": "5f8e9ff4add48fd059152418f831fd99f3ddb5526d16bb7f50f47c6ef750106d",
+    "rcd/03-auditoria-final.md": "0feebe4eb77b88fbb0571cf432f0357112902842b587eb527276e61a6fd91495",
+    "rcd/04-revisao-documental.md": "d3804d03e53cc160fe824ce9d22efacb178bed18ace401d7e60482746dd7b4f7",
+    "usuario/01-objecoes.md": "6acdb952b6a120dc32d748380518b4d44f0a442a33035af0a3f0faa3c8c7d565",
+    "usuario/02-replica.md": "1b8d18248a006f280a0b1d17f95bb039c8d12e4ea04ec76753196203b6298bc1",
+    "usuario/03-contestacao-final.md": "517526f1761794c72e26569f7bd990934d84e189651112de92df76cd014ab56f",
+    "engenharia/00-fronteiras.md": "1a938ac7072cde600bb5da834e70cb34795b950cf89716e27421817380d63146",
+    "engenharia/01-mediacao.md": "137098cc59f5d1a369f031731a94d9676554ba6ab375f939ec3ab984526ffc60",
+    "engenharia/02-desenho-consolidado.md": "ed3551a90867bff9daed2fa450636b23242f9ef891e647af3d54f9be162d0cae",
+    "engenharia/03-fechamento.md": "6a540acfdf952843a4e8c62246293abcdc2d81ab1547ac6b39a5e5797e51c152",
+    "engenharia/04-revisao-documental.md": "152909d31963ea66c7fb355ab3c3c26fee529d9b6784ff1a36d5327ee90c354c",
+    "variacoes/01-dna-usuario-e-trabalho.md": "ae58d8160a8c71f1159b00ca3bf9925597995ff2c3158423cb989b24fd92424b",
+    "variacoes/01-matriz.json": "f1d44f0780be687622675f205e5e1ca0a891d36e73bf4009c227552e4ec15795",
+    "variacoes/02-revisao-consolidacao.md": "c5860d0b96180efcefd42f82ef8054ea93e0700bff85113d6f5758229118deb7"
+  },
+  "methodLoadEvidence": "Prompts required reload each evaluation; every completed agent report declares reload. Not independent inspection of every internal read.",
+  "marketOutcome": "unknown; no real interview, use, offer, payment, realized margin or return in this execution",
+  "humanApprovedChoices": "Electron, narrative visuals, internal workshop context skill, generation in app, private repo, specs only; investigating alternatives. No final ICP, pricing, output quantities or build approval inferred."
+}
