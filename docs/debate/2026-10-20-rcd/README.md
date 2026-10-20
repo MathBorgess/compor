@@ -2,7 +2,7 @@
 
 20/10/2026 · Pacote documental privado. O debate inicial dos três agentes terminou; a investigação adicional de variações de usuário/material foi solicitada depois pelo autor. Nenhum agente representa comprador entrevistado ou aprovação humana de preço, nicho ou produto.
 
-**Resultado inicial:** P1 preciso como hipótese, deck + LinkedIn primeiro, Instagram no produto completo, contratos de confiança e plano de descoberta/uso/venda. **Não vender agora:** nenhuma prova de vantagem, instalação, dados, capacidade ou margem. O novo pedido transforma P1 em controle, sem fechar público definitivo.
+**Resultado inicial:** P1 preciso como hipótese, deck + LinkedIn primeiro, Instagram no produto completo, contratos de confiança e plano de descoberta/uso/venda. **Não vender agora:** nenhuma prova de vantagem, instalação, dados, capacidade ou margem. O novo pedido transforma P1 em controle, sem fechar público definitivo. A investigação documental adicional terminou; descoberta real não foi executada.
 
 ## Como o debate aconteceu
 
@@ -32,6 +32,7 @@ As rodadas brutas ficam preservadas, inclusive recomendações depois corrigidas
 - [Variações de usuário e material](../../servico/variacoes-escopo.md).
 - [Fontes públicas e limites](evidencias-orquestrador.md), [cenários e fórmulas](economia-cenarios.json).
 - [Auditoria do objetivo](auditoria-do-objetivo.md), [manifesto da execução](execucao.json), [ambiente observado](ambiente.json).
+- [Entrega GitHub conferida](entrega-github.json): PR privada #4 aberta e issue #2 atualizada; não houve merge ou implementação.
 
 ## Limites da evidência
 
