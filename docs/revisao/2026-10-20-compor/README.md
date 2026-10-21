@@ -57,6 +57,7 @@ PNG e TXT são arquivos de imagem e texto. ZIP agrupa arquivos. São contratos c
 - [Produto e fluxo](../../produto.md): o que criar e para quem testar.
 - [Spec atual](../../specs/compor-macos-v1.md): histórias, contratos, testes e limites.
 - [Arquitetura](../../arquitetura.md): integração, imagens, dados, Oracle e distribuição.
+- [Experimento v0](../../compor/experimento-v0.md): oferta gratuita, paga e pré-venda.
 - [Negócio e mercado](../../compor/negocio-e-gtm.md): canais, funil, custos e critério comercial.
 - [Ordem de construção](../../compor/plano-construcao.md): etapas e critérios de encerramento.
 - [Demo e testes](../../compor/demo-e-testes.md): roteiro de cinco minutos e provas futuras.
@@ -70,6 +71,10 @@ A documentação fecha um caminho proposto de construção e avaliação. Ela pe
 G0 depende de acesso oficial e confirmação das condições comerciais. Depois vêm persistência, composição, geração, distribuição e piloto. Dados reais exigem política do fornecedor e de suporte definida. Comercialização exige custo, capacidade, oferta e termos verificados.
 
 **Decisão de Matheus em 20/10/2026:** manter o repositório privado e validar acesso oficial antes de vender. A resposta ao painel fecha essa direção. O resultado de G0 continua pendente; a decisão preserva esse requisito anterior à oferta comercial.
+
+**Decisão intermediária de Matheus:** cobrar desde o início para validar aceitação de valores e sustentabilidade. A proposta de cobrar de todos os primeiros pilotos deu lugar à v0 abaixo. O histórico dessa escolha permanece preservado.
+
+**Direção mais recente de Matheus:** testar A/B na v0 com e sem cobrança. Investigar também pré-venda ou beta antes da estabilidade. O [protocolo v0](../../compor/experimento-v0.md) mantém acesso oficial antes da venda e métricas distintas para interesse, uso e pagamento. Preço específico, demanda, margem e recuperação do investimento continuam dependentes de avaliação e evidência.
 
 Matheus conduz desenvolvimento; Mavi reforça design. Disponibilidade semanal, orçamento e datas de entrega continuam sem confirmação. A execução dos testes e a aceitação visual também permanecem futuras. Então, design é uma frente restante, junto das verificações técnicas e comerciais descritas.
 

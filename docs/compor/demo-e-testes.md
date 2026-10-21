@@ -29,9 +29,11 @@ Ana vende o curso fictício Organize Sua Semana. A primeira versão anuncia R$ 9
 | 1:20–2:20 | 60 segundos | **Narrativa e visual:** combinar texto, imagem autorizada, formas e cores; conferir envio. | Prévia junto da narrativa e decisão humana sobre sugestões. |
 | 2:20–3:20 | 60 segundos | **Revisão e exportação:** mudar o preço, comparar e aprovar ajustes seletivos. | Atualização na arte e no texto; frase editada preservada e versão anterior disponível. |
 | 3:20–4:20 | 60 segundos | **Meus projetos:** salvar, fechar, mover a imagem original e reabrir. | Cópia interna recupera imagem, decisões e versão aprovada. |
-| 4:20–5:00 | 40 segundos | **Revisão e exportação:** exportar e abrir arte e texto; convidar ao teste. | Resultado fora do aplicativo e próximo passo explícito. |
+| 4:20–5:00 | 40 segundos | **Revisão e exportação:** exportar, abrir arte e texto e apresentar a próxima ação. | Arquivos conferidos; conceito pede pesquisa; demo comercial mostra preço e condições do piloto pago. |
 
 Total: 300 segundos. A demonstração contém quatro telas; painéis agrupam tarefas sem exigir novas telas.
+
+Após os requisitos comerciais, a chamada final apresenta preço, escopo, suporte e condições da condição gratuita ou paga atribuída na v0. O plano comercial propõe o valor para avaliação. Antes do acesso oficial, a chamada oferece somente pesquisa de conceito e aceitação declarada de preço.
 
 A arte proposta usa Portable Network Graphics (PNG), com 1080 × 1350 pixels. O texto usa arquivo simples (TXT), com Unicode Transformation Format (UTF-8). Na demo de conceito, indicar formatos propostos. Na demo técnica, abrir os arquivos e conferir conteúdo, dimensões, fontes, recorte e endereço de compra.
 
@@ -73,13 +75,19 @@ Alvos exploratórios: quatro de cinco concluem sem orientação por passo; redu�
 
 ## Retorno e decisão
 
-Quando houver nova ocasião, acompanhar em sete a 14 dias. Registrar reutilização, tarefa, ajuda e custo. Sem nova ocasião observável, marcar repetição como desconhecida. Compra futura depende dos portões de acesso, distribuição, dados e teste independente. Pagamento real exige oferta autorizada, preço, suporte, limites e devolução claros.
+Quando houver nova ocasião, acompanhar em sete a 14 dias. Registrar reutilização, tarefa, ajuda e custo. Sem nova ocasião observável, marcar repetição como desconhecida.
+
+Matheus definiu v0 com oferta gratuita e paga. O [protocolo A/B](experimento-v0.md) registra condição, preço, urgência e resultados por braço. A comparação de esforço com ChatGPT e Canva mede outra pergunta. Manter os registros separados.
+
+A pré-venda pode anteceder a estabilidade, com acesso oficial, entregável, prazo e condições explícitos. Um beta disponível exige verificações técnicas para uso real. Na mesma rodada, os dois braços usam o mesmo modo de entrega. Cinco testes gratuitos deixam de ser condição para cobrar.
+
+As cinco sessões qualitativas podem incluir compradores que aceitem participar da pesquisa. Separar consentimento de pesquisa e contratação. A compra garante a entrega contratada, mesmo quando a pessoa recusar participar do estudo. Registrar resultados de uso e de pagamento em campos distintos.
 
 **Rejeitar a hipótese atual** se o caminho habitual oferecer esforço equivalente ou menor após contar todo o trabalho. Rejeitar também uma oferta cujo custo completo superar o benefício e a disposição a pagar observados.
 
 **Revisar** se faltarem autonomia, correção ou recuperação. Uma perda silenciosa ou fato falso bloqueia avanço até correção e nova conferência.
 
-**Avançar para oferta limitada** somente após fechar os portões e avaliar os alvos exploratórios com seus limites.
+**Avançar para oferta limitada** após acesso oficial, com preço e condições claros. Pré-venda explicita construção pendente; beta exige verificações de uso real. Medir aceitação e custo desde a primeira compra. Os alvos exploratórios orientam melhoria; ganhos, margem e demanda exigem evidência própria.
 
 Registrar por sessão: código anônimo, consentimento, perfil, ocasião, prazo, ambiente, versões, ordem, tempos, ajuda, erros, arquivos, recuperação e motivo de saída. Acrescentar custo, próxima ocasião, oferta apresentada, pagamento confirmado e devolução quando aplicáveis. Todos os resultados atuais constam como pendentes. Uma peça concluída difere de receita adicional do curso.
 

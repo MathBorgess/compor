@@ -68,6 +68,9 @@ A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda
 50. Como dono, quero conhecer entrega e preço antes de contratar um serviço futuro.
 51. Como operador, quero medir custos e ajuda para verificar sustentabilidade.
 52. Como mantenedor, quero testar compatibilidade para distribuir sem desativar proteções do Mac.
+53. Como operador, quero cobrar no braço pago desde a primeira oferta para medir aceitação e sustentabilidade.
+54. Como operador, quero comparar oferta gratuita e paga na v0 para observar urgência, uso e compromisso.
+55. Como operador, quero descrever pré-venda ou beta com clareza para testar compra antes da estabilidade.
 
 ## Implementation Decisions
 
@@ -137,7 +140,13 @@ Cinco sessões qualitativas comparam tarefas equivalentes no Compor e no caminho
 
 Alvos exploratórios: quatro de cinco concluem sem orientação por etapa e mediana de 30% menos tempo. Esses números orientam revisão, sem provar prevalência ou significância. Erro factual crítico e perda silenciosa bloqueiam o piloto seguinte até correção.
 
-Pagamento exige oferta autorizada e condições claras. Repetição exige retorno numa nova ocasião real. Demonstração, teste simulado, uso independente e venda medem resultados diferentes.
+Matheus definiu v0 com teste A/B de oferta gratuita e paga, incluindo possibilidade de venda antes da estabilidade. O [protocolo v0](../compor/experimento-v0.md) propõe sorteio após qualificação, mesmo escopo e registro por braço. Pouca amostra exige interpretação exploratória.
+
+Pré-venda exige acesso oficial, entregável, prazo e condições explícitos. Beta exige também verificações técnicas para uso com dados reais. Essas ofertas podem anteceder a estabilidade geral; elas preservam os limites declarados. Cinco testes gratuitos e três compras deixam de ser pré-requisitos da comparação.
+
+O [plano comercial](../compor/negocio-e-gtm.md) propõe o preço do braço pago e a conta de sustentabilidade. Matheus definiu testar cobrança; o valor específico permanece proposta.
+
+Repetição exige retorno numa nova ocasião real. Demonstração, teste simulado, uso independente e venda medem resultados diferentes. Cobrar permite medir aceitação; recuperar custos depende de receita e despesas observadas.
 
 ## Out of Scope
 

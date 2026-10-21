@@ -21,6 +21,10 @@ A equipe pode desenhar o conceito com dados fictícios enquanto verifica o acess
 
 G1 e G2 permitem verificar comportamento com respostas preparadas. G3 depende também de G0 e política de dados. G4 exige G1–G3 para distribuir o fluxo completo. G5 começa após distribuição, dados e suporte terem condições claras.
 
+Matheus definiu v0 com comparação de oferta gratuita e paga, preservando acesso oficial antes de vender. A [v0](experimento-v0.md) pode testar pré-venda após G0 e antes da estabilidade geral. A entrega real depende das verificações técnicas aplicáveis.
+
+G5 observa uso, aceitação do preço e custos. Cinco sessões gratuitas deixam de ser pré-requisito comercial. A previsão de entrega da pré-venda precisa considerar construção, testes e design pendentes.
+
 ## Primeira fatia de implementação
 
 Criar um projeto fictício com preço, título, imagem e cor. Salvar, fechar, mover a imagem original e reabrir. Restaurar a cópia em outra pasta. Uma aprovação muda a versão ativa e preserva a anterior.

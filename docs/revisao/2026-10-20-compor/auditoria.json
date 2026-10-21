@@ -58,7 +58,7 @@
         "../../specs/compor-macos-v1.md",
         "../../compor/demo-e-testes.md"
       ],
-      "status": "52 historias, fronteira principal, falhas, etapas e aceites documentados"
+      "status": "55 historias, fronteira principal, falhas, etapas e aceites documentados"
     },
     {
       "requirement": "Negocio e GTM",
@@ -96,6 +96,14 @@
         "entrega-github.json"
       ],
       "status": "Arquivos limitados a documentacao; publicacao verificada em entrega-github.json"
+    },
+    {
+      "requirement": "V0 A/B gratuito e pago, com exploracao de pre-venda",
+      "evidence": [
+        "../../compor/experimento-v0.md",
+        "../../compor/negocio-e-gtm.md"
+      ],
+      "status": "Direcao do autor preservada, protocolo exploratorio, acesso oficial antes da venda; preco199proposto"
     }
   ],
   "futureGates": {
@@ -106,7 +114,7 @@
     "onlyDesignRemaining": "Nao comprovado; as dependencias materiais ficam explicitadas"
   },
   "checks": {
-    "linksChecked": 109,
+    "linksChecked": 121,
     "brokenLinks": [],
     "legacyPreserved": [
       "docs/specs/experiencia-desktop-oficina.md",
@@ -117,7 +125,8 @@
       "docs/servico/variacoes-escopo.md"
     ],
     "sourceCopiedExactly": true,
-    "docsOnly": true
+    "docsOnly": true,
+    "financialArithmetic": "Conferidas contas99/199, piso e cenário3compras; hipóteses, sem medições"
   },
   "languageLint": [
     {
@@ -245,6 +254,12 @@
       "exit": 0,
       "errors": 0,
       "warnings": 0
+    },
+    {
+      "file": "docs/compor/experimento-v0.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
     }
   ],
   "independentReview": {
@@ -259,7 +274,8 @@
       "pixels e pacote extraido limitados",
       "processamento e divulgacao independentes"
     ],
-    "finalReview": "Engenharia conferiu correcoes e plano: sem novos achados materiais no recorte"
+    "finalReview": "Engenharia conferiu correcoes e plano: sem novos achados materiais no recorte",
+    "v0": "Engenharia leu protocolo V0 e secoes novas: sem achados materiais, limites documentais explicitos"
   },
   "RCDLicenseSHA256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32",
   "ownerDecision": {
@@ -267,5 +283,19 @@
     "source": "Resposta de Matheus ao painel de pergunta nesta conversa",
     "decision": "Manter privado e validar acesso oficial antes de vender",
     "effect": "Direcao fechada; G0 permanece pendente antes da oferta; sem troca automatica por API paga ou abertura do codigo"
+  },
+  "ownerPaidValidationDecision": {
+    "date": "2026-10-20",
+    "source": "Mensagem direta de Matheus nesta conversa",
+    "decision": "Cobrar desde o inicio para validar aceitacao de valores e sustentabilidade",
+    "effect": "Primeiro piloto comercial pago apos acesso oficial; hipoteses de preco e custo precisam de teste; nenhuma cobranca executada",
+    "status": "Refinada pela direcao V0, com bracos gratuito e pago"
+  },
+  "ownerV0Decision": {
+    "date": "2026-10-20",
+    "source": "Mensagem direta de Matheus nesta conversa",
+    "decision": "Testar A/B com e sem valor na v0 e investigar vender antes da estabilidade",
+    "effect": "Comparacao gratuita e paga, pre-venda ou beta identificado, acesso oficial antes da venda preservado",
+    "price199": "Proposta dos agentes; fora das decisoes explicitas do autor"
   }
 }

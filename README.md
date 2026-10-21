@@ -12,11 +12,14 @@ Matheus definiu macOS, conexão inicial por conta ChatGPT/Codex e backend Oracle
 
 Decisão confirmada em 20/10/2026: manter o repositório privado e validar acesso oficial antes de vender.
 
+Matheus definiu uma v0 com comparação A/B de oferta gratuita e paga. Ela pode testar pré-venda ou beta antes da estabilidade. O plano mede urgência, uso, pagamento e custo desde essa etapa, preservando acesso oficial antes da venda.
+
 ## Documentos atuais
 
 - [Produto e fluxo](docs/produto.md): proposta de valor e escopo.
 - [Spec de construção](docs/specs/compor-macos-v1.md): histórias, contratos e aceites.
 - [Arquitetura e dados](docs/arquitetura.md): integração, armazenamento, imagens e backend.
+- [Experimento v0](docs/compor/experimento-v0.md): gratuito, pago, pré-venda e critérios de comparação.
 - [Negócio e mercado](docs/compor/negocio-e-gtm.md): funil, oferta experimental e economia.
 - [Ordem de construção](docs/compor/plano-construcao.md): etapas, dependências e responsáveis.
 - [Demo e testes](docs/compor/demo-e-testes.md): roteiro de cinco minutos e validação.
@@ -26,7 +29,7 @@ Decisão confirmada em 20/10/2026: manter o repositório privado e validar acess
 
 ## Histórico preservado
 
-A [spec de oficinas](docs/specs/experiencia-desktop-oficina.md), o [orientações de fotografia](docs/briefing-designer-primeira-versao.md) e os [planos do controle P1](docs/servico/variacoes-escopo.md) descrevem recortes anteriores. Seus preços e estimativas ficam restritos àqueles cenários.
+A [spec de oficinas](docs/specs/experiencia-desktop-oficina.md), as [orientações de fotografia](docs/briefing-designer-primeira-versao.md) e os [planos do controle P1](docs/servico/variacoes-escopo.md) descrevem recortes anteriores. Seus preços e estimativas ficam restritos àqueles cenários.
 
 O [debate anterior](docs/debate/2026-10-20-rcd/README.md) registra a exploração original. O [fork público acadêmico](https://github.com/MathBorgess/projeto-ferramenta-criacomp) preserva a caixa morfológica; este repositório privado concentra a futura construção.
 

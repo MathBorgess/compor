@@ -17,6 +17,8 @@ Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisã
 | Fonte oficial | Uso do plano ChatGPT sem pagamento obrigatório ao app | Confirmar separação comercial antes de oferecer editor ou assistência |
 | Autor | Reforçar specs, negócio, mercado e testes | Esta execução mantém apenas documentação; Mavi reforçará design |
 | Autor, resposta ao painel | Manter privado e validar acesso oficial antes de vender | Confirmar elegibilidade e condições de cobrança antes da oferta; G0 continua pendente |
+| Autor, mensagem intermediária | Cobrar desde o início para validar aceitação e sustentabilidade | Orientação inicial; a direção v0 abaixo passa a comparar gratuito e pago |
+| Autor, mensagem mais recente | V0 com teste A/B gratuito e pago; investigar venda antes da estabilidade | Manter acesso oficial antes de vender; separar interesse, uso, pagamento e custo; preço específico permanece proposta |
 
 As propostas fecham um caminho para revisão e construção futura. Elas preservam a autoridade do autor e exigem as provas descritas na [spec atual](specs/compor-macos-v1.md).
 

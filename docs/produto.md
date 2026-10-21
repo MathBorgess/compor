@@ -82,4 +82,8 @@ Primeiro, testar a hipótese de uso e a rota oficial de integração. Depois, va
 
 O [plano de negócio](compor/negocio-e-gtm.md) define recrutamento, oferta experimental e condições de avanço. A entrega atual contém documentação. Implementação, contato e cobrança exigem outra execução autorizada.
 
+Matheus definiu uma v0 com teste A/B de oferta gratuita e paga. Ela procura usuários com urgência e testa aceitação de preço desde o início. A equipe pode investigar pré-venda ou beta antes da estabilidade. O plano mantém acesso oficial antes da venda.
+
+O [experimento v0](compor/experimento-v0.md) separa interesse, uso e pagamento. Cobrar cedo permite testar o valor; receita líquida e custos observados mostram se a oferta se paga. O braço gratuito também entra nessa conta.
+
 Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos próprios](debate/2026-10-20-rcd/RCD-LICENSE.txt). A revisão mantém preço, receita e ganho como hipóteses.
