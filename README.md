@@ -10,6 +10,8 @@ Um dono solo de curso digital já vendido, uma divulgação próxima e um materi
 
 Matheus definiu macOS, conexão inicial por conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. A proposta mantém conteúdo e exportação no Mac. A elegibilidade oficial da integração e a cobrança permitida antecedem venda.
 
+Decisão confirmada em 20/10/2026: manter o repositório privado e validar acesso oficial antes de vender.
+
 ## Documentos atuais
 
 - [Produto e fluxo](docs/produto.md): proposta de valor e escopo.

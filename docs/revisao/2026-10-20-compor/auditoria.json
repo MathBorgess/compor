@@ -261,5 +261,11 @@
     ],
     "finalReview": "Engenharia conferiu correcoes e plano: sem novos achados materiais no recorte"
   },
-  "RCDLicenseSHA256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32"
+  "RCDLicenseSHA256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32",
+  "ownerDecision": {
+    "date": "2026-10-20",
+    "source": "Resposta de Matheus ao painel de pergunta nesta conversa",
+    "decision": "Manter privado e validar acesso oficial antes de vender",
+    "effect": "Direcao fechada; G0 permanece pendente antes da oferta; sem troca automatica por API paga ou abertura do codigo"
+  }
 }

@@ -69,6 +69,8 @@ A documentação fecha um caminho proposto de construção e avaliação. Ela pe
 
 G0 depende de acesso oficial e confirmação das condições comerciais. Depois vêm persistência, composição, geração, distribuição e piloto. Dados reais exigem política do fornecedor e de suporte definida. Comercialização exige custo, capacidade, oferta e termos verificados.
 
+**Decisão de Matheus em 20/10/2026:** manter o repositório privado e validar acesso oficial antes de vender. A resposta ao painel fecha essa direção. O resultado de G0 continua pendente; a decisão preserva esse requisito anterior à oferta comercial.
+
 Matheus conduz desenvolvimento; Mavi reforça design. Disponibilidade semanal, orçamento e datas de entrega continuam sem confirmação. A execução dos testes e a aceitação visual também permanecem futuras. Então, design é uma frente restante, junto das verificações técnicas e comerciais descritas.
 
 ## Método e termos

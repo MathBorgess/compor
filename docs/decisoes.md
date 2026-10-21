@@ -16,6 +16,7 @@ Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisã
 | Consolidação | Oracle sem conteúdo, tokens, inferência e renderização | Compatibilidade e diagnóstico autorizado; registros técnicos candidatos por cinco dias |
 | Fonte oficial | Uso do plano ChatGPT sem pagamento obrigatório ao app | Confirmar separação comercial antes de oferecer editor ou assistência |
 | Autor | Reforçar specs, negócio, mercado e testes | Esta execução mantém apenas documentação; Mavi reforçará design |
+| Autor, resposta ao painel | Manter privado e validar acesso oficial antes de vender | Confirmar elegibilidade e condições de cobrança antes da oferta; G0 continua pendente |
 
 As propostas fecham um caminho para revisão e construção futura. Elas preservam a autoridade do autor e exigem as provas descritas na [spec atual](specs/compor-macos-v1.md).
 

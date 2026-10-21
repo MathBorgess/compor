@@ -12,6 +12,8 @@ Os [termos de conexão](https://openai.com/policies/sign-in-with-chatgpt-terms/)
 
 **G0:** verificar a rota comercial e o que o Compor pode cobrar. Registrar resposta, condições e chamada sintética concluída. O login antigo do Codex fica fora das rotas de contorno. [Autenticação oficial](https://learn.chatgpt.com/docs/app-server#authentication).
 
+Matheus confirmou em 20/10/2026: manter privado e validar acesso oficial antes de vender. Essa decisão mantém G0 como requisito anterior à oferta. Ela difere da confirmação de elegibilidade pelo fornecedor.
+
 Sem G0, a demo apresenta conexão e resultados como simulação. Cobrar composição ou assistência permanece uma hipótese sujeita à confirmação de separação permitida. Uma interface de programação de aplicações (API) paga, outro fornecedor ou abertura do código dependem de nova decisão do autor. O plano preserva a direção pedida.
 
 ## Responsabilidades
