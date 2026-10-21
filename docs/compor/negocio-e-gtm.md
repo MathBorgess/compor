@@ -1,134 +1,127 @@
 # Compor: negócio e entrada no mercado
 
-Data: 20/10/2026. Plano proposto de pesquisa e experimento comercial V0. Construção, publicação, contatos e cobrança exigem trabalho posterior autorizado.
+Data: 20/10/2026. Plano de exploração criativa e experimento comercial V0. Construção, publicação, contatos e cobrança exigem trabalho posterior autorizado.
 
-**Decisão atual de Matheus, em 20/10/2026:** testar a V0 com oferta gratuita e paga. Investigar aceitação desde o início, incluindo possível pré-venda antes da estabilidade. Preservar o repositório privado e validar acesso oficial antes de vender. G0 verifica acesso e condições comerciais permitidas.
+**Direção atual de Matheus, em 20/10/2026:** ajudar o fundador a criar criativos do zero e explorar temáticas diferentes. Preservar voz e produto entre alternativas. Editar preço ou data passa a servir como revisão secundária, sem definir o valor principal.
 
-**Histórico substituído:** a orientação anterior cobrava de todos desde o primeiro piloto comercial. A V0 agora compara os dois braços, identificados como A e B. A versão comercial pode incluir acesso gratuito; comercialização difere de cobrar por todo acesso. Esta entrega registra a mudança, sem executar o experimento.
+**Decisões preservadas:** comparar oferta gratuita e paga na V0 e investigar possível pré-venda antes da estabilidade. Manter o repositório privado e validar acesso oficial antes de vender. G0 verifica acesso e condições comerciais permitidas.
 
-## A oferta que merece investigação
+**Histórico substituído:** a proposta começou por uma peça e sua atualização, depois sugeriu cobrar de todos no primeiro piloto. A V0 compara gratuito e pago; agora ambos recebem exploração criativa equivalente. Esta revisão registra a mudança, sem executar o experimento.
 
-Compor ajuda uma pessoa a preparar e atualizar uma divulgação visual, preservando fatos, imagens e escolhas aprovadas. O primeiro resultado proposto reúne uma publicação estática e sua legenda.
+## Valor e primeira ocasião
 
-O público inicial proposto é o dono solo de um curso digital já vendido. Ele usa Mac e prepara uma campanha ou alteração nos próximos 14 dias. Exigir duas mudanças recentes de preço, data ou condição. A demanda continua como hipótese.
+Compor ajuda o fundador a transformar notas sobre seu produto em alternativas de divulgação. A pessoa compara caminhos, escolhe uma direção e explora variações, mantendo identidade, fatos e voz.
 
-O produtor usa Compor e pode contratar sua oferta paga; o destinatário da divulgação compra o curso. Separar esses públicos na linguagem.
+Identidade do produto e da voz (DNA) reúne o que vende, para quem, fatos confirmados, vocabulário, tom e escolhas visuais. A pessoa confirma essa base. A ferramenta preserva decisões e mostra quando uma alternativa se afasta delas.
 
-Promessa candidata: atualize a divulgação do seu curso, preservando suas escolhas aprovadas. Vender o curso exige também audiência, oferta, canal e execução.
+Proposta de público inicial: dono solo de curso digital já vendido, usuário de Mac, com campanha prevista nos próximos 14 dias. A ocasião precisa de novos criativos, e pode começar com arte existente ou apenas ideias e notas. Preferir duas tentativas recentes ajuda a investigar recorrência; esse histórico dispensa funcionar como requisito do autor.
+
+O produtor usa Compor e pode contratar sua oferta paga; o destinatário dos criativos compra o curso. A dor proposta é ficar preso à mesma abordagem ou gastar esforço reconstruindo contexto entre alternativas. Frequência, peso e disposição a pagar continuam como hipóteses.
+
+Promessa candidata: explore diferentes maneiras de divulgar seu produto, preservando sua voz e suas escolhas. O resultado é um conjunto de alternativas utilizáveis. Tráfego, conversão e vendas dependem de outros fatores.
+
+## Unidade de entrega proposta
+
+Propor uma rodada por campanha, com três rotas-base contrastantes. Cada rota apresenta tema, gancho, narrativa, direção visual, arte estática e legenda. Gancho é a abertura que procura atenção. A pessoa vê texto, imagens, formas e cores durante a criação.
+
+Comparar as três rotas lado a lado. Em seguida, escolher uma rota e criar duas variantes, mudando a mesma dimensão. Preservar a rota original e registrar a mudança. Exportar as versões escolhidas com seus textos, para testes externos conduzidos pelo fundador.
+
+Por exemplo, um mesmo curso poderia explorar rotina, sobrecarga ou prioridades como temas. Isso sugere abordagens; fatos sobre conteúdo e benefícios dependem de confirmação do produtor. Temas e direções visuais diferentes ajudam a explorar possibilidades, sem isolar causa de desempenho.
+
+Imagens opcionais vêm de recursos fornecidos com autorização. Formas, cores e composição podem criar diferenças mesmo quando existe uma única imagem. A rodada dispensa presumir geração nativa de imagens permitida. Esse recurso depende de verificação própria e permanece fora da promessa atual.
 
 ## Alternativa atual e diferença a provar
 
-Comparar com ChatGPT e um modelo salvo no Canva, incluindo atalhos conhecidos. Contar instalação, preparo, geração, espera, correções, revisão, exportação e recuperação.
+Comparar a mesma tarefa completa com ChatGPT e Canva, usando os modelos e atalhos habituais. Contar preparo, exploração, comparação, geração, espera, edição, revisão e exportação.
 
-[Canva](https://www.canva.com/solutions/brand-management-tools/) oferece recursos de marca, modelos, geração e aprovação. [Adobe Express](https://helpx.adobe.com/express/web/create-with-templates/text-to-template.html) gera modelos editáveis por texto e oferece [criação de publicações](https://www.adobe.com/express/create/post). Geração e consistência visual, sozinhas, enfrentam alternativas disponíveis.
+[Canva](https://www.canva.com/solutions/brand-management-tools/) oferece recursos de marca, modelos, geração e aprovação. [Adobe Express](https://helpx.adobe.com/express/web/create-with-templates/text-to-template.html) gera modelos editáveis por texto e oferece [criação de publicações](https://www.adobe.com/express/create/post). Produzir alternativas e manter aparência consistente já têm concorrentes.
 
-A diferença proposta liga fatos da oferta, blocos visuais e decisões aprovadas. Quando o preço muda, Compor apresenta trechos afetados na arte e na legenda. A pessoa revisa o conjunto e escolhe os ajustes. O projeto recupera imagens, versões e escolhas ao reabrir.
+O Compor precisa provar diversidade útil entre rotas, coerência com produto e voz, comparação compreensível e ramificação controlada. Julgar originalidade percebida exige revisão humana. Também medir tempo até o conjunto aprovado, incluindo instalação e recuperação.
 
-As diferenças exigem implementação e teste. Uma demonstração explica o mecanismo; funcionamento e disposição a pagar precisam de evidência própria.
+Conjunto aprovado significa as versões que a pessoa aceita levar ao teste, com arte e legenda. Contar quantas alternativas ela considera distintas, utilizáveis ou descartáveis. Mais arquivos, sozinhos, carecem de prova de valor.
 
 ## Qualificação e objeções
 
-Antes de um futuro teste, confirmar Mac disponível, curso já vendido, tarefa em até 14 dias e material autorizado. Conferir elegibilidade para a integração oficial ChatGPT/Codex. A permissão comercial continua pendente.
+Confirmar Mac, produto conhecido, campanha próxima e disposição para explorar novas abordagens. Aceitar fatos, notas ou material autorizado. Arte pronta fica opcional. Conferir elegibilidade para a integração oficial ChatGPT/Codex; a permissão comercial continua pendente.
 
-| Objeção | Resposta que exige prova |
+| Objeção | Prova exigida |
 | --- | --- |
-| Já pago por ChatGPT e Canva. | Comparar o trabalho completo com ferramentas e modelos que a pessoa já usa. |
-| Só preciso mudar um número. | Observar retrabalho real; dispensar casos que o modelo atual resolve facilmente. |
-| Preciso de compradores. | Explicar o limite da entrega; investigar distribuição como necessidade anterior. |
-| Outro aplicativo toma tempo. | Mostrar requisitos antes do download e medir instalação no tempo completo. |
-| A geração altera meu texto. | Aprovar por trecho, preservar edições e recuperar a versão anterior. |
-| Posso perder minhas fotos. | Reabrir após mover a imagem original e testar restauração por cópia. |
+| ChatGPT e Canva já criam variações. | Comparar diversidade útil, coerência e esforço da mesma rodada nos dois caminhos. |
+| As três opções parecem iguais. | Mostrar diferenças de tema, narrativa e direção visual; registrar a avaliação humana. |
+| A geração perde minha voz. | Preservar o DNA confirmado e permitir rejeitar desvios sem apagar escolhas. |
+| Preciso começar sem arte pronta. | Aceitar ideias e notas; construir composição com recursos autorizados, formas e cores. |
+| Quero saber qual vende mais. | Separar exploração da criação de evidência externa; dispensar promessa de desempenho. |
+| Instalar outro aplicativo atrapalha. | Contar instalação, aprendizado e recuperação no esforço completo. |
 
 ## Dois canais e urgência observável
 
-**Comunidades de produtores de cursos:** numa ação futura aprovada, pedir permissão aos responsáveis para apresentar o experimento. Procurar campanhas datadas e mudanças recentes demonstráveis.
+**Comunidades de produtores de cursos:** numa ação futura aprovada, pedir permissão para apresentar o experimento. Procurar campanhas datadas e pessoas que precisam de abordagens novas.
 
-**Conteúdo próprio demonstrando a tarefa:** numa publicação futura autorizada, mostrar a atualização de preço e apresentar as condições experimentais.
+**Conteúdo próprio mostrando exploração:** numa publicação futura autorizada, mostrar três rotas do mesmo produto e a ramificação de uma delas. Apresentar as condições experimentais.
 
-Consultar manualmente páginas públicas e calendários de inscrições. Contar ofertas com prazo e revisão de condições. Essas ocasiões carecem de prova de dor ou compra.
+Consultar manualmente calendários e páginas públicas de campanhas. Contar ocasiões com prazo visível. Isso localiza possibilidades, sem comprovar dor ou intenção de compra. Cadastro gratuito também carece de prova de urgência.
 
-Guardar contagens agregadas. Cadastro de perfis, coleta automatizada e contatos ficam fora desta execução. Uma futura pesquisa com pessoas exige finalidade, consentimento, acesso restrito e prazo de descarte.
+Guardar contagens agregadas. Cadastro de perfis, coleta automatizada e contatos ficam fora desta execução. Pesquisa futura com pessoas exige finalidade, consentimento e prazo de descarte.
 
-Rascunho de convite de pesquisa anterior a G0, sem envio:
+Rascunho de convite, sem envio:
 
-> Você já vendeu seu curso e precisa atualizar a divulgação em até 14 dias? Quer comparar esse trabalho com seu caminho atual?
+> Vai divulgar seu curso em até 14 dias? Quer explorar caminhos diferentes, mantendo sua voz e seu produto?
 
-Rascunho da próxima ação de pesquisa:
+Antes de G0, mostrar conceito e perguntar sobre preço representa pesquisa de interesse. Depois de G0, uma oferta experimental pode comparar gratuito e pago. Mostrar atribuição, entrega, limites e condições antes da aceitação.
 
-> Veja a demonstração. Depois, escolha participar de uma comparação com uma tarefa sua.
+## Dois testes diferentes
 
-Essa chamada oferece pesquisa. Antes de G0, mostrar conceito e perguntar sobre preço permanece separado de venda.
+O [protocolo da V0](experimento-v0.md) compara preço zero e preço pago pela mesma rodada criativa. Após qualificar, distribuir aleatoriamente cada pessoa entre os braços. Preservar escopo, suporte, canal e janela de observação.
 
-Rascunho da oferta experimental, sujeito a G0 e condições aprovadas:
+Esse teste de oferta difere dos testes de criativos que o fundador conduz com tráfego próprio. Compor ajuda a criar e exportar alternativas; publicação, anúncios e coleta automática de desempenho ficam fora da primeira versão.
 
-> Experimento Compor: compare criar e atualizar sua divulgação. A oferta pode ser gratuita ou paga, conforme distribuição aleatória após qualificação.
+Rotas que mudam várias dimensões servem à exploração. Um resultado externo melhor pode depender de tema, imagem, gancho ou distribuição. Para investigar uma hipótese específica, orientar uma ramificação que muda uma dimensão por vez. Volume pequeno e exposição desigual limitam a conclusão.
 
-O braço pago propõe R$ 199 pelo editor; esse valor continua candidato. Confirmar preço, entrega e condições antes da execução. Mostrar a condição atribuída e o escopo antes de aceitar. O conceito anterior a G0 apresenta preços como hipóteses, separado de venda.
+A V0 dispensa esperar cinco usuários gratuitos ou três pagamentos. Pequenas amostras oferecem aprendizado exploratório, sem significância estatística ou preço de mercado validado.
 
-## Experimento V0, funil e registros
+## Funil e medidas
 
-O [protocolo da V0](experimento-v0.md) descreve a comparação exploratória A/B, com oferta gratuita e paga. Esta análise propõe R$ 199 para B; o autor definiu comparar gratuito e pago, sem escolher esse valor.
+Registrar código anônimo, braço, canal, ocasião, prazo, versão da oferta, ajuda, tempo, custo e motivo de saída. Cada taxa precisa de período e denominador.
 
-Manter público, filtros, escopo, suporte, canal e janela iguais entre os braços. Após qualificar, distribuir aleatoriamente cada pessoa entre A e B. Guardar a atribuição para impedir troca oportunista. Informar a natureza experimental e as condições antes da aceitação.
-
-A urgência vem de campanha datada, tarefa demonstrável e alterações recentes. Cadastro gratuito, sozinho, carece de prova de necessidade. Retorno numa ocasião real e tarefa concluída oferecem evidências adicionais.
-
-Antes de G0, pesquisa de conceito pode mostrar preço e perguntar sobre compra. Registrar isso como interesse declarado. Depois de G0, uma beta paga ou pré-venda transparente pode anteceder estabilidade e conclusão integral de G1–G4. Essa antecipação exige capacidade de cumprir a entrega prometida.
-
-A V0 dispensa esperar cinco usuários gratuitos ou três pagamentos. A amostra pequena serve à exploração; diferença entre braços carece de significância estatística ou preço de mercado validado.
-
-Cada taxa precisa do numerador, do denominador, do braço e do período. Registrar código anônimo, canal, tarefa, prazo, atribuição, etapa, ajuda, tempo, custo e motivo de saída.
-
-| Etapa | Evidência | Denominador por braço |
+| Medida | Evidência | Denominador por braço |
 | --- | --- | --- |
-| Qualificação | Critérios e material demonstráveis. | Respondentes. |
-| Oferta apresentada | Condição atribuída, escopo, limites e entrega explícitos. | Qualificados atribuídos. |
-| Aceitação | Pessoa aceita a condição gratuita ou paga. | Qualificados atribuídos; registrar também ofertas apresentadas. |
-| Pagamento em B | Transação confirmada, valor e prazo. | Qualificados atribuídos a B; registrar também ofertas apresentadas. |
-| Ativação comum | Material concluído e exportado conforme a entrega prometida. | Qualificados atribuídos a cada braço, na mesma janela. |
-| Uso independente | Tarefa concluída sem orientação por passo. | Qualificados atribuídos; registrar também quem tentou. |
-| Devolução em B | Pedido, motivo, valor e desfecho. | Compradores no período aplicável. |
-| Repetição | Outra ocasião real e tarefa concluída. | Qualificados atribuídos; registrar também quem teve nova ocasião. |
+| Oferta apresentada | Condição, rodada, limites e entrega claros. | Qualificados atribuídos. |
+| Aceitação | Pessoa aceita a condição atribuída. | Qualificados atribuídos. |
+| Pagamento | Transação confirmada no braço pago. | Qualificados atribuídos; registrar também ofertas apresentadas. |
+| Ativação comum | Compara três rotas, cria duas variantes de uma rota e exporta seu conjunto aprovado. | Qualificados atribuídos, na mesma janela. |
+| Uso independente | Executa a rodada sem orientação por passo. | Qualificados atribuídos; registrar também quem tentou. |
+| Retorno | Explora outra campanha real. | Qualificados atribuídos; registrar também novas ocasiões observáveis. |
+| Devolução | Pedido, valor, motivo e desfecho. | Compradores no período aplicável. |
 
-Definir as janelas antes da execução. Na pré-venda, marcar ativação como pendente até a entrega e abertura da janela comum. Preservar os desistentes no denominador de atribuição. Registrar separadamente prazos vencidos e promessas descumpridas.
+Medir rotas distintas e utilizáveis, desvios de voz, fatos inventados, descartes e tempo até aprovação. Na pré-venda, marcar uso como pendente até a entrega. Preservar desistentes no denominador de atribuição.
 
-Comparar qualificados que chegam à ativação em A e B, além de aceitação paga em B. O braço gratuito tem preço zero por desenho; sua taxa de pagamento fica como inaplicável. Podem ocorrer zero compras. Registrar recusas, desistências, devoluções, custos e motivos.
+A pesquisa é opcional e separada do acesso ou da compra. Entregar o combinado mesmo quando a pessoa recusa entrevistas. Medição operacional exige informação e regras próprias. Podem ocorrer zero compras; registrar também recusas e custos do braço gratuito.
 
-A pesquisa é opcional e separada do acesso ou da compra. Entregar o combinado mesmo quando a pessoa recusa entrevistas ou acompanhamento de pesquisa. Medição operacional exige informação e regras próprias. Os casos qualitativos podem incluir compradores e participantes gratuitos, com consentimento próprio.
+## Beta, pré-venda e demonstração
 
-Interesse permite pesquisa. Uso independente demonstra execução. Pagamento indica aceitação daquela oferta. Repetição exige outra ocasião real. Três pagamentos isolados carecem de prova de sustentabilidade.
+Depois de G0, beta paga ou pré-venda transparente pode anteceder estabilidade e conclusão integral de G1–G4. Antes de oferecer, confirmar rodada entregável, recursos incompletos, suporte, cancelamento, devolução e prazo com data. A data permanece pendente. A promessa precisa caber no prazo da campanha.
 
-## Condições para beta ou pré-venda
+Distinguir recurso disponível, demonstração preparada e entrega futura. Preservar o núcleo: exploração visual no Compor. Serviço manual separado desse núcleo testa outra oferta. O braço gratuito dispensa cartão; pré-autorização e retenção de cartão ficam fora do teste.
 
-Antes de oferecer, aprovar material entregável, acesso ao aplicativo, recursos incompletos, suporte, cancelamento, devolução e prazo com data. A data permanece pendente nesta documentação. A oferta precisa caber no prazo da campanha do participante.
+A [demonstração](demo-e-testes.md) deve mostrar notas virando três direções, comparação, escolhas e ramificação. Reabrir e exportar comprova continuidade quando houver execução real. Ajustar preço ou data serve à regressão secundária. Identificar simulações e resultados preparados.
 
-Distinguir recurso disponível, demonstração preparada e entrega futura. Uma beta instável exige descrição das falhas e dos limites conhecidos. Oferecer acesso futuro exige prazo confirmado e capacidade de entrega. Preservar o núcleo do Compor: criação visual e revisão da divulgação. Serviço manual separado desse núcleo difere da hipótese investigada.
+## Cobrança e custos da nova rodada
 
-O braço gratuito dispensa cartão. No pago, apresentar cobrança e condições antes de confirmar. Pré-autorização e retenção de cartão ficam fora do teste. O uso do plano ChatGPT continua separado da cobrança do editor. Sem G0, permanecer no conceito e na pesquisa de interesse.
+Investigar pacote de exploração dentro do aplicativo ou licença que o permita, após confirmação formal da separação permitida. Cobrar só por editor genérico perde a proposta de valor. Créditos de acesso ao plano ChatGPT ficam fora da oferta.
 
-## Demonstração para entrada no mercado
+O uso do plano precisa existir sem pagamento ou atualização obrigatória de plano do aplicativo. A conta tem limites próprios. R$ 199 era estímulo da entrega antiga; o novo pacote exige reavaliar preço e custo. O autor decidiu testar gratuito e pago, sem aprovar esse valor.
 
-O [roteiro de demonstração e testes](demo-e-testes.md) detalha uma apresentação futura de até cinco minutos. Usar Ana e o curso fictício Organize Sua Semana.
+Matheus também citou 10 a 15 dólares como referência percebida para ferramentas de inteligência artificial. Essa é uma âncora declarada pelo autor, sem pesquisa de mercado ou conversão cambial nesta entrega. Ele questionou o adicional perto de R$ 200 quando o cliente já paga pelo modelo.
 
-Mostrar texto, imagem autorizada, formas e cores durante a criação. Alterar R$ 97 para R$ 127, aprovar diferenças e preservar uma edição humana.
+Preço em reais e unidade de cobrança permanecem pendentes. Investigar pacote de rodadas ou licença; assinatura exige frequência e retorno observados. A referência a assinaturas comparáveis dispensa escolher mensalidade para o Compor. O braço pago precisa de valor aprovado antes da oferta, apoiado no benefício e no custo da nova rodada.
 
-Salvar, fechar, mover a imagem original e reabrir. Exportar e conferir os arquivos fora do aplicativo. A execução real comprova recuperação e exportação.
+Os dois braços recebem três rotas-base e duas variantes da mesma dimensão, com revisão e suporte equivalentes. Reavaliar o antigo limite de vinte minutos de apoio por participante. Contar exploração, comparação, recursos visuais, tentativas, revisão, recuperação e manutenção. Correção de defeitos fica fora de cobrança adicional.
 
-Identificar simulações de login, geração prévia, cortes e execução ao vivo. R$ 97 e R$ 127 pertencem ao curso fictício. A versão experimental apresenta sua condição gratuita ou paga desde o começo, após qualificação e atribuição. O conceito anterior a G0 apresenta preço como hipótese.
+Conta e uso do modelo são custos do cliente, separados da aplicação. Registrar consumo disponível, espera, limites e tentativas; dispensar promessa de uso ilimitado. Recursos de imagem autorizados e seu preparo também podem consumir tempo ou dinheiro. A rodada exige novo custo completo, medido nos dois braços.
 
-## Modelo de compra e custo completo
+### Histórico econômico da entrega anterior
 
-Investigar uma licença do editor, condicionada à confirmação formal de um arranjo permitido. Acesso à geração exige caminho sem pagamento ou atualização obrigatória de plano do aplicativo. Cobrar exclusivamente para acessar geração entra em conflito com essa condição.
-
-Uma licença candidata precisa declarar versão, atualizações, manutenção, suporte e direitos de uso. Preservar acesso local ao trabalho existente. Assinatura depende de repetição observada. Assistência paga permanece hipótese posterior, sujeita à mesma confirmação formal.
-
-**Preço proposto para o braço pago: R$ 199 pelo editor.** É recomendação desta análise, sem preço vigente ou aprovação do autor. A decisão de comparar gratuito e pago difere da escolha desse valor. O cenário abaixo justifica investigar esse preço, sem comprovar aceitação ou lucro real.
-
-Propor até vinte minutos de apoio individual por participante, igualmente nos dois braços. Medir todo o atendimento. Se exceder o limite, incorporar o custo ao resultado. Correção de defeitos fica fora de cobrança adicional; registrar suas horas também.
-
-### Histórico: estímulo de R$ 99 rejeitado
-
-O cenário anterior usava as hipóteses abaixo:
+Os números abaixo pertencem à antiga entrega centrada em uma peça e sua atualização. Eles preservam a investigação; a rodada criativa exige outra conta.
 
 | Custo | Hipótese | Valor |
 | --- | --- | ---: |
@@ -144,42 +137,36 @@ A contribuição antes do desenvolvimento seria R$ 22,15. O resultado completo s
 
 O estímulo anterior de R$ 179 com assistência também fica rejeitado até existir conta própria de atendimento. Ele permanece histórico, fora da oferta candidata atual. Evitar dois planos antes de validar uma compra simples.
 
-### Proposta de R$ 199 e seu contraexemplo
+### Estímulo anterior de R$ 199 e seu contraexemplo
 
 Mantendo a base hipotética de R$ 122 e reservas de 15% do preço, o total seria `122 + 0,15 × 199 = R$ 151,85`. O resultado completo seria R$ 47,15, com margem de 23,69%. Antes do desenvolvimento rateado, a contribuição seria R$ 107,15. Com margem desejada de 20%, o piso seria `122 / (1 - 0,15 - 0,20) = R$ 187,69`.
 
-Esse piso é apenas cenário. Cem licenças, dez compradores mensais e quatro compradores por esforço de aquisição representam hipóteses. A primeira turma exige novos denominadores e custos observados. Recalcular distribuição, suporte, manutenção e reservas, mesmo quando piorarem o resultado.
+Esse piso é apenas cenário. Cem licenças, dez compradores mensais e quatro compradores por esforço de aquisição representam hipóteses. A nova entrega exige novos denominadores e custos por rodada observados. Recalcular distribuição, suporte, manutenção e reservas, mesmo quando piorarem o resultado.
 
-Se a pessoa economizasse quarenta minutos em três ocasiões, a R$ 60 por hora, o benefício seria R$ 120. Esse teto sintético permanece como contraexemplo: R$ 199 supera R$ 120. Avançar com esse preço exige benefício e aceitação observados que o sustentem. Aumentar o preço proposto preserva a necessidade de provar valor.
+Se a pessoa economizasse quarenta minutos em três ocasiões, a R$ 60 por hora, o benefício seria R$ 120. Esse teto sintético permanece como contraexemplo: R$ 199 supera R$ 120. Esse cenário serve apenas à entrega anterior. A nova rodada exige benefício e aceitação observados, com preço próprio.
 
 Conta e uso do modelo são custos do cliente, separados do aplicativo. Incluir assinatura incremental, limites, tentativas adicionais e aprendizado na comparação. Medir também segurança, suporte, manutenção futura e entrega no custo completo do produto.
 
-### Como verificar se o produto se paga
+### Como verificar sustentabilidade agora
 
-A V0 inclui custos dos dois braços: aquisição, atendimento, infraestrutura, entrega e eventual desenvolvimento adicional. Contar receitas apenas das compras confirmadas. Acessos gratuitos podem elevar custos mesmo quando sua ativação superar a do braço pago.
+Contar receitas confirmadas e todos os custos dos dois braços. Somar aquisição, suporte, infraestrutura, exploração, revisão e entrega, inclusive participantes que recusam ou usam gratuitamente. Custos compartilhados entram uma vez, com alocação explícita.
 
-Receita recebida representa entrada de caixa. Lucro exige descontar custos, obrigações de entrega e trabalho humano, inclusive horas do fundador. Reservas para devolução permanecem separadas de dinheiro disponível.
+Receita recebida representa entrada de caixa. Lucro exige descontar custos, obrigações e trabalho humano, inclusive horas do fundador. Reservas para devolução permanecem separadas do dinheiro disponível.
 
-Registrar o investimento real de desenvolvimento como `K`. Calcular contribuição observada por venda após aquisição, entrega, atendimento, manutenção atribuída, taxas e reservas. Com contribuição positiva, dividir `K` pela contribuição média observada e arredondar para cima. Conferir também o total acumulado das vendas reais.
+Registrar o investimento real como `K`. Medir contribuição da nova rodada após custos atribuídos. Só declarar recuperação quando a contribuição acumulada observada cobrir `K` e as obrigações. Três pagamentos isolados oferecem sinal de aceitação, sem provar recuperação integral.
 
-Só declarar recuperação de `K` quando a contribuição acumulada observada cobrir esse investimento. Atualizar custos e obrigações antes dessa conclusão. Sob as hipóteses anteriores, `6000 / 107,15` exigiria 56 licenças; a projeção difere de vendas realizadas.
+O cenário histórico de três compras a R$ 199 geraria R$ 597. Infraestrutura de R$ 120, aquisição de R$ 120 e apoio de R$ 60 somariam R$ 300. Reservas de 15% seriam R$ 89,55; sobrariam R$ 207,45 antes de `K`. Com `K = R$ 6.000`, o resultado seria negativo em R$ 5.792,55.
 
-O ponto de equilíbrio econômico difere do saldo de caixa: horas próprias podem consumir valor sem gerar desembolso imediato. Três pagamentos isolados oferecem sinal inicial de preço. Sustentabilidade exige recuperação observada dos custos e obrigações.
+Esse cenário antigo excluía novos custos da exploração e participantes gratuitos. Ele serve como contraexemplo, sem precificar o pacote atual. O novo teste precisa de teto de esforço, gasto e suporte antes da oferta.
 
-**Contraexemplo de três compras, inteiramente sintético:** esse número representa um cenário financeiro, fora dos critérios para começar a V0. Supor três compras a R$ 199, desenvolvimento de R$ 6.000 e um mês de infraestrutura de R$ 120. Supor ainda duas horas de aquisição a R$ 60, vinte minutos de apoio por comprador e reservas de 15%.
+## Condições de avanço
 
-A receita seria R$ 597. Infraestrutura, aquisição e apoio somariam R$ 300; reservas seriam R$ 89,55. Sobrariam R$ 207,45 antes do desenvolvimento. Ratear `K / N = 6000 / 3` atribuiria R$ 2.000 de desenvolvimento a cada comprador. O custo completo seria R$ 6.389,55; o resultado seria negativo em R$ 5.792,55.
+A [documentação oficial](https://developers.openai.com/siwc/token-sharing-open-source) orienta interessados em aplicativos pagos ou remotos a pedir acesso. A elegibilidade privada e comercial continua sem comprovação. Codex local preserva esse bloqueio.
 
-Esse exemplo substitui os denominadores de cem licenças e dez compradores mensais por três compras hipotéticas. Ele exclui participantes gratuitos; a V0 precisa acrescentar todos os custos deles. Os custos reais podem divergir ainda mais. Receber as três compras provaria aceitação naquele grupo, com recuperação integral do investimento ainda pendente.
+Os [termos](https://openai.com/policies/sign-in-with-chatgpt-terms/) exigem uso do plano sem pagamento obrigatório ao aplicativo e armazenamento persistente local das credenciais. Confirmar formalmente a oferta permitida antes de vender. Aceitar a especificação difere da autorização do provedor.
 
-## Bloqueio comercial e critérios de decisão
+Revisar o produto quando as rotas parecerem repetidas, perderem identidade ou exigirem esforço sem benefício percebido perante o caminho habitual. Recalcular preço quando custo completo superar benefício e aceitação observados. Perda silenciosa ou fato inventado exige correção e nova conferência.
 
-A [documentação oficial da OpenAI](https://developers.openai.com/siwc/token-sharing-open-source) orienta interessados em aplicativos pagos ou remotos a pedir acesso. A elegibilidade privada e comercial do Compor continua sem comprovação. Codex local preserva esse bloqueio.
+A [especificação](../specs/compor-macos-v1.md) define os contratos candidatos. Esta entrega permanece documental, sem execução de vendas, tráfego ou nova integração.
 
-Os [termos](https://openai.com/policies/sign-in-with-chatgpt-terms/) exigem uso do plano sem pagamento ao aplicativo e armazenamento persistente local das credenciais. Confirmar formalmente o arranjo antes de prometer integração ou cobrar. A conta mantém limites próprios. O aceite desta especificação difere da autorização do provedor.
-
-Os casos qualitativos permitem revisar conceito e uso, sem funcionar como espera obrigatória para a V0. Registrar autonomia e tempo nos dois braços. A redução mediana de 30% continua como alvo exploratório quando houver comparações válidas. Exigir zero fatos inventados e zero perdas silenciosas de imagens ou edições.
-
-Revisar ou encerrar a tentativa quando o caminho habitual vencer, o suporte consumir o benefício ou o teto ficar abaixo do piso. A [especificação da primeira versão](../specs/compor-macos-v1.md) separa hipóteses, direção técnica e verificações necessárias.
-
-Método: Revenue-Centric Design, de Richard ([@richardrx](https://x.com/richardrx)), com [termos próprios integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). Aplicar [recorte de público](https://x.com/richardrx/status/2056789797646029232), [piso e teto](https://x.com/richardrx/status/2084250609687884144) e [qualidade do sinal](https://x.com/richardrx/status/2045094511106220220). Os termos excluem apostas, cassinos e jogos de azar. Esses princípios orientam análise, sem comprovar a demanda do Compor.
+Método: Revenue-Centric Design, de Richard ([@richardrx](https://x.com/richardrx)), com [termos integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). Aplicar [recorte de público](https://x.com/richardrx/status/2056789797646029232), [piso e teto](https://x.com/richardrx/status/2084250609687884144) e [qualidade do sinal](https://x.com/richardrx/status/2045094511106220220). Os termos excluem apostas, cassinos e jogos de azar. Esses princípios orientam análise, sem comprovar demanda.

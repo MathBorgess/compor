@@ -1,77 +1,109 @@
-# Compor v0: oferta gratuita, oferta paga e pré-venda
+# Compor V0: exploração criativa, oferta gratuita e paga
 
-20/10/2026. Matheus definiu uma v0 com teste A/B, comparando oferta gratuita e paga. Ele também propôs investigar venda antes da estabilidade. Esta entrega descreve o experimento; recrutamento, publicação e cobrança continuam futuros.
+20/10/2026. Matheus definiu comparar oferta gratuita e paga, incluindo possível pré-venda antes da estabilidade. Depois, reforçou a essência: criar criativos do zero, explorar temáticas e preservar voz e produto.
 
-## O que testar
+Esta entrega descreve o experimento. Construção, recrutamento, publicação, tráfego e cobrança continuam futuros. Preço em reais e unidade de cobrança permanecem pendentes.
 
-A v0 procura pessoas com uma tarefa urgente e testa aceitação de preço. A V1 continua como alvo de produto descrito na spec. A primeira oferta pode identificar explicitamente uma pré-venda ou um beta, versão ainda em teste.
+## O valor que a rodada procura testar
 
-A hipótese principal é que parte do público aceite pagar para criar e atualizar a divulgação do próprio curso. A oferta gratuita ajuda a observar uso e dificuldades. Cadastro gratuito, isoladamente, mede interesse. Urgência, conclusão e retorno ajudam a identificar necessidade real.
+A hipótese é que o fundador precise de alternativas diferentes e utilizáveis para divulgar seu produto. Atualizar preço ou data serve à revisão secundária. O ganho principal precisa aparecer na exploração de tema, gancho, narrativa e direção visual.
 
-O acesso oficial continua anterior à venda, conforme a decisão de Matheus. A proposta preserva uso do plano ChatGPT sem pagamento obrigatório ao aplicativo. Cobrar pelo editor ou entrega exige confirmar a separação permitida. A [arquitetura](../arquitetura.md) registra esse requisito.
+Gancho é a abertura que procura atenção. Identidade do produto e da voz (DNA) reúne fatos confirmados, público, tom, vocabulário e escolhas aprovadas. Cada alternativa preserva essa base, com controle humano sobre desvios.
 
-## Dois modos possíveis, em rodadas separadas
+Proposta de entrega: três rotas-base contrastantes por campanha, cada uma com arte estática e legenda. Comparar as rotas, escolher uma e criar duas variantes que alteram a mesma dimensão. Exportar as versões escolhidas para testes externos do fundador.
 
-**Pré-venda:** o aplicativo ainda depende de construção ou estabilização. A oferta explica entregável, recursos ausentes, previsão de entrega e condições de cancelamento ou devolução. A equipe precisa assumir uma data concreta antes de aceitar pagamento. Sem data e condições viáveis, registrar interesse sem cobrar.
+A pessoa pode começar com notas ou ideias, sem arte pronta. Imagens opcionais vêm de recursos fornecidos com autorização. Formas, cores e composição podem produzir diferenças. Geração nativa de imagens depende de verificação própria e fica fora da promessa atual.
 
-**Beta disponível:** existe uma versão para executar a tarefa delimitada. A oferta mostra limitações e suporte. A experiência pode exigir ajustes, mas precisa preservar dados e recursos. Testar recuperação, exportação e permissões antes de entregar conteúdo real.
+## Dois testes diferentes
 
-Escolher um modo antes da rodada. Misturar pré-venda e beta entre os braços confundiria preço com disponibilidade do produto. A venda de beta pode anteceder estabilidade geral; a comunicação deve apresentar esse estado com clareza.
+**Teste da oferta do Compor:** compara condição gratuita e paga pela mesma rodada. O preço é a diferença planejada entre os braços.
+
+**Teste dos criativos do fundador:** compara materiais com seu tráfego e sua audiência. Publicação, anúncios e coleta automática de desempenho ficam fora do produto inicial.
+
+Rotas com temas e visuais diferentes ajudam a explorar possibilidades. Se várias dimensões mudarem juntas, um resultado externo diferente admite várias explicações. A ramificação pode isolar uma dimensão quando houver hipótese específica. Audiência, período, exposição e volume também afetam a interpretação.
+
+O aplicativo ajuda a produzir alternativas, sem prometer desempenho, significância estatística ou vendas. A escolha de uma rota exige revisão humana, incluindo originalidade percebida, coerência e fatos.
+
+## Público e ocasião
+
+Recorte inicial proposto: dono solo de curso digital já vendido, usuário de Mac, com campanha nos próximos 14 dias. Confirmar necessidade de novos criativos, prazo e fatos autorizados do produto.
+
+Aceitar arte existente, notas ou ideias. Duas tentativas recentes ajudam a investigar recorrência; elas representam preferência de pesquisa, sem requisito definido pelo autor. Uma pessoa com tarefa demonstrável pode participar mesmo sem materiais prontos.
+
+Cadastro gratuito, sozinho, mede interesse. Urgência observável, conclusão da rodada e retorno numa campanha real oferecem sinais de necessidade. Registrar esses sinais antes de atribuir preço.
+
+## Acesso oficial e modos de entrega
+
+G0 confirma acesso oficial e condições comerciais permitidas. Ele continua anterior à venda, conforme a decisão do autor. O uso do plano ChatGPT precisa existir sem pagamento obrigatório ao aplicativo. Confirmar formalmente a separação permitida para cobrar pela rodada ou pelo editor.
+
+**Pré-venda:** ainda falta construir ou estabilizar partes da experiência. A oferta explicita rodada entregável, recursos incompletos, suporte, cancelamento, devolução e prazo com data. A data depende de confirmação futura; esta documentação deixa o campo pendente.
+
+**Beta disponível:** existe uma versão capaz de executar a rodada delimitada. Mostrar limitações e suporte. Conferir permissões, exportação e recuperação antes de conteúdo real. Falhas conhecidas precisam de descrição clara e plano compatível com a entrega.
+
+Escolher um modo antes da rodada. Misturar pré-venda e beta entre braços confundiria preço com disponibilidade. Depois de G0, a oferta pode anteceder estabilidade e conclusão integral de G1–G4. A promessa exige capacidade de entrega no prazo da campanha.
+
+Serviço manual separado da exploração no Compor testa outra oferta. Preservar o núcleo do aplicativo. Antes de G0, mostrar conceito e perguntar sobre preço representa somente interesse declarado.
 
 ## Protocolo proposto
 
-Proposta inicial: uma rodada de 14 dias ou dez qualificados, o que ocorrer primeiro. Esse limite controla esforço; ele carece de poder estatístico demonstrado. A equipe registra amostra e incerteza antes de concluir.
+Proposta inicial: quatorze dias ou dez qualificados, o que ocorrer primeiro. Esse limite controla esforço; a amostra oferece aprendizado exploratório. Confirmar duração, orçamento, suporte e vagas antes da execução.
 
-Qualificar pessoas com o mesmo perfil: dono solo de curso já vendido, Mac, divulgação em até 14 dias e duas mudanças recentes. Pedir fatos e material autorizados. Registrar o prazo da tarefa antes de atribuir a condição.
+Depois de qualificar, sortear uma condição por pessoa. Usar blocos de duas atribuições, uma gratuita e uma paga, em ordem sorteada. Preservar a condição em retornos e impedir duplicação na contagem.
 
-Depois da qualificação, sortear uma condição por pessoa. Usar blocos de duas atribuições, uma gratuita e uma paga, em ordem sorteada. Preservar a condição em retornos e evitar duplicar pessoas na contagem.
+| Condição | Preço | Entrega |
+| --- | --- | --- |
+| A: gratuita | R$ 0 | Três rotas-base, comparação e duas variantes de uma rota; mesmo suporte e prazo. |
+| B: paga | Valor em reais a definir | A mesma rodada, suporte e prazo; pagamento ou pré-venda conforme o modo escolhido. |
 
-| Condição | Preço candidato | Entrega e suporte |
-| --- | ---: | --- |
-| A: gratuita | R$0 | Mesmo escopo, prazo, limite de revisão e suporte do braço pago |
-| B: paga | R$199 | Mesmo escopo; pagamento ou pré-venda conforme o modo escolhido |
+R$ 99 e R$ 199 pertencem a cenários anteriores, centrados numa peça e sua atualização. R$ 199 deixou de representar preço atual proposto. A nova rodada exige reavaliar benefício, custo e aceitação antes de escolher o valor de B.
 
-O plano comercial propõe R$199, sem aprovação do autor para oferta real. Matheus escolheu testar cobrança e gratuidade; o valor específico permanece para avaliação. A equipe define preço, limite de suporte e condições antes de abrir a rodada.
+Matheus citou 10 a 15 dólares como referência percebida para ferramentas de inteligência artificial. Essa âncora carece de pesquisa atual de mercado nesta entrega. Ela dispensa conversão cambial ou escolha automática de mensalidade. Pacote de rodadas, licença e assinatura são hipóteses; assinatura exige repetição observada.
 
-Manter iguais mensagem, canal, material, suporte e janela de observação. O preço constitui a diferença planejada. Informar que as condições pertencem a um experimento. Registrar diferenças de canal, prazo ou familiaridade que escaparem ao controle.
+Manter iguais filtros, mensagem, canal, rodada, suporte e janela de observação. Informar a natureza experimental e a condição atribuída antes da aceitação. Registrar diferenças de familiaridade, recursos ou prazos que escaparem ao controle.
 
-A pesquisa de uso exige consentimento separado da compra. Quem recusa participar do estudo mantém sua entrega contratada. A coleta registra somente os dados necessários e um prazo de descarte.
+O braço gratuito dispensa cartão. Pré-autorização e retenção de cartão ficam fora do teste. A cobrança paga exige condições explícitas e confirmação própria. O uso do plano ChatGPT permanece separado da cobrança do Compor.
+
+Pesquisa de uso exige consentimento separado. Quem recusa entrevistas mantém a entrega combinada. Medição operacional também exige informação e regras próprias. O experimento dispensa esperar cinco usuários gratuitos ou três pagamentos.
 
 ## Métricas e denominadores
 
-| Medida | Numerador | Denominador e limite |
+Definir janela de oferta e janela comum de uso antes da rodada. Na pré-venda, marcar uso como pendente até a entrega. Separar indisponibilidade de abandono. Preservar desistentes no denominador de atribuição.
+
+| Medida | Numerador | Denominador ou unidade |
 | --- | --- | --- |
-| Aceitação da oferta | Pessoas que confirmam condições | Qualificados atribuídos ao braço |
-| Uso inicial no beta | Pessoas que concluem a primeira tarefa | Qualificados atribuídos ao braço com beta disponível |
-| Entrega na pré-venda | Compradores que recebem o combinado | Compras com prazo de entrega vencido |
-| Pagamento | Transações confirmadas | Ofertas pagas apresentadas |
-| Retorno | Pessoas que concluem nova tarefa | Pessoas com nova ocasião observável |
-| Devolução | Compras devolvidas | Compras confirmadas |
+| Aceitação | Pessoas que confirmam condições. | Qualificados atribuídos ao braço. |
+| Pagamento | Pessoas com transação confirmada. | Qualificados de B; registrar também ofertas pagas apresentadas. |
+| Ativação comum | Pessoas que comparam três rotas, criam duas variantes de uma rota e exportam seu conjunto aprovado. | Qualificados atribuídos, na mesma janela. |
+| Diversidade útil | Rotas que a pessoa julga distintas e utilizáveis. | Rotas apresentadas por campanha. |
+| Coerência | Rotas que preservam fatos e voz confirmados. | Rotas revisadas pela pessoa. |
+| Tempo até aprovação | Preparo, instalação, exploração, espera, comparação, edição e exportação. | Minutos até o conjunto escolhido. |
+| Retorno | Pessoas que exploram outra campanha. | Qualificados atribuídos; registrar também novas ocasiões observáveis. |
+| Devolução | Compras devolvidas. | Compras confirmadas no período aplicável. |
 
-Na pré-venda, a primeira tarefa ainda indisponível recebe estado pendente. Separar indisponibilidade de abandono. A confirmação gratuita difere do compromisso financeiro; comparar contagens sem atribuir igual força aos sinais.
+Conjunto aprovado significa versões que a pessoa aceita levar ao teste externo, com arte e legenda. Registrar descartes, motivo, ajuda, desvios, fatos inventados e perdas. A revisão humana avalia originalidade percebida; arquivos extras, sozinhos, carecem de prova de valor.
 
-Registrar também receita líquida por qualificado, custo por braço, ajuda, tempo e motivo de recusa. Incluir suporte gratuito no custo do experimento. Contar apenas custos dos compradores esconderia o custo das pessoas que recusaram ou usaram gratuitamente.
+Comparar a mesma rodada com ChatGPT e Canva, incluindo modelos e atalhos conhecidos. Medir esforço e qualidade do conjunto, além do tempo. Uma alternativa rápida que produz rotas repetidas pode oferecer pouco valor.
 
-## Como interpretar
+No braço gratuito, pagamento fica como inaplicável. A confirmação gratuita difere do compromisso financeiro. Podem ocorrer zero compras. Registrar recusas e devoluções, sem inventar aceitação de preço.
 
-O teste compara duas ofertas, mas dez pessoas permitem apenas aprendizado exploratório. Mostrar contagens, taxas e incerteza. Resultados pequenos dispensam declarar preço validado ou vencedor estatístico. Qualquer teste confirmatório exige planejar volume e efeito mínimo antes da coleta.
+## Interpretação e economia
 
-Mais inscrições no gratuito podem indicar curiosidade ou menor atrito. Conclusão e retorno mostram se a pessoa usa o resultado. Pagamento confirma aceitação daquela oferta; devolução e custo podem mudar sua avaliação.
+Dez pessoas permitem aprendizado exploratório. Mostrar contagens, taxas e limites da amostra. Diferença pequena entre braços dispensa declarar vencedor estatístico ou preço de mercado validado.
 
-Antes da rodada, registrar duração, preço, critérios, métricas e motivos de parada. Evitar encerrar antecipadamente só porque uma taxa parece favorável. Uma falha crítica, condição comercial descumprida ou risco de perda exige interromper a entrega afetada.
+Mais inscrições gratuitas podem indicar curiosidade ou menor atrito. Diversidade útil, conclusão e retorno ajudam a interpretar necessidade. Pagamento confirma aceitação daquela oferta; custos e devoluções podem mudar a avaliação.
 
-## Sustentabilidade desde a primeira oferta
+Antes da rodada, registrar critérios e motivos de parada. Evitar encerrar cedo apenas porque uma taxa parece favorável. Falha crítica, promessa descumprida ou perda exige interromper a entrega afetada.
 
-Cobrar cedo mede aceitação, sem garantir recuperação do investimento. O [plano comercial](negocio-e-gtm.md) separa contribuição por venda de recuperação do desenvolvimento. O braço gratuito também consome suporte, distribuição e aquisição.
+O [plano comercial](negocio-e-gtm.md) preserva os cenários econômicos antigos como histórico. A nova unidade é a rodada de exploração. Medir comparação, variações, preparo de imagens, revisão, suporte, aquisição e manutenção. Conta e uso do modelo são custos do cliente, separados da aplicação.
 
-Registrar dinheiro recebido, taxas, devoluções e horas reais. Somar custos compartilhados uma vez e explicitar sua alocação entre braços. Comparar a contribuição acumulada com o investimento ainda por recuperar.
+Somar custos dos dois braços e alocar compartilhados uma vez. Registrar dinheiro recebido, taxas, devoluções, reservas e horas reais. Comparar contribuição acumulada com investimento e obrigações pendentes. A conta antiga de R$ 122 descreve outra entrega. Calcular o novo custo antes de precificar ou avaliar sustentabilidade.
 
-Antes de abrir a rodada, fechar teto de gasto, horas, vagas, suporte e responsável. Uma oferta com custo acima do benefício observado exige revisar público, tarefa ou escopo. A cobrança, sozinha, deixa essa conta em aberto.
+Cobrar cedo testa aceitação, sem garantir recuperação do investimento. Antes de oferecer, confirmar teto de gasto, preço, suporte e responsável. Créditos ou revenda de acesso ao plano ChatGPT ficam fora da oferta.
 
-## Evidência e próxima decisão
+## Resultado esperado do experimento
 
-A entrega do experimento deve trazer critérios, sorteio, versões da oferta, contagens por braço e custos. Acrescentar pagamentos confirmados, devoluções, ajuda, materiais e retomadas quando existirem. Os resultados atuais permanecem desconhecidos.
+Guardar critérios, sorteio, versões da oferta, contagens por braço e custos. Acrescentar rotas, escolhas, ramificações, pagamentos, recusas e devoluções quando existirem. Resultados externos dos criativos exigem evidência própria e consentimento para relato.
 
-Depois, decidir entre repetir com hipótese revisada, ampliar pesquisa ou encerrar a oferta. Avançar para V1 exige evidência de tarefa, operação e economia. O experimento preserva a criação narrativa e visual como núcleo do produto.
+Depois, decidir entre revisar hipótese, repetir a rodada, ampliar pesquisa ou encerrar a oferta. A decisão considera alternativas úteis, identidade preservada, esforço, aceitação e custo. Os resultados atuais permanecem desconhecidos.
 
-Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). A proposta respeita a decisão do autor pelo A/B e mantém [limites de pequenas amostras](https://x.com/richardrx/status/2061463480868229189) explícitos.
+Método: Revenue-Centric Design, de Richard ([@richardrx](https://x.com/richardrx)), com [termos integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). A proposta preserva os [limites de pequenas amostras](https://x.com/richardrx/status/2061463480868229189) e exclui apostas, cassinos e jogos de azar.

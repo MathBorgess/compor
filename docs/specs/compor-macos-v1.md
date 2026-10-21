@@ -4,15 +4,17 @@
 
 ## Problem Statement
 
-O dono de um produto digital precisa preparar uma divulgação clara e revisar mudanças de preço, data ou condições. Ele reúne informações, adapta texto e composição e confere o resultado.
+O founder, pessoa que criou o negócio, precisa explorar maneiras diferentes de divulgar seu produto. Ele pode ter fatos e uma voz definida, sem saber transformar essa base em conceitos e artes utilizáveis.
 
-A hipótese é que repetir esse trabalho entre ferramentas consuma esforço relevante. O recorte inicial proposto é o dono solo de um curso já vendido, com divulgação em até 14 dias. O teste precisa comparar a tarefa com seu caminho habitual, incluindo ChatGPT e Canva.
+A hipótese de dor é esforço para sair do rascunho, produzir caminhos distintos e preservar identidade entre tentativas. Atualizar data ou preço permanece um teste secundário. O caso inicial proposto é curso digital, sujeito à investigação com o público.
 
 ## Solution
 
-Aplicativo Electron para macOS. A pessoa constrói uma divulgação com texto, imagens, formas e cores no mesmo ambiente. A base interna preserva fatos, recursos e escolhas aprovadas. Uma mudança gera revisão seletiva e conserva a versão anterior.
+Aplicativo Electron para macOS. A pessoa aprova produto e voz, define uma campanha e explora rotas criativas do zero. Compara temas, ganchos e composição e desenvolve variantes, preservando a base e a origem de cada alternativa.
 
-A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda em texto simples (TXT). O projeto privado inclui recursos e versões para retomar a edição. A conexão inicial por conta ChatGPT/Codex passa por verificação oficial antes da oferta comercial.
+Proposta inicial: três rotas distintas, cada uma com arte e legenda, e duas variantes de uma rota escolhida. O compositor entrega a arte utilizável. Imagens autorizadas são opcionais; uma direção que exige imagem inédita por modelo depende de integração verificada.
+
+Cada criativo selecionado exporta formato de imagem (PNG) e texto simples (TXT). A cópia privada conserva campanha, rotas, variantes e recursos. A conexão inicial ChatGPT/Codex continua condicionada ao acesso oficial antes da venda.
 
 ## User Stories
 
@@ -24,12 +26,12 @@ A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda
 6. Como dono, quero identificar lacunas para completar informações essenciais.
 7. Como dono, quero omitir um detalhe por escolha para controlar a divulgação.
 8. Como dono, quero separar base e campanha atual para limitar mudanças.
-9. Como dono, quero criar um projeto para preparar um material.
+9. Como dono, quero criar uma campanha para explorar criativos do mesmo produto.
 10. Como dono, quero abrir um exemplo fictício para compreender a tarefa.
 11. Como dono, quero duplicar um projeto preservando o original.
 12. Como dono, quero editar blocos para manter minha voz.
 13. Como dono, quero reorganizar blocos para construir a narrativa.
-14. Como dono, quero importar imagens autorizadas para representar meu produto.
+14. Como dono, quero importar imagens autorizadas quando fizerem sentido para minha direção visual.
 15. Como dono, quero ver imagens enquanto escrevo para relacionar mensagem e visual.
 16. Como dono, quero escolher formas para organizar a composição.
 17. Como dono, quero escolher cores para expressar minha identidade.
@@ -40,7 +42,7 @@ A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda
 22. Como dono, quero revisar o conteúdo enviado para controlar processamento externo.
 23. Como dono, quero manter dados somente locais fora dos envios.
 24. Como dono, quero distinguir envio e divulgação para dar permissões específicas.
-25. Como dono, quero pedir alternativas para explorar redação e composição.
+25. Como dono, quero pedir conceitos alternativos para explorar temas, ganchos e composição.
 26. Como dono, quero aceitar ou rejeitar sugestões para preservar minhas escolhas.
 27. Como dono, quero editar uma sugestão antes de aprovar.
 28. Como dono, quero cancelar geração preservando meu trabalho.
@@ -52,7 +54,7 @@ A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda
 34. Como dono, quero preservar adaptações deliberadas para manter meu propósito.
 35. Como dono, quero desfazer uma atualização para recuperar a versão anterior.
 36. Como dono, quero conferir o material inteiro para encontrar impactos adicionais.
-37. Como dono, quero exportar arte e legenda para encaminhar por conta própria.
+37. Como dono, quero exportar os criativos selecionados, com arte e legenda, para testar por conta própria.
 38. Como dono, quero abrir o arquivo exportado para conferir legibilidade.
 39. Como dono, quero reconhecer limites de edição em outros programas.
 40. Como dono, quero reabrir com minhas imagens após mover os originais.
@@ -72,6 +74,19 @@ A primeira saída proposta contém uma arte no formato de imagem (PNG) e legenda
 54. Como operador, quero comparar oferta gratuita e paga na v0 para observar urgência, uso e compromisso.
 55. Como operador, quero descrever pré-venda ou beta com clareza para testar compra antes da estabilidade.
 
+56. Como founder, quero aprovar exemplos de voz para orientar diferentes criativos do mesmo produto.
+57. Como founder, quero começar sem arte pronta para construir conceitos a partir do meu produto.
+58. Como founder, quero explorar temas contrastantes para encontrar formas diferentes de comunicar a oferta.
+59. Como founder, quero receber arte e legenda por rota para avaliar um criativo utilizável.
+60. Como founder, quero comparar diversidade e fidelidade separadamente para escolher com critérios claros.
+61. Como founder, quero variar uma dimensão escolhida para investigar ganchos ou composições.
+62. Como founder, quero reconhecer a origem de uma variante para preservar minha linha de exploração.
+63. Como founder, quero selecionar várias alternativas para testar nos meus canais.
+64. Como founder, quero preservar rotas concluídas quando outra falhar ou eu cancelar a fila.
+65. Como founder, quero conferir chamadas previstas e limites antes de autorizar uma rodada criativa.
+66. Como founder, quero rejeitar desvios de voz ou fatos para manter o produto reconhecível.
+67. Como founder, quero registrar resultados externos com origem e período para distinguir preferência de desempenho.
+
 ## Implementation Decisions
 
 ### Direções explícitas do autor
@@ -86,13 +101,19 @@ O texto da designer propõe Compor e donos de produtos digitais. O recorte em cu
 
 ### Contratos técnicos propostos
 
-**Projeto:** uma pessoa, produto e divulgação por projeto. Base, blocos, fatos, permissões, recursos e versões ficam locais. A skill interna contém instruções separadas dos dados. O usuário dispensa editar essas instruções.
+**Projeto:** uma pessoa, produto e campanha por projeto. A base aprovada inclui voz, fatos, benefícios, omissões e limites. Campanha acrescenta público e objetivo; rotas e variantes herdam versões explícitas. Blocos, permissões, recursos e versões ficam locais. A skill interna contém instruções separadas dos dados. O usuário dispensa editar essas instruções.
 
 **Visual:** edição de texto, imagem, formas e cores acontece antes de escolher a saída. Um compositor limitado atende prévia e exportação. Modelos locais evitam execução de conteúdo arbitrário.
 
-**Geração:** o adaptador recebe versão, tarefa e contexto permitido. Retorna alternativa validada, sem sobrescrever o aprovado. Conclusão, falha, cancelamento, revogação e limite exigem estados distintos. Nova tentativa requer decisão explícita.
+**Geração:** o adaptador recebe base, campanha, tarefa e contexto permitido. Cada rota contém tema, gancho, argumento, direção visual, composição, arte e legenda. Rotas usam a mesma base, sem depender da redação gerada para outra rota. O resultado preserva o aprovado. Conclusão, falha, cancelamento, revogação e limite exigem estados distintos. Nova tentativa requer decisão explícita.
 
-**Mudanças:** cada bloco conserva relações conhecidas com fatos. Mudar R$97 para R$127 apresenta diferenças e o conjunto completo. Aplicar, rejeitar e desfazer preservam adaptações e histórico. A pessoa confere impactos além dos detectados automaticamente.
+**Exploração:** propor três temas contrastantes e duas variantes de uma rota, até cinco criativos na rodada inicial. Diferenças somente cosméticas falham como diversidade entre rotas. Cada variante declara dimensão alterada e origem. Alterações adicionais exigem revisão explícita.
+
+**Fila:** uma tentativa em curso por usuário, com tarefas e custo ou limite conhecidos. Falha ou cancelamento preserva rotas concluídas. Repetir exige decisão explícita. Registrar todas as tentativas, inclusive incompletas; proposta concluída difere de consumo total.
+
+**Fidelidade:** avaliar tema distinto e adequação à voz em critérios separados. Comparar com exemplos aprovados e mostrar restrições. O modelo apoia a avaliação; a pessoa decide. Aceitar uma rota preserva base, irmãs e variantes anteriores.
+
+**Mudanças secundárias:** cada bloco conserva relações conhecidas com fatos. Mudar R$97 para R$127 apresenta diferenças e o conjunto completo. Aplicar, rejeitar e desfazer preservam adaptações e histórico. A pessoa confere impactos além dos detectados automaticamente.
 
 **Imagens:** importar PNG ou Joint Photographic Experts Group (JPEG) incorpora bytes ao projeto. Guardar origem declarada, dimensões, autorização e resumo criptográfico. O resumo permite conferir integridade. Referências temporárias e caminhos externos deixam de ser dependências de recuperação.
 
@@ -100,7 +121,7 @@ O texto da designer propõe Compor e donos de produtos digitais. O recorte em cu
 
 Limites candidatos: dez imagens, dez megabytes cada e pacote de 250 megabytes compactado e extraído. Cada imagem aceita até vinte milhões de pixels e 8192 pixels por lado. Decodificar uma imagem por vez; miniaturas limitam cada lado a 2048 pixels. O pacote aceita até mil entradas. Exceder limites recusa a entrada e preserva o projeto.
 
-**Saídas:** arte PNG de 1080 × 1350 pixels e legenda TXT em Unicode Transformation Format (UTF-8), codificação que preserva acentos. Cópia privada em pacote de arquivos (ZIP) inclui base, imagens e versões. ZIP agrupa arquivos. Exportação pública exclui contexto privado, credenciais e metadados das fotos.
+**Saídas:** cada criativo selecionado exporta arte PNG de 1080 × 1350 pixels e legenda TXT em Unicode Transformation Format (UTF-8). Essa codificação preserva acentos. A proposta inicial permite exportar até cinco criativos da rodada com nomes legíveis de rota e versão. Cópia privada em pacote de arquivos (ZIP) inclui base, campanha, rotas, variantes, relações, imagens e versões. ZIP agrupa arquivos. Exportação pública exclui contexto privado, credenciais e metadados das fotos.
 
 **Restauração:** extrair em outra pasta, conferir manifesto e resumos e só depois abrir. Bloquear caminhos externos, links simbólicos e expansão excessiva. Cópia corrompida permanece preservada. Exclusão considera versões e exige ação explícita.
 
@@ -118,14 +139,17 @@ O login antigo do Codex, credenciais de outra aplicação ou conta compartilhada
 
 ## Testing Decisions
 
-Uma fronteira principal observa o comportamento completo: criar base e visual, salvar, gerar, revisar preço, exportar, reabrir e restaurar. O teste verifica trabalho preservado e arquivos úteis. Ele dispensa depender da organização interna dos componentes.
+Uma fronteira principal observa o comportamento completo: aprovar produto e voz, criar campanha, explorar rotas, comparar, ramificar, selecionar, exportar e restaurar. O teste verifica trabalho preservado e arquivos úteis. Ele dispensa depender da organização interna dos componentes.
 
 O repositório contém documentação, sem testes executáveis anteriores. A implementação futura pode usar provedor simulado para falhas repetíveis. Integração real e distribuição exigem verificações separadas. A [matriz de testes](../compor/demo-e-testes.md) detalha casos e evidências.
 
 | Fronteira | Aceite futuro |
 | --- | --- |
 | Base e visual | Fatos, lacunas, omissões e elementos visuais permanecem editáveis no mesmo fluxo |
-| Alteração | Preço muda em arte e legenda; edição manual e versão anterior sobrevivem |
+| Exploração | Três conceitos contrastantes mantêm produto, voz, fatos e limites; cada um entrega arte e legenda |
+| Ramificação | Duas variantes declaram uma dimensão; origens, irmãs e edição manual sobrevivem |
+| Fila parcial | Segunda rota falha ou fila cancela; a primeira continua recuperável, sem repetição silenciosa |
+| Alteração secundária | Preço muda nas rotas relacionadas; edição manual e versão anterior sobrevivem |
 | Dados | Marcadores locais ficam fora das chamadas; divulgação segue sua permissão; diagnóstico exige autorização específica |
 | Permissões independentes | Texto bloqueado para processamento pode entrar manualmente na saída quando sua divulgação tiver aprovação |
 | Recursos | Mover originais preserva imagens; restauração em outra pasta mantém relações e escolhas |
@@ -136,17 +160,23 @@ O repositório contém documentação, sem testes executáveis anteriores. A imp
 | Distribuição | Pacote instala na matriz macOS declarada com proteções normais |
 | Oracle | Carga sintética mede memória, erros e reinício; queda preserva trabalho local |
 
-Cinco sessões qualitativas comparam tarefas equivalentes no Compor e no caminho habitual. Alternar ordem e registrar familiaridade reduz efeitos de aprendizagem. Contar preparo, instalação, espera, revisão, ajuda e exportação.
+Cinco sessões qualitativas comparam três rotas e duas variantes no Compor e no caminho habitual. Alternar ordem e registrar familiaridade reduz efeitos de aprendizagem. Contar preparo, instalação, espera, revisão, ajuda e exportação.
 
-Alvos exploratórios: quatro de cinco concluem sem orientação por etapa e mediana de 30% menos tempo. Esses números orientam revisão, sem provar prevalência ou significância. Erro factual crítico e perda silenciosa bloqueiam o piloto seguinte até correção.
+Alvos propostos: quatro de cinco concluem sem orientação por etapa; cada pessoa seleciona ao menos duas rotas úteis e distintas. Medir fidelidade, diversidade, acabamento, tempo, correções, custo e ajuda separadamente. A meta anterior de 30% menos tempo pertence ao recorte substituído. Erro factual crítico e perda silenciosa bloqueiam o piloto seguinte até correção.
 
 Matheus definiu v0 com teste A/B de oferta gratuita e paga, incluindo possibilidade de venda antes da estabilidade. O [protocolo v0](../compor/experimento-v0.md) propõe sorteio após qualificação, mesmo escopo e registro por braço. Pouca amostra exige interpretação exploratória.
 
 Pré-venda exige acesso oficial, entregável, prazo e condições explícitos. Beta exige também verificações técnicas para uso com dados reais. Essas ofertas podem anteceder a estabilidade geral; elas preservam os limites declarados. Cinco testes gratuitos e três compras deixam de ser pré-requisitos da comparação.
 
-O [plano comercial](../compor/negocio-e-gtm.md) propõe o preço do braço pago e a conta de sustentabilidade. Matheus definiu testar cobrança; o valor específico permanece proposta.
+O [plano comercial](../compor/negocio-e-gtm.md) orienta a escolha do preço e a conta de sustentabilidade. Matheus definiu testar cobrança; o valor específico permanece pendente.
 
 Repetição exige retorno numa nova ocasião real. Demonstração, teste simulado, uso independente e venda medem resultados diferentes. Cobrar permite medir aceitação; recuperar custos depende de receita e despesas observadas.
+
+### Preço e duas comparações distintas
+
+Matheus indicou 10 a 15 dólares americanos como referência percebida de preço, sem escolher valor ou forma de cobrança. R$199 deixa de ser candidato atual. O novo escopo exige recalcular geração, revisão, variantes e suporte; cenários antigos permanecem históricos.
+
+O A/B gratuito e pago mede aceitação do Compor. O teste dos criativos do founder mede outra hipótese e exige dados externos. Temas distintos exploram várias dimensões; variantes de uma dimensão apoiam investigação mais delimitada. Notas manuais registram origem e período; o aplicativo dispensa publicação ou análise de anúncios automática.
 
 ## Out of Scope
 
@@ -154,11 +184,11 @@ Nesta entrega: app, protótipo executável, dependências, testes executáveis, 
 
 Na primeira versão proposta: vídeo, carrossel, apresentações, vários adaptadores, publicação automática, anúncios, métricas de campanha, contratos e pagamentos do curso.
 
-Sincronização, colaboração, geração de imagens, documento portátil (PDF) e edição externa por camadas ficam para outro recorte. Suporte a outros sistemas depende de decisão futura.
+Sincronização, colaboração, documento portátil (PDF) e edição externa por camadas ficam para outro recorte. A rota inicial de inteligência artificial (IA) dispensa prometer imagem inédita por modelo. Uma direção que dependa disso mostra integração pendente; rascunho com recurso provisório difere de arte final. Suporte a outros sistemas depende de decisão futura.
 
 ## Further Notes
 
-O recorte anterior de oficinas, a proposta de fotografia e seus números permanecem históricos. Suas estimativas e preços deixam de orientar esta versão. A revisão registra [decisões, divergências e pendências](../revisao/2026-10-20-compor/README.md).
+Oficinas, fotografia, atualização de peça e os números desses cenários permanecem históricos. Suas estimativas e preços deixam de orientar esta versão. A revisão registra [decisões, divergências e pendências](../revisao/2026-10-20-compor/README.md).
 
 Mavi reforçará o desenho das quatro telas e painéis. Matheus conduz o desenvolvimento futuro. Integração, capacidade, distribuição e economia exigem os testes descritos, além do design.
 

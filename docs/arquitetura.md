@@ -22,7 +22,7 @@ Sem G0, a demo apresenta conexão e resultados como simulação. Cobrar composi�
 | --- | --- | --- |
 | Interface | Base, blocos, visual, revisão e estados | Sem acesso direto a disco, tokens ou terminal |
 | Processo principal | Arquivos, versões, exportação e conexão autorizada | Operações delimitadas e entradas validadas |
-| Adaptador local de geração | Contexto permitido, chamada e resposta estruturada | Uma tarefa por projeto; ferramentas de execução desativadas |
+| Adaptador local de geração | Contexto permitido, chamada e resposta estruturada | Uma tentativa por usuário; fila local; ferramentas de execução desativadas |
 | Compositor local | Prévia e arte final a partir dos mesmos blocos | Elementos e fontes fornecidos pelo aplicativo |
 | Repositório local | Base, recursos, permissões e versões | Fora da nuvem por padrão |
 | Backend Oracle | Compatibilidade e diagnóstico autorizado | Sem projetos, imagens, credenciais ou execução de modelos |
@@ -49,6 +49,22 @@ Blocos guardam texto, posição, ordem, cor, forma e referências a recursos. De
 
 A skill interna contém instruções versionadas para trabalhar com essa base. Ela permanece separada de fatos, recursos e credenciais. O histórico do chat serve como apoio, sem assumir o papel de armazenamento principal.
 
+## Campanha, rotas e variantes
+
+A base aprovada guarda produto, voz, fatos, omissões e limites. A campanha referencia essa versão e acrescenta público, objetivo e hipótese. Cada rota contém tema, gancho, conceito, direção visual, composição, arte e legenda. Cada variante referencia sua origem e dimensão alterada.
+
+Proposta de primeira rodada: três rotas e duas variantes de uma rota selecionada. A geração de cada rota parte da mesma base autorizada. A pessoa compara conceito e fidelidade separadamente; mudar só cores falha como diversidade. Aprovar uma rota preserva a base e suas irmãs.
+
+Guardar versão da base, campanha, origem, tentativa, recursos e aprovações. Resposta atrasada permanece ligada à versão usada. Mudar voz ou produto pede revisão explícita das rotas afetadas. A escolha de uma variante preserva as demais e o histórico.
+
+Uma fila local mostra tarefas previstas, em curso, concluídas, falhas e canceladas. Executar uma tentativa por vez. Cancelar ou falhar na segunda rota preserva a primeira. Informar chamadas e limites conhecidos antes da autorização; contar tentativas incompletas na medição de uso.
+
+O compositor entrega arte com texto, formas, cores e imagens autorizadas opcionais. Uma direção que exige foto ou ilustração inédita por modelo mostra dependência pendente. Recursos provisórios recebem rótulo e ficam fora do aceite final. Gerar conceito ou prompt difere de entregar a arte utilizável.
+
+Exportar os criativos selecionados, até cinco nessa rodada proposta, com arte e legenda por item. A cópia privada inclui todas as rotas, variantes, origens e versões. Compartilhar recursos por resumo criptográfico evita duplicar imagens por rota. Os tetos de pacote e entradas incluem alternativas e histórico.
+
+Preferência interna por uma rota difere de desempenho no mercado. Notas de resultado identificam canal, período, hipótese e fonte. Publicação, orçamento de anúncios e métricas automáticas permanecem fora desta versão. O A/B de preço da v0 usa outro conjunto de registros.
+
 ## Imagens e recuperação
 
 Os formatos candidatos são Portable Network Graphics (PNG) e Joint Photographic Experts Group (JPEG). Importar copia os bytes para o projeto. Esses formatos de imagem delimitam o primeiro importador. Guardar dimensões, origem e autorização declaradas. Um resumo criptográfico identifica os bytes e permite conferir integridade.
@@ -69,7 +85,7 @@ O pacote privado guarda dados legíveis; ele difere do armazenamento protegido d
 
 ## Exportação proposta
 
-Uma arte PNG de 1080 × 1350 pixels e uma legenda em texto simples (TXT). A codificação Unicode Transformation Format (UTF-8) representa caracteres, incluindo acentos. O compositor local atende prévia e exportação. Fontes fazem parte do pacote instalado e de sua licença própria.
+Cada criativo selecionado exporta arte PNG de 1080 × 1350 pixels e legenda em texto simples (TXT). A codificação Unicode Transformation Format (UTF-8) representa caracteres, incluindo acentos. O compositor local atende prévia e exportação. Fontes fazem parte do pacote instalado e de sua licença própria.
 
 Uma exportação incompleta preserva o arquivo anterior. Conferir texto, preço, datas, imagem, recorte e cores fora do aplicativo. O endereço de compra permanece acessível na legenda. A imagem exportada contém pixels, sem camadas editáveis em outro editor.
 
@@ -97,7 +113,7 @@ A matriz de Macs começa pelo equipamento de desenvolvimento, sem presumir cober
 
 ## Construção futura e testes
 
-A [spec](specs/compor-macos-v1.md) define uma fronteira principal: criar, editar visual, salvar, gerar, revisar mudança, exportar e restaurar. Simulação verifica preservação; Inteligência artificial (IA) real verifica integração; pessoas independentes verificam uso; pagamento e repetição verificam negócio.
+A [spec](specs/compor-macos-v1.md) define uma fronteira principal: aprovar base, explorar rotas, comparar, ramificar, selecionar, exportar e restaurar. Simulação verifica preservação; Inteligência artificial (IA) real verifica integração; pessoas independentes verificam uso; pagamento e repetição verificam negócio.
 
 Ordem proposta: G0 acesso e escopo comercial; G1 imagens e persistência; G2 compositor e exportação; G3 geração; G4 distribuição; G5 piloto. [Aceites e demonstração](compor/demo-e-testes.md) detalham cada verificação.
 

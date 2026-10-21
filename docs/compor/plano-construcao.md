@@ -13,9 +13,9 @@ A equipe pode desenhar o conceito com dados fictícios enquanto verifica o acess
 | Etapa | Trabalho futuro | Evidência de encerramento |
 | --- | --- | --- |
 | G0: acesso e contrato | Confirmar rota ChatGPT/Codex, cobrança permitida, dados e limites | Resposta oficial aplicável e chamada sintética concluída; alternativa exige decisão do autor |
-| G1: projeto recuperável | Criar base, blocos, imagens incorporadas, versões e cópia privada | Mover originais, fechar, reabrir e restaurar em outra pasta preserva conteúdo |
-| G2: narrativa e saída | Construir compositor, edição visual, revisão seletiva e PNG/TXT | Preço muda preservando título; arquivos coincidem com aprovado; versão anterior continua disponível |
-| G3: geração autorizada | Conectar adaptador local, permissões, propostas e estados | Chamada real, limite, revogação e cancelamento preservam projeto e credenciais |
+| G1: projeto recuperável | Criar base de produto e voz, campanha, rotas, recursos, versões e cópia privada | Mover originais, fechar, reabrir e restaurar em outra pasta preserva conteúdo |
+| G2: narrativa e saída | Construir exploração visual, comparação de rotas, ramificações e exportação selecionada | Três conceitos distintos preservam voz e produto; duas variantes mostram origem; arquivos coincidem com aprovado |
+| G3: geração autorizada | Conectar adaptador local, permissões, propostas e estados | Fila, chamada real, limite, revogação e cancelamento preservam rotas concluídas e credenciais |
 | G4: distribuição e backend | Empacotar macOS, definir assinatura e verificar serviço Oracle | Instalar com proteções normais; medir carga; queda do servidor preserva trabalho local |
 | G5: uso e negócio | Comparar tarefa independente e recalcular oferta limitada | Evidências de tempo, ajuda, fidelidade, recuperação e custo sustentam decisão comercial |
 
@@ -27,7 +27,7 @@ G5 observa uso, aceitação do preço e custos. Cinco sessões gratuitas deixam 
 
 ## Primeira fatia de implementação
 
-Criar um projeto fictício com preço, título, imagem e cor. Salvar, fechar, mover a imagem original e reabrir. Restaurar a cópia em outra pasta. Uma aprovação muda a versão ativa e preserva a anterior.
+Criar uma base fictícia de produto e voz, uma campanha e três rascunhos visuais distintos. Salvar, fechar, mover a imagem original e reabrir. Restaurar a cópia em outra pasta. Ramificar uma rota e preservar sua origem e irmãs. Uma aprovação muda a versão ativa e preserva a anterior.
 
 Essa fatia verifica a base do produto. Depois, acrescentar narrativa visual e exportação antes da geração real. A equipe evita investir num adaptador sobre dados que ainda podem desaparecer.
 
@@ -35,7 +35,7 @@ Essa fatia verifica a base do produto. Depois, acrescentar narrativa visual e ex
 
 A fronteira principal percorre o aplicativo inteiro e seus arquivos finais. Provedor simulado torna falhas repetíveis. Integração real, instalador e carga Oracle têm verificações próprias.
 
-Testar persistência sob queda e disco cheio. Testar cópia corrompida, caminhos externos e recursos ausentes. Testar mudança de preço junto de omissão deliberada. Testar permissões antes de cada envio e limites de exportação pública.
+Testar persistência sob queda e disco cheio. Testar cópia corrompida, caminhos externos e recursos ausentes. Testar diversidade de conceito e fidelidade à voz separadamente. Mudar preço e preservar omissão fica como regressão secundária. Testar permissões antes de cada envio e limites de exportação pública.
 
 O [plano de demo e testes](demo-e-testes.md) detalha as evidências. A [spec](../specs/compor-macos-v1.md) define o comportamento. Passar por um teste demonstra somente seu alcance observado.
 
@@ -43,7 +43,7 @@ O [plano de demo e testes](demo-e-testes.md) detalha as evidências. A [spec](..
 
 Antes de datar etapas, registrar horas semanais reais de Matheus e disponibilidade de Mavi. Estimar cada fatia após G0 e o desenho inicial. Considerar instalação, suporte, manutenção, dados, exportação e retrabalho.
 
-Os números de desenvolvimento no [cenário econômico](negocio-e-gtm.md) são estímulos para testar sustentabilidade. Eles diferem de orçamento ou estimativa técnica deste plano. A faixa antiga de 98–184 horas pertence ao caso de oficinas.
+Os números do [cenário econômico](negocio-e-gtm.md) pertencem à entrega anterior de uma peça. A exploração de rotas e variantes exige nova estimativa. Medir geração, comparação, seleção, revisão, recuperação e suporte por rodada. Esses números diferem de orçamento ou estimativa técnica deste plano. A faixa antiga de 98–184 horas pertence ao caso de oficinas.
 
 Um cronograma futuro apresenta início condicionado, responsável, dependência e aceite por etapa. Espera por autorização, assinatura e acesso oficial fica visível, separada das horas de desenvolvimento. Mudança de dimensão ou formato exige reestimar o compositor e seus testes.
 
@@ -51,6 +51,6 @@ Um cronograma futuro apresenta início condicionado, responsável, dependência 
 
 G0 pode impedir a rota comercial pedida. Nesse caso, registrar a condição e apresentar alternativas para decisão. A equipe preserva o código privado e a direção do autor até uma escolha explícita.
 
-Perda silenciosa, fato comercial inventado ou envio indevido bloqueia o próximo piloto até correção. Esforço equivalente ao caminho habitual ou custo acima do benefício reabre público, tarefa ou oferta. Acrescentar formatos depende de evidência de necessidade.
+Perda silenciosa, fato comercial inventado ou envio indevido bloqueia o próximo piloto até correção. Comparar qualidade criativa, fidelidade, esforço e custo em conjunto. Se o benefício observado perder para o caminho habitual, reabrir público, tarefa ou oferta. Acrescentar formatos depende de evidência de necessidade.
 
 Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos integrais](../debate/2026-10-20-rcd/RCD-LICENSE.txt). Esta proposta mantém execução e resultado como etapas futuras.

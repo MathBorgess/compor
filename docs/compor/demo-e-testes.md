@@ -4,7 +4,7 @@ Data: 20/10/2026. Esta entrega descreve a demonstração e os testes futuros. Im
 
 ## O que precisamos provar
 
-Compor propõe ajudar o dono de um curso digital a preparar e atualizar uma divulgação, preservando imagens e escolhas aprovadas. O resultado inicial reúne uma arte estática e texto de apoio. O teste compara esse trabalho com ChatGPT e Canva, incluindo os modelos que a pessoa já usa.
+Compor ajuda o founder a criar e comparar caminhos criativos do zero, mantendo voz e produto. A proposta inicial reúne três rotas temáticas com arte e legenda. Uma rota pode receber duas variantes de gancho. O teste compara o mesmo conjunto com o caminho habitual da pessoa.
 
 macOS com Electron e servidor Oracle, com um núcleo e um gigabyte de memória, são direções do autor. O servidor trata metadados técnicos de compatibilidade e disponibilidade. Pode receber diagnóstico autorizado, sem conteúdo ou credenciais. Conteúdo, imagens, credenciais, login, modelos e composição visual ficam fora dele. A geração autorizada parte do ambiente local. Abrir, editar e exportar trabalho existente funciona sem rede.
 
@@ -20,22 +20,24 @@ Uma chamada bem-sucedida prova aquela chamada. A recuperação exige reabertura 
 
 ## Roteiro de entrada no mercado: cinco minutos
 
-Ana vende o curso fictício Organize Sua Semana. A primeira versão anuncia R$ 97. Depois, Ana muda o preço para R$ 127. Esses valores pertencem ao curso; o preço do Compor continua em estudo.
+Ana divulga o curso fictício Organize Sua Semana. A base mantém método de planejamento semanal e voz calma, prática e acolhedora. As três rotas propostas exploram Caos cotidiano, Rotina desejada e Método em ação.
 
 | Tempo | Duração | Tela e ação | Evidência procurada |
 | --- | ---: | --- | --- |
-| 0:00–0:30 | 30 segundos | **Meus projetos:** explicar tarefa e abrir o exemplo de Ana. | Público, ocasião e limite da promessa. |
-| 0:30–1:20 | 50 segundos | **Base da oferta:** conferir produto, público, preço, data e endereço de compra. | Separação entre fato confirmado, lacuna e omissão escolhida. |
-| 1:20–2:20 | 60 segundos | **Narrativa e visual:** combinar texto, imagem autorizada, formas e cores; conferir envio. | Prévia junto da narrativa e decisão humana sobre sugestões. |
-| 2:20–3:20 | 60 segundos | **Revisão e exportação:** mudar o preço, comparar e aprovar ajustes seletivos. | Atualização na arte e no texto; frase editada preservada e versão anterior disponível. |
-| 3:20–4:20 | 60 segundos | **Meus projetos:** salvar, fechar, mover a imagem original e reabrir. | Cópia interna recupera imagem, decisões e versão aprovada. |
-| 4:20–5:00 | 40 segundos | **Revisão e exportação:** exportar, abrir arte e texto e apresentar a próxima ação. | Arquivos conferidos; conceito pede pesquisa; demo comercial mostra preço e condições do piloto pago. |
+| 0:00–0:30 | 30 segundos | **Campanhas:** abrir um projeto vazio e explicar o objetivo. | Partida sem uma arte pronta e tarefa de exploração. |
+| 0:30–1:15 | 45 segundos | **Produto e voz:** aprovar fatos, linguagem, restrições e público. | Base comum para as rotas, com lacunas explícitas. |
+| 1:15–2:30 | 75 segundos | **Explorar criativos:** desenvolver os três temas e acompanhar texto e composição. | Conceitos, ganchos e artes distintos, preservando voz e produto. |
+| 2:30–3:30 | 60 segundos | **Comparar e desenvolver:** selecionar Método em ação e criar duas variantes de gancho. | Uma dimensão declarada, origem preservada e escolha humana. |
+| 3:30–4:15 | 45 segundos | **Comparar e desenvolver:** selecionar criativos e conferir exportação. | Artes e legendas utilizáveis, além de descrições ou prompts. |
+| 4:15–5:00 | 45 segundos | **Campanhas:** reabrir o conjunto e apresentar a oferta experimental. | Rotas, variantes e escolhas preservadas; condição gratuita ou paga explícita. |
 
-Total: 300 segundos. A demonstração contém quatro telas; painéis agrupam tarefas sem exigir novas telas.
+Total: 300 segundos. Quatro telas agrupam as tarefas. Identificar resultados preparados, geração real e qualquer espera omitida. A demonstração de conceito conserva seu selo permanente.
 
-Após os requisitos comerciais, a chamada final apresenta preço, escopo, suporte e condições da condição gratuita ou paga atribuída na v0. O plano comercial propõe o valor para avaliação. Antes do acesso oficial, a chamada oferece somente pesquisa de conceito e aceitação declarada de preço.
+Após acesso oficial, a chamada apresenta escopo, preço e condições da oferta atribuída na v0. O preço do braço pago permanece para avaliação. Antes desse acesso, a apresentação coleta somente entendimento e interesse.
 
-A arte proposta usa Portable Network Graphics (PNG), com 1080 × 1350 pixels. O texto usa arquivo simples (TXT), com Unicode Transformation Format (UTF-8). Na demo de conceito, indicar formatos propostos. Na demo técnica, abrir os arquivos e conferir conteúdo, dimensões, fontes, recorte e endereço de compra.
+Propostas de saída: imagem Portable Network Graphics (PNG), com 1080 × 1350 pixels, e texto simples (TXT), codificado em Unicode Transformation Format (UTF-8). Cada rota selecionada exporta seu par de arquivos. A cópia privada inclui todas as rotas, variantes e recursos.
+
+No teste técnico completo, mover imagens originais e restaurar em outra pasta. Conferir os arquivos fora do aplicativo. Na demo curta, identificar qualquer trecho dessa recuperação apresentado em gravação.
 
 ## Painéis e decisões visíveis
 
@@ -49,9 +51,11 @@ Registros técnicos guardam códigos de estado, versões e duração, sem conte�
 
 ## Uma fronteira principal e verificações separadas
 
-A fronteira principal percorre projeto novo → edição visual → sugestão controlada → mudança → aprovação → exportação → fechamento → reabertura → restauração. Usar um fornecedor simulado para repetir respostas e falhas. Verificar os arquivos finais e a cópia restaurada em outra pasta. Mover os originais antes da reabertura comprova o uso das cópias internas.
+A fronteira principal percorre base aprovada → campanha → rotas distintas → comparação → variante → seleção → exportação → reabertura → restauração. Usar um fornecedor simulado para repetir respostas e falhas. Verificar os arquivos finais e a cópia restaurada em outra pasta. Mover os originais antes da reabertura comprova o uso das cópias internas.
 
-A integração real constitui uma verificação separada: acesso autorizado, resposta válida, revogação, limite, cancelamento e proteção dos segredos. A capacidade Oracle exige outro ensaio, com concorrência, memória, disco, erros e retomada. Simulação de modelo e ensaio de servidor oferecem evidências distintas da tarefa completa.
+A integração real constitui uma verificação separada: acesso autorizado, resposta válida, revogação, limite, cancelamento e proteção dos segredos. Geração parcial também exige teste: falhar na segunda rota preserva a primeira e sua origem. Cancelar a fila preserva variantes concluídas. Alterar a voz da base pede revisão explícita das rotas afetadas.
+
+A capacidade Oracle exige outro ensaio, com concorrência, memória, disco, erros e retomada. Simulação de modelo e ensaio de servidor oferecem evidências distintas da tarefa completa.
 
 | Falha futura a provocar | Comportamento exigido |
 | --- | --- |
@@ -65,13 +69,25 @@ A integração real constitui uma verificação separada: acesso autorizado, res
 
 ## Cinco sessões qualitativas independentes
 
-Recrutar futuramente cinco donos solos de curso já vendido. Exigir Mac e campanha ou atualização prevista em até 14 dias. Pedir exemplos autorizados de duas mudanças recentes de preço, data ou condição. A pesquisa exige consentimento e regra de descarte próprios.
+Recrutar futuramente cinco donos solos de curso já vendido. Exigir Mac e uma campanha prevista em até 14 dias. Pedir tentativas anteriores ou a hipótese criativa que deseja explorar. Uma arte pronta e mudanças anteriores de preço deixam de ser requisitos. A pesquisa exige consentimento e regra de descarte próprios.
 
-Cada pessoa executa a mesma tarefa nos dois caminhos, com os mesmos fatos, imagens e mudança de preço. O caminho habitual usa ChatGPT e Canva. Alternar a ordem: três começam nele; duas começam pelo Compor. Registrar a ordem e o efeito de aprendizado. Esse grupo pequeno exige análise individual, sem conclusão estatística para o mercado.
+Cada pessoa parte da mesma base nos dois caminhos e cria três conceitos contrastantes, com arte e legenda. Depois desenvolve duas variantes de gancho de uma rota. Usar os mesmos fatos, voz, restrições e recursos autorizados.
+
+O caminho habitual usa ChatGPT e Canva. Alternar a ordem: três começam nele; duas começam pelo Compor. Registrar a ordem e o efeito de aprendizado. Esse grupo pequeno exige análise individual, sem conclusão estatística para o mercado.
 
 Separar apresentação guiada de tentativa independente. Durante esta tentativa, observar sem orientar cada passo. Registrar pedidos de ajuda e intervenções. Contar instalação, preparo, espera, revisão, ajuda, exportação e recuperação no tempo total. Modelos, atalhos e familiaridade pertencem à comparação.
 
-Alvos exploratórios: quatro de cinco concluem sem orientação por passo; redução mediana de 30% no tempo completo. Procurar zero fatos falsos e zero perdas nos casos observados. Esses alvos orientam revisão; eles dispensam garantia geral de segurança ou desempenho.
+Alvos propostos: quatro de cinco concluem sem orientação por passo e cada pessoa seleciona ao menos duas rotas úteis e distintas. Avaliar diversidade, fidelidade à voz, fatos e acabamento separadamente. Registrar tempo até o conjunto aprovado, correções, chamadas, custo e ajuda.
+
+O antigo alvo de 30% menos tempo pertencia à atualização de uma peça. Ele perde validade neste recorte e exige nova comparação. Erros factuais críticos e perdas silenciosas bloqueiam o próximo piloto até correção.
+
+## Comparar criativos no mercado
+
+O A/B de oferta gratuita e paga mede aceitação do Compor. A comparação de criativos do founder mede outra hipótese. Ela exige período, canal, público, objetivo e evidência de exposição próprios.
+
+Rotas temáticas mudam várias dimensões e servem à exploração inicial. Para investigar uma dimensão, usar variantes que mantenham as demais constantes. Registrar origem dos dados e limitações. O app dispensa publicar, comprar anúncios ou coletar métricas automaticamente nesta versão.
+
+Uma escolha na interface demonstra preferência. Uso num canal exige evidência externa. Vendas dependem de mais fatores; atribuição ao criativo precisa de investigação própria.
 
 ## Retorno e decisão
 
@@ -83,13 +99,17 @@ A pré-venda pode anteceder a estabilidade, com acesso oficial, entregável, pra
 
 As cinco sessões qualitativas podem incluir compradores que aceitem participar da pesquisa. Separar consentimento de pesquisa e contratação. A compra garante a entrega contratada, mesmo quando a pessoa recusar participar do estudo. Registrar resultados de uso e de pagamento em campos distintos.
 
-**Rejeitar a hipótese atual** se o caminho habitual oferecer esforço equivalente ou menor após contar todo o trabalho. Rejeitar também uma oferta cujo custo completo superar o benefício e a disposição a pagar observados.
+**Rejeitar a hipótese atual** quando o caminho habitual igualar ou superar diversidade, utilidade e fidelidade com esforço equivalente ou menor. Avaliar também custo e disposição a pagar. Tempo isolado deixa de servir como veto: mais esforço pode compensar quando o conjunto criativo tiver mais valor para a pessoa.
 
 **Revisar** se faltarem autonomia, correção ou recuperação. Uma perda silenciosa ou fato falso bloqueia avanço até correção e nova conferência.
 
 **Avançar para oferta limitada** após acesso oficial, com preço e condições claros. Pré-venda explicita construção pendente; beta exige verificações de uso real. Medir aceitação e custo desde a primeira compra. Os alvos exploratórios orientam melhoria; ganhos, margem e demanda exigem evidência própria.
 
-Registrar por sessão: código anônimo, consentimento, perfil, ocasião, prazo, ambiente, versões, ordem, tempos, ajuda, erros, arquivos, recuperação e motivo de saída. Acrescentar custo, próxima ocasião, oferta apresentada, pagamento confirmado e devolução quando aplicáveis. Todos os resultados atuais constam como pendentes. Uma peça concluída difere de receita adicional do curso.
+Registrar por sessão: código anônimo, consentimento, perfil, ocasião, prazo, ambiente, versões, ordem, tempos, ajuda, erros, arquivos, recuperação e motivo de saída. Acrescentar custo, próxima ocasião, oferta apresentada, pagamento confirmado e devolução quando aplicáveis. Todos os resultados atuais constam como pendentes. Um conjunto aprovado difere de desempenho comercial observado.
+
+## Consistência secundária
+
+Mudar preço ou data continua como regressão: verificar fatos nas rotas relacionadas e preservar escolhas manuais. Esse caso complementa o teste central de exploração criativa. Ele deixa de sustentar a promessa ou a demo principal.
 
 ## Método e fontes
 

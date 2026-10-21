@@ -8,6 +8,12 @@ O [texto da designer](fontes/adaptacao-designer.txt) propõe o nome Compor e o p
 
 Na mensagem desta revisão, Matheus confirma macOS, Electron, acesso inicial por conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. A mensagem pede fechar exportação, recuperação e armazenamento. A capacidade da máquina e a elegibilidade da integração continuam sem teste.
 
+## Direções posteriores do autor
+
+Matheus definiu criar criativos do zero e explorar temas diferentes, mantendo voz e produto. Ele considera atualização de data e preço insuficiente como valor principal. Essa direção substitui o caso central do texto inicial da designer.
+
+Matheus apontou 10 a 15 dólares americanos como referência percebida de preço e comparou R$200 com uma assinatura ampla de inteligência artificial (IA). A fala orienta pesquisa de valor; ela difere de levantamento atual de preços ou escolha de cobrança. O pacote atual retira R$199 da candidatura ativa.
+
 ## Integração OpenAI
 
 - [Visão de uso do plano ChatGPT](https://developers.openai.com/siwc/token-sharing-open-source): aplicativos pagos ou remotos seguem o formulário de interesse.

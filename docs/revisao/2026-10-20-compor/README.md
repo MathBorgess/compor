@@ -2,7 +2,17 @@
 
 20/10/2026. Esta revisão responde ao objetivo de Matheus após a conversa com a designer. A entrega contém documentação no repositório privado. Construção, contato e cobrança permanecem fora desta execução.
 
-## O que mudou
+## Direção vigente: exploração criativa
+
+Matheus definiu criar criativos do zero e testar temas diferentes, mantendo voz e produto. Atualização de data e preço fica como consistência secundária. O [parecer de direção criativa](05-direcao-criativa.md) interpreta essa decisão e propõe aceites.
+
+A proposta atual usa uma campanha com três rotas contrastantes e duas variantes de uma rota. Cada rota entrega arte e legenda utilizáveis. Produto, voz e fatos aprovados permanecem como base. Quantidades são recomendações dos agentes.
+
+Matheus apontou 10 a 15 dólares americanos como referência percebida de preço. R$199 deixa de ser candidato atual. A faixa citada difere de preço aprovado, pesquisa de mercado ou conversão cambial. Reestimar custo por rodada criativa; preço e unidade de cobrança seguem para avaliação.
+
+A v0 preserva oferta gratuita e paga com o mesmo escopo. Esse A/B testa aceitação do Compor. Testar os criativos do founder nos seus canais exige outro protocolo e evidência externa.
+
+## Origem da revisão
 
 O [texto recebido](fontes/adaptacao-designer.txt) apresenta Compor para donos de produtos digitais. Ele propõe uma divulgação estática com imagem e texto de apoio. Matheus acrescentou macOS, conta ChatGPT/Codex e sua máquina Oracle com um processador e um gigabyte (GB) de memória.
 
@@ -31,7 +41,7 @@ Os agentes herdaram o contexto do orquestrador, sem modelo específico imposto. 
 
 **Acesso incompatível:** assinatura pessoal difere de permissão para oferecer aplicativo pago. Os termos também exigem uso do plano sem pagamento obrigatório ao app. G0 verifica elegibilidade e cobrança permitida. O login antigo do Codex fica fora das alternativas de contorno.
 
-**Conta de suporte:** preço baixo pode perder dinheiro mesmo com consumo do modelo no plano do cliente. A simulação comercial inclui instalação, atendimento e aquisição. O cenário de R$99 perde R$37,85 após alocação de desenvolvimento. Ele rejeita esse estímulo nas condições simuladas.
+**Conta de suporte:** preço baixo pode perder dinheiro mesmo com consumo do modelo no plano do cliente. A simulação comercial inclui instalação, atendimento e aquisição. O antigo cenário de R$99 perde R$37,85 após alocação de desenvolvimento. Esse cálculo pertence à entrega anterior. Rotas, variantes e revisão exigem nova estimativa, sem transferir sua margem ou inviabilidade.
 
 ## Consolidação e divergências
 
@@ -40,14 +50,14 @@ Formatos candidatos: Portable Network Graphics (PNG), texto simples (TXT) e paco
 | Tema | Encaminhamento proposto | Motivo e evidência pendente |
 | --- | --- | --- |
 | Público | Dono solo de curso gravado já vendido, com divulgação em 14 dias | Recorte do gerente; descobrir frequência e peso da tarefa |
-| Material | Uma arte e uma legenda por projeto | Fluxo completo pequeno; comparar com ferramenta habitual |
+| Material | Campanha com três rotas e duas variantes propostas | Diversidade, fidelidade e utilidade contra o fluxo habitual |
 | Dimensão | PNG 1080 × 1350 e TXT | Consolidação de produto; engenharia ajustou a alternativa quadrada |
 | Imagens | Copiar bytes, verificar resumo e incluir na cópia privada | Reabrir após mover originais e restaurar em outra pasta |
 | Persistência | Projeto local versionado; pacote privado ZIP completo | Testar queda, corrupção, esquema e disco cheio |
 | Oracle | Compatibilidade e diagnóstico autorizado, sem projetos ou geração | Medir carga e recursos no limite informado |
 | Retenção remota | Sem fila de geração; registros técnicos sem conteúdo por cinco dias | A proposta de tarefa remota por 24 horas fica descartada |
 | IA | Rota oficial local após elegibilidade e consentimento | Autorização comercial e chamada real continuam pendentes |
-| Cobrança | Editor ou assistência como hipótese de separação permitida | Confirmar termos antes de oferecer; geração sem paywall obrigatório |
+| Cobrança | Pacote de exploração ou assinatura como hipóteses | Recalcular custo; recorrência e cobrança permitida exigem verificação |
 | Design | Quatro telas, dois painéis e estados | Mavi reforça navegação, legibilidade e composição |
 
 PNG e TXT são arquivos de imagem e texto. ZIP agrupa arquivos. São contratos candidatos para implementação futura, sem exportador comprovado. O uso em múltiplos formatos continua como visão posterior, sem requisito de construir todos na primeira versão.
@@ -84,8 +94,16 @@ Aplicação de **Revenue-Centric Design, Richard (@richardrx)**, com [fonte fixa
 
 A adaptação usa nicho, prova antes da promessa, piso de custo, teto de valor e qualidade de sinal. Ela trata interesse, uso, compra, repetição e receita do cliente como evidências distintas.
 
-## Revisão independente da consolidação
+## Revisão independente da consolidação inicial
 
-Produto, engenharia e marketing leram a consolidação sem editar os arquivos. A revisão encontrou quatro ajustes de contrato. O texto final alinha recrutamento em duas mudanças recentes e diagnóstico opcional na Oracle. Também define limites de pixels e pacote extraído e separa processamento de divulgação nos testes.
+Produto, engenharia e marketing leram a consolidação sem editar os arquivos. A revisão encontrou quatro ajustes de contrato. Naquela versão, o texto alinhou recrutamento em duas mudanças recentes e diagnóstico opcional na Oracle. A nova direção criativa substitui esse filtro. Também define limites de pixels e pacote extraído e separa processamento de divulgação nos testes.
 
 Os pareceres verificam coerência documental. Eles preservam integração, capacidade, uso e pagamento como resultados futuros. A auditoria registra os documentos e verificações desta entrega.
+
+## Revisão da nova direção
+
+Produto interpretou criação do zero, diversidade e fidelidade. Marketing atualizou oferta, recrutamento, preço e métricas. Engenharia recomendou base versionada, rotas, linhagem, fila parcial e exportação do conjunto.
+
+A documentação conserva as restrições da integração inicial. Composição original pode usar texto, formas, cores e recursos autorizados opcionais. Foto ou ilustração inédita por modelo exige integração visual própria, sem confundir prompt com arte final.
+
+Os pareceres anteriores continuam como histórico do recorte de atualização. A direção vigente e as mensagens posteriores do autor orientam a spec atual. O pacote permanece documental.

@@ -11,7 +11,7 @@ Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisã
 | Autor | Oracle com um processador e 1 GB de memória | Backend inicial; capacidade permanece sem medição |
 | Texto da designer | Nome Compor e donos de produtos digitais | Substitui foco ativo em oficinas e caso-guia de fotografia |
 | Revisão de produto | Dono solo de curso já vendido; divulgação em 14 dias | Recorte para pesquisa; demanda permanece hipótese |
-| Consolidação | Uma arte PNG 1080 × 1350, legenda TXT e cópia ZIP | Contratos propostos para testar; PDF e outros adaptadores ficam posteriores |
+| Consolidação intermediária | Uma arte e legenda por projeto | Recorte substituído pela exploração de rotas criativas abaixo |
 | Consolidação | Imagens incorporadas; projeto local versionado e recuperável | Testar após mover originais, desligar rede e restaurar cópia |
 | Consolidação | Oracle sem conteúdo, tokens, inferência e renderização | Compatibilidade e diagnóstico autorizado; registros técnicos candidatos por cinco dias |
 | Fonte oficial | Uso do plano ChatGPT sem pagamento obrigatório ao app | Confirmar separação comercial antes de oferecer editor ou assistência |
@@ -19,6 +19,9 @@ Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisã
 | Autor, resposta ao painel | Manter privado e validar acesso oficial antes de vender | Confirmar elegibilidade e condições de cobrança antes da oferta; G0 continua pendente |
 | Autor, mensagem intermediária | Cobrar desde o início para validar aceitação e sustentabilidade | Orientação inicial; a direção v0 abaixo passa a comparar gratuito e pago |
 | Autor, mensagem mais recente | V0 com teste A/B gratuito e pago; investigar venda antes da estabilidade | Manter acesso oficial antes de vender; separar interesse, uso, pagamento e custo; preço específico permanece proposta |
+| Autor, direção criativa posterior | Criar criativos do zero e testar temas, preservando voz e produto | Exploração e comparação passam ao centro; preço e data ficam como consistência secundária |
+| Autor, percepção de preço | Ferramentas de IA na faixa de US$10–15; R$200 próximo de assinatura ampla | Referência para pesquisa, sem preço ou periodicidade escolhidos; R$199 retirado da candidatura ativa |
+| Agentes, proposta de recorte | Três rotas e duas variantes de uma rota por campanha | Quantidades propostas; reestimar custo e avaliar utilidade antes de definir preço |
 
 As propostas fecham um caminho para revisão e construção futura. Elas preservam a autoridade do autor e exigem as provas descritas na [spec atual](specs/compor-macos-v1.md).
 

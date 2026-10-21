@@ -1,89 +1,93 @@
-# Compor: produto e escopo inicial
+# Compor: exploração criativa para divulgar um produto
 
-20/10/2026. Esta definição substitui o recorte anterior de oficinas e o exemplo de fotografia. A [revisão](revisao/2026-10-20-compor/README.md) preserva a origem das mudanças.
+20/10/2026. Matheus definiu criação de criativos do zero e exploração de temas como valor central. Esta direção substitui o foco anterior em atualizar preço e data. O [parecer de produto](revisao/2026-10-20-compor/05-direcao-criativa.md) detalha a mudança.
 
 ## Proposta de valor
 
-Compor ajuda o dono de um produto digital a criar e atualizar uma divulgação visual, preservando informações e escolhas aprovadas.
+Compor ajuda o founder, pessoa que criou o negócio, a explorar criativos diferentes para divulgar o mesmo produto. Cada caminho pode mudar tema, gancho, narrativa e composição, preservando voz e fatos aprovados.
 
-A pessoa constrói a mensagem enquanto vê texto, imagens, formas e cores. O aplicativo mantém uma base interna do produto. Quando preço, data ou condições mudam, a pessoa revisa o material sem reconstruir o projeto.
+A pessoa começa com informações do produto e uma intenção de campanha. Ela recebe caminhos criativos, compara as propostas e desenvolve os que fazem sentido. Texto, imagens, formas e cores aparecem durante essa construção. A base interna preserva as decisões entre tentativas.
 
-A hipótese comercial é reduzir esforço e erros de atualização. A criação do material, sozinha, permite prometer apenas esse resultado. Atrair público e vender também dependem da oferta, do canal e da demanda.
+A hipótese de compra é obter mais caminhos úteis para testar, com menos esforço de direção e revisão. Diversidade, fidelidade e capacidade de concluir as artes precisam aparecer no uso. Desempenho comercial depende também de público, distribuição, orçamento e oferta.
 
 ## Público e ocasião
 
-O texto da designer define donos de negócios digitais. Para pesquisar esse grupo, os agentes propõem um recorte inicial menor.
+O público definido pelo autor são founders que querem divulgar seu produto. Dono solo de curso digital já vendido permanece como recorte proposto para a pesquisa inicial. Outros produtos continuam possíveis, sem atender todos simultaneamente.
 
-- Dono solo de um curso gravado que já vendeu.
-- Usa Mac e prepara uma divulgação nos próximos 14 dias.
-- Tem fatos da oferta e imagens autorizadas.
-- Atualiza materiais semelhantes e consegue mostrar duas mudanças recentes de preço, data ou condição.
-- Hoje resolve a tarefa com ChatGPT, Canva ou modelos próprios.
+- Usa Mac e tem uma campanha ou divulgação prevista em até 14 dias.
+- Consegue explicar produto, público, benefício e limites de comunicação.
+- Precisa explorar temas e ganchos, mesmo começando sem uma arte pronta.
+- Pode mostrar tentativas anteriores ou explicar a hipótese que deseja explorar.
+- Hoje usa ChatGPT, Canva, modelos próprios ou ajuda de outra pessoa.
 
-O próprio dono opera e pode pagar pelo aplicativo. Os compradores do curso recebem o material final. A conta usada para gerar conteúdo pertence ao usuário; elegibilidade e limites exigem confirmação.
+Duas tentativas recentes ajudam a investigar recorrência; elas deixam de ser requisito de entrada. Um histórico de mudanças de preço também deixa de definir necessidade. O próprio founder pode pagar; o público da campanha compra seu produto.
 
-Esse recorte serve à primeira pesquisa. A dor e a disposição para pagar continuam como hipóteses. A empresa ainda precisa observar o uso recorrente e o esforço de mudança.
+## O que permanece e o que varia
+
+| Base aprovada | Exploração da campanha |
+| --- | --- |
+| Produto, público, fatos e benefícios confirmados | Tema e abordagem da mensagem |
+| Voz, exemplos de linguagem e limites | Gancho, argumento e ordem da narrativa |
+| Omissões deliberadas e restrições de divulgação | Direção visual, composição e chamada para ação |
+
+A voz pede exemplos e regras concretas: termos preferidos, expressões evitadas e tom desejado. O modelo pode sugerir essas regras; o founder aprova a base. Criar uma alternativa preserva essa versão, sem alterar silenciosamente o produto.
 
 ## Primeira versão proposta
 
-Um usuário, um negócio, um produto digital e uma publicação estática por projeto. O material contém arte e texto de apoio. Uma cópia do projeto conserva a base, imagens e versões.
+Um usuário, um produto e uma campanha por projeto. Proposta inicial: três rotas criativas contrastantes, cada uma com arte estática e legenda. Rota significa um conceito de comunicação, acompanhado de texto e composição. A quantidade de três é recomendação, sem escolha numérica do autor.
 
-Proposta técnica: arte no formato de imagem (PNG) e legenda em texto simples (TXT). A arte tem 1080 × 1350 pixels. Uma cópia privada permite restaurar o projeto. A equipe precisa testar esses formatos antes de anunciá-los como disponíveis.
+Após comparar, a pessoa pode ramificar uma rota e criar duas variantes de uma dimensão escolhida. Por exemplo: manter conceito e composição e experimentar dois ganchos. Três temas iniciais e duas variantes formam até cinco criativos nessa rodada proposta.
 
-O formato de imagem serve ao caso-guia de uma publicação vertical. O arquivo conserva sua edição dentro do Compor. Outros editores recebem a imagem final, sem promessa de camadas editáveis.
+Trocar somente cor ou preço deixa de cumprir a diversidade esperada entre rotas. Cada rota precisa apresentar uma razão de comunicação própria. A comparação permite desenvolver uma ideia desde o rascunho, em vez de apenas aplicar uma arte pronta.
 
 ## Fluxo principal
 
-1. Abre um exemplo fictício ou cria um projeto.
-2. Informa produto, público, objetivo, preço, datas, condições e endereço de compra.
-3. Confirma fatos, marca lacunas e registra omissões intencionais.
-4. Escolhe fotos e organiza a narrativa com formas e cores.
-5. Confere os dados e autoriza a tarefa externa de geração.
-6. Aceita, rejeita ou edita as sugestões dentro do aplicativo.
-7. Salva uma versão aprovada e exporta arte e legenda.
-8. Muda o preço, compara versões e aprova ajustes por bloco.
-9. Fecha, reabre e recupera o projeto com suas imagens.
+1. Aprova produto, voz, fatos e limites.
+2. Define público, objetivo e hipótese da campanha.
+3. Confere a tarefa externa, dados e chamadas previstas.
+4. Explora três conceitos com ganchos e direções visuais contrastantes.
+5. Edita texto e composição enquanto acompanha a arte.
+6. Compara diversidade, fidelidade e utilidade; seleciona uma rota.
+7. Ramifica essa rota, escolhendo uma dimensão para variar.
+8. Aprova e exporta os criativos que pretende testar.
+9. Reabre a campanha com alternativas, recursos, decisões e versões preservadas.
 
-A preparação manual fica disponível antes do login. A geração exige conexão e acesso válido. Abrir, editar e exportar trabalho existente continua disponível sem nova geração ou renovação.
+O usuário testa os criativos nos seus canais. Publicação, anúncios e análise automática ficam fora da primeira versão. O app pode guardar notas manuais de resultado, identificando origem e período. Registrar uma percepção difere de comprovar efeito nas vendas.
 
-## Exemplo para desenho e teste
+## Exemplo para desenho e demo
 
-Ana divulga o curso fictício Organize Sua Semana. Ela informa R$97, uma data fictícia e um endereço de compra de exemplo. Ela escolhe sua imagem, organiza a mensagem e aprova o material.
+Ana vende o curso fictício Organize Sua Semana. Sua voz é calma, prática e acolhedora. O produto oferece um método de planejamento semanal. Esses fatos ficam iguais nos três caminhos.
 
-Depois, Ana informa R$127. O aplicativo mostra a alteração ao lado da arte e da legenda. Ana preserva a imagem e um título editado manualmente. Cada aprovação gera uma versão; a anterior continua disponível.
+| Rota | Tema e gancho | Direção visual proposta |
+| --- | --- | --- |
+| Caos cotidiano | A semana começou e sua agenda já transbordou? | Compromissos dispersos que ganham uma ordem legível |
+| Rotina desejada | Abra espaço para o que importa nesta semana. | Espaço livre, equilíbrio e destaque para prioridades |
+| Método em ação | Um jeito de escolher prioridades para a próxima semana. | Sequência visual de passos e prioridades |
 
-O aplicativo aponta relações conhecidas entre fatos e blocos. A pessoa confere o material completo para encontrar impactos que a detecção automática perdeu. Essa revisão evita prometer conferência infalível.
+Esses caminhos são exemplos sintéticos, sujeitos à revisão de Ana. A rota Método em ação recebe duas versões de gancho. A pessoa compara diferenças e escolhe o material. Alterar preço depois verifica consistência; esse caso fica secundário.
 
-## Direções do autor e propostas técnicas
+## Arte do zero e limites visuais
 
-Matheus definiu Electron para macOS, conexão inicial com ChatGPT/Codex e sua máquina Oracle de um processador e um gigabyte (GB) como backend. São direções de arquitetura, sem implantação ou capacidade comprovada.
+Do zero significa partir do produto e construir conceito, texto e composição, sem exigir uma arte anterior. O primeiro compositor pode produzir artes com tipografia, formas, cores e imagens autorizadas opcionais. O resultado deve ser uma arte utilizável, além de uma descrição ou prompt.
 
-A proposta mantém edição, imagens, versões e exportação no Mac. O backend serve metadados da versão e recebe diagnósticos autorizados. Ele fica fora do caminho necessário para recuperar arquivos existentes.
+Uma direção que exige foto ou ilustração inédita por modelo depende de integração visual verificada. Mostrar essa dependência e pedir outra direção ou recurso. Uma imagem provisória identificada serve ao rascunho; ela fica fora do aceite de arte final.
 
-O [contrato técnico](arquitetura.md) define como testar integração, dados e limites. O acesso oficial a modelos para um aplicativo pago permanece como condição anterior à venda.
+Propostas de saída: formato de imagem (PNG) e legenda em texto simples (TXT). A arte candidata tem 1080 × 1350 pixels. Uma cópia privada em pacote de arquivos (ZIP), guarda campanha, rotas, variantes e recursos. Cada exportação identifica sua rota e versão.
 
-## Diferenciação que precisa aparecer no uso
+## Valor, preço e prova
 
-Canva e Adobe já oferecem criação visual e recursos reutilizáveis. [Fontes e limites](revisao/2026-10-20-compor/fontes-consultadas.md) detalham essa sobreposição.
+O ganho precisa superar o caminho habitual de criação e comparação. Observar quantidade de rotas distintas e úteis, fidelidade à voz e produto, correções e tempo até o conjunto aprovado. Medir custo da rodada e apoio necessário.
 
-A hipótese do Compor combina uma oferta estruturada, revisão de mudanças e projeto local recuperável. O teste compara esse caminho com o material e os modelos que a pessoa já usa. Tempo total, qualidade e recuperação precisam justificar instalação e preço.
+Matheus apontou 10 a 15 dólares americanos como referência percebida de ferramentas de inteligência artificial. Essa faixa orienta a pesquisa; ela difere de preço escolhido ou levantamento atual de mercado. R$199 deixa de ser candidato da oferta atual. Os cenários anteriores permanecem históricos e precisam de nova estimativa.
 
-## Fora da primeira versão
+A [v0 gratuita e paga](compor/experimento-v0.md) compara a mesma entrega criativa nos dois braços. Preço em reais e unidade de cobrança continuam para avaliação. A cobrança pode testar pacote de exploração; assinatura exige frequência observada. O usuário já pode pagar por modelos, e esse custo entra na comparação.
 
-Vídeos, animação, carrosséis, pitch deck e LinkedIn como adaptador próprio ficam para avaliação posterior. A visão de múltiplas saídas permanece no histórico do produto.
+## Contratos mantidos
 
-Publicação automática, anúncios, cobrança do curso, clientes, loja e análise de campanhas ficam fora do recorte. Colaboração simultânea, sincronização e geração de imagens também ficam para outra etapa.
+Electron para macOS, geração dentro do app e conexão inicial ChatGPT/Codex permanecem direções do autor. A máquina Oracle inicial tem um processador e um gigabyte de memória. A proposta mantém projetos e composição no Mac. Elegibilidade e condições comerciais precisam de acesso oficial antes da venda.
 
-O aplicativo usa imagens que a pessoa fornece com autorização. A base interna reúne contexto e instruções; a interface evita exigir conhecimento sobre skills.
+Abrir, editar, exportar e restaurar trabalho existente preserva acesso local. A [arquitetura](arquitetura.md) mantém permissões, recuperação e limites. A [spec](specs/compor-macos-v1.md), a [demo](compor/demo-e-testes.md) e as [orientações para Mavi](briefing-designer-compor-v1.md) aplicam a nova direção.
 
-## Critério para avançar
+A entrega atual contém documentação. Implementação, campanhas, contatos e cobrança permanecem fora desta execução.
 
-Primeiro, testar a hipótese de uso e a rota oficial de integração. Depois, validar recuperação, exportação, instalação e custo completo. A [demo e os testes](compor/demo-e-testes.md) separam protótipo, integração real, uso independente e pagamento.
-
-O [plano de negócio](compor/negocio-e-gtm.md) define recrutamento, oferta experimental e condições de avanço. A entrega atual contém documentação. Implementação, contato e cobrança exigem outra execução autorizada.
-
-Matheus definiu uma v0 com teste A/B de oferta gratuita e paga. Ela procura usuários com urgência e testa aceitação de preço desde o início. A equipe pode investigar pré-venda ou beta antes da estabilidade. O plano mantém acesso oficial antes da venda.
-
-O [experimento v0](compor/experimento-v0.md) separa interesse, uso e pagamento. Cobrar cedo permite testar o valor; receita líquida e custos observados mostram se a oferta se paga. O braço gratuito também entra nessa conta.
-
-Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos próprios](debate/2026-10-20-rcd/RCD-LICENSE.txt). A revisão mantém preço, receita e ganho como hipóteses.
+Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos próprios](debate/2026-10-20-rcd/RCD-LICENSE.txt). Ganho, preço, demanda e retorno permanecem hipóteses.

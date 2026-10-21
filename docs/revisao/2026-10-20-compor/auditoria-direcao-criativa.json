@@ -1,0 +1,157 @@
+{
+  "date": "2026-10-20",
+  "baselineCommit": "b657c72a271b490106f651f443bd319b3a2895a2",
+  "scope": "Entrega documental da nova direcao; sem prova funcional ou comercial",
+  "source": "Mensagens de Matheus sobre exploracao criativa e referencia de preco nesta conversa",
+  "requirements": [
+    {
+      "requirement": "Criar criativos do zero",
+      "evidence": [
+        "../../produto.md",
+        "../../specs/compor-macos-v1.md"
+      ],
+      "proof": "Conceito, texto, composicao e arte utilizavel; arte anterior opcional"
+    },
+    {
+      "requirement": "Tematicas diferentes preservando voz e produto",
+      "evidence": [
+        "../../produto.md",
+        "../../arquitetura.md"
+      ],
+      "proof": "Base aprovada versionada, tres rotas propostas, diversidade e fidelidade separadas"
+    },
+    {
+      "requirement": "Comparar e testar variacoes",
+      "evidence": [
+        "../../briefing-designer-compor-v1.md",
+        "../../compor/demo-e-testes.md"
+      ],
+      "proof": "Comparacao e duas variantes propostas de uma dimensao; testes externos separados do A/B de preco"
+    },
+    {
+      "requirement": "Reavaliar preco",
+      "evidence": [
+        "../../compor/negocio-e-gtm.md",
+        "../../compor/experimento-v0.md"
+      ],
+      "proof": "199 retirado; 10a15dolares como percepcao do autor; preco e unidade em aberto; reestimar rodada"
+    },
+    {
+      "requirement": "Preservar restricoes e dados",
+      "evidence": [
+        "../../arquitetura.md",
+        "../../specs/compor-macos-v1.md"
+      ],
+      "proof": "Fila parcial, origem, exportacao multipla, copia privada; acesso oficial e imagens ineditas condicionais"
+    },
+    {
+      "requirement": "Somente documentacao privada",
+      "evidence": [
+        "../../decisoes.md"
+      ],
+      "proof": "Diff limitado a Markdown e registros JSON; sem app, contatos ou cobranca"
+    }
+  ],
+  "checks": {
+    "languageLint": [
+      {
+        "file": "README.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/arquitetura.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/briefing-designer-compor-v1.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/compor/demo-e-testes.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/compor/experimento-v0.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/compor/negocio-e-gtm.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/compor/plano-construcao.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/decisoes.md",
+        "scope": "trecho atual",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/produto.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/revisao/2026-10-20-compor/README.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/revisao/2026-10-20-compor/fontes-consultadas.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/specs/compor-macos-v1.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      },
+      {
+        "file": "docs/revisao/2026-10-20-compor/05-direcao-criativa.md",
+        "scope": "arquivo inteiro",
+        "errors": 0,
+        "warnings": 0
+      }
+    ],
+    "localLinksChecked": 78,
+    "brokenLinks": [],
+    "stories": 67,
+    "demoDurationsSeconds": [
+      30,
+      45,
+      75,
+      60,
+      45,
+      45
+    ],
+    "demoTotalSeconds": 300,
+    "RCDLicenseSHA256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32"
+  },
+  "review": {
+    "product": "05-direcao-criativa.md",
+    "marketing": "Negocio e protocolo V0 atualizados",
+    "engineering": "Contratos confirmados; veto por esforco isolado corrigido"
+  },
+  "publication": "Confirmar estado remoto apos commit; recibos anteriores preservam seus commits de origem",
+  "future": "Geracao, compatibilidade, acesso, recuperacao e mercado exigem execucao posterior"
+}

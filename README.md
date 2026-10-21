@@ -1,18 +1,20 @@
 # Compor
 
-Aplicativo Electron para macOS que ajuda donos de produtos digitais a criar e atualizar uma divulgação visual. A pessoa trabalha com texto, imagens, formas e cores. O contexto interno preserva fatos e escolhas aprovadas.
+Aplicativo Electron para macOS que ajuda founders a criar criativos do zero e explorar temas diferentes para divulgar o mesmo produto. Founder é quem criou o negócio. A base interna preserva voz e fatos; cada campanha permite comparar conceitos, artes e variantes.
 
 **Estado em 20/10/2026: documentação, sem implementação.** O repositório permanece privado. O nome anterior era Oficina em Prancha; oficinas e fotografia pertencem ao histórico de exploração.
 
 ## Caminho proposto para a primeira versão
 
-Um dono solo de curso digital já vendido, uma divulgação próxima e um material estático por projeto. Propostas de saída: formato de imagem (PNG), texto simples (TXT) e cópia privada restaurável. Público, ganho e pagamento precisam de teste.
+Um produto e uma campanha por projeto. Proposta inicial: três rotas criativas contrastantes e duas variantes de uma rota escolhida. Cada criativo selecionado exporta imagem (PNG) e texto simples (TXT). A cópia privada preserva o conjunto. Público, quantidade, ganho e pagamento precisam de teste.
 
 Matheus definiu macOS, conexão inicial por conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. A proposta mantém conteúdo e exportação no Mac. A elegibilidade oficial da integração e a cobrança permitida antecedem venda.
 
 Decisão confirmada em 20/10/2026: manter o repositório privado e validar acesso oficial antes de vender.
 
 Matheus definiu uma v0 com comparação A/B de oferta gratuita e paga. Ela pode testar pré-venda ou beta antes da estabilidade. O plano mede urgência, uso, pagamento e custo desde essa etapa, preservando acesso oficial antes da venda.
+
+Matheus apontou 10 a 15 dólares americanos como referência percebida de preço. R$199 saiu da oferta atual; preço em reais e unidade de cobrança continuam para avaliação. A nova entrega exige estimar custo por rodada criativa.
 
 ## Documentos atuais
 
@@ -25,6 +27,7 @@ Matheus definiu uma v0 com comparação A/B de oferta gratuita e paga. Ela pode 
 - [Demo e testes](docs/compor/demo-e-testes.md): roteiro de cinco minutos e validação.
 - [Orientações para Mavi](docs/briefing-designer-compor-v1.md): quatro telas, painéis e estados.
 - [Decisões e origem](docs/decisoes.md): confirmações, propostas e substituições.
+- [Direção criativa atual](docs/revisao/2026-10-20-compor/05-direcao-criativa.md): valor, variações e critérios.
 - [Revisão com quatro agentes](docs/revisao/2026-10-20-compor/README.md): críticas, consolidação e fontes.
 
 ## Histórico preservado
