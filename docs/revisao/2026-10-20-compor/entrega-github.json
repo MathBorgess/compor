@@ -1,0 +1,162 @@
+{
+  "date": "2026-10-20",
+  "verifiedContentCommit": "f7fe9ac0de7e679b2db3518e93965d6c27e83686",
+  "repository": {
+    "nameWithOwner": "MathBorgess/oficina-em-prancha",
+    "url": "https://github.com/MathBorgess/oficina-em-prancha",
+    "visibility": "PRIVATE"
+  },
+  "pullRequest": {
+    "headRefName": "codex/debate-rcd-servico",
+    "headRefOid": "f7fe9ac0de7e679b2db3518e93965d6c27e83686",
+    "number": 4,
+    "state": "OPEN",
+    "statusCheckRollup": [],
+    "url": "https://github.com/MathBorgess/oficina-em-prancha/pull/4"
+  },
+  "issue": {
+    "labels": [
+      {
+        "id": "LA_kwDOVRM-ns8AAAAC-SQSiQ",
+        "name": "ready-for-agent",
+        "description": "Spec preparada para triagem; execucao deve respeitar o escopo autorizado.",
+        "color": "0E8A16"
+      }
+    ],
+    "number": 2,
+    "state": "OPEN",
+    "title": "Spec: Compor V1 para macOS, criação visual e revisão de oferta",
+    "url": "https://github.com/MathBorgess/oficina-em-prancha/issues/2"
+  },
+  "verification": {
+    "private": true,
+    "PRHeadMatchesLocal": true,
+    "remoteFilesMatchLocal": true,
+    "issueBodyMatchesSpec": true,
+    "PRBodyReadback": true,
+    "workingTreeCleanAtReadback": true
+  },
+  "files": [
+    {
+      "path": "README.md",
+      "gitBlob": "4d0021c643025eb2f2b0b715dabbaa141fc3c2f3",
+      "sha256": "c92c70cf372ed134bc3c5fbc73bd725ee91572b61e4742fdec6bc103d66f0f7e"
+    },
+    {
+      "path": "docs/arquitetura.md",
+      "gitBlob": "dc099e3ff4ba1c7339be84844fd47f4b06cd4fcc",
+      "sha256": "b3c7b88daf98ec9671a841ecf9a42403c8c0ef4ad053a9b35dad734a3c48bec8"
+    },
+    {
+      "path": "docs/briefing-designer-compor-v1.md",
+      "gitBlob": "752a8cceafee5fc03228de4225454ac4e2ead9ba",
+      "sha256": "f5193c89a228512d02051343d0e1fb89b5eced4c41b9e3d35b8a87c58ab45e48"
+    },
+    {
+      "path": "docs/briefing-designer-primeira-versao.md",
+      "gitBlob": "5e750e76369da39aeb9ac62666f095b4bdef3047",
+      "sha256": "9136797da9584fc6841ce791fbfa8fc9fae6bebbe1dc9eb8ae706e8c707853e0"
+    },
+    {
+      "path": "docs/compor/demo-e-testes.md",
+      "gitBlob": "89654adbe808d81c6fc391d5af24daf625b06074",
+      "sha256": "798e69713e47df96e8e3444b1c19e182c58626b13755aa32c784500bdb781e40"
+    },
+    {
+      "path": "docs/compor/negocio-e-gtm.md",
+      "gitBlob": "0ab90ce962d9b4e0418395b9fdc338abbe9681dd",
+      "sha256": "11e80d940d084d513dca7e3edfeaad05a36dc8f8b4bbbecc6768d00130238bf2"
+    },
+    {
+      "path": "docs/compor/plano-construcao.md",
+      "gitBlob": "73711c80802a699e9ca57030396eac75d4449554",
+      "sha256": "0224e851cd4b6ef7f8057c0f5f717f8891fd2a366473cf79632c915b64e509c8"
+    },
+    {
+      "path": "docs/decisoes.md",
+      "gitBlob": "e10b2068c772a974966af29060ea5362a3e08ca4",
+      "sha256": "888909a9c03d46ce7f4fd3379b1bd37dce4ea0aaf7d2522f289a8414eb0d3e61"
+    },
+    {
+      "path": "docs/produto.md",
+      "gitBlob": "dc5585aa7e8dae277ba4b217c2760407fe6d4d7c",
+      "sha256": "e2eda9ff798ba9a7fd1ff5bc91649be188661f7b5e47b3f2ac347941f5ae9996"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/README.md",
+      "gitBlob": "73318b98831879c7f780c9400d093b2720116817",
+      "sha256": "3958640002e413ec28dc847d22edc72ea42abb3cf32bac267ede314a48de23a6"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/agentes/01-usuario.md",
+      "gitBlob": "80aadbad6d82814855649f4221be87e91c609a9f",
+      "sha256": "4bc06bdbaacc2135215e4ca99ee9d8dc56472cd194e6f4efdd772b71b25bea40"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/agentes/02-produto.md",
+      "gitBlob": "656d0af85c9eac0f9e0276b9571f88769278c4fc",
+      "sha256": "3aeaa07bf204c5aeb51a306783478c53038acdaebdfbc6b68f76eb7b01ccc2ef"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/agentes/03-engenharia.md",
+      "gitBlob": "7bfdb015d59334a744f266cbe066c1eac18e386f",
+      "sha256": "288468d01f44bf93f64aac9ee9fc11e31fde2ebd871902cae53c42eb8f6163dc"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/agentes/04-marketing-vendas.md",
+      "gitBlob": "630697019d8cc00eaa72ac390b2fe69589e594d6",
+      "sha256": "6615c034d34a4205cc9d3c4f6e087481130f854b7d9bc0b8259d3193fc3ccb69"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/ambiente.json",
+      "gitBlob": "d333c1b828d74cefdc76574e7472f733b435f015",
+      "sha256": "cdccb557555cb69bc1341be6efee9ad8893cbb36d4009b200c7416a626cd63c6"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/auditoria.json",
+      "gitBlob": "6b4a44c47d7ceaeeaccab29f131892566d13e257",
+      "sha256": "066c2e899bb1a33333dbf2a3f6fbeb64b74e4bce7ff13bafd052f9f0eaa8a574"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/fontes-consultadas.md",
+      "gitBlob": "737fce66c365462edb9bae680c6b717730e69917",
+      "sha256": "d153d73a0a2494bb7c10df17b5adfd6511fbcfeefd5c9f141a2a8c1ba6d82581"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/fontes/adaptacao-designer.txt",
+      "gitBlob": "f866f270be61337d526275d7f736e5bc7c524b17",
+      "sha256": "9ac293982a75c98ee8af72e7b1a41ba53e3aa00a193fa44e5faa03e4870a7fc7"
+    },
+    {
+      "path": "docs/servico/gtm-e-validacao.md",
+      "gitBlob": "6a327d25edc211374ad91866fff00fd01efffecf",
+      "sha256": "eb67a62404935b129c072fec87afca75cd7e8ce78577ec530bcc2cad4c625ea3"
+    },
+    {
+      "path": "docs/servico/oferta-e-economia.md",
+      "gitBlob": "3ac783cedee923d1c79ab3b3df6f20162ec72822",
+      "sha256": "5cbdf49f7fa77172c20505499e093f8eb6cf06cc860603bd2e9f4b7e33a2ad86"
+    },
+    {
+      "path": "docs/servico/plano-implementacao.md",
+      "gitBlob": "38a44223409c4a6107daa53db185992ebee7567b",
+      "sha256": "a65ebf095c1fe77b53f76e7f4cd57d910968e1fbfb0e22ca6d5e13fa59b8e817"
+    },
+    {
+      "path": "docs/servico/variacoes-escopo.md",
+      "gitBlob": "03251a9bb3dbc7f432243967a54aded3fdaa56de",
+      "sha256": "3b9e1795a21faeba80b007e17706d5e88fa8290b69582f75d0c6a088b05d96a0"
+    },
+    {
+      "path": "docs/specs/compor-macos-v1.md",
+      "gitBlob": "dfda8f557a7b24b8418624abe79091740fe048cc",
+      "sha256": "952726d310174cdacc6ff02aee135b090dec15cecd5a3f3e1f33ceac4e53c5cf"
+    },
+    {
+      "path": "docs/specs/experiencia-desktop-oficina.md",
+      "gitBlob": "5df2942f06f85cca3e65b8cb1dd7f9a16d47d932",
+      "sha256": "553e6defeb093377d20bb37f91fa02569a908defcb45e43fdf082afa506c1778"
+    }
+  ],
+  "scope": "Apenas entrega documental; sem prova de comportamento do aplicativo, capacidade ou mercado"
+}
