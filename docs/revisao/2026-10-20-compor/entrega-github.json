@@ -1,15 +1,13 @@
 {
   "date": "2026-10-20",
-  "verifiedContentCommit": "f7fe9ac0de7e679b2db3518e93965d6c27e83686",
+  "verifiedContentCommit": "4fc7f081164b9c8fde89e5c407ca3deb87b01008",
   "repository": {
     "nameWithOwner": "MathBorgess/oficina-em-prancha",
     "url": "https://github.com/MathBorgess/oficina-em-prancha",
     "visibility": "PRIVATE"
   },
   "pullRequest": {
-    "headRefName": "codex/debate-rcd-servico",
-    "headRefOid": "f7fe9ac0de7e679b2db3518e93965d6c27e83686",
-    "number": 4,
+    "headRefOid": "4fc7f081164b9c8fde89e5c407ca3deb87b01008",
     "state": "OPEN",
     "statusCheckRollup": [],
     "url": "https://github.com/MathBorgess/oficina-em-prancha/pull/4"
@@ -23,9 +21,8 @@
         "color": "0E8A16"
       }
     ],
-    "number": 2,
     "state": "OPEN",
-    "title": "Spec: Compor V1 para macOS, criação visual e revisão de oferta",
+    "title": "Spec: Compor v0 gratuito/pago e V1 para macOS",
     "url": "https://github.com/MathBorgess/oficina-em-prancha/issues/2"
   },
   "verification": {
@@ -34,18 +31,20 @@
     "remoteFilesMatchLocal": true,
     "issueBodyMatchesSpec": true,
     "PRBodyReadback": true,
-    "workingTreeCleanAtReadback": true
+    "workingTreeCleanAtReadback": true,
+    "legacyDocumentsPreservedExceptMarkers": true,
+    "userStories": 55
   },
   "files": [
     {
       "path": "README.md",
-      "gitBlob": "4d0021c643025eb2f2b0b715dabbaa141fc3c2f3",
-      "sha256": "c92c70cf372ed134bc3c5fbc73bd725ee91572b61e4742fdec6bc103d66f0f7e"
+      "gitBlob": "0218f6b3d64d22cc6cbfd066d5dd0ac6204bdd47",
+      "sha256": "256ef9c51346a36699f47537043eb4b15efe85e053ae57308d84824f0eb8931c"
     },
     {
       "path": "docs/arquitetura.md",
-      "gitBlob": "dc099e3ff4ba1c7339be84844fd47f4b06cd4fcc",
-      "sha256": "b3c7b88daf98ec9671a841ecf9a42403c8c0ef4ad053a9b35dad734a3c48bec8"
+      "gitBlob": "c5faff3dad7a7c817c91f9914b48c0750a36d815",
+      "sha256": "1320d26796d10243f4c4d96b065accda5571e4eb065b8819de20aa176025c482"
     },
     {
       "path": "docs/briefing-designer-compor-v1.md",
@@ -59,33 +58,38 @@
     },
     {
       "path": "docs/compor/demo-e-testes.md",
-      "gitBlob": "89654adbe808d81c6fc391d5af24daf625b06074",
-      "sha256": "798e69713e47df96e8e3444b1c19e182c58626b13755aa32c784500bdb781e40"
+      "gitBlob": "4f9320155b8d8a02b0dd3cc3b7bd32e4f0bb7ed5",
+      "sha256": "ed9bd4c1ece735665f3b8a01f024b2b7a58fd0873a0428268994f9d1a3adf4e3"
+    },
+    {
+      "path": "docs/compor/experimento-v0.md",
+      "gitBlob": "0066eaa0a18e3be9d739ead791080a5487864406",
+      "sha256": "00e4913929ff5d373053da7bcc5528ed5918d0e9f410118dd545dc83099cf8bf"
     },
     {
       "path": "docs/compor/negocio-e-gtm.md",
-      "gitBlob": "0ab90ce962d9b4e0418395b9fdc338abbe9681dd",
-      "sha256": "11e80d940d084d513dca7e3edfeaad05a36dc8f8b4bbbecc6768d00130238bf2"
+      "gitBlob": "636b4d53fbeed0cd60afad98cf93bda354a0b1e7",
+      "sha256": "fca4ced4e53af27725e3255cabd2c6446b3065ab3895b626d57d5580fd1a11d4"
     },
     {
       "path": "docs/compor/plano-construcao.md",
-      "gitBlob": "73711c80802a699e9ca57030396eac75d4449554",
-      "sha256": "0224e851cd4b6ef7f8057c0f5f717f8891fd2a366473cf79632c915b64e509c8"
+      "gitBlob": "b8518bbe4685368bd33a7d401a4c6bc0d8a53579",
+      "sha256": "4cde5d949327abb02583e806343c2f481d83c861570c5416476ea402b8de03d5"
     },
     {
       "path": "docs/decisoes.md",
-      "gitBlob": "e10b2068c772a974966af29060ea5362a3e08ca4",
-      "sha256": "888909a9c03d46ce7f4fd3379b1bd37dce4ea0aaf7d2522f289a8414eb0d3e61"
+      "gitBlob": "8d6b4c3e43996b2f1278d067453493986ba3eb0a",
+      "sha256": "bb87577777503161352b9fc93458b07776e2970420654eff8863952ee87556d6"
     },
     {
       "path": "docs/produto.md",
-      "gitBlob": "dc5585aa7e8dae277ba4b217c2760407fe6d4d7c",
-      "sha256": "e2eda9ff798ba9a7fd1ff5bc91649be188661f7b5e47b3f2ac347941f5ae9996"
+      "gitBlob": "cbe7fdf86c2eb1ffd0c6d9aad1118ec6545c60f9",
+      "sha256": "346bbdbc77416e2803d408ab21ec7c638fbc1a12cf3075e59263a03f01ab7251"
     },
     {
       "path": "docs/revisao/2026-10-20-compor/README.md",
-      "gitBlob": "73318b98831879c7f780c9400d093b2720116817",
-      "sha256": "3958640002e413ec28dc847d22edc72ea42abb3cf32bac267ede314a48de23a6"
+      "gitBlob": "0e28214ea8ab483ee32f55f1d759b1b32524074d",
+      "sha256": "10510f02b56600b04100076c7db1ca970fbdc6b138f949e814ee5d4feba90333"
     },
     {
       "path": "docs/revisao/2026-10-20-compor/agentes/01-usuario.md",
@@ -114,8 +118,13 @@
     },
     {
       "path": "docs/revisao/2026-10-20-compor/auditoria.json",
-      "gitBlob": "6b4a44c47d7ceaeeaccab29f131892566d13e257",
-      "sha256": "066c2e899bb1a33333dbf2a3f6fbeb64b74e4bce7ff13bafd052f9f0eaa8a574"
+      "gitBlob": "7d0ebc9c76a9f24f385c41967516eea17c0d90d1",
+      "sha256": "d679ef14f361223fe24bb270b50e3f89db92e757a0e04a3e02273913623087a2"
+    },
+    {
+      "path": "docs/revisao/2026-10-20-compor/entrega-github.json",
+      "gitBlob": "f011e909d4d68ab8a684c707d973a47675aa6e09",
+      "sha256": "574799cfbb2500a239a85c847861c16299ce3310b0547588027585708c9e7dc9"
     },
     {
       "path": "docs/revisao/2026-10-20-compor/fontes-consultadas.md",
@@ -149,8 +158,8 @@
     },
     {
       "path": "docs/specs/compor-macos-v1.md",
-      "gitBlob": "dfda8f557a7b24b8418624abe79091740fe048cc",
-      "sha256": "952726d310174cdacc6ff02aee135b090dec15cecd5a3f3e1f33ceac4e53c5cf"
+      "gitBlob": "4901126c2b4ca8abd50bfc96078f19e27e0c4a13",
+      "sha256": "797ee00b2b990fd5e5027abbb6725f1139bfc36e7e991994f16d301e96de16f3"
     },
     {
       "path": "docs/specs/experiencia-desktop-oficina.md",
@@ -158,5 +167,5 @@
       "sha256": "553e6defeb093377d20bb37f91fa02569a908defcb45e43fdf082afa506c1778"
     }
   ],
-  "scope": "Apenas entrega documental; sem prova de comportamento do aplicativo, capacidade ou mercado"
+  "scope": "Entrega documental verificada. Integracao, capacidade, demanda, pagamento e estabilidade permanecem testes futuros."
 }
