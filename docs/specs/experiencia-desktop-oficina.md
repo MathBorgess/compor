@@ -1,5 +1,7 @@
 # Especificação: experiência desktop da Oficina em Prancha
 
+> Histórico em 20/10/2026. O [recorte Compor](compor-macos-v1.md) substitui este caso-guia. O texto abaixo preserva decisões e propostas anteriores.
+
 **20/10/2026 · Proposta para revisão, apenas documentação.** Invariantes do autor preservados; recorte comercial e novos contratos derivados do debate RCD. Não há app, instalador, teste de uso ou oferta disponível. `ready-for-agent` não autoriza implementar.
 
 ## Problem Statement

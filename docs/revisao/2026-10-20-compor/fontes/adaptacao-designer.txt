@@ -1,0 +1,71 @@
+Nome do projeto: Compor.
+Este documento adapta o texto original e considera o contexto do print enviado na conversa. O público desta adaptação são donos de negócios digitais que querem vender um produto digital. O aplicativo ajuda essas pessoas a preparar materiais de marketing para divulgar sua oferta.
+A pessoa reúne informações sobre seu produto e cria um material com texto, imagens, formas e cores. O aplicativo guarda as informações e as escolhas aprovadas para facilitar mudanças futuras. A inteligência artificial pode sugerir textos e composições. A pessoa revisa e decide o que aprovar.
+O aplicativo será para computador. O documento original prevê a tecnologia Electron para o desenvolvimento. Matheus cuida do desenvolvimento, conforme a divisão de trabalho informada na conversa. Você cuida do design das telas e do fluxo. As instruções internas de geração ficam nos bastidores. A interface apresenta objetivos, informações e materiais em linguagem comum.
+O público definido para esta adaptação são donos de negócios digitais que querem divulgar e vender um produto digital. Cursos, livros digitais, materiais para baixar e assinaturas são exemplos possíveis. A pessoa pode criar materiais para o próprio negócio e trabalhar sem uma equipe de marketing.
+A interface deve atender pessoas com diferentes níveis de experiência em design e inteligência artificial. Usar exemplos, perguntas claras e nomes de ações que expliquem o resultado. A disposição desse público para usar inteligência artificial continua como hipótese. O print expressa uma opinião sobre essa disposição.
+Quem usa o aplicativo é o dono do negócio. Quem recebe o material é o possível comprador do produto digital. O público da divulgação deve aparecer em cada projeto, pois diferentes produtos podem atender pessoas diferentes. Quem paga pelo aplicativo e em quais condições são decisões comerciais pendentes.
+A hipótese é que essas pessoas precisam transformar informações dispersas em uma divulgação clara e visualmente consistente. Também podem precisar adaptar materiais quando mudam o preço, a data, o benefício ou a chamada para compra. O aplicativo deve preservar o trabalho aprovado e mostrar o que precisa de revisão.
+Essas dificuldades ainda precisam de pesquisa com o novo público. O design deve permitir observar se a pessoa entende o produto e conclui a tarefa com autonomia. A promessa do aplicativo é ajudar a criar e revisar materiais. Resultados de venda dependem de outros fatores.
+Para começar o desenho, usar um negócio, um produto digital e um material por projeto. O ponto de partida proposto nesta adaptação é uma publicação estática para rede social, com imagem e texto de apoio. Essa escolha permite desenhar e testar o fluxo completo. Outros formatos entram após a equipe avaliar esse primeiro uso.
+O fluxo cobre criar, salvar, reabrir, revisar e exportar. A pessoa pode duplicar um projeto para aproveitar sua base. O aplicativo preserva o projeto original. O projeto guarda o conteúdo editável, as imagens e as decisões aprovadas.
+Propor exportação de imagem e cópia do texto de apoio. Matheus deve verificar os formatos possíveis antes da implementação. Exportação no formato de documento portátil (PDF) depende dessa verificação e da necessidade do material. O desenho deve mostrar as opções de formato como propostas em avaliação.
+Ana vende o curso digital fictício Organize Sua Semana. Ela quer divulgar as inscrições para pessoas que buscam organizar a rotina. Ana informa o conteúdo do curso, o preço de R$ 97, a data e o endereço de compra. Ela escolhe imagens autorizadas e monta uma publicação com texto de apoio.
+Depois, Ana muda o preço para R$ 127. O aplicativo aponta os trechos que podem precisar de revisão. Ana confere o material completo e aprova cada ajuste. A versão anterior continua disponível.
+Usar dados fictícios em todas as telas e nos primeiros testes. Preço, condições, datas, benefícios e resultados anunciados vêm da pessoa responsável pelo produto. Se faltar uma informação, o aplicativo mostra a lacuna. Sugestões de texto devem preservar os fatos confirmados.
+1. Abre o aplicativo e cria um projeto ou retoma um projeto salvo.
+2. Informa os dados do negócio e do produto digital.
+3. Define o objetivo da divulgação, o público e o destino do material.
+4. Completa as informações que faltam ou registra uma omissão intencional.
+5. Escolhe imagens, organiza os blocos e acompanha a prévia.
+6. Confere os dados, o fornecedor e o custo antes de autorizar uma geração.
+7. Revisa as sugestões de texto e composição.
+8. Salva uma versão aprovada e exporta o material.
+9. Quando uma informação muda, compara versões e aprova os ajustes.
+10. Fecha e reabre o projeto para continuar o trabalho.
+Começar com baixa fidelidade: rascunhos com caixas, textos, campos e botões. O objetivo é definir a organização e o caminho entre as telas. Cores, fontes e acabamento entram depois da revisão desse caminho. As quatro telas agrupam tarefas. Você pode combinar painéis quando isso facilitar o uso.
+
+
+Mostrar os projetos com nome, produto, tipo de material, última alteração e estado. Usar os estados Rascunho, Revisão pendente e Versão aprovada. Esses estados descrevem o trabalho dentro do aplicativo. Publicação e venda exigem confirmação externa.
+Desenhar ações para criar, abrir, duplicar e restaurar uma cópia. No primeiro acesso, mostrar um exemplo fictício e o botão Criar projeto. Mostrar os requisitos de conexão antes da geração. Sistema operacional e funcionamento sem rede continuam pendentes.
+Separar a base reutilizável do pedido atual de divulgação. Uma mudança para um material vale primeiro para aquele projeto. Atualizar a base reutilizável exige uma ação explícita da pessoa.
+
+
+Permitir colar notas existentes e preencher as lacunas. Usar os rótulos Confirmado por você, A confirmar e Omitido por escolha. Explicar a omissão: a pessoa escolheu deixar aquela informação fora do material. Uma omissão aprovada deve continuar preservada nas próximas sugestões.
+Desenhar perguntas como: O que você vende? Para quem? O que a pessoa deve fazer depois de ver este material? Campos devem indicar quando são opcionais e explicar por que uma informação ajuda.
+Mostrar o texto e a composição visual durante a criação. Como ponto de partida, desenhar três áreas: informações e blocos à esquerda, prévia no centro e ajustes à direita. Essa organização é uma proposta para testar.
+Os blocos podem incluir título, benefício, conteúdo do produto, imagem, condições e chamada para ação. Explicar chamada para ação com um exemplo: Conheça o curso. A pessoa pode reorganizar blocos, editar textos, trocar imagens e experimentar formas e cores. O texto de apoio da publicação deve ficar acessível junto da prévia.
+Usar imagens próprias ou com autorização de uso. A geração de imagens fica para uma avaliação futura. Nesta etapa, a pessoa escolhe as imagens que fornece.
+Desenhar sugestões como Encurtar texto, Sugerir título e Experimentar outra composição. Cada alternativa preserva a versão atual. A pessoa pode aceitar, rejeitar ou editar a sugestão.
+Mostrar o material completo, com imagem e texto de apoio. A pessoa confere os fatos, a ordem de leitura, o endereço de compra e as condições da oferta. Mostrar quais informações da base originaram o material, em linguagem comum.
+Desenhar ações para salvar versão, comparar, revisar mudança e exportar. Quando o preço mudar, apresentar o conteúdo anterior e o ajuste sugerido. A pessoa pode aplicar, rejeitar ou desfazer cada ajuste. O aplicativo deve mostrar o conjunto do material, pois a detecção automática de mudanças pode falhar.
+No painel de exportação, mostrar destino, formato e limites de edição. Depois da exportação, permitir abrir o arquivo para conferência. O arquivo final leva apenas o conteúdo aprovado para divulgação. O projeto privado mantém a base completa.
+Ao reabrir, recuperar a versão aprovada, as imagens e as decisões. Abrir, editar e exportar trabalho existente dispensa nova geração, renovação ou conexão de cobrança. Novas gerações podem exigir conexão e condições de custo próprias.
+Separar a autorização para enviar dados à inteligência artificial da decisão de divulgar conteúdo no material final. Antes de cada envio, mostrar a tarefa, os textos, as imagens, o fornecedor e o custo ou limite aplicável. A autorização vale para o escopo apresentado. Mudanças de tarefa ou fornecedor exigem nova conferência.
+Conteúdo marcado como Somente neste computador permanece fora dos envios externos. Quando faltar autorização, manter a edição local disponível e bloquear o envio. Se a geração falhar, explicar o custo e o envio de uma nova tentativa.
+A equipe precisa definir fornecedor, retenção de dados e acesso do suporte antes de trabalhar com dados reais. A política de dados também deve cobrir registros, atendimento, cópias e exportação. Senhas e chaves de acesso ficam fora do conteúdo, das cópias e dos registros.
+
+
+Usar texto junto da cor para explicar cada estado. Os campos precisam de rótulos claros. As ações precisam funcionar por teclado. A ordem de leitura deve acompanhar a tarefa.
+Observar se a pessoa consegue:
+- Entender que o aplicativo ajuda a criar materiais para divulgar um produto digital.
+- Distinguir as informações do produto, a divulgação atual e o material final.
+- Trabalhar com texto, imagens, formas e cores na mesma criação.
+- Reconhecer fatos confirmados, lacunas e omissões intencionais.
+- Entender o que envia à inteligência artificial e o que aparece na divulgação.
+- Revisar uma mudança de preço e preservar as escolhas aprovadas.
+- Salvar, fechar, reabrir e exportar o trabalho com seus recursos.
+- Explicar onde ela decide e onde a ferramenta sugere.
+Registrar dúvidas, erros e ajuda recebida. Contar o tempo total: preparo, instalação, criação, espera, revisão e exportação. Comparar com o caminho que a pessoa já usa, incluindo modelos e ferramentas existentes. Separar o teste com ajuda do teste independente. Metas de tempo, frequência e preço dependem de dados desse público.
+Vídeos, animações, carrosséis, apresentações e páginas de venda ficam para avaliação posterior. O mesmo vale para publicação automática, agendamento, compra de anúncios e análise de campanhas. Busca de clientes, contratos, estoque e cobrança dentro do aplicativo também ficam fora desta primeira versão. Colaboração simultânea, contas compartilhadas e sincronização entre computadores exigem avaliação própria. Exportação editável para outras ferramentas depende de verificação técnica.
+A hipótese comercial é que o público pague para criar e atualizar materiais com menos esforço. O benefício precisa superar o preço, o tempo de aprendizado e o trabalho de revisão. A cobrança precisa cobrir desenvolvimento, geração, aquisição, entrega e suporte.
+Pagamento por material concluído é uma hipótese para testar. Preço e condições continuam em aberto. Uma assinatura depende da frequência de uso observada. A equipe deve definir o apoio e as revisões incluídos antes de oferecer uma contratação. O cliente mantém acesso ao projeto e aos arquivos.
+Para testes futuros, procurar pessoas que venderam ou tentaram vender um produto digital recentemente. Pedir que mostrem um material autorizado e expliquem como o criaram ou atualizaram. Observar o trabalho real e comparar com o aplicativo.
+Os relatos de fotografia e os fornecedores citados no documento original pertencem ao recorte anterior. Este documento usa essas referências como histórico. A pesquisa com o novo público ainda precisa acontecer. As referências comerciais e seus termos permanecem no documento original. Receita, disposição a pagar e licença do código continuam pendentes.
+- Quatro telas em baixa fidelidade, com campos, botões e informações de exemplo.
+- Um roteiro de navegação entre as telas. Um protótipo clicável pode demonstrar esse caminho.
+- O painel de envio à inteligência artificial e o painel de exportação.
+- Os estados de espera, erro, mudança, reabertura e restauração.
+- Anotações sobre o resultado de cada ação e as decisões que o aplicativo precisa preservar.
+- Uma lista de dúvidas e dificuldades observadas na revisão.
+O roteiro mínimo cria o material do curso fictício, muda o preço e recupera o projeto após reabrir. Seu primeiro passo é desenhar a tela Meus projetos e indicar o destino do botão Criar projeto.

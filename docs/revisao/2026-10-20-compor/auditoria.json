@@ -1,0 +1,265 @@
+{
+  "date": "2026-10-20",
+  "scope": "Auditoria da entrega documental, sem confirmar funcionamento ou mercado",
+  "baselineCommit": "d7bbc5aca230886c67f3f0f1c10d7679cca236f5",
+  "requirements": [
+    {
+      "requirement": "Fonte da designer",
+      "evidence": [
+        "fontes/adaptacao-designer.txt"
+      ],
+      "status": "Preservada byte a byte"
+    },
+    {
+      "requirement": "Quatro agentes com papeis separados",
+      "evidence": [
+        "agentes/01-usuario.md",
+        "agentes/02-produto.md",
+        "agentes/03-engenharia.md",
+        "agentes/04-marketing-vendas.md"
+      ],
+      "status": "Pareceres e consolidacao completos; simulacoes declaradas"
+    },
+    {
+      "requirement": "RCD com atribuicao e termos",
+      "evidence": [
+        "fontes-consultadas.md",
+        "../../debate/2026-10-20-rcd/RCD-LICENSE.txt"
+      ],
+      "status": "Aplicado; termos proprios preservados"
+    },
+    {
+      "requirement": "O que criar e para quem",
+      "evidence": [
+        "../../produto.md",
+        "../../briefing-designer-compor-v1.md"
+      ],
+      "status": "Recorte e quatro telas documentados como propostas"
+    },
+    {
+      "requirement": "macOS, ChatGPT/Codex e Oracle1CPU1GB",
+      "evidence": [
+        "../../arquitetura.md"
+      ],
+      "status": "Direcoes preservadas; elegibilidade e capacidade pendentes de execucao"
+    },
+    {
+      "requirement": "Exportacao, recuperacao de imagens, armazenamento",
+      "evidence": [
+        "../../arquitetura.md",
+        "../../specs/compor-macos-v1.md"
+      ],
+      "status": "Contratos propostos PNG/TXT/ZIP, incorporacao de imagens, versoes, limites e retencao"
+    },
+    {
+      "requirement": "Como construir e testar",
+      "evidence": [
+        "../../compor/plano-construcao.md",
+        "../../specs/compor-macos-v1.md",
+        "../../compor/demo-e-testes.md"
+      ],
+      "status": "52 historias, fronteira principal, falhas, etapas e aceites documentados"
+    },
+    {
+      "requirement": "Negocio e GTM",
+      "evidence": [
+        "../../compor/negocio-e-gtm.md"
+      ],
+      "status": "Funil, canais, filtros, custos, piso/teto e condicoes de rejeicao"
+    },
+    {
+      "requirement": "Descricao de demo GTM",
+      "evidence": [
+        "../../compor/demo-e-testes.md"
+      ],
+      "status": "300 segundos; conceito e integracao real separados"
+    },
+    {
+      "requirement": "Correcao de drifts e preservacao de origem",
+      "evidence": [
+        "README.md",
+        "../../decisoes.md"
+      ],
+      "status": "Historico preservado; propostas e direcoes distintas"
+    },
+    {
+      "requirement": "Revisao independente",
+      "evidence": [
+        "README.md"
+      ],
+      "status": "Produto, marketing e engenharia; quatro ajustes corrigidos e conferidos"
+    },
+    {
+      "requirement": "Repositorio privado sem implementacao",
+      "evidence": [
+        "../../arquitetura.md",
+        "entrega-github.json"
+      ],
+      "status": "Arquivos limitados a documentacao; publicacao verificada em entrega-github.json"
+    }
+  ],
+  "futureGates": {
+    "commercialIntegration": "Pendente; nao oferecer nem cobrar sem confirmacao do arranjo permitido",
+    "runtimeAndDistribution": "Pendente e fora desta entrega documental",
+    "userAndPayment": "Pendente; nenhuma entrevista ou compra observada",
+    "design": "Mavi reforcara telas e composicao",
+    "onlyDesignRemaining": "Nao comprovado; as dependencias materiais ficam explicitadas"
+  },
+  "checks": {
+    "linksChecked": 109,
+    "brokenLinks": [],
+    "legacyPreserved": [
+      "docs/specs/experiencia-desktop-oficina.md",
+      "docs/briefing-designer-primeira-versao.md",
+      "docs/servico/oferta-e-economia.md",
+      "docs/servico/gtm-e-validacao.md",
+      "docs/servico/plano-implementacao.md",
+      "docs/servico/variacoes-escopo.md"
+    ],
+    "sourceCopiedExactly": true,
+    "docsOnly": true
+  },
+  "languageLint": [
+    {
+      "file": "README.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/produto.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/arquitetura.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/specs/compor-macos-v1.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/briefing-designer-compor-v1.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/compor/demo-e-testes.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/compor/negocio-e-gtm.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/compor/plano-construcao.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/README.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/agentes/01-usuario.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/agentes/02-produto.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/agentes/03-engenharia.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/agentes/04-marketing-vendas.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/revisao/2026-10-20-compor/fontes-consultadas.md",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/decisoes.md:trecho novo",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/specs/experiencia-desktop-oficina.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/briefing-designer-primeira-versao.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/servico/gtm-e-validacao.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/servico/oferta-e-economia.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/servico/plano-implementacao.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    },
+    {
+      "file": "docs/servico/variacoes-escopo.md:aviso",
+      "exit": 0,
+      "errors": 0,
+      "warnings": 0
+    }
+  ],
+  "independentReview": {
+    "roles": [
+      "produto",
+      "engenharia",
+      "marketing"
+    ],
+    "fixed": [
+      "duas mudancas recentes",
+      "diagnostico Oracle autorizado",
+      "pixels e pacote extraido limitados",
+      "processamento e divulgacao independentes"
+    ],
+    "finalReview": "Engenharia conferiu correcoes e plano: sem novos achados materiais no recorte"
+  },
+  "RCDLicenseSHA256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32"
+}

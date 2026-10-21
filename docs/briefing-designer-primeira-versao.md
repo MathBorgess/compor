@@ -1,5 +1,7 @@
 # Briefing para designer: primeira versão proposta
 
+> Histórico em 20/10/2026. O [recorte Compor](briefing-designer-compor-v1.md) substitui este caso-guia. O texto abaixo preserva decisões e propostas anteriores.
+
 **Data: 20/10/2026. Entrega atual: documentação.** Este documento transforma a explicação do produto em um fluxo para desenhar e testar. A construção do aplicativo fica fora desta tarefa.
 
 ## Proposta de valor

@@ -1,5 +1,7 @@
 # Proposta de variar usuário, oferta e material comercial
 
+> Histórico em 20/10/2026. O [plano Compor](../compor/negocio-e-gtm.md) substitui este recorte ativo. Preços e esforços abaixo pertencem aos cenários anteriores.
+
 **20/10/2026 · Investigação documental concluída; descoberta real ainda não executada.** Depois do debate inicial, o autor pediu investigar pessoas que querem vender produtos ou serviços, além de facilitadores, e materiais que apoiem essas vendas, além de divulgação de oficinas/palestras. Não escolheu um novo nicho nem autorizou construir todos os casos.
 
 ## O que muda na investigação

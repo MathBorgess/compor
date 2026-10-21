@@ -1,5 +1,7 @@
 # Plano de entrada, vendas e validação
 
+> Histórico em 20/10/2026. O [plano Compor](../compor/negocio-e-gtm.md) substitui este recorte ativo. Preços e esforços abaixo pertencem aos cenários anteriores.
+
 20/10/2026 · **Plano proposto, sem execução comercial.** Não há produto instalável, clientes, entrevistas, pagamentos ou vantagem competitiva demonstrada. As condições abaixo são hipóteses para revisão. O limite atual continua sendo escrever specs.
 
 **Este é o plano condicional de P1, agora controle de comparação.** O autor pediu investigar outras pessoas que vendem produtos/serviços e outros materiais. [Variações](variacoes-escopo.md) recomendam fotografia comercial e cerâmica para descoberta, sem escolha humana de novo ICP. Se outra hipótese for escolhida, substituir tarefa, canais e critérios deste plano; não somar campanhas ou transferir custos automaticamente.

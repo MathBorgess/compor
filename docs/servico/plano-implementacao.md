@@ -1,5 +1,7 @@
 # Plano de implementação proposto
 
+> Histórico em 20/10/2026. O [plano Compor](../compor/negocio-e-gtm.md) substitui este recorte ativo. Preços e esforços abaixo pertencem aos cenários anteriores.
+
 20/10/2026 · Planejamento, sem autorização para executar construção. O repositório contém apenas documentos. Nenhuma faixa abaixo é orçamento, compromisso de entrega ou capacidade observada.
 
 **Plano do controle P1, sem público definitivo escolhido.** O novo pedido do autor abriu [variações de usuário/material](variacoes-escopo.md). Outros contextos, propostas, catálogos e saídas exigem reestimativa; 98–184h não é esforço universal do app nem orçamento das variações.

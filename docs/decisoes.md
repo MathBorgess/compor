@@ -1,5 +1,28 @@
 # Decisões e origem
 
+## Revisão Compor após conversa com a designer
+
+Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisão](revisao/2026-10-20-compor/README.md) preserva a fonte e os quatro pareceres.
+
+| Origem | Direção ou proposta | Efeito atual |
+| --- | --- | --- |
+| Autor | Electron para macOS | Define o primeiro sistema; distribuição e compatibilidade exigem teste |
+| Autor | Conta ChatGPT/Codex inicialmente | Preservar direção; elegibilidade e cobrança permitida exigem confirmação oficial |
+| Autor | Oracle com um processador e 1 GB de memória | Backend inicial; capacidade permanece sem medição |
+| Texto da designer | Nome Compor e donos de produtos digitais | Substitui foco ativo em oficinas e caso-guia de fotografia |
+| Revisão de produto | Dono solo de curso já vendido; divulgação em 14 dias | Recorte para pesquisa; demanda permanece hipótese |
+| Consolidação | Uma arte PNG 1080 × 1350, legenda TXT e cópia ZIP | Contratos propostos para testar; PDF e outros adaptadores ficam posteriores |
+| Consolidação | Imagens incorporadas; projeto local versionado e recuperável | Testar após mover originais, desligar rede e restaurar cópia |
+| Consolidação | Oracle sem conteúdo, tokens, inferência e renderização | Compatibilidade e diagnóstico autorizado; registros técnicos candidatos por cinco dias |
+| Fonte oficial | Uso do plano ChatGPT sem pagamento obrigatório ao app | Confirmar separação comercial antes de oferecer editor ou assistência |
+| Autor | Reforçar specs, negócio, mercado e testes | Esta execução mantém apenas documentação; Mavi reforçará design |
+
+As propostas fecham um caminho para revisão e construção futura. Elas preservam a autoridade do autor e exigem as provas descritas na [spec atual](specs/compor-macos-v1.md).
+
+## Registro histórico anterior
+
+O restante deste documento preserva decisões e propostas anteriores à adaptação Compor. Em conflitos de recorte, seguir a revisão acima e a spec atual.
+
 Fonte das decisões: instruções e respostas explícitas de Matheus na conversa Codex de 19–20/10/2026. Recomendações do agente são identificadas como propostas.
 
 | Data | Decisão | Consequência |

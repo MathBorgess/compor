@@ -1,5 +1,7 @@
 # Serviço proposto e economia da entrega
 
+> Histórico em 20/10/2026. O [plano Compor](../compor/negocio-e-gtm.md) substitui este recorte ativo. Preços e esforços abaixo pertencem aos cenários anteriores.
+
 20/10/2026 · Recomendação dos agentes para revisão do autor, sem oferta comercial vigente. Não houve cliente, compra, entrega ou custo medido. O app não está implementado.
 
 **P1 é controle de comparação, não público definitivo.** Após o pedido do autor para investigar vendedores de produtos/serviços, este documento preserva somente a oferta condicional do caso oficina. [Variações e recomendação de descoberta](variacoes-escopo.md) podem mudar usuário, material e unidade. Não transferir preço, horas ou termos para elas.
