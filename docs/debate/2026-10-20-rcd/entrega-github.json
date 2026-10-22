@@ -5,7 +5,7 @@
   "proposalPullRequest": "https://github.com/MathBorgess/oficina-em-prancha/pull/4",
   "pullRequestStateObserved": "OPEN",
   "contentCommitVerified": "3bc99b2d9e648e2048d584ecc023489ee0e9b306",
-  "verificationScope": "Four key remote files match local bytes; GitHub PR head matches pushed content commit; issue body matches source with relative links resolved. Subsequent bookkeeping commit may change metadata only.",
+  "verificationScope": "Historical verification of exactly contentCommitVerified, not the current checkout. matchesLocalBytes records the bytes observed on 2026-10-20 at that frozen revision; later documentation evolves independently.",
   "files": [
     {
       "path": "README.md",
@@ -43,5 +43,6 @@
   "remoteChecksMeaning": "No CI checks reported; not a passing app test or approval.",
   "implementationAuthorized": false,
   "commercialActionsExecuted": false,
-  "humanApprovalOfRecommendation": false
+  "humanApprovalOfRecommendation": false,
+  "verificationInterpretation": "Compare the recorded hashes with git show contentCommitVerified:path, never with the current working tree."
 }
