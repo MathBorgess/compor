@@ -1,0 +1,273 @@
+{
+  "schema_version": 1,
+  "data": "2026-10-20",
+  "timezone": "America/Recife",
+  "tipo": "investigacao_documental_de_hipoteses",
+  "agente": "/root/variacoes_dna_receita",
+  "modelo_servido": "nao_observado",
+  "apenas_documentacao": true,
+  "contatos_executados": false,
+  "entrevistas_realizadas": false,
+  "compras_observadas": false,
+  "taaft_acessado": false,
+  "fatos_do_autor": [
+    {
+      "id": "A1",
+      "fonte": "pedido direto de Matheus nesta conversa em 2026-10-20",
+      "fato": "Investigar perfis que vendem produtos ou servicos, alem de facilitadores, oficinas e palestras; criar novo agente RCD para variar DNA do usuario e o que quer gerar."
+    },
+    {
+      "id": "A2",
+      "fonte": "decisoes do autor registradas em ../brief.md",
+      "fato": "Electron baixavel, narrativa visual, skill interna de contexto e geracao de conteudo dentro do app; esta execucao permanece em specs e documentacao."
+    }
+  ],
+  "controle_historico": {
+    "id": "P1",
+    "perfil": "Fundador de microconsultoria que vende oficinas B2B de feedback a RH/T&D.",
+    "status": "hipotese anterior preservada, sem substituicao aprovada pelo autor",
+    "referencias": ["../rcd/01-perfil.md", "../engenharia/03-fechamento.md"],
+    "evidencia_de_demanda_real": "ausente"
+  },
+  "evidencia_publica": [
+    {
+      "id": "E1",
+      "url": "https://www.pandadoc.com/proposal-software/",
+      "consultada_em": "2026-10-20",
+      "observacao": "Pagina oficial descreve propostas com marca, conteudo reutilizavel e aprovacao.",
+      "leitura": "pagina aberta",
+      "limite": "Nao prova ganho, preco ou satisfacao dos pequenos estudios."
+    },
+    {
+      "id": "E2",
+      "url": "https://abedesign.com.br/lista-de-associados",
+      "consultada_em": "2026-10-20",
+      "observacao": "Lista publica de empresas associadas.",
+      "leitura": "pagina aberta",
+      "limite": "Nao verifica porte, problema, ocasiao ou permissao de contato."
+    },
+    {
+      "id": "E3",
+      "url": "https://pixieset.com/studio-manager/",
+      "consultada_em": "2026-10-20",
+      "observacao": "Pagina oficial anuncia documentos com marca, orcamentos e gestao de projetos.",
+      "leitura": "pagina aberta",
+      "limite": "Nao testado no recorte de fotografia de alimentos local."
+    },
+    {
+      "id": "E4",
+      "url": "https://www.abrafoto.com.br/Portfolio",
+      "consultada_em": "2026-10-20",
+      "observacao": "Diretorio publico inclui especialidades alimentos e still life.",
+      "leitura": "timeout inicial; abertura posterior funcionou",
+      "limite": "Sem qualificacao individual, acesso a associados ou coleta de contatos."
+    },
+    {
+      "id": "E5",
+      "url": "https://www.nuvemshop.com.br/ferramentas/catalogo-de-produtos-com-ia",
+      "consultada_em": "2026-10-20",
+      "observacao": "Fornecedor anuncia cadastro por foto com descricao e revisao.",
+      "leitura": "pagina aberta",
+      "limite": "Descricao comercial nao comprova exatidao de medidas, material ou preco inferidos."
+    },
+    {
+      "id": "E6",
+      "url": "https://www.nuvemshop.com.br/canais/whatsapp",
+      "consultada_em": "2026-10-20",
+      "observacao": "Resultado oficial indexado anuncia catalogo e link de compra no WhatsApp.",
+      "leitura": "resultado indexado, sem validacao em conta",
+      "limite": "Disponibilidade por plano e fluxo real nao verificados."
+    },
+    {
+      "id": "E7",
+      "url": "https://www.adepe.pe.gov.br/contato/",
+      "consultada_em": "2026-10-20",
+      "observacao": "Pagina institucional lista unidades do Centro de Artesanato em Recife e Bezerros.",
+      "leitura": "pagina aberta",
+      "limite": "Canal institucional nao autoriza recrutamento nem garante acesso."
+    },
+    {
+      "id": "E8",
+      "url": "https://www.artesanatodepernambuco.pe.gov.br/pt-BR/centro-de-artesanato/artesaos",
+      "consultada_em": "2026-10-20",
+      "observacao": "Indice oficial descreve diretorio de artesaos e filtro de tipologia Barro.",
+      "leitura": "resultado indexado; abertura retornou 502",
+      "limite": "Conteudo integral e elegibilidade dos perfis nao conferidos; E7 sustenta rota institucional alternativa."
+    },
+    {
+      "id": "E9",
+      "url": "https://www.notion.com/help/selling-on-marketplace",
+      "consultada_em": "2026-10-20",
+      "observacao": "Documentacao admite descricoes e capturas na listagem; venda direta depende de aprovacao e elegibilidade.",
+      "leitura": "pagina aberta",
+      "limite": "Nenhum criador especifico foi considerado habilitado a receber pagamentos."
+    },
+    {
+      "id": "E10",
+      "url": "https://www.notion.com/templates/category/brand-guidelines",
+      "consultada_em": "2026-10-20",
+      "observacao": "Marketplace mostra perfis de criadores e filtros gratuito/pago.",
+      "leitura": "pagina aberta",
+      "limite": "Nao demonstra vendas, idioma, necessidade ou consentimento de criadores."
+    },
+    {
+      "id": "E11",
+      "url": "https://gumroad.com/features",
+      "consultada_em": "2026-10-20",
+      "observacao": "Fornecedor descreve pagina editavel e distribuicao de produtos digitais.",
+      "leitura": "pagina aberta",
+      "limite": "Nao prova elegibilidade de pessoa especifica, demanda pelo app ou resultados dos depoimentos selecionados."
+    }
+  ],
+  "hipoteses": [
+    {
+      "id": "V1",
+      "natureza": "servico_profissional_b2b",
+      "dna": "Estudio brasileiro de identidade visual com uma a tres pessoas; fundador tambem comercial.",
+      "papeis": {
+        "cliente": "estudio",
+        "pagador": "estudio por decisao do fundador",
+        "operador": "fundador",
+        "comprador_final": "dono de pequeno negocio contratando identidade visual"
+      },
+      "gatilho": "Briefing qualificado recebido e proposta em ate 14 dias.",
+      "vende": "pacote delimitado de identidade visual",
+      "gera": ["proposta PDF com escopo e casos", "case publico somente se necessario e autorizado"],
+      "acao_comercial": "obter resposta ou reuniao de decisao a uma oportunidade existente",
+      "dor": "Adaptar escopo e evidencias sem inconsistencias entre pecas.",
+      "alternativa_habitual_a_verificar": "Modelo proprio e Canva/Figma/Slides; PandaDoc como alternativa documentada.",
+      "insumos_a_verificar": ["portfolio autorizado", "identidade", "escopo", "processo"],
+      "lacunas": ["preco real", "direitos dos casos", "condicoes", "criterios do comprador"],
+      "mecanismo_de_valor_a_testar": "Revisar impacto de mudanca de entrega preservando concessoes particulares.",
+      "objecoes": ["qualidade visual", "arquivo editavel externo", "confidencialidade", "instalacao"],
+      "recrutamento_proposto": "E2 para localizar negocios; verificar porte e ocasiao voluntariamente, sem acesso presumido aos associados.",
+      "recorrencia": "por nova proposta, sem frequencia demonstrada",
+      "unidade_de_cobranca_candidata": "uma proposta e revisao; biblioteca reutilizavel somente apos teste",
+      "piso_e_teto": "desconhecidos",
+      "impacto_de_escopo": "Nucleo visual reutilizavel; composicao e edicao externa podem aumentar custo.",
+      "desistir_se": ["modelo atual basta", "Figma/PPTX indispensavel sem exportador viavel", "valor depende de captar clientes"]
+    },
+    {
+      "id": "V2",
+      "natureza": "servico_local_comercial",
+      "dna": "Fotografo independente que vende ensaio de alimentos a restaurantes e cafes locais, com portfolio e pedido de orcamento.",
+      "papeis": {
+        "cliente": "negocio de fotografia",
+        "pagador": "negocio por decisao do fotografo",
+        "operador": "fotografo",
+        "comprador_final": "proprietario ou marketing de restaurante/cafe"
+      },
+      "gatilho": "Cardapio ou colecao novos e proposta solicitada em ate 14 dias.",
+      "vende": "sessao fotografica com quantidade, uso e prazo definidos pelo profissional",
+      "gera": ["proposta visual privada", "selecao curta de portfolio para encaminhar"],
+      "acao_comercial": "explicar e discutir pacote de ensaio solicitado",
+      "dor": "Reunir fotos pertinentes e condicoes sem publicar preco ou imagem indevidamente.",
+      "alternativa_habitual_a_verificar": "PDF/template, mensagens e galeria; Pixieset como alternativa documentada.",
+      "insumos_a_verificar": ["fotos finais autorizadas", "identidade", "escopo", "tabela propria"],
+      "lacunas": ["direitos por imagem", "condicoes especificas", "autorizacao de processamento"],
+      "mecanismo_de_valor_a_testar": "Alterar quantidade/prazo e revisar efeitos preservando decisao de uso por imagem.",
+      "objecoes": ["outro aplicativo", "upload e compressao", "privacidade do cliente", "edicao"],
+      "recrutamento_proposto": "E4 e sites profissionais para localizar especialidades e verificar atuacao/ocasiao, sem solicitacao em massa.",
+      "recorrencia": "por pedido de orcamento, frequencia desconhecida",
+      "unidade_de_cobranca_candidata": "uma proposta acompanhada com base reaproveitavel",
+      "piso_e_teto": "desconhecidos",
+      "impacto_de_escopo": "Fotos e PDF sao centrais; excluir RAW, tratamento, contratos automaticos e imagens que finjam trabalho realizado.",
+      "desistir_se": ["gargalo e ausencia de pedidos", "Pixieset/template basta", "instalacao ou revisao consome todo ganho"]
+    },
+    {
+      "id": "V3",
+      "natureza": "produto_fisico_atacado",
+      "dna": "Atelie pernambucano de ceramica decorativa, uma a tres pessoas, colecao pequena pronta para revenda.",
+      "papeis": {
+        "cliente": "atelie",
+        "pagador": "atelie por decisao do proprietario",
+        "operador": "proprietario ou comercial",
+        "comprador_final": "lojista de decoracao; consumidor da loja e beneficiario posterior"
+      },
+      "gatilho": "Nova colecao a apresentar ou pedido de catalogo de lojista.",
+      "vende": "lotes de pecas fisicas decorativas",
+      "gera": ["catalogo PDF com fichas", "condicoes privadas", "selecao publica apenas se necessaria"],
+      "acao_comercial": "facilitar pedido de orcamento ou lote sem processar pedido no app",
+      "dor": "Manter fotos, referencias, medidas, disponibilidade e prazo coerentes entre materiais.",
+      "alternativa_habitual_a_verificar": "Planilha, Canva/PDF, WhatsApp e loja; Nuvemshop como alternativa documentada.",
+      "insumos_a_verificar": ["fotos reais", "referencias e medidas conferidas", "precos", "capacidade informada"],
+      "lacunas": ["qualidade cadastral", "condicoes de lote", "validade da disponibilidade"],
+      "mecanismo_de_valor_a_testar": "Revisar mudancas seletivas entre catalogo e ficha sem inferir atributos da aparencia.",
+      "objecoes": ["operacao so no celular", "acesso a computador", "PDF envelhece", "margem e suporte"],
+      "recrutamento_proposto": "Rota institucional E7; E8 apenas indice parcial. Adesao voluntaria com permissao do organizador, sem acesso a base presumido.",
+      "recorrencia": "por colecao ou atualizacao, sazonalidade nao demonstrada",
+      "unidade_de_cobranca_candidata": "uma colecao limitada e uma atualizacao; quantidade a descobrir",
+      "piso_e_teto": "desconhecidos; piso inclui revisao por referencia",
+      "impacto_de_escopo": "Entidades de produto e validade ampliam escopo alem da narrativa; sem estoque, checkout ou substituicao sintetica da peca.",
+      "desistir_se": ["estoque e preco em tempo real sao indispensaveis", "desktop exclui ocasioes", "revisao por item supera valor aceito"]
+    },
+    {
+      "id": "V4",
+      "natureza": "produto_digital",
+      "dna": "Criador independente lusofono com template Notion pago e funcional para pequenos negocios.",
+      "papeis": {
+        "cliente": "negocio do criador",
+        "pagador": "criador",
+        "operador": "criador",
+        "comprador_final": "profissional autonomo que compra o template"
+      },
+      "gatilho": "Publicacao ou atualizacao relevante de produto pronto em ate 30 dias.",
+      "vende": "licenca ou acesso ao template",
+      "gera": ["descricao da oferta", "capturas anotadas de uso real", "texto de lancamento"],
+      "acao_comercial": "montar listagem manualmente e explicar adequacao e limites",
+      "dor": "Manter descricao e capturas compativeis com a versao entregue.",
+      "alternativa_habitual_a_verificar": "Editor da plataforma, capturas, Canva e chat; Notion/Gumroad documentados.",
+      "insumos_a_verificar": ["produto pronto", "capturas sem dados reais", "instrucoes", "licenca", "identidade"],
+      "lacunas": ["compatibilidade", "limitacoes", "ocasiao de uso", "audiencia"],
+      "mecanismo_de_valor_a_testar": "Vincular afirmacoes a evidencia real e marcar revisao apos mudanca, sem deteccao perfeita prometida.",
+      "objecoes": ["custo adicional", "distribuicao como gargalo", "instalacao", "duplicacao da plataforma"],
+      "recrutamento_proposto": "Perfis publicos E10; filtrar idioma e produto pronto e convidar voluntarios onde permitido, sem extrair compradores.",
+      "recorrencia": "por versao ou lancamento, sem mensalidade presumida",
+      "unidade_de_cobranca_candidata": "material de um produto e versao",
+      "piso_e_teto": "desconhecidos",
+      "impacto_de_escopo": "Relacao versao-captura-afirmacao e adaptador de listagem; sem desenvolver template ou integrar checkout.",
+      "desistir_se": ["gargalo e trafego", "editor da plataforma basta", "valor aceito nao cobre apoio e aquisicao"]
+    }
+  ],
+  "comparacao_rcd": {
+    "tipo": "inferencia qualitativa; nao e pontuacao de mercado",
+    "criterios_observaveis": ["episodio e peso da dor", "frequencia", "ocasiao concreta", "autoridade e orcamento", "alternativa habitual completa", "acesso voluntario", "recusas de instalacao", "reuso de contexto e visual", "custo total de servir"],
+    "recomendacao": {
+      "para_descoberta_apenas": ["V2", "V3"],
+      "prioridade": "V2 antes de V3",
+      "razao_V2": "Mudanca no DNA e servico com proposta visual, fotos proprias e ocasiao delimitada, ainda comparavel ao nucleo P1.",
+      "razao_V3": "Contraste de produto para descobrir valor do contexto de colecao antes de financiar catalogo estruturado.",
+      "reservas": {"V1": "exigencia de edicao e design pode dominar", "V4": "distribuicao ou editor da plataforma podem dominar"},
+      "decisao_humana_de_nicho": "pendente",
+      "ampliar_primeiro_produto_a_todos": false
+    },
+    "prova_futura": "Reconstruir episodio com material autorizado; duas pecas necessarias e uma mudanca; comparar alternativa habitual; medir instalacao, revisao, ajuda e exportacao; incluir recusas antes de selecionar concluintes.",
+    "orcamento": "Novo plano de descoberta deve substituir, nao somar automaticamente, o de P1; teto ainda depende de decisao do autor."
+  },
+  "desconhecidos": [
+    "Dor prioritaria, frequencia e gasto atual em cada recorte.",
+    "Acesso real do fundador e permissao dos canais.",
+    "Sistema operacional, IA, dados, distribuicao e capacidade.",
+    "Orcamento, teto aceito, piso completo e unidade adequada.",
+    "Recorrencia, retencao e demanda suficiente.",
+    "Diferenca observavel frente a alternativas fortes.",
+    "Venda atribuivel ao material; tempo liberado nao e receita."
+  ],
+  "economia": {
+    "preco_novo": null,
+    "margem_nova": null,
+    "nao_transferir": ["R$690 de P1", "98-184h de P1"],
+    "custos_a_medir_sem_dupla_contagem": ["aquisicao e recusas", "implantacao", "entrega e revisao", "IA e repeticoes", "distribuicao", "perdas e suporte"],
+    "parada": "Se alternativa bastar ou piso exceder teto, rejeitar ou reformular. Nenhuma venda autorizada."
+  },
+  "metodo": {
+    "nome": "Revenue-Centric Design",
+    "atribuicao": "Richard (@richardrx)",
+    "fonte_fixada": "https://github.com/heliocosta-dev/revenue-centric-design/tree/1942760c2242f609bf63ce2c97204f5a1791bd68",
+    "skill_e_tres_referencias_recarregadas": true,
+    "principios": ["nicho delimitado", "prova antes da promessa", "piso de custo e teto de valor", "qualidade do sinal"],
+    "termos_integrais": "../RCD-LICENSE.txt",
+    "exclusao": "Nao aplicar a apostas, cassinos ou jogos de azar.",
+    "retorno_financeiro_garantido": false
+  }
+}

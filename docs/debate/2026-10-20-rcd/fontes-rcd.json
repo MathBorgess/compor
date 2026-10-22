@@ -1,0 +1,30 @@
+{
+  "commit": "1942760c2242f609bf63ce2c97204f5a1791bd68",
+  "files": [
+    {
+      "path": "SKILL.md",
+      "sha256": "5bb1494ac24b8641513023d73d4f8c00f0793f1468594c4733f796cfa7aec393",
+      "matchesPinnedSource": true
+    },
+    {
+      "path": "LICENSE",
+      "sha256": "29e6d8b0a1e3dd78776b46b22b9a9a3df94fdbf6a73482f59d688dee7fd38e32",
+      "matchesPinnedSource": true
+    },
+    {
+      "path": "references/positioning-icp-and-gtm.md",
+      "sha256": "340cc50ba98d5b64765226696773f26adbb4c1861a61e8314d480aa9b3b0d678",
+      "matchesPinnedSource": true
+    },
+    {
+      "path": "references/pricing-and-monetization.md",
+      "sha256": "a181c7c7b9f62f019e34b4fea78507b1c176fd0f8200701939052f4c12420081",
+      "matchesPinnedSource": true
+    },
+    {
+      "path": "references/metrics-and-experimentation.md",
+      "sha256": "683e7b3e6dee9503f46c7fb7ac69f778dcfcc3b15ea368d9d94690f401f9f9a6",
+      "matchesPinnedSource": true
+    }
+  ]
+}

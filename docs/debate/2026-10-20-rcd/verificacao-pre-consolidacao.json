@@ -1,0 +1,41 @@
+{
+  "date": "2026-10-20",
+  "phase": "debate_closed_before_canonical_consolidation",
+  "baselineUnchanged": true,
+  "baselineFiles": {
+    "README.md": {
+      "expected": "a7e91a9c412871a83ac37d97858bd547092d2c0af71682bf3aaeb5cf381a886a",
+      "observed": "a7e91a9c412871a83ac37d97858bd547092d2c0af71682bf3aaeb5cf381a886a"
+    },
+    "docs/produto.md": {
+      "expected": "a33789ec2925d0176b4b7abb46ecb3be9e8c0fdb1d7faf0255f2aaaa3e7267b8",
+      "observed": "a33789ec2925d0176b4b7abb46ecb3be9e8c0fdb1d7faf0255f2aaaa3e7267b8"
+    },
+    "docs/arquitetura.md": {
+      "expected": "900c6c7b3088e81a90eafdf32f3e77ef696204224ee09129c4a1be175910fa2c",
+      "observed": "900c6c7b3088e81a90eafdf32f3e77ef696204224ee09129c4a1be175910fa2c"
+    },
+    "docs/decisoes.md": {
+      "expected": "f5696c8e2e9cc1d5aeaf76b39b4839b227f804259fcf4c2cabf7ddb88edf1bbf",
+      "observed": "f5696c8e2e9cc1d5aeaf76b39b4839b227f804259fcf4c2cabf7ddb88edf1bbf"
+    },
+    "docs/specs/experiencia-desktop-oficina.md": {
+      "expected": "6f53caafa34370260d59164cad2734cfe14a05eaeb7e87f05eabb1840bbfd0ec",
+      "observed": "6f53caafa34370260d59164cad2734cfe14a05eaeb7e87f05eabb1840bbfd0ec"
+    }
+  },
+  "rawAgentOutputsSha256": {
+    "rcd/01-perfil.md": "c628359c9bf5f8d226c6325e8f0035a7e92dc02f9620da4c744fef014741fce9",
+    "rcd/01-proposta.md": "fa872729fd8259bb2830161edc30ddd9b938509ade29ea09dd294fd389df6aa7",
+    "rcd/02-replica.md": "5f8e9ff4add48fd059152418f831fd99f3ddb5526d16bb7f50f47c6ef750106d",
+    "rcd/03-auditoria-final.md": "0feebe4eb77b88fbb0571cf432f0357112902842b587eb527276e61a6fd91495",
+    "usuario/01-objecoes.md": "6acdb952b6a120dc32d748380518b4d44f0a442a33035af0a3f0faa3c8c7d565",
+    "usuario/02-replica.md": "1b8d18248a006f280a0b1d17f95bb039c8d12e4ea04ec76753196203b6298bc1",
+    "usuario/03-contestacao-final.md": "517526f1761794c72e26569f7bd990934d84e189651112de92df76cd014ab56f",
+    "engenharia/00-fronteiras.md": "1a938ac7072cde600bb5da834e70cb34795b950cf89716e27421817380d63146",
+    "engenharia/01-mediacao.md": "137098cc59f5d1a369f031731a94d9676554ba6ab375f939ec3ab984526ffc60",
+    "engenharia/02-desenho-consolidado.md": "ed3551a90867bff9daed2fa450636b23242f9ef891e647af3d54f9be162d0cae",
+    "engenharia/03-fechamento.md": "6a540acfdf952843a4e8c62246293abcdc2d81ab1547ac6b39a5e5797e51c152"
+  },
+  "meaning": "All five original docs remained unchanged through engineer final closure. Consolidation may now revise canonical docs; raw outputs remain preserved."
+}

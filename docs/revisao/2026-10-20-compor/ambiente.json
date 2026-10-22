@@ -1,0 +1,18 @@
+{
+  "date": "2026-10-20",
+  "host": "Darwin",
+  "architecture": "arm64",
+  "client": "Codex Desktop; ferramentas observadas",
+  "model": "Identidade exata desconhecida; sem override nos agentes",
+  "harnessRevisionDeclared": "5a05f7da2b62b5a8fecc11b2e1e0da0da75c520b",
+  "policySHA256": "e878452db2389109204ef01b265ecd0dc97ef98531124a946d6688b78d0cecb3",
+  "baselineCommit": "d7bbc5aca230886c67f3f0f1c10d7679cca236f5",
+  "roles": [
+    "/root/compor_usuario",
+    "/root/compor_pm",
+    "/root/compor_engenharia",
+    "/root/compor_marketing"
+  ],
+  "rounds": "Pareceres independentes, consolidacao e revisao documental; sem entrevistas",
+  "execution": "Somente documentacao; sem chamadas de modelo pelo app, SSH, deploy, contato ou pagamento"
+}

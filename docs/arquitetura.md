@@ -1,36 +1,122 @@
-# Arquitetura inicial
+# Arquitetura proposta do Compor V1
 
-**Confirmado:** aplicativo Electron, baixável para uso interno, com geração de conteúdo no próprio app. **Proposto:** a divisão abaixo, React/TypeScript na interface, persistência local de projetos e adaptadores por formato. Não há código implementado nem versões de dependências escolhidas.
+20/10/2026. Alvo: Electron para macOS, conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. Matheus confirmou essas direções. Esta entrega descreve contratos; instalação, integração e capacidade continuam sem execução.
 
-## Componentes
+## Integração e condição comercial
 
-| Parte | Responsabilidade proposta |
-| --- | --- |
-| Interface / renderer | Narrativa por blocos, painel de imagens/formas/cores, comparação e revisão das saídas |
-| Main | Ciclo do aplicativo, acesso a arquivos, persistência e integração com o serviço de geração |
-| Preload / IPC | Expor operações delimitadas entre interface e main, com entradas validadas |
-| Contexto da oficina | Conteúdo, decisões visuais, arquivos e versões aprovadas |
-| Adaptadores | Compor contexto da oficina + prompt + skill do formato + pedido do usuário |
+O aplicativo terá sua própria identidade e conexão autorizada. O fluxo separa login da permissão de usar modelos. Copiar sessões, cookies ou credenciais de outro aplicativo fica fora do contrato.
 
-Essa separação segue o [modelo de processos do Electron](https://www.electronjs.org/docs/latest/tutorial/process-model), consultado em 20/10/2026. Para a implementação, manter isolamento de contexto e limitar as operações expostas à interface, conforme a [orientação de segurança](https://www.electronjs.org/docs/latest/tutorial/security). Credenciais de IA não fazem parte da skill, dos arquivos da oficina ou do repositório.
+A documentação encaminha aplicativos pagos ou remotos para avaliação. A elegibilidade do Compor privado permanece pendente. [Escopo oficial](https://developers.openai.com/siwc/token-sharing-open-source).
 
-## Skill interna por oficina
+Os [termos de conexão](https://openai.com/policies/sign-in-with-chatgpt-terms/) exigem acesso ao uso do plano sem pagamento ou upgrade obrigatório no aplicativo. Também exigem persistir tokens localmente, sob controle do usuário. A proposta comercial precisa respeitar essas condições além de obter acesso.
 
-Estrutura conceitual; os nomes e a persistência definitiva serão fechados na implementação:
+**G0:** verificar a rota comercial e o que o Compor pode cobrar. Registrar resposta, condições e chamada sintética concluída. O login antigo do Codex fica fora das rotas de contorno. [Autenticação oficial](https://learn.chatgpt.com/docs/app-server#authentication).
 
-```text
-oficina/
-  SKILL.md       instruções para trabalhar com o contexto aprovado
-  context.json   briefing, narrativa, voz e escolhas visuais
-  assets/        imagens e referências visuais
-  versions/      histórico do contexto
-  outputs/       materiais e versão de origem
-```
+Matheus confirmou em 20/10/2026: manter privado e validar acesso oficial antes de vender. Essa decisão mantém G0 como requisito anterior à oferta. Ela difere da confirmação de elegibilidade pelo fornecedor.
 
-A skill contém instruções; contexto e arquivos preservam o conteúdo. O histórico do chat não é a única memória. As imagens precisam continuar disponíveis, com suas relações aos blocos. Cada geração registra a versão do contexto e do adaptador utilizada; regenerar não deve apagar uma saída aprovada.
+Sem G0, a demo apresenta conexão e resultados como simulação. Cobrar composição ou assistência permanece uma hipótese sujeita à confirmação de separação permitida. Uma interface de programação de aplicações (API) paga, outro fornecedor ou abertura do código dependem de nova decisão do autor. O plano preserva a direção pedida.
 
-## Desktop e distribuição
+## Responsabilidades
 
-O usuário baixa, instala e abre o app. Sistemas-alvo, instaladores, assinatura e canal de distribuição interna ainda estão abertos. Empacotar e distribuir são etapas posteriores; ver a [visão oficial de distribuição](https://www.electronjs.org/docs/latest/tutorial/distribution-overview), consultada em 20/10/2026.
+| Parte | Trabalho proposto | Limite |
+| --- | --- | --- |
+| Interface | Base, blocos, visual, revisão e estados | Sem acesso direto a disco, tokens ou terminal |
+| Processo principal | Arquivos, versões, exportação e conexão autorizada | Operações delimitadas e entradas validadas |
+| Adaptador local de geração | Contexto permitido, chamada e resposta estruturada | Uma tentativa por usuário; fila local; ferramentas de execução desativadas |
+| Compositor local | Prévia e arte final a partir dos mesmos blocos | Elementos e fontes fornecidos pelo aplicativo |
+| Repositório local | Base, recursos, permissões e versões | Fora da nuvem por padrão |
+| Backend Oracle | Compatibilidade e diagnóstico autorizado | Sem projetos, imagens, credenciais ou execução de modelos |
 
-Geração dentro do app descreve a experiência do usuário. Fornecedor de IA, credenciais e dependência de rede ainda serão definidos; não foi decidido que o produto funcionará integralmente offline. Sincronização em nuvem também não foi escolhida.
+Proposta de interface: React com TypeScript. Versões de dependências ficam para o início autorizado da implementação. O processo da interface usa isolamento, sandbox e política restrita de conteúdo. A ponte entre processos valida operação, remetente, tamanho e estado. [Segurança do Electron](https://www.electronjs.org/docs/latest/tutorial/security/).
+
+O modelo devolve dados num esquema limitado de texto e composição. A aplicação valida esses dados antes de montar a prévia. Scripts, marcação executável e instruções dentro de documentos permanecem conteúdo. O adaptador dispensa acesso de terminal, navegação livre e ferramentas externas.
+
+## Interfaces e estados
+
+Os contratos principais recebem versões explícitas do projeto. Salvar devolve uma versão durável; gerar devolve uma proposta; aplicar exige confirmação separada. Uma resposta atrasada para outra versão permanece disponível como alternativa, sem sobrescrever o trabalho atual.
+
+A geração passa por preparada, autorizada, em curso, concluída, falha ou cancelada. Só uma conclusão válida cria alternativa revisável. Cancelar preserva o projeto; reenviar exige ação explícita. Limite, revogação e indisponibilidade mostram recuperação possível e eventual consumo observado.
+
+Depois de G0, o adaptador pode usar Codex app-server como processo filho local. A comunicação usa entrada e saída padrão. O modelo vem do catálogo disponível e passa por verificação real. [Integração oficial](https://developers.openai.com/siwc/token-sharing-open-source/codex-app-server).
+
+A rota consultada exclui geração de imagens. A primeira versão importa imagens autorizadas e gera texto ou composição estruturada. [Limites oficiais](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
+
+## Modelo de projeto
+
+Cada projeto mantém identidade, versão de esquema e versão ativa. A base distingue negócio, produto e divulgação atual. Os fatos têm estado confirmado, pendente ou omitido por escolha.
+
+Blocos guardam texto, posição, ordem, cor, forma e referências a recursos. Decisões preservam alterações manuais, omissões e aprovações. Saídas registram sua base e o adaptador usado. A mudança de um fato cria proposta de revisão; ela preserva versões anteriores.
+
+A skill interna contém instruções versionadas para trabalhar com essa base. Ela permanece separada de fatos, recursos e credenciais. O histórico do chat serve como apoio, sem assumir o papel de armazenamento principal.
+
+## Campanha, rotas e variantes
+
+A base aprovada guarda produto, voz, fatos, omissões e limites. A campanha referencia essa versão e acrescenta público, objetivo e hipótese. Cada rota contém tema, gancho, conceito, direção visual, composição, arte e legenda. Cada variante referencia sua origem e dimensão alterada.
+
+Proposta de primeira rodada: três rotas e duas variantes de uma rota selecionada. A geração de cada rota parte da mesma base autorizada. A pessoa compara conceito e fidelidade separadamente; mudar só cores falha como diversidade. Aprovar uma rota preserva a base e suas irmãs.
+
+Guardar versão da base, campanha, origem, tentativa, recursos e aprovações. Resposta atrasada permanece ligada à versão usada. Mudar voz ou produto pede revisão explícita das rotas afetadas. A escolha de uma variante preserva as demais e o histórico.
+
+Uma fila local mostra tarefas previstas, em curso, concluídas, falhas e canceladas. Executar uma tentativa por vez. Cancelar ou falhar na segunda rota preserva a primeira. Informar chamadas e limites conhecidos antes da autorização; contar tentativas incompletas na medição de uso.
+
+O compositor entrega arte com texto, formas, cores e imagens autorizadas opcionais. Uma direção que exige foto ou ilustração inédita por modelo mostra dependência pendente. Recursos provisórios recebem rótulo e ficam fora do aceite final. Gerar conceito ou prompt difere de entregar a arte utilizável.
+
+Exportar os criativos selecionados, até cinco nessa rodada proposta, com arte e legenda por item. A cópia privada inclui todas as rotas, variantes, origens e versões. Compartilhar recursos por resumo criptográfico evita duplicar imagens por rota. Os tetos de pacote e entradas incluem alternativas e histórico.
+
+Preferência interna por uma rota difere de desempenho no mercado. Notas de resultado identificam canal, período, hipótese e fonte. Publicação, orçamento de anúncios e métricas automáticas permanecem fora desta versão. O A/B de preço da v0 usa outro conjunto de registros.
+
+## Imagens e recuperação
+
+Os formatos candidatos são Portable Network Graphics (PNG) e Joint Photographic Experts Group (JPEG). Importar copia os bytes para o projeto. Esses formatos de imagem delimitam o primeiro importador. Guardar dimensões, origem e autorização declaradas. Um resumo criptográfico identifica os bytes e permite conferir integridade.
+
+O projeto usa a cópia local. Mover o original ou perder um endereço externo preserva a imagem incorporada. Miniaturas servem à prévia, mantendo o original disponível para exportação. Imagem ausente gera aviso com identificação do recurso e opção de recuperar uma cópia.
+
+Limites iniciais propostos: dez imagens, dez megabytes por imagem e vinte milhões de pixels por imagem. Cada lado aceita até 8192 pixels. O decodificador trabalha com uma imagem por vez e cria miniaturas de até 2048 pixels por lado. O pacote privado aceita até 250 megabytes e mil entradas, tanto compactadas quanto extraídas.
+
+São tetos para teste, sem capacidade medida. Arquivos inválidos, dimensões excessivas e tipo incompatível recebem recusa explicada. O importador valida o conteúdo real do arquivo. Ao atingir um teto, recusar a nova entrada e preservar o projeto existente. Esclarecer o limite excedido; reduzir conteúdo exige escolha do usuário.
+
+Salvar cria uma versão temporária e confere sua integridade. Só depois troca a referência ativa. Queda ou disco cheio mantém a última versão íntegra. Versões de esquema futuras abrem como incompatíveis, preservando o original. Migrações começam por uma cópia.
+
+A cópia privada proposta usa pacote de arquivos (ZIP) com manifesto, base, blocos, versões e todos os recursos referenciados. ZIP é um contêiner de arquivos. A restauração cria outra pasta e verifica integridade antes de ativar o projeto.
+
+O importador bloqueia caminhos externos, links simbólicos e expansão além dos limites. Uma cópia corrompida permanece preservada para diagnóstico. Recursos usados por versões mantidas sobrevivem à limpeza. Excluir um projeto exige ação explícita e explica o efeito sobre suas cópias.
+
+O pacote privado guarda dados legíveis; ele difere do armazenamento protegido de credenciais. A interface alerta sobre isso antes do compartilhamento. Credenciais ficam fora de projetos, cópias, prompts e registros. O cofre do macOS exige teste no aplicativo assinado. [Armazenamento protegido do Electron](https://www.electronjs.org/docs/latest/api/safe-storage).
+
+## Exportação proposta
+
+Cada criativo selecionado exporta arte PNG de 1080 × 1350 pixels e legenda em texto simples (TXT). A codificação Unicode Transformation Format (UTF-8) representa caracteres, incluindo acentos. O compositor local atende prévia e exportação. Fontes fazem parte do pacote instalado e de sua licença própria.
+
+Uma exportação incompleta preserva o arquivo anterior. Conferir texto, preço, datas, imagem, recorte e cores fora do aplicativo. O endereço de compra permanece acessível na legenda. A imagem exportada contém pixels, sem camadas editáveis em outro editor.
+
+A cópia privada ZIP permite retomar a edição dentro do Compor. O material público recebe somente conteúdo aprovado para divulgação. A exportação pública exclui a base privada e metadados de origem das fotos. A conferência inclui esses metadados.
+
+Documento portátil (PDF) e exportação editável externa ficam fora do primeiro exportador. Mavi testa se a dimensão candidata serve à tarefa. Uma exigência diferente reabre esse contrato antes de venda ou implementação do exportador.
+
+## Dados e retenção
+
+A autorização de uma tarefa externa difere da aprovação de divulgação. Antes do envio, mostrar fornecedor, finalidade, textos, imagens e limite ou custo conhecido. Dado marcado como somente local permanece fora de todas as chamadas. A edição manual continua disponível.
+
+Por padrão, a geração textual envia apenas texto autorizado. Enviar imagem exige necessidade declarada e autorização própria. O fornecedor recebe esses dados diretamente do Mac. Suas regras de retenção precisam de verificação antes de conteúdo real.
+
+Projetos, imagens e versões permanecem no Mac até exclusão explícita. A pasta do projeto mostra tamanho e local. Cópia de segurança é ação explícita; o app informa quando falta uma cópia. O backend deixa de ter filas de geração ou retenção de conteúdo.
+
+Registros técnicos excluem textos, imagens e credenciais. Proposta: retenção de cinco dias, preservando incidente aberto com justificativa. Diagnóstico para suporte exige escolha e prévia dos campos. Telemetria de produto depende de adesão; o serviço funciona sem ela.
+
+## Oracle e distribuição
+
+Proposta: um serviço pequeno serve compatibilidade e recebe diagnóstico autorizado. A última configuração válida acompanha o app. Queda da Oracle preserva abrir, editar, recuperar e exportar. Cada pedido usa a conta autorizada do próprio usuário.
+
+Tetos de ensaio propostos: resposta de 32 quilobytes e processo de 256 megabytes. Medir memória do sistema, disco, concorrência e reinício antes de confirmar capacidade. Inferência, renderização, exportação e arquivos dos clientes ficam no Mac e fora dessa máquina.
+
+A matriz de Macs começa pelo equipamento de desenvolvimento, sem presumir cobertura. Registrar arquitetura e versão do macOS. Distribuição externa exige escolher compatibilidade, assinatura, notarização, custos e canal. O instalador deve funcionar com as proteções normais do sistema.
+
+## Construção futura e testes
+
+A [spec](specs/compor-macos-v1.md) define uma fronteira principal: aprovar base, explorar rotas, comparar, ramificar, selecionar, exportar e restaurar. Simulação verifica preservação; Inteligência artificial (IA) real verifica integração; pessoas independentes verificam uso; pagamento e repetição verificam negócio.
+
+Ordem proposta: G0 acesso e escopo comercial; G1 imagens e persistência; G2 compositor e exportação; G3 geração; G4 distribuição; G5 piloto. [Aceites e demonstração](compor/demo-e-testes.md) detalham cada verificação.
+
+Matheus conduz desenvolvimento; Mavi reforça design. Capacidade semanal e calendário continuam sem confirmação. A estimativa do antigo caso de oficinas permanece histórica e inaplicável a este recorte.
+
+Método: **Revenue-Centric Design, Richard (@richardrx)**, com [termos integrais](debate/2026-10-20-rcd/RCD-LICENSE.txt). Custo e capacidade são hipóteses até medição.

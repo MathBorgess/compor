@@ -1,0 +1,3 @@
+Registro do pedido de conferência documental final enviado por followup nativo, sem nova rodada de escolha.
+
+Recarregar RCD/referências. Conferir spec consolidada (50 histórias), arquitetura, decisões, plano de implementação, oferta/economia e GTM. Verificar contratos, dados em toda a cadeia/duas permissões, suporte simples, continuidade, faixas/capacidade/custo e invariantes do autor. P1 agora é controle; o autor pediu investigar vendedores de produtos/serviços com novo agente. Não tomar hipótese como aprovação nem expandir implementação. Somente engenharia/04-revisao-documental.md, até 500 palavras, sem editar outros arquivos ou implementar.

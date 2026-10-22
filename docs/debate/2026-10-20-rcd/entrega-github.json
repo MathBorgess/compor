@@ -1,0 +1,48 @@
+{
+  "date": "2026-10-20",
+  "repo": "MathBorgess/oficina-em-prancha",
+  "visibilityObserved": "PRIVATE",
+  "proposalPullRequest": "https://github.com/MathBorgess/oficina-em-prancha/pull/4",
+  "pullRequestStateObserved": "OPEN",
+  "contentCommitVerified": "3bc99b2d9e648e2048d584ecc023489ee0e9b306",
+  "verificationScope": "Historical verification of exactly contentCommitVerified, not the current checkout. matchesLocalBytes records the bytes observed on 2026-10-20 at that frozen revision; later documentation evolves independently.",
+  "files": [
+    {
+      "path": "README.md",
+      "matchesLocalBytes": true,
+      "sha256": "ab2efccf2b93cae0c5c2612cff2eb1ff087ec1cc1decf680b68e80a99865dd2f"
+    },
+    {
+      "path": "docs/specs/experiencia-desktop-oficina.md",
+      "matchesLocalBytes": true,
+      "sha256": "db9d5497ab0097e76c13615870a1377c4d3e2edcb4a18fb0ded8c3a23514a7b4"
+    },
+    {
+      "path": "docs/servico/variacoes-escopo.md",
+      "matchesLocalBytes": true,
+      "sha256": "9eb51d6f8ed29f49839e25988800cfde3737a5c596fa82f82db95f814d948a79"
+    },
+    {
+      "path": "docs/debate/2026-10-20-rcd/variacoes/01-matriz.json",
+      "matchesLocalBytes": true,
+      "sha256": "f1d44f0780be687622675f205e5e1ca0a891d36e73bf4009c227552e4ec15795"
+    }
+  ],
+  "tracker": {
+    "url": "https://github.com/MathBorgess/oficina-em-prancha/issues/2",
+    "bodyMatchesPublishedSpecWithResolvedLinks": true,
+    "bodySha256": "4c911d158cd01d606674484885ba2974cd21bd7cb1fc18d0192d8161e7da293d",
+    "labels": [
+      "ready-for-agent"
+    ],
+    "state": "open",
+    "updatedAt": "2026-10-20T18:18:14Z"
+  },
+  "baselineIssuePreservedAt": "https://github.com/MathBorgess/oficina-em-prancha/blob/9c8bfedd780d613519accdb93c0752e5234a687e/docs/specs/experiencia-desktop-oficina.md",
+  "remoteChecksObserved": [],
+  "remoteChecksMeaning": "No CI checks reported; not a passing app test or approval.",
+  "implementationAuthorized": false,
+  "commercialActionsExecuted": false,
+  "humanApprovalOfRecommendation": false,
+  "verificationInterpretation": "Compare the recorded hashes with git show contentCommitVerified:path, never with the current working tree."
+}
