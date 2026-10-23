@@ -1,0 +1,49 @@
+{
+  "as_of": "2026-10-23",
+  "client": "Codex Desktop, tarefa local",
+  "host_os": "macOS-27.0-arm64-arm-64bit",
+  "exact_model": "não exposto nesta execução",
+  "product_baseline": "e4bc707b898f6814555a0ab1e8a485ef772a68ee",
+  "remote_main": "e4bc707b898f6814555a0ab1e8a485ef772a68ee",
+  "wiki_baseline": "a5a99c07ed096ee9a0c5fde71038a5fd96dd294d",
+  "owner_policy_installed_revision_as_declared": "5a05f7da2b62b5a8fecc11b2e1e0da0da75c520b",
+  "wiki_agents_sha256": "a29612dbc71c85ee66ab513dc5818648f8de8f613f80cc36aa015ec204f09a04",
+  "voice_skill_sha256": "c0de533fa043cb8d68a6f9ff7856ad0485662ecbf7d758856f31be743144cbb8",
+  "voice_reference_commit": "5afa3c99c1a3e9decbeb8450e838de6332a7cdd5",
+  "owner_local_documents": [
+    {
+      "path": "README.md",
+      "source_path": "/Users/matheusborges/github/compor/README.md",
+      "sha256": "b3d56294288668e45c19387a86c2036b6338e95e12f969ebe2f30b71ab775fc2",
+      "matches_owner_local_copy": true
+    },
+    {
+      "path": "docs/produto.md",
+      "source_path": "/Users/matheusborges/github/compor/docs/produto.md",
+      "sha256": "c29708e7f7337c681c1239cffc9814742df61a279c94d4e7700d67670f609f55",
+      "matches_owner_local_copy": true
+    },
+    {
+      "path": "docs/compor/negocio-e-gtm.md",
+      "source_path": "/Users/matheusborges/github/compor/docs/compor/negocio-e-gtm.md",
+      "sha256": "d6efdb5d31836f2d8f21ef731ab0915e9d48b48cf446643fef1a01b40db11777",
+      "matches_owner_local_copy": true
+    },
+    {
+      "path": "docs/persona-e-posicionamento.md",
+      "source_path": "/Users/matheusborges/github/compor/docs/persona-e-posicionamento.md",
+      "sha256": "9ef8083578faaa97bc5e013fe09886a14df6a3701ba3a4bdc49869532251939f",
+      "matches_owner_local_copy": true
+    },
+    {
+      "path": "docs/customer-discovery-playbook.md",
+      "source_path": "/Users/matheusborges/github/compor/docs/customer-discovery-playbook.md",
+      "sha256": "a2101e222654ebcefa70bdcf31a6b663bcb55aa1fdce198b2f7321dce7b98445",
+      "matches_owner_local_copy": true
+    }
+  ],
+  "authorization": "Pedidos explícitos nesta conversa em23/10: pesquisar e contactar leads; Gmail pessoal; matheus writing style; registrar na wiki; dossiê de relatos em paralelo.",
+  "thread_id": "01a16870-d59e-7511-97c5-beee1c6524b6",
+  "no_credentials_stored": true,
+  "owner_documents_note": "Hashes referem-se à importação inicial; cópias exatas estão em docs/historico/2026-10-22. Documentos atuais foram revisados após debate; a cópia do dono permaneceu intacta."
+}

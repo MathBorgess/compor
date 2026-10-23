@@ -1,5 +1,7 @@
 # Compor V1: especificação para construção futura
 
+> Atualização de 23/10/2026: a [spec consolidada](compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
+
 20/10/2026. Estado: especificação proposta, sem implementação. Direções do autor e recomendações técnicas aparecem separadas. Esta spec substitui o recorte ativo da [spec anterior](experiencia-desktop-oficina.md), preservada como histórico.
 
 ## Problem Statement
@@ -117,7 +119,7 @@ O texto da designer propõe Compor e donos de produtos digitais. O recorte em cu
 
 **Imagens:** importar PNG ou Joint Photographic Experts Group (JPEG) incorpora bytes ao projeto. Guardar origem declarada, dimensões, autorização e resumo criptográfico. O resumo permite conferir integridade. Referências temporárias e caminhos externos deixam de ser dependências de recuperação.
 
-**Persistência:** gravar nova versão, verificar integridade e só depois ativá-la. Falha conserva a última íntegra. Migração cria cópia; esquema futuro incompatível preserva original. 
+**Persistência:** gravar nova versão, verificar integridade e só depois ativá-la. Falha conserva a última íntegra. Migração cria cópia; esquema futuro incompatível preserva original.
 
 Limites candidatos: dez imagens, dez megabytes cada e pacote de 250 megabytes compactado e extraído. Cada imagem aceita até vinte milhões de pixels e 8192 pixels por lado. Decodificar uma imagem por vez; miniaturas limitam cada lado a 2048 pixels. O pacote aceita até mil entradas. Exceder limites recusa a entrada e preserva o projeto.
 

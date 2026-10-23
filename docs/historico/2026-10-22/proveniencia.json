@@ -1,0 +1,31 @@
+{
+  "date": "2026-10-23",
+  "source": "owner working copy /Users/matheusborges/github/compor; originals unchanged",
+  "files": [
+    {
+      "source_relative_path": "README.md",
+      "snapshot_relative_path": "docs/historico/2026-10-22/README.md",
+      "sha256": "b3d56294288668e45c19387a86c2036b6338e95e12f969ebe2f30b71ab775fc2"
+    },
+    {
+      "source_relative_path": "docs/produto.md",
+      "snapshot_relative_path": "docs/historico/2026-10-22/docs/produto.md",
+      "sha256": "c29708e7f7337c681c1239cffc9814742df61a279c94d4e7700d67670f609f55"
+    },
+    {
+      "source_relative_path": "docs/compor/negocio-e-gtm.md",
+      "snapshot_relative_path": "docs/historico/2026-10-22/docs/compor/negocio-e-gtm.md",
+      "sha256": "d6efdb5d31836f2d8f21ef731ab0915e9d48b48cf446643fef1a01b40db11777"
+    },
+    {
+      "source_relative_path": "docs/persona-e-posicionamento.md",
+      "snapshot_relative_path": "docs/historico/2026-10-22/docs/persona-e-posicionamento.md",
+      "sha256": "9ef8083578faaa97bc5e013fe09886a14df6a3701ba3a4bdc49869532251939f"
+    },
+    {
+      "source_relative_path": "docs/customer-discovery-playbook.md",
+      "snapshot_relative_path": "docs/historico/2026-10-22/docs/customer-discovery-playbook.md",
+      "sha256": "a2101e222654ebcefa70bdcf31a6b663bcb55aa1fdce198b2f7321dce7b98445"
+    }
+  ]
+}

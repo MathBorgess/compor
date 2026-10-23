@@ -1,0 +1,30 @@
+{
+  "id": "C10",
+  "name": "Alessandro Trovato",
+  "email": "contato@alessandrotrovato.com.br",
+  "segment": "Criador de cursos e conteúdo; operação solo não confirmada.",
+  "selection_reason": "Contraponto positivo: relata ganho de tempo com IA e mantém edição pessoal; investigar o que já funciona e o que ainda exige esforço.",
+  "source_urls": [
+    "https://alessandrotrovato.com.br/",
+    "https://pt.linkedin.com/pulse/proteger-o-imperfeito-errar-faz-parte-do-aprendizado-trovato-wnfjf"
+  ],
+  "contact_source": "https://alessandrotrovato.com.br/",
+  "qualification_unknowns": [
+    "operação solo",
+    "receita",
+    "uso de macOS",
+    "campanha nas próximas duas semanas",
+    "dor atual",
+    "interesse em Compor"
+  ],
+  "history_check": {
+    "query": "in:anywhere (from:alessandrotrovato.com.br OR to:alessandrotrovato.com.br)",
+    "matches": 0,
+    "scope": "Somente Gmail pessoal conectado; não prova ausência de relação em outros canais.",
+    "checked_on": "2026-10-23"
+  },
+  "subject": "Seu processo de conteúdo com IA — uma pergunta",
+  "text": "Oi, Alessandro! Tudo bem?\n\nSou Matheus Borges. Li seu artigo “Proteger o imperfeito” e fiquei pensando no processo que você descreve: a IA ajuda a preparar os posts, mas você edita e acrescenta seu jeito de escrever.\n\nEstou pesquisando como quem cria cursos cuida da própria divulgação. Quero entender também quem já encontrou um processo que funciona bem.\n\nSe puder compartilhar por aqui:\n\n1. Na última divulgação de um curso, como você passou da ideia ao texto e à imagem publicados? Quais ferramentas usou e quem participou?\n\n2. O que funcionou bem nesse processo e você não trocaria? Sobrou alguma parte cansativa, demorada ou que precisou refazer? Se sim, qual delas mais vale resolver hoje?\n\n3. Estou explorando uma ideia chamada Compor: trabalhar texto e visual juntos, comparando alternativas sem perder a voz de quem escreve nem alterar as informações da oferta. Isso acrescentaria algo ao que você já usa? Em que situação seria desnecessário, ou o que precisaria mudar para ajudar?\n\nPode responder só ao que fizer sentido, sem marcar uma reunião. É uma pesquisa para orientar a ideia; não estou oferecendo um produto pronto. Não vou divulgar seu nome nas respostas sem combinar antes.\n\nSe preferir não receber novos contatos sobre isso, é só me dizer.\n\nObrigado!\nMatheus",
+  "status": "preparado",
+  "html": "<p>Oi, Alessandro! Tudo bem?</p>\n<p>Sou Matheus Borges. Li seu artigo “Proteger o imperfeito” e fiquei pensando no processo que você descreve: a IA ajuda a preparar os posts, mas você edita e acrescenta seu jeito de escrever.</p>\n<p>Estou pesquisando como quem cria cursos cuida da própria divulgação. Quero entender também quem já encontrou um processo que funciona bem.</p>\n<p>Se puder compartilhar por aqui:</p>\n<p>1. Na última divulgação de um curso, como você passou da ideia ao texto e à imagem publicados? Quais ferramentas usou e quem participou?</p>\n<p>2. O que funcionou bem nesse processo e você não trocaria? Sobrou alguma parte cansativa, demorada ou que precisou refazer? Se sim, qual delas mais vale resolver hoje?</p>\n<p>3. Estou explorando uma ideia chamada Compor: trabalhar texto e visual juntos, comparando alternativas sem perder a voz de quem escreve nem alterar as informações da oferta. Isso acrescentaria algo ao que você já usa? Em que situação seria desnecessário, ou o que precisaria mudar para ajudar?</p>\n<p>Pode responder só ao que fizer sentido, sem marcar uma reunião. É uma pesquisa para orientar a ideia; não estou oferecendo um produto pronto. Não vou divulgar seu nome nas respostas sem combinar antes.</p>\n<p>Se preferir não receber novos contatos sobre isso, é só me dizer.</p>\n<p>Obrigado!<br>Matheus</p>"
+}

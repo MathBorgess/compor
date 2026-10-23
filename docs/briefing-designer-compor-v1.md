@@ -1,5 +1,7 @@
 # Compor: direção criativa e telas para Mavi
 
+> Atualização de 23/10/2026: a [spec consolidada](specs/compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
+
 20/10/2026. Matheus definiu criar criativos do zero e explorar temas preservando voz e produto. Esta direção substitui a atualização de preço como exemplo principal. O desenho abaixo orienta a proposta para Mavi; esta entrega contém apenas documentação.
 
 ## Proposta de valor

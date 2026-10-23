@@ -1,0 +1,15 @@
+{
+  "checked_at": "2026-10-23T11:41:21Z",
+  "account": "matheusborgesfig@gmail.com",
+  "scope": "Mensagens desde 23/10 não enviadas por mim, com remetentes dos domínios/endereço dos nove candidatos ou mailer-daemon/postmaster.",
+  "matches": [
+    {
+      "message_id": "1a1687cb3aae936a",
+      "thread_id": "1a1687ca65fae4cc",
+      "kind": "falha_de_entrega",
+      "lead_id": "C06"
+    }
+  ],
+  "human_replies_found": 0,
+  "limits": "Busca por remetente pode não capturar resposta enviada por outro domínio. Não confirma leitura/entrega dos demais; não é monitoramento contínuo."
+}

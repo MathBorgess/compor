@@ -1,0 +1,17 @@
+{
+  "checked_at": "2026-10-23T12:48:46.155812+00:00",
+  "json_files_valid": 20,
+  "corpus_records": 67,
+  "unique_ids": 67,
+  "csv_rows": 67,
+  "markdown_files_link_checked": 42,
+  "broken_local_file_links": [],
+  "historical_snapshots_exact": 5,
+  "owner_originals_unchanged": true,
+  "round_outputs": 14,
+  "stories": 64,
+  "google_docs_content_verified": 4,
+  "final_review": "UX role rechecked six current docs, no material contradictions;24 cited source IDs exist",
+  "runtime_tests": "not applicable; documentation only",
+  "links_scope": "relative target files; immutable original snapshots excluded because paths preserve original source location"
+}

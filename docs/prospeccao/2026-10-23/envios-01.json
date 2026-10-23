@@ -1,0 +1,78 @@
+{
+  "date": "2026-10-23",
+  "sender": "matheusborgesfig@gmail.com",
+  "sends": [
+    {
+      "lead_id": "C01",
+      "name": "Juliana Assalino",
+      "to": "contato@oreconectar.com.br",
+      "result": {
+        "id": "1a16879ac7602381",
+        "thread_id": "1a16879ac7602381",
+        "label_ids": [
+          "SENT"
+        ],
+        "snippet": null,
+        "history_id": null,
+        "internal_date": null,
+        "payload": null,
+        "size_estimate": null,
+        "classification_label_values": null
+      }
+    },
+    {
+      "lead_id": "C02",
+      "name": "André Rafael",
+      "to": "andre@origamid.com",
+      "result": {
+        "id": "1a16879bf16472af",
+        "thread_id": "1a16879bf16472af",
+        "label_ids": [
+          "SENT"
+        ],
+        "snippet": null,
+        "history_id": null,
+        "internal_date": null,
+        "payload": null,
+        "size_estimate": null,
+        "classification_label_values": null
+      }
+    },
+    {
+      "lead_id": "C03",
+      "name": "Walter Mattos",
+      "to": "walter@waltermattos.com",
+      "result": {
+        "id": "1a16879d139b8a56",
+        "thread_id": "1a16879d139b8a56",
+        "label_ids": [
+          "SENT"
+        ],
+        "snippet": null,
+        "history_id": null,
+        "internal_date": null,
+        "payload": null,
+        "size_estimate": null,
+        "classification_label_values": null
+      }
+    },
+    {
+      "lead_id": "C04",
+      "name": "Roger Melo",
+      "to": "oi@rogermelo.com.br",
+      "result": {
+        "id": "1a16879ec2963d3e",
+        "thread_id": "1a16879ec2963d3e",
+        "label_ids": [
+          "SENT"
+        ],
+        "snippet": null,
+        "history_id": null,
+        "internal_date": null,
+        "payload": null,
+        "size_estimate": null,
+        "classification_label_values": null
+      }
+    }
+  ]
+}

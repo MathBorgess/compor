@@ -1,0 +1,16 @@
+{
+  "lead_id": "C10",
+  "message_id": "1a168a19d5a142d9",
+  "thread_id": "1a168a19d5a142d9",
+  "mail_url": "https://mail.google.com/mail/u/0/#sent/1a168a19d5a142d9",
+  "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+  "to": "contato@alessandrotrovato.com.br",
+  "subject": "Seu processo de conteúdo com IA — uma pergunta",
+  "sent_at": "2026-10-23T11:59:44.000Z",
+  "sent": true,
+  "body_match": true,
+  "to_match": true,
+  "subject_match": true,
+  "status": "enviado_entrega_desconhecida",
+  "checked_at": "2026-10-23T12:00:44.868Z"
+}

@@ -1,0 +1,11 @@
+{
+  "lead_id": "C06",
+  "observed_at": "2026-10-23T11:27:18.864Z",
+  "message_id": "1a1687cb3aae936a",
+  "thread_id": "1a1687ca65fae4cc",
+  "recipient": "contato@mayzakennedy.com.br",
+  "status": "falha_de_entrega",
+  "diagnostic": "554 5.7.1: Relay access denied",
+  "reason": "O Gmail informou falha de configuração no servidor remoto.",
+  "resent": false
+}

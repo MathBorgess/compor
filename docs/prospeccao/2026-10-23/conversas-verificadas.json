@@ -1,0 +1,151 @@
+{
+  "checked_at_utc": "2026-10-23 11:46:13 UTC",
+  "threads": [
+    {
+      "thread_id": "1a16879ac7602381",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879ac7602381",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Juliana, uma pergunta sobre a divulgação do ReConectar",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:16:07.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879bf16472af",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879bf16472af",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "André, como a divulgação entra na rotina da Origamid?",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:16:11.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879d139b8a56",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879d139b8a56",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Walter, uma conversa sobre divulgar seu curso",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:16:16.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879ec2963d3e",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879ec2963d3e",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Roger, uma pergunta sobre divulgar a Formação",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:16:23.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687c939c3a8b5",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687c939c3a8b5",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Felipe, uma pergunta sobre divulgar suas mentorias",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:19:16.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ca65fae4cc",
+      "message_count": 2,
+      "messages": [
+        {
+          "id": "1a1687ca65fae4cc",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Mayza, uma pergunta sobre a divulgação da sua mentoria",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:19:22.000Z"
+        },
+        {
+          "id": "1a1687cb3aae936a",
+          "from": "Mail Delivery Subsystem <mailer-daemon@googlemail.com>",
+          "subject": "Delivery Status Notification (Failure)",
+          "labels": [
+            "UNREAD",
+            "CATEGORY_UPDATES",
+            "INBOX"
+          ],
+          "date_utc": "2026-10-23T11:19:24.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687cb9d0924a6",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687cb9d0924a6",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Iran, como você prepara a divulgação das mentorias?",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:19:26.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ff1c6544c7",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687ff1c6544c7",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "Professor Anderson, uma pergunta sobre divulgar o curso online",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:22:57.000Z"
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16880095dbd27e",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16880095dbd27e",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "subject": "José, uma pergunta sobre divulgar o RevisaZé",
+          "labels": [
+            "SENT"
+          ],
+          "date_utc": "2026-10-23T11:23:03.000Z"
+        }
+      ]
+    }
+  ]
+}

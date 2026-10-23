@@ -1,0 +1,72 @@
+[
+  {
+    "lead_id": "C05",
+    "message_id": "1a1687c939c3a8b5",
+    "thread_id": "1a1687c939c3a8b5",
+    "sent": true,
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "contato@felipelapa.com.br",
+    "subject": "Felipe, uma pergunta sobre divulgar suas mentorias",
+    "sent_at": "2026-10-23T11:19:16.000Z",
+    "body_match": true,
+    "to_match": true,
+    "subject_match": true,
+    "gmail_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#all/1a1687c939c3a8b5"
+  },
+  {
+    "lead_id": "C06",
+    "message_id": "1a1687ca65fae4cc",
+    "thread_id": "1a1687ca65fae4cc",
+    "sent": true,
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "contato@mayzakennedy.com.br",
+    "subject": "Mayza, uma pergunta sobre a divulgação da sua mentoria",
+    "sent_at": "2026-10-23T11:19:22.000Z",
+    "body_match": true,
+    "to_match": true,
+    "subject_match": true,
+    "gmail_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#all/1a1687ca65fae4cc"
+  },
+  {
+    "lead_id": "C07",
+    "message_id": "1a1687cb9d0924a6",
+    "thread_id": "1a1687cb9d0924a6",
+    "sent": true,
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "contato@iranpontes.com.br",
+    "subject": "Iran, como você prepara a divulgação das mentorias?",
+    "sent_at": "2026-10-23T11:19:26.000Z",
+    "body_match": true,
+    "to_match": true,
+    "subject_match": true,
+    "gmail_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#all/1a1687cb9d0924a6"
+  },
+  {
+    "lead_id": "C08",
+    "message_id": "1a1687ff1c6544c7",
+    "thread_id": "1a1687ff1c6544c7",
+    "sent": true,
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "contato@mixinfocell.com.br",
+    "subject": "Professor Anderson, uma pergunta sobre divulgar o curso online",
+    "sent_at": "2026-10-23T11:22:57.000Z",
+    "body_match": true,
+    "to_match": true,
+    "subject_match": true,
+    "gmail_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#all/1a1687ff1c6544c7"
+  },
+  {
+    "lead_id": "C09",
+    "message_id": "1a16880095dbd27e",
+    "thread_id": "1a16880095dbd27e",
+    "sent": true,
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "joseofneto@gmail.com",
+    "subject": "José, uma pergunta sobre divulgar o RevisaZé",
+    "sent_at": "2026-10-23T11:23:03.000Z",
+    "body_match": true,
+    "to_match": true,
+    "subject_match": true,
+    "gmail_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#all/1a16880095dbd27e"
+  }
+]

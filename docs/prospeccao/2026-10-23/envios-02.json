@@ -1,0 +1,82 @@
+[
+  {
+    "lead_id": "C05",
+    "result": {
+      "id": "1a1687c939c3a8b5",
+      "thread_id": "1a1687c939c3a8b5",
+      "label_ids": [
+        "SENT"
+      ],
+      "snippet": null,
+      "history_id": null,
+      "internal_date": null,
+      "payload": null,
+      "size_estimate": null,
+      "classification_label_values": null
+    }
+  },
+  {
+    "lead_id": "C06",
+    "result": {
+      "id": "1a1687ca65fae4cc",
+      "thread_id": "1a1687ca65fae4cc",
+      "label_ids": [
+        "SENT"
+      ],
+      "snippet": null,
+      "history_id": null,
+      "internal_date": null,
+      "payload": null,
+      "size_estimate": null,
+      "classification_label_values": null
+    }
+  },
+  {
+    "lead_id": "C07",
+    "result": {
+      "id": "1a1687cb9d0924a6",
+      "thread_id": "1a1687cb9d0924a6",
+      "label_ids": [
+        "SENT"
+      ],
+      "snippet": null,
+      "history_id": null,
+      "internal_date": null,
+      "payload": null,
+      "size_estimate": null,
+      "classification_label_values": null
+    }
+  },
+  {
+    "lead_id": "C08",
+    "result": {
+      "id": "1a1687ff1c6544c7",
+      "thread_id": "1a1687ff1c6544c7",
+      "label_ids": [
+        "SENT"
+      ],
+      "snippet": null,
+      "history_id": null,
+      "internal_date": null,
+      "payload": null,
+      "size_estimate": null,
+      "classification_label_values": null
+    }
+  },
+  {
+    "lead_id": "C09",
+    "result": {
+      "id": "1a16880095dbd27e",
+      "thread_id": "1a16880095dbd27e",
+      "label_ids": [
+        "SENT"
+      ],
+      "snippet": null,
+      "history_id": null,
+      "internal_date": null,
+      "payload": null,
+      "size_estimate": null,
+      "classification_label_values": null
+    }
+  }
+]

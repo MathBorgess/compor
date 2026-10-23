@@ -1,0 +1,76 @@
+{
+  "date": "2026-10-23",
+  "account": "matheusborgesfig@gmail.com",
+  "folder": {
+    "success": true,
+    "id": "14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC",
+    "url": "https://drive.google.com/drive/folders/14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC",
+    "title": "ChatGPT",
+    "parent_id": "root"
+  },
+  "documents": [
+    {
+      "kind": "primeira_onda",
+      "title": "Compor — Primeira onda de prospecção — 23/10/2026",
+      "id": "1oS_f8onuzhGVeih5BNaBWMdCOutYaBAiyeiFEdyphV0",
+      "url": "https://docs.google.com/document/d/1oS_f8onuzhGVeih5BNaBWMdCOutYaBAiyeiFEdyphV0",
+      "tab_id": "t.0",
+      "checked_at": "2026-10-23T12:21:26.750Z",
+      "paragraphs_checked": 55,
+      "missing": [],
+      "tables_equal": true,
+      "heading_count": 17,
+      "shared": false,
+      "parent_id": "14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC"
+    },
+    {
+      "kind": "relatos",
+      "title": "Compor — Relatos, dores e contrapontos — 23/10/2026",
+      "id": "132EEunY9xWk4IANJRWQu_iWwL6m1bgKY4EAntsRzzWI",
+      "url": "https://docs.google.com/document/d/132EEunY9xWk4IANJRWQu_iWwL6m1bgKY4EAntsRzzWI",
+      "tab_id": "t.0",
+      "checked_at": "2026-10-23T12:21:26.812Z",
+      "paragraphs_checked": 787,
+      "missing": [],
+      "tables_equal": true,
+      "heading_count": 71,
+      "shared": false,
+      "parent_id": "14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC"
+    },
+    {
+      "kind": "debate",
+      "title": "Compor — Debate, decisões e reestruturação — 23/10/2026",
+      "id": "1FeiVTC1twrPUGq7eWPdTTK0_GI0tWbvr8Oo9EFeXiDA",
+      "url": "https://docs.google.com/document/d/1FeiVTC1twrPUGq7eWPdTTK0_GI0tWbvr8Oo9EFeXiDA",
+      "tab_id": "t.0",
+      "checked_at": "2026-10-23T12:46:27.223Z",
+      "paragraphs_checked": 360,
+      "missing": [],
+      "tables_equal": true,
+      "heading_count": 108,
+      "native_bullet_paragraphs": 46,
+      "expected_bullet_paragraphs": 46,
+      "linked_runs": 90,
+      "shared": false,
+      "parent_id": "14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC"
+    },
+    {
+      "kind": "spec",
+      "title": "Compor — Spec consolidada de produto e negócio — 23/10/2026",
+      "id": "1QYxTAxeIAfDv8ckN8bteh10NV1IS6fEtWjR8_htGdT0",
+      "url": "https://docs.google.com/document/d/1QYxTAxeIAfDv8ckN8bteh10NV1IS6fEtWjR8_htGdT0",
+      "tab_id": "t.0",
+      "checked_at": "2026-10-23T12:46:27.086Z",
+      "paragraphs_checked": 62,
+      "missing": [],
+      "tables_equal": true,
+      "heading_count": 19,
+      "native_bullet_paragraphs": 85,
+      "expected_bullet_paragraphs": 85,
+      "linked_runs": 4,
+      "shared": false,
+      "parent_id": "14px_QEq2CAed71p4CJ6WZgXYP9VMkvvC"
+    }
+  ],
+  "note": "Quatro documentos nativos com conteúdo conferido; conta pessoal e pasta ChatGPT. Nenhum compartilhamento adicionado; metadados dos quatro confirmam somente o proprietário e shared=false."
+}

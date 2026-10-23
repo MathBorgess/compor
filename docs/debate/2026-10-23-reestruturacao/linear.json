@@ -1,0 +1,18 @@
+{
+  "recorded_on": "2026-10-23",
+  "spec_issue": {
+    "identifier": "MAT-327",
+    "url": "https://linear.app/borgesmathai/issue/MAT-327/compor-spec-de-reestruturacao-apos-pesquisa-e-debate-de-arquetipos",
+    "title": "Compor — Spec de reestruturação após pesquisa e debate de arquétipos",
+    "state": "Backlog",
+    "labels": [
+      "ready-for-agent"
+    ]
+  },
+  "discovery_issue": {
+    "identifier": "MAT-326",
+    "state": "In Progress",
+    "url": "https://linear.app/borgesmathai/issue/MAT-326/compor-conduzir-discovery-com-15-entrevistas-qualificadas"
+  },
+  "note": "Publicação da spec exigida por to-spec; não inicia implementação ou oferta comercial."
+}
