@@ -6,6 +6,7 @@ Compor é a proposta de um espaço para elaborar, comparar e concluir texto e vi
 
 ## Documentos para começar
 
+- [Briefing de design e tese de mercado](docs/briefing-design-e-mercado-2026-10-23.md): leitura de 4–5 minutos para designer e investidor; [Google Docs](https://docs.google.com/document/d/1PqE-ZhGSMkk8J1vV82XC14DMI0ySiayihEVMb2AvH8E).
 - [Spec consolidada](docs/specs/compor-reestruturado-2026-10-23.md): problema, solução, 64 histórias, experiência, negócio, métricas e aceites.
 - [Como o debate mudou a proposta](docs/debate/2026-10-23-reestruturacao/README.md): categorias satisfeitas/insatisfeitas, posições, réplicas, premissas contestadas e decisões.
 - [Primeira onda de mensagens e e-mails](docs/prospeccao/2026-10-23/mensagens-da-primeira-onda.md): os dez envios, texto e evidências; [controle operacional](docs/prospeccao/2026-10-23/README.md).
