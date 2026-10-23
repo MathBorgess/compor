@@ -1,0 +1,34 @@
+{
+  "cli": "@excalidraw/cli@0.2.0",
+  "executedAt": "2026-10-23T17:59:59.622Z",
+  "results": [
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "estados-comuns.excalidraw",
+      "frame": "recomposicao",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    }
+  ]
+}
