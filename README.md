@@ -1,5 +1,7 @@
 # Compor
 
+> **Gestão e documentação compartilhada — 24/10/2026:** a central do projeto passa a ser o [Confluence Compor](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/360627), com [onboarding](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/196637) e [testes e evidências](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/458753). O [Jira SCRUM](https://compor-mathai.atlassian.net/issues?jql=project%20%3D%20SCRUM%20ORDER%20BY%20key) acompanha tarefas, backlog e sprints. As fontes do Drive e os snapshots local e remoto foram preservados como histórico. Compor passa a ser construído em público e em comunidade, com contribuições selecionadas; essa direção não altera a visibilidade nem a licença do repositório. Consulte os [ponteiros e a precedência das fontes](docs/gestao-atlassian.md).
+
 Compor é a proposta de um espaço para elaborar, comparar e concluir texto e visual de uma divulgação, preservando autoria, fatos e decisões. O primeiro recorte investiga responsáveis por cursos, mentorias e ebooks com uma tarefa real de comunicação e um obstáculo observável de criação.
 
 **Estado em 23/10/2026:** pesquisa e documentação, sem aplicativo implementado. A reestruturação combina 67 relatos públicos, dez e-mails enviados e debate de sete subagentes em duas rodadas. Há uma devolução e nenhuma resposta humana na checagem de 09:08. O desenho é candidato; necessidade, benefício, pagamento e market fit continuam sem validação direta.
