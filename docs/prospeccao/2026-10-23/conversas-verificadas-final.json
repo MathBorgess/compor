@@ -1,0 +1,332 @@
+{
+  "checked_at": "2026-10-23T12:08:22.419Z",
+  "scope": "Leitura das dez conversas exatas, incluindo mensagens enviadas e recebidas. Não comprova entrega/leitura.",
+  "threads": [
+    {
+      "thread_id": "1a16879ac7602381",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879ac7602381",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Juliana, uma pergunta sobre a divulgação do ReConectar"
+            },
+            {
+              "name": "To",
+              "value": "contato@oreconectar.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:16:07 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879bf16472af",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879bf16472af",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "André, como a divulgação entra na rotina da Origamid?"
+            },
+            {
+              "name": "To",
+              "value": "andre@origamid.com"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:16:11 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879d139b8a56",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879d139b8a56",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Walter, uma conversa sobre divulgar seu curso"
+            },
+            {
+              "name": "To",
+              "value": "walter@waltermattos.com"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:16:16 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879ec2963d3e",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16879ec2963d3e",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Roger, uma pergunta sobre divulgar a Formação"
+            },
+            {
+              "name": "To",
+              "value": "oi@rogermelo.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:16:23 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687c939c3a8b5",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687c939c3a8b5",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Felipe, uma pergunta sobre divulgar suas mentorias"
+            },
+            {
+              "name": "To",
+              "value": "contato@felipelapa.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:19:16 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ca65fae4cc",
+      "message_count": 2,
+      "messages": [
+        {
+          "id": "1a1687ca65fae4cc",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Mayza, uma pergunta sobre a divulgação da sua mentoria"
+            },
+            {
+              "name": "To",
+              "value": "contato@mayzakennedy.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:19:22 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        },
+        {
+          "id": "1a1687cb3aae936a",
+          "labels": [
+            "UNREAD",
+            "CATEGORY_UPDATES",
+            "INBOX"
+          ],
+          "headers": [
+            {
+              "name": "To",
+              "value": "matheusborgesfig@gmail.com"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:19:24 -0700 (PDT)"
+            },
+            {
+              "name": "From",
+              "value": "Mail Delivery Subsystem <mailer-daemon@googlemail.com>"
+            },
+            {
+              "name": "Subject",
+              "value": "Delivery Status Notification (Failure)"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687cb9d0924a6",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687cb9d0924a6",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Iran, como você prepara a divulgação das mentorias?"
+            },
+            {
+              "name": "To",
+              "value": "contato@iranpontes.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:19:26 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ff1c6544c7",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a1687ff1c6544c7",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Professor Anderson, uma pergunta sobre divulgar o curso online"
+            },
+            {
+              "name": "To",
+              "value": "contato@mixinfocell.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:22:57 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16880095dbd27e",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a16880095dbd27e",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "José, uma pergunta sobre divulgar o RevisaZé"
+            },
+            {
+              "name": "To",
+              "value": "joseofneto@gmail.com"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:23:03 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a168a19d5a142d9",
+      "message_count": 1,
+      "messages": [
+        {
+          "id": "1a168a19d5a142d9",
+          "labels": [
+            "SENT"
+          ],
+          "headers": [
+            {
+              "name": "Subject",
+              "value": "Seu processo de conteúdo com IA — uma pergunta"
+            },
+            {
+              "name": "To",
+              "value": "contato@alessandrotrovato.com.br"
+            },
+            {
+              "name": "Date",
+              "value": "Fri, 23 Oct 2026 04:59:44 -0700"
+            },
+            {
+              "name": "From",
+              "value": "Matheus Borges <matheusborgesfig@gmail.com>"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

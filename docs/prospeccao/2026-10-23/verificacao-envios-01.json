@@ -1,0 +1,54 @@
+[
+  {
+    "lead_id": "C01",
+    "message_id": "1a16879ac7602381",
+    "thread_id": "1a16879ac7602381",
+    "date_utc": "2026-10-23T11:16:07.000Z",
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "contato@oreconectar.com.br",
+    "subject": "Juliana, uma pergunta sobre a divulgação do ReConectar",
+    "sent_label": true,
+    "body_exact_match": true,
+    "headers_match": true,
+    "display_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#sent/1a16879ac7602381"
+  },
+  {
+    "lead_id": "C02",
+    "message_id": "1a16879bf16472af",
+    "thread_id": "1a16879bf16472af",
+    "date_utc": "2026-10-23T11:16:11.000Z",
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "andre@origamid.com",
+    "subject": "André, como a divulgação entra na rotina da Origamid?",
+    "sent_label": true,
+    "body_exact_match": true,
+    "headers_match": true,
+    "display_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#sent/1a16879bf16472af"
+  },
+  {
+    "lead_id": "C03",
+    "message_id": "1a16879d139b8a56",
+    "thread_id": "1a16879d139b8a56",
+    "date_utc": "2026-10-23T11:16:16.000Z",
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "walter@waltermattos.com",
+    "subject": "Walter, uma conversa sobre divulgar seu curso",
+    "sent_label": true,
+    "body_exact_match": true,
+    "headers_match": true,
+    "display_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#sent/1a16879d139b8a56"
+  },
+  {
+    "lead_id": "C04",
+    "message_id": "1a16879ec2963d3e",
+    "thread_id": "1a16879ec2963d3e",
+    "date_utc": "2026-10-23T11:16:23.000Z",
+    "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+    "to": "oi@rogermelo.com.br",
+    "subject": "Roger, uma pergunta sobre divulgar a Formação",
+    "sent_label": true,
+    "body_exact_match": true,
+    "headers_match": true,
+    "display_url": "https://mail.google.com/mail/u/?authuser=matheusborgesfig%40gmail.com#sent/1a16879ec2963d3e"
+  }
+]

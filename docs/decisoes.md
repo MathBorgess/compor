@@ -1,5 +1,21 @@
 # Decisões e origem
 
+## Reestruturação de 23/10/2026
+
+Fonte: pedidos explícitos de Matheus nesta conversa para pesquisa, envio pelo Gmail pessoal, registro de relatos, debate de arquétipos/UX/CEO e síntese com to-spec. [Registro completo](debate/2026-10-23-reestruturacao/README.md) e [spec candidata atual](specs/compor-reestruturado-2026-10-23.md).
+
+| Origem | Atualização | Estado |
+|---|---|---|
+| Matheus | Enviar perguntas e registrar execução; ampliar pesquisa com satisfeitos; debater com subagentes e RCD | Mandato executado e documentado; não equivale a aprovação de todas as propostas |
+| Debate A1–A5, D1, B1 | Qualificar tarefa observável, incluindo primeira divulgação; satisfação legítima | Desenho candidato; substitui renda e sinais de atividade como prova de dor |
+| Debate A1/A2/D1 | Uma composição para mensagem definida; duas rotas para exploração; alternativa visível | Substitui obrigação de três rotas e duas variantes; quantidade sujeita a teste |
+| Debate A4/A5/B1 | Benefício incremental separado de ativação, uso, pagamento e renovação | Sem resultados humanos nesta rodada |
+| Debate D1/B1 | Ativação aprovar + exportar / todos os atribuídos; iniciar com tarefa própria | Demonstração excluída; abertura externa/restauração verificam entrega |
+| Debate A5/B1 | Entrega por campanha; pacote/licença/assinatura em pesquisa | Sem preço escolhido, cobrança ou suporte ilimitado |
+| Direções anteriores de Matheus | Mac/Electron, local, integração ChatGPT/Codex e G0 antes da venda | Preservadas; acesso e capacidade ainda precisam de confirmação |
+
+Os originais de 22/10 estão no [histórico](historico/2026-10-22/LEIA-ME.md). Em conflito, esta seção e a spec de 23/10 orientam o próximo ensaio; o restante preserva evolução e propostas anteriores.
+
 ## Revisão Compor após conversa com a designer
 
 Fonte: mensagem de Matheus e texto da designer anexado em 20/10/2026. A [revisão](revisao/2026-10-20-compor/README.md) preserva a fonte e os quatro pareceres.

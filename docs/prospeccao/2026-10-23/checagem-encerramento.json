@@ -1,0 +1,162 @@
+{
+  "recorded_at": "2026-10-23T12:51:53.599Z",
+  "scope": "Releitura das dez conversas da primeira onda, até 20 mensagens por conversa; todas retornaram uma ou duas mensagens",
+  "sent_messages": 10,
+  "confirmed_bounces": 1,
+  "human_replies_observed": 0,
+  "delivery_or_read_unknown": 9,
+  "interviews_completed": 0,
+  "threads": [
+    {
+      "thread_id": "1a16879ac7602381",
+      "messages": [
+        {
+          "id": "1a16879ac7602381",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@oreconectar.com.br",
+          "subject": "Juliana, uma pergunta sobre a divulgação do ReConectar",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879bf16472af",
+      "messages": [
+        {
+          "id": "1a16879bf16472af",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "andre@origamid.com",
+          "subject": "André, como a divulgação entra na rotina da Origamid?",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879d139b8a56",
+      "messages": [
+        {
+          "id": "1a16879d139b8a56",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "walter@waltermattos.com",
+          "subject": "Walter, uma conversa sobre divulgar seu curso",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16879ec2963d3e",
+      "messages": [
+        {
+          "id": "1a16879ec2963d3e",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "oi@rogermelo.com.br",
+          "subject": "Roger, uma pergunta sobre divulgar a Formação",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687c939c3a8b5",
+      "messages": [
+        {
+          "id": "1a1687c939c3a8b5",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@felipelapa.com.br",
+          "subject": "Felipe, uma pergunta sobre divulgar suas mentorias",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ca65fae4cc",
+      "messages": [
+        {
+          "id": "1a1687ca65fae4cc",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@mayzakennedy.com.br",
+          "subject": "Mayza, uma pergunta sobre a divulgação da sua mentoria",
+          "labels": [
+            "SENT"
+          ]
+        },
+        {
+          "id": "1a1687cb3aae936a",
+          "from": "Mail Delivery Subsystem <mailer-daemon@googlemail.com>",
+          "to": "matheusborgesfig@gmail.com",
+          "subject": "Delivery Status Notification (Failure)",
+          "labels": [
+            "UNREAD",
+            "CATEGORY_UPDATES",
+            "INBOX"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687cb9d0924a6",
+      "messages": [
+        {
+          "id": "1a1687cb9d0924a6",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@iranpontes.com.br",
+          "subject": "Iran, como você prepara a divulgação das mentorias?",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a1687ff1c6544c7",
+      "messages": [
+        {
+          "id": "1a1687ff1c6544c7",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@mixinfocell.com.br",
+          "subject": "Professor Anderson, uma pergunta sobre divulgar o curso online",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a16880095dbd27e",
+      "messages": [
+        {
+          "id": "1a16880095dbd27e",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "joseofneto@gmail.com",
+          "subject": "José, uma pergunta sobre divulgar o RevisaZé",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    },
+    {
+      "thread_id": "1a168a19d5a142d9",
+      "messages": [
+        {
+          "id": "1a168a19d5a142d9",
+          "from": "Matheus Borges <matheusborgesfig@gmail.com>",
+          "to": "contato@alessandrotrovato.com.br",
+          "subject": "Seu processo de conteúdo com IA — uma pergunta",
+          "labels": [
+            "SENT"
+          ]
+        }
+      ]
+    }
+  ]
+}

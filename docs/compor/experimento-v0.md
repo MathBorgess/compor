@@ -1,5 +1,7 @@
 # Compor V0: exploração criativa, oferta gratuita e paga
 
+> Atualização de 23/10/2026: a [spec consolidada](../specs/compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
+
 20/10/2026. Matheus definiu comparar oferta gratuita e paga, incluindo possível pré-venda antes da estabilidade. Depois, reforçou a essência: criar criativos do zero, explorar temáticas e preservar voz e produto.
 
 Esta entrega descreve o experimento. Construção, recrutamento, publicação, tráfego e cobrança continuam futuros. Preço em reais e unidade de cobrança permanecem pendentes.

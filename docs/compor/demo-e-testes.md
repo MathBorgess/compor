@@ -1,5 +1,7 @@
 # Compor: demonstração e plano de testes
 
+> Atualização de 23/10/2026: a [spec consolidada](../specs/compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
+
 Data: 20/10/2026. Esta entrega descreve a demonstração e os testes futuros. Implementação, protótipo, recrutamento e cobrança exigem etapas próprias.
 
 ## O que precisamos provar

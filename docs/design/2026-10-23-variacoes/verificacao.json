@@ -1,0 +1,270 @@
+{
+  "checkedAt": "2026-10-23T18:05:28.901685+00:00",
+  "cli": "@excalidraw/cli@0.2.0",
+  "nativeScenes": 4,
+  "frames": [
+    {
+      "id": "A1",
+      "nativeElements": 32,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "A2",
+      "nativeElements": 41,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "A3",
+      "nativeElements": 62,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "A4",
+      "nativeElements": 33,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "A5",
+      "nativeElements": 27,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "A-fluxo",
+      "nativeElements": 40,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B1",
+      "nativeElements": 43,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B2",
+      "nativeElements": 68,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B3",
+      "nativeElements": 45,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B4",
+      "nativeElements": 41,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B5",
+      "nativeElements": 35,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B2-definida",
+      "nativeElements": 34,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "B-fluxo",
+      "nativeElements": 40,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C1",
+      "nativeElements": 29,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C2",
+      "nativeElements": 67,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C3",
+      "nativeElements": 43,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C4",
+      "nativeElements": 38,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C5",
+      "nativeElements": 32,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C2-definida",
+      "nativeElements": 33,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "C-fluxo",
+      "nativeElements": 40,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "estados",
+      "nativeElements": 42,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "recomposicao",
+      "nativeElements": 26,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    },
+    {
+      "id": "conclusao",
+      "nativeElements": 32,
+      "dimensions": [
+        1600,
+        1080
+      ]
+    }
+  ],
+  "moodboards": 3,
+  "archetypeInspections": 5,
+  "uxReview": "avaliacoes/16-ux-verificacao.md",
+  "linksMissing": [],
+  "galleryVerification": {
+    "method": "CUA: página renderizada, troca A→B→C, quadro único e moodboard alternados; estado AX conferido",
+    "screenshot": "galeria-verificada.png",
+    "scope": "Navegação da galeria, não controles do produto desenhado"
+  },
+  "goalAudit": {
+    "installCli": "Executável 0.2.0 verificado; instalação isolada registrada no README",
+    "wireframesAndFlows": "4 cenas editáveis, 3 diagramas e 23 PNGs renderizados pelo CLI",
+    "variationsWithProsCons": "3 modelos propostos por UX; tabela e cenário de invalidação em 01-ux-fluxos.md",
+    "moodboardsColorsShapesLogoObjects": "3 imagens, 9 esboços de símbolo, códigos de cor e direção tipográfica no README/galeria",
+    "subagentEvaluation": "5 categorias inspeccionaram PNGs; síntese mantém discordâncias e mudanças aplicadas",
+    "baseDrawingsForHumanValidation": "Galeria, editáveis, imagens e roteiro disponíveis; sem alegação de validação humana"
+  },
+  "limits": [
+    "Sem implementação do Compor",
+    "Sem teste humano",
+    "Sem pesquisa de marca ou fonte licenciada",
+    "Persistência, teclado, integrações e exportação real não demonstrados",
+    "Escolha de identidade ainda aberta"
+  ],
+  "sha256": {
+    "proveniencia.json": "50498879865e6c0402548e36751940eb4a5fb2e34d48c0fdab86dd95d6b78d15",
+    "index.html": "2319045b05926540dad29a9b816d000d5b40aa6703ed96f1b0ec0bfa70acc00b",
+    "galeria-verificada.png": "2d65aac0ac1c65b8c722febacad912447265b03b53ec28f28cea65dbc333ee9e",
+    "renderizacao.json": "3642c53295a2de68d4a874935a6830650e44a7147b136dcf59e37b23be2cb5e7",
+    "README.md": "c0484b6037b6a7ff24ae8fc374c208904108c94c54bdcefaf7d833da0c69859d",
+    "quadros.json": "6ee179d6894735e3b262d65b4b16c776bdd5e8e177153740300d3d8b6bf19e0b",
+    "renderizacao-ajustes.json": "cbbe2e17375514650d9a84c31394137cca337f55a11822219e0397c48477f3dd",
+    "google-docs.json": "96f344345410e7c713a09a62749ae20ff50c9096ef9244d93197e2093f995995",
+    "moodboards/03-caderno-autoria.png": "13cd80d128fe6513dc1b2e62973925dfb4bae09724a49993ed8be1fa18bd53df",
+    "moodboards/prompts.json": "ad8de0c927705bee13c8915833177924b2ba313a64d4bfb6331934b215f3338c",
+    "moodboards/01-oficina-editorial.png": "7265f47a29d85073720db54b8fdb531143490378179782cbb9e90e8ad1476279",
+    "moodboards/02-encaixe-composicao.png": "8d20bb66c7d4f9139b827cee9d4289cd38ddaff60e949d4a86ba43a416bc8e4e",
+    "renders/A1.png": "43a8e5957f9758866ef4b4ef0be11111f469b5cb6d0eb59a5faf44aa795a6dfe",
+    "renders/B-fluxo.png": "ecc3ac087126b696183d6e9316b3d138657a36c01a5b7943b0c806e9e0aead1c",
+    "renders/A3.png": "e2a0645c5e0ef792ac9c4680caf1fb87de7282139892b87e1db123fe24a75a0a",
+    "renders/A2.png": "03fe3b7fca25ce8afcb423a4e5e608fd21060f833aa5968413c91ef61af0145f",
+    "renders/recomposicao.png": "7b2000d7fc42d2faac2530b52442b8ce8de09edb9a584cfc220b06ab4e2fcc28",
+    "renders/B2-definida.png": "6bfe509b86ad2451963c8280537739e52cc4b9b36f335b45897da3e20eb4c36a",
+    "renders/A5.png": "fb3d5ea66c6d9b0d8753a9ace8361afdbace5b5f789df7e57673e9ea5dd969c7",
+    "renders/A4.png": "9f03d53959b740150f227a55d3bfa4f298312a0571ef727ccaaf7d2df2e5dd62",
+    "renders/C-fluxo.png": "9be3ab1b7dd45bc0ea699b62414161cc0562cf486960e47427f968a76190520e",
+    "renders/conclusao.png": "8008e3220ac03c9aec4c15f6b43fb2e4b55819ba2fd79edb57135ca2c276b85b",
+    "renders/estados.png": "d2ed228dae83f257615b03f3b522f83bf111d8fcbe5da52a7a75b24e4ed07338",
+    "renders/C1.png": "66cb17ab800b3f17ec553ee2269fce5adafdaf400bb9ae6daf9e24acbb6205a1",
+    "renders/B5.png": "43f2cbd20933e6a3469161838b60853f124abbee2276d46523928bfea1273f41",
+    "renders/B4.png": "d0f3797ab0d13ada3fef4bde0a0f5904fa89a6bb91f27157a1cdb5e15e4bfad0",
+    "renders/C2.png": "4d9bd7e0aa534b82aff2b719d69c844568b0d05bbda00d9762e11de903106e15",
+    "renders/C3.png": "b6058e924b0e8b4a1358d8070b43f0eb0a1171165cddf4a452c8b93e4cdde8e3",
+    "renders/C2-definida.png": "107d7c3d1db0fa4f5403707d948ae190c2d690b7d8cc65d3831be575ec3df2d7",
+    "renders/A-fluxo.png": "61d8313c5b3cf412be9120081110b9e351aa62c85d0f4b921ccce7a9df0a8e18",
+    "renders/B3.png": "2dd55d62b2c88e0bdb2fd2454dd944e372e2096595c9598641144f4216340bdd",
+    "renders/B2.png": "7dfc9fa005e4958833197113126cb0162224b0b96a786c7aba7802b339b1b149",
+    "renders/C4.png": "aa991c223c51e133c010c2d484ca80e8038ba70163c96718feb53055f27a7d6e",
+    "renders/B1.png": "f05a855b22916b1f620112d4f5fcc099306f1c55b541b59fc2df19d804c8143c",
+    "renders/C5.png": "39133c8e83a18efd6f26d64cae84cf835e692d46f9148379cf37292eb6b91d93",
+    "avaliacoes/15-a5-inspecao.md": "44d06af0c5ff088040380d85eb10551515a62a998b2c106f971bc2d815f06615",
+    "avaliacoes/02-a1-criterios.md": "62794fd6b06df7a251baffcf2116f4591102fc176833a5decbea0d038010503f",
+    "avaliacoes/01-ux-fluxos.md": "70a220c8fb89c81544ffa746ea594c865c140d050221c5f5700d528a8c763a0c",
+    "avaliacoes/13-a3-inspecao.md": "4048769a7ef5956c44880d42c0e98520b2226a3d20ba5bf3f8d22658209526e7",
+    "avaliacoes/14-a4-inspecao.md": "143c1968ee1bf9a822fb60d24e84abf949efa0abbae6be598ea7869d4ba86d0c",
+    "avaliacoes/03-a4-criterios.md": "f1b06f015129028b5e18efe30116ad95af7de707a5f295a035b58d443a9eb9da",
+    "avaliacoes/11-a1-inspecao.md": "8dc31f97d23352c6eed7b3522763fa5196337b67ba5e235a94770c20e93b52e2",
+    "avaliacoes/16-ux-verificacao.md": "deef6ed287f9d7d0e3d258cdc3e61a809a2f45c0c30341e24f4610a15757cb46",
+    "avaliacoes/04-sintese.md": "a2a6dacca2ed74f1aac3ae3db14990edd0ece14d43ee4f38670412acd14d0660",
+    "avaliacoes/12-a2-inspecao.md": "a73020519501da7af06384cebb3519be0ad703308c417163bff635dd6e8c344c",
+    "excalidraw/c-bancada-comparativa.excalidraw": "02a57804baf7207eb039f315abc815534c32e5da0bc6007c939191e27c46d45f",
+    "excalidraw/estados-comuns.excalidraw": "8e3a3321da8a4f967f94be3dae3015fe92ad4e423f0045f027c5e6f0d6c3f623",
+    "excalidraw/a-estudio-direto.excalidraw": "a95af56ba2220f3e62235e2511fb5e3f9ed12aba1e3f0a268c8e7c316542c30e",
+    "excalidraw/b-percurso-guiado.excalidraw": "4a6973b502866c66e5ddac8bfe29fc41bb179f39ce17b526c2c3d98fadff1c93",
+    "scripts/gerar-galeria.mjs": "386a4f95538c1e77fd27bad884180d08f8f30a97c220140d452d31a41b4330af",
+    "scripts/gerar-wireframes.mjs": "8fd1797fc8eea3265e5df1d421689c7747c88da0fbbc8f0349d6677a4ca85bad",
+    "scripts/renderizar.mjs": "af2c0d8087681c9b39abf99eb7e9d160f4320156986f25f32b97c7da54e7dc03",
+    "scripts/verificar-entrega.py": "bd6363cc400a319bf5b5fc0ad7597ceedb124d60a35ee66e863dca2beefc602f"
+  }
+}

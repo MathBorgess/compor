@@ -1,0 +1,167 @@
+{
+  "cli": "@excalidraw/cli@0.2.0",
+  "executedAt": "2026-10-23T17:55:13.810Z",
+  "results": [
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A1",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A2",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A3",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A4",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A5",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "a-estudio-direto.excalidraw",
+      "frame": "A-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B1",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B2",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B3",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B4",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B5",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B2-definida",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "b-percurso-guiado.excalidraw",
+      "frame": "B-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C1",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C2",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C3",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C4",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C5",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C2-definida",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "c-bancada-comparativa.excalidraw",
+      "frame": "C-fluxo",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "estados-comuns.excalidraw",
+      "frame": "estados",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "estados-comuns.excalidraw",
+      "frame": "recomposicao",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    },
+    {
+      "scene": "estados-comuns.excalidraw",
+      "frame": "conclusao",
+      "width": 1600,
+      "height": 1080,
+      "exitCode": 0
+    }
+  ]
+}

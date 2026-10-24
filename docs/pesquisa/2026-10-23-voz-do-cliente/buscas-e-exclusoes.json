@@ -1,0 +1,813 @@
+{
+  "collected_on": "2026-10-23",
+  "note": "Consultas e candidatos excluídos preservados; repetição de consultas não aumenta relatos. Nenhuma cópia integral de threads.",
+  "pt": {
+    "queries": [
+      "site:reddit.com/r/MarketingDigitalBR \"meu curso\" \"criativo\"",
+      "site:reddit.com \"infoproduto\" \"Canva\"",
+      "site:reddit.com \"mentoria\" \"ChatGPT\" \"conteúdo\"",
+      "site:linkedin.com/posts \"curso\" \"Canva\" \"horas\"",
+      "site:reddit.com/r/MarketingDigitalBR \"criativos\" \"meu produto\"",
+      "site:reddit.com/r/MarketingDigitalBR \"Canva\" \"tempo\"",
+      "site:reddit.com \"infoproduto\" \"criativos\" \"dificuldade\"",
+      "site:reddit.com \"ChatGPT\" \"genérico\" \"conteúdo\" \"meu\"",
+      "site:reddit.com/r/MarketingDigitalBR \"Canva\" \"ebook\"",
+      "site:reddit.com/r/MarketingDigitalBR \"criativos\" \"cansado\"",
+      "site:reddit.com/r/MarketingDigitalBR \"copy\" \"curso\" \"sou\"",
+      "site:reddit.com/r/MarketingDigitalBR \"ChatGPT\" \"criativos\"",
+      "\"eu\" \"Canva\" \"meu curso\" \"difícil\"",
+      "\"eu\" \"Canva\" \"mentoria\" \"horas\" -site:hotmart.com -site:eduzz.com -site:kiwify.com.br",
+      "\"eu\" \"ChatGPT\" \"genérico\" \"mentoria\"",
+      "\"criativos\" \"infoproduto\" \"não consigo\"",
+      "site:reddit.com \"meu ebook\" \"criativos\" -\"minigui-bot\"",
+      "site:reddit.com \"meu curso\" \"criativos\" -\"minigui-bot\"",
+      "site:reddit.com \"infoproduto\" \"Canva\" \"eu\" -Tutorial",
+      "\"meu curso\" \"Canva\" \"demoro\"",
+      "\"meu ebook\" \"divulgação\" \"difícil\"",
+      "\"meus posts\" \"Canva\" \"mentoria\" \"horas\"",
+      "\"ChatGPT\" \"minha voz\" \"curso\" \"conteúdo\" \"eu\" -site:hotmart.com -site:kiwify.com.br -site:eduzz.com",
+      "\"vendo cursos\" \"conteúdo\" \"difícil\" -site:hotmart.com -site:kiwify.com.br",
+      "\"meu infoproduto\" \"criativos\" \"dificuldade\"",
+      "\"meu curso\" \"divulgar\" \"Canva\" -site:skillshare.com",
+      "\"mentoria\" \"odeio\" \"conteúdo\" \"eu\" -site:hotmart.com",
+      "site:reddit.com \"criativos\" \"ebook\" \"tempo\" -Tutorial -plataforma",
+      "site:reddit.com \"curso online\" \"criar conteúdo\"",
+      "site:reddit.com \"Canva\" \"carrossel\" \"eu\"",
+      "site:linkedin.com/posts \"Canva\" \"eu demorava\"",
+      "site:reddit.com/r/MarketingDigitalBR/comments/1qyrzwh \"Saturday\"",
+      "site:reddit.com/r/MarketingDigitalBR/comments/1hpgriq \"Monday\"",
+      "site:reddit.com/r/MarketingDigitalBR/comments/1nhs4k6 \"2025\"",
+      "site:reddit.com/r/MarketingDigitalBR/comments/1g1numn \"2024\"",
+      "\"Uma dúvida matadora\" \"20 criativos\"",
+      "\"Primeiras vendas do ebook no orgânico 432 reais\"",
+      "\"Como vender ebook pelo Hotmart?\" \"Meu forte\"",
+      "\"AJUDA PARA INFOPRODUTO\" \"Sua Casa Sua Selva\""
+    ],
+    "exclusions": [
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1w2qmyw/ajuda_com_oferta/",
+        "author": "minigui-bot",
+        "reason": "Resumos e recomendações automatizados não são voz do usuário. Incluído apenas o autor humano do post.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1vdrmb9/minha_primeira_campanha_flopou/",
+        "author": "minigui-bot",
+        "reason": "Bot atribui falha a funil/criativo; diagnóstico não declarado pelo autor.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1qyrzwh/como_aprender_a_dar_resultados_pros_outros/",
+        "author": "homemdoleste",
+        "reason": "Autor principal quer criar agência; somente comentário independente de Potter91 entrou.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/empreendedorismo/comments/1mpsqw5/sou_gestor_de_tr%C3%A1fego_gostaria_de_saber_o_que/",
+        "author": "Potter91",
+        "reason": "Mesmo autor de PT02; apoio contextual, não pessoa adicional.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1h0j5j8/marketing_digital_realmente_da_dinheiro/",
+        "author": "Potter91",
+        "reason": "Mesmo autor de PT02; propriedade do produto confirmada no relato, sem nova contagem.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1fyot46/",
+        "author": null,
+        "reason": "Relato encontrado em busca, mas abertura retornou404; narrativa didática de consultor. Não promovido a evidência validada.",
+        "validation": "snippet_only_open_failed"
+      },
+      {
+        "url": "https://pt.linkedin.com/posts/maurenmotta_destravandoocanva-cursoparamulheres-canvadozero-activity-7393958665332006914-BZnZ",
+        "author": "Mauren Motta",
+        "reason": "Anúncio do próprio curso de Canva; narrativa de transformação com finalidade promocional.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1knuijm/",
+        "author": null,
+        "reason": "Agência/assessoria vendendo serviço; não dono de oferta de conhecimento no episódio.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1rrrig5/tutorial_como_uso_ia_pra_produzir_30_posts_por/",
+        "author": null,
+        "reason": "Agência com vários clientes e chamada para plataforma; não relato independente do ICP.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1prk0zb/como_voc%C3%AA_usa_intelig%C3%AAncia_artificial_no_seu/",
+        "author": null,
+        "reason": "Discussão de serviços de marketing; propriedade de produto de conhecimento não estabelecida.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1vhqkii/estou_perdido/",
+        "author": null,
+        "reason": "Afiliado de produtos físicos; não criador de curso, mentoria ou ebook.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1rbrd26/tem_alguma_ia_mais_inteligente_que_o_chatgpt_hoje/",
+        "author": null,
+        "reason": "Queixa de ChatGPT genérico, mas oferta de conhecimento própria não estabelecida. Não preencher ICP por inferência.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1x0tlhk/voc%C3%AA_pausaria_um_an%C3%BAncio_s%C3%B3_porque_o_chatgpt/",
+        "author": null,
+        "reason": "Pergunta hipotética; não episódio próprio constatável.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1upwaqe/how_many_creatives_do_you_test_per_week/",
+        "author": null,
+        "reason": "Pergunta em inglês sem episódio próprio suficiente; bot propõe volume de criativos.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1vtg4fp/campanha_come%C3%A7a_vendendo_e_depois_para/",
+        "author": null,
+        "reason": "Produto não especificado; resultado de mídia não demonstra dor de criação.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/empreendedorismo/comments/1j6qo4v/melhor_forma_de_escrever_um_ebook_pro_meu_neg%C3%B3cio/",
+        "author": "Branseed",
+        "reason": "Clínica com equipe pede ebook gratuito complementar, explicitamente não para vender. Dor de produzir material diferente do ICP.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1i0yr4v/fiz_um_ebook_e_n%C3%A3o_sei_como_vender_ele_agora/",
+        "author": "Head_Chicken6962",
+        "reason": "Ebook criado, mas ainda sem tentativa de divulgação relatada; problema amplo de começar a vender, sem episódio de criação de campanha.",
+        "validation": "opened_full"
+      },
+      {
+        "url": "https://pt.linkedin.com/posts/caioavelino_saas-vibecoding-activity-7437258513287917568-gd6l",
+        "author": "Caio Avelino",
+        "reason": "Narrativa de dor de Canva ligada ao lançamento de ferramenta concorrente; útil para concorrência, não evidência independente nesta amostra.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://wowpostio.com/br/use-cases/experts",
+        "author": "Wowpost",
+        "reason": "Vendor descreve dores de experts em segunda pessoa; não depoimento direto identificável.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://pt.linkedin.com/posts/isabelle-cannes_parem-de-fazer-cards-com-ia-s%C3%A9rio-activity-7498485965506904066-qr89",
+        "author": "Isabelle C. e comentaristas",
+        "reason": "Opiniões e trabalho de designers/marketing; não comprova oferta de conhecimento própria.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/MarketingDigitalBlack/comments/1h1kwgo/",
+        "author": null,
+        "reason": "Dificuldade de aprovação/distribuição em conteúdo de saúde sexual; não processo arte+texto. Não usado para completar quota.",
+        "validation": "search_only"
+      },
+      {
+        "url": "https://www.reddit.com/r/EscritoresBrasil/comments/1vr7jrq/ca%C3%AD_no_papo_de_escrever_com_ia/",
+        "author": null,
+        "reason": "Escrita literária, sem episódio de divulgação de produto de conhecimento.",
+        "validation": "search_only"
+      }
+    ]
+  },
+  "en": {
+    "queries": [
+      "site:reddit.com \"course creator\" \"marketing\" \"struggling\"",
+      "site:reddit.com \"digital products\" \"Canva\" \"hours\"",
+      "site:reddit.com \"online course\" \"hate marketing\"",
+      "site:reddit.com \"solopreneur\" \"content\" \"exhausting\"",
+      "site:reddit.com \"course\" \"marketing\" \"Canva\" \"struggle\"",
+      "site:reddit.com \"digital products\" \"content creation\" \"struggling\"",
+      "site:reddit.com \"selling courses\" \"marketing\" \"time\"",
+      "site:reddit.com \"created a course\" \"marketing\" \"hard\"",
+      "site:reddit.com/r/onlinecourses marketing selling course struggle",
+      "site:reddit.com/r/digitalproducts marketing overwhelmed",
+      "site:reddit.com \"sell ebooks\" \"marketing\" \"struggling\"",
+      "site:reddit.com \"my digital products\" \"marketing\" \"time\"",
+      "site:reddit.com \"online course\" \"Canva\" \"I\" \"time consuming\"",
+      "site:reddit.com \"course creator\" \"burnout\"",
+      "site:reddit.com \"Gumroad\" \"marketing\" \"exhausting\"",
+      "site:reddit.com \"course\" \"social media\" \"burned out\" \"my\"",
+      "site:reddit.com \"digital product\" \"Canva\" \"frustrating\"",
+      "site:reddit.com \"digital products\" \"ChatGPT\" \"generic\"",
+      "site:reddit.com \"coaching business\" \"content\" \"time\" \"struggling\"",
+      "site:reddit.com \"course\" \"ad creatives\" \"struggling\"",
+      "site:reddit.com \"online course\" \"creative\" \"ads\" \"spent\"",
+      "site:reddit.com \"sell courses\" \"creative\" \"Canva\"",
+      "site:reddit.com \"my course\" \"creatives\" \"time\"",
+      "site:reddit.com \"selling\" \"ebook\" \"copywriting\" \"struggling\""
+    ],
+    "exclusions": [
+      {
+        "url": "https://www.reddit.com/r/creators/comments/1qtrrdz/creating_content_is_fine_distributing_it/",
+        "reason": "OP valida sua própria ferramenta e liga waitlist; não tratado como reclamação espontânea independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/onlinecourses/comments/1qbyh16/course_creators_what_are_your_actual_daytoday/",
+        "reason": "Lista de dores do OP é pergunta de pesquisa, não relato. Só o comentário de LearnWeb3_xyz entrou (EN04), marcado como resposta provocada."
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1mmjq7s/",
+        "reason": "Mensagem instrucional/promocional de sucesso, produto e evidência vagos. Excluída do corpus de reclamações."
+      },
+      {
+        "url": "https://www.reddit.com/r/DigitalProductSellers/comments/1rpfap3/people_didnt_buy_our_digital_product_until_we/",
+        "reason": "Post 'o que funcionou' com longo prompt/receita e afirmações pouco verificáveis. Candidato promissor para pesquisa de processo, mas não selecionado como dor independente nesta amostra."
+      },
+      {
+        "url": "https://www.reddit.com/r/passive_income/comments/1kilv9y/",
+        "reason": "Oferta é revenda de assinatura Canva3anos a$2; não oferta autoral de expert definida no ICP."
+      },
+      {
+        "url": "https://www.reddit.com/r/DigitalMarketing/comments/1x61f6y/anyone_here_successfully_selling_online_courses/",
+        "reason": "Amigo relata dificuldade de outra pessoa. Não é voz direta do dono do curso; crosspost também excluído."
+      },
+      {
+        "url": "https://www.reddit.com/r/EntrepreneurRideAlong/comments/1x61dk9/anyone_here_successfully_selling_online_courses/",
+        "reason": "Crosspost do relato de terceiro anterior; não contar novamente."
+      },
+      {
+        "url": "https://www.reddit.com/r/DigitalMarketing/comments/1qxdzaz/digital_marketing_without_the_creativity/",
+        "reason": "Pessoa ajudando negócio de familiar; dor visual válida, mas sem evidência de oferta digital. Reservada para corpus adjacente, não incluída aqui."
+      },
+      {
+        "url": "https://www.reddit.com/r/passive_income/comments/1m41f2t/digital_products_3_months_0_sales_help/",
+        "reason": "Autor aparece removido; relato genérico e detalhes de negócio insuficientes. Não inferir que comentários [deleted] são o mesmo autor."
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1nqgada/ngl_im_tired_bro/",
+        "reason": "Rant pessoal com posterior autopromoção de link; dor pouco específica e maior risco de confundir aquisição com queixa independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/Entrepreneur/comments/13eiodp/im_sick_of_running_my_business/",
+        "reason": "E-commerce de moda + loja física; não oferta digital/educacional. Excluído deste recorte."
+      },
+      {
+        "url": "https://www.reddit.com/r/canva/comments/1xb3un1/wtf_happened_to_canva/",
+        "reason": "Grande volume de queixas de interface/IA, mas OP não demonstra vender curso/mentoria/ebook. Não usar volume de comentário como confirmação do ICP."
+      }
+    ]
+  },
+  "adj": {
+    "queries": [
+      "site.indiehackers.com/post \"content\" \"Canva\" \"struggle\"",
+      "site.reddit.com/r/solopreneur \"content\" \"exhausting\"",
+      "site.reddit.com/r/SaaS \"marketing\" \"content creation\" \"struggle\"",
+      "site.indiehackers.com/post \"copywriting\" \"struggling\"",
+      "site.indiehackers.com/post \"hate marketing\"",
+      "site.reddit.com/r/solopreneur \"Canva\" \"hours\"",
+      "site.reddit.com/r/SaaS \"copywriting\" \"I struggle\"",
+      "site.reddit.com/r/indiehackers \"Canva\" \"spend\"",
+      "site.indiehackers.com/post \"landing page\" \"struggling\" \"copy\"",
+      "site.reddit.com/r/solopreneur \"posts\" \"ChatGPT\" \"generic\"",
+      "site.reddit.com/r/solopreneur \"content\" \"off brand\"",
+      "site.indiehackers.com/post \"marketing\" \"graphics\" \"struggle\"",
+      "site.news.ycombinator.com/item \"marketing\" \"I suck\"",
+      "site.reddit.com/r/Solopreneur \"consulting\" \"content\" \"struggling\"",
+      "site.reddit.com/r/Solopreneur \"coach\" \"posting\" \"tired\"",
+      "site.linkedin.com/posts \"I spent\" \"Canva\" \"my business\""
+    ],
+    "exclusions": [
+      {
+        "url": "https://news.ycombinator.com/item?id=43582801",
+        "reason": "Narrativa de dor vira promoção da própria ferramenta de social marketing; não contar como depoimento independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/indiehackers/comments/1tr3e2e/im_a_dev_who_genuinely_hates_marketing_so_i_built/",
+        "reason": "Pitch da plataforma JriveContent; rejeitado como evidência independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/indiehackers/comments/1krdh5o",
+        "reason": "Pitch Hookads com métricas próprias e convite comercial; não tratar alegações como voz independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/creators/comments/1qtrrdz/creating_content_is_fine_distributing_it/",
+        "reason": "Validação de ideia e link de waitlist da própria ferramenta; não espontâneo independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/Solopreneur/comments/1qhbpsu/how_an_seo_consultant_is_using_rag_to_fix_the/",
+        "reason": "Relato introduz solução própria de RAG, portanto material promocional."
+      },
+      {
+        "url": "https://www.indiehackers.com/post/ask-ih-do-you-struggle-when-writing-your-landing-page-copy-JW92fD5a58AwD0bx0kWy",
+        "reason": "Busca trouxe relato potencialmente útil de autor do Dashman, mas abertura falhou; não incluído no corpus confirmado nem atribuído sem autor."
+      },
+      {
+        "url": "https://www.indiehackers.com/post/struggling-with-copy-8c87bc16fb",
+        "reason": "Kieran Parker aparece em resultado primário, mas abertura falhou; separado do corpus confirmado."
+      },
+      {
+        "url": "https://www.indiehackers.com/post/i-suck-at-marketing-what-do-i-do-now-0d520f6a48",
+        "reason": "Abertura falhou, apenas candidato de pesquisa."
+      },
+      {
+        "url": "https://www.linkedin.com/posts/canva_its-not-a-trap-its-a-creative-commitment-activity-7495796753477099520-DfD6",
+        "reason": "Comentários solicitados por post da marca; muitos elogios e arquétipo incerto. Não convertidos em relato de dor."
+      }
+    ]
+  },
+  "root_extra_queries": [
+    "\"meu curso\" \"Canva\" \"tempo\" \"post\" reddit",
+    "\"vendo\" \"ebook\" \"ChatGPT\" \"difícil\" reddit",
+    "\"mentoria\" \"criar conteúdo\" \"cansada\"",
+    "\"curso\" \"conteúdo\" \"não aguento\" \"Instagram\""
+  ],
+  "root_extra_exclusions": "Resultados de vendas de mentorias atribuíram dores ao cliente; materiais de terceiros e queixas de estudantes não foram tratados como relato do ICP.",
+  "direct": {
+    "queries": [
+      "\"coach\" \"Canva\" \"hours\" \"reddit\"",
+      "\"consultant\" \"Canva\" \"struggle\" content",
+      "\"course creator\" \"Canva\" \"struggling\" -site:youtube.com -site:facebook.com",
+      "\"I\" \"coach\" \"hours in Canva\"",
+      "\"I\" \"consulting\" \"creating content\" \"Canva\" \"frustrating\"",
+      "\"expensive AI Carousel\"",
+      "\"Tim Brownson\" \"AI\" \"carousel\"",
+      "site:thefullybookedcoach.com \"carousel\"",
+      "\"ChatGPT\" \"Canva\" \"copying and pasting\"",
+      "\"personal training\" \"ads\" \"promo materials\"",
+      "\"canva\" \"struggling with making good design\"",
+      "\"ChatGPT\" \"canva\" \"actual visuals and text\"",
+      "\"Spent 8 hours making one proposal\"",
+      "\"Social media & content creation\" \"personaltraining\""
+    ],
+    "exclusions": [
+      {
+        "url": "https://www.reddit.com/r/VirtualAssistantPH/comments/1rx5zmy/hiring_social_media_manager_for_consulting_brand/",
+        "author": "u/Electronic-Quit2643",
+        "date": "2026-03-18",
+        "status": "Aberta, excluída do total de relatos",
+        "reason": "Demanda de contratação por consultoria para conteúdo humano e Canva; é evidência de tarefa de compra, não reclamação espontânea de execução. Editada com HIRED, sem transação verificada."
+      },
+      {
+        "url": "https://www.reddit.com/r/Entrepreneur/comments/1knl6rx/comment/msn36rq/",
+        "author": "u/PIPMaker9k",
+        "date": null,
+        "status": "Aberta, excluída deste lote restrito",
+        "reason": "Consultor solo explícito relata limitação para usar cases confidenciais em conteúdo e pressão de produzir textos. Relevante ao ICP, porém não demonstra rotina visual/copy entre ferramentas suficiente para este lote."
+      },
+      {
+        "url": "https://www.reddit.com/r/automation/comments/1vsi4n6/need_a_reliable_automation_tool_for_multitabs/",
+        "author": "u/No-Spirit-9610",
+        "date": "2026-08-19",
+        "status": "Aberta, excluída deste lote restrito",
+        "reason": "Copia respostas do ChatGPT para páginas de assignments no Canva; tarefa e papel comercial desconhecidos, sem divulgação de oferta."
+      },
+      {
+        "url": "https://www.reddit.com/r/logodesign/comments/1wsk29y/struggling_to_find_uniqueness_in_my_design/",
+        "status": "Duplicata excluída",
+        "reason": "Mesmo autor e conteúdo de DR04 em outro subreddit."
+      },
+      {
+        "url": "https://www.linkedin.com/posts/kim-curtis_i-asked-a-coach-what-she-dreads-most-about-activity-7428238998713720833-5JFd",
+        "status": "Excluída",
+        "reason": "Relato atribuído a terceiro não identificável; não é voz primária verificável do coach."
+      },
+      {
+        "url": "https://www.linkedin.com/posts/lindseyaskew-self-improvementcopywriter_wellnesscoaches-contentoverwhelm-burnoutprevention-activity-7404828628540162048-Ls3l",
+        "status": "Excluída",
+        "reason": "Copywriter descrevendo dores de clientes em conteúdo comercial; não depoimento primário do alvo."
+      },
+      {
+        "url": "https://gethypemedia.com/overwhelmed-by-content-creation-heres-how-to-stay-consistent-clear-and-connected-without-burning-out/",
+        "status": "Excluída",
+        "reason": "Página de serviço que descreve dores de terceiros, sem fonte primária individual."
+      },
+      {
+        "url": "https://thecollective.inc/",
+        "status": "Excluída",
+        "reason": "Texto de venda usa linguagem de dor muito aderente, mas não é relato espontâneo de usuário."
+      },
+      {
+        "url": "https://graphicsforcoaches.co.uk/nutrition-vault",
+        "status": "Excluída",
+        "reason": "Alegação de fornecedor sobre horas gastas por coaches; não foi tratada como dado observado ou relato individual."
+      },
+      {
+        "url": "https://ttabvue.uspto.gov/ttabvue/ttabvue-98303277-EXA-4.pdf",
+        "status": "Pista de descoberta substituída pela fonte original",
+        "reason": "Encontrou-se reprodução antiga de trecho de Tim Brownson; usamos apenas o artigo atual aberto e não contamos a reprodução como nova fonte."
+      }
+    ]
+  },
+  "pt-direct": {
+    "queries": [
+      "site:reddit.com/r/PsicologiaBR \"Canva\"",
+      "site:reddit.com \"criar conteúdo\" \"psicóloga\" \"tempo\"",
+      "site:reddit.com \"posts\" \"ChatGPT\" \"genérico\"",
+      "site:linkedin.com/posts \"Canva\" \"minha mentoria\" \"horas\"",
+      "site:reddit.com/r/PsicologiaBR \"postar\" \"tempo\"",
+      "site:reddit.com/r/PsicologiaBR \"conteúdo\" \"produzir\" \"cansativo\"",
+      "site:reddit.com/r/empreendedorismo \"Canva\" \"posts\"",
+      "site:reddit.com \"Canva\" \"demoro\"",
+      "\"canva\" \"demoro\" \"post\"",
+      "\"canva\" \"perco\" \"horas\" \"eu\" -curso -aprenda -plataforma",
+      "\"chatgpt\" \"meu jeito\" \"post\" -curso -prompts -prompt",
+      "site:reddit.com \"criar posts\" \"tempo\" -socialmediamarketing -SaaS",
+      "site:linkedin.com/posts \"ChatGPT\" \"reescrevo\"",
+      "site:linkedin.com/posts \"Canva\" \"demorei\"",
+      "site:linkedin.com/posts \"Canva\" \"passei horas\"",
+      "site:reddit.com \"Canva\" \"demorado\"",
+      "\"Clara Fontanezzi de Araujo\" \"EU NÃO AGUENTO MAIS TEXTO DE IA\"",
+      "\"Tânia Belo Santos\" \"Demoro menos na produção\"",
+      "\"Canva\" \"meus posts\" \"difícil\" -site:hotmart.com -site:skillshare.com -site:youtube.com",
+      "\"criar conteúdo\" \"sou psicólogo\" \"tempo\"",
+      "\"Clara Fontanezzi de Araujo\" copywriter",
+      "\"Tânia Belo Santos\" \"comunicação\" consultora"
+    ],
+    "exclusions": [
+      {
+        "author": "Luiz Mazini",
+        "url": "https://mazini.substack.com/p/pluguei-um-cerebro-de-marketing-na",
+        "opened": true,
+        "reason": "Relato de retrabalho muito próximo da hipótese, mas estrutura narrativa promocional do próprio método Cérebro de Marketing e captação de newsletter. Não contado como confirmação independente."
+      },
+      {
+        "author": "u/Ferdiscyourself",
+        "url": "https://www.reddit.com/r/PsicologiaBR/comments/1iv4xol/voc%C3%AAs_costumam_usar_ia_na_pr%C3%A1tica_profissional_de/",
+        "opened": true,
+        "reason": "Uso de IA para slides de aula e retorno ao Canva; produção didática, sem divulgação de oferta própria."
+      },
+      {
+        "author": "Fernando Uehara",
+        "url": "https://pt.linkedin.com/posts/uehara_marketresearch-dataintelligence-canva-activity-7438230565159518208-ZPRw",
+        "opened": true,
+        "reason": "Apresentações e relatórios feitos em equipe; não é divulgação solo ou produção de post."
+      },
+      {
+        "author": "Anselmo Cristov em post de Itamara Ferreira",
+        "url": "https://pt.linkedin.com/posts/itamaraferreira_design-ia-chatgpt-activity-7320876883426865153-R1-p",
+        "opened": true,
+        "reason": "Comentário de reescrita, sem contexto suficiente de atividade profissional ou publicação e sem permalink individual obtido."
+      },
+      {
+        "author": "Leonardo Delmondes",
+        "url": "https://pt.linkedin.com/posts/leonardodelmondes_pessoal-o-gpt-%C3%A9-muito-bom-pra-ajudar-a-gente-activity-7442612940131696640-X94h",
+        "opened": true,
+        "reason": "Crítica geral a textos alheios; não é episódio de dor na própria produção. PD01 foi verificado no permalink original, não contado a partir de recomendação nesta página."
+      },
+      {
+        "author": "Claudia De Conto / repost de Maria Caroline Zimermann",
+        "url": "https://pt.linkedin.com/posts/claudia-de-conto-32649351_ficadica-chatgpt-digital-activity-7254166790287597569-O4Gx",
+        "opened": true,
+        "reason": "Dicas de prompting, não episódio próprio de produção."
+      },
+      {
+        "author": "Joedna Hubner",
+        "url": "https://www.sympla.com.br/play/canva-para-iniciantes-basico-pratico-e-autoral/1683230",
+        "opened": false,
+        "reason": "Página de venda do próprio curso; história de dor integra a argumentação comercial."
+      },
+      {
+        "author": "Box de Canva",
+        "url": "https://boxdecanva.com.br/",
+        "opened": false,
+        "reason": "Fornecedor de templates falando de dor do cliente; não testemunho primário espontâneo."
+      },
+      {
+        "author": "Rafael Ruschel",
+        "url": "https://rafaelruschel.com.br/mentoriapsi/",
+        "opened": false,
+        "reason": "Oferta de mentoria e promessa de solução, sem relato espontâneo independente."
+      },
+      {
+        "author": "Brunetti",
+        "url": "https://brunettittb.com/",
+        "opened": false,
+        "reason": "Oferta de curso de marketing para psicólogos; não testemunho primário espontâneo."
+      },
+      {
+        "author": "GERA/Altive",
+        "url": "https://altive-ai.com/blog/ia-para-conteudo/chatgpt-para-instagram",
+        "opened": false,
+        "reason": "Conteúdo de fornecedor de ferramenta."
+      },
+      {
+        "author": "Rodolfo Souza",
+        "url": "https://thehumanplus.substack.com/p/seu-carrossel-morre-antes-do-slide",
+        "opened": false,
+        "reason": "Conteúdo prescritivo em segunda pessoa, não episódio próprio identificado."
+      },
+      {
+        "author": "Resenhas G2 traduzidas",
+        "url": "https://www.g2.com/pt/products/canva/reviews?page=5&qs=pros-and-cons",
+        "opened": false,
+        "reason": "Idioma original não era português e perfil-alvo não estava demonstrado."
+      },
+      {
+        "author": "Debates gerais r/PsicologiaBR",
+        "url": "https://www.reddit.com/r/PsicologiaBR/comments/1qv5lrs/eu_tenho_avers%C3%A3o_ao_instagram_e_ao_marketing_na/",
+        "opened": false,
+        "reason": "Aversão a marketing e captação sem episódio específico de arte, texto ou retrabalho; não usado para preencher quantidade."
+      }
+    ]
+  },
+  "positive": {
+    "queries": [
+      "site:reddit.com \"my course\" \"ChatGPT\" \"helped\"",
+      "site:reddit.com \"ebook\" \"Canva\" \"sales\" \"I\"",
+      "site:reddit.com \"digital products\" \"Canva\" \"saved\" -automation -bot",
+      "site:community.udemy.com ChatGPT Canva course instructors experience",
+      "site:reddit.com \"course creator\" \"Canva\" \"love\"",
+      "site:reddit.com \"online course\" \"templates\" \"marketing\" \"worked\"",
+      "site:reddit.com \"ebook\" \"ChatGPT\" \"sold\" -prompts -PLR",
+      "site:reddit.com \"solopreneur\" \"content\" \"finally\" \"working\"",
+      "site:reddit.com \"Canva\" \"ebook\" \"sold\" -ChatGPT -PLR -MRR -affiliate",
+      "site:reddit.com \"digital products\" \"first sale\" \"Canva\"",
+      "site:reddit.com \"course\" \"marketing\" \"I use Canva\"",
+      "site:community.udemy.com \"ChatGPT\" \"I use\"",
+      "site:community.udemy.com \"Canva\" \"I use\"",
+      "site:community.udemy.com \"ChatGPT\" \"helped\" \"course\"",
+      "site:reddit.com/r/Entrepreneur \"my course\" \"sales\" \"email\"",
+      "site:reddit.com/r/OnlineCourses \"marketing\" \"sold\"",
+      "\"goyashy\" \"Snapy\"",
+      "site:community.udemy.com \"Canva\" \"love\"",
+      "site:community.udemy.com \"Canva\" \"templates\"",
+      "site:reddit.com \"my ebook\" \"sales\" \"I used\" \"Canva\" -MRR -PLR",
+      "site:reddit.com \"online courses\" \"works for me\" marketing",
+      "site:reddit.com \"my course\" \"email list\" \"successful\" -AMA -6,000,000",
+      "site:reddit.com \"coaching business\" \"Canva\" \"use\"",
+      "site:community.udemy.com \"promotional\" \"emails\" \"worked\" \"I\"",
+      "\"site:community.udemy.com\" \"goyashy\" \"founder\"",
+      "\"snapy.ai\" \"Yash\" founder",
+      "\"I’ve pre-sold my courses several times\" \"June\"",
+      "\"My funnel right now is simply\" \"August\""
+    ],
+    "exclusions": [
+      {
+        "url": "https://community.udemy.com/en/discussion/137812/my-story-to-30k-revenue-how-i-launch-4-hour-courses-in-a-week/p1",
+        "author": "goyashy / Yash Thakker",
+        "reason": "Excluído como depoente independente: recomenda Snapy sem revelar nessa recomendação que é seu produto. Relação com Snapy confirmada em fontes primárias do autor; comentário independente MichaelPog preservado em PO02.",
+        "verification_urls": [
+          "https://goyashy.medium.com/from-prompts-to-shorts-automate-tiktok-reels-and-youtube-shorts-creation-f25f7bd55b86",
+          "https://yashthakker.com/"
+        ]
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1n2jipm/i_hit_2000_sales_on_etsy_by_selling_canva/",
+        "reason": "Post inclui venda de licença de kit por US$1.200 e chamada de escassez para DM. Pitch direto."
+      },
+      {
+        "url": "https://www.reddit.com/r/SideHustleGold/comments/1sneyiv/my_digital_product_side_hustle_just_crossed_25k/",
+        "reason": "Alegação de sucesso usada para encaminhar a planilha com produtos/links próprios; não usada como evidência independente."
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1n1h7ts",
+        "reason": "Oferta explícita de prompts/planner por comentário ou DM; post de venda."
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1n4jwg5",
+        "reason": "Encaminha para ebook e programa fixado no perfil; pitch."
+      },
+      {
+        "url": "https://www.reddit.com/r/digitalproductselling/comments/1mm2l7r/i_made_938_in_1_day_selling_a_1333_digital_product/",
+        "reason": "Oferta de bundle com revenda e benefícios comerciais descritos para converter leitores."
+      },
+      {
+        "url": "https://www.reddit.com/r/thesidehustle/comments/1l34tvz",
+        "reason": "Relato de PLR acompanhado de convite para receber os sites; adequação ao expert e independência insuficientes."
+      },
+      {
+        "url": "https://www.reddit.com/r/Entrepreneur/comments/36gv2l/i_sell_wholesale_to_1000_retail_stores_big_and/",
+        "reason": "AMA contém cupom de US$50 para curso próprio."
+      },
+      {
+        "url": "https://www.reddit.com/r/sidehustle/comments/rty0m0/my_experience_launching_an_online_course_sharing/",
+        "author": "u/ykpeazy",
+        "reason": "Bom relato de dor, mas não positivo: prejuízo de expectativa, alcance em queda e burnout. Não inflar corpus de contrapontos com caso predominantemente negativo."
+      },
+      {
+        "url": "https://www.reddit.com/r/passive_income/comments/1k7t186/how_i_started_selling_digital_products_the_highs/",
+        "author": "u/dumbl3d00r",
+        "reason": "Adesão adjacente (templates); caso menos informativo do que os selecionados. Convite a contato e comentários de terceiros vendendo guias tornam contexto misto; não classificamos o autor como bot."
+      },
+      {
+        "url": "https://www.reddit.com/r/lifecoaching/comments/1h6oh1y/what_kind_of_equipment_do_you_use_for_your/",
+        "author": "u/kirbyclarity",
+        "reason": "Lista de ferramentas inclui Canva, mas uso não implica satisfação nem resultado. Não incluído como positivo apenas por mencionar a ferramenta."
+      },
+      {
+        "url": "https://www.reddit.com/r/elearning/comments/1d7kuom/whats_the_best_way_to_boost_enrollment_in_courses/",
+        "author": "u/christyinsdesign",
+        "reason": "Recomendação de curso de terceiro que a autora admite não ter cursado; não é experiência primária do método recomendado."
+      }
+    ]
+  },
+  "pt-positive": {
+    "queries": [
+      "site:reddit.com \"meu ebook\" \"Canva\"",
+      "site:reddit.com \"meu curso\" \"ChatGPT\"",
+      "site:reddit.com \"ebook\" \"ChatGPT\" \"vendi\"",
+      "site:linkedin.com/posts \"Canva\" \"meus cursos\"",
+      "site:reddit.com/r/MarketingDigitalBR \"Canva\" \"eu\"",
+      "site:reddit.com/r/empreendedorismo \"ChatGPT\" \"ebook\"",
+      "site:reddit.com \"meu e-book\" \"Canva\"",
+      "site:reddit.com \"meus ebooks\" \"ChatGPT\"",
+      "site:reddit.com/r/MarketingDigitalBR \"ChatGPT\" \"vendi\"",
+      "site:reddit.com/r/MarketingDigitalBR \"Canva\" \"ebook\"",
+      "site:reddit.com \"Canva\" \"vendo cursos\"",
+      "\"ChatGPT\" \"meu ebook\" \"posts\"",
+      "\"Canva\" \"meus posts\" \"gosto\"",
+      "\"ChatGPT\" \"minha mentoria\" \"uso\"",
+      "\"Canva\" \"meu curso\" \"criei\" -site:instagram.com -site:facebook.com",
+      "site:linkedin.com/posts \"ChatGPT\" \"meus alunos\" \"posts\"",
+      "\"Canva\" \"me ajudou\" \"divulgar\"",
+      "\"ChatGPT\" \"meus produtos\" \"conteúdo\"",
+      "\"Canva\" \"uso\" \"minhas mentorias\"",
+      "\"Canva\" \"meu ebook\" \"vendas\" -site:scribd.com -site:hotmart.com -site:facebook.com",
+      "\"Canva\" \"meus posts\" site:linkedin.com/posts",
+      "\"ChatGPT\" \"meus posts\" site:linkedin.com/posts",
+      "\"Canva\" \"meus cursos\" \"uso\"",
+      "\"Canva\" \"minha newsletter\" \"tempo\"",
+      "\"Canva\" \"eu adoro\" \"curso\"",
+      "\"ChatGPT\" \"me ajuda\" \"meus posts\"",
+      "\"Canva\" \"meus posts\" \"rápido\"",
+      "\"minhas aulas\" \"posts\" \"ChatGPT\" \"uso\"",
+      "\"criativos\" \"Canva\" \"gosto\" site:reddit.com",
+      "\"meu produto\" \"Canva\" \"faço\" site:reddit.com",
+      "\"Canva\" \"facilita\" \"mentorias\"",
+      "\"Canva\" \"meu negócio\" \"adoro\"",
+      "\"infoproduto\" \"Canva\" \"faço\" site:reddit.com",
+      "\"meu ebook\" \"posts\" site:reddit.com -1nhs4k6",
+      "\"meu curso\" \"criativos\" site:reddit.com",
+      "\"Canva\" \"meus cursos\" \"gosto\"",
+      "\"ChatGPT\" \"newsletter\" \"meus cursos\" -site:skillshare.com",
+      "\"Canva\" \"minhas postagens\" \"professora\"",
+      "\"Canva\" \"economizo\" \"professor\"",
+      "\"ChatGPT\" \"posts\" \"meus mentorados\" \"uso\"",
+      "\"Ida Mara Freire\" \"curso\" \"escrita\"",
+      "\"Ida Mara Freire\" \"meditação\" \"oficina\"",
+      "site:domestika.org/pt/projects \"Canva\" \"meu negócio\"",
+      "site:domestika.org/pt/projects \"Canva\" \"minhas\" \"curso\"",
+      "site:domestika.org \"Canva\" \"psicóloga\" \"projeto\"",
+      "site:domestika.org \"Canva\" \"mentoria\" \"projeto\"",
+      "site:domestika.org/projects \"Canva\" \"minha marca\" \"curso\"",
+      "site:domestika.org \"criando conteúdo\" \"satisfeita\"",
+      "site:luri.substack.com \"100 newsletters\"",
+      "site:luriribeiro.com \"Substack\" \"tão bom\"",
+      "\"Alessandro Trovato\" site oficial",
+      "\"Priscila Turini Carmo\" \"mentoria\"",
+      "Alessandro Trovato professor Excel site",
+      "site:linkedin.com/in \"Alessandro Trovato\""
+    ],
+    "exclusions": [
+      {
+        "author": "Priscila Turini Carmo",
+        "url": "https://pt.linkedin.com/posts/pricarmorhecarreira_linkedin-inclus%C3%A3o-pracegover-activity-7274392856260210688-jYYx",
+        "validation": "aberta",
+        "reason": "Mentora relata criar descrições acessíveis com ChatGPT, mas não diz que gostou da ferramenta nem demonstra eficácia para leitores. Reserva funcional; não contada para completar a meta positiva."
+      },
+      {
+        "author": "u/Potter91",
+        "url": "https://www.reddit.com/r/empreendedorismo/comments/1pi2s4q/comment/ntjg8lk/",
+        "validation": "aberta",
+        "reason": "Mesmo autor de PT02. Fonte adicional sobre template/app, sem vínculo explícito com o PDF anterior; não contar como pessoa nova nem substituir o produto antigo."
+      },
+      {
+        "author": "u/Edcarlosaph",
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1nhs4k6/primeiras_vendas_do_ebook_no_org%C3%A2nico_432_reais/",
+        "validation": "duplicata previamente aberta",
+        "reason": "Já consta como PT07; manter benefício do ChatGPT nesse registro."
+      },
+      {
+        "author": "u/psychology1student",
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1g1numn/como_vender_ebook_pelo_hotmart/",
+        "validation": "duplicata previamente aberta",
+        "reason": "Já consta como PT05; não aumentar número de pessoas."
+      },
+      {
+        "author": "Tânia Belo Santos",
+        "url": "https://pt.linkedin.com/posts/taniasantos_corporatecommunication-strategiccommunication-activity-7460598229731102721-55zY",
+        "validation": "duplicata previamente aberta",
+        "reason": "PD02 já registra benefício e custo de curadoria; não duplicar em PP."
+      },
+      {
+        "author": "Luiz Mazini",
+        "url": "https://mazini.substack.com/p/pluguei-um-cerebro-de-marketing-na",
+        "validation": "previamente aberta",
+        "reason": "Narrativa promove método próprio de IA e marketing; excluída como confirmação independente."
+      },
+      {
+        "author": "Conrado de Sa",
+        "url": "https://pt.linkedin.com/posts/conradodesa_o-que-mais-me-gerou-resultado-na-vida-profissional-activity-7508278198212710400-kYdw",
+        "validation": "snippet",
+        "reason": "Promoção da ferramenta Otto; não usuário independente."
+      },
+      {
+        "author": "Anwar Hermuche",
+        "url": "https://pt.linkedin.com/posts/anwarhermuche_chatgpt-ia-produtividade-activity-7282893841123172353-FoHa",
+        "validation": "snippet",
+        "reason": "Alegação de ganho de tempo usada para promover curso de ChatGPT."
+      },
+      {
+        "author": "Samia Gehlen Predebon",
+        "url": "https://pt.linkedin.com/posts/samia-gehlen-predebon-socialmedia_ol%C3%A1-tudo-bem-eu-preparei-uma-surpresa-activity-7041379509958262784-OmH4",
+        "validation": "snippet",
+        "reason": "Campanha de descontos de cursos; promessa de ganho de produtividade não é relato espontâneo."
+      },
+      {
+        "author": "Paulo Andrade",
+        "url": "https://pt.linkedin.com/posts/paulomfandrade_canva-completo-crie-posts-sites-videos-activity-7366488614215602180-VTyv",
+        "validation": "snippet",
+        "reason": "Recompartilha recomendação do próprio curso; não relata uso para divulgar sua oferta."
+      },
+      {
+        "author": "PackBook / Amanda Santana",
+        "url": "https://negociosedesign.com.br/ebook-editaveis-no-canva/",
+        "validation": "snippet",
+        "reason": "Testemunho escolhido pelo fornecedor, sem permalink primário da cliente."
+      },
+      {
+        "author": "Ariely Caramori / clientes",
+        "url": "https://arielycaramori.com.br/pack-de-canva-para-dentistas-pack-de-canvarmkt/",
+        "validation": "snippet",
+        "reason": "Depoimentos em página comercial, sem publicação independente de cada cliente."
+      },
+      {
+        "author": "Funcionários do Futuro",
+        "url": "https://cirorosa.com/funcionarios-do-futuro-seu-post-pronto-em-3-minutos-vs2-2/",
+        "validation": "snippet",
+        "reason": "Histórias e números publicados pelo fornecedor; não fontes diretas dos usuários."
+      },
+      {
+        "author": "Posta Aí",
+        "url": "https://postaai.app/",
+        "validation": "snippet",
+        "reason": "Depoimentos de landing page sem fonte primária independente."
+      },
+      {
+        "author": "Rodolfo Souza",
+        "url": "https://orodolfosouza.com.br/ia-fast-content/",
+        "validation": "snippet",
+        "reason": "Página de venda dos próprios agentes de conteúdo."
+      },
+      {
+        "author": "MiniGui",
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1qyokmz/melhor_curso_de_canva_para_instagram/",
+        "validation": "snippet",
+        "reason": "Resposta explicitamente gerada por bot; excluída. Comentário humano sobre curso sem perfil ou episódio suficiente."
+      },
+      {
+        "author": "Autor apagado de AMA",
+        "url": "https://www.reddit.com/r/AMABRASIL/comments/1rdgdic/vivo_de_vendas_online_infoprodutos_e_produtos/",
+        "validation": "aberta",
+        "reason": "Conta apagada e episódio Canva é prestação de design a terceiros; não preencher a amostra com isso."
+      },
+      {
+        "author": "Mary Cagnin",
+        "url": "https://t.me/s/canalmarycagnin?before=668",
+        "validation": "aberta",
+        "reason": "Entusiasmo por novo app de animação que ainda vai testar; não episódio do fluxo de divulgação."
+      },
+      {
+        "author": "Fabiane Nascimento",
+        "url": "https://www.domestika.org/es/projects/1860908-hospitalidade-corporativa-estrategia-de-conteudo-e-marca-pessoal-no-linkedin",
+        "validation": "aberta",
+        "reason": "Projeto de marca pessoal para recolocação, sem oferta própria de conhecimento nem satisfação com ferramenta estabelecida."
+      },
+      {
+        "author": "Amanda Andrade",
+        "url": "https://www.domestika.org/es/projects/1046982-meu-projeto-do-curso-copywriting-defina-o-tom-de-sua-marca-pessoal",
+        "validation": "snippet",
+        "reason": "Projeto de marca de velas; outro segmento e pré-lançamento."
+      },
+      {
+        "author": "G2 traduzido",
+        "url": "https://www.g2.com/pt/products/canva/reviews?page=5&qs=pros-and-cons",
+        "validation": "snippet",
+        "reason": "Texto traduzido, não relato originalmente em português; perfil-alvo não comprovado."
+      },
+      {
+        "author": "Autor não validado",
+        "url": "https://www.reddit.com/r/MarketingDigitalBlack/comments/1g9piro",
+        "validation": "abertura falhou — 404",
+        "reason": "Não usar preferência por Copilot/fluxo multi-IA vista só no índice."
+      },
+      {
+        "author": "Autor não validado",
+        "url": "https://www.reddit.com/r/MarketingDigitalBlack/comments/1fyot46",
+        "validation": "abertura falhou",
+        "reason": "Não usar narrativa de receita e VSL vista só no índice."
+      },
+      {
+        "author": "u/SoilAlarmed7898",
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1abve9y/quanto_custa_lan%C3%A7ar_um_produto/",
+        "validation": "aberta",
+        "reason": "Declara materiais vendendo, mas sem fluxo de produção ou satisfação descritos; não preencher apenas com receita/tráfego."
+      },
+      {
+        "author": "u/odavida",
+        "url": "https://www.reddit.com/r/MarketingDigitalBR/comments/1abve9y/quanto_custa_lan%C3%A7ar_um_produto/",
+        "validation": "aberta",
+        "reason": "Benefício em automação de resposta a leads, outro trabalho que não criação de divulgação."
+      }
+    ]
+  }
+}
