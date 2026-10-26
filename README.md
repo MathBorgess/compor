@@ -27,6 +27,8 @@ Ativação significa aprovar e exportar uma arte com legenda, medida sobre todos
 
 Essa arquitetura não comprova implementação, instalação ou integração. Acesso oficial e condições comerciais antecedem venda (G0). O repositório permanece privado. A comparação gratuita/paga continua candidata, sem cobrança ou promessa de beta nesta entrega.
 
+**Perfis para testes do dono — 26/10:** chave OpenAI de teste/da disciplina, BYOK pessoal e proxy Codex local, conforme o [ADR 0004](docs/adr/0004-tres-perfis-de-teste.md). Os dois primeiros usam o mesmo adaptador oficial. O proxy atende Responses no laboratório, com imagem ainda não comprovada, e não substitui a rota Codex de distribuição. O contexto acadêmico orienta configuração; chave, cota e habilitação real precisam estar disponíveis para chamadas de IA.
+
 ## Referências de trabalho
 
 - [Produto e fluxo](docs/produto.md)

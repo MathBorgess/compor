@@ -18,6 +18,8 @@ Nas rodadas de 26/10, Matheus definiu v0 para Windows e macOS, setup assistido p
 
 Q14–Q17 fecharam o recorte de um usuário para uma organização na v0, toda memória no mesmo repositório opcional da organização, Codex com texto e imagem nativos sem chave BYOK complementar como condição de liberação e composição local com elementos textuais editáveis. O [ADR 0003](adr/0003-memoria-integral-da-organizacao.md) preserva a escolha de concentrar a memória. Os gates de integração, distribuição e testes continuam pendentes; arquitetura aprovada não comprova aplicativo implementado.
 
+Na atualização posterior de 26/10, Matheus definiu três perfis de teste: chave OpenAI de teste/da disciplina, BYOK pessoal e proxy Codex local. O [ADR 0004](adr/0004-tres-perfis-de-teste.md) distingue esses perfis da distribuição: o proxy interno não comprova imagem nem substitui G0. A chave acadêmica é uma possível origem de credencial autorizada, sem concessão de crédito ou cota confirmada nas fontes consultadas.
+
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 
 A spec consolidada de 23/10/2026 substituiu definições anteriores sobre público, promessa, fluxo, quantidade obrigatória de rotas, ativação e monetização. Ela permanece como referência da proposta para validação, sujeita às decisões posteriores registradas no Confluence. Contratos técnicos que não foram alterados continuam referências candidatas, sem comprovar implementação ou elegibilidade da integração.

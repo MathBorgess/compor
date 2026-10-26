@@ -44,6 +44,10 @@ _Avoid_: Arte final
 Execução delimitada de uma tarefa de geração, vinculada ao contexto que a originou, inclusive quando falha ou é cancelada.
 _Avoid_: Proposta, peça aprovada
 
+**Modo de teste**:
+Perfil selecionável de acesso à geração para experimentar o Compor, com origem de credencial e capacidades explícitas. Chave de teste ou da disciplina, BYOK pessoal e proxy Codex são os três perfis previstos para os testes do dono.
+_Avoid_: Modelo de IA, garantia de capacidade, modo de distribuição
+
 **Proposta**:
 Sugestão de texto, composição ou mudança apresentada para revisão do autor antes de ser aplicada.
 _Avoid_: Alteração aplicada, aprovação
