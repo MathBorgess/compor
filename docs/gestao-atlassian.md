@@ -12,6 +12,8 @@ Em 24/10/2026, Matheus definiu o Confluence como central organizadora do Compor 
 
 ## Precedência e preservação
 
+O [desenho inicial de arquitetura de 26/10](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) levanta as 64 histórias da spec e propõe instalação, dois modos de conexão à IA (OpenAI BYOK e Codex instalado), memória, skills e backend. O pedido de Matheus autoriza esse desenho e o uso de proxy em testes internos; as escolhas da primeira rodada de discussão continuam pendentes. O [glossário](../GLOSSARY.md) registra apenas os conceitos já definidos pela spec, sem escolher novos escopos de memória ou implementar o aplicativo.
+
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 
 A spec consolidada de 23/10/2026 substituiu definições anteriores sobre público, promessa, fluxo, quantidade obrigatória de rotas, ativação e monetização. Ela permanece como referência da proposta para validação, sujeita às decisões posteriores registradas no Confluence. Contratos técnicos que não foram alterados continuam referências candidatas, sem comprovar implementação ou elegibilidade da integração.
