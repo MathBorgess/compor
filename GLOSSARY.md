@@ -91,3 +91,15 @@ _Avoid_: Fato do produto, autorização de execução
 **Contribuição compartilhada**:
 Alteração oferecida para revisão antes de integrar a base vigente de um contexto ou projeto compartilhado.
 _Avoid_: Base aprovada, aprovação de peça
+
+**Trace do Compor**:
+Registro correlacionado das etapas de uma operação, com a tentativa e as versões de contexto que a originaram. Seu resultado técnico não constitui aprovação da peça ou benefício observado pela pessoa.
+_Avoid_: Gravação de tela, conversa completa, aceite humano
+
+**Caso de avaliação**:
+Exemplo selecionado com origem, critérios e dados autorizados para verificar o comportamento do Compor.
+_Avoid_: Toda sessão de usuário, dado automaticamente liberado para pesquisa
+
+**Avaliação do Compor**:
+Resultado da aplicação de critérios versionados a um caso ou trace, identificando se a origem é código, pessoa ou modelo avaliador.
+_Avoid_: Aprovação da peça, garantia de experiência, receita comprovada
