@@ -4,6 +4,10 @@ Vocabulário do trabalho de elaborar, comparar e concluir texto e visual de uma 
 
 ## Language
 
+**Organização do Compor**:
+Unidade do usuário que reúne contextos e projetos e corresponde a um repositório quando o salvamento pelo GitHub é utilizado.
+_Avoid_: Organization do GitHub, escopo de memória, equipe com papéis no Compor
+
 **Projeto**:
 Espaço de trabalho recuperável que reúne material criativo, alternativas e decisões.
 _Avoid_: Conversa, arquivo exportado
@@ -47,6 +51,10 @@ _Avoid_: Alteração aplicada, aprovação
 **Aprovação**:
 Aceite explícito de uma peça após a revisão de fatos, voz, legibilidade e recursos. Aplicar uma sugestão, exportar e publicar são ações distintas desse aceite.
 _Avoid_: Aplicação de sugestão, exportação, publicação
+
+**Atualização de contexto**:
+Adoção explícita de novas versões da base ou das skills por uma campanha, preservando a referência às versões anteriores.
+_Avoid_: Aprovação de peça, recebimento de arquivos
 
 **Exportação pública**:
 Arte e legenda aprovadas para uso fora do Compor, sem a base privada ou o contexto interno da campanha.
