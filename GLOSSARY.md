@@ -8,6 +8,10 @@ Vocabulário do trabalho de elaborar, comparar e concluir texto e visual de uma 
 Espaço de trabalho recuperável que reúne material criativo, alternativas e decisões.
 _Avoid_: Conversa, arquivo exportado
 
+**Produto**:
+Oferta divulgada, com fatos, voz e limites próprios, que pode orientar diferentes campanhas.
+_Avoid_: Campanha, peça
+
 **Base aprovada**:
 Referência revisada de produto e voz, com fatos, omissões e limites, que orienta a campanha. Os fatos distinguem o que está confirmado, pendente ou omitido por escolha.
 _Avoid_: Histórico da conversa, perfil inferido
@@ -23,6 +27,10 @@ _Avoid_: Variante, troca de cor
 **Variante**:
 Alternativa derivada de uma rota pela mudança de uma dimensão escolhida, mantendo sua origem reconhecível.
 _Avoid_: Rota independente, nova campanha
+
+**Peça**:
+Unidade de comunicação composta por arte e legenda, sujeita à revisão e ao aceite do autor.
+_Avoid_: Campanha, arquivo de projeto
 
 **Recurso**:
 Material visual ou tipográfico usado na composição, com origem e autorização de uso conhecidas. Um recurso provisório ou ausente permanece identificado como tal.
@@ -49,5 +57,25 @@ Conjunto restaurável do trabalho que preserva base, campanha, rotas, variantes,
 _Avoid_: Exportação pública, imagem final
 
 **Preferência**:
-Orientação reutilizável do projeto adotada por escolha explícita do autor. Uma correção limitada à peça não constitui, por si só, uma preferência.
+Orientação reutilizável adotada por escolha explícita do autor para um escopo definido. Uma correção limitada à peça não constitui, por si só, uma preferência.
 _Avoid_: Correção pontual, regra inferida
+
+**Memória do Compor**:
+Contexto reutilizável de fatos, preferências e orientações, com escopo explícito, que informa o trabalho de criação.
+_Avoid_: Histórico da conversa, credencial
+
+**Escopo de memória**:
+Fronteira de aplicação de uma memória: pessoal, marca ou cliente, produto e campanha. Uma correção pontual da peça só se torna reutilizável por promoção explícita.
+_Avoid_: Regra global implícita, permissão de acesso
+
+**Memória pessoal**:
+Contexto reutilizável da pessoa, separado dos contextos compartilhados de criação.
+_Avoid_: Memória compartilhada, base do cliente
+
+**Skill do Compor**:
+Conjunto versionado de instruções reutilizáveis que orienta uma atividade de criação no escopo escolhido.
+_Avoid_: Fato do produto, autorização de execução
+
+**Contribuição compartilhada**:
+Alteração oferecida para revisão antes de integrar a base vigente de um contexto ou projeto compartilhado.
+_Avoid_: Base aprovada, aprovação de peça
