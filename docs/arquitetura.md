@@ -1,5 +1,7 @@
 # Arquitetura proposta do Compor V1
 
+> Direção vigente de 26/10/2026: [arquitetura e decisões fechadas no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258), [organização individual](adr/0002-organizacao-e-fluxo-individual.md) e [memória integral da organização](adr/0003-memoria-integral-da-organizacao.md). O fechamento inclui Windows e macOS, BYOK e Codex, geração de imagens desde a v0 e envio opcional de toda a memória ao GitHub. O texto abaixo preserva os contratos anteriores; suas restrições de plataforma, adiamento de imagens e exclusão genérica de nuvem foram substituídas nesses pontos. Instalação e integrações continuam sem comprovação de execução.
+
 > Atualização de 23/10/2026: a [spec consolidada](specs/compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
 
 20/10/2026. Alvo: Electron para macOS, conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. Matheus confirmou essas direções. Esta entrega descreve contratos; instalação, integração e capacidade continuam sem execução.

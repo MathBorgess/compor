@@ -23,7 +23,9 @@ O resultado inicial candidato é uma imagem estática PNG e sua legenda TXT, com
 
 Ativação significa aprovar e exportar uma arte com legenda, medida sobre todos os qualificados atribuídos. Benefício incremental, uso externo, retorno em nova ocasião e pagamento são resultados separados. A unidade comercial em pesquisa é uma entrega delimitada por campanha; preço, suporte e recorrência ainda precisam de observação.
 
-Matheus definiu macOS/Electron, conexão inicial por conta ChatGPT/Codex, projetos locais e backend Oracle pequeno. Acesso oficial e condições comerciais antecedem venda (G0). O repositório permanece privado. A comparação gratuita/paga continua candidata, sem cobrança ou promessa de beta nesta entrega.
+**Arquitetura fechada em 26/10/2026:** aplicativo Electron para Windows e macOS, com um usuário e uma organização na v0. O projeto local reúne todas as memórias por escopo, preferências, skills declarativas e recursos; envio ao repositório GitHub da organização é opcional. O setup usa instruções para o agente do usuário, com alternativa manual. OpenAI BYOK e Codex instalado devem atender texto e imagem; o modo Codex depende de G0 e comprovação nativa sem chave BYOK complementar. O compositor local preserva texto, preço e datas editáveis. Backend Oracle pequeno permanece restrito a compatibilidade e diagnóstico autorizado. Consulte o [desenho e decisões no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) e os [ADRs](docs/adr/0003-memoria-integral-da-organizacao.md).
+
+Essa arquitetura não comprova implementação, instalação ou integração. Acesso oficial e condições comerciais antecedem venda (G0). O repositório permanece privado. A comparação gratuita/paga continua candidata, sem cobrança ou promessa de beta nesta entrega.
 
 ## Referências de trabalho
 

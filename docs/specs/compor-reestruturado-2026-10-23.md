@@ -1,5 +1,7 @@
 # Compor — spec consolidada de produto, experiência e negócio
 
+> Atualização arquitetural aprovada em 26/10/2026: [diagrama e decisões](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) e [ADRs](../adr/0003-memoria-integral-da-organizacao.md). A v0 passa a Windows e macOS, um usuário/organização, geração de imagens desde o início e salvamento GitHub opcional de todo o contexto da organização. Autorizar sincronização GitHub difere de autorizar envio ao fornecedor de IA. Os requisitos de autoria, versões, revisão, exportação e recuperação abaixo permanecem; a atualização não executa implementação, ensaio ou oferta.
+
 23/10/2026. Síntese com `to-spec`, após pesquisa pública, prospecção e debate de arquétipos, UX/Product Design e CEO. **Desenho candidato para validação; implementação e resultados de mercado ainda não demonstrados.** Esta versão orienta a próxima descoberta e o protótipo. Direções do dono são distinguidas de decisões de desenho e hipóteses comerciais.
 
 ## Problem Statement

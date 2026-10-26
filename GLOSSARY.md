@@ -5,7 +5,7 @@ Vocabulário do trabalho de elaborar, comparar e concluir texto e visual de uma 
 ## Language
 
 **Organização do Compor**:
-Unidade do usuário que reúne contextos e projetos e corresponde a um repositório quando o salvamento pelo GitHub é utilizado.
+Unidade do usuário que reúne marcas ou clientes, produtos, campanhas e memórias e corresponde a um repositório quando o salvamento pelo GitHub é utilizado. Na v0, cada usuário trabalha com uma organização.
 _Avoid_: Organization do GitHub, escopo de memória, equipe com papéis no Compor
 
 **Projeto**:
@@ -77,8 +77,8 @@ Fronteira de aplicação de uma memória: pessoal, marca ou cliente, produto e c
 _Avoid_: Regra global implícita, permissão de acesso
 
 **Memória pessoal**:
-Contexto reutilizável da pessoa, separado dos contextos compartilhados de criação.
-_Avoid_: Memória compartilhada, base do cliente
+Contexto reutilizável da pessoa, pertencente à organização do Compor assim como as demais memórias. O escopo pessoal não implica acesso exclusivo dentro de um repositório compartilhado.
+_Avoid_: Conteúdo inacessível aos colaboradores, base do cliente
 
 **Skill do Compor**:
 Conjunto versionado de instruções reutilizáveis que orienta uma atividade de criação no escopo escolhido.
