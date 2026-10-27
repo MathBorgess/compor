@@ -5,7 +5,7 @@ Vocabulário do trabalho de elaborar, comparar e concluir texto e visual de uma 
 ## Language
 
 **Organização do Compor**:
-Unidade do usuário que reúne marcas ou clientes, produtos, campanhas e memórias e corresponde a um repositório quando o salvamento pelo GitHub é utilizado. Na v0, cada usuário trabalha com uma organização.
+Unidade do usuário que reúne marcas ou clientes, produtos, campanhas e memórias. Na v0, cada usuário trabalha com uma organização.
 _Avoid_: Organization do GitHub, escopo de memória, equipe com papéis no Compor
 
 **Projeto**:
@@ -24,6 +24,18 @@ _Avoid_: Histórico da conversa, perfil inferido
 Trabalho de divulgação que relaciona a base usada a um público, um objetivo e uma ação desejada.
 _Avoid_: Projeto, anúncio publicado
 
+**Direção criativa**:
+Conjunto de referências e escolhas criativas que orienta a exploração e um resultado piloto.
+_Avoid_: Peça final, preferência permanente
+
+**Divergência criativa**:
+Exploração de alternativas diferentes para ampliar as possibilidades de uma direção criativa.
+_Avoid_: Repetição da mesma opção, escolha final
+
+**Convergência criativa**:
+Refinamento das escolhas da pessoa em uma direção criativa editável, com possibilidade de voltar a explorar.
+_Avoid_: Aprovação da peça, fim obrigatório da exploração
+
 **Rota**:
 Conceito de comunicação com argumento, composição, arte e legenda para a mesma oferta e seus fatos. Rotas contrastantes apresentam abordagens diferentes da divulgação.
 _Avoid_: Variante, troca de cor
@@ -36,16 +48,28 @@ _Avoid_: Rota independente, nova campanha
 Unidade de comunicação composta por arte e legenda, sujeita à revisão e ao aceite do autor.
 _Avoid_: Campanha, arquivo de projeto
 
+**Peça piloto**:
+Peça experimental com arte e legenda criada para experimentar uma direção criativa. Sua existência não implica aceite ou publicação.
+_Avoid_: Peça aprovada, publicação
+
 **Recurso**:
 Material visual ou tipográfico usado na composição, com origem e autorização de uso conhecidas. Um recurso provisório ou ausente permanece identificado como tal.
 _Avoid_: Arte final
+
+**Referência criativa**:
+Imagem ou frase apresentada pela pessoa para orientar a exploração de uma direção criativa.
+_Avoid_: Preferência permanente, peça aprovada
+
+**Rótulo de referência**:
+Indicação escolhida ou criada pela pessoa sobre o significado de uma referência criativa, com definição editável e instruções que orientam a análise do agente. Uma referência pode acrescentar instruções próprias; o uso de rótulos pode ser estudado para melhorar o Compor quando autorizado.
+_Avoid_: Preferência permanente inferida, autorização de uso genérica
 
 **Tentativa**:
 Execução delimitada de uma tarefa de geração, vinculada ao contexto que a originou, inclusive quando falha ou é cancelada.
 _Avoid_: Proposta, peça aprovada
 
-**Modo de teste**:
-Perfil selecionável de acesso à geração para experimentar o Compor, com origem de credencial e capacidades explícitas. Chave de teste ou da disciplina, BYOK pessoal e proxy Codex são os três perfis previstos para os testes do dono.
+**Modo de acesso à IA**:
+Uso da própria chave da pessoa para acessar a IA no Compor. Uma chave própria da equipe pode ser usada em testes internos.
 _Avoid_: Modelo de IA, garantia de capacidade, modo de distribuição
 
 **Proposta**:
@@ -60,9 +84,9 @@ _Avoid_: Aplicação de sugestão, exportação, publicação
 Adoção explícita de novas versões da base ou das skills por uma campanha, preservando a referência às versões anteriores.
 _Avoid_: Aprovação de peça, recebimento de arquivos
 
-**Exportação pública**:
-Arte e legenda aprovadas para uso fora do Compor, sem a base privada ou o contexto interno da campanha.
-_Avoid_: Cópia privada, publicação
+**Download do piloto**:
+Transferência da imagem PNG do piloto para fora do Compor, inclusive como rascunho; a legenda permanece disponível para copiar como texto.
+_Avoid_: Aprovação, publicação, cópia privada da memória
 
 **Cópia privada**:
 Conjunto restaurável do trabalho que preserva base, campanha, rotas, variantes, recursos, decisões e versões.
@@ -71,6 +95,10 @@ _Avoid_: Exportação pública, imagem final
 **Preferência**:
 Orientação reutilizável adotada por escolha explícita do autor para um escopo definido. Uma correção limitada à peça não constitui, por si só, uma preferência.
 _Avoid_: Correção pontual, regra inferida
+
+**Hipótese de preferência**:
+Interpretação provisória de uma possível preferência, que pode ser registrada proativamente com escopo e evidência e é reversível.
+_Avoid_: Preferência confirmada, fato da marca
 
 **Memória do Compor**:
 Contexto reutilizável de fatos, preferências e orientações, com escopo explícito, que informa o trabalho de criação.
@@ -81,8 +109,8 @@ Fronteira de aplicação de uma memória: pessoal, marca ou cliente, produto e c
 _Avoid_: Regra global implícita, permissão de acesso
 
 **Memória pessoal**:
-Contexto reutilizável da pessoa, pertencente à organização do Compor assim como as demais memórias. O escopo pessoal não implica acesso exclusivo dentro de um repositório compartilhado.
-_Avoid_: Conteúdo inacessível aos colaboradores, base do cliente
+Contexto reutilizável da pessoa, pertencente à organização do Compor assim como as demais memórias. Seu escopo de aplicação não determina, por si só, quem tem acesso a ela.
+_Avoid_: Permissão de acesso, base do cliente
 
 **Skill do Compor**:
 Conjunto versionado de instruções reutilizáveis que orienta uma atividade de criação no escopo escolhido.
@@ -101,7 +129,7 @@ Trace com reação ou julgamento identificado de uma pessoa, código ou modelo s
 _Avoid_: Trace apenas com latência ou status, caso automaticamente curado
 
 **Caso de avaliação**:
-Exemplo selecionado com origem, critérios e dados autorizados para verificar o comportamento do Compor.
+Exemplo selecionado, inclusive um recorte de trajetória, com origem, critérios e dados autorizados para avaliar o comportamento do Compor.
 _Avoid_: Toda sessão de usuário, dado automaticamente liberado para pesquisa
 
 **Dataset de avaliação**:
@@ -133,8 +161,8 @@ Atendimento ao conjunto de requisitos explícitos da tarefa e versão avaliadas.
 _Avoid_: Texto longo, ausência de críticas, requisitos de outra tarefa
 
 **Trajetória do Compor**:
-Sequência observável de decisões e operações de uma tentativa, incluindo chamadas de ferramentas e seus resultados quando disponíveis.
-_Avoid_: Raciocínio interno do modelo, reconstrução presumida, jornada inteira do usuário
+Sequência observável de interações entre pessoa e agente em um trabalho, incluindo escolhas, operações e resultados disponíveis.
+_Avoid_: Raciocínio interno do modelo, reconstrução presumida, caso de avaliação
 
 **Harness do Compor**:
 Conjunto versionado de instruções, ferramentas, controles e fluxos que conduz e valida as tentativas do agente no produto.

@@ -12,7 +12,9 @@ Em 24/10/2026, Matheus definiu o Confluence como central organizadora do Compor 
 
 ## Precedência e preservação
 
-O [desenho de arquitetura de 26/10](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) consolida as decisões fechadas no chat e seu diagrama. Matheus definiu manter as perguntas e propostas no chat e registrar no Confluence apenas as decisões fechadas. O pedido inclui dois modos de conexão à IA (OpenAI BYOK e Codex instalado) e proxy apenas para testes internos.
+> As decisões históricas de 26/10 narradas a seguir precedem a direção web atual e não são contratos vigentes quando conflitarem com [Arquitetura v0 — Compor](arquitetura-v0.md), inclusive quanto a memória proativa.
+
+O registro histórico de arquitetura de 26/10 consolidou decisões então discutidas e seu diagrama. Matheus definiu manter as perguntas e propostas no chat e registrar no Confluence apenas as decisões fechadas. O pedido inclui dois modos de conexão à IA (OpenAI BYOK e Codex instalado) e proxy apenas para testes internos.
 
 Nas rodadas de 26/10, Matheus definiu v0 para Windows e macOS, setup assistido pelo agente do usuário e salvamento/colaboração opcionais pelo GitHub. A aprovação de Q5–Q9 fechou conteúdo editável completo no repositório, memória por escopos e skills declarativas versionadas. Em Q10–Q13, delimitou um repositório por organização do Compor, foco no operador individual sem governança por escopos, atualização explícita das versões de contexto da campanha e geração de imagens desde a v0. O [glossário](../GLOSSARY.md) e os [ADRs](adr/0002-organizacao-e-fluxo-individual.md) incorporam apenas decisões aprovadas e preservam sua evolução.
 

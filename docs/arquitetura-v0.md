@@ -1,48 +1,36 @@
 # Arquitetura v0 — Compor
 
-Resumo de decisões e tecnologias. A arquitetura v0 está em elaboração e não foi aprovada por completo, embora algumas decisões individuais tenham sido acordadas. O aplicativo, as integrações, os instaladores e o MLflow ainda precisam de implementação e validação.
+Resumo da direção em discussão em 27/10/2026. Decisões individuais foram aceitas; a arquitetura como um todo ainda está em revisão. Aplicação, integrações, infraestrutura e testes de produto não foram implementados ou comprovados por esta documentação.
 
-## Diagrama editável
+## Diagrama e visão geral
 
-- [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — um arquivo com três quadros. Baixe o arquivo e abra-o no Excalidraw para editar; imagens são apenas prévias.
-- [Resumo e prévias no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
-
-## Visão geral
-
-- Uma pessoa usa o app instalado para criar e revisar uma peça e exportar PNG e TXT. Projeto e contexto ficam no computador.
-- O agente usa OpenAI; o proxy Codex é uma opção de teste local. GitHub é opcional para salvar a organização.
-- A Oracle hospeda compatibilidade e MLflow. Feedback autorizado alimenta avaliações e melhoria revisada do harness.
+- [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — arquivo editável no Excalidraw.
+- [Resumo da arquitetura no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
+- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
 
 ## Tecnologias e decisões
 
-- **Electron:** Windows/macOS; uma pessoa e uma organização do Compor na v0.
-- **IA:** geração de texto e imagem desde a v0; chave de teste/da disciplina ou BYOK na API oficial; proxy Codex só em laboratório. Codex nativo depende de G0 e comprovação de texto/imagem.
-- **Dados:** vault local com memória, preferências e skills; GitHub opcional inclui a memória pessoal compartilhada com colaboradores do repositório.
-- **Observabilidade:** MLflow na Oracle; coleta de metadados opcional e conteúdo apenas em testes/evals autorizados. Traces avaliados ficam preservados; sem avaliação, cinco dias.
-- **Aprendizado:** tarefa concluída fornece sinal positivo e não conclusão observada, negativo; motivo, reações e avaliação são evidências distintas. Sem treinamento de modelos ou promoção automática. A régua de promoção é hipótese revisável; amostra insuficiente é inconclusiva.
-- **Perfil:** apagar o perfil ativo não apaga traces avaliados, datasets nem histórico/cópias do GitHub automaticamente.
+- **Aplicação:** Next.js na Vercel, com autenticação inicial pelo Google; a configuração e a elegibilidade do plano para o uso pretendido precisam de verificação.
+- **IA:** um agente com OpenAI Agents SDK, skills versionadas e tools, sem subagentes na v0. Cada pessoa usa sua própria chave OpenAI (BYOK), que poderá ser salva de forma protegida ou usada somente na sessão; a chave da equipe serve a testes internos.
+- **Dados:** Supabase Free é o candidato inicial para PostgreSQL, autenticação e armazenamento privado de imagens. Uma pessoa trabalha em sua organização na v0. Não há exportação da memória na primeira versão.
+- **Contexto:** imagens e frases podem receber rótulos sugeridos ou criados pela pessoa, com significado editável para orientar a análise do agente. A busca vetorial com pgvector é candidata para RAG de memórias por escopo e bases comuns aprovadas; acesso, custo e integração precisam ser testados.
+- **Memória:** o agente pode salvar proativamente hipóteses reversíveis com escopo e evidência, preservando preferências confirmadas. Durante uma exploração solicitada, pode propor alternativa que diverge de preferência inferida, explicando o motivo e permitindo rejeição.
+- **Observabilidade:** MLflow privado na Oracle, com SQLite e arquivos persistentes como primeira opção, sujeito à capacidade e à proteção do servidor. Trajetórias autorizadas são preservadas para análise; metadados são opcionais, e conteúdo requer autorização específica. Fila e reenvio em falhas ficam para o futuro: a v0 pode ter lacunas nos traces.
+- **Aprendizado:** casos e datasets autorizados ajudam a avaliar prompts, tools e trajetórias e a melhorar o harness. Não há treinamento de modelos nem promoção automática do harness; a régua de promoção permanece hipótese revisável. Dados de interações anteriores à revogação continuam elegíveis para a finalidade autorizada, inclusive quando recebidos depois; dados posteriores não entram.
+- **Recuperação:** procedimento manual protegido para dump do banco e cópia dos arquivos, inclusive os dados do MLflow; BYOK pode precisar ser inserida novamente após restauração. Backups, restauração, custos e disponibilidade ainda requerem verificação.
 
 ## O design precisa possibilitar e incentivar
 
-- Começar pela intenção: preservar texto próprio ou explorar duas rotas contrastantes, com escolha ou rejeição de ambas; permitir salvar e voltar. A escolha ajusta a sessão.
-- Editar e desfazer diretamente; separar aplicar, aprovar e exportar. Uma correção só vira memória reutilizável com escolha explícita do escopo.
-- Oferecer 👍 útil, 👏 muito útil e 👎 não ajudou para a versão avaliada; corretude e completude são opcionais, com “não sei”. O convite é discreto e dispensável.
-- Ao encerrar sem concluir, oferecer ajuda e perguntar opcionalmente o que atrapalhou. Não tratar silêncio, pendência ou ausência de telemetria como falha.
-- Explicar separadamente as permissões de GitHub, envio à IA, telemetria e conteúdo para avaliação; a recusa de feedback ou telemetria não bloqueia a entrega.
-- Permitir consultar, corrigir e apagar o perfil, informando claramente os registros e cópias que permanecem e o estado da sincronização.
-- Mostrar estados de autorização, geração, falha, cancelamento e retomada; preservar trabalho e permitir abrir, editar e exportar o salvo sem a Oracle.
-- Guiar o setup com formulário que prepara instruções para o agente do usuário auxiliar na criação da chave e na configuração da cobrança; oferecer alternativa manual. A pessoa confirma conta e gastos antes de inserir a chave em campo protegido.
+- Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
+- Explorar e comparar alternativas, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
+- Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
+- Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses e rejeitar alternativas de exploração.
+- Oferecer reações opcionais por versão e pergunta opcional sobre o motivo de baixar o rascunho; não confundir reação, download e aprovação.
+- Distinguir autorização para gerar, armazenar, telemetria e uso de conteúdo para avaliação, incluindo o tratamento de dados anteriores à revogação.
 
-## ADRs
+## Histórico e fontes
 
-- [0001 — Contexto local e GitHub](adr/0001-contexto-local-e-colaboracao-github.md).
-- [0002 — Organização e fluxo individual](adr/0002-organizacao-e-fluxo-individual.md).
-- [0003 — Memória integral da organização](adr/0003-memoria-integral-da-organizacao.md).
-- [0004 — Três perfis de teste](adr/0004-tres-perfis-de-teste.md).
-- [0005 — MLflow e observabilidade](adr/0005-observabilidade-centralizada-mlflow.md).
-- [0006 — Feedback e evolução do harness](adr/0006-feedback-e-evolucao-do-harness.md).
+- [ADR 0007 — Aplicação web com BYOK e dados gerenciados](adr/0007-arquitetura-web-e-byok.md).
+- [ADR 0008 — Memória proativa e observabilidade autorizada](adr/0008-memoria-proativa-e-observabilidade.md).
 
-## Detalhes e histórico
-
-- [Spec do produto](specs/compor-reestruturado-2026-10-23.md), [contratos históricos de arquitetura](arquitetura.md) e [proposta detalhada de aprendizado pelo uso](design/2026-10-26-aprendizado-pelo-uso-proposta.md). A proposta detalhada contém hipóteses que ainda não são decisões.
-- [Captura histórica da página do Confluence](historico/2026-10-27-confluence-arquitetura-v11.html), preservada antes da simplificação. Seu identificador é uma revisão da página, não uma versão da arquitetura; o texto histórico não representa aprovação integral.
+Os [ADRs anteriores](adr/0001-contexto-local-e-colaboracao-github.md), a [arquitetura anterior](arquitetura.md) e a [captura histórica do Confluence](historico/2026-10-27-confluence-arquitetura-v11.html) preservam a evolução e não devem ser tratados integralmente como desenho atual. A [spec anterior](specs/compor-reestruturado-2026-10-23.md) e a [proposta de aprendizado](design/2026-10-26-aprendizado-pelo-uso-proposta.md) precisam de reconciliação; seus requisitos não conflitantes continuam candidatos aplicáveis.
