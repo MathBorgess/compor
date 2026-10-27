@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "flat-type-hierarchy",
+        "value": "*",
+        "files": [
+          "docs/historico/2026-10-27-confluence-arquitetura-v11.html"
+        ],
+        "createdAt": "2026-10-27T10:28:07.469Z",
+        "reason": "Agent: archived Confluence v11 HTML is a preserved historical snapshot; changing typography would alter the source evidence."
+      }
+    ]
+  }
+}

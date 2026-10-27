@@ -12,6 +12,26 @@ Em 24/10/2026, Matheus definiu o Confluence como central organizadora do Compor 
 
 ## Precedência e preservação
 
+> As decisões históricas de 26/10 narradas a seguir precedem a direção web atual e não são contratos vigentes quando conflitarem com [Arquitetura v0 — Compor](arquitetura-v0.md), inclusive quanto a memória proativa.
+
+O registro histórico de arquitetura de 26/10 consolidou decisões então discutidas e seu diagrama. Matheus definiu manter as perguntas e propostas no chat e registrar no Confluence apenas as decisões fechadas. O pedido inclui dois modos de conexão à IA (OpenAI BYOK e Codex instalado) e proxy apenas para testes internos.
+
+Nas rodadas de 26/10, Matheus definiu v0 para Windows e macOS, setup assistido pelo agente do usuário e salvamento/colaboração opcionais pelo GitHub. A aprovação de Q5–Q9 fechou conteúdo editável completo no repositório, memória por escopos e skills declarativas versionadas. Em Q10–Q13, delimitou um repositório por organização do Compor, foco no operador individual sem governança por escopos, atualização explícita das versões de contexto da campanha e geração de imagens desde a v0. O [glossário](../GLOSSARY.md) e os [ADRs](adr/0002-organizacao-e-fluxo-individual.md) incorporam apenas decisões aprovadas e preservam sua evolução.
+
+Q14–Q17 fecharam o recorte de um usuário para uma organização na v0, toda memória no mesmo repositório opcional da organização, Codex com texto e imagem nativos sem chave BYOK complementar como condição de liberação e composição local com elementos textuais editáveis. O [ADR 0003](adr/0003-memoria-integral-da-organizacao.md) preserva a escolha de concentrar a memória. A arquitetura v0 como um todo ainda não foi aprovada; os gates de integração, distribuição e testes continuam pendentes, assim como a implementação do aplicativo.
+
+Na atualização posterior de 26/10, Matheus definiu três perfis de teste: chave OpenAI de teste/da disciplina, BYOK pessoal e proxy Codex local. O [ADR 0004](adr/0004-tres-perfis-de-teste.md) distingue esses perfis da distribuição: o proxy interno não comprova imagem nem substitui G0. A chave acadêmica é uma possível origem de credencial autorizada, sem concessão de crédito ou cota confirmada nas fontes consultadas.
+
+Também determinou centralizar traces e avaliações em MLflow na Oracle, ampliando a responsabilidade anterior do backend. O [ADR 0005](adr/0005-observabilidade-centralizada-mlflow.md) registra metadados opcionais por padrão, conteúdo só em testes/evals autorizados, datasets selecionados separados com origem/consentimento e avaliações em lotes. Na correção posterior de Q19, Matheus protegeu traces com avaliação contra expurgo automático, preservando avaliações e contexto autorizado, mesmo fora de dataset; cinco dias valem apenas sem avaliação. Modelo avaliador exige comando explícito e limite de gasto; não há autorização automática para usar a chave do usuário.
+
+Em Q21–Q23, aprovou seleção automática da amostra e reações rápidas com critérios opcionais, e esclareceu o objetivo: aprimorar prompts, tools, trajetórias e harness, sem treinar modelos. O [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md) separa utilidade, corretude, completude, aprovação e curadoria; a seleção não inicia análise paga nem promove mudanças automaticamente.
+
+Em Q24, decidiu apagar o perfil ativo preservando traces avaliados e datasets até outra decisão, inclusive possíveis dados identificáveis. A interface deve informar a distinção, a sincronização escolhida e os limites de histórico Git, clones e backups. A decisão foi refletida no [ADR 0005](adr/0005-observabilidade-centralizada-mlflow.md), na arquitetura do Confluence e em SCRUM-12.
+
+Em Q25, aprovou seleção por filtros de permissões/fatos, intenção/contexto adotado e duas rotas contrastantes quando houver exploração; escolha afeta a sessão e memória reutilizável exige aceite. Em Q26, manteve a régua conservadora de promoção como hipótese revisável, com comparação equivalente e insuficiência de amostra como resultado inconclusivo. Os números concretos da proposta ainda não são limites validados. Registro no [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md).
+
+Na sequência, determinou usar conclusão observada como reforço positivo e não conclusão observada como negativo, investigando o motivo. Pendência e ausência de evidência permanecem desconhecidas; o sinal não penaliza a pessoa, não treina modelos e não ultrapassa filtros obrigatórios. [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md).
+
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 
 A spec consolidada de 23/10/2026 substituiu definições anteriores sobre público, promessa, fluxo, quantidade obrigatória de rotas, ativação e monetização. Ela permanece como referência da proposta para validação, sujeita às decisões posteriores registradas no Confluence. Contratos técnicos que não foram alterados continuam referências candidatas, sem comprovar implementação ou elegibilidade da integração.

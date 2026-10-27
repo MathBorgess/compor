@@ -1,6 +1,8 @@
-# Compor — spec consolidada de produto, experiência e negócio
+# Compor — spec histórica de produto, experiência e negócio
 
-23/10/2026. Síntese com `to-spec`, após pesquisa pública, prospecção e debate de arquétipos, UX/Product Design e CEO. **Desenho candidato para validação; implementação e resultados de mercado ainda não demonstrados.** Esta versão orienta a próxima descoberta e o protótipo. Direções do dono são distinguidas de decisões de desenho e hipóteses comerciais.
+> Documento de 23/10, sujeito a reconciliação com a direção atual no navegador. As referências abaixo a aplicativo instalado, funcionamento offline, vault/GitHub, proxy Codex, exportação de memória e prazos antigos de traces não definem a arquitetura atual; os requisitos não conflitantes continuam candidatos aplicáveis. Consulte [Arquitetura v0 — Compor](../arquitetura-v0.md) e o [Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258). A arquitetura atual ainda está em revisão e não foi implementada por esta documentação.
+
+23/10/2026. Síntese com `to-spec`, após pesquisa pública, prospecção e debate de arquétipos, UX/Product Design e CEO. **Desenho candidato para validação; implementação e resultados de mercado ainda não demonstrados.** Esta versão registra a orientação anterior para descoberta e protótipo. Direções do dono são distinguidas de decisões de desenho e hipóteses comerciais.
 
 ## Problem Statement
 

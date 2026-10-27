@@ -1,6 +1,6 @@
-# Arquitetura proposta do Compor V1
+# Histórico de proposta arquitetural anterior
 
-> Atualização de 23/10/2026: a [spec consolidada](specs/compor-reestruturado-2026-10-23.md) passa a orientar promessa, qualificação, jornada por intenção, quantidade de rotas, ativação e hipótese comercial. Este documento preserva a proposta anterior e seus contratos técnicos não alterados. Três rotas + duas variantes deixam de ser obrigação; não há implementação ou validação humana demonstrada.
+> Documento histórico: as opções de aplicativo instalado, integração Codex e vault/GitHub aqui descritas não representam a direção atual. Consulte [Arquitetura v0 — Compor](arquitetura-v0.md) para a proposta web em revisão. O texto abaixo preserva a evolução e não comprova implementação nem aprovação integral.
 
 20/10/2026. Alvo: Electron para macOS, conta ChatGPT/Codex e backend Oracle com um processador e um gigabyte (GB) de memória. Matheus confirmou essas direções. Esta entrega descreve contratos; instalação, integração e capacidade continuam sem execução.
 

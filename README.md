@@ -2,41 +2,44 @@
 
 > **Gestão e documentação compartilhada — 24/10/2026:** a central do projeto passa a ser o [Confluence Compor](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/360627), com [onboarding](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/196637) e [testes e evidências](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/458753). O [Jira SCRUM](https://compor-mathai.atlassian.net/issues?jql=project%20%3D%20SCRUM%20ORDER%20BY%20key) acompanha tarefas, backlog e sprints. As fontes do Drive e os snapshots local e remoto foram preservados como histórico. Compor passa a ser construído em público e em comunidade, com contribuições selecionadas; essa direção não altera a visibilidade nem a licença do repositório. Consulte os [ponteiros e a precedência das fontes](docs/gestao-atlassian.md).
 
-Compor é a proposta de um espaço para elaborar, comparar e concluir texto e visual de uma divulgação, preservando autoria, fatos e decisões. O primeiro recorte investiga responsáveis por cursos, mentorias e ebooks com uma tarefa real de comunicação e um obstáculo observável de criação.
+Compor é uma proposta de espaço no navegador para explorar referências e alternativas, convergir em uma direção criativa e produzir um piloto com arte e legenda, preservando autoria, fatos e decisões. O primeiro recorte investiga responsáveis por cursos, mentorias e ebooks com uma tarefa real de comunicação e um obstáculo observável de criação.
 
 **Estado em 23/10/2026:** pesquisa e documentação, sem aplicativo implementado. A reestruturação combina 67 relatos públicos, dez e-mails enviados e debate de sete subagentes em duas rodadas. Há uma devolução e nenhuma resposta humana na checagem de 09:08. O desenho é candidato; necessidade, benefício, pagamento e market fit continuam sem validação direta.
 
 ## Documentos para começar
 
 - [Briefing de design e tese de mercado](docs/briefing-design-e-mercado-2026-10-23.md): leitura de 4–5 minutos para designer e investidor; [Google Docs](https://docs.google.com/document/d/1PqE-ZhGSMkk8J1vV82XC14DMI0ySiayihEVMb2AvH8E).
-- [Spec consolidada](docs/specs/compor-reestruturado-2026-10-23.md): problema, solução, 64 histórias, experiência, negócio, métricas e aceites.
+- [Spec histórica](docs/specs/compor-reestruturado-2026-10-23.md): problema, histórias, experiência, negócio e métricas da proposta de 23/10; requer reconciliação com a direção web atual.
 - [Como o debate mudou a proposta](docs/debate/2026-10-23-reestruturacao/README.md): categorias satisfeitas/insatisfeitas, posições, réplicas, premissas contestadas e decisões.
 - [Primeira onda de mensagens e e-mails](docs/prospeccao/2026-10-23/mensagens-da-primeira-onda.md): os dez envios, texto e evidências; [controle operacional](docs/prospeccao/2026-10-23/README.md).
 - [Dossiê dos relatos](docs/pesquisa/2026-10-23-voz-do-cliente/README.md): 67 registros com fontes, linguagem, satisfações, dores e limites de amostra.
 - [Google Docs e verificação](docs/debate/2026-10-23-reestruturacao/google-docs.md): espelhos editáveis na conta pessoal de Matheus.
 
-## Como o produto passa a ser descrito
+## Direção v0 em discussão
 
-Quem tem uma mensagem definida começa com uma composição, preservando o texto. Quem quer explorar começa com duas abordagens contrastantes. A pessoa pode comparar, rejeitar, editar, ramificar ou concluir uma peça; explorar outra abordagem permanece visível. Essa configuração será testada, sem transformar quantidade de alternativas em sucesso.
+A pessoa explora imagens e frases, atribui rótulos sugeridos ou próprios e compara alternativas para definir uma direção criativa. Pode rejeitar opções, voltar a divergir e produzir um piloto com arte e legenda. O piloto poderá ser baixado em PNG e o texto copiado; download e aprovação são ações distintas.
 
-O resultado inicial candidato é uma imagem estática PNG e sua legenda TXT, com projeto local recuperável. A proposta precisa demonstrar benefício sobre Canva, ChatGPT, métodos próprios ou ajuda humana. Revisão desejada é parte da autoria; um processo atual suficiente é motivo legítimo para não trocar. Aquisição e vendas têm causas e evidências próprias.
+O Compor será acessado no navegador, com conexão obrigatória. A direção técnica combina Next.js na Vercel, um agente OpenAI Agents SDK com skills e tools, BYOK da pessoa e Supabase Free como candidato inicial para dados e arquivos privados. O agente pode registrar hipóteses reversíveis sobre preferências, com escopo e evidência, e propor divergências explicadas durante a exploração, preservando preferências confirmadas. A busca vetorial é candidata para recuperar memórias por escopo e bases comuns aprovadas.
 
-Ativação significa aprovar e exportar uma arte com legenda, medida sobre todos os qualificados atribuídos. Benefício incremental, uso externo, retorno em nova ocasião e pagamento são resultados separados. A unidade comercial em pesquisa é uma entrega delimitada por campanha; preço, suporte e recorrência ainda precisam de observação.
+Traces e avaliações autorizados usam MLflow privado na Oracle. O reenvio de eventos após falha é futuro, portanto podem existir lacunas. Casos e datasets ajudam a avaliar prompts, tools e trajetórias, sem treinar modelos; promoção do harness exige revisão. Autorização de conteúdo e telemetria é separada do uso da memória para a pessoa. O procedimento de recuperação será manual, com dump do banco e cópia dos arquivos.
 
-Matheus definiu macOS/Electron, conexão inicial por conta ChatGPT/Codex, projetos locais e backend Oracle pequeno. Acesso oficial e condições comerciais antecedem venda (G0). O repositório permanece privado. A comparação gratuita/paga continua candidata, sem cobrança ou promessa de beta nesta entrega.
+O desenho está em revisão e não foi aprovado por completo. Aplicação, integração, custos, recuperação e capacidade ainda não foram comprovados. Consulte o [resumo da arquitetura v0](docs/arquitetura-v0.md), o [Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) e o [Jira](https://compor-mathai.atlassian.net/browse/SCRUM-49).
 
-## Referências de trabalho
+## Referências de trabalho e histórico
+
+As fontes anteriores à direção web preservam pesquisa e decisões da época; seus contratos técnicos precisam ser reconciliados com a arquitetura v0.
 
 - [Produto e fluxo](docs/produto.md)
 - [Persona e posicionamento](docs/persona-e-posicionamento.md)
 - [Playbook de descoberta e prospecção](docs/customer-discovery-playbook.md)
 - [Negócio e mercado](docs/compor/negocio-e-gtm.md)
-- [Arquitetura e dados](docs/arquitetura.md)
+- [Arquitetura v0 e diagrama editável](docs/arquitetura-v0.md)
+- [Detalhes e contratos históricos de arquitetura](docs/arquitetura.md)
 - [Experimento v0](docs/compor/experimento-v0.md)
 - [Ordem de construção](docs/compor/plano-construcao.md), [demo e testes](docs/compor/demo-e-testes.md) e [orientações para Mavi](docs/briefing-designer-compor-v1.md)
 - [Decisões e origem](docs/decisoes.md)
 
-Em conflito sobre público, promessa, fluxo, rotas, ativação ou negócio, prevalece a spec de 23/10 como proposta para o próximo ensaio. Os contratos técnicos não alterados continuam referências candidatas; isso não confirma integração ou implementação.
+A spec de 23/10 preserva a proposta anterior e seu contexto de pesquisa. Em conflito com as decisões mais recentes da direção web, prevalece o resumo atual da arquitetura; requisitos não conflitantes continuam candidatos aplicáveis, e a reconciliação integral de produto e métricas ainda está pendente.
 
 ## Histórico e método
 
