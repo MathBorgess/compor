@@ -1,6 +1,6 @@
 # Arquitetura v0 — Compor
 
-Resumo de decisões e tecnologias. O aplicativo, as integrações, os instaladores e o MLflow ainda precisam de implementação e validação.
+Resumo de decisões e tecnologias. A arquitetura v0 está em elaboração e não foi aprovada por completo, embora algumas decisões individuais tenham sido acordadas. O aplicativo, as integrações, os instaladores e o MLflow ainda precisam de implementação e validação.
 
 ## Diagrama editável
 
@@ -45,4 +45,4 @@ Resumo de decisões e tecnologias. O aplicativo, as integrações, os instalador
 ## Detalhes e histórico
 
 - [Spec do produto](specs/compor-reestruturado-2026-10-23.md), [contratos históricos de arquitetura](arquitetura.md) e [proposta detalhada de aprendizado pelo uso](design/2026-10-26-aprendizado-pelo-uso-proposta.md). A proposta detalhada contém hipóteses que ainda não são decisões.
-- [Captura da página anterior do Confluence, versão 11](historico/2026-10-27-confluence-arquitetura-v11.html), preservada antes da simplificação.
+- [Captura histórica da página do Confluence](historico/2026-10-27-confluence-arquitetura-v11.html), preservada antes da simplificação. Seu identificador é uma revisão da página, não uma versão da arquitetura; o texto histórico não representa aprovação integral.
