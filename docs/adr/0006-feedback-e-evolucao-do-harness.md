@@ -10,6 +10,8 @@ Reações 👍 útil, 👏 muito útil e 👎 não ajudou pertencem à resposta/
 
 A seleção automática de uma amostra é configurável, limitada aos casos autorizados e cobre sucessos, falhas, rejeições e os três perfis de teste. Casos sem reação também permanecem elegíveis; registrar população elegível, seleção e limites evita tratar apenas elogios como qualidade. Seleção não dispara análise paga: lotes continuam sob comando e limite de gasto, conforme Q20.
 
+Em Q25, Matheus aprovou a base de seleção da v0: filtrar permissões e fatos, priorizar intenção e contexto adotado e apresentar duas rotas contrastantes quando a pessoa quiser explorar. A escolha ajusta a sessão; memória reutilizável requer aceite explícito. Em Q26, manteve a régua de promoção como hipótese revisável: nenhum erro crítico, comparação em tarefas equivalentes e evidência mínima; amostra insuficiente permanece inconclusiva. Os números concretos propostos continuam hipóteses a revisar após os ensaios, não limiares já validados.
+
 ## Consequências
 
 - O fluxo é feedback associado à versão → amostra autorizada → curadoria → dataset com revisão identificada → avaliação em lote → candidato versionado do harness. Comparações de prompts, contratos de ferramentas e trajetórias usam os mesmos casos e critérios, com fontes de avaliação humanas, determinísticas e de modelos distinguíveis.
