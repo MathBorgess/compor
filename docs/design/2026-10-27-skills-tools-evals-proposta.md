@@ -4,7 +4,7 @@
 
 O [rascunho dos contratos e arquivos](2026-10-27-contratos-skills-tools-rascunho.md) detalha as quatro skills, operações candidatas e casos associados, sem escolher o transporte.
 
-A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) contém nove casos de desenvolvimento/calibração, com entradas, expectativas propostas e avaliações não executadas separadas. Não é conjunto reservado nem evidência de comportamento do produto.
+A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) contém 23 casos de desenvolvimento/calibração, com entradas, expectativas propostas e avaliações não executadas separadas. Não é conjunto reservado nem evidência de comportamento do produto; cenários visuais exigem fixtures com pixels antes da execução.
 
 ## Resultado que queremos investigar
 
