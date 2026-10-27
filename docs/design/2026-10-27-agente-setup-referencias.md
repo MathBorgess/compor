@@ -1,6 +1,6 @@
 # Agente e setup v0 — referências para discussão
 
-Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As fontes abaixo são insumos para discussão, não decisões de integração, requisitos automaticamente adotados ou demonstrações de qualidade. Nenhuma skill ou servidor foi instalado, executado ou testado neste levantamento.
+Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As fontes abaixo são insumos para discussão, não decisões de integração, requisitos automaticamente adotados ou demonstrações de qualidade. Nenhuma skill ou servidor de terceiros foi instalado, executado ou testado neste levantamento. Separadamente, existe um [protótipo MCP local do Compor](../../prototypes/compor-mcp/README.md), com capacidades e testes limitados.
 
 ## Direção já acordada
 
@@ -21,6 +21,8 @@ Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As 
 - **Q77:** apresentar inicialmente duas direções contrastantes e permitir ampliar a exploração sob demanda.
 - **Q78:** usar checkpoints quando necessário para a pessoa confirmar ou corrigir uma interpretação, sem bloquear a apresentação de ideias.
 - **Q79:** apresentar um catálogo de nomes e descrições e disponibilizar uma tool para carregar sob demanda a versão relevante. O backend controla permissões e operações; não se presume descoberta automática pelo Agents SDK básico.
+- **Q80–Q81:** o agente usa MCP próprio internamente na v0; MCP Apps fica para depois. Outras integrações MCP externas continuam avaliadas separadamente de nosso servidor.
+- **Q86–Q87 e instrução posterior:** testar primeiro o MCP no mesmo processo do backend e manter o uso do produto interno. A equipe pode construir e testar o MCP localmente com seus harnesses enquanto o design é prototipado; isso não implica disponibilização remota para clientes externos nem acesso a dados reais em testes.
 - A direção vigente mantém um agente com OpenAI Agents SDK, sem subagentes na v0, memórias por escopo e hipóteses de preferência reversíveis. O acesso à IA usa BYOK da pessoa; a chave da equipe é restrita a testes internos. O [resumo da arquitetura](../arquitetura-v0.md) registra os demais limites, inclusive consentimento, observabilidade e revisão humana.
 
 ## Desenho conceitual das quatro skills

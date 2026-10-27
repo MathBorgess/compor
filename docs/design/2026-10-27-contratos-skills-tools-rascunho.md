@@ -1,10 +1,10 @@
 # Contratos de skills e tools — rascunho de estudo
 
-**Estado em 27/10/2026:** proposta para revisão. Nenhum arquivo de aplicação, skill executável, tool ou servidor foi criado. Os nomes abaixo são ilustrativos; Q80–Q81 sobre MCP seguem abertos. O [resumo da arquitetura](../arquitetura-v0.md), o [estudo das referências](2026-10-27-agente-setup-referencias.md) e a [proposta de evals](2026-10-27-skills-tools-evals-proposta.md) fornecem o contexto e as decisões já tomadas.
+**Estado em 27/10/2026:** proposta para revisão; nomes são ilustrativos. Q80–Q81 e Q86–Q87 definiram MCP próprio para o agente, primeiro teste no mesmo processo e MCP Apps posterior; a equipe pode testar localmente com seus harnesses. Integração de produto, autenticação e disponibilização remota não estão comprovadas. O [resumo da arquitetura](../arquitetura-v0.md), o [estudo das referências](2026-10-27-agente-setup-referencias.md) e a [proposta de evals](2026-10-27-skills-tools-evals-proposta.md) fornecem contexto e decisões.
 
 ## Possível organização de arquivos
 
-Esta árvore é um mapa para discutir responsabilidades, **não uma estrutura existente ou decisão por monorepo**. Um núcleo poderia ser reutilizado por uma integração direta ou por um adaptador MCP; isso não resolve qual integração será implementada na v0.
+Esta árvore é um mapa para discutir responsabilidades, **não uma estrutura existente ou decisão por monorepo**. A v0 prevê MCP próprio utilizado pelo agente; o primeiro teste de conexão será no mesmo processo. O desenho de pacotes e a forma de acesso de clientes externos permanecem em discussão.
 
 ```text
 compor/
@@ -18,7 +18,7 @@ compor/
 │   │   ├── explore-moodboards
 │   │   └── create-pilot
 │   └── ports/                      # memória, IA, artefatos e eventos
-├── adapters/                       # integração com serviços e, se decidido, MCP
+├── adapters/                       # integração com serviços e servidor MCP próprio
 └── evals/                          # casos sintéticos, rubricas e resultados versionados
 ```
 

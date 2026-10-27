@@ -29,7 +29,7 @@ As linhas seguintes são insumos da spec; não foram transformadas em requisitos
 ## Decisões e evidências que não devem ser inventadas
 
 - **Q85 aceita:** avisar sobre fato pendente e permitir baixar o rascunho. A spec antiga tinha um gate para uma saída final; não há regra atual aprovada para esse conceito.
-- **Q80–Q81 e Q84 em aberto:** transporte MCP/MCP Apps e conteúdo final das âncoras da rubrica continuam em discussão.
+- **Q80–Q81 e Q86–Q87:** MCP próprio no agente v0, com primeiro teste no mesmo processo; MCP Apps posterior. Testes locais pelos harnesses da equipe são autorizados; exposição remota externa permanece aberta. **Q84:** conteúdo final das âncoras da rubrica continua em discussão.
 - Limites numéricos de duração, custo, amostra, preço e resolução não são decisões da v0 só porque aparecem em documentos históricos.
 - Observar um PNG baixado não demonstra publicação, venda ou benefício. Um estudo com pessoas precisa de dados e consentimentos próprios; exemplos sintéticos e pareceres de agentes não são entrevistas nem comprovação de valor.
 

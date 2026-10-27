@@ -1,6 +1,6 @@
 # Skills, tools e avaliações do Compor v0 — proposta para discussão
 
-**Estado em 27/10/2026:** estudo e proposta, incorporando Q82–Q83, a preferência de Q84 por escala 1–5 e a decisão Q85 para rascunhos; critérios específicos ainda em discussão, sem implementação ou execução. Complementa a [arquitetura web](../arquitetura-v0.md) e o [estudo das quatro skills](2026-10-27-agente-setup-referencias.md). O documento anterior de [aprendizado pelo uso](2026-10-26-aprendizado-pelo-uso-proposta.md) contém decisões superadas sobre app, vault, retenção, fila e exportação: seus casos e métricas não devem ser aplicados sem reconciliação com a v0 web.
+**Estado em 27/10/2026:** estudo e proposta, incorporando Q82–Q83, a preferência de Q84 por escala 1–5 e a decisão Q85 para rascunhos; critérios específicos ainda em discussão. Os casos criativos não foram executados e o protótipo MCP ainda não está integrado ao produto. Complementa a [arquitetura web](../arquitetura-v0.md) e o [estudo das quatro skills](2026-10-27-agente-setup-referencias.md). O documento anterior de [aprendizado pelo uso](2026-10-26-aprendizado-pelo-uso-proposta.md) contém decisões superadas sobre app, vault, retenção, fila e exportação: seus casos e métricas não devem ser aplicados sem reconciliação com a v0 web.
 
 O [rascunho dos contratos e arquivos](2026-10-27-contratos-skills-tools-rascunho.md) detalha as quatro skills, operações candidatas e casos associados, sem escolher o transporte.
 
@@ -8,11 +8,13 @@ A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) con
 
 O [levantamento de estudos sobre criatividade e avaliação](2026-10-27-evidencias-criatividade-e-avaliacao.md) documenta achados e limites para formular hipóteses, sem presumir que os resultados se reproduzam no Compor.
 
+O [protótipo MCP local](../../prototypes/compor-mcp/README.md) implementa catálogo, carregamento das quatro skills e preparação de dados da nuvem de palavras. Passou em testes de protocolo, inclusive conexão no mesmo processo com o cliente MCP do Agents SDK, e em chamadas `stdio` pelo Codex app-server isolado. Esses testes não incluem modelo, usuários, aplicação, identidade ou os 23 casos de avaliação; a origem dos pesos recebidos é uma alegação do cliente, não uma escolha humana verificada.
+
 ## Resultado que queremos investigar
 
 Uma pessoa com objetivo criativo, mesmo incompleto, consegue construir uma direção que reconhece como adequada e obter um piloto de arte e legenda, mantendo controle sobre referências, texto e escolhas. O estudo compara alinhamento, diversidade útil e obtenção do resultado com o processo habitual; tempo, custo, retrabalho indesejado, erros e ajuda necessária são contrapesos. São hipóteses de valor, ainda sem demonstração com usuários.
 
-**Skill** é instrução versionada; **tool** é uma operação com entradas, saídas e efeitos controlados; **agente** escolhe e usa recursos em diálogo. A execução segue com um único agente. MCP e MCP Apps são alternativas de integração ainda em discussão: Q80–Q81 não foram respondidas nesta proposta. **Q82:** avaliar resultado e restrições, aceitando sequências distintas de tools quando válidas; registrar chamadas para diagnóstico, sem exigir roteiro único.
+**Skill** é instrução versionada; **tool** é uma operação com entradas, saídas e efeitos controlados; **agente** escolhe e usa recursos em diálogo. A execução segue com um único agente e MCP próprio na v0; o primeiro teste do app será no mesmo processo. MCP Apps fica para depois e a equipe pode testar localmente com seus harnesses. **Q82:** avaliar resultado e restrições, aceitando sequências distintas de tools quando válidas; registrar chamadas para diagnóstico, sem exigir roteiro único.
 
 ## Matriz de capacidades e evidências a buscar
 
@@ -37,7 +39,7 @@ Nomes de tools são ilustrativos. O backend valida identidade, organização, es
 | `record_feedback` | Versão apresentada, reação e motivo opcional | Registro no produto e eventual envio à observabilidade, cada um sujeito à sua permissão | Reação não é corretude, conclusão, preferência confirmada, aprovação nem autorização de telemetria ou uso coletivo. Sem permissão, não enviar o conteúdo. |
 | `compose_png` | Rascunho, versão esperada e camadas editáveis | PNG da versão identificada ou falha recuperável | Não sobrescrever edição mais recente; produzir PNG não significa que a pessoa aprovou ou concluiu. |
 
-Preservar o rascunho em falhas, timeouts e conflitos é um requisito a testar, não uma capacidade já comprovada. Uma fonte ou memória de outra organização não pode aparecer no contexto, na resposta nem no trace. A interface ou host pode variar, mas a validação pertence ao servidor. A existência destas operações não decide se todas serão expostas como tools ao modelo. Estudar como suportar clientes MCP e sua autenticação somente após as decisões pendentes.
+Preservar o rascunho em falhas, timeouts e conflitos é um requisito a testar, não uma capacidade já comprovada. Uma fonte ou memória de outra organização não pode aparecer no contexto, na resposta nem no trace. A interface ou host pode variar, mas a validação pertence ao servidor. A existência destas operações não decide se todas serão expostas como tools ao modelo. Testes locais com harnesses da equipe não autorizam acesso remoto público nem acesso a dados de usuários.
 
 ## Exemplos iniciais de casos sintéticos
 
@@ -159,7 +161,7 @@ A métrica central candidata é **tarefas elegíveis com resultado desejado conf
 
 ## Decisões em aberto
 
-- Q80–Q81: momento de MCP, forma de acesso do agente e necessidade de interface em outros hosts.
+- Para o MCP próprio decidido em Q80–Q81 e Q86–Q87, ainda é necessário demonstrar a conexão no mesmo processo e definir autenticação, permissões e eventual exposição remota. Testes locais por harnesses da equipe são parte do desenvolvimento; MCP Apps fica para depois.
 - Q84: escala 1–5 escolhida; confirmar ou alterar as âncoras e dimensões de avaliação propostas.
 - Eventual conceito e regra de saída final com fatos pendentes permanecem em aberto; Q85 decidiu o download do rascunho, conforme a [reconciliação](2026-10-27-reconciliacao-spec-v0.md).
 - A janela de observação, a fonte de evidência quando a pessoa não responder e o desenho operacional da métrica ainda precisam de definição, respeitando Q83.
