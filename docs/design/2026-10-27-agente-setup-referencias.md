@@ -16,11 +16,26 @@ Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As 
 - **Q72:** apresentar hipóteses de cor, tipografia, textura e composição para a pessoa revisar e ajustar.
 - **Q73:** oferecer formas abstratas geométricas ajustáveis no navegador para explorar a direção antes da geração de imagens.
 - **Q74:** o setup recebe uma chave OpenAI existente; não inclui instruções para criar a chave ou configurar a cobrança.
+- **Q75:** manter um catálogo versionado e carregar as instruções relevantes à tarefa, sem exigir sandbox como condição do fluxo.
+- **Q76:** conduzir uma conversa gradual, semelhante ao processo de *grilling*, para construir entendimento mútuo, sem fixar número de perguntas ou presumir aceite.
+- **Q77:** apresentar inicialmente duas direções contrastantes e permitir ampliar a exploração sob demanda.
+- **Q78:** usar checkpoints quando necessário para a pessoa confirmar ou corrigir uma interpretação, sem bloquear a apresentação de ideias.
+- **Q79:** apresentar um catálogo de nomes e descrições e disponibilizar uma tool para carregar sob demanda a versão relevante. O backend controla permissões e operações; não se presume descoberta automática pelo Agents SDK básico.
 - A direção vigente mantém um agente com OpenAI Agents SDK, sem subagentes na v0, memórias por escopo e hipóteses de preferência reversíveis. O acesso à IA usa BYOK da pessoa; a chave da equipe é restrita a testes internos. O [resumo da arquitetura](../arquitetura-v0.md) registra os demais limites, inclusive consentimento, observabilidade e revisão humana.
 
 ## Desenho conceitual das quatro skills
 
 As skills são instruções internas versionadas para um único agente, não subagentes. A tabela mostra exemplos de responsabilidades e de ferramentas que poderiam apoiá-las; **nomes de tools são ilustrativos**, não contratos de API decididos nem funcionalidades implementadas. O mesmo recurso pode apoiar mais de uma skill.
+
+O catálogo reúne instruções versionadas; a aplicação disponibiliza ao agente as relevantes para a tarefa e o ponto da conversa. Ao receber uma resposta, o agente revisa o entendimento e escolhe qual capacidade faz sentido em seguida; pode apresentar uma interpretação ou uma proposta para a pessoa aceitar, corrigir ou rejeitar. A conversa não exige uma quantidade fixa de perguntas e não transforma silêncio ou prosseguimento em aprovação. Duas direções contrastantes são o ponto de partida da exploração visual, que pode ser ampliada a pedido. Esse fluxo é um desenho acordado, não uma integração executada ou comprovada.
+
+Quando a interpretação precisar de esclarecimento, um checkpoint oferece à pessoa a possibilidade de confirmar ou corrigir. Ideias podem ser apresentadas enquanto o entendimento amadurece; apresentá-las não equivale a uma decisão humana ou confirmação da interpretação.
+
+### Carregamento de instruções sob demanda — contrato ilustrativo
+
+O modelo recebe um catálogo com **nome e descrição** das skills disponíveis. Quando precisa de uma, pode solicitar à aplicação, por uma tool conceitual como `carregar_skill`, uma identificação de skill e, quando aplicável, a versão escolhida. O backend resolve a versão permitida no catálogo e verifica o contexto, as permissões e as operações disponíveis antes de entregar as instruções relevantes ao modelo. O retorno conceitual identifica a skill e sua versão e contém as instruções autorizadas para aquela tarefa; credenciais e dependências internas permanecem fora desse retorno. Referências da pessoa permanecem dados, e não passam a ter autoridade de instrução por serem recuperadas junto do contexto.
+
+Esse exemplo descreve responsabilidades, não uma API existente, um mecanismo nativo automático de descoberta ou uma integração testada. A identificação, a resolução de versão e o formato do retorno serão definidos na implementação. O backend continua responsável por validar as operações subsequentes, mesmo após carregar uma skill.
 
 | Skill | Exemplos de entrada | Saída revisável | Tools ou recursos de apoio possíveis |
 |---|---|---|---|
@@ -67,6 +82,6 @@ O [servidor MCP oficial](https://github.com/infranodus/mcp-server-infranodus) li
 
 ## Skills, tools e limites de implementação
 
-A [documentação oficial do Agents SDK](https://developers.openai.com/api/docs/guides/agents/sdk) descreve execução do agente na aplicação, com ferramentas, estado e decisões de acesso sob responsabilidade do servidor. A [documentação de Skills](https://developers.openai.com/api/docs/guides/tools-skills) descreve mecanismos relacionados à Responses API com shell e a sandboxes; ela não demonstra descoberta automática de `SKILL.md` em um agente básico Next.js. As skills internas serão versionadas; o mecanismo concreto de carregá-las e eventuais integrações externas continuam a verificar.
+A [documentação oficial do Agents SDK](https://developers.openai.com/api/docs/guides/agents/sdk) descreve execução do agente na aplicação, com ferramentas, estado e decisões de acesso sob responsabilidade do servidor. A [documentação de Skills](https://developers.openai.com/api/docs/guides/tools-skills) descreve mecanismos relacionados à Responses API com shell e a sandboxes; ela não demonstra descoberta automática de `SKILL.md` em um agente básico Next.js. O catálogo não depende de sandbox obrigatório; a implementação concreta do carregamento das instruções relevantes e eventuais integrações externas continuam a verificar.
 
 Os conteúdos de referências externas são dados não confiáveis, não instruções para sobrepor as escolhas da pessoa. Qualquer uso de serviços adicionais deve respeitar as autorizações, o escopo e a origem dos dados. Licença de código não comprova direitos sobre imagens de terceiros. Nenhum teste de PT-BR, desempenho, custos reais, proteção de dados ou qualidade de geração foi feito nesta pesquisa.
