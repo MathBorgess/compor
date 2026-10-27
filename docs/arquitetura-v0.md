@@ -6,7 +6,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 
 - [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — arquivo editável no Excalidraw.
 - [Resumo da arquitetura no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
-- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
+- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. Textos, preços e datas são editáveis no app, separados da imagem gerada e compostos no PNG. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
 
 ## Tecnologias e decisões
 
@@ -18,12 +18,14 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 - **Observabilidade:** MLflow privado na Oracle, com SQLite e arquivos persistentes como primeira opção, sujeito à capacidade e à proteção do servidor. Trajetórias autorizadas são preservadas para análise; metadados são opcionais, e conteúdo requer autorização específica. Fila e reenvio em falhas ficam para o futuro: a v0 pode ter lacunas nos traces.
 - **Aprendizado:** casos e datasets autorizados ajudam a avaliar prompts, tools e trajetórias e a melhorar o harness. Não há treinamento de modelos nem promoção automática do harness; a régua de promoção permanece hipótese revisável. Dados de interações anteriores à revogação continuam elegíveis para a finalidade autorizada, inclusive quando recebidos depois; dados posteriores não entram.
 - **Recuperação:** procedimento manual protegido para dump do banco e cópia dos arquivos, inclusive os dados do MLflow; BYOK pode precisar ser inserida novamente após restauração. Backups, restauração, custos e disponibilidade ainda requerem verificação.
+- **Primeiro piloto:** começar com a equipe e, após verificar autenticação, proteção dos dados e condições dos serviços, convidar pessoas externas. Comparar tarefas reais com o processo habitual de cada participante, observando direção criativa, diversidade útil e conclusão; incluir não concluintes e registrar resultados desconhecidos como desconhecidos. O benefício ainda precisa ser demonstrado.
 
 ## O design precisa possibilitar e incentivar
 
 - Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
 - Explorar e comparar alternativas, escolher dimensões a variar e manter, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
 - Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
+- Permitir editar textos, preços e datas antes de compô-los no PNG, sem exigir aprovação para baixar o rascunho.
 - Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses, além de consultar, confirmar, corrigir ou remover não preferências quando a pessoa quiser. Oferecer sugestões ocasionais de revisão, sem frequência predefinida.
 - Ao rejeitar uma proposta, permitir selecionar o aspecto rejeitado ou explicar o motivo opcionalmente. Sem motivo explícito, uma possível causa apontada pelo agente permanece hipótese, não fato.
 - Oferecer reações opcionais por versão e pergunta opcional sobre o motivo de baixar o rascunho; não confundir reação, download e aprovação.
