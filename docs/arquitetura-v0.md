@@ -6,7 +6,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 
 - [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — arquivo editável no Excalidraw.
 - [Resumo da arquitetura no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
-- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. Textos, preços e datas são editáveis no app, separados da imagem gerada e compostos no PNG. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
+- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. O sistema solicita uma imagem sem texto; textos, preços e datas são editáveis no app, separados da imagem e compostos no PNG. Se a imagem contiver texto inesperado, a pessoa o revisa antes de usar. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
 
 ## Tecnologias e decisões
 
@@ -18,7 +18,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 - **Observabilidade:** MLflow privado na Oracle, com SQLite e arquivos persistentes como primeira opção, sujeito à capacidade e à proteção do servidor. Trajetórias autorizadas são preservadas para análise; metadados são opcionais, e conteúdo requer autorização específica. Fila e reenvio em falhas ficam para o futuro: a v0 pode ter lacunas nos traces.
 - **Aprendizado:** casos e datasets autorizados ajudam a avaliar prompts, tools e trajetórias e a melhorar o harness. Não há treinamento de modelos nem promoção automática do harness; a régua de promoção permanece hipótese revisável. Dados de interações anteriores à revogação continuam elegíveis para a finalidade autorizada, inclusive quando recebidos depois; dados posteriores não entram.
 - **Recuperação:** procedimento manual protegido para dump do banco e cópia dos arquivos, inclusive os dados do MLflow; BYOK pode precisar ser inserida novamente após restauração. Backups, restauração, custos e disponibilidade ainda requerem verificação.
-- **Primeiro piloto:** começar com a equipe e, após verificar autenticação, proteção dos dados e condições dos serviços, convidar pessoas externas. Comparar tarefas reais com o processo habitual de cada participante, observando direção criativa, diversidade útil e conclusão; incluir não concluintes e registrar resultados desconhecidos como desconhecidos. O benefício ainda precisa ser demonstrado.
+- **Primeiro piloto:** começar com a equipe e, após verificar autenticação, proteção dos dados e condições dos serviços, convidar pessoas externas. Comparar tarefas reais com o processo habitual de cada participante, avaliando separadamente a diversidade útil das alternativas, o alinhamento da direção à intenção e a obtenção do piloto desejado; incluir não concluintes e registrar resultados desconhecidos como desconhecidos. O benefício ainda precisa ser demonstrado.
 
 ## O design precisa possibilitar e incentivar
 
