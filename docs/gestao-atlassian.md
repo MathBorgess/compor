@@ -20,7 +20,7 @@ Q14–Q17 fecharam o recorte de um usuário para uma organização na v0, toda m
 
 Na atualização posterior de 26/10, Matheus definiu três perfis de teste: chave OpenAI de teste/da disciplina, BYOK pessoal e proxy Codex local. O [ADR 0004](adr/0004-tres-perfis-de-teste.md) distingue esses perfis da distribuição: o proxy interno não comprova imagem nem substitui G0. A chave acadêmica é uma possível origem de credencial autorizada, sem concessão de crédito ou cota confirmada nas fontes consultadas.
 
-Também determinou centralizar traces e avaliações em MLflow na Oracle, ampliando a responsabilidade anterior do backend. O [ADR 0005](adr/0005-observabilidade-centralizada-mlflow.md) registra a escolha; payload, retenção e execução de avaliações estão em fechamento no chat, sem autorizar automaticamente conteúdo ou uso de chaves do usuário para modelos avaliadores.
+Também determinou centralizar traces e avaliações em MLflow na Oracle, ampliando a responsabilidade anterior do backend. O [ADR 0005](adr/0005-observabilidade-centralizada-mlflow.md) registra a escolha e o fechamento de Q18–Q20: metadados opcionais por padrão, conteúdo só em testes/evals autorizados, traces operacionais por cinco dias, datasets selecionados separados com origem/consentimento e avaliações em lotes. Modelo avaliador exige comando explícito e limite de gasto; não há autorização automática para usar a chave do usuário.
 
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 

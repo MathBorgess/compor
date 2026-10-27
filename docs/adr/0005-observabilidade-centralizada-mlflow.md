@@ -8,7 +8,15 @@ Em 26/10/2026, Matheus determinou adicionar traces centralizados em MLflow na m�
 
 O processo principal do Electron instrumenta as operações do produto e dos três perfis de teste, correlacionando tentativa, tarefa, organização e versões. Um endpoint autenticado recebe payloads permitidos e limitados para o MLflow privado; credenciais de IA e segredos administrativos não entram nos traces. O envio é assíncrono, com fila limitada e sem bloquear geração, salvamento, exportação ou sincronização. Falha na telemetria não provoca repetição da inferência.
 
-A telemetria operacional continua opcional e sem texto ou imagem. A coleta de conteúdo para casos de avaliação depende do fechamento explícito dessa política. Conteúdo, retenção e execução/custeio de modelos avaliadores estão sendo fechados no chat; não serão inferidos da permissão de sincronizar GitHub ou de enviar uma tarefa ao fornecedor de IA. Notas automáticas não constituem aprovação humana nem demonstram por si experiência satisfatória.
+## Política fechada em Q18–Q20
+
+Matheus confirmou em 26/10/2026:
+
+- **Q18 — Conteúdo:** telemetria opcional com metadados por padrão. Entradas e saídas com texto ou imagem só são capturadas em sessões ou casos de teste/avaliação autorizados para essa finalidade. Credenciais continuam excluídas mesmo nesses casos. Sincronização GitHub e permissão de geração não concedem consentimento para coleta.
+- **Q19 — Retenção:** traces operacionais são retidos por cinco dias. Somente casos explicitamente selecionados são preservados em datasets separados, com origem e consentimento. Essa seleção não preserva automaticamente a sessão inteira; finalidade e prazo do dataset devem ser declarados ao selecioná-lo, sem herdar retenção indefinida.
+- **Q20 — Avaliações:** execução em lotes, começando por critérios determinísticos e revisão humana. Modelos avaliadores só são acionados por comando explícito com limite de gasto. Receber um trace não dispara chamadas pagas; a credencial e o custeio do avaliador são declarados na execução, sem uso automático da chave do usuário.
+
+Critérios, versões, origem e resultado da avaliação ficam identificados. Notas automáticas não constituem aprovação humana nem demonstram por si experiência satisfatória. Os resultados de código, pessoa e modelo permanecem distinguíveis.
 
 ## Base técnica a validar
 

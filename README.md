@@ -29,7 +29,7 @@ Essa arquitetura não comprova implementação, instalação ou integração. Ac
 
 **Perfis para testes do dono — 26/10:** chave OpenAI de teste/da disciplina, BYOK pessoal e proxy Codex local, conforme o [ADR 0004](docs/adr/0004-tres-perfis-de-teste.md). Os dois primeiros usam o mesmo adaptador oficial. O proxy atende Responses no laboratório, com imagem ainda não comprovada, e não substitui a rota Codex de distribuição. O contexto acadêmico orienta configuração; chave, cota e habilitação real precisam estar disponíveis para chamadas de IA.
 
-**Observabilidade — 26/10:** Matheus adicionou MLflow centralizado na Oracle para traces de operações e avaliações, conforme o [ADR 0005](docs/adr/0005-observabilidade-centralizada-mlflow.md). O envio não bloqueia o produto e preserva os limites vigentes de consentimento e conteúdo enquanto a política de coleta/avaliação é fechada no chat. MLflow e a capacidade do servidor ainda não foram implantados ou testados.
+**Observabilidade — 26/10:** MLflow centralizado na Oracle para traces de operações e avaliações, conforme o [ADR 0005](docs/adr/0005-observabilidade-centralizada-mlflow.md). Q18–Q20 fecharam metadados opcionais por padrão, conteúdo somente em testes/evals autorizados, cinco dias de traces operacionais e datasets selecionados separados com origem/consentimento. Avaliações em lotes, determinísticas/humanas; modelos avaliadores somente por comando explícito com limite de gasto. O envio não bloqueia o produto. MLflow e a capacidade do servidor ainda não foram implantados ou testados.
 
 ## Referências de trabalho
 

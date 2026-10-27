@@ -100,6 +100,10 @@ _Avoid_: Gravação de tela, conversa completa, aceite humano
 Exemplo selecionado com origem, critérios e dados autorizados para verificar o comportamento do Compor.
 _Avoid_: Toda sessão de usuário, dado automaticamente liberado para pesquisa
 
+**Dataset de avaliação**:
+Conjunto de casos selecionados e preservados para uma finalidade de avaliação, com origem e consentimento identificados.
+_Avoid_: Histórico completo de uso, cópia automática de todas as sessões
+
 **Avaliação do Compor**:
 Resultado da aplicação de critérios versionados a um caso ou trace, identificando se a origem é código, pessoa ou modelo avaliador.
 _Avoid_: Aprovação da peça, garantia de experiência, receita comprovada
