@@ -22,6 +22,8 @@ Critérios, versões, origem e resultado da avaliação ficam identificados. Not
 
 A implementação deve proteger trace, avaliação, spans e artefatos contra limpezas parciais, inclusive quando avaliação e expurgo concorrem. A capacidade/disco da Oracle precisa considerar o crescimento acumulado dos traces avaliados. Se um feedback chegar após expurgo legítimo de trace ainda não avaliado, preservar o feedback ligado à versão e registrar a trajetória ausente, sem reconstruir evidência.
 
+**Q24 — Exclusão do perfil:** Matheus decidiu apagar o perfil ativo e preservar traces avaliados e datasets até outra decisão, inclusive possíveis dados identificáveis neles. O app deve comunicar esse alcance e informar que histórico Git, clones e backups não são automaticamente removidos; o estado atual do vault segue a modalidade de sincronização escolhida. Dados preservados só podem ser reprocessados sob a permissão aplicável; preservar não cria novo consentimento.
+
 Q21–Q23 fecharam a seleção automática da amostra, reações opcionais e o objetivo de melhorar prompts, ferramentas, trajetórias e harness, conforme o [ADR 0006](0006-feedback-e-evolucao-do-harness.md). Nenhum treinamento de modelo integra esse ciclo.
 
 ## Base técnica a validar

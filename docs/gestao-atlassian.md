@@ -24,6 +24,8 @@ Também determinou centralizar traces e avaliações em MLflow na Oracle, amplia
 
 Em Q21–Q23, aprovou seleção automática da amostra e reações rápidas com critérios opcionais, e esclareceu o objetivo: aprimorar prompts, tools, trajetórias e harness, sem treinar modelos. O [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md) separa utilidade, corretude, completude, aprovação e curadoria; a seleção não inicia análise paga nem promove mudanças automaticamente.
 
+Em Q24, decidiu apagar o perfil ativo preservando traces avaliados e datasets até outra decisão, inclusive possíveis dados identificáveis. A interface deve informar a distinção, a sincronização escolhida e os limites de histórico Git, clones e backups. A decisão foi refletida no [ADR 0005](adr/0005-observabilidade-centralizada-mlflow.md), na arquitetura do Confluence e em SCRUM-12.
+
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 
 A spec consolidada de 23/10/2026 substituiu definições anteriores sobre público, promessa, fluxo, quantidade obrigatória de rotas, ativação e monetização. Ela permanece como referência da proposta para validação, sujeita às decisões posteriores registradas no Confluence. Contratos técnicos que não foram alterados continuam referências candidatas, sem comprovar implementação ou elegibilidade da integração.
