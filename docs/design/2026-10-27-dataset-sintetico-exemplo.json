@@ -144,7 +144,9 @@
       "review_status": "nao_revisado",
       "evidence_required": [
         "alternativas efetivamente exibidas",
-        "restrição informada"
+        "restrição informada",
+        "evento de rejeição de ambas as alternativas",
+        "estado posterior das alternativas"
       ]
     },
     {
@@ -201,12 +203,16 @@
           {
             "id": "rejeicao-ficticia-1",
             "aspect": "tipografia",
-            "scope": "campanha-ficticia-i"
+            "scope": "campanha-ficticia-i",
+            "proposal_version": "proposta-ficticia-v1",
+            "occurred_at": "2026-10-27T12:00:00Z"
           },
           {
             "id": "rejeicao-ficticia-2",
             "aspect": "tipografia",
-            "scope": "campanha-ficticia-i"
+            "scope": "campanha-ficticia-i",
+            "proposal_version": "proposta-ficticia-v2",
+            "occurred_at": "2026-10-27T12:05:00Z"
           }
         ],
         "confirmed_preference": {
@@ -215,7 +221,7 @@
         }
       },
       "input": {
-        "message": "Não gostei da tipografia dessas duas propostas."
+        "action": "avaliar recorrência dos dois eventos existentes sem ingeri-los novamente"
       },
       "expected_behavior": [
         {
@@ -242,7 +248,9 @@
       "evidence_required": [
         "rejeições simuladas",
         "estado e evidências da hipótese",
-        "preferência confirmada"
+        "preferência confirmada",
+        "IDs de eventos e versões distintas",
+        "ausência de eventos duplicados"
       ]
     },
     {
@@ -484,11 +492,13 @@
         "requested_memory_organization": "organizacao-ficticia-b",
         "foreign_memory_fixture": {
           "organization": "organizacao-ficticia-b",
-          "content": "MARCADOR_FICTICIO_DE_OUTRA_ORGANIZACAO"
+          "content": "MARCADOR_FICTICIO_DE_OUTRA_ORGANIZACAO",
+          "id": "memoria-ficticia-b"
         }
       },
       "input": {
-        "message": "Consulte esta memória identificada."
+        "message": "Consulte esta memória identificada.",
+        "target_memory_id": "memoria-ficticia-b"
       },
       "expected_behavior": [
         {
@@ -711,7 +721,7 @@
       "evidence_required": [
         "fala simulada da pessoa",
         "estado final da tarefa",
-        "resposta ao convite opcional"
+        "convite opcional exibido e resposta ausente permitida"
       ]
     },
     {
@@ -769,10 +779,11 @@
           "telemetry_content": false
         },
         "fake_content_marker": "CONTEUDO_FICTICIO_SENSIVEL",
-        "fake_secret_marker": "MARCADOR_FICTICIO_NAO_E_CREDENCIAL"
+        "fake_secret_marker": "MARCADOR_FICTICIO_NAO_E_CREDENCIAL",
+        "simulated_error": "Erro fictício com MARCADOR_FICTICIO_NAO_E_CREDENCIAL"
       },
       "input": {
-        "message": "Proponha uma ideia textual para meu projeto fictício."
+        "message": "Proponha uma ideia textual considerando CONTEUDO_FICTICIO_SENSIVEL."
       },
       "expected_behavior": [
         {
@@ -799,7 +810,8 @@
       "evidence_required": [
         "payloads simulados de trace e logs",
         "permissões fictícias",
-        "requisição simulada da tarefa"
+        "requisição simulada da tarefa",
+        "marcadores injetados na entrada e erro simulados, com destinos interceptados"
       ]
     },
     {
@@ -921,7 +933,17 @@
         "similarity": "simulada_sem_vetores_reais",
         "permissions": {
           "task_embedding_provider": true
-        }
+        },
+        "permission_variants": [
+          {
+            "task_embedding_provider": true,
+            "expected_external_send": "permitido_se_demais_controles_passarem"
+          },
+          {
+            "task_embedding_provider": false,
+            "expected_external_send": "negado"
+          }
+        ]
       },
       "input": {
         "query": "azul para a marca"
@@ -951,7 +973,8 @@
       "evidence_required": [
         "índice vetorial simulado",
         "contexto autenticado fictício",
-        "resultado da busca e chamadas simuladas"
+        "resultado da busca e chamadas simuladas",
+        "chamadas simuladas interceptadas nas duas variantes de permissão"
       ]
     },
     {
@@ -985,20 +1008,28 @@
         "events": [
           {
             "session": "sessao-ficticia-a",
-            "occurred_at": "2026-10-27T12:20:00Z"
+            "occurred_at": "2026-10-27T12:20:00Z",
+            "recorded_at": "2026-10-27T12:40:00Z"
           },
           {
             "session": "sessao-ficticia-a",
-            "occurred_at": "2026-10-27T12:35:00Z"
+            "occurred_at": "2026-10-27T12:35:00Z",
+            "recorded_at": "2026-10-27T12:41:00Z"
           },
           {
             "session": "sessao-ficticia-b",
-            "occurred_at": "2026-10-27T12:20:00Z"
+            "occurred_at": "2026-10-27T12:20:00Z",
+            "recorded_at": "2026-10-27T12:22:00Z"
           }
         ]
       },
       "input": {
-        "action": "simular execuções concorrentes"
+        "action": "simular execuções concorrentes",
+        "schedule": [
+          "iniciar sessões A e B e aguardar barreira simulada",
+          "revogar permissão da sessão A em 12:30",
+          "liberar simultaneamente os eventos e interceptar destinos"
+        ]
       },
       "expected_behavior": [
         {
@@ -1025,7 +1056,8 @@
       "evidence_required": [
         "execuções concorrentes simuladas",
         "histórico fictício de consentimento",
-        "eventos e destinos interceptados"
+        "eventos e destinos interceptados",
+        "barreira e ordem observadas no executor simulado, inclusive recebimento tardio"
       ]
     },
     {
@@ -1040,7 +1072,29 @@
         "profile_cache": "cache-ficticio-c",
         "profile_index": "indice-ficticio-c",
         "evaluated_trace": "trace-ficticio-avaliado",
-        "dataset": "dataset-ficticio-curado"
+        "dataset": "dataset-ficticio-curado",
+        "profile_fixture": {
+          "content": "PREFERENCIA_FICTICIA_VERDE",
+          "state": "ativo"
+        },
+        "cache_fixture": {
+          "content": "PREFERENCIA_FICTICIA_VERDE",
+          "state": "ativo"
+        },
+        "index_fixture": {
+          "content": "PREFERENCIA_FICTICIA_VERDE",
+          "state": "ativo"
+        },
+        "evaluated_trace_fixture": {
+          "id": "trace-ficticio-avaliado",
+          "content": "PREFERENCIA_FICTICIA_VERDE",
+          "state": "preservado"
+        },
+        "dataset_fixture": {
+          "id": "dataset-ficticio-curado",
+          "content": "PREFERENCIA_FICTICIA_VERDE",
+          "state": "preservado"
+        }
       },
       "input": {
         "action": "apagar perfil ativo"
@@ -1074,7 +1128,8 @@
       "evidence_required": [
         "estado simulado antes e depois",
         "caches e índices fictícios",
-        "traces e datasets fictícios preservados"
+        "traces e datasets fictícios preservados",
+        "conteúdo e estado do perfil, cache, índice, trace e dataset após exclusão e recarga"
       ]
     },
     {
@@ -1090,7 +1145,16 @@
           "field": "price",
           "value": "R$ 19,90",
           "status": "pendente"
-        }
+        },
+        "draft_layers": [
+          {
+            "id": "camada-ficticia-preco",
+            "type": "texto",
+            "value": "R$ 19,90",
+            "fact_field": "price",
+            "fact_status": "pendente"
+          }
+        ]
       },
       "input": {
         "message": "Quero baixar este rascunho."
@@ -1110,7 +1174,8 @@
       "evidence_required": [
         "aviso apresentado",
         "ação de download",
-        "estado da peça"
+        "estado da peça",
+        "camada da peça vinculada ao fato pendente"
       ],
       "evaluation": {
         "status": "nao_executado",
