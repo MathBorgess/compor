@@ -68,8 +68,8 @@ O texto a seguir é um **esboço de instruções para discussão**, não um prom
 - **Orientação:** gerar ou usar imagem conforme pedido; solicitar imagem sem texto; manter textos, preço e data como elementos editáveis; apontar lacunas e texto inesperado na imagem para revisão.
 - **Saída revisável:** versão de arte com camadas textuais, legenda copiável e PNG baixável; o rascunho pode ser baixado sem aprovação.
 - **Apoio candidato:** gerar imagem quando autorizado, atualizar rascunho com controle de versão e compor PNG. Download, edição e cópia podem ser ações de UI; ainda não foi decidido se são tools do agente.
-- **Limites:** não inventar fatos; não sobrescrever edição posterior; não tratar download como aprovação ou conclusão.
-- **Casos propostos:** S08, S09, S12, S15 e S18.
+- **Limites:** não inventar fatos; não sobrescrever edição posterior; avisar sobre fato pendente e permitir baixar o rascunho; não tratar download como aprovação ou conclusão. A regra para uma eventual saída final permanece em aberto.
+- **Casos propostos:** S08, S09, S12, S15, S18 e S23.
 
 ## Superfície candidata de operações
 

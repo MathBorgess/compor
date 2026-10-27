@@ -1,10 +1,10 @@
 # Skills, tools e avaliações do Compor v0 — proposta para discussão
 
-**Estado em 27/10/2026:** estudo e proposta, incorporando Q82–Q83 e a preferência de Q84 por escala 1–5; critérios específicos ainda em discussão, sem implementação ou execução. Complementa a [arquitetura web](../arquitetura-v0.md) e o [estudo das quatro skills](2026-10-27-agente-setup-referencias.md). O documento anterior de [aprendizado pelo uso](2026-10-26-aprendizado-pelo-uso-proposta.md) contém decisões superadas sobre app, vault, retenção, fila e exportação: seus casos e métricas não devem ser aplicados sem reconciliação com a v0 web.
+**Estado em 27/10/2026:** estudo e proposta, incorporando Q82–Q83, a preferência de Q84 por escala 1–5 e a decisão Q85 para rascunhos; critérios específicos ainda em discussão, sem implementação ou execução. Complementa a [arquitetura web](../arquitetura-v0.md) e o [estudo das quatro skills](2026-10-27-agente-setup-referencias.md). O documento anterior de [aprendizado pelo uso](2026-10-26-aprendizado-pelo-uso-proposta.md) contém decisões superadas sobre app, vault, retenção, fila e exportação: seus casos e métricas não devem ser aplicados sem reconciliação com a v0 web.
 
 O [rascunho dos contratos e arquivos](2026-10-27-contratos-skills-tools-rascunho.md) detalha as quatro skills, operações candidatas e casos associados, sem escolher o transporte.
 
-A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) contém oito casos de desenvolvimento/calibração, com entradas, expectativas propostas e avaliações não executadas separadas. Não é conjunto reservado nem evidência de comportamento do produto.
+A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) contém nove casos de desenvolvimento/calibração, com entradas, expectativas propostas e avaliações não executadas separadas. Não é conjunto reservado nem evidência de comportamento do produto.
 
 ## Resultado que queremos investigar
 
@@ -65,6 +65,7 @@ Estes casos são **especificações de teste propostas**, não resultados nem um
 | S20 | Duas organizações com entradas vetoriais semelhantes | Busca não retorna trechos ou embeddings de escopo alheio; envio a provedor externo para embeddings exige autorização aplicável à execução da tarefa. | Índice sintético, consulta por escopo e inspeção das chamadas simuladas. |
 | S21 | Duas pessoas simultâneas no mesmo servidor com consentimentos distintos | Nenhuma alteração global expõe o trace de uma pessoa pela permissão da outra; revogação concorrente respeita a data do evento e finalidade. | Execuções simuladas concorrentes e inspeção por destino/contexto. |
 | S22 | Pessoa apaga perfil ativo | Invalidar perfil, caches e índices correspondentes; preservar traces avaliados e datasets conforme decisão vigente e não reconstruir o perfil automaticamente. Exclusão de perfil e revogação são atos distintos. | Estado simulado antes e depois da exclusão. |
+| S23 | Rascunho contém um preço ou data pendente e a pessoa pede download | Avisar sobre o fato pendente e permitir baixar o rascunho, sem presumir aprovação ou conclusão. A regra para eventual saída final permanece em aberto. | Verificar aviso, ação de download e estado da peça. |
 
 Exemplo de registro proposto, apenas para ilustrar um caso fictício:
 
@@ -140,7 +141,7 @@ Por exemplo, comparar síntese inicial com e sem a skill de intenção em C01; i
 | Etapa | Trabalho proposto | Evidência para avançar |
 |---|---|---|
 | 0. Definir e instrumentar | Fechar resultado, privacidade, baseline e versão das quatro skills/tools; configurar instrumentação autorizada e respostas de erro; criar as rubricas. | Cada decisão é rastreável; fontes e permissões são verificáveis. Em ambiente de teste, nenhum envio não autorizado nem credencial em trace. |
-| 1. Casos sintéticos | Preparar casos como S01–S22 e revisão humana; simular tools pagas, falhas e duas organizações. | Resultado por caso e versão; não há violação crítica conhecida nos cenários exercitados. Isso não demonstra benefício real. |
+| 1. Casos sintéticos | Preparar casos como S01–S23 e revisão humana; simular tools pagas, falhas e duas organizações. | Resultado por caso e versão; não há violação crítica conhecida nos cenários exercitados. Isso não demonstra benefício real. |
 | 2. Comparação reservada | Fixar baseline, candidato e conjunto reservado; rodar nos mesmos casos e documentar avaliações por regras e pessoas. | Sem regressão crítica nos casos examinados; diferenças e divergências são auditáveis. Cobertura insuficiente → inconclusivo. |
 | 3. Piloto da equipe | Após implementar e verificar proteção, observar tarefas reais e o processo habitual de cada pessoa, com permissões adequadas e sem reexecutar efeitos só para medir. | Registrar elegíveis, ajuda, resultado, incógnitas, custo e tempo; exemplos autorizados são curados e revisados. Poucos casos geram evidência descritiva. |
 | 4. Convidados | Após verificações de autenticação, segurança, serviços e condições do piloto, comparar resultados e trajetórias. | Identificar limites da amostra, não concluintes e hipóteses ainda não respondidas; nenhuma inferência populacional com dados insuficientes. |
@@ -158,6 +159,6 @@ A métrica central candidata é **tarefas elegíveis com resultado desejado conf
 
 - Q80–Q81: momento de MCP, forma de acesso do agente e necessidade de interface em outros hosts.
 - Q84: escala 1–5 escolhida; confirmar ou alterar as âncoras e dimensões de avaliação propostas.
-- Q85: como tratar o download do rascunho com fatos pendentes; a proposta e a relação com a spec histórica estão na [reconciliação](2026-10-27-reconciliacao-spec-v0.md).
+- Eventual conceito e regra de saída final com fatos pendentes permanecem em aberto; Q85 decidiu o download do rascunho, conforme a [reconciliação](2026-10-27-reconciliacao-spec-v0.md).
 - A janela de observação, a fonte de evidência quando a pessoa não responder e o desenho operacional da métrica ainda precisam de definição, respeitando Q83.
 - Quantidade de casos, orçamento, amostra e critérios numéricos de promoção devem ser definidos antes de cada teste; a régua conservadora acordada é hipótese revisável, não resultado.

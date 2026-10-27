@@ -368,6 +368,52 @@
         "cost": null,
         "rubric_version": null
       }
+    },
+    {
+      "case_id": "S23",
+      "skill": "criar-piloto",
+      "origin": "sintetico",
+      "source": "decisão Q85 de 2026-10-27, ilustrada com dados fictícios",
+      "scope": "campanha-ficticia-h",
+      "permission": "somente-sintetico",
+      "initial_state": {
+        "draft_version": "rascunho-ficticio-1",
+        "pending_fact": {
+          "field": "price",
+          "value": "R$ 19,90",
+          "status": "pendente"
+        }
+      },
+      "input": {
+        "message": "Quero baixar este rascunho."
+      },
+      "expected_behavior": [
+        {
+          "check_type": "regra_proposta",
+          "criterion": "Avisar que o preço está pendente e permitir o download do rascunho."
+        },
+        {
+          "check_type": "regra_proposta",
+          "criterion": "Não tratar download como aprovação nem conclusão da tarefa."
+        }
+      ],
+      "case_version": "rascunho-2026-10-27",
+      "review_status": "nao_revisado",
+      "evidence_required": [
+        "aviso apresentado",
+        "ação de download",
+        "estado da peça"
+      ],
+      "evaluation": {
+        "status": "nao_executado",
+        "observed_output": null,
+        "reviewer": null,
+        "score": null,
+        "trace": null,
+        "model_version": null,
+        "cost": null,
+        "rubric_version": null
+      }
     }
   ],
   "partition": "desenvolvimento_e_calibracao_exemplo",

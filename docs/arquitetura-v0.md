@@ -26,7 +26,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 - Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
 - Explorar e comparar alternativas, escolher dimensões a variar e manter, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
 - Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
-- Permitir editar textos, preços e datas antes de compô-los no PNG, sem exigir aprovação para baixar o rascunho.
+- Permitir editar textos, preços e datas antes de compô-los no PNG, sem exigir aprovação para baixar o rascunho. Se houver fato pendente, avisar e permitir o download; eventual regra para uma saída final permanece em aberto.
 - Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses, além de consultar, confirmar, corrigir ou remover não preferências quando a pessoa quiser. Oferecer sugestões ocasionais de revisão, sem frequência predefinida.
 - Ao rejeitar uma proposta, permitir selecionar o aspecto rejeitado ou explicar o motivo opcionalmente. Sem motivo explícito, uma possível causa apontada pelo agente permanece hipótese, não fato.
 - Oferecer reações opcionais por versão e pergunta opcional sobre o motivo de baixar o rascunho; não confundir reação, download e aprovação.
