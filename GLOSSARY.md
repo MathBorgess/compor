@@ -100,6 +100,14 @@ _Avoid_: Correção pontual, regra inferida
 Interpretação provisória de uma possível preferência, que pode ser registrada proativamente com escopo e evidência e é reversível.
 _Avoid_: Preferência confirmada, fato da marca
 
+**Não preferência**:
+Orientação revisável sobre características que a pessoa prefere evitar em um contexto. Rejeições recorrentes podem fornecer evidência para uma hipótese de não preferência, sem torná-la uma regra global.
+_Avoid_: Falha da pessoa, proibição global inferida
+
+**Sinal negativo de preferência**:
+Evidência contextual de rejeição de uma característica ou alternativa, que pode contribuir para identificar uma hipótese de não preferência.
+_Avoid_: Não conclusão da tarefa, aprovação, treinamento de modelo
+
 **Memória do Compor**:
 Contexto reutilizável de fatos, preferências e orientações, com escopo explícito, que informa o trabalho de criação.
 _Avoid_: Histórico da conversa, credencial

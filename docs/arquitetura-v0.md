@@ -14,7 +14,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 - **IA:** um agente com OpenAI Agents SDK, skills versionadas e tools, sem subagentes na v0. Cada pessoa usa sua própria chave OpenAI (BYOK), que poderá ser salva de forma protegida ou usada somente na sessão; a chave da equipe serve a testes internos.
 - **Dados:** Supabase Free é o candidato inicial para PostgreSQL, autenticação e armazenamento privado de imagens. Uma pessoa trabalha em sua organização na v0. Não há exportação da memória na primeira versão.
 - **Contexto:** imagens e frases podem receber rótulos sugeridos ou criados pela pessoa, com significado editável para orientar a análise do agente. A busca vetorial com pgvector é candidata para RAG de memórias por escopo e bases comuns aprovadas; acesso, custo e integração precisam ser testados.
-- **Memória:** o agente pode salvar proativamente hipóteses reversíveis com escopo e evidência, preservando preferências confirmadas. Durante uma exploração solicitada, pode propor alternativa que diverge de preferência inferida, explicando o motivo e permitindo rejeição.
+- **Memória:** o agente pode salvar proativamente hipóteses reversíveis com escopo e evidência, preservando preferências confirmadas. A hipótese começa na tarefa ou campanha, sem se propagar automaticamente à marca ou organização. Rejeições recorrentes de tipografia ou partes da composição são evidência de reforço negativo e podem orientar não preferências revisáveis; o limiar de recorrência e a ampliação de escopo ainda precisam ser definidos. Durante uma exploração solicitada, o agente pode propor alternativa que diverge de preferência inferida, explicando o motivo e permitindo rejeição.
 - **Observabilidade:** MLflow privado na Oracle, com SQLite e arquivos persistentes como primeira opção, sujeito à capacidade e à proteção do servidor. Trajetórias autorizadas são preservadas para análise; metadados são opcionais, e conteúdo requer autorização específica. Fila e reenvio em falhas ficam para o futuro: a v0 pode ter lacunas nos traces.
 - **Aprendizado:** casos e datasets autorizados ajudam a avaliar prompts, tools e trajetórias e a melhorar o harness. Não há treinamento de modelos nem promoção automática do harness; a régua de promoção permanece hipótese revisável. Dados de interações anteriores à revogação continuam elegíveis para a finalidade autorizada, inclusive quando recebidos depois; dados posteriores não entram.
 - **Recuperação:** procedimento manual protegido para dump do banco e cópia dos arquivos, inclusive os dados do MLflow; BYOK pode precisar ser inserida novamente após restauração. Backups, restauração, custos e disponibilidade ainda requerem verificação.
@@ -22,9 +22,9 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 ## O design precisa possibilitar e incentivar
 
 - Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
-- Explorar e comparar alternativas, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
+- Explorar e comparar alternativas, escolher dimensões a variar e manter, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
 - Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
-- Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses e rejeitar alternativas de exploração.
+- Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses, revisar não preferências e rejeitar alternativas de exploração.
 - Oferecer reações opcionais por versão e pergunta opcional sobre o motivo de baixar o rascunho; não confundir reação, download e aprovação.
 - Distinguir autorização para gerar, armazenar, telemetria e uso de conteúdo para avaliação, incluindo o tratamento de dados anteriores à revogação.
 
