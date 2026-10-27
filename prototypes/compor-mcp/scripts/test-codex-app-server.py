@@ -126,7 +126,7 @@ def run():
             server = status["data"][0]
             require(server["name"] == "compor_probe", "Servidor inesperado.")
             require(not server.get("toolsError"), "Falha na descoberta de tools.")
-            require(set(server["tools"]) == {"list_skills", "load_skill", "prepare_word_cloud"},
+            require(set(server["tools"]) == {"list_skills", "load_skill", "prepare_word_cloud", "prepare_moodboard"},
                     "Tools inesperadas.")
             report["tests"]["codex_mcp_discovery"] = sorted(server["tools"])
 
@@ -171,7 +171,22 @@ def run():
                 "effective_weight": 0, "effective_source": "client_supplied_choice",
                 "creates_confirmed_preference": False,
             }
-            require(call(7, "load_skill", {"id": "nao-existe"}).get("isError") is True,
+            board = unpack(call(7, "prepare_moodboard", {
+                "board_id": "board-fixture", "board_version": "v1", "direction": "acolhimento",
+                "elements": [
+                    {"id": "ref-a", "kind": "reference", "asset_ref": "ref-a", "label": "minha marca", "aspects": ["color"], "intent": "keep", "priority": 0, "origin_claim": "pessoa"},
+                    {"id": "icone-a", "kind": "icon", "value": "folha", "intent": "inspire"},
+                ],
+                "restrictions": [{"aspect": "color", "value": "azul", "rule": "must_keep"}],
+            }))
+            require(board["board_id"] == "board-fixture" and board["board_version"] == "v1", "Quadro inesperado.")
+            require(board["elements"][0]["priority"] == 0 and board["elements"][1]["priority"] is None, "Prioridades perdidas.")
+            require(board["elements"][1]["visual_role"] == "style_hint", "Ícone deve ser pista visual.")
+            require(board["origins_verified"] is False and board["creates_confirmed_preference"] is False, "Origem ou preferência indevidamente verificada.")
+            require(board["renders_or_generates_image"] is False and board["persists_data"] is False, "Efeitos inesperados no quadro.")
+            require(board["client_data_is_untrusted"] is True and board["conflict_detection"] == "literal_only", "Limites do snapshot ausentes.")
+            report["tests"]["prepare_moodboard"] = {"snapshot_received": True, "style_hint": True, "priority_zero_and_missing": True, "no_generation_or_persistence": True, "origins_verified": False}
+            require(call(8, "load_skill", {"id": "nao-existe"}).get("isError") is True,
                     "Skill desconhecida deveria retornar erro.")
             report["tests"]["unknown_skill_is_error"] = True
         finally:

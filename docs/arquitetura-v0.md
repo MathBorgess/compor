@@ -27,6 +27,7 @@ O desenvolvimento pode avançar em paralelo: **design** prototipa a experiência
 
 - Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
 - Usar formas e ícones do moodboard como pistas visuais de estilo, sem exigir sua reprodução literal na arte final.
+- Preparar um quadro estruturado com referências, pistas e prioridades sem gerar imagem nem salvar memória automaticamente; a pessoa revisa as escolhas antes de gerar.
 - Explorar e comparar alternativas, escolher dimensões a variar e manter, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
 - Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
 - Permitir editar textos, preços e datas antes de compô-los no PNG, sem exigir aprovação para baixar o rascunho. Se houver fato pendente, avisar e permitir o download; eventual regra para uma saída final permanece em aberto.
