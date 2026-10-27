@@ -6,6 +6,7 @@ Resumo da direção em discussão em 27/10/2026. Decisões individuais foram ace
 
 - [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — arquivo editável no Excalidraw.
 - [Resumo da arquitetura no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
+- [Agente e setup — página de aprofundamento](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/4194328/Agente+e+setup+arquitetura+v0) · [diagrama editável](design/compor-agente-setup-v0.excalidraw) · [referências e verificações](design/2026-10-27-agente-setup-referencias.md).
 - A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. O sistema solicita uma imagem sem texto; textos, preços e datas são editáveis no app, separados da imagem e compostos no PNG. Se a imagem contiver texto inesperado, a pessoa o revisa antes de usar. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
 
 ## Tecnologias e decisões
