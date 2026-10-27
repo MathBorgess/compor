@@ -13,6 +13,9 @@ Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As 
 - **Q69:** organizar o agente em quatro skills internas: compreender intenção e referências; traduzir conceitos em direção visual; explorar moodboards; apoiar a criação do piloto.
 - **Q70:** na nuvem de palavras, distinguir frequência, relevância sugerida e escolha da pessoa. Pesos são editáveis e não se tornam, por si só, preferências confirmadas.
 - **Q71:** manter um conjunto revisável de rejeições, com motivo opcional, preservando a diferença entre rejeição observada e hipótese sobre a causa.
+- **Q72:** apresentar hipóteses de cor, tipografia, textura e composição para a pessoa revisar e ajustar.
+- **Q73:** oferecer formas abstratas geométricas ajustáveis no navegador para explorar a direção antes da geração de imagens.
+- **Q74:** o setup recebe uma chave OpenAI existente; não inclui instruções para criar a chave ou configurar a cobrança.
 - A direção vigente mantém um agente com OpenAI Agents SDK, sem subagentes na v0, memórias por escopo e hipóteses de preferência reversíveis. O acesso à IA usa BYOK da pessoa; a chave da equipe é restrita a testes internos. O [resumo da arquitetura](../arquitetura-v0.md) registra os demais limites, inclusive consentimento, observabilidade e revisão humana.
 
 ## Desenho conceitual das quatro skills
@@ -22,7 +25,7 @@ As skills são instruções internas versionadas para um único agente, não sub
 | Skill | Exemplos de entrada | Saída revisável | Tools ou recursos de apoio possíveis |
 |---|---|---|---|
 | **Compreender intenção e referências** | Objetivo e conversa; imagens, frases e rótulos fornecidos pela pessoa; contexto autorizado, quando houver. | Síntese da intenção, dúvidas e hipóteses com origem e escopo; ideias iniciais podem partir apenas do objetivo. | Ler referências selecionadas; recuperar contexto permitido por pessoa, organização e escopo; registrar hipótese reversível com evidência. |
-| **Traduzir conceitos em direção visual** | Palavras, referências, rótulos, restrições e o que a pessoa quer variar ou manter. | Propostas de características visuais e nuvem de palavras com frequência, relevância sugerida e escolhas distinguíveis; a pessoa pode editar pesos e corrigir leituras. | Consultar contexto autorizado; preparar os dados da nuvem; renderizar no navegador, sem pressupor que um MCP externo receba os dados. |
+| **Traduzir conceitos em direção visual** | Palavras, referências, rótulos, restrições e o que a pessoa quer variar ou manter. | Hipóteses revisáveis de cor, tipografia, textura e composição; nuvem de palavras com frequência, relevância sugerida e escolhas distinguíveis; formas geométricas ajustáveis antes de gerar imagens. A pessoa pode editar pesos e corrigir leituras. | Consultar contexto autorizado e preparar os dados. Nuvem e formas são renderizadas no navegador, sem envio a serviço de visualização hospedado. |
 | **Explorar moodboards** | Direções e referências selecionadas, o que variar/manter e o pedido explícito de exploração. | Alternativas para comparar, rejeitar e refinar; conjunto de rejeições revisável com motivo opcional. | Buscar referências autorizadas do projeto; acionar geração de imagem com a BYOK quando a pessoa solicitar; salvar versões e registrar sinais de interação. |
 | **Apoiar a criação do piloto** | Direção escolhida, imagem-base e informações a comunicar. | Piloto revisável com texto, preço e datas editáveis; imagem solicitada sem texto e texto inesperado sujeito à revisão da pessoa. | Acionar geração solicitada; propor ou aplicar edição conforme instrução da pessoa; compor PNG com os textos e permitir copiar a legenda. |
 
