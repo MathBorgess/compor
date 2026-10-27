@@ -6,6 +6,8 @@ O [rascunho dos contratos e arquivos](2026-10-27-contratos-skills-tools-rascunho
 
 A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) contém 23 casos de desenvolvimento/calibração, com entradas, expectativas propostas e avaliações não executadas separadas. Não é conjunto reservado nem evidência de comportamento do produto; cenários visuais exigem fixtures com pixels antes da execução.
 
+O [levantamento de estudos sobre criatividade e avaliação](2026-10-27-evidencias-criatividade-e-avaliacao.md) documenta achados e limites para formular hipóteses, sem presumir que os resultados se reproduzam no Compor.
+
 ## Resultado que queremos investigar
 
 Uma pessoa com objetivo criativo, mesmo incompleto, consegue construir uma direção que reconhece como adequada e obter um piloto de arte e legenda, mantendo controle sobre referências, texto e escolhas. O estudo compara alinhamento, diversidade útil e obtenção do resultado com o processo habitual; tempo, custo, retrabalho indesejado, erros e ajuda necessária são contrapesos. São hipóteses de valor, ainda sem demonstração com usuários.
