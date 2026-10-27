@@ -15,3 +15,5 @@ O MLflow permanece como destino privado na Oracle, com SQLite e arquivos persist
 No piloto, tarefas reais serão comparadas com o processo habitual da pessoa, avaliando separadamente a diversidade útil das alternativas, o alinhamento da direção à intenção e a obtenção do piloto desejado. A avaliação inclui não concluintes e registra resultados desconhecidos como desconhecidos; não pressupõe benefício demonstrado.
 
 Esta decisão atualiza parcialmente os [ADRs 0005](0005-observabilidade-centralizada-mlflow.md) e [0006](0006-feedback-e-evolucao-do-harness.md), preservados como histórico. Capacidade da Oracle, custo acumulado, autenticação, integração e recuperação precisam de validação; a decisão não aprova a arquitetura integral nem comprova implementação.
+
+> **Atualização de 27/10/2026:** Matheus aprovou a [arquitetura v0](../arquitetura-v0.md) como direção arquitetural após esta decisão. A aprovação não comprova implementação nem encerra os pontos de validação indicados acima.

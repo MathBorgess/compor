@@ -1,6 +1,8 @@
 # Reconciliação preliminar: spec histórica e arquitetura web v0
 
-**Estado em 27/10/2026:** análise de rastreabilidade, não uma nova spec aprovada. A [spec histórica de 23/10](../specs/compor-reestruturado-2026-10-23.md) classifica seus requisitos não conflitantes como **candidatos**, e a [arquitetura web v0](../arquitetura-v0.md) registra decisões individuais sem aprovar a arquitetura inteira. A análise separa decisões posteriores, candidatos ainda úteis e questões abertas; não demonstra implementação ou testes.
+**Atualização de 27/10/2026:** Matheus aprovou posteriormente a arquitetura v0 como direção; esta análise continua sendo rastreabilidade, não uma nova spec aprovada.
+
+**Estado no momento da análise:** análise de rastreabilidade, não uma nova spec aprovada. A [spec histórica de 23/10](../specs/compor-reestruturado-2026-10-23.md) classifica seus requisitos não conflitantes como **candidatos**, e a [arquitetura web v0](../arquitetura-v0.md) registra decisões individuais sem aprovar a arquitetura inteira. A análise separa decisões posteriores, candidatos ainda úteis e questões abertas; não demonstra implementação ou testes.
 
 ## Requisitos da spec que precisam ser lidos à luz de decisões posteriores
 

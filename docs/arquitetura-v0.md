@@ -1,6 +1,6 @@
 # Arquitetura v0 — Compor
 
-Resumo da direção em discussão em 27/10/2026. Decisões individuais foram aceitas; a arquitetura como um todo ainda está em revisão. Aplicação, integrações, infraestrutura e testes de produto não foram implementados ou comprovados por esta documentação.
+**Arquitetura v0 aprovada por Matheus em 27/10/2026.** A aprovação estabelece a direção arquitetural descrita aqui; não comprova a implementação da aplicação, das integrações e da infraestrutura, nem valida os resultados de produto. Hipóteses, escolhas candidatas e pontos explicitamente abertos permanecem sujeitos a validação.
 
 ## Diagrama e visão geral
 
