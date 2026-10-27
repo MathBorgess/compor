@@ -10,7 +10,23 @@ Pesquisa documental de 27/10/2026 para o desenho do agente único do Compor. As 
 - **Q66:** adaptar os métodos em skills internas versionadas e tools do Compor; integrações MCP externas serão avaliadas separadamente.
 - **Q67:** renderizar a nuvem de palavras no navegador, com pesos explicáveis e editáveis pela pessoa.
 - **Q68:** propor ideias iniciais a partir do objetivo mesmo sem perfil ou referências, distinguindo hipóteses de escolhas confirmadas.
+- **Q69:** organizar o agente em quatro skills internas: compreender intenção e referências; traduzir conceitos em direção visual; explorar moodboards; apoiar a criação do piloto.
+- **Q70:** na nuvem de palavras, distinguir frequência, relevância sugerida e escolha da pessoa. Pesos são editáveis e não se tornam, por si só, preferências confirmadas.
+- **Q71:** manter um conjunto revisável de rejeições, com motivo opcional, preservando a diferença entre rejeição observada e hipótese sobre a causa.
 - A direção vigente mantém um agente com OpenAI Agents SDK, sem subagentes na v0, memórias por escopo e hipóteses de preferência reversíveis. O acesso à IA usa BYOK da pessoa; a chave da equipe é restrita a testes internos. O [resumo da arquitetura](../arquitetura-v0.md) registra os demais limites, inclusive consentimento, observabilidade e revisão humana.
+
+## Desenho conceitual das quatro skills
+
+As skills são instruções internas versionadas para um único agente, não subagentes. A tabela mostra exemplos de responsabilidades e de ferramentas que poderiam apoiá-las; **nomes de tools são ilustrativos**, não contratos de API decididos nem funcionalidades implementadas. O mesmo recurso pode apoiar mais de uma skill.
+
+| Skill | Exemplos de entrada | Saída revisável | Tools ou recursos de apoio possíveis |
+|---|---|---|---|
+| **Compreender intenção e referências** | Objetivo e conversa; imagens, frases e rótulos fornecidos pela pessoa; contexto autorizado, quando houver. | Síntese da intenção, dúvidas e hipóteses com origem e escopo; ideias iniciais podem partir apenas do objetivo. | Ler referências selecionadas; recuperar contexto permitido por pessoa, organização e escopo; registrar hipótese reversível com evidência. |
+| **Traduzir conceitos em direção visual** | Palavras, referências, rótulos, restrições e o que a pessoa quer variar ou manter. | Propostas de características visuais e nuvem de palavras com frequência, relevância sugerida e escolhas distinguíveis; a pessoa pode editar pesos e corrigir leituras. | Consultar contexto autorizado; preparar os dados da nuvem; renderizar no navegador, sem pressupor que um MCP externo receba os dados. |
+| **Explorar moodboards** | Direções e referências selecionadas, o que variar/manter e o pedido explícito de exploração. | Alternativas para comparar, rejeitar e refinar; conjunto de rejeições revisável com motivo opcional. | Buscar referências autorizadas do projeto; acionar geração de imagem com a BYOK quando a pessoa solicitar; salvar versões e registrar sinais de interação. |
+| **Apoiar a criação do piloto** | Direção escolhida, imagem-base e informações a comunicar. | Piloto revisável com texto, preço e datas editáveis; imagem solicitada sem texto e texto inesperado sujeito à revisão da pessoa. | Acionar geração solicitada; propor ou aplicar edição conforme instrução da pessoa; compor PNG com os textos e permitir copiar a legenda. |
+
+A pessoa pode comparar, rejeitar, editar, desfazer e decidir quando avançar; proposta, aplicação, aprovação e download são ações distintas. Uma observação ou rejeição não confirma por si só uma preferência. Hipóteses proativas mantêm evidência, escopo e reversibilidade; preferências confirmadas são preservadas. Metadados de telemetria são opcionais e conteúdo para avaliação requer autorização própria. Interações anteriores à revogação podem continuar elegíveis para a finalidade autorizada, inclusive se recebidas depois; interações posteriores não entram nessa curadoria. Sem fila e reenvio na v0, falhas podem deixar lacunas. O envio à IA para executar a tarefa não equivale à autorização de uso dos dados para melhoria coletiva.
 
 ## Intenção e tradução visual
 
