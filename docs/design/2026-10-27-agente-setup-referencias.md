@@ -46,6 +46,12 @@ Esse exemplo descreve responsabilidades, não uma API existente, um mecanismo na
 
 A pessoa pode comparar, rejeitar, editar, desfazer e decidir quando avançar; proposta, aplicação, aprovação e download são ações distintas. Uma observação ou rejeição não confirma por si só uma preferência. Hipóteses proativas mantêm evidência, escopo e reversibilidade; preferências confirmadas são preservadas. Metadados de telemetria são opcionais e conteúdo para avaliação requer autorização própria. Interações anteriores à revogação podem continuar elegíveis para a finalidade autorizada, inclusive se recebidas depois; interações posteriores não entram nessa curadoria. Sem fila e reenvio na v0, falhas podem deixar lacunas. O envio à IA para executar a tarefa não equivale à autorização de uso dos dados para melhoria coletiva.
 
+### Dados do Supabase na melhoria coletiva
+
+Dados de projetos, memórias e referências no Supabase, quando especificamente autorizados para a finalidade de melhoria, podem contribuir para casos e datasets, além dos traces autorizados no MLflow. Neste desenho, **destilação** é a extração e curadoria de recortes autorizados para avaliações e propostas de melhoria das skills, tools e fluxo do agente; não é treinamento de modelos. A equipe revisa os resultados antes de promover mudanças no harness.
+
+Cada caso precisa preservar sua origem, versão, escopo, data e autorização aplicável. Usar a memória para personalização individual não concede, por si só, acesso para curadoria coletiva; não se pressupõe acesso irrestrito ao banco ou anonimização dos dados pessoais. Os trechos relativos a interações anteriores à revogação continuam elegíveis somente na finalidade autorizada, inclusive se recebidos depois; dados posteriores não entram nessa curadoria. Esse fluxo é uma decisão de desenho: ainda não há integração, acesso ou anonimização comprovados.
+
 ## Intenção e tradução visual
 
 ### Visual Identity Direction

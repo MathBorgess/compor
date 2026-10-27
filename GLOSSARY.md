@@ -144,6 +144,10 @@ _Avoid_: Toda sessão de usuário, dado automaticamente liberado para pesquisa
 Conjunto de casos selecionados e preservados para uma finalidade de avaliação, com origem e consentimento identificados.
 _Avoid_: Histórico completo de uso, cópia automática de todas as sessões
 
+**Destilação de evidências**:
+Curadoria de exemplos e padrões extraídos de dados autorizados para avaliar e propor melhorias no harness do Compor.
+_Avoid_: Treinamento de modelo, autorização automática para usar memórias
+
 **Avaliação do Compor**:
 Resultado da aplicação de critérios versionados a um caso ou trace, identificando se a origem é código, pessoa ou modelo avaliador.
 _Avoid_: Aprovação da peça, garantia de experiência, receita comprovada

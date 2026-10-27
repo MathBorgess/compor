@@ -2494,6 +2494,10 @@
         {
           "id": "b-to-db",
           "type": "arrow"
+        },
+        {
+          "id": "b-db-to-team",
+          "type": "arrow"
         }
       ],
       "link": null,
@@ -2970,6 +2974,10 @@
         {
           "id": "b-team-loop",
           "type": "arrow"
+        },
+        {
+          "id": "b-db-to-team",
+          "type": "arrow"
         }
       ],
       "link": null,
@@ -3017,7 +3025,7 @@
       "x": 1056,
       "y": 3144,
       "width": 748,
-      "height": 62.400000000000006,
+      "height": 89.7,
       "angle": 0,
       "strokeColor": "#555555",
       "backgroundColor": "transparent",
@@ -3037,9 +3045,9 @@
       "boundElements": null,
       "link": null,
       "locked": false,
-      "text": "Casos autorizados → evals → revisão humana\nSem treinamento do modelo",
-      "originalText": "Casos autorizados → evals → revisão humana\nSem treinamento do modelo",
-      "fontSize": 24,
+      "text": "Dados autorizados → curadoria → datasets\nEvals → revisão humana → melhorar agente\nSem treinamento de modelos",
+      "originalText": "Dados autorizados → curadoria → datasets\nEvals → revisão humana → melhorar agente\nSem treinamento de modelos",
+      "fontSize": 23,
       "fontFamily": 2,
       "textAlign": "center",
       "verticalAlign": "top",
@@ -3148,7 +3156,65 @@
       "elbowed": false
     },
     {
-      "id": "x084",
+      "id": "b-db-to-team",
+      "type": "arrow",
+      "x": 1825,
+      "y": 2760,
+      "width": 35,
+      "height": 405,
+      "angle": 0,
+      "strokeColor": "#111111",
+      "backgroundColor": "transparent",
+      "fillStyle": "solid",
+      "strokeWidth": 3,
+      "strokeStyle": "dashed",
+      "roughness": 0,
+      "opacity": 100,
+      "groupIds": [],
+      "frameId": "03 — Contexto e limites",
+      "roundness": null,
+      "seed": 715764,
+      "version": 1,
+      "versionNonce": 60396,
+      "updated": 1793118000000,
+      "isDeleted": false,
+      "boundElements": null,
+      "link": null,
+      "locked": false,
+      "points": [
+        [
+          0,
+          0
+        ],
+        [
+          35,
+          0
+        ],
+        [
+          35,
+          405
+        ],
+        [
+          0,
+          405
+        ]
+      ],
+      "startBinding": {
+        "elementId": "b-database",
+        "focus": 0,
+        "gap": 1
+      },
+      "endBinding": {
+        "elementId": "b-team",
+        "focus": 0,
+        "gap": 1
+      },
+      "startArrowhead": null,
+      "endArrowhead": "arrow",
+      "elbowed": false
+    },
+    {
+      "id": "x085",
       "type": "text",
       "x": 160,
       "y": 3300,
@@ -3165,9 +3231,9 @@
       "groupIds": [],
       "frameId": "03 — Contexto e limites",
       "roundness": null,
-      "seed": 715764,
+      "seed": 724285,
       "version": 1,
-      "versionNonce": 60396,
+      "versionNonce": 61115,
       "updated": 1793118000000,
       "isDeleted": false,
       "boundElements": null,
