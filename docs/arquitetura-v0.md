@@ -16,10 +16,10 @@ Resumo de decisões e tecnologias. O aplicativo, as integrações, os instalador
 ## Tecnologias e decisões
 
 - **Electron:** Windows/macOS; uma pessoa e uma organização do Compor na v0.
-- **IA:** chave de teste/da disciplina ou BYOK na API oficial; proxy Codex só em laboratório. Codex nativo depende de G0 e comprovação de texto/imagem.
+- **IA:** geração de texto e imagem desde a v0; chave de teste/da disciplina ou BYOK na API oficial; proxy Codex só em laboratório. Codex nativo depende de G0 e comprovação de texto/imagem.
 - **Dados:** vault local com memória, preferências e skills; GitHub opcional inclui a memória pessoal compartilhada com colaboradores do repositório.
 - **Observabilidade:** MLflow na Oracle; coleta de metadados opcional e conteúdo apenas em testes/evals autorizados. Traces avaliados ficam preservados; sem avaliação, cinco dias.
-- **Aprendizado:** tarefa concluída fornece sinal positivo e não conclusão observada, negativo; motivo, reações e avaliação são evidências distintas. Sem treinamento de modelos ou promoção automática.
+- **Aprendizado:** tarefa concluída fornece sinal positivo e não conclusão observada, negativo; motivo, reações e avaliação são evidências distintas. Sem treinamento de modelos ou promoção automática. A régua de promoção é hipótese revisável; amostra insuficiente é inconclusiva.
 - **Perfil:** apagar o perfil ativo não apaga traces avaliados, datasets nem histórico/cópias do GitHub automaticamente.
 
 ## O design precisa possibilitar e incentivar
@@ -31,7 +31,7 @@ Resumo de decisões e tecnologias. O aplicativo, as integrações, os instalador
 - Explicar separadamente as permissões de GitHub, envio à IA, telemetria e conteúdo para avaliação; a recusa de feedback ou telemetria não bloqueia a entrega.
 - Permitir consultar, corrigir e apagar o perfil, informando claramente os registros e cópias que permanecem e o estado da sincronização.
 - Mostrar estados de autorização, geração, falha, cancelamento e retomada; preservar trabalho e permitir abrir, editar e exportar o salvo sem a Oracle.
-- Guiar o setup por agente do usuário ou alternativa manual, confirmando conta e gastos antes de inserir a chave em campo protegido.
+- Guiar o setup com formulário que prepara instruções para o agente do usuário auxiliar na criação da chave e na configuração da cobrança; oferecer alternativa manual. A pessoa confirma conta e gastos antes de inserir a chave em campo protegido.
 
 ## ADRs
 
