@@ -105,7 +105,7 @@ Orientação revisável sobre características que a pessoa prefere evitar em um
 _Avoid_: Falha da pessoa, proibição global inferida
 
 **Sinal negativo de preferência**:
-Evidência contextual de rejeição de uma característica ou alternativa, que pode contribuir para identificar uma hipótese de não preferência.
+Evidência contextual de rejeição de uma característica ou alternativa, que pode contribuir para identificar uma hipótese de não preferência. Sem motivo explícito da pessoa, a causa interpretada da rejeição permanece uma hipótese.
 _Avoid_: Não conclusão da tarefa, aprovação, treinamento de modelo
 
 **Memória do Compor**:
