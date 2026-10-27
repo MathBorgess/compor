@@ -112,6 +112,14 @@ _Avoid_: Histórico completo de uso, cópia automática de todas as sessões
 Resultado da aplicação de critérios versionados a um caso ou trace, identificando se a origem é código, pessoa ou modelo avaliador.
 _Avoid_: Aprovação da peça, garantia de experiência, receita comprovada
 
+**Sinal de desfecho da tarefa**:
+Indicação de conclusão observada, positiva, ou não conclusão observada, negativa, vinculada à tarefa e à evidência disponível. Uma tarefa pendente ou de resultado desconhecido não recebe sinal de desfecho.
+_Avoid_: Penalidade à pessoa, reação de utilidade, treinamento do modelo, conclusão inferida do silêncio
+
+**Motivo da não conclusão**:
+Explicação declarada, observada ou hipotética para não alcançar o resultado desejado, vinculada à sua origem e distinta do próprio desfecho.
+_Avoid_: Culpa presumida, causa inventada, resultado desconhecido
+
 **Reação de utilidade**:
 Sinal voluntário de utilidade percebida sobre uma resposta ou proposta em uma versão identificada. Não constitui preferência adotada na memória, julgamento factual ou aprovação da peça.
 _Avoid_: Corretude, aprovação, preferência reutilizável, satisfação inferida do silêncio

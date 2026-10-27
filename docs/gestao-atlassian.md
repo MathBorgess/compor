@@ -28,6 +28,8 @@ Em Q24, decidiu apagar o perfil ativo preservando traces avaliados e datasets at
 
 Em Q25, aprovou seleção por filtros de permissões/fatos, intenção/contexto adotado e duas rotas contrastantes quando houver exploração; escolha afeta a sessão e memória reutilizável exige aceite. Em Q26, manteve a régua conservadora de promoção como hipótese revisável, com comparação equivalente e insuficiência de amostra como resultado inconclusivo. Os números concretos da proposta ainda não são limites validados. Registro no [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md).
 
+Na sequência, determinou usar conclusão observada como reforço positivo e não conclusão observada como negativo, investigando o motivo. Pendência e ausência de evidência permanecem desconhecidas; o sinal não penaliza a pessoa, não treina modelos e não ultrapassa filtros obrigatórios. [ADR 0006](adr/0006-feedback-e-evolucao-do-harness.md).
+
 Atualizações compartilhadas de requisitos, onboarding, decisões e evidências de teste ficam no Confluence. Estado de trabalho, responsáveis e sprints ficam no Jira; os arquivos deste repositório não substituem esse acompanhamento.
 
 A spec consolidada de 23/10/2026 substituiu definições anteriores sobre público, promessa, fluxo, quantidade obrigatória de rotas, ativação e monetização. Ela permanece como referência da proposta para validação, sujeita às decisões posteriores registradas no Confluence. Contratos técnicos que não foram alterados continuam referências candidatas, sem comprovar implementação ou elegibilidade da integração.
