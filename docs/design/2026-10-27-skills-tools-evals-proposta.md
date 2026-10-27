@@ -8,6 +8,8 @@ A [amostra sintética de dataset](2026-10-27-dataset-sintetico-exemplo.json) con
 
 O [levantamento de estudos sobre criatividade e avaliação](2026-10-27-evidencias-criatividade-e-avaliacao.md) documenta achados e limites para formular hipóteses, sem presumir que os resultados se reproduzam no Compor.
 
+A [avaliação da proposta de moodboard estruturado](2026-10-27-moodboard-estruturado-proposta.md) explora uma tool candidata, suas fronteiras e uma comparação experimental; não representa uma decisão ou tool implementada.
+
 O [protótipo MCP local](../../prototypes/compor-mcp/README.md) implementa catálogo, carregamento das quatro skills e preparação de dados da nuvem de palavras. Passou em testes de protocolo, inclusive conexão no mesmo processo com o cliente MCP do Agents SDK, e em chamadas `stdio` pelo Codex app-server isolado. Esses testes não incluem modelo, usuários, aplicação, identidade ou os 23 casos de avaliação; a origem dos pesos recebidos é uma alegação do cliente, não uma escolha humana verificada.
 
 ## Resultado que queremos investigar
