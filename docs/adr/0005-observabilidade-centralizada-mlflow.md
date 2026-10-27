@@ -13,10 +13,16 @@ O processo principal do Electron instrumenta as operações do produto e dos tr�
 Matheus confirmou em 26/10/2026:
 
 - **Q18 — Conteúdo:** telemetria opcional com metadados por padrão. Entradas e saídas com texto ou imagem só são capturadas em sessões ou casos de teste/avaliação autorizados para essa finalidade. Credenciais continuam excluídas mesmo nesses casos. Sincronização GitHub e permissão de geração não concedem consentimento para coleta.
-- **Q19 — Retenção:** traces operacionais são retidos por cinco dias. Somente casos explicitamente selecionados são preservados em datasets separados, com origem e consentimento. Essa seleção não preserva automaticamente a sessão inteira; finalidade e prazo do dataset devem ser declarados ao selecioná-lo, sem herdar retenção indefinida.
+- **Q19 — Retenção inicial, substituída para traces avaliados pela atualização abaixo:** traces operacionais são retidos por cinco dias. Somente casos explicitamente selecionados são preservados em datasets separados, com origem e consentimento. Essa seleção não preserva automaticamente a sessão inteira; finalidade e prazo do dataset devem ser declarados ao selecioná-lo.
 - **Q20 — Avaliações:** execução em lotes, começando por critérios determinísticos e revisão humana. Modelos avaliadores só são acionados por comando explícito com limite de gasto. Receber um trace não dispara chamadas pagas; a credencial e o custeio do avaliador são declarados na execução, sem uso automático da chave do usuário.
 
 Critérios, versões, origem e resultado da avaliação ficam identificados. Notas automáticas não constituem aprovação humana nem demonstram por si experiência satisfatória. Os resultados de código, pessoa e modelo permanecem distinguíveis.
+
+**Atualização posterior de Matheus em 26/10/2026:** “Traces com avaliação não deveriam ser expurgados, feedback humano é muito valioso.” Cinco dias passam a valer somente para traces sem avaliação. Traces com reação/avaliação humana, por código ou por modelo são preservados sem expurgo automático, junto a seus assessments e contexto autorizado disponível, mesmo sem seleção para dataset. Latência, tokens e status operacionais não constituem avaliação por si. Seleção para dataset e proteção de retenção são estados distintos; avaliação não amplia consentimento ou payload.
+
+A implementação deve proteger trace, avaliação, spans e artefatos contra limpezas parciais, inclusive quando avaliação e expurgo concorrem. A capacidade/disco da Oracle precisa considerar o crescimento acumulado dos traces avaliados. Se um feedback chegar após expurgo legítimo de trace ainda não avaliado, preservar o feedback ligado à versão e registrar a trajetória ausente, sem reconstruir evidência.
+
+Q21–Q23 fecharam a seleção automática da amostra, reações opcionais e o objetivo de melhorar prompts, ferramentas, trajetórias e harness, conforme o [ADR 0006](0006-feedback-e-evolucao-do-harness.md). Nenhum treinamento de modelo integra esse ciclo.
 
 ## Base técnica a validar
 

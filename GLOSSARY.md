@@ -96,6 +96,10 @@ _Avoid_: Base aprovada, aprovação de peça
 Registro correlacionado das etapas de uma operação, com a tentativa e as versões de contexto que a originaram. Seu resultado técnico não constitui aprovação da peça ou benefício observado pela pessoa.
 _Avoid_: Gravação de tela, conversa completa, aceite humano
 
+**Trace avaliado**:
+Trace com reação ou julgamento identificado de uma pessoa, código ou modelo sobre uma versão, preservado junto à avaliação e ao contexto autorizado disponível, independentemente de seleção para dataset.
+_Avoid_: Trace apenas com latência ou status, caso automaticamente curado
+
 **Caso de avaliação**:
 Exemplo selecionado com origem, critérios e dados autorizados para verificar o comportamento do Compor.
 _Avoid_: Toda sessão de usuário, dado automaticamente liberado para pesquisa
@@ -107,3 +111,23 @@ _Avoid_: Histórico completo de uso, cópia automática de todas as sessões
 **Avaliação do Compor**:
 Resultado da aplicação de critérios versionados a um caso ou trace, identificando se a origem é código, pessoa ou modelo avaliador.
 _Avoid_: Aprovação da peça, garantia de experiência, receita comprovada
+
+**Reação de utilidade**:
+Sinal voluntário de utilidade percebida sobre uma resposta ou proposta em uma versão identificada. Não constitui preferência adotada na memória, julgamento factual ou aprovação da peça.
+_Avoid_: Corretude, aprovação, preferência reutilizável, satisfação inferida do silêncio
+
+**Corretude**:
+Atendimento aos fatos e às regras aplicáveis à tarefa avaliada, segundo referências e critérios identificados.
+_Avoid_: Beleza, popularidade, reação positiva, fluência
+
+**Completude**:
+Atendimento ao conjunto de requisitos explícitos da tarefa e versão avaliadas.
+_Avoid_: Texto longo, ausência de críticas, requisitos de outra tarefa
+
+**Trajetória do Compor**:
+Sequência observável de decisões e operações de uma tentativa, incluindo chamadas de ferramentas e seus resultados quando disponíveis.
+_Avoid_: Raciocínio interno do modelo, reconstrução presumida, jornada inteira do usuário
+
+**Harness do Compor**:
+Conjunto versionado de instruções, ferramentas, controles e fluxos que conduz e valida as tentativas do agente no produto.
+_Avoid_: Modelo de IA, pesos treinados, memória adotada pelo usuário
