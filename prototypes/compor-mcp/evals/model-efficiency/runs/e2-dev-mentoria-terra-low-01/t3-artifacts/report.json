@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-editorial",
+      "piece_id": "trama-editorial",
+      "version": "1",
+      "original_piece_sha256": "b10bb77d447b79d2d20cff3da0852ee8032eaf2077501f7c434379443e4d7f42",
+      "mapped_piece_sha256": "b10bb77d447b79d2d20cff3da0852ee8032eaf2077501f7c434379443e4d7f42",
+      "mcp_evidence": [
+        {
+          "event_index": 12,
+          "event_id": "item_5",
+          "wire_candidates": [
+            {
+              "process_id": 40293,
+              "request_id": 4,
+              "request_line": 27,
+              "response_line": 29
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-editorial-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-editorial.json",
+      "render_input_sha256": "f73121076badf1c8ee273d675d83a502910a0f3fe766e4fbee853e6f872429ed"
+    },
+    {
+      "id": "direcao-trama",
+      "piece_id": "trama-trama",
+      "version": "1",
+      "original_piece_sha256": "1260c959a222614c6dc0fec0ef582e75a76b4bdd49d9c9aa9daed8e62fccc0a9",
+      "mapped_piece_sha256": "1260c959a222614c6dc0fec0ef582e75a76b4bdd49d9c9aa9daed8e62fccc0a9",
+      "mcp_evidence": [
+        {
+          "event_index": 11,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 40293,
+              "request_id": 5,
+              "request_line": 26,
+              "response_line": 28
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-trama-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-trama.json",
+      "render_input_sha256": "4e410fb027c9e1caaabecc29cc57922a6ebbabc7798ff2fcd8a0da3f68e23087"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/turn-03.json",
+    "sha256": "01d5b46102a7c9a54d4a1af19226b2e04d47bdc1dbba8a92f0a081647f4bdaa6"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "5f623c7e719c381c50dc7705a1434a9dd9839c132fd7856e77156e9223dd94c6",
+  "assets": {
+    "asset-editorial-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-editorial-01.png",
+      "sha256": "f798377b2820b54a7d98f9849a642ffe4518eeb59b4ce98810a8c59003967fac",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-editorial-01.png"
+    },
+    "asset-trama-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-trama-01.png",
+      "sha256": "b58e68a3883c84a1f1b13cc733463e2c10e707ac105fb59bced346b789b534e9",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-trama-01.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets.json",
+    "sha256": "12c91be5ba015888a0d83bcc71b7b254145836384bd0753f0c68577068fa8851",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01"
+  },
+  "unresolved_asset_refs": []
+}

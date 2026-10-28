@@ -36,7 +36,7 @@ A crítica por camada foi útil para auditar o alcance da edição. As revisões
 
 ## Continuação: candidato E2 em desenvolvimento
 
-O [candidato E2 e seu replay diagnóstico](e2-development.md) foram implementados depois desta rodada. Ainda não têm avaliação visual completa. A [proposta E2](e2-proposal.md) concentra instruções curtas nos erros de coordenadas e `z_index`, com orientação visual carregada sob demanda. O resultado também sugere experimentar medição de texto/preview durante a composição, permitindo reparar overflow e rever hierarquia **dentro do alcance autorizado**. Isso é hipótese arquitetural: não foi testada nesta rodada e não faz parte de uma nova arquitetura aprovada.
+O [candidato E2 e seu replay diagnóstico](e2-development.md) foram implementados depois desta rodada. A [trajetória E2 completa](e2-result.md) também ficou abaixo da régua dos dois Judges; é um replay de desenvolvimento, fora da matriz de 24 runs. A [proposta E2](e2-proposal.md) concentra instruções curtas nos erros de coordenadas e `z_index`, com orientação visual carregada sob demanda. O resultado também sugere experimentar medição de texto/preview durante a composição, permitindo reparar overflow e rever hierarquia **dentro do alcance autorizado**. Isso é hipótese arquitetural: não foi testada nesta rodada e não faz parte de uma nova arquitetura aprovada.
 
 Não é necessário ampliar o produto para multiagentes, MCP Apps, execução offline ou persistência neste ensaio. A arquitetura permanece v0. O PR entrega código experimental, evidências e propostas para crítica, sem promoção automática do harness.
 

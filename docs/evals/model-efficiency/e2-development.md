@@ -2,6 +2,8 @@
 
 28/10/2026. Continuação do objetivo após o fechamento da rodada E0/E1 no commit `aa7ff80`. Não promove o candidato nem altera os resultados dos 24 pacotes.
 
+**Atualização:** [trajetória completa e avaliação](e2-result.md). Os registros abaixo preservam o marco inicial até T3.
+
 ## Intervenção
 
 `COMPOR_MCP_GUIDANCE=focused_v2` parte do catálogo E0 e acrescenta orientação localizada a `rect`, `z_index`, preparação de camadas e carregamento da skill de piloto. Apenas `criar-piloto` recebe complemento de composição/revisão, com versão `0.1.0-prototype-e2` e hash próprios. As outras skills mantêm conteúdo e versão.

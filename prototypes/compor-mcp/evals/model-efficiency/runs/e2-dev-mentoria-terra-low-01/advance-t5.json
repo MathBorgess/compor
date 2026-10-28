@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/resume-after-t4.json",
+      "sha256": "11a8cabd944e33697c8811730985070566788f909b15136e4cd5f1a8324360e5"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets.json",
+      "sha256": "12c91be5ba015888a0d83bcc71b7b254145836384bd0753f0c68577068fa8851"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "editorial-a-revisao-3a",
+        "piece_id": "trama-editorial",
+        "version": "3a",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/t5-artifacts/renders/editorial-a-revisao-3a.png",
+        "png_sha256": "cf54aafcdefe1f9bcdd49d50043ef51b46bffb15cf52c4547af794af612150bf",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/t5-artifacts/renders/editorial-a-revisao-3a.json",
+        "report_sha256": "c1d9de91f485f29b33474d460f558e5381f46a409ff55141ceea46b8d87b2836",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 212.845542,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-editorial-01"
+        ],
+        "layers": [
+          {
+            "id": "e-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "e-imagem",
+            "kind": "image",
+            "asset_ref": "asset-editorial-01"
+          },
+          {
+            "id": "e-linha",
+            "kind": "shape"
+          },
+          {
+            "id": "e-marca",
+            "kind": "text"
+          },
+          {
+            "id": "e-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "e-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "e-formato",
+            "kind": "text"
+          },
+          {
+            "id": "e-acao",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 8.655834,
+    "total": 224.0105
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

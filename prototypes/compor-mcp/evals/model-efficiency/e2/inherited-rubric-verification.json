@@ -1,0 +1,9 @@
+{
+  "scope": "Retrospective verification of prior committed rubric/expectations against original freeze, not a new preregistration",
+  "original_freeze": "docs/evals/model-efficiency/freeze.json",
+  "pre_continuation_commit": "2b7933c",
+  "matches_original_and_prior_commit": {
+    "docs/evals/model-efficiency/rubric.md": "7a0be22e4f15ab8c168e2eb39142794f90e8f24c42d3b45b8e2033fba1acc359",
+    "prototypes/compor-mcp/evals/model-efficiency/expectations.json": "afe0ca3402c27edb11a426061f879595d01b7346b86d91208e8c79e11cb0e701"
+  }
+}

@@ -1,6 +1,6 @@
 # E2 proposto — ajuda curta de contrato e composição revisável
 
-28/10/2026 · Proposta histórica anterior à implementação. Estado atual: [E2 em desenvolvimento](e2-development.md), com contratos testados e replay parcial; ainda sem avaliação visual ou promoção.
+28/10/2026 · Proposta histórica anterior à implementação. Estado atual: [E2 em desenvolvimento](e2-development.md), com contratos e trajetória completa testados; [avaliação visual abaixo da régua](e2-result.md), sem promoção.
 
 **Recomendação:** partir do E0 congelado e acrescentar somente lembretes de coordenadas/ordem junto ao schema e um trecho curto, carregado sob demanda, em `criar-piloto`. Testar esse E2 contra aumento de esforço. Não ampliar o E1 inteiro nem recomendar promoção com base nas notas desta rodada. O resultado pretendido é menos tentativas inválidas e melhor decisão de composição dentro do pedido; não há evidência de que esta proposta consiga ambos.
 
