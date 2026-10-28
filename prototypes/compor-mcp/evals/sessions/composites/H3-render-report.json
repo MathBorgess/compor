@@ -1,0 +1,546 @@
+{
+  "candidate": "H3",
+  "pillow_version": "12.2.0",
+  "script_sha256": "c1f27a524a82d61d9a5d76a20aeccb7b7799d11087a730610c8a37378626dff6",
+  "helper_script_sha256": "5ecdd6b6e529166026eaea7230a40542c1d06aeca9c1e6babfb067151fa03643",
+  "baseline_renderer_sha256": "3d6a652224c24bd2b837c3124cd83cdc15f8c7fc0869f951361848dbce835039",
+  "input_hashes": {
+    "sessions/H3-output.json": "3095519d9294c79df24da313c8e485661e386b131cf074f7ad1e160f26ac515f",
+    "sessions/H0-output.json": "d2a93d41b1be8d3050bbf5070db202a4f9fcb1b3cbc893a6e63caf6ab5d2b672",
+    "sessions/H2-output.json": "16e23b740b613dcfb2b186650c6988824bce64735839c063796381e312127ea8",
+    "sessions/composites/render-report.json": "09f9ad1326fb5d069b893d398c1514bb19805f704c2e9bb17b1710526ade69cb",
+    "sessions/composites/H2-render-report.json": "b5645ef74efb7cf79eaab7bc3fdf6eeb94a7fd32d41233bb07e678f151b13682"
+  },
+  "schema_normalization": {
+    "font_ref_mapping": {
+      "inter": "Inter"
+    },
+    "instruction": "Preservar fontes/fallback e todos estilos do H0_D1/H2_D2. Resolver font_ref inter usando o mesmo mapeamento explícito Inter→Arial do ensaio anterior. Substituir somente os textos headline/copy e reutilizar assets. Não reduzir fonte silenciosamente; o preflight local indicou ajuste sem redução. Registrar hashes e comparar pixels da zona de imagem.",
+    "only_rendered_changes": [
+      "headline text",
+      "copy text"
+    ],
+    "source_warnings_unchanged": {
+      "H3_D1": [
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_cta"
+        }
+      ],
+      "H3_D2": [
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_cta"
+        }
+      ]
+    }
+  },
+  "mapping_for_coordinator_only": {
+    "K1": "H0_D1",
+    "K2": "H2_D2",
+    "L1": "H3_D1",
+    "L2": "H3_D2"
+  },
+  "compositions": [
+    {
+      "id": "H3_D1",
+      "source_direction_id": "H3_D1",
+      "schema_normalization": "H0-layer_plan-object",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "output_file": "sessions/composites/H3_D1.png",
+      "output_sha256": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+      "layers": [
+        {
+          "id": "H0_D1_base",
+          "kind": "shape",
+          "box_px": [
+            0,
+            0,
+            1080,
+            1350
+          ]
+        },
+        {
+          "id": "H0_D1_art",
+          "kind": "image",
+          "box_px": [
+            0,
+            0,
+            1080,
+            810
+          ],
+          "fit": "contain",
+          "contain_default_no_crop": true,
+          "letterbox_total_px": [
+            0,
+            0
+          ],
+          "asset_path": "sessions/assets/H0_D1.png",
+          "asset_sha256": "b57597a2b56b3e593cd7c32833e8011bc3aeff61de4a4b70d0bd9e2f211d98c4",
+          "source_size_px": [
+            1448,
+            1086
+          ],
+          "rendered_size_px": [
+            1080,
+            810
+          ]
+        },
+        {
+          "id": "H0_D1_reading",
+          "kind": "shape",
+          "box_px": [
+            0,
+            810,
+            1080,
+            540
+          ]
+        },
+        {
+          "id": "H0_D1_brand",
+          "kind": "text",
+          "box_px": [
+            76,
+            857,
+            929,
+            47
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 600,
+          "resolved_family": "Arial",
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "text_preserved": "CAFÉ AURORA",
+          "requested_size_px": 24,
+          "effective_size_px": 24,
+          "fit_resize": false,
+          "requested_line_advance_px": 28.799999999999997,
+          "effective_line_advance_px": 28.799999999999997,
+          "used_width_px": 177,
+          "used_height_px": 23,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D1_headline",
+          "kind": "text",
+          "box_px": [
+            76,
+            934,
+            929,
+            162
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 400,
+          "resolved_family": "Arial",
+          "resolved_weight": 400,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "text_preserved": "Nem toda aurora\nvem com o sol.",
+          "requested_size_px": 72,
+          "effective_size_px": 72,
+          "fit_resize": false,
+          "requested_line_advance_px": 77.76,
+          "effective_line_advance_px": 77.76,
+          "used_width_px": 540,
+          "used_height_px": 131,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D1_copy",
+          "kind": "text",
+          "box_px": [
+            76,
+            1126,
+            929,
+            74
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 400,
+          "resolved_family": "Arial",
+          "resolved_weight": 400,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "text_preserved": "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro.",
+          "requested_size_px": 28,
+          "effective_size_px": 28,
+          "fit_resize": false,
+          "requested_line_advance_px": 33.6,
+          "effective_line_advance_px": 33.6,
+          "used_width_px": 606,
+          "used_height_px": 61,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D1_cta",
+          "kind": "text",
+          "box_px": [
+            76,
+            1245,
+            929,
+            54
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 600,
+          "resolved_family": "Arial",
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "text_preserved": "Venha conhecer.",
+          "requested_size_px": 30,
+          "effective_size_px": 30,
+          "fit_resize": false,
+          "requested_line_advance_px": 36.0,
+          "effective_line_advance_px": 36.0,
+          "used_width_px": 240,
+          "used_height_px": 22,
+          "text_clipped": false
+        }
+      ],
+      "limits": "Experimental Pillow compositor, not Compor UI or renderer. Original candidate plans and text unchanged."
+    },
+    {
+      "id": "H3_D2",
+      "source_direction_id": "H3_D2",
+      "schema_normalization": "H0-layer_plan-object",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "output_file": "sessions/composites/H3_D2.png",
+      "output_sha256": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+      "layers": [
+        {
+          "id": "H0_D2_base",
+          "kind": "shape",
+          "box_px": [
+            0,
+            0,
+            1080,
+            1350
+          ]
+        },
+        {
+          "id": "H0_D2_art",
+          "kind": "image",
+          "box_px": [
+            0,
+            0,
+            1080,
+            810
+          ],
+          "fit": "contain",
+          "contain_default_no_crop": true,
+          "letterbox_total_px": [
+            0,
+            0
+          ],
+          "asset_path": "sessions/assets/H2_D2.png",
+          "asset_sha256": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe",
+          "source_size_px": [
+            1448,
+            1086
+          ],
+          "rendered_size_px": [
+            1080,
+            810
+          ]
+        },
+        {
+          "id": "H0_D2_reading",
+          "kind": "shape",
+          "box_px": [
+            0,
+            810,
+            1080,
+            540
+          ]
+        },
+        {
+          "id": "H0_D2_brand",
+          "kind": "text",
+          "box_px": [
+            76,
+            857,
+            929,
+            47
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 600,
+          "resolved_family": "Arial",
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "text_preserved": "CAFÉ AURORA",
+          "requested_size_px": 24,
+          "effective_size_px": 24,
+          "fit_resize": false,
+          "requested_line_advance_px": 28.799999999999997,
+          "effective_line_advance_px": 28.799999999999997,
+          "used_width_px": 177,
+          "used_height_px": 23,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D2_headline",
+          "kind": "text",
+          "box_px": [
+            76,
+            934,
+            929,
+            162
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 500,
+          "resolved_family": "Arial",
+          "resolved_weight": 400,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "text_preserved": "Café de bairro.\nPausa de outro mundo.",
+          "requested_size_px": 64,
+          "effective_size_px": 64,
+          "fit_resize": false,
+          "requested_line_advance_px": 69.12,
+          "effective_line_advance_px": 69.12,
+          "used_width_px": 671,
+          "used_height_px": 117,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D2_copy",
+          "kind": "text",
+          "box_px": [
+            76,
+            1126,
+            929,
+            74
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 400,
+          "resolved_family": "Arial",
+          "resolved_weight": 400,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "text_preserved": "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro.",
+          "requested_size_px": 28,
+          "effective_size_px": 28,
+          "fit_resize": false,
+          "requested_line_advance_px": 33.6,
+          "effective_line_advance_px": 33.6,
+          "used_width_px": 606,
+          "used_height_px": 61,
+          "text_clipped": false
+        },
+        {
+          "id": "H0_D2_cta",
+          "kind": "text",
+          "box_px": [
+            76,
+            1245,
+            929,
+            54
+          ],
+          "requested_family": "Inter",
+          "requested_weight": 600,
+          "resolved_family": "Arial",
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "text_preserved": "Venha conhecer.",
+          "requested_size_px": 30,
+          "effective_size_px": 30,
+          "fit_resize": false,
+          "requested_line_advance_px": 36.0,
+          "effective_line_advance_px": 36.0,
+          "used_width_px": 240,
+          "used_height_px": 22,
+          "text_clipped": false
+        }
+      ],
+      "limits": "Experimental Pillow compositor, not Compor UI or renderer. Original candidate plans and text unchanged."
+    }
+  ],
+  "pixel_checks": [
+    {
+      "candidate": "H3_D1",
+      "baseline": "H0_D1",
+      "allowed_text_boxes": [
+        {
+          "layer_id": "H0_D1_headline",
+          "box_xyxy_px": [
+            76,
+            934,
+            1005,
+            1096
+          ]
+        },
+        {
+          "layer_id": "H0_D1_copy",
+          "box_xyxy_px": [
+            76,
+            1126,
+            1005,
+            1200
+          ]
+        }
+      ],
+      "whole_canvas": {
+        "changed_pixel_count": 26102,
+        "pixel_identical": false,
+        "max_channel_difference": 223,
+        "difference_bbox_xyxy_px": [
+          76,
+          934,
+          680,
+          1187
+        ]
+      },
+      "image_region_xyxy_px": [
+        0,
+        0,
+        1080,
+        810
+      ],
+      "image_region": {
+        "changed_pixel_count": 0,
+        "pixel_identical": true,
+        "max_channel_difference": 0,
+        "difference_bbox_xyxy_px": null
+      },
+      "outside_changed_text_boxes": {
+        "changed_pixel_count": 0,
+        "pixel_identical": true,
+        "max_channel_difference": 0,
+        "difference_bbox_xyxy_px": null
+      }
+    },
+    {
+      "candidate": "H3_D2",
+      "baseline": "H2_D2",
+      "allowed_text_boxes": [
+        {
+          "layer_id": "H0_D2_headline",
+          "box_xyxy_px": [
+            76,
+            934,
+            1005,
+            1096
+          ]
+        },
+        {
+          "layer_id": "H0_D2_copy",
+          "box_xyxy_px": [
+            76,
+            1126,
+            1005,
+            1200
+          ]
+        }
+      ],
+      "whole_canvas": {
+        "changed_pixel_count": 30292,
+        "pixel_identical": false,
+        "max_channel_difference": 223,
+        "difference_bbox_xyxy_px": [
+          76,
+          934,
+          742,
+          1187
+        ]
+      },
+      "image_region_xyxy_px": [
+        0,
+        0,
+        1080,
+        810
+      ],
+      "image_region": {
+        "changed_pixel_count": 0,
+        "pixel_identical": true,
+        "max_channel_difference": 0,
+        "difference_bbox_xyxy_px": null
+      },
+      "outside_changed_text_boxes": {
+        "changed_pixel_count": 0,
+        "pixel_identical": true,
+        "max_channel_difference": 0,
+        "difference_bbox_xyxy_px": null
+      }
+    }
+  ],
+  "previous_evidence_unchanged": true,
+  "protected_hashes": {
+    "sessions/H0-output.json": "d2a93d41b1be8d3050bbf5070db202a4f9fcb1b3cbc893a6e63caf6ab5d2b672",
+    "sessions/H1-output.json": "7065469bbd232fe18bba985c4aa82b55297fb4104e2b2ddf10bd9836d49e1eaa",
+    "sessions/H2-output.json": "16e23b740b613dcfb2b186650c6988824bce64735839c063796381e312127ea8",
+    "sessions/H3-output.json": "3095519d9294c79df24da313c8e485661e386b131cf074f7ad1e160f26ac515f",
+    "sessions/assets/H1_D2.png": "1266f13f7ffe6438eea43443410b53b13a1f96da80b362fc7c5834d8645aa80c",
+    "sessions/assets/H1_D1.png": "2ead9abd238eb73e6d5cab53717f68ede944177eb3749559d4e7d539bfe36460",
+    "sessions/assets/H2_D2.png": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe",
+    "sessions/assets/H0_D1.png": "b57597a2b56b3e593cd7c32833e8011bc3aeff61de4a4b70d0bd9e2f211d98c4",
+    "sessions/assets/H0_D2.png": "8cb192f105674b269caea59f6553bcc623c14f5e750488a9aaca6e6fbf6960ea",
+    "sessions/composites/H1_D2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/composites/H1_D1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/composites/H2_D2.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/composites/H0_D1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/composites/H0_D2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/P2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/blind/P1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/blind/Q1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/blind/Q2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/contact-sheet.png": "c64f73d76a5e66bc659a5b66226d7a5d3b4b849619e9f64aa162ea6e6742e1ea",
+    "sessions/blind/h2/Y.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/blind/h2/X.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/h2/contact-sheet.png": "09215872f5fad3c7beaaaf3f3b12c8d4928e3bb69627b41e0da090810fd13d20",
+    "sessions/composites/render-report.json": "09f9ad1326fb5d069b893d398c1514bb19805f704c2e9bb17b1710526ade69cb",
+    "sessions/composites/H2-render-report.json": "b5645ef74efb7cf79eaab7bc3fdf6eeb94a7fd32d41233bb07e678f151b13682"
+  },
+  "blind_output_hashes": {
+    "sessions/blind/h3/K1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/blind/h3/K2.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/blind/h3/L1.png": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+    "sessions/blind/h3/L2.png": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+    "sessions/blind/h3/contact-sheet.png": "c9ecc3eb0c78fdf2f522eaa7e848eff16b6888ada0565b687822ae1e4f4c2f5a"
+  },
+  "limits": [
+    "Experimental compositor; not the Compor implementation.",
+    "Inter remains adapted to Arial exactly as in the baseline.",
+    "Only authorized headline/copy pixels differ; no text was rewritten or fitted by this script.",
+    "Hashes and pixel checks demonstrate invariants, not creative quality or human approval."
+  ]
+}

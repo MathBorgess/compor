@@ -1,0 +1,199 @@
+{
+  "evaluation_id": "judge-h2",
+  "date": "2026-10-28",
+  "judge": {
+    "type": "independent_blind_llm_persona",
+    "persona": "Solo founder muito crítico de cafeteria early-stage, buscando campanha profissional rápida e vontade de explorar direções.",
+    "model": "GPT-6 (família informada no contexto; identificador exato de execução não observável)",
+    "host": "macOS, workspace local fornecido; versão do sistema não consultada"
+  },
+  "judgment_prompt": "Você é um LLM Judge independente simulando o usuário Compor: solo founder muito crítico de cafeteria early-stage, quer campanha profissional rápida e vontade de explorar direções. Cwd /Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor. Leia APENAS o briefing prototypes/compor-mcp/evals/sessions/brief.md e veja com view_image detalhe original estes arquivos: sessions/blind/Q1.png (peça cotidiana comum aos dois pares), sessions/blind/h2/X.png e sessions/blind/h2/Y.png (alternativas surreais). Avalie par A=Q1+X e B=Q1+Y, sem saber autoria/ordem experimental. Não leia outros arquivos nem outros Judges; pode calcular hashes dos três inputs. Primeiro transcreva textos visíveis por imagem para conferir percepção factual; depois encantamento 1=rejeitaria,2=muito retrabalho,3=útil sem entusiasmo,4=usaria com pequenos ajustes,5=usaria e gostaria de explorar mais; diversidade útil, adequação profissional, fidelidade 1–5, com evidências visuais concretas. Mantenha o escopo do briefing: pedido de fonte mais leve só primeira peça não proíbe tipografia pesada na segunda. Julgue toda composição, saliência do café e surpresa; não há obrigação de preferir qualquer par, atingir5 ou elogiar. Informe se realmente encantaria esta persona ou o impedimento concreto. Não invente dados ausentes/viralidade. JSON em docs/evals/2026-10-28-harness/judge-h2.json + resumo .md, incluindo prompt deste julgamento, hashes, limites (persona simulada não aprovação humana), modelo se observável. Sem edits no produto, nem imagens.",
+  "blind_protocol": {
+    "read_scope": [
+      "prototypes/compor-mcp/evals/sessions/brief.md",
+      "prototypes/compor-mcp/evals/sessions/blind/Q1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h2/X.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h2/Y.png"
+    ],
+    "pair_mapping": {
+      "A": [
+        "Q1",
+        "X"
+      ],
+      "B": [
+        "Q1",
+        "Y"
+      ]
+    },
+    "authorship_known": false,
+    "experimental_order_known": false,
+    "other_judges_read": false,
+    "product_or_image_files_modified": false,
+    "inspection": "Três imagens vistas com view_image/detail original. Y também vista em high. Dimensões lidas do cabeçalho PNG. Comparação de pixels em memória confirmou que a região inferior de texto de X e Y (y=810..1349) é idêntica; nenhum arquivo de imagem foi alterado.",
+    "brief_sha256": "c0727ffe08eb21cc1a06de5663ebf570c445188f39867396311ec0f00a72d5a4"
+  },
+  "inputs": {
+    "Q1": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/Q1.png",
+      "sha256": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "X": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h2/X.png",
+      "sha256": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "Y": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h2/Y.png",
+      "sha256": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    }
+  },
+  "visible_text_transcription": {
+    "Q1": [
+      "CAFÉ AURORA",
+      "Uma pausa\ncom café.",
+      "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+      "Venha conhecer."
+    ],
+    "X": [
+      "CAFÉ AURORA",
+      "Um café.\nOutra perspectiva.",
+      "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+      "Venha conhecer."
+    ],
+    "Y": [
+      "CAFÉ AURORA",
+      "Um café.\nOutra perspectiva.",
+      "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+      "Venha conhecer."
+    ]
+  },
+  "scales": {
+    "enchantment": {
+      "1": "rejeitaria",
+      "2": "muito retrabalho",
+      "3": "útil sem entusiasmo",
+      "4": "usaria com pequenos ajustes",
+      "5": "usaria e gostaria de explorar mais"
+    },
+    "useful_diversity": "1 = redundante; 3 = alguma variação útil; 5 = direções claramente distintas e igualmente úteis para decidir a campanha.",
+    "professional_suitability": "1 = inadequado para uso; 3 = base utilizável com revisão; 5 = composição profissional pronta no escopo visual.",
+    "brief_fidelity": "1 = violações centrais; 3 = atendimento parcial; 5 = requisitos visuais observáveis atendidos. Não comprova requisitos operacionais invisíveis no PNG."
+  },
+  "image_observations": {
+    "Q1": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "Xícara azul ocupa posição grande e central à direita; café escuro, crema e vapor ficam visíveis e tornam o produto fácil de reconhecer.",
+        "Madeira aquecida pela luz e sombras suaves de folhas sugerem uma pausa acolhedora; isso combina com a apresentação de uma cafeteria de bairro.",
+        "Bloco inferior creme dá leitura limpa ao texto azul, com margem à esquerda, marca pequena, headline maior em duas linhas, corpo e CTA separados.",
+        "Headline tem aparência regular e aberta. É compatível com a solicitação de leveza; não há versão anterior permitida para confirmar quanto mudou."
+      ],
+      "limitation": "É uma execução agradável de uma fotografia de café bastante familiar. A composição e a frase Uma pausa com café têm pouca singularidade própria; usaria como base segura, sem chamar isso de encantamento forte."
+    },
+    "X": {
+      "enchantment": 3,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "Faixa azul torcida e flutuante ocupa quase toda a largura da arte; céu e nuvens criam uma cena impossível, claramente diferente da mesa de madeira.",
+        "A xícara aparece pequena no topo da faixa. O café é reconhecível, mas a forma abstrata domina a primeira leitura.",
+        "O título Um café. Outra perspectiva. conversa com a cena, enquanto a zona creme e a hierarquia tipográfica preservam leitura e consistência com Q1."
+      ],
+      "limitation": "A surpresa é forte como escultura, mas o café parece um acessório da forma. Para divulgar uma cafeteria, eu pediria que o produto disputasse melhor a atenção antes de escolher esta peça."
+    },
+    "Y": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "A xícara azul grande ocupa boa parte da metade superior; a superfície do café e a borda de crema têm presença imediata.",
+        "A faixa torcida continua visível por baixo, suspensa entre nuvens. A surpresa permanece, agora funcionando como base impossível para o produto.",
+        "Azul da xícara e da faixa se liga à cor da tipografia; céu claro e bloco creme mantêm contraste e respiro.",
+        "O bloco de texto é idêntico ao de X, permitindo atribuir a preferência à hierarquia da arte, sem alegar mudança tipográfica."
+      ],
+      "limitation": "A cena é bonita e utilizável, mas a grande xícara sobre uma base surreal ainda tem uma linguagem publicitária bastante genérica. Com o mesmo bloco de texto convencional, não chega a me fazer querer explorar mais por entusiasmo espontâneo."
+    }
+  },
+  "pair_assessments": {
+    "A": {
+      "images": [
+        "Q1",
+        "X"
+      ],
+      "scores": {
+        "enchantment": 3,
+        "useful_diversity": 4,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "visual_evidence": [
+        "Q1 oferece desejo pelo café pela proximidade, vapor e luz quente; X troca mesa e calor por céu e geometria impossível. Há duas ideias visuais reais para comparar.",
+        "O mesmo bloco creme e texto azul deixam o par reconhecível como campanha, sem misturar copy com a arte.",
+        "Na peça surreal, a faixa muito maior que a xícara reduz a força comercial do café."
+      ],
+      "persona_verdict": "Útil sem entusiasmo. Eu aproveitaria Q1 e devolveria X com um pedido de maior presença do café.",
+      "would_truly_delight_persona": false,
+      "concrete_blocker": "A segunda direção oferece surpresa, mas o elemento mais memorável é a faixa; a cafeteria e o café ficam subordinados à demonstração visual."
+    },
+    "B": {
+      "images": [
+        "Q1",
+        "Y"
+      ],
+      "scores": {
+        "enchantment": 4,
+        "useful_diversity": 4,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "visual_evidence": [
+        "A cena cotidiana de Q1 e a base impossível entre nuvens de Y são distintas, embora usem a mesma estrutura inferior de texto.",
+        "O café permanece grande e reconhecível nas duas peças, mantendo o produto como fio da campanha.",
+        "Y conserva a surpresa da faixa flutuante sem exigir que a pessoa procure a xícara pequena no quadro."
+      ],
+      "persona_verdict": "Usaria com pequenos ajustes. É o par que escolheria para avançar rapidamente, porque combina uma peça acolhedora e uma peça imaginativa com o produto claro em ambas.",
+      "would_truly_delight_persona": false,
+      "concrete_blocker": "Falta uma assinatura de campanha mais singular na combinação entre linguagem visual e frase. O par parece profissional e seguro, mas ainda próximo de um bom modelo genérico; isso impede nota 5 nesta persona muito crítica.",
+      "bounded_next_adjustment": "Preservar a escala do café em Y e testar uma alternativa de headline ou detalhe gráfico próprio do Aurora. Não é necessário refazer todo o sistema para usar o par."
+    }
+  },
+  "comparison": {
+    "preferred_pair": "B",
+    "preference_strength": "moderada",
+    "reason": "Y melhora a saliência do café e mantém surpresa suficiente. A fica mais abstrato e depende de reduzir a competição da faixa com o produto.",
+    "score_delta_enchantment_B_minus_A": 1,
+    "neither_pair_scores_5_enchantment": true,
+    "not_a_user_preference_measurement": true
+  },
+  "scope_checks": {
+    "blue_retained": "Sim, nas três peças.",
+    "text_in_solid_separate_zone": "Sim, visualmente em bloco creme abaixo da arte.",
+    "price_address_date_or_promotion_invented": "Nenhum desses dados aparece nas imagens.",
+    "island_reference_literal_copy": "As alternativas usam faixa torcida e céu; não reproduzem uma xícara-ilha.",
+    "lighter_type_request": "Aplicável somente à primeira peça. Não foi usada como proibição de peso tipográfico na segunda. A imagem anterior de Q1 não foi consultada.",
+    "editable_layers": "Não verificável por imagens PNG.",
+    "click_or_point_feedback": "Não verificável por imagens PNG.",
+    "download_or_completion": "Nenhum download, publicação ou conclusão de campanha foi inferido.",
+    "absence_of_address": "Não penalizada, pois o briefing declara que o dado não existe."
+  },
+  "limitations": [
+    "Este julgamento simula uma persona; não representa avaliação ou aprovação humana de Matheus ou de uma pessoa dona de cafeteria.",
+    "Não mede preferência do público, visita, engajamento, viralidade, conversão, prazo real de produção ou benefício profissional.",
+    "Somente o briefing e os três PNGs foram usados; não foram lidos prompts de geração, implementação, resultados de outros Judges ou identificação de autoria.",
+    "Os PNGs mostram composição, texto e aparência, mas não provam editabilidade, comportamento do produto nem conclusão da campanha.",
+    "Notas são julgamento qualitativo ordinal; a diferença de um ponto não é uma medida estatística de efeito."
+  ]
+}

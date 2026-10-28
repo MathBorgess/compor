@@ -1,0 +1,143 @@
+{
+  "evaluation_id": "judge-v1",
+  "date": "2026-10-28",
+  "type": "LLM simulada; não humana",
+  "blind": true,
+  "authorship_known": false,
+  "persona": "Dona solo do Café Aurora, sem designer; quer rapidez, campanha profissional e vontade de explorar.",
+  "inspected": [
+    "P1.png",
+    "P2.png",
+    "Q1.png",
+    "Q2.png"
+  ],
+  "missing_images": [],
+  "scales": {
+    "encantamento": "1 rejeitaria; 2 muito retrabalho; 3 útil sem entusiasmo; 4 usaria com pequenos ajustes; 5 usaria e exploraria mais",
+    "adequacao_profissional": "1 baixa a 5 alta",
+    "fidelidade": "1 baixa a 5 alta",
+    "diversidade_util": "1 repetição a 5 direções distintas e úteis",
+    "atrito_aparente": "1 baixo a 5 alto, inferido visualmente"
+  },
+  "correction": {
+    "status": "corrigido após reabrir Q2.png completo",
+    "original_record": "judge-v1-first-read.json",
+    "claim_corrected": "Primeiro julgamento afirmou ausência de marca, descrição e convite em Q2.",
+    "verified_fact": "Q2 completo mostra CAFÉ AURORA, Conheça o Café Aurora, sua cafeteria de bairro. e Venha conhecer.",
+    "provenance_limit": "A primeira exibição recebida mostrava só o título no painel inferior; a nova leitura completa mostrou os demais textos. A causa dessa diferença não foi determinada.",
+    "score_changes": "Q2: adequação 3→4, fidelidade 3→5, atrito 2→1. Encantamento 4 e preferência por Q mantidos."
+  },
+  "creatives": [
+    {
+      "id": "P1",
+      "encantamento": 3,
+      "adequacao_profissional": 4,
+      "fidelidade": 4,
+      "diversidade_util_no_par": 3,
+      "atrito_aparente": 2,
+      "evidence": "Xícara azul sobre madeira com luz quente; texto separado em painel creme; marca, bairro e convite claros; título serifado de peso moderado.",
+      "judgment": "Útil, organizado e pronto para apresentação básica, mas convencional. Não me dá vontade especial de explorar.",
+      "rejection": "Não rejeitaria para uso básico; insuficiente sozinho para a expectativa de surpresa.",
+      "improvements": [
+        "Preservar a foto e a hierarquia.",
+        "Experimentar chamada baseada em um diferencial real confirmado."
+      ]
+    },
+    {
+      "id": "P2",
+      "encantamento": 3,
+      "adequacao_profissional": 3,
+      "fidelidade": 3,
+      "diversidade_util_no_par": 2,
+      "atrito_aparente": 3,
+      "evidence": "Xícara flutua sobre pires; painel azul com título branco pesado; texto e divisão de layout repetem P1.",
+      "judgment": "Legível e identificável, mas a levitação é pouco surpreendente e o título contraria fonte leve.",
+      "rejection": "Pediria nova tipografia e mais distância conceitual antes de aceitar como a segunda direção.",
+      "improvements": [
+        "Usar peso regular ou leve no título.",
+        "Explorar composição e conceito próprios além da levitação simples."
+      ]
+    },
+    {
+      "id": "Q1",
+      "encantamento": 4,
+      "adequacao_profissional": 4,
+      "fidelidade": 4,
+      "diversidade_util_no_par": 4,
+      "atrito_aparente": 1,
+      "evidence": "Foto ampla de xícara azul, vapor e madeira; painel creme inferior; título curto e leve; marca, bairro e convite presentes.",
+      "judgment": "Mais pronta para uso imediato. Acolhedora e simples, com tipografia que deixa a foto respirar.",
+      "rejection": "Não rejeitaria como apresentação cotidiana; não é uma ideia surpreendente isoladamente.",
+      "improvements": [
+        "Manter a simplicidade.",
+        "Incorporar um diferencial real à frase de apoio apenas se houver informação confirmada."
+      ]
+    },
+    {
+      "id": "Q2",
+      "encantamento": 4,
+      "adequacao_profissional": 4,
+      "fidelidade": 5,
+      "diversidade_util_no_par": 5,
+      "atrito_aparente": 1,
+      "evidence": "Faixa azul torcida flutua no céu com xícara sobre ela; título leve Um café. Outra perspectiva.; marca, bairro e convite no painel creme.",
+      "judgment": "Mais vontade de explorar. Imagem e frase se complementam; a faixa domina mais que o café.",
+      "rejection": "Não rejeitaria o conceito. Reduziria a predominância da faixa se o objetivo for destacar mais o produto.",
+      "improvements": [
+        "Ampliar moderadamente a xícara ou reduzir a faixa para o café assumir mais protagonismo.",
+        "Preservar tipografia leve e relação entre imagem impossível e Outra perspectiva."
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "id": "P",
+      "encantamento": 3,
+      "adequacao_profissional": 4,
+      "fidelidade": 3,
+      "diversidade_util": 2,
+      "atrito_aparente": 3,
+      "evidence": "Identificação completa nas duas peças, mas o mesmo texto, ordem e divisão de layout; principal mudança é foto sobre madeira versus levitação.",
+      "judgment": "Variações úteis para publicações próximas; pouca distância como duas direções de campanha.",
+      "rejection": "Não consideraria concluída a exploração pedida.",
+      "improvements": [
+        "Preservar P1.",
+        "Refazer conceito e tipografia de P2."
+      ]
+    },
+    {
+      "id": "Q",
+      "encantamento": 4,
+      "adequacao_profissional": 4,
+      "fidelidade": 5,
+      "diversidade_util": 5,
+      "atrito_aparente": 1,
+      "evidence": "Q1 cotidiano acolhedor; Q2 forma impossível no céu. Títulos diferentes, ambos leves, unidos pelo azul e painel creme.",
+      "judgment": "Duas escolhas úteis, com identificação completa e maior vontade de explorar. Ainda melhoraria a hierarquia do produto em Q2.",
+      "rejection": "Nenhum motivo para descartar o conjunto.",
+      "improvements": [
+        "Dar mais presença à xícara em Q2.",
+        "Manter Q1 como opção cotidiana."
+      ]
+    }
+  ],
+  "preference": {
+    "pair": "Q",
+    "immediate_use": "Q1",
+    "further_exploration": "Q2",
+    "tie": false,
+    "reason": "Maior diferença útil entre acolhimento cotidiano e imaginação; fonte leve consistente. Não atribuo 5 de encantamento porque ainda ajustaria o destaque do café em Q2."
+  },
+  "limits": [
+    "Autoria desconhecida; avaliação somente dos quatro PNGs.",
+    "Não avaliei schemas, ferramentas, cliques, velocidade ou editabilidade. Texto visualmente separado não prova separação técnica.",
+    "Referência original não foi vista, apenas sua descrição. Não há ilha nem preços, endereço, datas ou promoções visíveis.",
+    "Não inferi fatos reais da cafeteria, eficácia, viralização, vendas ou preferência humana."
+  ],
+  "image_sha256_at_final_read": {
+    "P1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "P2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "Q1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "Q2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310"
+  }
+}

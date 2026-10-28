@@ -1,0 +1,189 @@
+{
+  "candidate": "H2",
+  "status": "experimental_not_promoted",
+  "source_candidate": "H0_D2",
+  "source_piece_version": "v1",
+  "source_image": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/sessions/assets/H0_D2.png",
+  "edit_prompt": "Edit only the supplied image asset, preserving its landscape 4:3 composition, cobalt-blue and pale cream palette, soft editorial lighting, tactile material, and surreal folded-ribbon concept. Make the blue ceramic cup of dark coffee the unmistakable visual protagonist: enlarge the cup to about 45 percent of image width, show its entire rim, handle and visible coffee surface, and position it around the upper-middle of the composition. Reduce the ribbon into a narrower supporting folded platform beneath the cup, occupying about 55 percent of frame width; retain one readable impossible loop, but it must not dominate the cup. Keep the airiness and an elegant sense of surprise. The cup should look appetizing and tangible; no new toppings or promotional objects. Keep the ribbon abstract, not a letter or logo. No island, ocean, palm trees, miniature landscape or literal copying of the inspiration. No people, identifiable café, text, numbers, logo, watermark, headline or CTA. This is only the image layer; the existing separate text panel, brand and CTA will be reused unchanged by the compositor. This request does not assume pixel-exact preservation outside the changed elements.",
+  "hypothesis": "Aumentar a saliência da xícara e reduzir a fita pode preservar surpresa e aumentar vontade de conhecer o café. Hipótese baseada na crítica preliminar, antes da nota final.",
+  "change_scope": {
+    "target_layer": "H0_D2_art",
+    "edit_scope": "piece",
+    "memory_update": false,
+    "product_or_campaign_change": false
+  },
+  "changes": [
+    "Somente conteúdo da camada de imagem: xícara maior, fita menor como apoio.",
+    "Versão da peça muda; textos, fontes, cores, geometria do layout e CTA permanecem."
+  ],
+  "copy_changes": [],
+  "headline": "Um café.\nOutra perspectiva.",
+  "copy": "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+  "cta": "Venha conhecer.",
+  "layer_plan": {
+    "piece_id": "H0_D2",
+    "version": "H2_v2_proposed",
+    "width_px": 1080,
+    "height_px": 1350,
+    "layers": [
+      {
+        "id": "H0_D2_base",
+        "kind": "shape",
+        "name": "Base azul",
+        "z_index": 0,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        },
+        "shape": "rectangle",
+        "fill_hex": "#235E9A"
+      },
+      {
+        "id": "H0_D2_art",
+        "kind": "image",
+        "name": "Arte H2 proposta — geração pendente",
+        "z_index": 1,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 0.6
+        }
+      },
+      {
+        "id": "H0_D2_reading",
+        "kind": "shape",
+        "name": "Zona sólida de leitura",
+        "z_index": 2,
+        "rect": {
+          "x": 0,
+          "y": 0.6,
+          "width": 1,
+          "height": 0.4
+        },
+        "shape": "rectangle",
+        "fill_hex": "#F6F2EA"
+      },
+      {
+        "id": "H0_D2_brand",
+        "kind": "text",
+        "name": "Nome da cafeteria",
+        "z_index": 3,
+        "rect": {
+          "x": 0.07,
+          "y": 0.635,
+          "width": 0.86,
+          "height": 0.035
+        },
+        "text": "CAFÉ AURORA",
+        "font_size_px": 24,
+        "color_hex": "#235E9A",
+        "font_ref": "inter",
+        "font_weight": 600,
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      {
+        "id": "H0_D2_headline",
+        "kind": "text",
+        "name": "Título editável",
+        "z_index": 4,
+        "rect": {
+          "x": 0.07,
+          "y": 0.692,
+          "width": 0.86,
+          "height": 0.12
+        },
+        "text": "Um café.\nOutra perspectiva.",
+        "font_size_px": 64,
+        "color_hex": "#173E65",
+        "font_ref": "inter",
+        "font_weight": 500,
+        "line_height": 1.08,
+        "text_align": "left"
+      },
+      {
+        "id": "H0_D2_copy",
+        "kind": "text",
+        "name": "Texto de apoio editável",
+        "z_index": 5,
+        "rect": {
+          "x": 0.07,
+          "y": 0.834,
+          "width": 0.86,
+          "height": 0.055
+        },
+        "text": "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+        "font_size_px": 28,
+        "color_hex": "#173E65",
+        "font_ref": "inter",
+        "font_weight": 400,
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      {
+        "id": "H0_D2_cta",
+        "kind": "text",
+        "name": "Convite editável",
+        "z_index": 6,
+        "rect": {
+          "x": 0.07,
+          "y": 0.922,
+          "width": 0.86,
+          "height": 0.04
+        },
+        "text": "Venha conhecer.",
+        "font_size_px": 30,
+        "color_hex": "#235E9A",
+        "font_ref": "inter",
+        "font_weight": 600,
+        "line_height": 1.2,
+        "text_align": "left"
+      }
+    ],
+    "product_ref": null,
+    "campaign_ref": null,
+    "variation_ref": null
+  },
+  "warnings": [
+    {
+      "code": "image_asset_missing",
+      "layer_id": "H0_D2_art"
+    },
+    {
+      "code": "font_ref_unresolved",
+      "layer_id": "H0_D2_brand"
+    },
+    {
+      "code": "font_ref_unresolved",
+      "layer_id": "H0_D2_headline"
+    },
+    {
+      "code": "font_ref_unresolved",
+      "layer_id": "H0_D2_copy"
+    },
+    {
+      "code": "font_ref_unresolved",
+      "layer_id": "H0_D2_cta"
+    }
+  ],
+  "tool_evidence": {
+    "load_skill": "traduzir-direcao",
+    "prepare_layered_creative_status": "ok",
+    "event_id": "5fed91c2-689f-4a8b-9149-a19bad87c7d6",
+    "trace": "evals/sessions/traces/H2.jsonl",
+    "compiled_server_sha256": "ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029"
+  },
+  "candidate_skill": "evals/candidates/refinar-criativo.md",
+  "candidate_skill_sha256": "e4a257545659db4dd29d1ff295eba4d269584bbd9d44defbbef8add0aceb8a0f",
+  "limitations": [
+    "Sem geração nesta sessão; coordenador executará edição.",
+    "Skill candidata lida localmente, não carregada pelo catálogo de produção.",
+    "font_ref permanece não resolvida e imagem está pendente; MCP não cria nem busca ativos.",
+    "Crítica de Judge simulado não é preferência humana ou decisão de campanha.",
+    "Mudança generativa pode afetar outros pixels; comparar composição completa e preservar fonte original."
+  ],
+  "render_instruction": "Reutilizar o plano/layout H0_D2 sem alterar texto nem estilo e substituir somente a imagem pelo asset H2 quando gerado; registrar fallback de fonte exatamente como no baseline."
+}

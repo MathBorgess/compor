@@ -1,0 +1,644 @@
+{
+  "candidate_id": "C2_typographic_intent_transport",
+  "recorded_at": "2026-10-28T03:23:38.840Z",
+  "mode": "synthetic_real_mcp_calls_no_model_no_rendering",
+  "expected_contract": {
+    "font_ref": "opaque identifier, unresolved warning always when supplied",
+    "font_weight": "integer 100..900",
+    "line_height": "unitless 0.8..3",
+    "text_align": [
+      "left",
+      "center",
+      "right"
+    ],
+    "missing_fields": "remain absent; no font/style fallback"
+  },
+  "baseline": {
+    "server_source_sha256": "91b19828706b806c4097bd6481ee59fbe8e46ac9ec4487baf65210980ef8068f",
+    "server_build_sha256": "24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b",
+    "input": {
+      "name": "prepare_layered_creative",
+      "arguments": {
+        "piece": {
+          "piece_id": "type-piece",
+          "version": "v1",
+          "width_px": 640,
+          "height_px": 800,
+          "layers": [
+            {
+              "id": "price",
+              "name": "Preço",
+              "kind": "text",
+              "z_index": 0,
+              "rect": {
+                "x": 0.1,
+                "y": 0.1,
+                "width": 0.5,
+                "height": 0.2
+              },
+              "text": "R$ 99",
+              "font_size_px": 48,
+              "font_ref": "typeface-synthetic",
+              "font_weight": 650,
+              "line_height": 1.25,
+              "text_align": "center"
+            }
+          ]
+        }
+      }
+    },
+    "output": {
+      "content": [
+        {
+          "type": "text",
+          "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Unrecognized keys: \"font_ref\", \"font_weight\", \"line_height\", \"text_align\" at piece.layers[0]"
+        }
+      ],
+      "isError": true
+    }
+  },
+  "candidate": {
+    "recorded_at": "2026-10-28T03:24:51.499Z",
+    "server_source_sha256": "fbb3b2ca38ff0c311e89ed01629d0f105cc375a9865ca3fe74936529f5f71b23",
+    "server_build_sha256": "ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029",
+    "test_source_sha256": "29bd75b0d070e7d1929d8ce8e5d583831ad70d69b34d607a0a0a2836e19eadf6",
+    "checks": {
+      "round_trip_preserved": true,
+      "font_unresolved_warning": true,
+      "missing_fields_remain_absent": true,
+      "invalid_values_rejected": true,
+      "no_rendering_or_persistence": true,
+      "no_global_fetch": true
+    },
+    "calls": [
+      {
+        "id": "typography_transport",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_ref": "typeface-synthetic",
+                  "font_weight": 650,
+                  "line_height": 1.25,
+                  "text_align": "center"
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"type-piece\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Preço\",\"z_index\":0,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.5,\"height\":0.2},\"text\":\"R$ 99\",\"font_size_px\":48,\"font_ref\":\"typeface-synthetic\",\"font_weight\":650,\"line_height\":1.25,\"text_align\":\"center\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"price\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Preço",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_ref": "typeface-synthetic",
+                  "font_weight": 650,
+                  "line_height": 1.25,
+                  "text_align": "center"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "price"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "id": "annotation_round_trip",
+        "input": {
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Preço",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_ref": "typeface-synthetic",
+                  "font_weight": 650,
+                  "line_height": 1.25,
+                  "text_align": "center"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "Revisar tipografia"
+              }
+            ]
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"type-piece\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null,\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Preço\",\"z_index\":0,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.5,\"height\":0.2},\"text\":\"R$ 99\",\"font_size_px\":48,\"font_ref\":\"typeface-synthetic\",\"font_weight\":650,\"line_height\":1.25,\"text_align\":\"center\"}]},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"price\"}],\"annotations\":[{\"id\":\"a1\",\"piece_version\":\"v1\",\"target\":{\"kind\":\"layer\",\"layer_id\":\"price\"},\"note\":\"Revisar tipografia\",\"edit_scope_claim\":null,\"memory_scope_claim\":null,\"candidate_layer_ids\":[\"price\"],\"selection_status\":\"explicit_layer\",\"warnings\":[],\"memory_scope_status\":\"unspecified\",\"candidate_detection\":\"explicit_layer_id\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Preço",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_ref": "typeface-synthetic",
+                  "font_weight": 650,
+                  "line_height": 1.25,
+                  "text_align": "center"
+                }
+              ]
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "price"
+              }
+            ],
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "Revisar tipografia",
+                "edit_scope_claim": null,
+                "memory_scope_claim": null,
+                "candidate_layer_ids": [
+                  "price"
+                ],
+                "selection_status": "explicit_layer",
+                "warnings": [],
+                "memory_scope_status": "unspecified",
+                "candidate_detection": "explicit_layer_id"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "id": "omitted_style_no_defaults",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"type-piece\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Preço\",\"z_index\":0,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.5,\"height\":0.2},\"text\":\"R$ 99\",\"font_size_px\":48}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Preço",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "id": "invalid_1",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_ref": "../font.ttf"
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Invalid string: must match pattern /^[A-Za-z0-9_-]+$/ at piece.layers[0].font_ref"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_2",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_weight": 99
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too small: expected number to be >=100 at piece.layers[0].font_weight"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_3",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_weight": 901
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=900 at piece.layers[0].font_weight"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_4",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "font_weight": 450.5
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Invalid input: expected int, received number at piece.layers[0].font_weight"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_5",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "line_height": 0.79
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too small: expected number to be >=0.8 at piece.layers[0].line_height"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_6",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "line_height": 3.01
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=3 at piece.layers[0].line_height"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "id": "invalid_7",
+        "input": {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "type-piece",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Preço",
+                  "kind": "text",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.5,
+                    "height": 0.2
+                  },
+                  "text": "R$ 99",
+                  "font_size_px": 48,
+                  "text_align": "justify"
+                }
+              ]
+            }
+          }
+        },
+        "output": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Invalid option: expected one of \"left\"|\"center\"|\"right\" at piece.layers[0].text_align"
+            }
+          ],
+          "isError": true
+        }
+      }
+    ],
+    "regression": {
+      "command": "npm test",
+      "tests": 25,
+      "passed": 25,
+      "failed": 0
+    }
+  },
+  "limitations": [
+    "No font discovery, loading, rendering or fallback was implemented.",
+    "A transported reference is not proof of an installed or available font."
+  ]
+}

@@ -126,7 +126,7 @@ def run():
             server = status["data"][0]
             require(server["name"] == "compor_probe", "Servidor inesperado.")
             require(not server.get("toolsError"), "Falha na descoberta de tools.")
-            require(set(server["tools"]) == {"list_skills", "load_skill", "prepare_word_cloud", "prepare_moodboard"},
+            require(set(server["tools"]) == {"list_skills", "load_skill", "prepare_word_cloud", "prepare_moodboard", "prepare_layered_creative", "prepare_annotation_context"},
                     "Tools inesperadas.")
             report["tests"]["codex_mcp_discovery"] = sorted(server["tools"])
 
@@ -189,6 +189,35 @@ def run():
             require(call(8, "load_skill", {"id": "nao-existe"}).get("isError") is True,
                     "Skill desconhecida deveria retornar erro.")
             report["tests"]["unknown_skill_is_error"] = True
+
+            piece = {"piece_id": "piece-fixture", "version": "v1", "width_px": 1080, "height_px": 1350,
+                     "campaign_ref": "campanha-fixture", "product_ref": "produto-fixture", "variation_ref": "variante-a",
+                     "layers": [
+                         {"id": "preco", "kind": "text", "name": "Preço", "z_index": 1,
+                          "rect": {"x": 0.1, "y": 0.1, "width": 0.3, "height": 0.1},
+                          "text": "R$ 39", "font_size_px": 40, "color_hex": "#112233"},
+                         {"id": "fundo", "kind": "image", "name": "Fundo", "z_index": 0,
+                          "rect": {"x": 0, "y": 0, "width": 1, "height": 1}, "asset_ref": "fundo-fixture"},
+                     ]}
+            creative = unpack(call(9, "prepare_layered_creative", {"piece": piece}))
+            require([layer["id"] for layer in creative["piece"]["layers"]] == ["fundo", "preco"], "Ordem das camadas inesperada.")
+            require(creative["piece"]["layers"][1]["font_size_px"] == 40, "Estilo sintético perdido.")
+            require(creative["renders_or_generates_image"] is False and creative["persists_data"] is False, "Efeitos inesperados no criativo.")
+            report["tests"]["prepare_layered_creative"] = {"ordered_layers": True, "synthetic_style": True, "no_generation_or_persistence": True}
+            annotation = unpack(call(10, "prepare_annotation_context", {
+                "piece": creative["piece"],
+                "annotations": [
+                    {"id": "a", "piece_version": "v1", "target": {"kind": "layer", "layer_id": "preco"}, "note": "Aumente a fonte", "edit_scope_claim": "layer"},
+                    {"id": "b", "piece_version": "v1", "target": {"kind": "area", "rect": {"x": 0.1, "y": 0.1, "width": 0.2, "height": 0.1}}, "note": "Fundo muito forte", "edit_scope_claim": "piece", "memory_scope_claim": "campaign"},
+                ],
+            }))
+            require(annotation["annotations"][0]["candidate_layer_ids"] == ["preco"], "Alvo de camada incorreto.")
+            require(set(annotation["annotations"][1]["candidate_layer_ids"]) == {"preco", "fundo"}, "Candidatas por área incorretas.")
+            require(annotation["annotations"][1]["candidate_detection"] == "bounding_box_only", "Sobreposição deve ser apenas geométrica.")
+            require(annotation["annotations"][1]["edit_scope_claim"] == "piece" and annotation["annotations"][1]["memory_scope_claim"] == "campaign", "Escopos não foram preservados separadamente.")
+            require(annotation["scope_claims_verified"] is False and annotation["input_snapshot_authenticated"] is False, "Alegações não são verificadas.")
+            require(annotation["updates_memory"] is False and annotation["persists_data"] is False, "Anotação não deve persistir ou atualizar memória.")
+            report["tests"]["prepare_annotation_context"] = {"layer_and_area": True, "scope_claim_unverified": True, "no_memory_update": True}
         finally:
             try:
                 process.stdin.close()

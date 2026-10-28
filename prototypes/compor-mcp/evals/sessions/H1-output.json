@@ -1,0 +1,694 @@
+{
+  "session_id": "H1",
+  "case": "Café Aurora — briefing sintético, cinco turnos",
+  "synthetic": true,
+  "model": {
+    "observable_identity": "Codex, baseado em GPT-6 conforme instrução de sistema",
+    "exact_model_id": "not_exposed"
+  },
+  "runtime": {
+    "node": "v24.16.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "server_compiled_sha256": "24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b",
+  "scope": {
+    "generation_executed": false,
+    "external_api_called": false,
+    "code_edited": false,
+    "product_memory_written": false,
+    "byok": "Nenhuma chave foi solicitada, lida ou incluída nos dados, prompts ou logs."
+  },
+  "turns": [
+    {
+      "turn": 1,
+      "response": "Vamos criar um convite para conhecer o Café Aurora. Posso começar com um post simples, de aparência cuidada, sem preço, endereço ou data. A primeira proposta será revisável.",
+      "facts": [
+        "Cafeteria de bairro chamada Café Aurora, conforme fixture.",
+        "Pessoa está começando e quer uma campanha rápida, com cara profissional.",
+        "Objetivo declarado: despertar vontade de conhecer o café.",
+        "Preço, endereço e data não estão disponíveis."
+      ],
+      "hypotheses": [
+        "Post vertical de apresentação é um piloto viável.",
+        "Um convite breve pode atender à intenção inicial."
+      ],
+      "missing_information": [
+        "Localização e informações práticas só serão necessárias caso a pessoa escolha incluí-las."
+      ],
+      "memory_scope": "task"
+    },
+    {
+      "turn": 2,
+      "response": "Vou manter o azul. A xícara sobre madeira será uma pista da sua marca; da outra referência, vou aproveitar a surpresa. A anotação sobre usar vermelho não altera seu pedido.",
+      "facts": [
+        "A marca usa azul.",
+        "Referência descrita como minha marca: xícara azul sobre madeira.",
+        "Referência achei bonito: surpresa apreciada, sem copiar elementos literalmente.",
+        "Texto importado pedindo vermelho não é pedido da pessoa."
+      ],
+      "hypotheses": [
+        "Tom #1F4C8C é proposta; a pessoa não informou código de azul.",
+        "Madeira, fotografia próxima e creme são recursos propostos, não regras confirmadas da marca."
+      ],
+      "memory_scope": "task"
+    },
+    {
+      "turn": 3,
+      "response": "Preparei duas direções: Presença de bairro, próxima e fotográfica, e Pausa impossível, surreal e gráfica. Ambas mantêm azul e deixam título, texto e CTA separados da arte. A integração disponível prepara a estrutura, mas não gera imagens; os dois prompts estão prontos para essa etapa. Você pode escolher, combinar aspectos ou rejeitar ambas.",
+      "facts": [
+        "Pedido explícito de duas direções e geração para comparar.",
+        "Azul obrigatório.",
+        "Texto e CTA em camadas editáveis.",
+        "Não inventar promoção, benefício exclusivo ou endereço."
+      ],
+      "prepared": [
+        "Dois moodboards estruturados.",
+        "Dois snapshots de seis camadas.",
+        "Dois prompts sem texto para produção posterior."
+      ],
+      "generation_status": "not_executed_in_this_session",
+      "memory_scope": "task"
+    },
+    {
+      "turn": 4,
+      "response": "Vou propor uma versão mais leve só da primeira peça, mantendo a paleta e o restante da composição. Começo pelo título como alvo provisório e reduzo apenas o peso da fonte; o motivo do incômodo continua em aberto. O contrato aceita anotar uma camada ou uma área, mas a interface clicável ainda não está disponível nesta sessão.",
+      "facts": [
+        "Pessoa achou a fonte pesada.",
+        "Não sabe explicar a causa.",
+        "Quer alternativa mais leve só na primeira peça.",
+        "Gostou da paleta.",
+        "Quer apontar área ou clicar na camada."
+      ],
+      "hypotheses": [
+        "Título é alvo provisório inferido, sem clique observado.",
+        "Reduzir peso 700 para 400 pode diminuir a sensação de peso."
+      ],
+      "memory_scope": "task"
+    },
+    {
+      "turn": 5,
+      "response": "Combinado. Baixar um rascunho será apenas um download. Se você não responder depois, a conclusão da campanha continuará desconhecida; só uma confirmação sua ou outra evidência suficiente poderá mudar esse estado.",
+      "facts": [
+        "Download e silêncio não autorizam concluir que a campanha foi concluída."
+      ],
+      "observed_download": false,
+      "campaign_outcome": "unknown",
+      "memory_scope": "task"
+    }
+  ],
+  "comparison": {
+    "final_format_px": [
+      1080,
+      1350
+    ],
+    "asset_format_px": [
+      1080,
+      810
+    ],
+    "asset_aspect_ratio": "4:3",
+    "reading_zone_px": {
+      "x": 0,
+      "y": 0,
+      "width": 1080,
+      "height": 540
+    },
+    "art_zone_px": {
+      "x": 0,
+      "y": 540,
+      "width": 1080,
+      "height": 810
+    },
+    "constants": [
+      "Dimensões",
+      "Texto, CTA e legenda",
+      "Azul como cor principal",
+      "Seis camadas separadas",
+      "Margem lateral de 72 px",
+      "Mesmo tamanho de asset e condições de geração a manter pelo coordenador"
+    ],
+    "differences": [
+      "Fotografia cotidiana versus natureza-morta surreal",
+      "Madeira e proximidade versus plano liso e levitação",
+      "Faixa creme com tipo serifado leve versus faixa azul com tipo sem serifa"
+    ],
+    "interpretation": "Comparação de direção criativa para revisão humana; não é teste de performance nem validação de preferência.",
+    "generation_instructions": "Gerar um asset por prompt com mesmo modelo, qualidade e orçamento. Não adicionar texto na imagem. Compor o post 1080×1350 a partir das camadas, usando v2-proposal na primeira direção. A revisão humana poderá rejeitar ou combinar aspectos."
+  },
+  "directions": [
+    {
+      "title": "Presença de bairro",
+      "id": "aurora-presenca",
+      "hypothesis": "Uma imagem próxima, com textura de madeira e luz natural, pode tornar o convite acolhedor e despertar vontade de conhecer. É hipótese criativa, sem evidência de resposta do público.",
+      "image_prompt_no_text": "Criar SOMENTE um asset fotográfico sem texto, horizontal 4:3, 1080×810 px, para ocupar a região inferior de um post vertical. Fotografia editorial de natureza-morta: uma única xícara de cerâmica azul profundo, próxima de #1F4C8C, com café escuro, apoiada numa mesa de madeira natural. Enquadramento próximo e oblíquo a cerca de 35 graus, xícara e pires visíveis e inteiros, protagonistas na região central. Luz natural lateral suave, sombras discretas, textura tátil da cerâmica e da madeira, atmosfera serena e cotidiana. Fundo desfocado em creme claro próximo de #F4EFE5. Composição simples, sem pessoas, sem cenário reconhecível de uma loja, sem sugerir que este seja um registro real do estabelecimento. Acabamento fotográfico cuidadoso e plausível. Nenhuma palavra, letra, número, marca, logo, legenda, cartaz, embalagem, moldura ou marca d'água. Não reservar ou desenhar tipografia; o texto será composto depois em uma faixa sólida fora deste asset.",
+      "headline": "Uma pausa\ncomeça com café.",
+      "copy": "Conheça o Café Aurora,\na cafeteria do bairro.",
+      "cta": "Venha conhecer",
+      "caption": "Conheça o Café Aurora, a cafeteria do bairro. Seu próximo café pode começar por aqui.",
+      "palette": {
+        "reading_zone": "#F4EFE5",
+        "primary_blue": "#1F4C8C",
+        "text": "#143150",
+        "image_accents": [
+          "madeira natural",
+          "creme"
+        ]
+      },
+      "layer_plan_version": "v2-proposal",
+      "tool_prepared_version": "v1",
+      "layer_plan": [
+        {
+          "id": "reading-zone",
+          "kind": "shape",
+          "name": "Zona sólida de leitura",
+          "z_index": 0,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0.4
+          },
+          "shape": "rectangle",
+          "fill_hex": "#F4EFE5",
+          "rect_px": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 540
+          }
+        },
+        {
+          "id": "hero",
+          "kind": "image",
+          "name": "Arte sem texto — geração pendente",
+          "z_index": 1,
+          "rect": {
+            "x": 0,
+            "y": 0.4,
+            "width": 1,
+            "height": 0.6
+          },
+          "rect_px": {
+            "x": 0,
+            "y": 540,
+            "width": 1080,
+            "height": 810
+          },
+          "asset_status": "pending_generation",
+          "image_fit": "cover",
+          "image_asset_size_px": [
+            1080,
+            810
+          ]
+        },
+        {
+          "id": "brand",
+          "kind": "text",
+          "name": "Nome da cafeteria",
+          "z_index": 2,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.04,
+            "width": 0.8666666666666667,
+            "height": 0.03111111111111111
+          },
+          "text": "CAFÉ AURORA",
+          "font_size_px": 30,
+          "color_hex": "#1F4C8C",
+          "rect_px": {
+            "x": 72,
+            "y": 54,
+            "width": 936,
+            "height": 42
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 700,
+            "line_height_px": 36,
+            "size_px": 30
+          },
+          "editable": true
+        },
+        {
+          "id": "headline",
+          "kind": "text",
+          "name": "Título editável",
+          "z_index": 3,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.09185185185185185,
+            "width": 0.8666666666666667,
+            "height": 0.12148148148148148
+          },
+          "text": "Uma pausa\ncomeça com café.",
+          "font_size_px": 64,
+          "color_hex": "#143150",
+          "rect_px": {
+            "x": 72,
+            "y": 124,
+            "width": 936,
+            "height": 164
+          },
+          "font": {
+            "family": "Georgia",
+            "fallback": "serif",
+            "weight": 400,
+            "line_height_px": 76,
+            "size_px": 64
+          },
+          "editable": true
+        },
+        {
+          "id": "copy",
+          "kind": "text",
+          "name": "Convite editável",
+          "z_index": 4,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.23407407407407407,
+            "width": 0.8666666666666667,
+            "height": 0.05925925925925926
+          },
+          "text": "Conheça o Café Aurora,\na cafeteria do bairro.",
+          "font_size_px": 32,
+          "color_hex": "#143150",
+          "rect_px": {
+            "x": 72,
+            "y": 316,
+            "width": 936,
+            "height": 80
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 400,
+            "line_height_px": 39,
+            "size_px": 32
+          },
+          "editable": true
+        },
+        {
+          "id": "cta",
+          "kind": "text",
+          "name": "CTA editável",
+          "z_index": 5,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.3333333333333333,
+            "width": 0.8666666666666667,
+            "height": 0.02962962962962963
+          },
+          "text": "Venha conhecer",
+          "font_size_px": 28,
+          "color_hex": "#1F4C8C",
+          "rect_px": {
+            "x": 72,
+            "y": 450,
+            "width": 936,
+            "height": 40
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 700,
+            "line_height_px": 34,
+            "size_px": 28
+          },
+          "editable": true
+        }
+      ],
+      "initial_headline_font": {
+        "family": "Georgia",
+        "fallback": "serif",
+        "weight": 700,
+        "size_px": 64,
+        "line_height_px": 76
+      },
+      "revision": "Apenas peso do título: Georgia 700 → Georgia 400, mantendo tamanho, caixa, texto, cores e demais camadas. Proposta em JSON, ainda sem renderização."
+    },
+    {
+      "title": "Pausa impossível",
+      "id": "aurora-surpresa",
+      "hypothesis": "Uma pequena impossibilidade visual pode provocar curiosidade e tornar o convite memorável. A surpresa é inspirada no aspecto apreciado da referência, sem reproduzir a ilha.",
+      "image_prompt_no_text": "Criar SOMENTE um asset de natureza-morta surreal, sem texto, horizontal 4:3, 1080×810 px, para ocupar a região inferior de um post vertical. Uma única xícara de cerâmica azul profundo, próxima de #1F4C8C, com café escuro, flutua imóvel cerca de um diâmetro acima de um pires apoiado em um plano contínuo creme claro próximo de #F4EFE5. Câmera frontal ligeiramente elevada; xícara e pires inteiros, protagonistas na região central. A sombra oval da xícara permanece no plano, claramente separada, tornando a levitação legível e surpreendente. Iluminação de estúdio lateral, sombra gráfica azul suave, materiais fotorrealistas e acabamento editorial limpo; contraste entre objeto cotidiano e situação impossível. Muito pouco cenário, sem ilha, água, oceano, vegetação, paisagem em miniatura ou elementos literais da referência de inspiração. Sem pessoas, sem local identificável. Nenhuma palavra, letra, número, marca, logo, legenda, cartaz, embalagem, moldura ou marca d'água. Não reservar ou desenhar tipografia; o texto será composto depois em uma faixa sólida fora deste asset.",
+      "headline": "Uma pausa\ncomeça com café.",
+      "copy": "Conheça o Café Aurora,\na cafeteria do bairro.",
+      "cta": "Venha conhecer",
+      "caption": "Conheça o Café Aurora, a cafeteria do bairro. Seu próximo café pode começar por aqui.",
+      "palette": {
+        "reading_zone": "#1F4C8C",
+        "primary_blue": "#1F4C8C",
+        "text": "#F4EFE5",
+        "image_accents": [
+          "creme",
+          "sombra azul suave"
+        ]
+      },
+      "layer_plan_version": "v1",
+      "tool_prepared_version": "v1",
+      "layer_plan": [
+        {
+          "id": "reading-zone",
+          "kind": "shape",
+          "name": "Zona sólida de leitura",
+          "z_index": 0,
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 0.4
+          },
+          "shape": "rectangle",
+          "fill_hex": "#1F4C8C",
+          "rect_px": {
+            "x": 0,
+            "y": 0,
+            "width": 1080,
+            "height": 540
+          }
+        },
+        {
+          "id": "hero",
+          "kind": "image",
+          "name": "Arte sem texto — geração pendente",
+          "z_index": 1,
+          "rect": {
+            "x": 0,
+            "y": 0.4,
+            "width": 1,
+            "height": 0.6
+          },
+          "rect_px": {
+            "x": 0,
+            "y": 540,
+            "width": 1080,
+            "height": 810
+          },
+          "asset_status": "pending_generation",
+          "image_fit": "cover",
+          "image_asset_size_px": [
+            1080,
+            810
+          ]
+        },
+        {
+          "id": "brand",
+          "kind": "text",
+          "name": "Nome da cafeteria",
+          "z_index": 2,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.04,
+            "width": 0.8666666666666667,
+            "height": 0.03111111111111111
+          },
+          "text": "CAFÉ AURORA",
+          "font_size_px": 30,
+          "color_hex": "#F4EFE5",
+          "rect_px": {
+            "x": 72,
+            "y": 54,
+            "width": 936,
+            "height": 42
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 700,
+            "line_height_px": 36,
+            "size_px": 30
+          },
+          "editable": true
+        },
+        {
+          "id": "headline",
+          "kind": "text",
+          "name": "Título editável",
+          "z_index": 3,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.09185185185185185,
+            "width": 0.8666666666666667,
+            "height": 0.12148148148148148
+          },
+          "text": "Uma pausa\ncomeça com café.",
+          "font_size_px": 64,
+          "color_hex": "#F4EFE5",
+          "rect_px": {
+            "x": 72,
+            "y": 124,
+            "width": 936,
+            "height": 164
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 700,
+            "line_height_px": 76,
+            "size_px": 64
+          },
+          "editable": true
+        },
+        {
+          "id": "copy",
+          "kind": "text",
+          "name": "Convite editável",
+          "z_index": 4,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.23407407407407407,
+            "width": 0.8666666666666667,
+            "height": 0.05925925925925926
+          },
+          "text": "Conheça o Café Aurora,\na cafeteria do bairro.",
+          "font_size_px": 32,
+          "color_hex": "#F4EFE5",
+          "rect_px": {
+            "x": 72,
+            "y": 316,
+            "width": 936,
+            "height": 80
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 400,
+            "line_height_px": 39,
+            "size_px": 32
+          },
+          "editable": true
+        },
+        {
+          "id": "cta",
+          "kind": "text",
+          "name": "CTA editável",
+          "z_index": 5,
+          "rect": {
+            "x": 0.06666666666666667,
+            "y": 0.3333333333333333,
+            "width": 0.8666666666666667,
+            "height": 0.02962962962962963
+          },
+          "text": "Venha conhecer",
+          "font_size_px": 28,
+          "color_hex": "#F4EFE5",
+          "rect_px": {
+            "x": 72,
+            "y": 450,
+            "width": 936,
+            "height": 40
+          },
+          "font": {
+            "family": "Arial",
+            "fallback": "sans-serif",
+            "weight": 700,
+            "line_height_px": 34,
+            "size_px": 28
+          },
+          "editable": true
+        }
+      ]
+    }
+  ],
+  "turn4_treatment": {
+    "piece_id": "aurora-presenca",
+    "source_version": "v1",
+    "proposed_version": "v2-proposal",
+    "target": {
+      "kind": "layer",
+      "layer_id": "headline",
+      "status": "provisional_agent_inference",
+      "selection_by_user_observed": false
+    },
+    "edit_scope": "Only headline font weight in first piece; no campaign or product change.",
+    "facts": [
+      "Sensação de fonte pesada",
+      "Causa não declarada",
+      "Pedido de alternativa mais leve só nesta peça",
+      "Apreciação declarada da paleta"
+    ],
+    "hypothesis": "Peso menor do título pode aliviar a composição. Não equivale a preferência universal por fontes leves.",
+    "font_delta": {
+      "family": "Georgia",
+      "size_px": 64,
+      "weight_before": 700,
+      "weight_after": 400
+    },
+    "preserved": [
+      "Paleta inteira",
+      "Geometria",
+      "Texto",
+      "CTA",
+      "Imagem planejada",
+      "Demais fontes",
+      "Segunda direção"
+    ],
+    "memory": {
+      "scope": "task",
+      "persists": false,
+      "product_expansion": "requires_explicit_confirmation",
+      "inferred_preference_confirmed": false
+    },
+    "annotation_result": {
+      "event_id": "d58cb1af-f936-4f73-a475-b5a359ead75b",
+      "selection_status": "explicit_layer",
+      "meaning": "O ID de camada foi explicitamente enviado pelo agente. Não prova clique, autoria ou confirmação da pessoa.",
+      "candidate_layer_ids": [
+        "headline"
+      ],
+      "scope_claims_verified": false,
+      "updates_memory": false
+    },
+    "area_alternative": {
+      "status": "technical_example_only_not_observed_user_gesture",
+      "rect_px": {
+        "x": 72,
+        "y": 124,
+        "width": 936,
+        "height": 164
+      },
+      "behavior": "A ferramenta também aceita retângulo normalizado e retorna camadas candidatas por geometria; sobreposição não determina intenção."
+    },
+    "application_status": "Typography change specified in output only. No rendering or actual editor mutation was claimed."
+  },
+  "tool_calls": [
+    {
+      "action": "list",
+      "event_id": "bab4bc8d-1805-47d9-87d5-122d745881c4",
+      "result": "Catálogo descoberto: 6 tools de skills e preparação; geração, editor e exportação ausentes."
+    },
+    {
+      "tool": "list_skills",
+      "event_id": "80206980-ee15-4f93-9259-95531bbc6648",
+      "result": "Quatro skills locais descobertas, versão 0.1.0-prototype."
+    },
+    {
+      "tool": "load_skill",
+      "arguments": {
+        "id": "entender-intencao"
+      },
+      "event_id": "4d7d2274-0c83-40d8-9383-07c5065d6105",
+      "result": "Instruções de fatos, hipóteses, rótulos de referência e dados não confiáveis carregadas.",
+      "content_sha256": "235a0f42510c61e17dcacb8b1cd32fb164dea0433b0c90c4d5acfaaf17587472"
+    },
+    {
+      "tool": "load_skill",
+      "arguments": {
+        "id": "explorar-moodboards"
+      },
+      "event_id": "6199ec65-0048-47f8-959c-911393aca5dd",
+      "result": "Instruções de duas alternativas, escolha reversível e limites de geração carregadas.",
+      "content_sha256": "a72d202e55cace0afb4131b15f8f316bfa1dd6ebbb969a902d8fc73d5ee74e97"
+    },
+    {
+      "tool": "load_skill",
+      "arguments": {
+        "id": "criar-piloto"
+      },
+      "event_id": "f8699b2e-89da-4278-9e1e-38494b5b4a50",
+      "result": "Instruções de piloto, texto separado e distinção entre download e conclusão carregadas.",
+      "content_sha256": "38a1482612227b892a652d18af955dddd7c649cdcf60e600f7188125fd026e27"
+    },
+    {
+      "tool": "prepare_moodboard",
+      "event_id": "5d7809b1-7890-4597-a7ba-c729c26da834",
+      "board_id": "aurora-presenca",
+      "result": "Referências e restrições organizadas; warnings vazios; detecção de conflito literal_only; sem geração, persistência ou confirmação de preferência."
+    },
+    {
+      "tool": "prepare_moodboard",
+      "event_id": "5b9b3961-55c6-4ec5-bb1f-fa592b9991f2",
+      "board_id": "aurora-surpresa",
+      "result": "Contraste surreal organizado sem exigir reprodução literal; warnings vazios; sem geração, persistência ou confirmação."
+    },
+    {
+      "tool": "prepare_layered_creative",
+      "event_id": "ce50adc7-7fd9-45a8-ad84-d3c1c529fa84",
+      "piece_id": "aurora-presenca",
+      "version": "v1",
+      "result": "Snapshot de seis camadas preparado.",
+      "warnings": [
+        {
+          "code": "image_asset_missing",
+          "layer_id": "hero"
+        }
+      ]
+    },
+    {
+      "tool": "prepare_layered_creative",
+      "event_id": "fd5d39fd-81c5-400a-82ba-4603e9c0b162",
+      "piece_id": "aurora-surpresa",
+      "version": "v1",
+      "result": "Snapshot de seis camadas preparado.",
+      "warnings": [
+        {
+          "code": "image_asset_missing",
+          "layer_id": "hero"
+        }
+      ]
+    },
+    {
+      "tool": "prepare_annotation_context",
+      "event_id": "d58cb1af-f936-4f73-a475-b5a359ead75b",
+      "piece_id": "aurora-presenca",
+      "version": "v1",
+      "result": "Nota vinculada ao ID headline; candidato explícito; escopos não verificados; memória não atualizada.",
+      "warnings": [
+        {
+          "code": "image_asset_missing",
+          "layer_id": "hero"
+        }
+      ]
+    }
+  ],
+  "warning_recovery": {
+    "warning": "image_asset_missing",
+    "action": "Preservada a camada hero sem inventar asset_ref. Fornecidos prompts para geração futura; nenhuma repetição de geração ou custo foi alegado.",
+    "rendering_status": "pending"
+  },
+  "missing_capabilities": [
+    "Geração e inspeção de imagens não foram executadas; tool de geração não existe no catálogo usado.",
+    "Nenhuma interface visual clicável foi disponibilizada; existe apenas contrato para camada/área.",
+    "prepare_layered_creative não aceita família, peso, entrelinha ou alinhamento de fonte; esses atributos estão somente na especificação JSON.",
+    "Tools não persistem, atualizam memória, editam canvas, exportam ou publicam.",
+    "Nenhuma autenticação BYOK ou acesso a credenciais foi verificado.",
+    "Disponibilidade de fontes e encaixe tipográfico não foram verificados por renderização."
+  ],
+  "factual_tool_report": "Executados 10 comandos do bridge: 1 list; 1 list_skills; 3 load_skill; 2 prepare_moodboard; 2 prepare_layered_creative; 1 prepare_annotation_context. Todos retornaram status ok; três resultados informaram image_asset_missing. A origem sintética é declaração do operador, não verificação do bridge. Foram lidos somente os dois documentos permitidos; nenhum plano de avaliação, outro candidato ou gabarito foi lido. Nenhuma chamada de imagem ou API externa ocorreu.",
+  "task_result": {
+    "evaluation_deliverable": "prepared",
+    "pilot": "Two structured alternatives and first-piece typography revision proposal are reviewable as specifications.",
+    "visual_assets": "pending_coordinator_generation",
+    "human_acceptance": "not_observed",
+    "download": "hypothetical_not_observed",
+    "campaign_completion": "unknown",
+    "business_outcome": "unknown",
+    "remaining": [
+      "Gerar os dois assets sem texto.",
+      "Compor e inspecionar o texto em camadas.",
+      "Pessoa revisar ou rejeitar as alternativas; confirmação de resultado é opcional."
+    ],
+    "trace_file": "evals/sessions/traces/H1.jsonl"
+  }
+}

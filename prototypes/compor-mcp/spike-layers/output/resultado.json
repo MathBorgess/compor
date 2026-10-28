@@ -1,0 +1,14 @@
+{
+  "mode": "synthetic_mcp_inmemory_no_model_no_network",
+  "case": "click_preco_aumentar_fonte_manual",
+  "source_version": "v1",
+  "new_version": "v2",
+  "target_layer": "preco",
+  "price_value": "R$ 99",
+  "unchanged_other_layer_specs": true,
+  "unchanged_other_layer_pixels": true,
+  "changes_confined_to_price_alpha_union": true,
+  "before_sha256_pixels": "5be4f67ae7236a0e72e8917c69077e6a1d9864b79efd8ac21307969a416d335f",
+  "after_sha256_pixels": "0b665b04ceaee32be348442d151cdbf391de36b7f9dcc7f9c2be2084d9e50e59",
+  "notes": "Sem interpretação de agente, autenticação, persistência de produto, edição por área ou teste de usuário."
+}

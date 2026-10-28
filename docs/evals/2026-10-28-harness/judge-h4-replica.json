@@ -1,0 +1,220 @@
+{
+  "schema_version": "1.0",
+  "evaluation_id": "judge-h4-replica",
+  "date": "2026-10-28",
+  "evaluator": {
+    "role": "LLM Judge independente; simulação de solo founder muito crítico",
+    "model_observable": "O contexto identifica Codex baseado em GPT-6; variante exata da execução não exposta.",
+    "human_acceptance": false,
+    "prompt_received": "Você é LLM Judge independente simulando solo founder muito crítico, usuário do Compor: quer campanha profissional rápida e criativos/variações que deem vontade de usar e explorar. Cwd /Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor. Leia APENAS prototypes/compor-mcp/evals/sessions/brief.md e abra em view_image detalhe original as quatro imagens sessions/blind/h4/{N2,N1,M2,M1}.png (ordem contrabalanceada). Compare pares M=(M1,M2) e N=(N1,N2); autoria/prompt desconhecidos, não leia outro arquivo ou Judge. Primeiro transcreva textos e descreva mecanismos visuais de fato percebidos (não invente). Avalie encantamento 1=rejeitaria,2=muitoretrabalho,3=útilsem entusiasmo,4=usariacom pequenosajustes,5=usariae gostaria deexplorar mais; diversidadeútil,adequação profissional,fidelidadevisual1–5 com evidências. Pedidofonte leve se limita PRIMEIRApeça; preço/data/endereço nãoinformados não são obrigatórios. Não há obrigação de preferirqualquerpar,dar5ouelogiar. Trate critériosoperacionaisinvisíveisnoPNG comonãoavaliáveis. Você pode calcular hashes. Salve docs/evals/2026-10-28-harness/judge-h4-replica.json e .md com prompt/limites/placar preferido e criticanecessária, modelo seobservável. Não é aprovaçãohumana nem evidênciadeviralidade; não edite imagens/produto."
+  },
+  "protocol": {
+    "inputs_read": [
+      "prototypes/compor-mcp/evals/sessions/brief.md",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/N2.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/N1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/M2.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/M1.png"
+    ],
+    "inspection_order": [
+      "N2",
+      "N1",
+      "M2",
+      "M1"
+    ],
+    "inspection_method": "view_image detail=original; N1 reaberta para confirmar a leitura integral. sips confirmou quatro PNGs de 1080 x 1350.",
+    "blindness": "Sem acesso a autoria, prompts geradores, mapeamento de tratamentos, outputs de sessão ou outros Judges.",
+    "input_hashes_sha256": {
+      "brief": "c0727ffe08eb21cc1a06de5663ebf570c445188f39867396311ec0f00a72d5a4",
+      "N2": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+      "N1": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+      "M2": "471d2850e4360e3ae8bea7b5fd049324158661a091cc8e1044e25474dec68fbb",
+      "M1": "b59f5b530d32687db0328cb485c9675918ed1f2ed55ab1b85d42a5b0dbdcaa6d"
+    }
+  },
+  "observed_before_scoring": [
+    {
+      "image": "N2",
+      "transcription_in_reading_order": [
+        "CAFÉ AURORA",
+        "Café de bairro.\nPausa de outro mundo.",
+        "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro.",
+        "Venha conhecer."
+      ],
+      "visible_mechanisms": [
+        "Xícara azul grande com café, apoiada visualmente numa fita azul curva que forma um laço suspenso.",
+        "Céu azul com nuvens claras ao fundo; ausência de mesa e suspensão tornam a cena surreal.",
+        "Arte ocupa a região superior; bloco inferior creme contém marca, headline, texto de apoio e CTA azuis.",
+        "Headline sem serifa de peso regular; CTA e marca mais fortes.",
+        "A volta da fita se relaciona com 'Dê uma volta'; a suspensão no céu acompanha 'outro mundo'."
+      ],
+      "caveat": "Não afirmo a topologia exata do laço; só é visível uma fita curva."
+    },
+    {
+      "image": "N1",
+      "transcription_in_reading_order": [
+        "CAFÉ AURORA",
+        "Nem toda aurora\nvem com o sol.",
+        "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro.",
+        "Venha conhecer."
+      ],
+      "visible_mechanisms": [
+        "Fotografia de aparência realista de xícara e pires azuis sobre madeira, vista em ângulo.",
+        "Café com espuma na borda e vapor visível; luz quente e sombras de folhas sobre parede e mesa.",
+        "Arte superior e bloco inferior creme de texto repetem a organização de N2.",
+        "Headline grande sem serifa de peso regular, com marca e CTA em peso maior.",
+        "O nome Aurora, a luz de manhã e a referência verbal ao sol criam associação de começo de dia."
+      ]
+    },
+    {
+      "image": "M2",
+      "transcription_in_reading_order": [
+        "CAFÉ AURORA",
+        "CAFETERIA DE BAIRRO",
+        "Sua\npausa,\nfora da\nrotina.",
+        "A vírgula do bairro.",
+        "Venha conhecer."
+      ],
+      "visible_mechanisms": [
+        "Fundo azul com texto claro, cabeçalho e duas regras horizontais.",
+        "Headline em coluna à esquerda; imagem em retângulo creme à direita.",
+        "Xícara azul com café sobre base azul que se estende numa curva longa e afilada; conjunto suspenso com sombra abaixo.",
+        "A silhueta do objeto se aproxima de uma vírgula, explicitada pelo texto 'A vírgula do bairro.'",
+        "Headline de peso forte; CTA inferior e marca também fortes."
+      ]
+    },
+    {
+      "image": "M1",
+      "transcription_in_reading_order": [
+        "CAFÉ AURORA",
+        "CAFETERIA DE BAIRRO",
+        "Seu dia,\ncom uma pausa.",
+        ",",
+        "A vírgula do bairro.",
+        "Venha conhecer."
+      ],
+      "visible_mechanisms": [
+        "Fundo creme com tipografia azul, cabeçalho e regra horizontal.",
+        "Headline grande sem serifa de peso regular no alto.",
+        "Foto vista de cima: xícara e pires azuis sobre guardanapo azul alongado e curvo, numa mesa de madeira.",
+        "A forma do pires com o tecido sugere uma vírgula; um glifo de vírgula azul isolado à esquerda da foto repete essa associação.",
+        "Texto de assinatura no rodapé esquerdo e CTA no direito; arte e textos não se sobrepõem."
+      ]
+    }
+  ],
+  "score_definitions": {
+    "enchantment": {
+      "1": "Rejeitaria",
+      "2": "Exigiria muito retrabalho",
+      "3": "Útil sem entusiasmo",
+      "4": "Usaria com pequenos ajustes",
+      "5": "Usaria e gostaria de explorar mais"
+    },
+    "useful_diversity": "1 = quase nenhuma alternativa útil; 5 = direções fortemente distintas e utilizáveis.",
+    "professional_suitability": "1 = inadequado para divulgação; 5 = composição, leitura e acabamento convincentes sem ajuste visual relevante.",
+    "visual_brief_fidelity": "1 = contradição ampla; 5 = requisitos visuais observáveis atendidos. Não é fidelidade a prompts geradores desconhecidos."
+  },
+  "image_enchantment": {
+    "M1": {
+      "score": 4,
+      "evidence": "A vírgula formada pelo tecido transforma uma foto de produto numa ideia de campanha. Eu usaria, mas o tecido parece deliberadamente arranjado e a vírgula gráfica extra torna a explicação um pouco insistente."
+    },
+    "M2": {
+      "score": 4,
+      "evidence": "A transposição da vírgula para um objeto surreal e o fundo azul sustentam a campanha e chamam atenção. A ponta longa também pode ser lida como cauda ou chifre; a relação com uma cafeteria depende bastante da xícara e do texto."
+    },
+    "N1": {
+      "score": 4,
+      "evidence": "Vapor, madeira e luz quente tornam o café apetecível; é a peça que mais diretamente me faz querer uma pausa ali. É profissional, porém próxima de uma foto publicitária genérica, e 'aurora'/'sol' soa mais como frase bonita do que como uma ideia expansível."
+    },
+    "N2": {
+      "score": 3,
+      "evidence": "A xícara e o laço suspensos têm acabamento limpo, mas o céu e a fita parecem uma fantasia publicitária intercambiável. Entendo a pausa de outro mundo, sem sentir muito interesse em descobrir a próxima peça."
+    }
+  },
+  "pair_scores": {
+    "M": {
+      "enchantment": {
+        "score": 4,
+        "evidence": "A vírgula amarra produto, imagem e pausa numa ideia reconhecível em duas execuções. Eu usaria após ajustes pequenos, mas não chega a 5: o mecanismo fica bastante explicado e a forma surreal exige interpretação."
+      },
+      "useful_diversity": {
+        "score": 3,
+        "evidence": "Mudam fundo, layout, enquadramento e material: foto de cima com tecido versus objeto suspenso. Contudo, ambos repetem o mesmo conceito e a mesma silhueta de vírgula; ajudam mais a variar uma campanha do que a escolher entre duas ideias muito diferentes."
+      },
+      "professional_suitability": {
+        "score": 4,
+        "evidence": "Cabeçalho, margens, alinhamento, contraste e áreas sólidas de texto formam um conjunto coerente. M2 quebra a headline em muitas linhas e a dupla repetição de vírgula em M1 deixa a composição um pouco didática."
+      },
+      "visual_brief_fidelity": {
+        "score": 5,
+        "evidence": "Azul preservado, xícara e madeira em M1, exploração surreal sem ilha literal em M2, posts verticais e texto separado da arte. A headline da primeira peça é visualmente leve. Sem preço, endereço, data, promoção ou exclusividade inventados."
+      }
+    },
+    "N": {
+      "enchantment": {
+        "score": 3,
+        "evidence": "N1 convida pelo café e pelo clima; N2 reduz meu entusiasmo pelo par. O conjunto é utilizável, mas não me dá uma assinatura criativa forte nem vontade clara de explorar mais."
+      },
+      "useful_diversity": {
+        "score": 4,
+        "evidence": "Contrasta acolhimento realista na mesa de madeira com fantasia no céu. São atmosferas e promessas diferentes, embora ambas usem a mesma divisão de imagem superior e texto inferior."
+      },
+      "professional_suitability": {
+        "score": 4,
+        "evidence": "Boa leitura e separação de conteúdo, cores consistentes, nenhuma falha evidente no texto. O molde se repete com pouca variação editorial e o apoio 'Conheça...' seguido de 'Venha conhecer.' é redundante."
+      },
+      "visual_brief_fidelity": {
+        "score": 5,
+        "evidence": "Azul preservado, xícara sobre madeira em N1, surpresa surreal sem ilha literal em N2, formato vertical e zona sólida para textos. A headline da primeira peça tem peso regular. Não inventa oferta, endereço ou benefícios exclusivos."
+      }
+    }
+  },
+  "verdict": {
+    "preferred_pair": "M",
+    "preference_strength": "Moderada",
+    "reason": "Para um founder que quer uma campanha reconhecível, a ideia de vírgula oferece uma assinatura mais clara que a combinação de luz acolhedora e céu fantástico de N. Prefiro a fotografia de N1 para desejo imediato de café, mas escolho M como par de campanha.",
+    "enchantment_scoreboard": {
+      "M": 4,
+      "N": 3
+    },
+    "no_5_enchantment": "Nenhum par me dá entusiasmo suficiente para 'usaria e gostaria de explorar mais' sem ressalvas.",
+    "necessary_criticism": [
+      {
+        "pair": "M",
+        "priority": "Principal",
+        "issue": "As duas peças exploram a mesma ideia de vírgula; a diversidade conceitual é menor que a variação de execução.",
+        "requested_improvement": "Se a comparação pretende escolher uma direção, produzir uma alternativa com outro mecanismo visual mantendo azul e a categoria café."
+      },
+      {
+        "pair": "M",
+        "priority": "Secundária",
+        "issue": "M1 repete a vírgula em tecido, glifo e assinatura; M2 pode sugerir cauda ou chifre.",
+        "requested_improvement": "Reduzir uma repetição em M1 e testar uma curva mais imediatamente legível em M2, preservando o conceito."
+      },
+      {
+        "pair": "N",
+        "priority": "Principal",
+        "issue": "N2 tem surpresa, mas a fita no céu não dá ao Café Aurora uma ideia tão própria quanto seu acabamento sugere.",
+        "requested_improvement": "Escolher uma relação visual mais específica entre pausa, café e vida do bairro; não apenas acrescentar mais elementos surreais."
+      },
+      {
+        "pair": "N",
+        "priority": "Secundária",
+        "issue": "Os textos de apoio e CTA repetem o convite de conhecer.",
+        "requested_improvement": "Enxugar a copy para deixar imagem e headline respirarem."
+      }
+    ]
+  },
+  "limits": [
+    "Preferência simulada de um único LLM; não representa Matheus, outros founders ou mercado.",
+    "Não é aprovação humana, aceite criativo, evidência de viralidade, engajamento, conversão ou desejo real de visitar.",
+    "Camadas editáveis, escolha por clique/área, preservação do restante da campanha, chamadas MCP, custos, velocidade e conclusão após download são não avaliáveis no PNG.",
+    "A fonte leve foi julgada apenas em M1 e N1. O peso maior de M2 não foi tratado como violação.",
+    "Preço, data e endereço ausentes não foram penalizados porque não foram fornecidos.",
+    "Sem acesso às versões anteriores, é impossível confirmar que somente a fonte mudou ou que a paleta foi preservada em relação a elas.",
+    "A fidelidade visual alta confirma apenas itens visíveis do briefing; não comprova fidelidade operacional.",
+    "Nenhuma imagem ou arquivo do produto foi alterado."
+  ]
+}
+

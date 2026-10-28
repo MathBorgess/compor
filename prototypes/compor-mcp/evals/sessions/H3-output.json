@@ -1,0 +1,503 @@
+{
+  "candidate": "H3",
+  "status": "experimental_not_promoted",
+  "date": "2026-10-28",
+  "model": "Codex baseado em GPT-6; identificador exato não observado nesta sessão",
+  "hypothesis": "Uma relação explícita entre Aurora, recomeço e a metáfora visual pode tornar as mesmas imagens menos genéricas; comparar o par com H2 mantendo imagem e estilo.",
+  "critique_source": "Judge H2 simulado: linguagem genérica e pouca assinatura de campanha; não é feedback de pessoa real.",
+  "alternatives": [
+    {
+      "id": "R1",
+      "name": "Recomeços cotidianos",
+      "headlines": [
+        "Um café.\nUm novo começo.",
+        "Recomece.\nPor outro ângulo."
+      ],
+      "assessment": "Curta e clara, mas a ideia de recomeço continua aplicável a muitas cafeterias; menor vínculo entre nome e imagem."
+    },
+    {
+      "id": "R2",
+      "name": "Bairro sem pressa",
+      "headlines": [
+        "Pausa na pressa.\nCafé na mesa.",
+        "Café de bairro.\nPausa de outro mundo."
+      ],
+      "assessment": "Contraste cotidiano/surreal legível. A primeira frase depende de ritmo verbal e ainda pouco explora o nome Aurora."
+    },
+    {
+      "id": "R3",
+      "name": "Pequenas auroras",
+      "headlines": [
+        "Nem toda aurora\nvem com o sol.",
+        "Café de bairro.\nPausa de outro mundo."
+      ],
+      "assessment": "A primeira peça usa Aurora como metáfora de recomeço e encontra a luz/mesa/xícara; a segunda contrapõe categoria conhecida e cena impossível. Propõe um par com funções distintas, sem acrescentar dado comercial."
+    }
+  ],
+  "selected_route": "R3",
+  "selected_rationale": "A primeira chamada cria uma ligação com o nome que a versão anterior não tinha; o apoio aponta a xícara. A segunda aproveita a construção impossível sem tirar a categoria café de bairro da leitura. Mantém o convite e a informação conhecida, variando apenas headline e apoio.",
+  "directions": [
+    {
+      "id": "H3_D1",
+      "source_asset": "prototypes/compor-mcp/evals/sessions/assets/H0_D1.png",
+      "source_asset_sha256": "b57597a2b56b3e593cd7c32833e8011bc3aeff61de4a4b70d0bd9e2f211d98c4",
+      "source_piece_version": "v2_proposed",
+      "headline": "Nem toda aurora\nvem com o sol.",
+      "copy": "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro.",
+      "cta": "Venha conhecer.",
+      "layer_plan": {
+        "piece_id": "H0_D1",
+        "version": "H3_copy_v1_proposed",
+        "width_px": 1080,
+        "height_px": 1350,
+        "layers": [
+          {
+            "id": "H0_D1_base",
+            "kind": "shape",
+            "name": "Base azul",
+            "z_index": 0,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#235E9A"
+          },
+          {
+            "id": "H0_D1_art",
+            "kind": "image",
+            "name": "Ativo gerado preservado — H0_D1",
+            "z_index": 1,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 0.6
+            },
+            "asset_ref": "eval_h0_d1"
+          },
+          {
+            "id": "H0_D1_reading",
+            "kind": "shape",
+            "name": "Zona sólida de leitura",
+            "z_index": 2,
+            "rect": {
+              "x": 0,
+              "y": 0.6,
+              "width": 1,
+              "height": 0.4
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F6F2EA"
+          },
+          {
+            "id": "H0_D1_brand",
+            "kind": "text",
+            "name": "Nome da cafeteria",
+            "z_index": 3,
+            "rect": {
+              "x": 0.07,
+              "y": 0.635,
+              "width": 0.86,
+              "height": 0.035
+            },
+            "text": "CAFÉ AURORA",
+            "font_size_px": 24,
+            "color_hex": "#235E9A",
+            "font_ref": "inter",
+            "font_weight": 600,
+            "line_height": 1.2,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D1_headline",
+            "kind": "text",
+            "name": "Título editável",
+            "z_index": 4,
+            "rect": {
+              "x": 0.07,
+              "y": 0.692,
+              "width": 0.86,
+              "height": 0.12
+            },
+            "text": "Nem toda aurora\nvem com o sol.",
+            "font_size_px": 72,
+            "color_hex": "#173E65",
+            "font_ref": "inter",
+            "font_weight": 400,
+            "line_height": 1.08,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D1_copy",
+            "kind": "text",
+            "name": "Texto de apoio editável",
+            "z_index": 5,
+            "rect": {
+              "x": 0.07,
+              "y": 0.834,
+              "width": 0.86,
+              "height": 0.055
+            },
+            "text": "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro.",
+            "font_size_px": 28,
+            "color_hex": "#173E65",
+            "font_ref": "inter",
+            "font_weight": 400,
+            "line_height": 1.2,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D1_cta",
+            "kind": "text",
+            "name": "Convite editável",
+            "z_index": 6,
+            "rect": {
+              "x": 0.07,
+              "y": 0.922,
+              "width": 0.86,
+              "height": 0.04
+            },
+            "text": "Venha conhecer.",
+            "font_size_px": 30,
+            "color_hex": "#235E9A",
+            "font_ref": "inter",
+            "font_weight": 600,
+            "line_height": 1.2,
+            "text_align": "left"
+          }
+        ],
+        "product_ref": null,
+        "campaign_ref": null,
+        "variation_ref": null
+      },
+      "text_fit_preflight": [
+        {
+          "layer_id": "H0_D1_brand",
+          "max_text_width_px": 177,
+          "box_width_px": 929,
+          "used_height_px": 23.0,
+          "box_height_px": 47,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D1_headline",
+          "max_text_width_px": 540,
+          "box_width_px": 929,
+          "used_height_px": 130.76,
+          "box_height_px": 162,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D1_copy",
+          "max_text_width_px": 606,
+          "box_width_px": 929,
+          "used_height_px": 60.6,
+          "box_height_px": 74,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D1_cta",
+          "max_text_width_px": 240,
+          "box_width_px": 929,
+          "used_height_px": 22.0,
+          "box_height_px": 54,
+          "fits": true
+        }
+      ],
+      "warnings": [
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D1_cta"
+        }
+      ],
+      "tool_event_id": "177ca48f-4738-4f67-bcb7-26820910a820"
+    },
+    {
+      "id": "H3_D2",
+      "source_asset": "prototypes/compor-mcp/evals/sessions/assets/H2_D2.png",
+      "source_asset_sha256": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe",
+      "source_piece_version": "H2_v2_proposed",
+      "headline": "Café de bairro.\nPausa de outro mundo.",
+      "copy": "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro.",
+      "cta": "Venha conhecer.",
+      "layer_plan": {
+        "piece_id": "H0_D2",
+        "version": "H3_copy_v1_proposed",
+        "width_px": 1080,
+        "height_px": 1350,
+        "layers": [
+          {
+            "id": "H0_D2_base",
+            "kind": "shape",
+            "name": "Base azul",
+            "z_index": 0,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#235E9A"
+          },
+          {
+            "id": "H0_D2_art",
+            "kind": "image",
+            "name": "Ativo gerado preservado — H2_D2",
+            "z_index": 1,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 0.6
+            },
+            "asset_ref": "eval_h2_d2"
+          },
+          {
+            "id": "H0_D2_reading",
+            "kind": "shape",
+            "name": "Zona sólida de leitura",
+            "z_index": 2,
+            "rect": {
+              "x": 0,
+              "y": 0.6,
+              "width": 1,
+              "height": 0.4
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F6F2EA"
+          },
+          {
+            "id": "H0_D2_brand",
+            "kind": "text",
+            "name": "Nome da cafeteria",
+            "z_index": 3,
+            "rect": {
+              "x": 0.07,
+              "y": 0.635,
+              "width": 0.86,
+              "height": 0.035
+            },
+            "text": "CAFÉ AURORA",
+            "font_size_px": 24,
+            "color_hex": "#235E9A",
+            "font_ref": "inter",
+            "font_weight": 600,
+            "line_height": 1.2,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D2_headline",
+            "kind": "text",
+            "name": "Título editável",
+            "z_index": 4,
+            "rect": {
+              "x": 0.07,
+              "y": 0.692,
+              "width": 0.86,
+              "height": 0.12
+            },
+            "text": "Café de bairro.\nPausa de outro mundo.",
+            "font_size_px": 64,
+            "color_hex": "#173E65",
+            "font_ref": "inter",
+            "font_weight": 500,
+            "line_height": 1.08,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D2_copy",
+            "kind": "text",
+            "name": "Texto de apoio editável",
+            "z_index": 5,
+            "rect": {
+              "x": 0.07,
+              "y": 0.834,
+              "width": 0.86,
+              "height": 0.055
+            },
+            "text": "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro.",
+            "font_size_px": 28,
+            "color_hex": "#173E65",
+            "font_ref": "inter",
+            "font_weight": 400,
+            "line_height": 1.2,
+            "text_align": "left"
+          },
+          {
+            "id": "H0_D2_cta",
+            "kind": "text",
+            "name": "Convite editável",
+            "z_index": 6,
+            "rect": {
+              "x": 0.07,
+              "y": 0.922,
+              "width": 0.86,
+              "height": 0.04
+            },
+            "text": "Venha conhecer.",
+            "font_size_px": 30,
+            "color_hex": "#235E9A",
+            "font_ref": "inter",
+            "font_weight": 600,
+            "line_height": 1.2,
+            "text_align": "left"
+          }
+        ],
+        "product_ref": null,
+        "campaign_ref": null,
+        "variation_ref": null
+      },
+      "text_fit_preflight": [
+        {
+          "layer_id": "H0_D2_brand",
+          "max_text_width_px": 177,
+          "box_width_px": 929,
+          "used_height_px": 23.0,
+          "box_height_px": 47,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D2_headline",
+          "max_text_width_px": 671,
+          "box_width_px": 929,
+          "used_height_px": 116.12,
+          "box_height_px": 162,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D2_copy",
+          "max_text_width_px": 606,
+          "box_width_px": 929,
+          "used_height_px": 60.6,
+          "box_height_px": 74,
+          "fits": true
+        },
+        {
+          "layer_id": "H0_D2_cta",
+          "max_text_width_px": 240,
+          "box_width_px": 929,
+          "used_height_px": 22.0,
+          "box_height_px": 54,
+          "fits": true
+        }
+      ],
+      "warnings": [
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H0_D2_cta"
+        }
+      ],
+      "tool_event_id": "b676096b-46e2-4892-afb2-a6273ce9fce6"
+    }
+  ],
+  "constraints": {
+    "unchanged": [
+      "marca CAFÉ AURORA",
+      "CTA Venha conhecer.",
+      "ativos H0_D1 e H2_D2",
+      "dimensões 1080×1350",
+      "IDs das camadas",
+      "geometria e z_index",
+      "cores",
+      "fontes/pesos/tamanhos/entrelinha/alinhamento"
+    ],
+    "changed": [
+      "headline e apoio de cada peça",
+      "versão do plano",
+      "metadados de referência ao ativo já disponível"
+    ],
+    "no_new_commercial_facts": true,
+    "memory_update": false,
+    "brand_preference_confirmed": false
+  },
+  "semantic_notes": [
+    "Aurora é explorada como recurso de linguagem, não como alegação sobre a origem da marca.",
+    "Nem toda aurora vem com o sol e pausa de outro mundo são metáforas, sem promessa de efeito do café ou definição de horário.",
+    "O uso do mesmo azul e da primeira headline leve permanece conforme os planos anteriores."
+  ],
+  "candidate_skill": "evals/candidates/direcao-de-campanha.md",
+  "candidate_skill_sha256": "2f789f33989a8b00a9e6c6e1745eb90cf0ed71bd73712ac4f343a50e8aa93a0b",
+  "tool_evidence": {
+    "trace": "evals/sessions/traces/H3.jsonl",
+    "calls": [
+      {
+        "tool": "load_skill",
+        "status": "ok",
+        "event_id": "ebbcf3fa-e9cd-48e7-8359-7eb40968a01e"
+      },
+      {
+        "tool": "prepare_layered_creative",
+        "status": "ok",
+        "event_id": "177ca48f-4738-4f67-bcb7-26820910a820"
+      },
+      {
+        "tool": "prepare_layered_creative",
+        "status": "ok",
+        "event_id": "b676096b-46e2-4892-afb2-a6273ce9fce6"
+      }
+    ],
+    "compiled_server_sha256": "ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029",
+    "candidate_skill_loading": "leitura local da candidata; catálogo MCP preservado, skill criar-piloto carregada pelo MCP"
+  },
+  "render_instructions": "Preservar fontes/fallback e todos estilos do H0_D1/H2_D2. Resolver font_ref inter usando o mesmo mapeamento explícito Inter→Arial do ensaio anterior. Substituir somente os textos headline/copy e reutilizar assets. Não reduzir fonte silenciosamente; o preflight local indicou ajuste sem redução. Registrar hashes e comparar pixels da zona de imagem.",
+  "limits": [
+    "Sem nova geração ou alteração de pixels de imagem nesta sessão.",
+    "Pré-checagem de texto com fontes locais não substitui inspeção da composição final.",
+    "MCP valida a estrutura; não resolve arquivos, verifica autoria, renderiza ou persiste memória.",
+    "Proposta selecionada por julgamento criativo do agente sem nota de Judge prévia; o resultado ainda não foi avaliado.",
+    "Caso de desenvolvimento já criticado; não é caso reservado nem prova de generalização.",
+    "Nenhuma aprovação humana, resultado comercial ou viralidade demonstrados."
+  ],
+  "invariant_checks": [
+    {
+      "id": "H3_D1",
+      "source_piece_id": "H0_D1",
+      "source_version": "v2_proposed",
+      "layer_ids_preserved": true,
+      "geometry_and_styles_preserved": true,
+      "brand_and_cta_preserved": true,
+      "font_metadata_adapter": "font_family Inter → font_ref inter for H0_D1; H2_D2 already uses font_ref inter",
+      "image_reference_metadata_added": true
+    },
+    {
+      "id": "H3_D2",
+      "source_piece_id": "H0_D2",
+      "source_version": "H2_v2_proposed",
+      "layer_ids_preserved": true,
+      "geometry_and_styles_preserved": true,
+      "brand_and_cta_preserved": true,
+      "font_metadata_adapter": "font_family Inter → font_ref inter for H0_D1; H2_D2 already uses font_ref inter",
+      "image_reference_metadata_added": true
+    }
+  ],
+  "prompt_file": "evals/sessions/H3-prompt.txt",
+  "prompt_sha256": "9bc47bc4e4f8ad1bc62ce070e3386772f694b8564a96947ce1a5361fa5e60c4e"
+}

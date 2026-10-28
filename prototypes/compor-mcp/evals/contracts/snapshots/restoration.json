@@ -1,0 +1,23 @@
+{
+  "candidate": "C1",
+  "restored_at": "2026-10-28T03:56:28.104576+00:00",
+  "method": "Inverse of the two C2-only source edits, followed by TypeScript 5.9.3 compilation with the project tsconfig compiler options. Both output hashes match the previously recorded candidate.json hashes exactly.",
+  "evidence_reference": "../candidate.json",
+  "artifacts": {
+    "server-c1.ts": {
+      "sha256": "91b19828706b806c4097bd6481ee59fbe8e46ac9ec4487baf65210980ef8068f",
+      "matches_recorded_field": "server_source_sha256",
+      "byte_identity_verified_by_sha256": true
+    },
+    "server-c1.js": {
+      "sha256": "24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b",
+      "matches_recorded_field": "server_build_sha256",
+      "byte_identity_verified_by_sha256": true
+    }
+  },
+  "limitations": [
+    "Only source/build of server.ts were recovered here; dependency, skill and harness versions must also match their experiment evidence.",
+    "The snapshots must be placed in src/server.ts and dist/server.js in an isolated checkout before runtime use; load_skill resolves its catalog relative to that runtime location."
+  ],
+  "current_source_sha256_unchanged": "fbb3b2ca38ff0c311e89ed01629d0f105cc375a9865ca3fe74936529f5f71b23"
+}

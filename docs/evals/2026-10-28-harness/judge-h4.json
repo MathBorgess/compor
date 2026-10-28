@@ -1,0 +1,308 @@
+{
+  "evaluation_id": "judge-h4",
+  "date": "2026-10-28",
+  "comparison_kind": "development_comparison_with_reused_judge",
+  "judge": {
+    "persona": "Solo founder muito crítico de cafeteria early-stage, buscando campanha profissional rápida e vontade de explorar direções.",
+    "model": "GPT-6 (família informada no contexto; identificador exato de execução não observável)",
+    "reused_from": [
+      "judge-h2",
+      "judge-h3"
+    ],
+    "independent": false,
+    "holdout": false,
+    "prior_context_retained": true,
+    "prior_context_summary": "H2: preferi café maior na peça surreal, mas dei 4 por falta de singularidade da combinação verbal/visual. H3: preferi L dentro da mesma nota 4; L2 ligava melhor bairro e fantasia, mas L1 dependia do jogo verbal com aurora.",
+    "baseline_recognition": "Hashes de N1 e N2 coincidem com L1 e L2 de H3. Reconheci a base anterior e preservei seu placar. Não conheço autoria, prompts ou configuração de geração.",
+    "previous_coordinator_information": "Em H3 recebi informação técnica de invariantes depois do primeiro salvamento do placar; isso foi registrado naquela rodada. Nenhuma informação de candidato ou prompt foi recebida nesta rodada antes do primeiro salvamento.",
+    "bias_risk": "A memória de críticas anteriores pode privilegiar uma solução que responda a elas. A nota atual é evidência qualitativa de desenvolvimento, não confirmação independente."
+  },
+  "judgment_prompt": "Última comparação desta rodada, mesma persona/régua: veja APENAS quatro PNGs completos prototypes/compor-mcp/evals/sessions/blind/h4/{M1,M2,N1,N2}.png e briefing original. Pares M e N. Preserve tudo anterior. Avalie sem conhecer autoria/prompt e sem metaobrigatória5. Compare ideia visual verbal, saliência do café, diversidade útil, profissionalismo e vontade de explorar; transcreva textos para acertar observação. Você é avaliador reaproveitado (desenvolvimento, não holdout). Não leia candidato/tooloutput/skills/manifest/relatórios/outros Judges. Escreva docs/evals/2026-10-28-harness/judge-h4.json e .md com hashes,placar,critério encantamento1–5 original,preferênciaeimpedimento se houver,qualquerambiguidadevisual. Não atribua resultadohumano/viralidade.",
+  "brief": {
+    "path": "prototypes/compor-mcp/evals/sessions/brief.md",
+    "source": "Briefing sintético original já lido, mantido no contexto da conversa.",
+    "scope": "Café Aurora de bairro, azul, duas direções diferentes, post vertical, texto em zona sólida separada, sem inventar oferta/endereço/data. Leveza tipográfica apenas na primeira peça; camadas e conclusão não comprováveis por PNG."
+  },
+  "inspection": {
+    "files_read_this_round": [
+      "prototypes/compor-mcp/evals/sessions/blind/h4/M1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/M2.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/N1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h4/N2.png"
+    ],
+    "all_four_pngs_viewed_complete_with_original_detail": true,
+    "other_candidate_tooloutput_skill_manifest_report_or_judge_files_read": false,
+    "previous_reports_reopened": false,
+    "images_or_product_code_modified": false,
+    "prior_outputs_preserved": true
+  },
+  "inputs": {
+    "M1": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h4/M1.png",
+      "sha256": "b59f5b530d32687db0328cb485c9675918ed1f2ed55ab1b85d42a5b0dbdcaa6d",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "M2": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h4/M2.png",
+      "sha256": "471d2850e4360e3ae8bea7b5fd049324158661a091cc8e1044e25474dec68fbb",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "N1": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h4/N1.png",
+      "sha256": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "N2": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h4/N2.png",
+      "sha256": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    }
+  },
+  "visible_text_transcription": {
+    "M1": [
+      {
+        "role": "marca",
+        "text": "CAFÉ AURORA"
+      },
+      {
+        "role": "categoria, topo direito",
+        "text": "CAFETERIA DE BAIRRO"
+      },
+      {
+        "role": "headline",
+        "text": "Seu dia,\ncom uma pausa."
+      },
+      {
+        "role": "sinal gráfico isolado à esquerda da foto",
+        "text": ","
+      },
+      {
+        "role": "assinatura",
+        "text": "A vírgula do bairro."
+      },
+      {
+        "role": "cta",
+        "text": "Venha conhecer."
+      }
+    ],
+    "M2": [
+      {
+        "role": "marca",
+        "text": "CAFÉ AURORA"
+      },
+      {
+        "role": "categoria, topo direito",
+        "text": "CAFETERIA DE BAIRRO"
+      },
+      {
+        "role": "headline",
+        "text": "Sua\npausa,\nfora da\nrotina."
+      },
+      {
+        "role": "assinatura",
+        "text": "A vírgula do bairro."
+      },
+      {
+        "role": "cta",
+        "text": "Venha conhecer."
+      }
+    ],
+    "N1": [
+      {
+        "role": "marca",
+        "text": "CAFÉ AURORA"
+      },
+      {
+        "role": "headline",
+        "text": "Nem toda aurora\nvem com o sol."
+      },
+      {
+        "role": "apoio",
+        "text": "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro."
+      },
+      {
+        "role": "cta",
+        "text": "Venha conhecer."
+      }
+    ],
+    "N2": [
+      {
+        "role": "marca",
+        "text": "CAFÉ AURORA"
+      },
+      {
+        "role": "headline",
+        "text": "Café de bairro.\nPausa de outro mundo."
+      },
+      {
+        "role": "apoio",
+        "text": "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro."
+      },
+      {
+        "role": "cta",
+        "text": "Venha conhecer."
+      }
+    ]
+  },
+  "scales": {
+    "enchantment": {
+      "1": "rejeitaria",
+      "2": "muito retrabalho",
+      "3": "útil sem entusiasmo",
+      "4": "usaria com pequenos ajustes",
+      "5": "usaria e gostaria de explorar mais"
+    },
+    "useful_diversity": "1 = redundante; 3 = alguma variação útil; 5 = direções claramente distintas e igualmente úteis para decidir a campanha.",
+    "professional_suitability": "1 = inadequado para uso; 3 = base utilizável com revisão; 5 = composição profissional pronta no escopo visual.",
+    "brief_fidelity": "1 = violações centrais; 3 = atendimento parcial; 5 = requisitos visuais observáveis atendidos. Não comprova requisitos operacionais invisíveis no PNG."
+  },
+  "image_assessments": {
+    "M1": {
+      "visual_observations": [
+        "Post com fundo creme, cabeçalho de marca à esquerda e categoria à direita, linha horizontal azul e título regular amplo no topo.",
+        "Foto vista de cima: café numa xícara azul com pires sobre madeira; um pano azul sai por baixo e curva para a esquerda, formando uma silhueta semelhante a vírgula.",
+        "Há uma vírgula gráfica azul isolada à esquerda da foto, além da vírgula na frase Seu dia, com uma pausa.",
+        "Assinatura A vírgula do bairro. e CTA ocupam lados distintos da faixa inferior."
+      ],
+      "coffee_salience": "O café é reconhecível, com crema vista de cima, mas ocupa menos área do post do que em N1. Madeira, pano e espaço creme recebem bastante atenção. A xícara continua sendo parte essencial do desenho da vírgula.",
+      "verbal_visual_idea": "A pausa na frase, a vírgula tipográfica, a forma do pano e a assinatura repetem uma mesma ideia compreensível. A relação acontece na composição inteira, não só em um trocadilho escrito.",
+      "professional_strength": "Boa hierarquia, margens generosas e separação clara entre texto e fotografia. O título tem aparência leve e regular, compatível com o ajuste solicitado apenas à primeira peça.",
+      "concrete_reservation": "A vírgula gráfica avulsa pode parecer sinal solto antes de se perceber o pano. Ela também repete uma ideia já expressa no título e na foto; eu avaliaria sua necessidade.",
+      "visual_ambiguities": [
+        "O pano parece formar vírgula, mas uma pessoa também pode ver apenas um guardanapo disposto sob a xícara. A associação é reforçada pela copy e pelo sinal gráfico; não é reconhecimento medido em público."
+      ]
+    },
+    "M2": {
+      "visual_observations": [
+        "Fundo azul cheio, texto claro, cabeçalho e linhas horizontais; título em peso forte numa coluna à esquerda, imagem em retângulo claro à direita.",
+        "Xícara azul com café visível no topo de uma forma cerâmica longa e curva; o conjunto flutua e projeta sombra suave.",
+        "A forma curvada continua a ideia de vírgula, enquanto Sua pausa, fora da rotina. e A vírgula do bairro. dão leitura à cena.",
+        "CTA separado por linha horizontal na parte inferior."
+      ],
+      "coffee_salience": "A xícara e a superfície do café são visíveis e bem contrastadas dentro da imagem clara. A extensão curva ocupa mais altura, mas integra o objeto; não deixa o café minúsculo ou perdido. N2 ainda mostra mais produto em termos de área.",
+      "verbal_visual_idea": "A vírgula deixa de ser arranjo cotidiano de pano e vira objeto impossível. Isso desenvolve a mesma premissa de pausa em um registro visual diferente.",
+      "professional_strength": "A inversão para fundo azul, a coluna tipográfica mais enfática e a imagem de estúdio mudam o ritmo sem abandonar a identidade. O peso forte aqui não viola a solicitação restrita à primeira peça.",
+      "concrete_reservation": "A silhueta surreal é menos inequívoca do que a assinatura sugere: eu refinaria a curva se a leitura de vírgula fosse decisiva para uso isolado.",
+      "visual_ambiguities": [
+        "A forma pode ser lida como vírgula, chifre, cauda ou suporte curvo. São hipóteses de leitura visual, não identificação de um objeto real nem erro anatômico.",
+        "O encontro entre pires e forma curva parece uma escultura única; o PNG não permite afirmar como foi construído ou se representa um produto existente."
+      ]
+    },
+    "N1": {
+      "visual_observations": [
+        "Xícara azul grande com café, crema e vapor sobre mesa iluminada por luz quente.",
+        "Headline e apoio em azul no bloco creme inferior; Nem toda aurora vem com o sol. se fecha com A sua pode vir numa xícara."
+      ],
+      "coffee_salience": "Muito clara e mais apetitosa por proximidade e vapor que M1. O produto é protagonista imediato.",
+      "verbal_visual_idea": "O nome Aurora é ativado verbalmente, mas a foto ensolarada não materializa uma aurora alternativa. A interpretação precisa da linha de apoio.",
+      "professional_strength": "Leitura fácil, composição polida e acolhedora.",
+      "concrete_reservation": "A fotografia é familiar e a assinatura depende mais da frase que de um gesto visual próprio. Mantém a avaliação de H3.",
+      "visual_ambiguities": [
+        "Nem toda aurora sobre uma foto com sol não é contradição lógica; a limitação é a associação visual menos específica."
+      ]
+    },
+    "N2": {
+      "visual_observations": [
+        "Xícara azul grande e faixa torcida flutuante entre nuvens.",
+        "Café de bairro. Pausa de outro mundo. liga a proximidade à imagem impossível; o apoio usa Dê uma volta no seu dia."
+      ],
+      "coffee_salience": "Alta: xícara e crema ocupam grande área, com o café evidente mesmo antes da leitura.",
+      "verbal_visual_idea": "A relação entre pausa de outro mundo e cena surreal funciona. Volta também se liga ao laço, mas acrescenta outro recurso verbal.",
+      "professional_strength": "Hierarquia clara e imagem tecnicamente polida, com texto em área sólida.",
+      "concrete_reservation": "A expressão de outro mundo continua comum e a informação de bairro se repete no corpo. O vínculo com N1 permanece menos específico que o fio comum de M.",
+      "visual_ambiguities": [
+        "A faixa pode ser entendida como laço ou superfície torcida; não é necessário identificar uma geometria matemática para entender o anúncio."
+      ]
+    }
+  },
+  "pair_assessments": {
+    "M": {
+      "images": [
+        "M1",
+        "M2"
+      ],
+      "scores": {
+        "enchantment": 5,
+        "useful_diversity": 5,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "persona_verdict": "Usaria e gostaria de explorar mais. Aqui vejo uma ideia de campanha que pode continuar sendo desenvolvida, e não apenas duas imagens atraentes acompanhadas de frases.",
+      "would_truly_delight_simulated_persona": true,
+      "why_score_5": "A assinatura A vírgula do bairro. transforma a pausa num elemento físico recorrente. Pano cotidiano e escultura surreal são duas interpretações visuais da mesma premissa; isso cria vontade de explorar outras execuções mantendo voz e produto. A nota corresponde ao desejo de usar e explorar, não à ausência de ajustes.",
+      "useful_diversity_reason": "M1 é claro, arejado, fotográfico e visto de cima; M2 é azul, enfático, escultórico e impossível. Layout, escala tipográfica, distribuição de cor e material mudam, enquanto a vírgula dá unidade. Há contraste suficiente para decidir entre atmosferas de campanha.",
+      "professional_suitability_reason": "As duas peças têm leitura sólida, margens e hierarquia intencionais. A ambiguidade da escultura e a possível redundância da vírgula isolada justificam manter 4, sem chamar o acabamento de perfeito.",
+      "tradeoff": "N comunica a bebida mais diretamente e com maior área de café. M troca parte dessa proximidade por uma identidade de campanha mais clara; nesta persona, o ganho de conceito compensa a redução sem esconder o produto.",
+      "concrete_blocker_to_use": null,
+      "concrete_reservations": [
+        "Refinar ou conferir a leitura da forma de M2 quando isolada do par.",
+        "Reavaliar a vírgula gráfica avulsa em M1, que pode ser redundante."
+      ],
+      "boundary": "A preferência não prova que a campanha terá resposta comercial, nem autoriza publicação ou representa aprovação humana."
+    },
+    "N": {
+      "images": [
+        "N1",
+        "N2"
+      ],
+      "scores": {
+        "enchantment": 4,
+        "useful_diversity": 4,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "persona_verdict": "Usaria com pequenos ajustes; preservo o julgamento do mesmo par em H3.",
+      "would_truly_delight_simulated_persona": false,
+      "evidence": [
+        "Produto grande e atraente, cotidiano acolhedor e cena surreal claramente distintos.",
+        "Texto separado e consistente garante unidade, mas o desenho dos dois posts muda pouco.",
+        "A ideia de aurora na primeira peça e a ideia de outro mundo na segunda não constroem um fio visual verbal tão forte entre si."
+      ],
+      "concrete_blocker_to_score_5": "A campanha continua com associação desigual: N1 depende do jogo verbal com o nome, N2 tem vínculo visual mais imediato. Há boas peças, mas menos motivo para explorar um sistema próprio do Aurora."
+    }
+  },
+  "comparison": {
+    "preferred_pair": "M",
+    "preference_strength": "clara, nesta simulação",
+    "enchantment_score_delta_M_minus_N": 1,
+    "main_reason": "Uma metáfora simples de pausa vira forma, copy e organização gráfica nas duas direções.",
+    "not_just_wordplay": "A vírgula é visível no pano e na escultura, reaparece na frase e é ligada ao bairro pela assinatura. A imagem participa da ideia; não é apenas uma fotografia genérica sob uma frase espirituosa.",
+    "residual_caveat": "A forma surreal também lembra chifre ou cauda. O par ajuda a interpretação, mas o reconhecimento isolado não foi testado.",
+    "not_a_perfect_score_claim": "Encantamento 5 significa vontade de usar e explorar. Adequação profissional permanece 4 por ajustes concretos.",
+    "novelty_control": "N manteve suas notas anteriores. M ganhou pela unidade e por direções úteis distintas; ser novo nesta conversa não foi usado como critério suficiente.",
+    "causal_attribution_limit": "M e N diferem em arte, copy e layout; esta rodada compara pacotes completos e não isola o efeito de uma única mudança."
+  },
+  "scope_checks": {
+    "blue_retained": true,
+    "solid_reading_zones_separate_from_art": true,
+    "invented_price_address_date_promotion": false,
+    "no_literal_cup_island_copy": true,
+    "first_piece_light_type": "M1 e N1 apresentam título regular e aberto. Não foi exigido o mesmo peso na segunda peça.",
+    "bold_second_piece": "M2 tem título mais forte, permitido no escopo do briefing.",
+    "editable_layers": "Não verificável por PNG.",
+    "click_or_point_feedback": "Não verificável por PNG.",
+    "campaign_completion": "Não inferida.",
+    "exclusive_benefit_claim": "Vírgula, pausa e fora da rotina foram lidos como metáforas, não como promessa factual de benefício exclusivo."
+  },
+  "limitations": [
+    "Avaliador reaproveitado de H2 e H3, com memória de críticas anteriores e reconhecimento de N por hash. Desenvolvimento, não holdout nem avaliação independente.",
+    "A persona é simulada. Encantamento 5 não é aceitação humana de Matheus nem de pessoa dona de cafeteria.",
+    "Não foram consultados candidatos, prompts de geração, outputs de ferramenta de geração, skills, manifests, relatórios ou outros Judges.",
+    "A nota compara pacotes completos: várias dimensões mudam simultaneamente entre os pares. Não permite atribuição causal isolada.",
+    "Possíveis leituras de vírgula, chifre ou cauda são hipóteses visuais do avaliador; não constituem resultados de teste com público.",
+    "Imagens estáticas não comprovam camadas editáveis, interação, rapidez operacional, custo, publicação ou conclusão de campanha.",
+    "Não há medida de engajamento, viralidade, visitas, vendas ou benefício profissional. Notas são ordinais e qualitativas."
+  ]
+}

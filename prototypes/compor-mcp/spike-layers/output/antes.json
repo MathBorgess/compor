@@ -1,0 +1,134 @@
+{
+  "piece": {
+    "piece_id": "peca_ficticia",
+    "version": "v1",
+    "width_px": 640,
+    "height_px": 800,
+    "layers": [
+      {
+        "id": "fundo",
+        "kind": "shape",
+        "name": "fundo",
+        "z_index": 0,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        },
+        "shape": "rectangle",
+        "fill_hex": "#101C38"
+      },
+      {
+        "id": "faixa",
+        "kind": "shape",
+        "name": "faixa",
+        "z_index": 1,
+        "rect": {
+          "x": 0.0625,
+          "y": 0.055,
+          "width": 0.875,
+          "height": 0.89
+        },
+        "shape": "rectangle",
+        "fill_hex": "#EAF4EF"
+      },
+      {
+        "id": "titulo",
+        "kind": "text",
+        "name": "titulo",
+        "z_index": 2,
+        "rect": {
+          "x": 0.121875,
+          "y": 0.14375,
+          "width": 0.734375,
+          "height": 0.175
+        },
+        "text": "Ideias que\nganham forma.",
+        "font_size_px": 50,
+        "color_hex": "#14223E"
+      },
+      {
+        "id": "descricao",
+        "kind": "text",
+        "name": "descricao",
+        "z_index": 3,
+        "rect": {
+          "x": 0.125,
+          "y": 0.34375,
+          "width": 0.734375,
+          "height": 0.175
+        },
+        "text": "Um encontro para tirar\nseu projeto do papel.",
+        "font_size_px": 26,
+        "color_hex": "#384A60"
+      },
+      {
+        "id": "arte",
+        "kind": "image",
+        "name": "arte",
+        "z_index": 4,
+        "rect": {
+          "x": 0.63125,
+          "y": 0.44,
+          "width": 0.2125,
+          "height": 0.17
+        },
+        "asset_ref": "arte_sintetica"
+      },
+      {
+        "id": "preco",
+        "kind": "text",
+        "name": "preco",
+        "z_index": 5,
+        "rect": {
+          "x": 0.125,
+          "y": 0.54375,
+          "width": 0.734375,
+          "height": 0.175
+        },
+        "text": "R$ 99",
+        "font_size_px": 40,
+        "color_hex": "#14223E"
+      },
+      {
+        "id": "cta_fundo",
+        "kind": "shape",
+        "name": "cta_fundo",
+        "z_index": 6,
+        "rect": {
+          "x": 0.125,
+          "y": 0.7,
+          "width": 0.484375,
+          "height": 0.1
+        },
+        "shape": "rectangle",
+        "fill_hex": "#9B57ED"
+      },
+      {
+        "id": "cta_texto",
+        "kind": "text",
+        "name": "cta_texto",
+        "z_index": 7,
+        "rect": {
+          "x": 0.1734375,
+          "y": 0.725,
+          "width": 0.734375,
+          "height": 0.175
+        },
+        "text": "Conhecer oficina",
+        "font_size_px": 27,
+        "color_hex": "#FFFFFF"
+      }
+    ],
+    "product_ref": null,
+    "campaign_ref": null,
+    "variation_ref": null
+  },
+  "coordinate_space": "normalized_oriented_image",
+  "input_snapshot_authenticated": false,
+  "client_data_is_untrusted": true,
+  "creates_confirmed_preference": false,
+  "renders_or_generates_image": false,
+  "persists_data": false
+}
