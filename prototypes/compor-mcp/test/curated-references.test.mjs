@@ -17,6 +17,12 @@ import {
   MAX_IMAGE_DOWNLOAD_BYTES,
   sanitize_and_stage_image,
 } from '../dist/security/image_sanitizer.js';
+import {
+  CURATED_PINTEREST_BOARDS,
+  discoverUserPublicBoards,
+  selectCuratedBoardsForQuery,
+} from '../dist/providers/curated_pinterest.js';
+import { loadSourcesCatalog } from '../dist/catalog/catalog.js';
 
 function crc32(buf) {
   let c = 0xffffffff;
@@ -1220,4 +1226,70 @@ test('Fallback HTTP para feed RSS público de boards curados do Pinterest quando
   } finally {
     await ctx.close();
   }
+
+  // Valida roteamento por formato (Ads, Carrossel, Stories, LinkedIn) e autodiscovery de boards públicos
+  const catalog = await loadSourcesCatalog();
+  const designSource = catalog.sources.find((s) => s.source_id === 'pinterest_curated_design');
+  assert.ok(CURATED_PINTEREST_BOARDS.length >= 25);
+
+  const carouselBoards = selectCuratedBoardsForQuery({
+    briefing_summary: 'Carrossel editorial com headline e tipografia expressiva',
+    target_format: 'carousel_5_slides',
+    aspect_focus: ['typography', 'composition'],
+    source: designSource,
+  });
+  assert.ok(
+    ['behance/typography', 'weandthecolor/typography', 'creativemarket/magazine-templates'].includes(
+      carouselBoards[0],
+    ),
+    `Esperado board de carrossel/tipografia no topo, obteve: ${carouselBoards[0]}`,
+  );
+
+  const storiesBoards = selectCuratedBoardsForQuery({
+    briefing_summary: 'Sequência vertical interativa com enquete e widget mobile',
+    target_format: 'instagram_stories_9_16',
+    aspect_focus: ['composition'],
+    source: designSource,
+  });
+  assert.ok(
+    ['latermedia/instagram-stories', 'dribbble/uiux-inspiration', 'latermedia/instagram-story-templates'].includes(
+      storiesBoards[0],
+    ),
+    `Esperado board de stories no topo, obteve: ${storiesBoards[0]}`,
+  );
+
+  const linkedinBoards = selectCuratedBoardsForQuery({
+    briefing_summary: 'Infográfico executivo B2B com framework e funil de vendas para LinkedIn',
+    target_format: 'linkedin_carousel_pdf',
+    aspect_focus: ['composition'],
+    source: designSource,
+  });
+  assert.ok(
+    ['hubspot/marketing-infographics', 'venngage/feed', 'hubspot/inbound-hub-marketing'].includes(
+      linkedinBoards[0],
+    ),
+    `Esperado board de LinkedIn/infográfico no topo, obteve: ${linkedinBoards[0]}`,
+  );
+
+  const discovered = await discoverUserPublicBoards('behance', async (url) => {
+    if (String(url).includes('BoardsResource/get/')) {
+      return new Response(
+        JSON.stringify({
+          resource_response: {
+            data: [
+              { url: '/behance/advertising/', name: 'Advertising', pin_count: 67 },
+              { url: '/behance/typography/', name: 'Typography', pin_count: 485 },
+            ],
+          },
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    return new Response('Not Found', { status: 404 });
+  });
+  assert.equal(discovered.length, 2);
+  assert.deepEqual(
+    discovered.map((b) => b.slug),
+    ['behance/advertising', 'behance/typography'],
+  );
 });

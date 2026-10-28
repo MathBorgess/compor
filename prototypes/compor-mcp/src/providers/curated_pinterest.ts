@@ -7,6 +7,327 @@ import {
   type ReferenceSearchProvider,
 } from './base_provider.js';
 
+export type CuratedBoardCategory =
+  | 'ads'
+  | 'instagram_carousel'
+  | 'instagram_stories'
+  | 'linkedin'
+  | 'general_design';
+
+export interface CuratedPinterestBoard {
+  slug: string; // "{user}/{board}" ou "{user}/feed"
+  category: CuratedBoardCategory;
+  intentKeywords: string[];
+}
+
+export interface DiscoveredPinterestBoard {
+  slug: string;
+  name: string;
+  url: string;
+  pin_count: number;
+}
+
+/**
+ * Curated Pinterest boards and profile firehose feeds (`{user}/feed`) organized by creative format,
+ * verified against Pinterest public RSS and BoardsResource endpoints.
+ */
+export const CURATED_PINTEREST_BOARDS: CuratedPinterestBoard[] = [
+  // --- A. ADS & PERFORMANCE (Meta Ads, Key Visuals, D2C, Conversão) ---
+  {
+    slug: 'behance/advertising',
+    category: 'ads',
+    intentKeywords: ['ad', 'ads', 'anuncio', 'campanha', 'promo', 'oferta', 'conversao', 'meta ads', 'key visual', 'performance'],
+  },
+  {
+    slug: 'kittldesign/ads-designs',
+    category: 'ads',
+    intentKeywords: ['ad', 'ads', 'anuncio', 'oferta', 'banner', 'promocional', 'cta', 'desconto', 'lancamento'],
+  },
+  {
+    slug: 'creativemarket/social-media-templates',
+    category: 'ads',
+    intentKeywords: ['ad', 'social media', 'template', 'anuncio', 'feed', 'comercial', 'hierarquia'],
+  },
+  {
+    slug: 'behance/branding-packaging',
+    category: 'ads',
+    intentKeywords: ['produto', 'embalagem', 'd2c', 'ecommerce', 'branding', 'marca', 'consumo'],
+  },
+  {
+    slug: 'weandthecolor/packaging-design',
+    category: 'ads',
+    intentKeywords: ['produto', 'embalagem', 'packaging', 'cosmetico', 'bebida', 'd2c'],
+  },
+  {
+    slug: 'thedieline/promotional-packaging',
+    category: 'ads',
+    intentKeywords: ['produto', 'embalagem', 'promo', 'edicao limitada', 'varejo', 'd2c'],
+  },
+  {
+    slug: 'thedieline/feed',
+    category: 'ads',
+    intentKeywords: ['produto', 'embalagem', 'd2c', 'ecommerce', 'mockup', 'consumo'],
+  },
+  {
+    slug: '99designs/packaging-label-design',
+    category: 'ads',
+    intentKeywords: ['pme', 'rotulo', 'embalagem', 'produto', 'comercial'],
+  },
+  {
+    slug: '99designs/feed',
+    category: 'ads',
+    intentKeywords: ['ad', 'marketing', 'banner', 'promocional', 'venda', 'cta'],
+  },
+  {
+    slug: 'weandthecolor/feed',
+    category: 'ads',
+    intentKeywords: ['campanha', 'branding', 'identidade', 'bold', 'direcao de arte'],
+  },
+
+  // --- B. CARROSSÉIS DE INSTAGRAM (4:5, Editorial, Tipografia, Seamless) ---
+  {
+    slug: 'behance/typography',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'carousel', 'capa', 'headline', 'tipografia', 'titulo', 'hook', 'serifa'],
+  },
+  {
+    slug: 'weandthecolor/typography',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'carousel', 'tipografia', 'editorial', 'grid', 'expressivo', 'poster'],
+  },
+  {
+    slug: 'creativemarket/magazine-templates',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'carousel', 'editorial', 'grid', 'diagramacao', 'slides', 'revista', 'colunas'],
+  },
+  {
+    slug: 'weandthecolor/templates',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'carousel', 'template', 'layout', 'grid', 'modular', 'slides'],
+  },
+  {
+    slug: 'kittldesign/poster-design',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'capa', 'poster', 'retro', 'textura', 'titulo', 'impacto'],
+  },
+  {
+    slug: 'kittldesign/social-media-designs',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'carousel', 'social media', 'instagram', 'post', 'cards'],
+  },
+  {
+    slug: 'kittldesign/quote-typography-lettering-design',
+    category: 'instagram_carousel',
+    intentKeywords: ['carrossel', 'frase', 'quote', 'tipografia', 'lettering', 'capa'],
+  },
+  {
+    slug: 'latermedia/instagram-post-design',
+    category: 'instagram_carousel',
+    intentKeywords: ['instagram', 'post', 'carrossel', 'carousel', 'feed', 'criador', 'retencao'],
+  },
+  {
+    slug: 'creativemarket/feed',
+    category: 'instagram_carousel',
+    intentKeywords: ['template', 'instagram', 'carrossel', 'social media', 'post', 'estetica'],
+  },
+  {
+    slug: 'canva/design-inspiration',
+    category: 'instagram_carousel',
+    intentKeywords: ['post', 'instagram', 'carrossel', 'dicas', 'educativo', 'layout'],
+  },
+  {
+    slug: 'canva/canva-template-collections',
+    category: 'instagram_carousel',
+    intentKeywords: ['template', 'colecao', 'carrossel', 'instagram', 'slides'],
+  },
+  {
+    slug: 'dribbble/design-inspiration',
+    category: 'instagram_carousel',
+    intentKeywords: ['ui', 'card', 'bento grid', 'tech', 'saas', 'moderno', 'dark'],
+  },
+  {
+    slug: 'dribbble/feed',
+    category: 'instagram_carousel',
+    intentKeywords: ['ui', 'card', 'bento grid', 'tech', 'saas', 'moderno', 'dark'],
+  },
+  {
+    slug: 'adobe/whats-your-type',
+    category: 'instagram_carousel',
+    intentKeywords: ['tipografia', 'type', 'display', 'capa', 'editorial'],
+  },
+
+  // --- C. STORIES DE INSTAGRAM (9:16, Vertical, Mobile UI) ---
+  {
+    slug: 'latermedia/instagram-stories',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'story', 'vertical', '9:16', 'enquete', 'caixinha', 'lancamento', 'sequencia'],
+  },
+  {
+    slug: 'latermedia/instagram-story-templates',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'story', 'template', 'vertical', '9:16', 'vendas', 'bastidores'],
+  },
+  {
+    slug: 'latermedia/instagram-story-tips',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'story', 'engajamento', 'dicas', 'interativo', 'stickers'],
+  },
+  {
+    slug: 'latermedia/instagram-reels',
+    category: 'instagram_stories',
+    intentKeywords: ['reels', 'vertical', '9:16', 'capa', 'mobile'],
+  },
+  {
+    slug: 'latermedia/feed',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'story', 'reels', 'instagram', 'engajamento', 'creator'],
+  },
+  {
+    slug: 'dribbble/uiux-inspiration',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'mobile', 'interface', 'widget', 'glassmorphism', 'app', 'ui'],
+  },
+  {
+    slug: 'behance/interaction-design',
+    category: 'instagram_stories',
+    intentKeywords: ['stories', 'mobile', 'interativo', 'interface', 'app', 'card'],
+  },
+  {
+    slug: 'weandthecolor/ui-screen-web-design',
+    category: 'instagram_stories',
+    intentKeywords: ['mobile', 'ui', 'screen', 'vertical', 'layout', 'widget'],
+  },
+  {
+    slug: 'adobe/web-mobile',
+    category: 'instagram_stories',
+    intentKeywords: ['mobile', 'vertical', 'stories', 'interface', 'responsivo'],
+  },
+
+  // --- D. POSTS DE LINKEDIN (B2B, Infográficos, Frameworks, Carrosséis PDF) ---
+  {
+    slug: 'hubspot/marketing-infographics',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'b2b', 'framework', 'funil', 'marketing', 'dados'],
+  },
+  {
+    slug: 'hubspot/inbound-hub-marketing',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'b2b', 'inbound', 'vendas', 'estrategia', 'corporativo'],
+  },
+  {
+    slug: 'hubspot/templates-tools',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'template', 'framework', 'ferramenta', 'b2b', 'executivo'],
+  },
+  {
+    slug: 'hubspot/feed',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'marketing', 'b2b', 'funil', 'vendas', 'estrategia'],
+  },
+  {
+    slug: 'venngage/free-infographic-template',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'processo', 'fluxograma', 'lista', 'comparativo'],
+  },
+  {
+    slug: 'venngage/infographic-design',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'dados', 'diagrama', 'corporativo', 'b2b'],
+  },
+  {
+    slug: 'venngage/feed',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'b2b', 'framework', 'processo', 'dados', 'corporativo', 'lista'],
+  },
+  {
+    slug: 'vismeapp/business-infographics',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'negocios', 'b2b', 'infografico', 'estatistica', 'relatorio'],
+  },
+  {
+    slug: 'vismeapp/charts-and-graphs-design-inspiration-education',
+    category: 'linkedin',
+    intentKeywords: ['grafico', 'chart', 'dados', 'data viz', 'tabela', 'linkedin'],
+  },
+  {
+    slug: 'vismeapp/presentations',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'apresentacao', 'slides', 'pdf', 'carrossel', 'executivo', 'pitch'],
+  },
+  {
+    slug: 'vismeapp/feed',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'apresentacao', 'slides', 'grafico', 'estatistica', 'negocios'],
+  },
+  {
+    slug: 'piktochart/best-of-piktochart-infographics',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'resumo', 'cheatsheet', 'comparativo', 'dados'],
+  },
+  {
+    slug: 'piktochart/slide-templates',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'slides', 'apresentacao', 'pdf', 'deck', 'corporativo'],
+  },
+  {
+    slug: 'piktochart/feed',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'infografico', 'resumo', 'cheatsheet', 'comparativo'],
+  },
+  {
+    slug: 'latermedia/linkedin-strategies-tips',
+    category: 'linkedin',
+    intentKeywords: ['linkedin', 'b2b', 'carrossel', 'autoridade', 'post'],
+  },
+  {
+    slug: 'canva/canva-cheatsheets',
+    category: 'linkedin',
+    intentKeywords: ['cheatsheet', 'guia', 'passo a passo', 'resumo', 'linkedin', 'educativo'],
+  },
+  {
+    slug: 'adobe/data-creativity',
+    category: 'linkedin',
+    intentKeywords: ['dados', 'data viz', 'infografico', 'diagrama', 'mapa mental', 'chart'],
+  },
+
+  // --- E. BASE GERAL (Fallback / Apoio Visual / Fotografia / Ilustração) ---
+  {
+    slug: 'behance/graphic-design',
+    category: 'general_design',
+    intentKeywords: ['design', 'grafico', 'composicao', 'layout', 'editorial'],
+  },
+  {
+    slug: 'weandthecolor/graphic-design',
+    category: 'general_design',
+    intentKeywords: ['design', 'grafico', 'composicao', 'grid', 'moderno'],
+  },
+  {
+    slug: 'adobe/graphic-design',
+    category: 'general_design',
+    intentKeywords: ['criativo', 'arte', 'cor', 'contraste', 'colagem'],
+  },
+  {
+    slug: 'behance/photography',
+    category: 'general_design',
+    intentKeywords: ['foto', 'fotografia', 'lifestyle', 'retrato', 'iluminacao', 'estudio'],
+  },
+  {
+    slug: 'adobe/art-photography',
+    category: 'general_design',
+    intentKeywords: ['foto', 'fotografia', 'direcao de arte', 'conceitual', 'luz'],
+  },
+  {
+    slug: 'behance/illustration',
+    category: 'general_design',
+    intentKeywords: ['ilustracao', 'vetor', 'arte digital', 'mascote', 'personagem'],
+  },
+  {
+    slug: 'weandthecolor/illustration',
+    category: 'general_design',
+    intentKeywords: ['ilustracao', 'editorial', 'textura', 'cor', 'expressivo'],
+  },
+];
+
 export interface PinterestPinJsonItem {
   id?: string;
   ref_id?: string;
@@ -38,6 +359,13 @@ export interface PinterestPinJsonItem {
 const DEFAULT_HTTP_USER_AGENT =
   'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
 
+function normalizeText(value: string): string {
+  return value
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
 function decodeXmlEntities(input: string): string {
   return input
     .replace(/&lt;/g, '<')
@@ -48,7 +376,7 @@ function decodeXmlEntities(input: string): string {
 }
 
 /**
- * Parses a public Pinterest board RSS feed (`https://www.pinterest.com/<user>/<board>.rss`)
+ * Parses a public Pinterest board or user firehose RSS feed (`https://www.pinterest.com/<slug>.rss`)
  * into normalized `PinterestPinJsonItem` records without any headless browser.
  */
 export function parsePinterestBoardRss(rssXml: string): PinterestPinJsonItem[] {
@@ -110,49 +438,229 @@ export function parsePinterestPwsHtml(html: string): PinterestPinJsonItem[] {
   }
 }
 
-function selectCuratedBoardsForQuery(query: ProviderSearchQuery): string[] {
-  const allowed = query.source.allowed_boards_or_queries.filter(
+/**
+ * Autodiscovers all public board slugs of a Pinterest reference account via `BoardsResource/get/`
+ * (with `X-Pinterest-PWS-Handler: www/[username]/_saved.js`) and `__PWS_INITIAL_PROPS__` fallback.
+ */
+export async function discoverUserPublicBoards(
+  username: string,
+  fetchFn: typeof globalThis.fetch = globalThis.fetch,
+  timeoutMs = 5000,
+): Promise<DiscoveredPinterestBoard[]> {
+  const cleanUser = username.trim().replace(/^\/+|\/+$/g, '').split('/')[0] ?? '';
+  if (!/^[A-Za-z0-9_.-]{1,60}$/.test(cleanUser)) {
+    return [];
+  }
+
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(new Error('Pinterest board discovery timeout')), timeoutMs);
+  timer.unref?.();
+
+  try {
+    const params = new URLSearchParams({
+      source_url: `/${cleanUser}/_saved/`,
+      data: JSON.stringify({
+        options: {
+          username: cleanUser,
+          field_set_key: 'profile_grid_item',
+          page_size: 50,
+        },
+        context: {},
+      }),
+    });
+
+    const apiEndpoint = `https://www.pinterest.com/resource/BoardsResource/get/?${params.toString()}`;
+    const apiRes = await fetchFn(apiEndpoint, {
+      method: 'GET',
+      headers: {
+        Accept: 'application/json',
+        'User-Agent': DEFAULT_HTTP_USER_AGENT,
+        'X-Requested-With': 'XMLHttpRequest',
+        'X-Pinterest-AppState': 'active',
+        'X-Pinterest-Source-Url': `/${cleanUser}/_saved/`,
+        'X-Pinterest-PWS-Handler': 'www/[username]/_saved.js',
+        'Referrer-Policy': 'no-referrer',
+      },
+      signal: controller.signal,
+    });
+
+    if (apiRes.ok) {
+      const json = (await apiRes.json()) as {
+        resource_response?: {
+          data?: Array<{ url?: string; name?: string; pin_count?: number }>;
+        };
+      };
+      const rawBoards = json.resource_response?.data ?? [];
+      const discovered = rawBoards
+        .filter((b) => typeof b.url === 'string' && b.url.length > 2)
+        .map((b) => {
+          const slug = b.url!.replace(/^\/+|\/+$/g, '');
+          return {
+            slug,
+            name: String(b.name ?? slug),
+            url: `https://www.pinterest.com/${slug}/`,
+            pin_count: typeof b.pin_count === 'number' ? b.pin_count : 0,
+          };
+        })
+        .filter((b) => b.slug.toLowerCase().startsWith(`${cleanUser.toLowerCase()}/`));
+
+      if (discovered.length > 0) {
+        return discovered;
+      }
+    }
+
+    // Fallback: inspect __PWS_INITIAL_PROPS__ on https://www.pinterest.com/{username}/_saved/
+    const htmlRes = await fetchFn(`https://www.pinterest.com/${cleanUser}/_saved/`, {
+      method: 'GET',
+      headers: {
+        Accept: 'text/html',
+        'User-Agent': DEFAULT_HTTP_USER_AGENT,
+        'Referrer-Policy': 'no-referrer',
+      },
+      signal: controller.signal,
+    });
+    if (htmlRes.ok) {
+      const html = await htmlRes.text();
+      const match = html.match(
+        /<script[^>]+id="__PWS_INITIAL_PROPS__"[^>]*>([\s\S]*?)<\/script>/i,
+      );
+      if (match?.[1]) {
+        const parsed = JSON.parse(match[1]) as {
+          initialReduxState?: {
+            boards?: Record<string, { url?: string; name?: string; pin_count?: number }>;
+          };
+        };
+        const boardsMap = parsed.initialReduxState?.boards ?? {};
+        return Object.values(boardsMap)
+          .filter((b) => typeof b.url === 'string' && b.url.length > 2)
+          .map((b) => {
+            const slug = b.url!.replace(/^\/+|\/+$/g, '');
+            return {
+              slug,
+              name: String(b.name ?? slug),
+              url: `https://www.pinterest.com/${slug}/`,
+              pin_count: typeof b.pin_count === 'number' ? b.pin_count : 0,
+            };
+          });
+      }
+    }
+  } catch {
+    // Return empty list if offline or unreachable
+  } finally {
+    clearTimeout(timer);
+  }
+
+  return [];
+}
+
+function inferTargetCategory(targetFormat: string, briefingSummary: string): CuratedBoardCategory {
+  const combined = normalizeText(`${targetFormat} ${briefingSummary}`);
+  if (
+    combined.includes('linkedin') ||
+    combined.includes('infografico') ||
+    combined.includes('infographic') ||
+    combined.includes('b2b') ||
+    combined.includes('framework') ||
+    combined.includes('cheatsheet') ||
+    combined.includes('data viz')
+  ) {
+    return 'linkedin';
+  }
+  if (
+    combined.includes('story') ||
+    combined.includes('stories') ||
+    combined.includes('9:16') ||
+    combined.includes('vertical') ||
+    combined.includes('reels')
+  ) {
+    return 'instagram_stories';
+  }
+  if (
+    combined.includes('carousel') ||
+    combined.includes('carrossel') ||
+    combined.includes('slides') ||
+    combined.includes('lamina')
+  ) {
+    return 'instagram_carousel';
+  }
+  if (
+    combined.includes('ad') ||
+    combined.includes('anuncio') ||
+    combined.includes('campanha') ||
+    combined.includes('single_feed') ||
+    combined.includes('oferta') ||
+    combined.includes('conversao') ||
+    combined.includes('packaging') ||
+    combined.includes('embalagem')
+  ) {
+    return 'ads';
+  }
+  return 'general_design';
+}
+
+export function selectCuratedBoardsForQuery(query: ProviderSearchQuery): string[] {
+  const allowedList = query.source.allowed_boards_or_queries.filter(
     (b) => !b.startsWith('compor-curated/'),
   );
-  if (allowed.length === 0) {
+  if (allowedList.length === 0) {
     return [query.source.allowed_boards_or_queries[0] ?? 'behance/graphic-design'];
   }
-  const summaryLower = query.briefing_summary.toLowerCase();
-  const prioritized = [...allowed].sort((a, b) => {
-    const score = (board: string) => {
+
+  const allowedSet = new Set(allowedList.map((s) => s.toLowerCase()));
+  const targetCategory = inferTargetCategory(query.target_format, query.briefing_summary);
+  const normalizedContext = normalizeText(`${query.briefing_summary} ${query.target_format}`);
+  const metadataBySlug = new Map<string, CuratedPinterestBoard>();
+  for (const board of CURATED_PINTEREST_BOARDS) {
+    metadataBySlug.set(board.slug.toLowerCase(), board);
+  }
+
+  return [...allowedList].sort((slugA, slugB) => {
+    const score = (slug: string): number => {
+      const lower = slug.toLowerCase();
+      if (!allowedSet.has(lower)) return -1;
+      const meta = metadataBySlug.get(lower);
       let s = 0;
-      if (
-        (summaryLower.includes('anúncio') ||
-          summaryLower.includes('ad') ||
-          summaryLower.includes('campanha') ||
-          summaryLower.includes('oferta')) &&
-        board.includes('advertising')
-      ) {
+
+      if (meta) {
+        if (meta.category === targetCategory) s += 10;
+        else if (meta.category === 'general_design') s += 2;
+
+        for (const kw of meta.intentKeywords) {
+          if (normalizedContext.includes(normalizeText(kw))) {
+            s += 4;
+          }
+        }
+      }
+
+      if (query.aspect_focus.includes('typography') && lower.includes('typograph')) {
+        s += 5;
+      }
+      if (query.aspect_focus.includes('photography') && lower.includes('photograph')) {
+        s += 6;
+      }
+      if (query.aspect_focus.includes('composition') && (lower.includes('editorial') || lower.includes('template') || lower.includes('poster'))) {
         s += 3;
       }
-      if (query.aspect_focus.includes('typography') && board.includes('graphic-design')) {
-        s += 2;
-      }
-      if (query.aspect_focus.includes('photography') && board.includes('photography')) {
-        s += 3;
+      // Prefer specific curated boards first, keeping {user}/feed firehose right behind as resilient fallback
+      if (!lower.endsWith('/feed')) {
+        s += 1;
       }
       return s;
     };
-    return score(b) - score(a);
+
+    return score(slugB) - score(slugA);
   });
-  return prioritized;
 }
 
 function rankPinsByQuery(pins: PinterestPinJsonItem[], briefingSummary: string): PinterestPinJsonItem[] {
-  const tokens = briefingSummary
-    .toLowerCase()
-    .split(/[^a-z0-9à-ú]+/i)
+  const tokens = normalizeText(briefingSummary)
+    .split(/[^a-z0-9]+/i)
     .filter((t) => t.length >= 3);
   if (tokens.length === 0) return pins;
 
   return [...pins].sort((a, b) => {
-    const textA = `${a.title ?? ''} ${a.description ?? ''}`.toLowerCase();
-    const textB = `${b.title ?? ''} ${b.description ?? ''}`.toLowerCase();
+    const textA = normalizeText(`${a.title ?? ''} ${a.description ?? ''}`);
+    const textB = normalizeText(`${b.title ?? ''} ${b.description ?? ''}`);
     const hitsA = tokens.reduce((acc, tk) => acc + (textA.includes(tk) ? 1 : 0), 0);
     const hitsB = tokens.reduce((acc, tk) => acc + (textB.includes(tk) ? 1 : 0), 0);
     return hitsB - hitsA;
@@ -175,6 +683,44 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
   } = {}) {
     this.sourceId = options.sourceId ?? 'pinterest_curated_design';
     this.fetchFn = options.fetchFn ?? ((input, init) => globalThis.fetch(input, init));
+  }
+
+  private async fetchRssCandidatesFromSlug(
+    slug: string,
+    timeoutMs: number,
+  ): Promise<PinterestPinJsonItem[]> {
+    const rssEndpoint = `https://www.pinterest.com/${slug}.rss`;
+    const rssController = new AbortController();
+    const rssTimer = setTimeout(
+      () => rssController.abort(new Error('Pinterest RSS HTTP timeout')),
+      timeoutMs,
+    );
+    rssTimer.unref?.();
+
+    try {
+      const rssResponse = await this.fetchFn(rssEndpoint, {
+        method: 'GET',
+        headers: {
+          Accept: 'application/rss+xml, application/xml, text/xml, text/html;q=0.8',
+          'User-Agent': DEFAULT_HTTP_USER_AGENT,
+          'Referrer-Policy': 'no-referrer',
+        },
+        signal: rssController.signal,
+      });
+
+      if (rssResponse.ok) {
+        const rssBody = await rssResponse.text();
+        const parsedRssPins = parsePinterestBoardRss(rssBody);
+        if (parsedRssPins.length > 0) return parsedRssPins;
+        return parsePinterestPwsHtml(rssBody);
+      }
+    } catch {
+      // Ignore individual board failure and allow fallback to next board or {username}/feed.rss
+    } finally {
+      clearTimeout(rssTimer);
+    }
+
+    return [];
   }
 
   async searchMetadataOnly(query: ProviderSearchQuery): Promise<RawProviderCandidate[]> {
@@ -236,55 +782,41 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
               query.source.source_id,
               error instanceof Error ? error.message : 'Pinterest HTTP request failed.',
             );
-      // If the transport itself threw a network error (e.g. ECONNRESET in offline/fallback tests),
-      // do not mask it if we cannot reach the host at all.
     } finally {
       clearTimeout(timer);
     }
 
-    // Step 2: If BaseSearchResource returned 403/404 (unauthenticated guest HTTP),
-    // query the public curated board RSS feed (`https://www.pinterest.com/{board}.rss`),
-    // which returns real pins over pure HTTP without headless browsers or login cookies.
+    // Step 2: Query curated board RSS feeds (`https://www.pinterest.com/{user}/{board}.rss`)
+    // with automatic fallback to the account's Firehose RSS (`https://www.pinterest.com/{user}/feed.rss`)
+    // if a folder slug was renamed or returned 404.
     if (rawPins.length === 0) {
-      for (const board of boards.slice(0, 2)) {
-        const rssEndpoint = `https://www.pinterest.com/${board}.rss`;
-        const rssController = new AbortController();
-        const rssTimer = setTimeout(
-          () => rssController.abort(new Error('Pinterest RSS HTTP timeout')),
-          timeoutMs,
-        );
-        rssTimer.unref?.();
+      const existingIds = new Set<string>();
+      const triedSlugs = new Set<string>();
 
-        try {
-          const rssResponse = await this.fetchFn(rssEndpoint, {
-            method: 'GET',
-            headers: {
-              Accept: 'application/rss+xml, application/xml, text/xml, text/html;q=0.8',
-              'User-Agent': DEFAULT_HTTP_USER_AGENT,
-              'Referrer-Policy': 'no-referrer',
-            },
-            signal: rssController.signal,
-          });
+      for (const board of boards.slice(0, 3)) {
+        if (triedSlugs.has(board)) continue;
+        triedSlugs.add(board);
 
-          if (rssResponse.ok) {
-            const rssBody = await rssResponse.text();
-            const parsedRssPins = parsePinterestBoardRss(rssBody);
-            const candidatePins =
-              parsedRssPins.length > 0 ? parsedRssPins : parsePinterestPwsHtml(rssBody);
-            const existingIds = new Set(rawPins.map((p) => p.id ?? p.origin_url));
-            for (const pin of candidatePins) {
-              const key = pin.id ?? pin.origin_url;
-              if (key && existingIds.has(key)) continue;
-              if (key) existingIds.add(key);
-              rawPins.push(pin);
-            }
-            if (rawPins.length >= limit) break;
+        let candidatePins = await this.fetchRssCandidatesFromSlug(board, timeoutMs);
+
+        // Automatic {username}/feed.rss fallback if a specific board returned 404/empty
+        if (candidatePins.length === 0 && !board.endsWith('/feed')) {
+          const username = board.split('/')[0];
+          const firehoseSlug = username ? `${username}/feed` : '';
+          if (firehoseSlug && !triedSlugs.has(firehoseSlug)) {
+            triedSlugs.add(firehoseSlug);
+            candidatePins = await this.fetchRssCandidatesFromSlug(firehoseSlug, timeoutMs);
           }
-        } catch {
-          // Keep original error if RSS fallback also fails
-        } finally {
-          clearTimeout(rssTimer);
         }
+
+        for (const pin of candidatePins) {
+          const key = pin.id ?? pin.origin_url;
+          if (key && existingIds.has(key)) continue;
+          if (key) existingIds.add(key);
+          rawPins.push(pin);
+        }
+
+        if (rawPins.length >= limit) break;
       }
     }
 
