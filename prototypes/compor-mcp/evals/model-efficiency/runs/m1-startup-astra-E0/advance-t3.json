@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/assets.json",
+      "sha256": "9ecfa1b0ee2e1516d4d2c49ce7fa3f91372bd6256ee13f85e4a4c72182521f31"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao_pergunta",
+        "piece_id": "vdp_pergunta",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t3-artifacts/renders/direcao_pergunta.png",
+        "png_sha256": "9f17ab5344da063ae0494c26882bbdcfce5dd0974ee504a14e8c5c9cfd475abd",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t3-artifacts/renders/direcao_pergunta.json",
+        "report_sha256": "26ae3556b4e7aba1d772ef0dab4dce4b3bbd565c5160af007aa6eaa1bfcbb42e",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 344.722625,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_pergunta_v1"
+        ],
+        "layers": [
+          {
+            "id": "a_fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a_imagem",
+            "kind": "image",
+            "asset_ref": "vdp_asset_pergunta_v1"
+          },
+          {
+            "id": "a_marca",
+            "kind": "text"
+          },
+          {
+            "id": "a_titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a_apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a_faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "a_convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao_ciclo",
+        "piece_id": "vdp_ciclo",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t3-artifacts/renders/direcao_ciclo.png",
+        "png_sha256": "7e55d9e257cc0a4e40f9fa29ece07915688c206cc71be57dc94532fcf80a828d",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t3-artifacts/renders/direcao_ciclo.json",
+        "report_sha256": "8cbd6f484abd5211e14a363123904a4f22e3a4f09b01ebe223196794e615b590",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 240.256291,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_ciclo_v1"
+        ],
+        "layers": [
+          {
+            "id": "b_fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b_lateral",
+            "kind": "shape"
+          },
+          {
+            "id": "b_marca",
+            "kind": "text"
+          },
+          {
+            "id": "b_titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b_imagem",
+            "kind": "image",
+            "asset_ref": "vdp_asset_ciclo_v1"
+          },
+          {
+            "id": "b_mensagem",
+            "kind": "text"
+          },
+          {
+            "id": "b_apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b_faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "b_convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/resume-after-t3.json",
+      "sha256": "606c398be7a109bbe8c11a6ae699a2cedbfb0705c47447af41a4cd746a755708",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.417708,
+    "total": 597.247167
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

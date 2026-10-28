@@ -1,0 +1,1255 @@
+{
+  "judge": {
+    "id": "judge-a",
+    "type": "LLM sintético cego",
+    "model": "Não identificado pela interface desta avaliação; agente Codex baseado em GPT-6 conforme instrução de ambiente, sem inferir versão exata.",
+    "date": "2026-10-28",
+    "rubric_version": "model-efficiency-v1",
+    "blinded": true
+  },
+  "persona": "Solo founder extremamente crítico, que precisa de campanha profissional rapidamente. Exijo oferta compreensível, hierarquia pronta para feed e personalidade pertinente, usando os mesmos limiares da rubrica.",
+  "scope": {
+    "case": "round1-startup",
+    "allowed_sources": [
+      "docs/evals/model-efficiency/rubric.md",
+      "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/index.json",
+      "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P01–P06/package.json",
+      "Todos os PNG originais e previews360 de P01–P06"
+    ],
+    "inspection_order": [
+      "P01",
+      "P02",
+      "P03",
+      "P04",
+      "P05",
+      "P06"
+    ],
+    "artifact_order": [
+      "D1",
+      "D2",
+      "V1",
+      "V2",
+      "R1"
+    ],
+    "visuals_inspected": 58,
+    "originals_inspected": 29,
+    "previews_360_inspected": 29,
+    "method": "Inspeção direta com view_image de cada original inteiro e de cada arquivo preview de 360 px, sem recorte. Transcrição visual registrada antes das notas na estrutura. Legendas foram lidas como contexto separado e nunca usadas para inventar texto visível.",
+    "score_mapping": {
+      "alignment": "Alinhamento à intenção (1–5)",
+      "professionalism": "Adequação visual e comunicativa (1–5), chamada profissionalismo nesta saída",
+      "delight": "Encantamento (1–5)",
+      "diversity.exploration": "Diversidade adequada em T3 (1–5)",
+      "diversity.convergence": "Diversidade adequada em T4 (1–5)"
+    },
+    "not_read": [
+      "runs",
+      "mapas de candidatos",
+      "outros julgamentos",
+      "planos externos ao pacote"
+    ],
+    "acceptance_rule": "Zero erro crítico, completude e legibilidade, todas as dimensões aplicáveis >=4; dimensões insuficientes ou ausência já impedem aceitabilidade, mesmo sem avaliar integralmente gates."
+  },
+  "packages": [
+    {
+      "package_id": "P01",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem estão\nseus potes?",
+            "support": [
+              "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "A pergunta apresenta a consulta de recipientes; apoio explicita os três registros e CTA convida à demonstração. A natureza web e o público aparecem na legenda, não na peça.",
+            "professionalism": "Headline dominante, imagem horizontal central e CTA em faixa mantêm sequência clara; apoio preserva leitura no celular.",
+            "delight": "Mãos em recorte de papel tornam a transferência concreta e próxima; cores da ilustração conversam com a peça."
+          },
+          "inspected_files": [
+            "P01/D1.png",
+            "P01/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Cada etapa\nmerece um registro.",
+            "support": [
+              "Entrega.\nEmpréstimo.\nDevolução.",
+              "Uma ferramenta web para\npequenos produtores\nacompanharem embalagens\nretornáveis."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Apoio lateral é o menor texto: legível nesta inspeção de 360 px, com maior esforço que a headline e CTA; sem corte."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Identifica ferramenta web e pequenos produtores; lista as etapas sem inventar resultados.",
+            "professionalism": "Título, lista lima e CTA contrastam bem com floresta; apoio lateral fica pequeno, porém consegui lê-lo a 360 px.",
+            "delight": "O círculo de três potes organiza a continuidade, mas é uma solução visual previsível e bastante literal."
+          },
+          "inspected_files": [
+            "P01/D2.png",
+            "P01/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes estão\ncom quais clientes?",
+            "support": [
+              "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Pergunta específica, registros corretos e convite direto; legenda completa a identificação da ferramenta web.",
+            "professionalism": "Imagem grande conserva textura e o eixo vertical continua fácil de seguir; faixa do CTA é inequívoca.",
+            "delight": "A troca do pote entre mãos permanece expressiva; copy simples dá função à cena."
+          },
+          "inspected_files": [
+            "P01/V1.png",
+            "P01/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Veja quais potes\nestão com clientes.",
+            "support": [
+              "Uma ferramenta web para pequenos\nprodutores de alimentos registrarem\nentregas, empréstimos e devoluções."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Oferta, público, funções e demonstração estão explícitos na própria peça; imagem reforça proximidade e materialidade.",
+            "professionalism": "Apoio acima da imagem é lido antes do CTA; barra da marca e botão lima estruturam a composição sem esconder texto.",
+            "delight": "A cena de entrega ganha contexto com a apresentação direta da ferramenta; conjunto coeso e com personalidade."
+          },
+          "inspected_files": [
+            "P01/V2.png",
+            "P01/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "possible_critical_errors": null,
+          "evidence": "R1 marcado missing:true no package.json; não há original ou preview para inspeção. Não imputada nota.",
+          "inspected_files": []
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 representa relação entre pessoas/posse; D2 representa ciclo de etapas registradas. Mãos transferindo um pote versus três recipientes em círculo torna a escolha conceitual observável."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 usa pergunta com imagem antes do apoio; V2 usa comando e introduz público/ferramenta antes da mesma imagem. São escolhas úteis dentro do conceito."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: R1 ausente e encantamento de D2 abaixo de 4. Não se usa média para compensar ausência ou nota baixa.",
+      "visual_renders_complete": false,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    },
+    {
+      "package_id": "P02",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem estão\nseus potes?",
+            "support": [
+              "Uma ferramenta web para pequenos\nprodutores de alimentos acompanharem\nsuas embalagens retornáveis."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Nomeia ferramenta web, público e uso; a pergunta conecta ao controle dos recipientes.",
+            "professionalism": "Composição vertical limpa e contraste forte; alinhamento dos quatro potes cria uma faixa visual estável.",
+            "delight": "Natureza-morta bem acabada, mas o inventário de potes não acrescenta um achado à pergunta."
+          },
+          "inspected_files": [
+            "P02/D1.png",
+            "P02/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Cada pote tem\num caminho de volta.",
+            "support": [
+              "Registre entregas,\nempréstimos\ne devoluções.",
+              "Consulte quais potes\nainda estão com\nseus clientes.",
+              "Ferramenta web para pequenos produtores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Todos os textos lidos nos dois tamanhos. A linha de público no rodapé fica muito pequena a 360 px; passa nesta inspeção com reserva de conforto, não como prova de acessibilidade."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Texto identifica funções e público; mãos e setas tornam retorno e proximidade concretos.",
+            "professionalism": "Serifa distingue o título da lista; colunas imagem/texto se equilibram e a faixa lima orienta ação. Rodapé é pequeno.",
+            "delight": "Recorte das mãos com setas de ida/volta dá caráter tátil e uma metáfora pertinente."
+          },
+          "inspected_files": [
+            "P02/D2.png",
+            "P02/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes estão\ncom quais clientes?",
+            "support": [
+              "Consulte na Volta de Pote.",
+              "Registre entregas, empréstimos e devoluções.",
+              "Ferramenta web para pequenos produtores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline e CTA claros; apoio e linha de público legíveis a 360 px, embora a última linha exija atenção."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Pergunta e resposta apresentam a consulta; registros, natureza web e público estão presentes.",
+            "professionalism": "Imagem é grande e o CTA tem contraste; a linha final de público é pequena, mas legível.",
+            "delight": "A fileira de quatro recipientes continua parecendo catálogo; copy e arranjo são corretos, sem personalidade memorável."
+          },
+          "inspected_files": [
+            "P02/V1.png",
+            "P02/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Saiba quais potes\nainda estão\ncom seus clientes.",
+            "support": [
+              "Registre entregas, empréstimos e devoluções\nem uma ferramenta web feita para\npequenos produtores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Oferta, público e três registros estão explícitos; chamada mantém finalidade da primeira direção.",
+            "professionalism": "A imagem abre a peça; barra vertical lima marca o título. Blocos têm separação suficiente para leitura.",
+            "delight": "Arranjo mais editorial, ainda dependente de uma fotografia de produtos muito convencional."
+          },
+          "inspected_files": [
+            "P02/V2.png",
+            "P02/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes estão com\nquais clientes?",
+            "support": [
+              "Consulte na Volta de Pote.",
+              "Registre entregas, empréstimos e devoluções.",
+              "Ferramenta web para pequenos produtores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline maior permanece legível e sem corte. Apoio e rodapé pequenos, mas lidos a 360 px."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Palavras da pergunta de V1 preservadas visualmente; proposta segue clara.",
+            "professionalism": "Headline maior ganha destaque sem colidir com a linha de consulta; imagem e rodapé aparentam preservar posição.",
+            "delight": "A revisão melhora presença da headline, mas não altera a natureza previsível da campanha."
+          },
+          "inspected_files": [
+            "P02/R1.png",
+            "P02/R1-360.png"
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 aborda localização/posse com inventário de recipientes; D2 aborda retorno com transferência entre mãos e setas. Há distinção conceitual além de layout."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 pergunta e responde antes da imagem; V2 começa pelo inventário e depois apresenta a ação e a ferramenta. Mesmo asset aparente e conceito preservado."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: encantamento 3 em D1, V1, V2 e R1. Entrega visual completa não basta para o limiar criativo.",
+      "visual_renders_complete": true,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    },
+    {
+      "package_id": "P03",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes ainda\nestão com seus\nclientes?",
+            "support": [
+              "Uma ferramenta web\npara consultar quais\nrecipientes estão\ncom seus clientes."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Ferramenta e consulta estão explícitas; potes com alimentos situam o universo, enquanto a legenda apresenta os pequenos produtores.",
+            "professionalism": "Headline grande funciona, mas coluna esquerda termina muito acima da imagem, deixando um vazio extenso antes do CTA.",
+            "delight": "Fotografia de recipientes com folhas, limão e alimentos é cuidada, porém editorialmente comum."
+          },
+          "inspected_files": [
+            "P03/D1.png",
+            "P03/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Entregou.\nEmprestou. Voltou.",
+            "support": [
+              "Registre entregas, empréstimos\ne devoluções em uma ferramenta web."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Verbos correspondem ao produto e apoio nomeia ferramenta web; duas cenas materializam a ida e a volta sem números inventados.",
+            "professionalism": "Headline lima no floresta, imagem larga e CTA têm hierarquia clara; legenda complementa público.",
+            "delight": "Pote cheio/tampado e pote aberto em cenas lado a lado tornam a sequência mais memorável que uma natureza-morta."
+          },
+          "inspected_files": [
+            "P03/D2.png",
+            "P03/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem\nestão seus\npotes?",
+            "support": [
+              "Consulte quais\nrecipientes ainda\nestão com clientes.",
+              "Uma ferramenta web para pequenos\nprodutores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta, ferramenta web e público aparecem, sem ampliar funcionalidades.",
+            "professionalism": "Foto concentra peso à direita; intervalos amplos entre título, apoio e rodapé fragmentam a leitura.",
+            "delight": "O arranjo de potes e ingredientes é coerente, mas a distribuição parece um modelo genérico de apresentação."
+          },
+          "inspected_files": [
+            "P03/V1.png",
+            "P03/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais recipientes ainda\nestão com seus clientes?",
+            "support": [
+              "Registre entregas, empréstimos e devoluções.\nConsulte os recipientes que estão com clientes."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Registros e consulta corretos; a identificação web e do público depende da legenda.",
+            "professionalism": "Foto pequena centralizada fica isolada por grandes vazios, com regra horizontal sem relação forte com o tamanho da foto. Texto legível.",
+            "delight": "A foto vira uma vinheta de catálogo; há pouco diálogo visual com a pergunta."
+          },
+          "inspected_files": [
+            "P03/V2.png",
+            "P03/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem\nestão\nseus potes?",
+            "support": [
+              "Consulte quais\nrecipientes ainda\nestão com clientes.",
+              "Uma ferramenta web para pequenos\nprodutores de alimentos."
+            ],
+            "cta": "Conheça uma demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Pergunta preservada e maior; a oferta permanece identificada no apoio e rodapé.",
+            "professionalism": "Headline ampliada ocupa melhor o vazio da coluna esquerda e equilibra a foto; não há sobreposição observável.",
+            "delight": "Melhora de hierarquia não elimina o caráter previsível da fotografia e do arranjo."
+          },
+          "inspected_files": [
+            "P03/R1.png",
+            "P03/R1-360.png"
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 enfatiza consulta/posse com objetos em vista superior; D2 enfatiza sequência de ações com díptico de transferência. Alternativas conceituais pertinentes."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 usa colunas e pergunta curta; V2 usa título largo e foto central, com enumeração das funções. Oferecem comparação real de leitura dentro do mesmo conceito."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: adequação 3 em D1, V1 e V2, e encantamento 3 em quatro artefatos. R1 melhora hierarquia, sem elevar todo o conjunto ao limiar.",
+      "visual_renders_complete": true,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    },
+    {
+      "package_id": "P04",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem\nestão seus\npotes?",
+            "support": [
+              "Registre entregas,\nempréstimos e devoluções.\nConsulte quais recipientes\nainda estão com clientes.",
+              "Uma ferramenta web para\npequenos produtores de alimentos."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Pergunta, funções, público e natureza web claros; alimento nos potes ancora a atividade do público.",
+            "professionalism": "Imagem alta à direita e vários blocos à esquerda deixam ritmo esparso; CTA termina antes da coluna da foto, enfraquecendo fechamento.",
+            "delight": "Potes de salada e grãos bem produzidos, mas sem relação visual especialmente inventiva com a consulta."
+          },
+          "inspected_files": [
+            "P04/D1.png",
+            "P04/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Cada pote tem\num caminho de volta.",
+            "support": [
+              "Entrega, empréstimo e devolução:\nacompanhe os recipientes com seus clientes.",
+              "Ferramenta web para pequenos produtores de alimentos."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Ciclo entre mãos comunica continuidade e proximidade; texto identifica produto, público e etapas.",
+            "professionalism": "Título serifado, ilustração horizontal e apoio formam uma ordem consistente. CTA é destacado sem disputar a imagem.",
+            "delight": "Pote com alimento e pote vazio no trajeto criam narrativa tátil pertinente e coesa."
+          },
+          "inspected_files": [
+            "P04/D2.png",
+            "P04/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes estão\ncom quem?",
+            "support": [
+              "Consulte quais recipientes\nainda estão com clientes.",
+              "Registre entregas,\nempréstimos e devoluções.",
+              "Ferramenta web para\npequenos produtores de alimentos."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta e registros estão corretos; produto e público explícitos.",
+            "professionalism": "Título claro; os apoios ficam espalhados pela esquerda e a foto pequena dentro de sua área alta enfraquece a integração.",
+            "delight": "A composição comunica, mas parece um folheto genérico com natureza-morta decorativa."
+          },
+          "inspected_files": [
+            "P04/V1.png",
+            "P04/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Saiba quais\npotes estão\ncom clientes.",
+            "support": [
+              "Registre entregas,\nempréstimos e devoluções.\nConsulte os recipientes\nque estão com clientes.",
+              "Uma ferramenta web para\npequenos produtores de alimentos."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Título e apoio preservam consulta, etapas e público.",
+            "professionalism": "Imagem à esquerda e texto à direita têm proporções mais equilibradas; CTA amplo fecha bem. Apoio repete a headline, mas é legível.",
+            "delight": "Troca de coluna melhora arranjo, sem criar personalidade além dos recipientes convencionais."
+          },
+          "inspected_files": [
+            "P04/V2.png",
+            "P04/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes\nestão com quem?",
+            "support": [
+              "Consulte quais recipientes\nainda estão com clientes.",
+              "Registre entregas,\nempréstimos e devoluções.",
+              "Ferramenta web para\npequenos produtores de alimentos."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "As mesmas palavras de V1 permanecem; oferta e público continuam claros.",
+            "professionalism": "Headline ampliada funciona, porém mantém dispersão entre apoios e foto isolada à direita; revisão local não resolve esse desequilíbrio.",
+            "delight": "A peça continua correta e previsível, mesmo com a pergunta mais enfática."
+          },
+          "inspected_files": [
+            "P04/R1.png",
+            "P04/R1-360.png"
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 aborda controle/consulta por potes estáticos; D2 mostra circulação entre pessoas com caminho de retorno. Diferença de narrativa, não só de fonte."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 prioriza pergunta no topo, V2 integra comando à coluna da foto invertida. Conservam objeto e conceito, permitindo escolher leitura."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: encantamento 3 em D1/V1/V2/R1 e adequação 3 em D1/V1/R1. D2 isolada é a direção mais resolvida deste pacote.",
+      "visual_renders_complete": true,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    },
+    {
+      "package_id": "P05",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Seus potes vão.\nVocê acompanha.",
+            "support": [
+              "Registre entregas, empréstimos e devoluções."
+            ],
+            "cta": "Conheça a demonstração →",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Registros e CTA estão claros, mas peça e legenda não dizem ferramenta web; caminhões e rota podem sugerir serviço de logística.",
+            "professionalism": "Headline e faixa inferior legíveis; barras brancas laterais da imagem quebram a continuidade pedra e parecem sobra de encaixe.",
+            "delight": "Ilustração de produtores, entregas e caminho circular tem narrativa própria, textura e proximidade."
+          },
+          "inspected_files": [
+            "P05/D1.png",
+            "P05/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Um lugar para acompanhar\nseus recipientes.",
+            "support": [
+              "Veja quais ainda estão com clientes."
+            ],
+            "cta": "Conheça a demonstração →",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta é comunicada, mas “um lugar” com foto de cozinha não esclarece ferramenta web; legenda também não a nomeia.",
+            "professionalism": "Serifa e moldura dão unidade, porém laterais brancas muito largas da foto parecem um encaixe incompleto. Texto e CTA são legíveis.",
+            "delight": "Foto de conservas é agradável, mas genérica e menos ligada à materialidade de papel que a direção ilustrada."
+          },
+          "inspected_files": [
+            "P05/D2.png",
+            "P05/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "O caminho dos potes,\nmais fácil de acompanhar.",
+            "support": [
+              "Registre entregas, empréstimos e devoluções."
+            ],
+            "cta": "Conheça a demonstração →",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [
+            {
+              "gate": "G01",
+              "status": "dúvida, não falha crítica confirmada",
+              "evidence": "“mais fácil de acompanhar” sugere benefício comparativo não demonstrado no brief. Pode ser linguagem qualitativa de simplicidade; não há número, garantia ou resultado medido. Não inferi comprovação."
+            }
+          ],
+          "evidence": {
+            "alignment": "Registros corretos, mas natureza web continua ausente; promessa qualitativa “mais fácil” é uma dúvida a registrar.",
+            "professionalism": "Imagem grande tem narrativa legível; gutters brancos e botão de largura diferente da imagem reduzem acabamento.",
+            "delight": "Circuito rural e humanos na troca tornam o percurso memorável e coerente com continuidade."
+          },
+          "inspected_files": [
+            "P05/V1.png",
+            "P05/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Onde estão\nseus recipientes?",
+            "support": [
+              "Consulte quais ainda estão com clientes."
+            ],
+            "cta": "Conheça a demonstração →",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta de posse está clara; ilustração logística sem identificação web ainda deixa o tipo de produto ambíguo.",
+            "professionalism": "Fundo floresta valoriza título e CTA; bordas brancas da ilustração destoam fortemente do entorno escuro.",
+            "delight": "Narrativa de ida/volta permanece uma característica forte; mudança de contraste dá presença à pergunta."
+          },
+          "inspected_files": [
+            "P05/V2.png",
+            "P05/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "O caminho dos potes, mais\nfácil de acompanhar.",
+            "support": [
+              "Registre entregas, empréstimos e devoluções."
+            ],
+            "cta": "Conheça a demonstração →",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [
+            {
+              "gate": "G01",
+              "status": "dúvida, não falha crítica confirmada",
+              "evidence": "“mais fácil de acompanhar” sugere benefício comparativo não demonstrado no brief. Pode ser linguagem qualitativa de simplicidade; não há número, garantia ou resultado medido. Não inferi comprovação."
+            }
+          ],
+          "evidence": {
+            "alignment": "Palavras de V1 mantidas e funções corretas; segue sem explicitar ferramenta web.",
+            "professionalism": "Ampliação do título é perceptível sem corte; encaixe branco da imagem continua aparente e o fechamento não se alinha à sua largura.",
+            "delight": "Ilustração de circulação continua o principal elemento de personalidade; edição não remove esse mérito."
+          },
+          "inspected_files": [
+            "P05/R1.png",
+            "P05/R1-360.png"
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 conta o percurso de circulação entre produção e clientes; D2 foca organização/consulta na rotina do produtor. Há distinção narrativa, embora a segunda dependa mais da copy que da foto."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 enfatiza acompanhamento do caminho; V2 pergunta pela localização/posse e usa contraste escuro. São variações úteis do mesmo circuito, com mesmo asset aparente."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: alinhamento 3 e adequação 3 em todos os artefatos; D2 também tem encantamento 3. A ilustração forte não compensa ambiguidade da oferta nem as faixas brancas de encaixe.",
+      "visual_renders_complete": true,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    },
+    {
+      "package_id": "P06",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "O caminho\ndo pote,\nmais claro.",
+            "support": [
+              "Acompanhe entregas,\nempréstimos e devoluções\nde recipientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [
+            {
+              "gate": "G01",
+              "status": "dúvida, não falha crítica confirmada",
+              "evidence": "“mais claro” é um benefício qualitativo sem evidência comparativa; pode traduzir simplicidade, sem afirmar ganho medido."
+            }
+          ],
+          "evidence": {
+            "alignment": "Etapas e demonstração são comunicadas; falta nomear ferramenta web e pequenos produtores na peça e legenda.",
+            "professionalism": "Serifa grande e imagem vertical têm separação clara; CTA largo é legível. Imagem conduz o olhar pelo percurso.",
+            "delight": "Caminho sinuoso conectando entrega, cliente e retorno tem personalidade editorial e textura pertinente."
+          },
+          "inspected_files": [
+            "P06/D1.png",
+            "P06/D1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes ainda\nestão com clientes?",
+            "support": [
+              "Consulte seus recipientes na Volta de Pote."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta correta, porém marca e foto de produção não identificam que se trata de ferramenta web; legenda tampouco.",
+            "professionalism": "Moldura verde, título e foto horizontal têm bom equilíbrio; CTA facilmente encontrado.",
+            "delight": "Foto de mãos embalando alimentos é competente, mas convencional e não torna visual a consulta."
+          },
+          "inspected_files": [
+            "P06/D2.png",
+            "P06/D2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "O pote vai.\nVocê acompanha.",
+            "support": [
+              "Registre entregas,\nempréstimos e devoluções\nde recipientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Registros preservados e voz próxima; permanece ausência de identificação web/público.",
+            "professionalism": "Headline curta fica pequena frente à imagem vertical; grande vazio até o apoio deixa a coluna esquerda frouxa.",
+            "delight": "A narrativa sinuosa mantém identidade e proximidade; serifas combinam com a linguagem ilustrada."
+          },
+          "inspected_files": [
+            "P06/V1.png",
+            "P06/V1-360.png"
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "A volta de\ncada pote\ncomeça aqui.",
+            "support": [
+              "Consulte quais recipientes\nainda estão com clientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Todos os textos lidos no preview. CTA é visivelmente menor que em V1/R1; legível nesta inspeção, com reserva de conforto."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Consulta correta; “começa aqui” é menos informativo, e natureza web permanece ausente.",
+            "professionalism": "Imagem domina a esquerda; apoio e CTA pequenos à direita deixam área vazia grande entre eles, perdendo força de leitura.",
+            "delight": "Imagem tem personalidade e percurso narrativo; a headline dialoga com a volta sem oferecer um achado verbal excepcional."
+          },
+          "inspected_files": [
+            "P06/V2.png",
+            "P06/V2-360.png"
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "O pote vai.\nVocê\nacompanha.",
+            "support": [
+              "Registre entregas,\nempréstimos e devoluções\nde recipientes."
+            ],
+            "cta": "Conheça a demonstração",
+            "other_visible_text": [],
+            "image_region_text": "Nenhum texto adicional identificado visualmente na região da imagem. Isto não verifica o asset isolado."
+          },
+          "alignment": 3,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "cta": "legível",
+            "evidence": "Headline, apoio e CTA lidos no original e no preview integral de 360 px; contraste verde/pedra ou lima/verde suficiente nesta inspeção, sem corte ou sobreposição observados."
+          },
+          "critical_errors": [],
+          "possible_critical_errors": [],
+          "evidence": {
+            "alignment": "Palavras da primeira variação preservadas; ainda é necessário explicar o produto web.",
+            "professionalism": "Escala maior dá presença à coluna esquerda e reduz vazio acima do apoio; quebra em três linhas permanece legível, sem colisão.",
+            "delight": "Materialidade e percurso são preservados visualmente; melhor peso do título sustenta a ilustração."
+          },
+          "inspected_files": [
+            "P06/R1.png",
+            "P06/R1-360.png"
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 4,
+          "evidence": "D1 conta o caminho de circulação por ilustração sequencial; D2 aborda recipientes em posse de clientes a partir da rotina de embalagem. Contraste conceitual pertinente, embora D2 seja menos específico visualmente."
+        },
+        "convergence": {
+          "score": 4,
+          "evidence": "V1 é uma frase de acompanhamento e lista de registros; V2 reorganiza em colunas invertidas e prioriza consulta. Explora o mesmo caminho com mensagem diferente, sem exigir nova direção."
+        }
+      },
+      "accepted": false,
+      "reason": "Não aceitável: alinhamento 3 em todas as peças; adequação 3 em V1/V2 e encantamento 3 em D2. R1 melhora o destaque local, mas não esclarece a natureza web da oferta.",
+      "visual_renders_complete": true,
+      "full_contract_completeness": "não avaliável: pacote contém renders e legendas, mas não planos e assets isolados",
+      "critical_errors_observed": [],
+      "contract_gates": "G01–G09 não integralmente avaliáveis neste recorte. Ausência de erro crítico visual confirmado não equivale a passar todos os gates."
+    }
+  ],
+  "limitations": [
+    "Avaliação simulada de LLM; não valida preferência humana, aceitação do fundador, uso, conversão, resultado comercial ou promoção do harness.",
+    "O pacote cego contém imagens compostas e legendas, não o histórico completo de execução, planos MCP, IDs de camada e assets isolados. Não se confirma editabilidade, ausência de texto em assets originais, hashes de reuso, autoridade de geração ou integridade determinística da revisão.",
+    "Nenhum erro crítico foi confirmado nos pixels/textos inspecionados; isso não significa que G01–G09 passaram. Dúvidas comparativas foram explicitadas nos artefatos, sem transformá-las em prova de ganho ou falha.",
+    "G01 tem apenas cobertura do texto visível e legendas; G03 apenas observação da paleta dominante e ausência da alegação de 80% nas peças. G02/G04/G05/G06/G07/G08/G09 dependem de evidência não integralmente disponível. Reuso aparente de imagem não prova identidade do arquivo.",
+    "P01 R1 ausente permanece null, sem nota artificial. Os demais pacotes têm os cinco renders visíveis, mas completude contratual integral permanece não avaliável.",
+    "Rótulo accepted:false decorre de falhas observáveis suficientes; não é ranking de eficiência. Custo, latência, autoria e modelos candidatos não foram consultados.",
+    "Legibilidade a 360 px registra leitura visual nesta interface, não acessibilidade universal. Linhas pequenas em P01 D2, P02 e P06 V2 recebem reserva explícita, sem inferir falha por tamanho declarado.",
+    "A paleta dominante foi inspecionada visualmente. Cores naturais de pele, alimentos e sombras não foram tratadas automaticamente como violação da paleta, e valores hexadecimais não foram medidos.",
+    "O brief contém relato sintético explícito de não obtenção do resultado em T5, sem causa geral explicada; elogio à materialidade e crítica à headline são locais. Nenhum download ocorreu no cenário. A revisão não demonstra conclusão posterior nem intenção de uso.",
+    "A rubrica informa exposição de sua autoria a apêndice de resultados anteriores: casos novos e autoria separada não constituem holdout protegido nem avaliação sem exposição ao corpus.",
+    "Persistência de memória, isolamento multiusuário, autorização de produção, telemetria real, revogação, recuperação e resistência geral a prompt injection não foram exercitados por este julgamento visual."
+  ]
+}

@@ -1,0 +1,15 @@
+{
+  "direction_id": "vdp_percurso",
+  "asset_ref": "vdp_asset_percurso_v1",
+  "prompt": "Criar um único ativo panorâmico, proporção 3:1, como ilustração editorial tátil de papel recortado fosco. Três pequenas cenas de igual importância, em uma única faixa horizontal, centralizadas nos terços esquerdo, central e direito. À esquerda, uma mão oferece um pote fechado a outra mão; no centro, mãos de um cliente seguram o pote; à direita, uma mão devolve o pote vazio a outra mão. Repetir o mesmo desenho de recipiente para sugerir continuidade. Formas simples, próximas e reconhecíveis, textura discreta de papel. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra. Todos os elementos inteiros, com margens internas, sem recorte e sem detalhes pequenos; o ativo será exibido integralmente em 936 × 312 px. Não incluir setas, legendas, divisórias, telas, interface, gráficos, selos ou símbolos de reciclagem. Sem letras, palavras, números, logotipos, assinaturas ou marcas-d'água. Os nomes das operações serão acrescentados como texto editável fora do ativo.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-0767c67a-49cd-4ece-84f2-0c3eff870f57.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/assets/vdp_asset_percurso_v1.png",
+  "sha256": "3d6e092227a75f24dc11e42b5b65828bd8cbaa43d516d411f7f1efb310f83558",
+  "elapsed_ms": 16625,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

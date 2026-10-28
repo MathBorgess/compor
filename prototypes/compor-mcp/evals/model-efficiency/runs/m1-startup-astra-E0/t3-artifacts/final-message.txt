@@ -1,0 +1,236 @@
+{
+  "directions": [
+    {
+      "id": "direcao_pergunta",
+      "title": "Uma pergunta do dia a dia",
+      "concept": "Parte da necessidade de saber quais potes estão com clientes. Uma natureza-morta aproxima a comunicação do cotidiano dos pequenos produtores; a pergunta conduz à função de consulta. Controle e proximidade orientam esta hipótese.",
+      "composition_plan": {
+        "piece_id": "vdp_pergunta",
+        "version": "v1",
+        "variation_ref": "direcao_pergunta",
+        "product_ref": "volta_de_pote",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "a_fundo",
+            "name": "Base pedra",
+            "kind": "shape",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "a_imagem",
+            "name": "Natureza-morta de potes",
+            "kind": "image",
+            "asset_ref": "vdp_asset_pergunta_v1",
+            "rect": {"x": 0.0556, "y": 0.3148, "width": 0.8889, "height": 0.4444},
+            "z_index": 1
+          },
+          {
+            "id": "a_marca",
+            "name": "Nome do produto",
+            "kind": "text",
+            "text": "Volta de Pote",
+            "rect": {"x": 0.0593, "y": 0.0389, "width": 0.8815, "height": 0.0463},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 34,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "a_titulo",
+            "name": "Pergunta principal",
+            "kind": "text",
+            "text": "Quais potes ainda estão\ncom seus clientes?",
+            "rect": {"x": 0.0593, "y": 0.1111, "width": 0.8815, "height": 0.1667},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 64,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "a_apoio",
+            "name": "Funções do produto",
+            "kind": "text",
+            "text": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+            "rect": {"x": 0.0593, "y": 0.7796, "width": 0.8815, "height": 0.0852},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 32,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "a_faixa",
+            "name": "Destaque lima",
+            "kind": "shape",
+            "shape": "rectangle",
+            "rect": {"x": 0.0593, "y": 0.8926, "width": 0.8815, "height": 0.0704},
+            "fill_hex": "#C9D94A",
+            "z_index": 5
+          },
+          {
+            "id": "a_convite",
+            "name": "Convite à demonstração",
+            "kind": "text",
+            "text": "Conheça a demonstração",
+            "rect": {"x": 0.0815, "y": 0.9065, "width": 0.837, "height": 0.0463},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 36,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Quais potes ainda estão com seus clientes? A Volta de Pote é uma ferramenta web para pequenos produtores de alimentos registrarem entregas, empréstimos e devoluções de recipientes e consultarem quais ainda estão com clientes. Conheça a demonstração."
+    },
+    {
+      "id": "direcao_ciclo",
+      "title": "Cada etapa conta",
+      "concept": "Apresenta o produto pelo acompanhamento da circulação dos recipientes. Uma ilustração de papel representa continuidade, enquanto as três ações ganham protagonismo editorial. Simplicidade e continuidade orientam esta hipótese, em vez de partir de uma dúvida pontual.",
+      "composition_plan": {
+        "piece_id": "vdp_ciclo",
+        "version": "v1",
+        "variation_ref": "direcao_ciclo",
+        "product_ref": "volta_de_pote",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "b_fundo",
+            "name": "Base pedra",
+            "kind": "shape",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "b_lateral",
+            "name": "Faixa floresta",
+            "kind": "shape",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 0.0222, "height": 1},
+            "fill_hex": "#183F32",
+            "z_index": 1
+          },
+          {
+            "id": "b_marca",
+            "name": "Nome do produto",
+            "kind": "text",
+            "text": "Volta de Pote",
+            "rect": {"x": 0.0593, "y": 0.0389, "width": 0.8815, "height": 0.0463},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 34,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "b_titulo",
+            "name": "Etapas do acompanhamento",
+            "kind": "text",
+            "text": "Entrega.\nEmpréstimo.\nDevolução.",
+            "rect": {"x": 0.0593, "y": 0.1519, "width": 0.4722, "height": 0.25},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 64,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "b_imagem",
+            "name": "Ciclo conceitual dos recipientes",
+            "kind": "image",
+            "asset_ref": "vdp_asset_ciclo_v1",
+            "rect": {"x": 0.5463, "y": 0.1444, "width": 0.3981, "height": 0.463},
+            "z_index": 4
+          },
+          {
+            "id": "b_mensagem",
+            "name": "Ideia de continuidade",
+            "kind": "text",
+            "text": "Acompanhe cada etapa.",
+            "rect": {"x": 0.0593, "y": 0.6481, "width": 0.8815, "height": 0.0602},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 48,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "b_apoio",
+            "name": "Apresentação da ferramenta",
+            "kind": "text",
+            "text": "Uma ferramenta web para pequenos produtores\nregistrarem a circulação de seus recipientes.",
+            "rect": {"x": 0.0593, "y": 0.7426, "width": 0.8815, "height": 0.0926},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 32,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "b_faixa",
+            "name": "Destaque lima",
+            "kind": "shape",
+            "shape": "rectangle",
+            "rect": {"x": 0.0593, "y": 0.8926, "width": 0.8815, "height": 0.0704},
+            "fill_hex": "#C9D94A",
+            "z_index": 7
+          },
+          {
+            "id": "b_convite",
+            "name": "Convite à demonstração",
+            "kind": "text",
+            "text": "Conheça a demonstração",
+            "rect": {"x": 0.0815, "y": 0.9065, "width": 0.837, "height": 0.0463},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 36,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 8
+          }
+        ]
+      },
+      "caption": "Entrega, empréstimo e devolução fazem parte da circulação dos seus recipientes. Com a Volta de Pote, pequenos produtores de alimentos podem registrar essas etapas e consultar quais embalagens ainda estão com clientes. Conheça a demonstração da ferramenta web."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "direcao_pergunta",
+      "asset_ref": "vdp_asset_pergunta_v1",
+      "prompt": "Criar um único asset horizontal, proporção 2:1, para uma peça editorial sobre recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta com três potes reutilizáveis de tamanhos diferentes, tampas simples e sem rótulos, distribuídos sobre superfície fosca com textura discreta de papel. Tratamento fotográfico estilizado, acolhedor e cotidiano. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra uniforme nas bordas. Objetos inteiros, centralizados, com margem interna ampla para encaixe proporcional sem recorte. Sem letras, palavras, números, logotipos, marcas-d'água ou qualquer texto. Sem telas, interfaces, gráficos, selos ou símbolos de resultados ambientais. Entregar apenas a imagem dos objetos; todo conteúdo verbal será adicionado em camadas editáveis."
+    },
+    {
+      "direction_id": "direcao_ciclo",
+      "asset_ref": "vdp_asset_ciclo_v1",
+      "prompt": "Criar um único asset vertical na proporção 43:50. Ilustração editorial artesanal com aparência de recortes de papel fosco, representando continuidade na circulação de recipientes: três silhuetas de potes reutilizáveis dispostas ao redor de uma faixa curva contínua e oval. A faixa é uma metáfora visual de percurso, sem setas de reciclagem e sem sugerir automação. Formas simples e legíveis, textura de papel discreta. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra uniforme nas bordas. Conjunto inteiro centralizado com margem interna ampla para encaixe proporcional sem recorte. Sem letras, palavras, números, logotipos, marcas-d'água ou qualquer texto. Sem telas, interfaces, gráficos, selos ambientais ou indicadores de impacto. Entregar apenas a ilustração; os nomes das etapas serão textos editáveis separados."
+    }
+  ],
+  "conversation_response": "A primeira direção começa com uma pergunta concreta e usa objetos do cotidiano; a segunda explica o acompanhamento das etapas por uma metáfora de continuidade. A copy está nas camadas de texto editáveis. Os dois planos foram preparados no MCP, com retângulos em coordenadas normalizadas. O MCP sinalizou fontes não resolvidas; Arial está no catálogo informado do compositor, e o encaixe final ainda depende da composição pelo coordenador. Os asset_ref são reservas locais para os dois pedidos futuros, não arquivos existentes. Não houve geração ou renderização nesta etapa. Você poderá comparar os pilotos, pedir ajustes ou rejeitar ambas as direções; nenhuma delas foi registrada como preferência permanente."
+}

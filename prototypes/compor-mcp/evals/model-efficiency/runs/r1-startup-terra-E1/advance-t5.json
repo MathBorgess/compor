@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/resume-after-t4.json",
+      "sha256": "873592a50aa07fee31665d70b8e82aa9b77ec1535c9455ab174e54dc1291ed2a"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets.json",
+      "sha256": "a2a49229b7f1680420543ada00343190c1fc24bddfa3d0debdd7e1e8c1d0984e"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "variacao-a-revisao-1",
+        "piece_id": "peca-caminho-variacao-va",
+        "version": "proposta-2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t5-artifacts/renders/variacao-a-revisao-1.png",
+        "png_sha256": "73a0aece22a2bf0e94f032b55eea2f0ad02633d52bf0b833deea027c451a4e2f",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t5-artifacts/renders/variacao-a-revisao-1.json",
+        "report_sha256": "33277a10f108adf3a057a0e03f4a05c1a3187babde27e94c0c04ec49e22ff4de",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 213.695458,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-caminho-pote"
+        ],
+        "layers": [
+          {
+            "id": "va-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "va-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-caminho-pote"
+          },
+          {
+            "id": "va-marca",
+            "kind": "text"
+          },
+          {
+            "id": "va-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "va-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "va-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "va-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.480292,
+    "total": 228.657125
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

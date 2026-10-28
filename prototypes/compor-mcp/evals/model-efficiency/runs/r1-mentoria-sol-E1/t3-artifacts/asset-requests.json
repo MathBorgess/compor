@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "ta-direcao-percurso",
+    "asset_ref": "ta-asset-percurso-proposto-v1",
+    "prompt": "Criar uma única ilustração editorial abstrata horizontal, proporção 952:340, destinada à camada p-visual da peça ta-percurso-proposta v1. Vista plana de um mapa conceitual sem qualquer escrita: pequenos núcleos geométricos ameixa conectados por linhas delicadas; uma sequência contínua argila percorre parte desses núcleos, sugerindo uma escolha entre possibilidades. Composição arejada, poucos elementos, leitura clara, sem aparência de labirinto ou corrida. Fundo sólido creme #F4EBDD até todas as bordas. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD. Todo o desenho deve caber no enquadramento, com margem interna generosa, adequado a encaixe contain sem recorte. Sem letras, palavras, números, legendas, símbolos tipográficos, logotipos, assinaturas ou marcas-d'água."
+  },
+  {
+    "direction_id": "ta-direcao-trama",
+    "asset_ref": "ta-asset-trama-proposto-v1",
+    "prompt": "Criar uma única imagem editorial tátil vertical, proporção 330:500, destinada à camada t-visual da peça ta-trama-proposta v1. Vista frontal próxima de fios espessos que se entrelaçam gradualmente em uma pequena trama aberta: fios individuais permanecem visíveis na parte superior e se conectam em tecido na parte inferior. Estrutura artesanal cuidadosa e contemporânea, composição simples, sem mãos, ferramentas, moldura ou objetos adicionais. Representar construção e relação entre partes, sem sugerir desordem ou reparação. Usar exclusivamente fios ameixa #532B54 e argila #C76B4B sobre fundo sólido creme #F4EBDD até todas as bordas; textura discreta dos fios. Objeto inteiro dentro do enquadramento com margem interna, adequado a encaixe contain sem recorte. Sem letras, palavras, números, símbolos tipográficos, etiquetas, logotipos, assinaturas ou marcas-d'água."
+  }
+]

@@ -1,0 +1,15 @@
+{
+  "direction_id": "vdp-direcao-controle-v1",
+  "asset_ref": "vdp-asset-controle-01-v1",
+  "prompt": "Criar um único ativo visual vertical, proporção 3:4, para uma peça sobre acompanhamento de recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta editorial de três potes alimentícios reutilizáveis com tampas, inteiros e separados, organizados em alturas diferentes, com contornos claros e aparência fosca. Tratamento de maquete artesanal em papel, textura sutil e iluminação uniforme. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra preenchendo toda a imagem. Manter margem interna para todos os objetos, pois o ativo será encaixado inteiro, sem recorte. Comunicar organização e presença concreta dos recipientes; não representar dashboard, interface, lista, etiquetas, indicadores ou funcionalidades. Sem letras, palavras, números, logotipos, marcas-d'água ou símbolos de certificação. Todo conteúdo verbal será adicionado em camadas editáveis fora do ativo. Associação futura: peça vdp-controle, versão v1, camada controle-imagem.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-fa36fa29-443c-47e9-ab11-873a18c5de85.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/assets/vdp-asset-controle-01-v1.png",
+  "sha256": "2e11744bb4184d746e4a75ba941caf646e18736c32f03ab884f0deb68e271522",
+  "elapsed_ms": 21366,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

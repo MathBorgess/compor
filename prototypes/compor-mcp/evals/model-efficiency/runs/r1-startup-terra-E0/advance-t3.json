@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets.json",
+      "sha256": "7598922e533724804915ecd08e07bf44f1f27ccd12d6c40a2b2f0717e7146908"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-ciclo",
+        "piece_id": "volta-pote-ciclo",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts/renders/direcao-ciclo.png",
+        "png_sha256": "c80eab7c3ad8aa2e29633d7ea27d404f29d20866e6212630c0df2072f1daedab",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts/renders/direcao-ciclo.json",
+        "report_sha256": "874312b18d7a750ebab1d801b94989ce457556cd03328d318489d68ec5880cb7",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 237.34225,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-ciclo-01"
+        ],
+        "layers": [
+          {
+            "id": "c-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "c-imagem",
+            "kind": "image",
+            "asset_ref": "asset-ciclo-01"
+          },
+          {
+            "id": "c-marca",
+            "kind": "text"
+          },
+          {
+            "id": "c-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "c-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "c-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "c-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-bancada",
+        "piece_id": "volta-pote-bancada",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts/renders/direcao-bancada.png",
+        "png_sha256": "f75252ad5ab72884745612aa2c56513da0cdcfbbb300928df1460f213e4df76e",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts/renders/direcao-bancada.json",
+        "report_sha256": "37a96807c4ee36342cab3d72638b5f8fff8eb5e521e4b0fc020d0f5f5b1183cc",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 143.738666,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-bancada-01"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-painel",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-bancada-01"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-destaque",
+            "kind": "shape"
+          },
+          {
+            "id": "b-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/resume-after-t3.json",
+      "sha256": "df042b2b2c53e37c0ab01e7b05e2710e23bc96b1727198c10a896267f8f1693f",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.500542,
+    "total": 395.760167
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

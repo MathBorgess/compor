@@ -1,0 +1,277 @@
+{
+  "directions": [
+    {
+      "id": "direcao-fios",
+      "title": "Conhecimento em trama",
+      "concept": "Uma metáfora abstrata: fios independentes se encontram e formam uma trama, sugerindo que conhecimentos já existentes podem ganhar uma estrutura de ensino. O foco está na transformação de ideias em uma forma compartilhável.",
+      "composition_plan": {
+        "piece_id": "trama-fios",
+        "version": "v1-proposta",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.050926,
+              "width": 0.851852,
+              "height": 0.046296
+            },
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text",
+            "name": "Chamada principal",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.12037,
+              "width": 0.851852,
+              "height": 0.148148
+            },
+            "text": "Seu conhecimento\npode ganhar forma.",
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 58,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "name": "Ativo visual proposto",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.291667,
+              "width": 0.851852,
+              "height": 0.361111
+            },
+            "z_index": 3
+          },
+          {
+            "id": "fios-detalhes",
+            "kind": "text",
+            "name": "Formato da mentoria",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.680556,
+              "width": 0.851852,
+              "height": 0.106481
+            },
+            "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 34,
+            "color_hex": "#532B54",
+            "line_height": 1.25,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "fios-faixa",
+            "kind": "shape",
+            "name": "Faixa do convite",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.833333,
+              "width": 0.851852,
+              "height": 0.092593
+            },
+            "fill_hex": "#532B54",
+            "z_index": 5
+          },
+          {
+            "id": "fios-convite",
+            "kind": "text",
+            "name": "Convite para contato",
+            "rect": {
+              "x": 0.101852,
+              "y": 0.861111,
+              "width": 0.796296,
+              "height": 0.044444
+            },
+            "text": "Peça informações por mensagem",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 32,
+            "color_hex": "#F4EBDD",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Você já conhece bem um assunto. Que tal organizar esse conhecimento para seu primeiro curso curto?\n\nNa Trama de Aula, a mentoria acontece em quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\n\nSe quiser saber mais, me envie uma mensagem."
+    },
+    {
+      "id": "direcao-mesa",
+      "title": "Mesa de planejamento",
+      "concept": "Uma cena concreta de trabalho: folhas e cartões vazios organizados sobre uma mesa evocam as decisões práticas de planejar uma aula. O foco está no processo de organizar o curso, com uma linguagem visual editorial e cotidiana.",
+      "composition_plan": {
+        "piece_id": "trama-mesa",
+        "version": "v1-proposta",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "mesa-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "mesa-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.050926,
+              "width": 0.851852,
+              "height": 0.046296
+            },
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "mesa-titulo",
+            "kind": "text",
+            "name": "Chamada principal",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.12037,
+              "width": 0.851852,
+              "height": 0.148148
+            },
+            "text": "Um curso começa\ncom um plano.",
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 58,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "mesa-imagem",
+            "kind": "image",
+            "name": "Ativo visual proposto",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.291667,
+              "width": 0.851852,
+              "height": 0.361111
+            },
+            "z_index": 3
+          },
+          {
+            "id": "mesa-detalhes",
+            "kind": "text",
+            "name": "Formato da mentoria",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.680556,
+              "width": 0.851852,
+              "height": 0.106481
+            },
+            "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 34,
+            "color_hex": "#532B54",
+            "line_height": 1.25,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "mesa-faixa",
+            "kind": "shape",
+            "name": "Faixa do convite",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0.074074,
+              "y": 0.833333,
+              "width": 0.851852,
+              "height": 0.092593
+            },
+            "fill_hex": "#532B54",
+            "z_index": 5
+          },
+          {
+            "id": "mesa-convite",
+            "kind": "text",
+            "name": "Convite para contato",
+            "rect": {
+              "x": 0.101852,
+              "y": 0.861111,
+              "width": 0.796296,
+              "height": 0.044444
+            },
+            "text": "Peça informações por mensagem",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 32,
+            "color_hex": "#F4EBDD",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Organizar um curso curto começa por dar forma ao que você já sabe e decidir como compartilhá-lo.\n\nA Trama de Aula é uma mentoria com quatro encontros semanais ao vivo e revisão de um plano de aula, para profissionais que querem organizar seu primeiro curso curto.\n\nQuer conhecer a mentoria? Me envie uma mensagem para pedir informações."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "direcao-fios",
+      "asset_ref": "asset-proposto-fios-v1",
+      "prompt": "Ilustração editorial abstrata horizontal, proporção aproximada 2,36:1, com fundo branco. Fios delicados em ameixa #532B54, argila #C76B4B e creme #F4EBDD partem de pontos distintos e se entrelaçam em uma trama simples e organizada no centro. Formas orgânicas, composição arejada, aparência artesanal contemporânea. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+    },
+    {
+      "direction_id": "direcao-mesa",
+      "asset_ref": "asset-proposto-mesa-v1",
+      "prompt": "Imagem editorial horizontal, proporção aproximada 2,36:1, com fundo branco: vista de cima de uma mesa de planejamento com folhas e cartões inteiramente em branco, dispostos em grupos organizados, e um lápis simples. Use ameixa #532B54, argila #C76B4B e creme #F4EBDD nos objetos, com composição arejada e luz suave. Sem letras, palavras, números, inscrições, logotipos ou marcas-d'água."
+    }
+  ],
+  "conversation_response": "As duas propostas mantêm a mesma oferta, voz e paleta: a primeira usa uma metáfora abstrata de conexão; a segunda mostra uma situação concreta de planejamento. Os IDs de ativos são reservas propostas, ainda sem arquivo. O coordenador pode associar cada ativo à camada de imagem correspondente após a geração. Você pode escolher uma direção, combinar aspectos ou recusar ambas."
+}

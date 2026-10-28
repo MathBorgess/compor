@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-percurso",
+  "asset_ref": "pedido-trama-percurso-visual-v1",
+  "prompt": "Criar uma única ilustração editorial vertical, proporção 388:480, para a camada percurso-imagem. Metáfora de autonomia ao escolher o que ensinar: um percurso orgânico contínuo que se ramifica suavemente em possibilidades abertas, visto de cima, com pequenas áreas circulares de pausa. Caminhos claros e tranquilos, sem labirinto, competição, pódio, chegada ou indicação de opção correta. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo sólido creme até as bordas. Traços largos e formas planas, composição adulta e acolhedora, espaços generosos e margem interna; a imagem será encaixada proporcionalmente sem recorte. Sem letras, palavras, números, marcas-d'água, logotipos, assinaturas ou qualquer elemento tipográfico. Sem sombras, gradientes ou efeitos fotográficos. Não incluir a peça completa nem seu conteúdo verbal.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-810ac750-a65a-4f2c-8642-2c19ca5e7111.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/assets/pedido-trama-percurso-visual-v1.png",
+  "sha256": "bf042ee1da00e46507f8fa2b8240ea873b3644160f1840f5e058a1a7db154f83",
+  "elapsed_ms": 19234,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

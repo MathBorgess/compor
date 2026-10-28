@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-paradeiro",
+    "asset_ref": "asset-vdp-paradeiro-01-proposto",
+    "prompt": "Criar um único ativo fotográfico horizontal, proporção 101:60, para uma peça sobre recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta próxima e cotidiana: um pote simples fechado em primeiro plano à direita e dois recipientes semelhantes agrupados mais atrás à esquerda, separados por espaço vazio visível. Todos inteiros, com margens generosas e sem cortes. Superfície fosca com textura sutil de papel. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, admitindo variações de luminosidade para volume. Luz suave, detalhes simples, aparência tátil. Fundo pedra contínuo preenchendo toda a imagem; a composição deve funcionar inteira em encaixe proporcional contain, sem depender de recorte. Sem pessoas, interfaces, telas, gráficos, selos, símbolos de reciclagem ou elementos que sugiram rastreamento automático. Sem letras, palavras, números, logotipos, etiquetas escritas, assinaturas ou marcas-d'água. Não incorporar título, copy ou convite."
+  },
+  {
+    "direction_id": "dir-cada-movimento",
+    "asset_ref": "asset-vdp-cada-movimento-01-proposto",
+    "prompt": "Criar um único ativo de ilustração editorial horizontal, proporção 476:185, com aparência de colagem artesanal em papel fosco. Representar continuidade por uma fita larga suavemente sinuosa que percorre a imagem da esquerda à direita e faz uma curva de retorno. Distribuir três representações semelhantes de potes fechados ao longo desse percurso, como metáfora visual de movimentos de recipientes, sem aparência de tela ou diagrama de software. Formas simples, textura de papel discreta, sem brilho e sem efeito tridimensional fotográfico. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo pedra contínuo; todos os elementos inteiros dentro da imagem, com margens generosas. A composição deve funcionar inteira em encaixe proporcional contain, sem recorte. Sem painéis, botões, tabelas, mapas, gráficos, setas de velocidade, selos ambientais ou indicadores de resultado. Sem letras, palavras, números, logotipos, etiquetas escritas, assinaturas ou marcas-d'água. Os nomes das funções e os demais textos serão camadas editáveis externas a este ativo."
+  }
+]

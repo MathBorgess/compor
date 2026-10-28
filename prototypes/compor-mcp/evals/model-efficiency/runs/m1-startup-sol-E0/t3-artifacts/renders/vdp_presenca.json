@@ -1,0 +1,413 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "731fa4fb228ca824e1fb01bed2160cf2eb6f11a9ae0f4fe30676eb065e6cdb5d",
+  "piece_sha256": "bdb0c80e794a0dc3f43ec22b16d4f4d895124b5d5e7f2a6ebca349d09157c63d",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp_presenca_piece",
+  "piece_version": "v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "presenca_bg",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "presenca_brand",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        72,
+        56,
+        936,
+        50
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            73,
+            56
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            56,
+            278,
+            79
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        73,
+        56,
+        277,
+        79
+      ]
+    },
+    {
+      "id": "presenca_headline",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        72,
+        144,
+        936,
+        170
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 68,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 68,
+      "effective_font_size_px": 68,
+      "font_fallback": false,
+      "text_preserved": "Quais potes estão\ncom seus clientes?",
+      "text_clipped": false,
+      "line_advance_px": 78.19999999999999,
+      "lines": [
+        {
+          "text": "Quais potes estão",
+          "origin_px": [
+            72,
+            144
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            144,
+            662,
+            208
+          ]
+        },
+        {
+          "text": "com seus clientes?",
+          "origin_px": [
+            72,
+            222
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            222,
+            703,
+            273
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        74,
+        144,
+        700,
+        273
+      ]
+    },
+    {
+      "id": "presenca_body",
+      "kind": "text",
+      "z_index": 3,
+      "rect_px": [
+        72,
+        376,
+        440,
+        350
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Uma ferramenta web\npara acompanhar\nseus recipientes.\n\nRegistre entregas,\nempréstimos\ne devoluções.",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Uma ferramenta web",
+          "origin_px": [
+            72,
+            376
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            376,
+            374,
+            399
+          ]
+        },
+        {
+          "text": "para acompanhar",
+          "origin_px": [
+            72,
+            413
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            413,
+            327,
+            442
+          ]
+        },
+        {
+          "text": "seus recipientes.",
+          "origin_px": [
+            72,
+            450
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            450,
+            314,
+            479
+          ]
+        },
+        {
+          "text": "",
+          "origin_px": [
+            72,
+            486
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            486,
+            72,
+            486
+          ]
+        },
+        {
+          "text": "Registre entregas,",
+          "origin_px": [
+            72,
+            523
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            523,
+            336,
+            552
+          ]
+        },
+        {
+          "text": "empréstimos",
+          "origin_px": [
+            72,
+            560
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            560,
+            257,
+            589
+          ]
+        },
+        {
+          "text": "e devoluções.",
+          "origin_px": [
+            72,
+            597
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            597,
+            271,
+            627
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        73,
+        376,
+        373,
+        627
+      ]
+    },
+    {
+      "id": "presenca_image",
+      "kind": "image",
+      "z_index": 4,
+      "rect_px": [
+        548,
+        350,
+        460,
+        460
+      ],
+      "asset_ref": "vdp_asset_presenca_v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/assets/vdp_asset_presenca_v1.png",
+      "asset_sha256": "ec033a5b7e8a6b9d6c75c09ec20a53d84d8d5e2a6475fc8bb6ff1966ff971bbd",
+      "source_raw_size_px": [
+        1254,
+        1254
+      ],
+      "source_oriented_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        548,
+        350,
+        460,
+        460
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "presenca_cta_bg",
+      "kind": "shape",
+      "z_index": 5,
+      "rect_px": [
+        72,
+        880,
+        936,
+        108
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "presenca_cta",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        100,
+        911,
+        880,
+        50
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 38,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 38,
+      "effective_font_size_px": 38,
+      "font_fallback": false,
+      "text_preserved": "Conheça uma demonstração",
+      "text_clipped": false,
+      "line_advance_px": 43.699999999999996,
+      "lines": [
+        {
+          "text": "Conheça uma demonstração",
+          "origin_px": [
+            100,
+            911
+          ],
+          "metric_bounds_xyxy_px": [
+            100,
+            911,
+            618,
+            945
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        101,
+        911,
+        617,
+        945
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "c183118f79629f5ffb548708bf9f8708680e978100138ed9d3f07d4b0445dde1",
+  "png_sha256": "6cefdd8dfe88d71b0e8dac5e4903e14eb3f7f3fdfc9287df43bc792cd01b74a8",
+  "png_bytes": 410947,
+  "report_payload_sha256": "e12c59bc3e37d73790ee59303786bacdf964472a7567d9a607c9a055d4c6206f"
+}

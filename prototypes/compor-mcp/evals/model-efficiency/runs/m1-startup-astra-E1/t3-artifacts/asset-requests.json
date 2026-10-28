@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "vdp-dir-localizar",
+    "asset_ref": "vdp-asset-localizar-v1",
+    "prompt": "Criar um único asset horizontal na proporção 936:380, destinado a uma peça para pequenos produtores de alimentos. Natureza-morta editorial de três recipientes alimentícios reutilizáveis com tampas, inteiros e separados por espaços generosos, sobre superfície fosca com textura sutil de papel. Visão frontal levemente elevada, silhuetas fáceis de reconhecer, composição tranquila e organizada. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, com fundo pedra até todas as bordas. Materialidade tátil discreta, sem brilho intenso. Manter todos os objetos dentro do enquadramento com margem; o asset será encaixado proporcionalmente sem recorte. Não incluir letras, palavras, números, etiquetas, logotipos, marcas-d'água, telas, interfaces, gráficos, selos ambientais ou símbolos de localização. Não representar rastreamento automático. Não incluir texto: toda a comunicação verbal será adicionada em camadas editáveis."
+  },
+  {
+    "direction_id": "vdp-dir-ciclo",
+    "asset_ref": "vdp-asset-ciclo-v1",
+    "prompt": "Criar um único asset quadrado, proporção 1:1. Ilustração editorial artesanal em papel recortado fosco: três silhuetas de recipientes alimentícios reutilizáveis distribuídas ao redor de um centro vazio, conectadas visualmente por três faixas curvas simples, sugerindo circulação e continuidade. A imagem é uma metáfora das movimentações de recipientes, não uma tela ou diagrama de funcionalidades. Textura de papel perceptível e composição circular acolhedora. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo floresta uniforme até todas as bordas, recortes em pedra e lima. Preservar margens e manter todas as formas inteiras: encaixe proporcional sem recorte. Não incluir letras, palavras, números, marcas-d'água, logotipos, etiquetas, telas, interfaces, ícones de automação, folhas, planeta, selo ambiental ou símbolo de reciclagem. Não incluir texto: toda a comunicação verbal será adicionada em camadas editáveis."
+  }
+]

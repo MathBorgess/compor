@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json",
+      "sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets.json",
+      "sha256": "007a5830bcd42f7375190275838eb3c21ade871bb92e9f20cb1c0bfe38483321"
+    },
+    "extractor_sha256": "a0f39d28f8c4e8028d715ca9dbeaafb73035a7dec9a4d0798bbc30744194e6cb",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-fios",
+        "piece_id": "trama-fios",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-fios.png",
+        "png_sha256": "798314669078994ad28bb1f8fddd27b69a45cbc2a2be412fa6c12e7861613593",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-fios.json",
+        "report_sha256": "2c3795f11a35d3017eb6efea791ef70d586d63a0cc57148761258996a436de72",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 269.530708,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-fios-v1"
+        ],
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text"
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-fios-v1"
+          },
+          {
+            "id": "fios-detalhes",
+            "kind": "text"
+          },
+          {
+            "id": "fios-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-mesa",
+        "piece_id": "trama-mesa",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-mesa.png",
+        "png_sha256": "8be38a3a874eae23271d3693fa829aac4fa11954701f2c9549220508a8829a2c",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-mesa.json",
+        "report_sha256": "8c8575af692f1e3af2743f226ab5e4e964f004082d56e9773cacfab606e14368",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 331.344958,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-mesa-v1"
+        ],
+        "layers": [
+          {
+            "id": "mesa-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "mesa-marca",
+            "kind": "text"
+          },
+          {
+            "id": "mesa-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "mesa-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-mesa-v1"
+          },
+          {
+            "id": "mesa-detalhes",
+            "kind": "text"
+          },
+          {
+            "id": "mesa-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "mesa-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/resume-after-t3.json",
+      "sha256": "ad72fc1453e29b35256f63b3ecf7ff84a99e11496440472271e1442817c85286",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.151958,
+    "total": 613.094875
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

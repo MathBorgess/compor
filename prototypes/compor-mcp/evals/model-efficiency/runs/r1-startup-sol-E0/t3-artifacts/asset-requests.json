@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-com-quem",
+    "asset_ref": "pedido-vdp-com-quem-asset-v1",
+    "prompt": "Criar um único ativo quadrado 1:1, sem texto, para a camada a-visual da peça vdp-consulta v1. Natureza-morta editorial vista de cima: pequenos recipientes alimentares retornáveis genéricos, fechados, distribuídos em grupos separados sobre superfície de papel fosco. Composição estática, organizada e acolhedora, objetos inteiros com margem em todos os lados. Materialidade tátil discreta, sem brilho. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF, com fundo pedra e textura suave. Sem pessoas, telas, interfaces, gráficos ou alegações visuais de impacto. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água. Não incluir conteúdo verbal. O ativo será encaixado integralmente, sem recorte, em uma caixa quadrada."
+  },
+  {
+    "direction_id": "dir-cada-movimento",
+    "asset_ref": "pedido-vdp-cada-movimento-asset-v1",
+    "prompt": "Criar um único ativo horizontal 2:1, sem texto, para a camada b-visual da peça vdp-percurso v1. Ilustração editorial em recortes de papel fosco: duas pequenas cenas lado a lado, com espaço entre elas. À esquerda, um par de mãos oferece um recipiente alimentar retornável fechado a outro par de mãos; à direita, mãos devolvem um recipiente semelhante vazio. Gestos simples e próximos, anatomia coerente, objetos inteiros com margens generosas. A repetição do recipiente sugere continuidade e ida e volta. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra e textura de papel discreta. Sem telas, interfaces, painéis, símbolos ambientais ou gráficos de resultados. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água. Não incluir conteúdo verbal. O ativo será encaixado integralmente, sem recorte, em uma caixa horizontal 2:1."
+  }
+]

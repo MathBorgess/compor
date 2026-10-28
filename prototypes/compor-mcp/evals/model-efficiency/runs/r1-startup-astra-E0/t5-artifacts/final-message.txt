@@ -1,0 +1,161 @@
+{
+  "revision": {
+    "id": "vdp-controle-var-a-v2",
+    "composition_plan": {
+      "piece_id": "vdp-controle-var-a",
+      "version": "v2",
+      "width_px": 1080,
+      "height_px": 1080,
+      "layers": [
+        {
+          "id": "a-fundo",
+          "kind": "shape",
+          "name": "a-fundo",
+          "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+          "shape": "rectangle",
+          "fill_hex": "#ECE9DF",
+          "z_index": 0
+        },
+        {
+          "id": "a-marca",
+          "kind": "text",
+          "name": "a-marca",
+          "rect": {"x": 0.06, "y": 0.05, "width": 0.88, "height": 0.05},
+          "text": "Volta de Pote",
+          "font_ref": "arial",
+          "font_size_px": 36,
+          "font_weight": 700,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 1
+        },
+        {
+          "id": "a-titulo",
+          "kind": "text",
+          "name": "a-titulo",
+          "rect": {"x": 0.06, "y": 0.14, "width": 0.88, "height": 0.18},
+          "text": "Seus potes\nestão com quem?",
+          "font_ref": "arial",
+          "font_size_px": 82,
+          "font_weight": 700,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 2
+        },
+        {
+          "id": "a-apoio",
+          "kind": "text",
+          "name": "a-apoio",
+          "rect": {"x": 0.06, "y": 0.39, "width": 0.49, "height": 0.25},
+          "text": "Consulte quais recipientes\nainda estão com clientes.\n\nRegistre entregas,\nempréstimos e devoluções.",
+          "font_ref": "arial",
+          "font_size_px": 32,
+          "font_weight": 400,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 3
+        },
+        {
+          "id": "a-imagem",
+          "kind": "image",
+          "name": "a-imagem",
+          "rect": {"x": 0.58, "y": 0.35, "width": 0.36, "height": 0.48},
+          "asset_ref": "vdp-asset-controle-01-v1",
+          "z_index": 4
+        },
+        {
+          "id": "a-publico",
+          "kind": "text",
+          "name": "a-publico",
+          "rect": {"x": 0.06, "y": 0.73, "width": 0.5, "height": 0.1},
+          "text": "Ferramenta web para\npequenos produtores de alimentos.",
+          "font_ref": "arial",
+          "font_size_px": 28,
+          "font_weight": 400,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 5
+        },
+        {
+          "id": "a-cta-fundo",
+          "kind": "shape",
+          "name": "a-cta-fundo",
+          "rect": {"x": 0.06, "y": 0.87, "width": 0.88, "height": 0.08},
+          "shape": "rectangle",
+          "fill_hex": "#C9D94A",
+          "z_index": 6
+        },
+        {
+          "id": "a-cta",
+          "kind": "text",
+          "name": "a-cta",
+          "rect": {"x": 0.085, "y": 0.886, "width": 0.82, "height": 0.05},
+          "text": "Conheça a demonstração",
+          "font_ref": "arial",
+          "font_size_px": 36,
+          "font_weight": 700,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 7
+        }
+      ]
+    },
+    "caption": "Seus potes estão com quem? Na Volta de Pote, você consulta quais recipientes ainda estão com clientes e registra entregas, empréstimos e devoluções. Uma ferramenta web para pequenos produtores de alimentos acompanharem suas embalagens retornáveis. Conheça a demonstração."
+  },
+  "feedback_summary": {
+    "source": "Relato explícito da pessoa neste turno",
+    "scope": "Somente a peça vdp-controle-var-a; não constitui preferência permanente de produto ou marca.",
+    "aspects": [
+      {
+        "aspect": "Destaque da headline",
+        "target": {
+          "piece_id": "vdp-controle-var-a",
+          "version": "v1",
+          "layer_id": "a-titulo"
+        },
+        "reported_feedback": "A headline ficou tímida perto do restante.",
+        "revision": "Fonte aumentada de 72 para 82 px; quebra alterada para 'Seus potes\\nestão com quem?'. Palavras, caixa, posição e demais atributos preservados."
+      },
+      {
+        "aspect": "Materialidade da imagem",
+        "target": {
+          "piece_id": "vdp-controle-var-a",
+          "version": "v1",
+          "layer_id": "a-imagem",
+          "asset_ref": "vdp-asset-controle-01-v1"
+        },
+        "reported_feedback": "Gostou da materialidade e pediu para manter a imagem exatamente como está.",
+        "revision": "Camada e ativo preservados integralmente."
+      },
+      {
+        "aspect": "Resultado geral",
+        "target": {
+          "piece_id": "vdp-controle-var-a",
+          "version": "v1"
+        },
+        "reported_feedback": "Até o momento, não conseguiu o resultado que buscava e não apresentou outra explicação para essa avaliação geral.",
+        "interpretation": "A avaliação positiva da imagem não implica satisfação com a peça. Não se atribui a insatisfação geral exclusivamente à headline."
+      }
+    ],
+    "preserved": "Todas as outras camadas, a legenda e a segunda variação permanecem inalteradas."
+  },
+  "outcome": {
+    "reported": {
+      "desired_result_achieved_so_far": false,
+      "download_occurred": false,
+      "future_use": "Indeciso"
+    },
+    "unknown": [
+      "Se a revisão v2 atenderá ao resultado buscado.",
+      "Se a peça será utilizada.",
+      "Outras razões para a insatisfação geral."
+    ],
+    "revision_status": "Plano v2 preparado no MCP; renderização e avaliação desta revisão pendentes.",
+    "new_image_requested": false
+  }
+}

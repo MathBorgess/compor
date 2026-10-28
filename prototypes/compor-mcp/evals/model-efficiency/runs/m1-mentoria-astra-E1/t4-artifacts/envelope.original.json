@@ -1,0 +1,267 @@
+{
+  "variations": [
+    {
+      "id": "estrutura-var-a",
+      "title": "A — Convite para tecer",
+      "composition_plan": {
+        "piece_id": "trama-estrutura-var-a",
+        "version": "proposta-v1",
+        "variation_ref": "estrutura-var-a",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "a-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.066,
+              "y": 0.05,
+              "width": 0.868,
+              "height": 0.05
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text",
+            "name": "Headline com foco no saber",
+            "rect": {
+              "x": 0.066,
+              "y": 0.14,
+              "width": 0.868,
+              "height": 0.22
+            },
+            "text": "Você conhece o assunto.\nVamos tecer seu\nprimeiro curso curto?",
+            "font_ref": "georgia",
+            "font_size_px": 54,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "name": "Trama original reutilizada integralmente",
+            "asset_ref": "pedido-asset-estrutura-v1",
+            "rect": {
+              "x": 0.066,
+              "y": 0.4,
+              "width": 0.868,
+              "height": 0.28
+            },
+            "z_index": 3
+          },
+          {
+            "id": "a-divisor",
+            "kind": "shape",
+            "name": "Divisor argila",
+            "rect": {
+              "x": 0.066,
+              "y": 0.72,
+              "width": 0.074,
+              "height": 0.005
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 4
+          },
+          {
+            "id": "a-oferta",
+            "kind": "text",
+            "name": "Formato da mentoria",
+            "rect": {
+              "x": 0.066,
+              "y": 0.755,
+              "width": 0.868,
+              "height": 0.14
+            },
+            "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 34,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "a-convite",
+            "kind": "text",
+            "name": "Convite por mensagem",
+            "rect": {
+              "x": 0.066,
+              "y": 0.925,
+              "width": 0.868,
+              "height": 0.045
+            },
+            "text": "Quer saber mais? Envie uma mensagem.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Você conhece bem um assunto e quer organizar seu primeiro curso curto? Podemos começar pelos conhecimentos que você já tem e pelas conexões entre eles.\n\nA Trama de Aula é uma mentoria online com quatro encontros semanais ao vivo e revisão de um plano de aula, para apoiar essa organização.\n\nEstou preparando o lançamento. Quer saber mais? Envie uma mensagem com a palavra TRAMA."
+    },
+    {
+      "id": "estrutura-var-b",
+      "title": "B — Saberes que se conectam",
+      "composition_plan": {
+        "piece_id": "trama-estrutura-var-b",
+        "version": "proposta-v1",
+        "variation_ref": "estrutura-var-b",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "b-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.066,
+              "y": 0.05,
+              "width": 0.868,
+              "height": 0.05
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "name": "Trama original reutilizada integralmente",
+            "asset_ref": "pedido-asset-estrutura-v1",
+            "rect": {
+              "x": 0.066,
+              "y": 0.145,
+              "width": 0.868,
+              "height": 0.316
+            },
+            "z_index": 2
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text",
+            "name": "Headline com foco na conexão",
+            "rect": {
+              "x": 0.066,
+              "y": 0.505,
+              "width": 0.868,
+              "height": 0.14
+            },
+            "text": "Seus saberes se conectam.\nSeu curso ganha forma.",
+            "font_ref": "georgia",
+            "font_size_px": 52,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "b-divisor",
+            "kind": "shape",
+            "name": "Divisor argila",
+            "rect": {
+              "x": 0.066,
+              "y": 0.685,
+              "width": 0.074,
+              "height": 0.005
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 4
+          },
+          {
+            "id": "b-oferta",
+            "kind": "text",
+            "name": "Proposta e formato",
+            "rect": {
+              "x": 0.066,
+              "y": 0.725,
+              "width": 0.868,
+              "height": 0.16
+            },
+            "text": "Para organizar seu primeiro curso curto.\nMentoria online · 4 encontros\nsemanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "b-convite",
+            "kind": "text",
+            "name": "Convite por mensagem",
+            "rect": {
+              "x": 0.066,
+              "y": 0.925,
+              "width": 0.868,
+              "height": 0.045
+            },
+            "text": "Quer conhecer a mentoria? Me escreva.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Que conexões entre os seus saberes podem ajudar a dar forma ao seu primeiro curso curto?\n\nA Trama de Aula é uma mentoria online para profissionais que conhecem bem um assunto e querem organizar como ensiná-lo. São quatro encontros semanais ao vivo e revisão de um plano de aula.\n\nEstou preparando o lançamento. Quer conhecer a mentoria? Me escreva com a palavra TRAMA."
+    }
+  ],
+  "conversation_response": "As duas variações permanecem no conceito escolhido e reutilizam exatamente pedido-asset-estrutura-v1. A começa pela conversa com quem já domina o assunto e apresenta a trama em escala menor; B abre com a imagem maior e enfatiza a conexão entre saberes. Os planos foram preparados no MCP, com textos editáveis e IDs próprios; nenhuma nova imagem foi solicitada. A renderização pelo coordenador permitirá comparar a leitura e o encaixe final. O MCP não resolveu as fontes, mas Arial e Georgia pertencem ao catálogo informado. Você poderá escolher A, B, pedir ajustes por camada ou recusar ambas."
+}

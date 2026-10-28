@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-controle",
+      "piece_id": "vp-controle",
+      "version": "proposta-v1",
+      "original_piece_sha256": "25fe2a9ac7958253e42170c53c59a595a2c115f4adfbb02d7367c7f67b235c7d",
+      "mapped_piece_sha256": "8a4a4174877879bdb2d20fd70fb05dbb568eba0b063a2bdfb4afd669a8167dc2",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 33459,
+              "request_id": 5,
+              "request_line": 33,
+              "response_line": 35
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "proposta-asset-controle-v1"
+      ],
+      "unresolved_asset_refs": [
+        "proposta-asset-controle-v1"
+      ],
+      "render_input": "render-inputs/direcao-controle.json",
+      "render_input_sha256": "fa2f71b9132a79d14c699fc9f39bd840d6d619bac357b0cb8c3e6d50593082fc"
+    },
+    {
+      "id": "direcao-caminho",
+      "piece_id": "vp-ciclo",
+      "version": "proposta-v1",
+      "original_piece_sha256": "6b5e8e6839f64b5fb8967a7ad4a614e221935467bb4a6f123d646bb8d3b2fc75",
+      "mapped_piece_sha256": "76f70f847a4abbdb4a1a1c8ec00bcf1cb2722246d99ea6fcbba59ecfd0c99c50",
+      "mcp_evidence": [
+        {
+          "event_index": 14,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 33459,
+              "request_id": 6,
+              "request_line": 32,
+              "response_line": 34
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "proposta-asset-caminho-v1"
+      ],
+      "unresolved_asset_refs": [
+        "proposta-asset-caminho-v1"
+      ],
+      "render_input": "render-inputs/direcao-caminho.json",
+      "render_input_sha256": "ddcbfd7596d1c107cf390335e421e0f8a3e8956ae688711b9acd1596f383237d"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-controle",
+      "operation": "add",
+      "layer_id": "c-imagem",
+      "field": "asset_ref",
+      "value": "proposta-asset-controle-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-caminho",
+      "operation": "add",
+      "layer_id": "v-imagem",
+      "field": "asset_ref",
+      "value": "proposta-asset-caminho-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/turn-03.json",
+    "sha256": "e42ddb15a03b14dd364ec0ec2e0865c3d418028b4c167986b0640d198aa00aab"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "eb52d7db1dc6f03f69e88f6d66f1c6255bd16c9cbd05324091c7d3575ee9359b",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "proposta-asset-caminho-v1",
+    "proposta-asset-controle-v1"
+  ]
+}

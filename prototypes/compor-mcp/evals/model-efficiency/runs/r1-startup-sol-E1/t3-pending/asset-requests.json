@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-com-quem",
+    "asset_ref": "asset-proposto-vdp-maos-v1",
+    "prompt": "Criar um único ativo horizontal, proporção 952:380, para associação futura à camada a-imagem da peça vdp-com-quem v1. Ilustração editorial tátil de duas mãos estilizadas passando um pote reutilizável de alimentos entre si, com outros dois recipientes discretos sobre uma superfície. Cena cotidiana próxima e acolhedora, enquadramento completo das mãos e dos recipientes, margem interna generosa, sem elementos cortados. Superfícies foscas e textura sutil de papel. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas. Fundo integral pedra #ECE9DF, arte opaca com toda a textura incorporada. Sem letras, palavras, números, rótulos, logotipos, marcas-d'água, telas ou interface. Não representar resultados, métricas ou funcionalidades digitais. A imagem será encaixada inteira, sem recorte; todo o conteúdo verbal será composto separadamente."
+  },
+  {
+    "direction_id": "dir-cada-etapa",
+    "asset_ref": "asset-proposto-vdp-ciclo-v1",
+    "prompt": "Criar um único ativo vertical, proporção 460:430, para associação futura à camada b-imagem da peça vdp-cada-etapa v1. Ilustração conceitual em recortes de papel fosco: três potes reutilizáveis de alimentos distribuídos em torno de um percurso circular aberto feito com uma faixa de papel, sugerindo continuidade. Vista superior, formas geométricas simples, composição centrada e margem interna generosa, com todos os objetos inteiros. Não criar fluxograma técnico nem atribuir estados específicos aos potes. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo integral floresta #183F32; potes e faixa em pedra e lima, textura de papel incorporada à imagem opaca. Sem letras, palavras, números, rótulos, logotipos, marcas-d'água, telas ou interface. Sem símbolos de certificação ambiental, métricas ou indicação de automação. A imagem será encaixada inteira, sem recorte; os nomes das etapas serão textos editáveis separados."
+  }
+]

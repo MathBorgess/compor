@@ -1,0 +1,283 @@
+{
+  "variations": [
+    {
+      "id": "vdp-var-pergunta",
+      "title": "A — Pergunta em destaque",
+      "composition_plan": {
+        "piece_id": "vdp-var-pergunta",
+        "version": "v1",
+        "product_ref": "volta-de-pote",
+        "variation_ref": "vdp-var-pergunta",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "vp-fundo",
+            "kind": "shape",
+            "name": "vp-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "vp-marca",
+            "kind": "text",
+            "name": "vp-marca",
+            "rect": {
+              "x": 0.06,
+              "y": 0.04,
+              "width": 0.88,
+              "height": 0.05
+            },
+            "text": "Volta de Pote",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 36,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "vp-headline",
+            "kind": "text",
+            "name": "vp-headline",
+            "rect": {
+              "x": 0.06,
+              "y": 0.12,
+              "width": 0.88,
+              "height": 0.17
+            },
+            "text": "Seus potes estão\ncom quais clientes?",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 68,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "vp-imagem",
+            "kind": "image",
+            "name": "Mesma imagem de mãos e potes da direção escolhida",
+            "rect": {
+              "x": 0.06,
+              "y": 0.32,
+              "width": 0.88,
+              "height": 0.351852
+            },
+            "asset_ref": "asset-proposto-vdp-maos-v1",
+            "z_index": 3
+          },
+          {
+            "id": "vp-apoio",
+            "kind": "text",
+            "name": "vp-apoio",
+            "rect": {
+              "x": 0.06,
+              "y": 0.7,
+              "width": 0.88,
+              "height": 0.1
+            },
+            "text": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 35,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "vp-faixa-convite",
+            "kind": "shape",
+            "name": "vp-faixa-convite",
+            "rect": {
+              "x": 0.06,
+              "y": 0.84,
+              "width": 0.88,
+              "height": 0.1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 5
+          },
+          {
+            "id": "vp-convite",
+            "kind": "text",
+            "name": "vp-convite",
+            "rect": {
+              "x": 0.085,
+              "y": 0.867,
+              "width": 0.83,
+              "height": 0.05
+            },
+            "text": "Conheça a demonstração",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 40,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Seus potes estão com quais clientes? Com a Volta de Pote, pequenos produtores de alimentos podem registrar entregas, empréstimos e devoluções de embalagens retornáveis e consultar quais recipientes continuam com clientes. Conheça a demonstração."
+    },
+    {
+      "id": "vdp-var-consulta",
+      "title": "B — Consulta em primeiro plano",
+      "composition_plan": {
+        "piece_id": "vdp-var-consulta",
+        "version": "v1",
+        "product_ref": "volta-de-pote",
+        "variation_ref": "vdp-var-consulta",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "vc-fundo",
+            "kind": "shape",
+            "name": "vc-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "vc-faixa-marca",
+            "kind": "shape",
+            "name": "vc-faixa-marca",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 0.105
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 1
+          },
+          {
+            "id": "vc-marca",
+            "kind": "text",
+            "name": "vc-marca",
+            "rect": {
+              "x": 0.06,
+              "y": 0.03,
+              "width": 0.88,
+              "height": 0.05
+            },
+            "text": "Volta de Pote",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 36,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "vc-headline",
+            "kind": "text",
+            "name": "vc-headline",
+            "rect": {
+              "x": 0.06,
+              "y": 0.14,
+              "width": 0.88,
+              "height": 0.16
+            },
+            "text": "Veja quais potes\nestão com clientes.",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 66,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "vc-apoio",
+            "kind": "text",
+            "name": "vc-apoio",
+            "rect": {
+              "x": 0.06,
+              "y": 0.335,
+              "width": 0.88,
+              "height": 0.13
+            },
+            "text": "Uma ferramenta web para pequenos\nprodutores de alimentos registrarem\nentregas, empréstimos e devoluções.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 38,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "vc-imagem",
+            "kind": "image",
+            "name": "Mesma imagem de mãos e potes da direção escolhida",
+            "rect": {
+              "x": 0.06,
+              "y": 0.49,
+              "width": 0.88,
+              "height": 0.351852
+            },
+            "asset_ref": "asset-proposto-vdp-maos-v1",
+            "z_index": 5
+          },
+          {
+            "id": "vc-faixa-convite",
+            "kind": "shape",
+            "name": "vc-faixa-convite",
+            "rect": {
+              "x": 0.06,
+              "y": 0.87,
+              "width": 0.88,
+              "height": 0.08
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 6
+          },
+          {
+            "id": "vc-convite",
+            "kind": "text",
+            "name": "vc-convite",
+            "rect": {
+              "x": 0.085,
+              "y": 0.885,
+              "width": 0.83,
+              "height": 0.05
+            },
+            "text": "Conheça a demonstração",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 40,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Veja quais potes estão com clientes. A Volta de Pote é uma ferramenta web para pequenos produtores de alimentos acompanharem embalagens retornáveis, com registros de entrega, empréstimo e devolução. Quer conhecer? Conheça a demonstração."
+    }
+  ],
+  "conversation_response": "A mantém a sequência pergunta → imagem → explicação. B reúne chamada e explicação antes da imagem e destaca a marca em uma faixa lima. Ambas reutilizam exatamente asset-proposto-vdp-maos-v1, sem novo pedido de imagem. Os planos foram preparados pelo MCP; a renderização das variações permanece pendente. O MCP sinalizou fontes não resolvidas, embora Arial esteja no catálogo informado do compositor. Para apontar uma parte, use a variação e o ID da camada, por exemplo: vdp-var-consulta / vc-headline. A escolha da primeira direção vale para este trabalho, sem virar preferência permanente."
+}

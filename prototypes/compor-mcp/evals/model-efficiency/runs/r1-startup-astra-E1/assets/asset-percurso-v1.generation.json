@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-percurso",
+  "asset_ref": "asset-percurso-v1",
+  "prompt": "Criar um único ativo visual quadrado 1:1: ilustração editorial em papel recortado fosco, com textura de papel sutil. Representar poeticamente a passagem de um recipiente alimentar entre duas mãos estilizadas, entrando de lados opostos, com uma faixa curva aberta que sugira ida e volta. O recipiente é o centro da cena; o gesto deve parecer próximo e cotidiano. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas; fundo pedra até as bordas. Composição inteiramente contida no quadrado, com margens internas. Não representar interface, aplicativo, mapa, localização, rastreamento, automação, confirmação de devolução ou selo de reciclagem. Sem letras, palavras, números, logotipos, rótulos, assinaturas ou marcas-d'água. O ativo será encaixado integralmente, sem recorte, numa caixa quadrada.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-0dcdf49d-cfc5-4ed3-b226-ddfc24322bcd.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-percurso-v1.png",
+  "sha256": "6450f9f64ecc539ae5aa21fca7c749cf65ff6ccf2bd7c85c2bcbe932485a251e",
+  "elapsed_ms": 19283,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

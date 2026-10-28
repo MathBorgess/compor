@@ -1,0 +1,218 @@
+{
+  "directions": [
+    {
+      "id": "direcao-fios",
+      "title": "Dar forma aos fios",
+      "concept": "Uma metáfora tátil para o trabalho de reunir e organizar conhecimentos: fios soltos se aproximam de uma trama. A ênfase está no potencial do conhecimento que a pessoa já tem.",
+      "composition_plan": {
+        "piece_id": "trama-fios",
+        "version": "1",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "fundo",
+            "kind": "shape",
+            "name": "Fundo",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "imagem-fios",
+            "kind": "image",
+            "name": "Fios organizados",
+            "asset_ref": "asset-fios-01",
+            "rect": {"x": 0.57, "y": 0.08, "width": 0.35, "height": 0.55},
+            "z_index": 1
+          },
+          {
+            "id": "marca",
+            "kind": "text",
+            "name": "Marca",
+            "text": "TRAMA DE AULA",
+            "rect": {"x": 0.07, "y": 0.07, "width": 0.46, "height": 0.05},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 27,
+            "color_hex": "#C76B4B",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "titulo",
+            "kind": "text",
+            "name": "Chamada",
+            "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+            "rect": {"x": 0.07, "y": 0.16, "width": 0.49, "height": 0.23},
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 52,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "descricao",
+            "kind": "text",
+            "name": "Descrição",
+            "text": "Mentoria para organizar\nseu primeiro curso curto.",
+            "rect": {"x": 0.07, "y": 0.43, "width": 0.46, "height": 0.11},
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 32,
+            "color_hex": "#532B54",
+            "line_height": 1.25,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "faixa",
+            "kind": "shape",
+            "name": "Faixa convite",
+            "shape": "rectangle",
+            "rect": {"x": 0.07, "y": 0.73, "width": 0.86, "height": 0.17},
+            "fill_hex": "#532B54",
+            "z_index": 5
+          },
+          {
+            "id": "convite",
+            "kind": "text",
+            "name": "Convite",
+            "text": "Peça informações\nsobre a mentoria.",
+            "rect": {"x": 0.1, "y": 0.76, "width": 0.77, "height": 0.11},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 36,
+            "color_hex": "#F4EBDD",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Você já conhece seu assunto. A Trama de Aula é uma mentoria online para ajudar a organizar esse conhecimento no seu primeiro curso curto.\n\nSão quatro encontros semanais ao vivo e a revisão de um plano de aula.\n\nQuer saber mais? Envie uma mensagem pedindo informações."
+    },
+    {
+      "id": "direcao-percurso",
+      "title": "Um percurso para ensinar",
+      "concept": "Uma representação gráfica de caminho e etapas destaca a dimensão prática da mentoria. A peça apresenta o formato da oferta com mais destaque, em vez de centrar a mensagem na metáfora têxtil.",
+      "composition_plan": {
+        "piece_id": "trama-percurso",
+        "version": "1",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "fundo",
+            "kind": "shape",
+            "name": "Fundo",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "marca",
+            "kind": "text",
+            "name": "Marca",
+            "text": "TRAMA DE AULA",
+            "rect": {"x": 0.07, "y": 0.06, "width": 0.56, "height": 0.05},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 27,
+            "color_hex": "#C76B4B",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "titulo",
+            "kind": "text",
+            "name": "Chamada",
+            "text": "Do que você sabe\nao seu primeiro\ncurso curto.",
+            "rect": {"x": 0.07, "y": 0.13, "width": 0.85, "height": 0.21},
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 54,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "imagem-percurso",
+            "kind": "image",
+            "name": "Percurso em etapas",
+            "asset_ref": "asset-percurso-01",
+            "rect": {"x": 0.07, "y": 0.36, "width": 0.39, "height": 0.34},
+            "z_index": 3
+          },
+          {
+            "id": "divisor",
+            "kind": "shape",
+            "name": "Divisor",
+            "shape": "rectangle",
+            "rect": {"x": 0.5, "y": 0.37, "width": 0.006, "height": 0.32},
+            "fill_hex": "#C76B4B",
+            "z_index": 4
+          },
+          {
+            "id": "oferta",
+            "kind": "text",
+            "name": "Formato da mentoria",
+            "text": "4 encontros semanais\nao vivo\n\nRevisão de um\nplano de aula",
+            "rect": {"x": 0.54, "y": 0.37, "width": 0.39, "height": 0.28},
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 32,
+            "color_hex": "#532B54",
+            "line_height": 1.25,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "faixa",
+            "kind": "shape",
+            "name": "Faixa convite",
+            "shape": "rectangle",
+            "rect": {"x": 0.07, "y": 0.76, "width": 0.86, "height": 0.12},
+            "fill_hex": "#532B54",
+            "z_index": 6
+          },
+          {
+            "id": "convite",
+            "kind": "text",
+            "name": "Convite",
+            "text": "Peça informações sobre a mentoria.",
+            "rect": {"x": 0.1, "y": 0.79, "width": 0.8, "height": 0.05},
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 32,
+            "color_hex": "#F4EBDD",
+            "line_height": 1.2,
+            "text_align": "center",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Quer organizar seu primeiro curso curto a partir de um assunto que você já conhece bem?\n\nA Trama de Aula é uma mentoria online com quatro encontros semanais ao vivo e revisão de um plano de aula.\n\nPara receber informações, envie uma mensagem."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "direcao-fios",
+      "asset_ref": "asset-fios-01",
+      "prompt": "Ilustração editorial vertical de fios de tecido em ameixa #532B54 e argila #C76B4B, inicialmente livres e gradualmente reunidos em uma pequena trama organizada. Composição simples, acolhedora e tátil, sobre fundo branco, sem outros elementos. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+    },
+    {
+      "direction_id": "direcao-percurso",
+      "asset_ref": "asset-percurso-01",
+      "prompt": "Ilustração editorial horizontal de um percurso abstrato formado por blocos geométricos e uma linha contínua que os conecta, sugerindo organização e autonomia. Visual limpo e contemporâneo, com ameixa #532B54 e argila #C76B4B sobre fundo branco. Sem fios ou tecido. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+    }
+  ],
+  "conversation_response": "As alternativas podem ser escolhidas, combinadas ou ambas recusadas. Os asset_ref são reservas locais para os dois pedidos; os ativos ainda não existem. As chamadas MCP organizaram os planos, sem renderização. A composição dependerá da geração e associação dos ativos e da verificação do encaixe dos textos pelo coordenador."
+}

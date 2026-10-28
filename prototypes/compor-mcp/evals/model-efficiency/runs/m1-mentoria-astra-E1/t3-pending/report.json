@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-estrutura",
+      "piece_id": "trama-estrutura",
+      "version": "proposta-v1",
+      "original_piece_sha256": "466544e53142c61eeb205d927b93b747855ada0f217bba110f4c951a1152b3aa",
+      "mapped_piece_sha256": "693a871db5b049fff1f0e90ff7479aad943979b7652490bc1ec48eba2a851388",
+      "mcp_evidence": [
+        {
+          "event_index": 14,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 26869,
+              "request_id": 6,
+              "request_line": 24,
+              "response_line": 26
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-asset-estrutura-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-asset-estrutura-v1"
+      ],
+      "render_input": "render-inputs/direcao-estrutura.json",
+      "render_input_sha256": "94e0ab16dcfb787ec383c2e39a52228aa47b50e481d0b10de1fc5e8800df28ff"
+    },
+    {
+      "id": "direcao-recorte",
+      "piece_id": "trama-recorte",
+      "version": "proposta-v1",
+      "original_piece_sha256": "9f153884c4d6804e0017571d8d3479e50e7210358ad5d402bdc3117c4961a8e2",
+      "mapped_piece_sha256": "13871db8891e55637273453c16d819a2d1286750212c95a8131a942eeb36fa27",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 26869,
+              "request_id": 7,
+              "request_line": 25,
+              "response_line": 27
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-asset-recorte-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-asset-recorte-v1"
+      ],
+      "render_input": "render-inputs/direcao-recorte.json",
+      "render_input_sha256": "186b427b6bfed1cefc7652968e55588a0c25cc1b0e4f8ded400a60365eec0192"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-estrutura",
+      "operation": "add",
+      "layer_id": "estrutura-imagem",
+      "field": "asset_ref",
+      "value": "pedido-asset-estrutura-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-recorte",
+      "operation": "add",
+      "layer_id": "recorte-imagem",
+      "field": "asset_ref",
+      "value": "pedido-asset-recorte-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/turn-03.json",
+    "sha256": "5fe494cf69b5020c601fdd2e08312c7897a190653cc5e485ed931b63767c833b"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "3d3e290ca643868c6bbc2d332a31bd52330f6d5bb134d59c761aab10338dedb5",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "pedido-asset-estrutura-v1",
+    "pedido-asset-recorte-v1"
+  ]
+}

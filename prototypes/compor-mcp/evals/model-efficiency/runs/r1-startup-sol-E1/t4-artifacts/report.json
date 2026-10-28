@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 4,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "vdp-var-pergunta",
+      "piece_id": "vdp-var-pergunta",
+      "version": "v1",
+      "original_piece_sha256": "78b9f7841817c21f10935cc3e649314bfd048c31e78d0618e78be29d66aa8d4b",
+      "mapped_piece_sha256": "78b9f7841817c21f10935cc3e649314bfd048c31e78d0618e78be29d66aa8d4b",
+      "mcp_evidence": [
+        {
+          "event_index": 5,
+          "event_id": "item_2",
+          "wire_candidates": [
+            {
+              "process_id": 26183,
+              "request_id": 2,
+              "request_line": 45,
+              "response_line": 46
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-vdp-maos-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/vdp-var-pergunta.json",
+      "render_input_sha256": "e931e3b675018e619958439eca35e192c95bb164fdd9f74413eb02be48152f28"
+    },
+    {
+      "id": "vdp-var-consulta",
+      "piece_id": "vdp-var-consulta",
+      "version": "v1",
+      "original_piece_sha256": "ba8e026524f6f201eafbde9904c5be3b81895f9fcc401eccdd37e456e56a1be6",
+      "mapped_piece_sha256": "ba8e026524f6f201eafbde9904c5be3b81895f9fcc401eccdd37e456e56a1be6",
+      "mcp_evidence": [
+        {
+          "event_index": 7,
+          "event_id": "item_3",
+          "wire_candidates": [
+            {
+              "process_id": 26183,
+              "request_id": 3,
+              "request_line": 47,
+              "response_line": 48
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-vdp-maos-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/vdp-var-consulta.json",
+      "render_input_sha256": "4a4e04f60f4ce7d8a31c48b4de4d539bb8ebe04725bbbf0b4cf38a5620ec3c39"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/turn-04.json",
+    "sha256": "37f6f2369a054192d0e0bdd6d54f3eee1f673831468a507e95038b8e6ed9f2eb"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "cd88d6bded647eb9ef17393837b00802a0a7a9f069f12394f5e024cf5bdcb5ff",
+  "assets": {
+    "asset-proposto-vdp-ciclo-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-ciclo-v1.png",
+      "sha256": "d639df2f895aaff280d2164aae6fba352f0b8c59d1f2bd2f12f6a02eadef8439",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-ciclo-v1.png"
+    },
+    "asset-proposto-vdp-maos-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-maos-v1.png",
+      "sha256": "20149145412e8d5dea1d6d162f701690fae950cc4cc42216636660283b2ccbea",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-maos-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets.json",
+    "sha256": "a77314a7fba24603179db4bfd299f9a3f33a4d2a099f6c9969f3a8511c31cd8a",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1"
+  },
+  "previous": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/report.json",
+    "sha256": "f98576c36221b757b98fefcb956e80ad47030eba3a5c9110c4bc4dc2cd9aa0e6"
+  },
+  "unresolved_asset_refs": []
+}

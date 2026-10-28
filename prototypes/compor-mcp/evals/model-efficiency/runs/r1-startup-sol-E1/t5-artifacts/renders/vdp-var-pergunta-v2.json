@@ -1,0 +1,8 @@
+{
+  "status": "failed",
+  "error": {
+    "type": "RenderError",
+    "message": "Text does not fit at the requested size; no resizing or wrapping applied"
+  },
+  "input_sha256": "4a4dff4b372203bf9c1643fcb739f4f93b8920776549d6cf2670b7a2c906db68"
+}

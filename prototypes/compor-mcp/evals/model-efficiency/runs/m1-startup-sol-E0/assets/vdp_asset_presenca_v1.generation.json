@@ -1,0 +1,15 @@
+{
+  "direction_id": "vdp_presenca",
+  "asset_ref": "vdp_asset_presenca_v1",
+  "prompt": "Criar um único ativo fotográfico editorial quadrado, proporção 1:1, para uma peça sobre recipientes retornáveis de pequenos produtores de alimentos. Vista próxima de uma bancada: mãos de duas pessoas passando um pote reutilizável fechado, com outros dois recipientes próximos. Gesto cotidiano e natural, sem rostos. Objetos inteiros dentro do enquadramento, margem interna generosa; composição legível em 460 × 460 px, pois será encaixada integralmente, sem recorte. Superfícies foscas e papel com textura sutil na bancada. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, além dos tons naturais das mãos e transparência do vidro. Fundo pedra, detalhes floresta e pequeno acento lima. Luz difusa e materialidade tátil. Não incluir telas, interface, gráficos, símbolos de certificação ou alegações ambientais. Sem letras, palavras, números, etiquetas, logotipos, assinaturas ou marcas-d'água. Não incorporar título ou legenda; todo conteúdo verbal será composto separadamente.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-29175548-a105-47a3-ae0f-f994b4438193.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/assets/vdp_asset_presenca_v1.png",
+  "sha256": "ec033a5b7e8a6b9d6c75c09ec20a53d84d8d5e2a6475fc8bb6ff1966ff971bbd",
+  "elapsed_ms": 25044,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

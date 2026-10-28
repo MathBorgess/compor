@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/resume-after-t4.json",
+      "sha256": "3a42703ae104c96c5c4d9847fcab6f517bf060e3649d024b8c025551716a2305"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/assets.json",
+      "sha256": "631b69b814f22253d97a92f8f7a37a75982674c768e7124bdc5ad58fd35e1aac"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "rev-va-headline-v2",
+        "piece_id": "vdp-consulta-var-a",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t5-artifacts/renders/rev-va-headline-v2.png",
+        "png_sha256": "056092186cee264830af10f5799f5ca02b957d2df6f266fcca13433eebdeee98",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t5-artifacts/renders/rev-va-headline-v2.json",
+        "report_sha256": "5d69130958aa711e33c3b2e53b90c8eefe9d57d335d6e9b4176807dace9d9195",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 211.745666,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-vdp-com-quem-asset-v1"
+        ],
+        "layers": [
+          {
+            "id": "va-base",
+            "kind": "shape"
+          },
+          {
+            "id": "va-marca",
+            "kind": "text"
+          },
+          {
+            "id": "va-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "va-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "va-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "va-imagem",
+            "kind": "image",
+            "asset_ref": "pedido-vdp-com-quem-asset-v1"
+          },
+          {
+            "id": "va-produto",
+            "kind": "text"
+          },
+          {
+            "id": "va-cta-base",
+            "kind": "shape"
+          },
+          {
+            "id": "va-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 14.123209,
+    "total": 229.329125
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

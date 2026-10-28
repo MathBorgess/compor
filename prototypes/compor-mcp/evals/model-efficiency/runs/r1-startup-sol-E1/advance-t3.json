@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets.json",
+      "sha256": "a77314a7fba24603179db4bfd299f9a3f33a4d2a099f6c9969f3a8511c31cd8a"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "dir-com-quem",
+        "piece_id": "vdp-com-quem",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/renders/dir-com-quem.png",
+        "png_sha256": "f930f5a19cb51f19d320a80b1a299f766356b52953c9a551ba40040cd5827741",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/renders/dir-com-quem.json",
+        "report_sha256": "d8d1cfb0d11aacf3794271854117e912775a4e000b87fcf4cccf3c1d214c4c9a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 272.072625,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-vdp-maos-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-chamada",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-vdp-maos-v1"
+          },
+          {
+            "id": "a-explicacao",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "dir-cada-etapa",
+        "piece_id": "vdp-cada-etapa",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/renders/dir-cada-etapa.png",
+        "png_sha256": "b993ca7822b7834bef6aae75ecc48829a53df401854fe798d89ec919f6cb6948",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/renders/dir-cada-etapa.json",
+        "report_sha256": "256f8dd39295772dbf7c5bd3ad0466cef516aa158f9c6a739aa0c76fb01f6a76",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 203.970709,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-vdp-ciclo-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-chamada",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-vdp-ciclo-v1"
+          },
+          {
+            "id": "b-etapas",
+            "kind": "text"
+          },
+          {
+            "id": "b-explicacao",
+            "kind": "text"
+          },
+          {
+            "id": "b-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/resume-after-t3.json",
+      "sha256": "13256a4df743749d8479096ecfc89698bc4db113fb4847b9f7ef72a93e67d687",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.811875,
+    "total": 489.7855
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,15 @@
+{
+  "direction_id": "percurso",
+  "asset_ref": "asset-volta-percurso-01",
+  "prompt": "Ilustração horizontal para acompanhar uma peça de feed de uma ferramenta para pequenos produtores de alimentos: recipientes retornáveis simples em uma sequência visual de ida e volta entre duas mãos, sugerindo continuidade e proximidade. Formas artesanais, superfícies foscas e textura sutil de papel; cores floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo branco, composição inteira visível, proporção aproximada 2,1:1. Sem letras, palavras, números, marcas-d'água, logotipos, telas ou interfaces.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-78ae7a63-bc2b-4491-af42-3c17d2cd714b.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/assets/asset-volta-percurso-01.png",
+  "sha256": "cdd3ee67d4d39209ab2ff99786c863efeed985174d4d6c1145535968ec6dbd14",
+  "elapsed_ms": 17061,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

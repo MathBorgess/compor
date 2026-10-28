@@ -1,0 +1,2228 @@
+{
+  "schema_version": 1,
+  "reviewed_at_utc": "2026-10-28T07:32:35.381639+00:00",
+  "scope": "Native T4/T5 outputs and technical artifacts for the six mentoria runs; no pixels, Judges or blind maps consulted. Only new documentation written.",
+  "basis": {
+    "path": "prototypes/compor-mcp/evals/model-efficiency/expectations.json",
+    "sha256": "afe0ca3402c27edb11a426061f879595d01b7346b86d91208e8c79e11cb0e701"
+  },
+  "normalization": "Headline comparison replaces CRLF, CR and LF with a single space. It does not normalize punctuation, casing, accents, tabs or other whitespace.",
+  "coverage": {
+    "requested_runs": 6,
+    "completed_followups": 5,
+    "infrastructure_failure_before_T4_response": 1,
+    "real_human_feedback": false,
+    "actual_download_or_success_observed": false,
+    "visual_quality_evaluated": false
+  },
+  "limitations": [
+    "A completed runtime trajectory is distinct from the synthetic persona reporting task non-conclusion.",
+    "Tool scope fields are unverified claims; successful annotation preparation does not persist memory or demonstrate authorization.",
+    "Renderer status/asset hashes establish technical lineage, not visual quality, legibility or absence of unexpected raster text.",
+    "No fixed tool sequence is required; an explicit valid layer target in final feedback can be evaluated even without prepare_annotation_context.",
+    "The absent Astra E0 T4/T5 content cannot receive creative or factual scores.",
+    "Cost billing is not available. CLI token counters are cumulative across the resumed native thread; use final confirmed totals or unique rollout deltas, never add all usage_cli snapshots or cached/reasoning subsets again."
+  ],
+  "runs": [
+    {
+      "run": "r1-mentoria-astra-E0",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/turn-04.json",
+          "sha256": "3c3cba71ac23ab7f64b097a63f69f920c1643010234a2ee743c7cd798a5db67e"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/report-002.json",
+          "sha256": "db4d4c1b403313ccf47c2dc6f86882176d456b18146c6763b261cec69e868496"
+        }
+      ],
+      "status": "infrastructure_unavailable",
+      "cause": "Selected model is at capacity. Please try a different model.",
+      "evidence": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/turn-04.json",
+          "json_pointer": "/events/3",
+          "event": {
+            "type": "error",
+            "message": "Selected model is at capacity. Please try a different model."
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/turn-04.json",
+          "json_pointer": "/events/4",
+          "event": {
+            "type": "turn.failed",
+            "error": {
+              "message": "Selected model is at capacity. Please try a different model."
+            }
+          }
+        }
+      ],
+      "exit_code": 1,
+      "timed_out": false,
+      "assistant_messages": [],
+      "T4_quality": "not_evaluable_no_response",
+      "T5": "not_exercised",
+      "creative_penalty": false,
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/report-002.json",
+        "json_pointer": "/turns/3",
+        "model": "gpt-6-astra",
+        "effort": "low",
+        "provider_response_model": null
+      },
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/report-002.json",
+        "last_confirmed_complete_turn": 3,
+        "last_confirmed_cumulative_input": 101026,
+        "last_confirmed_cumulative_output": 5365,
+        "last_confirmed_total_input_plus_output": 106391,
+        "failed_turn_usage_cli": null,
+        "failed_turn_rollout_delta": {
+          "input_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 0,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 0
+        },
+        "failed_turn_consumption_interpretation": "Unknown for billing/completed usage; the observed zero delta is an unchanged prior counter, not proof of free execution."
+      },
+      "gates": {
+        "G02": "not_evaluable_no_T4_response",
+        "G04": "not_evaluable_no_T4_or_T5_response",
+        "G05": "not_exercised",
+        "G06": "not_evaluable_no_candidate_claims",
+        "G08": "infrastructure_failure_not_candidate_invalid_output",
+        "G09": "not_evaluated"
+      }
+    },
+    {
+      "run": "r1-mentoria-astra-E1",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-04.json",
+          "sha256": "773bad8ff9eda8f531dec26651205895212bda2d72df6054eafcd0c55197df5f"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-05.json",
+          "sha256": "57404c8311c482019123eeee9e382fcdd2f1d79e928b23dcd7f57847b6f8c052"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/report-003.json",
+          "sha256": "464c4dadf34bd48a05b3ad38992609d78278e087dc8bbd35148d963ae79eb676"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/report.json",
+          "sha256": "6ad6c35cbbd8b1fae3404b63a44cc91eb5d9132e41915ec2c39300a167de9d83"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts/report.json",
+          "sha256": "1ec8fb241aa2c0444167a9cf6e8afb9e015df4a4dd76dc2d9d2d131df776a088"
+        }
+      ],
+      "status": "technical_followups_completed",
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/report-003.json",
+        "json_pointer": "/turns",
+        "observed": [
+          {
+            "turn": 4,
+            "model": "gpt-6-astra",
+            "effort": "low"
+          },
+          {
+            "turn": 5,
+            "model": "gpt-6-astra",
+            "effort": "low"
+          }
+        ],
+        "provider_response_model": null,
+        "runtime_report_status": "completed",
+        "interpretation": "Runtime completed five scripted turns; this is not human or persona task completion."
+      },
+      "artifacts_used": {
+        "T4": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts",
+        "T5": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts",
+        "technical_patches_T4": [],
+        "technical_patches_T5": []
+      },
+      "T4": {
+        "two_variations": true,
+        "selected_first_direction_asset_refs": [
+          "pedido-trama-estrutura-visual-v1"
+        ],
+        "both_reuse_selected_asset_refs": true,
+        "conversation_response": "A variação A abre uma conversa e mantém a imagem em destaque, com leitura sequencial. A B apresenta a proposta diretamente e aproxima a imagem menor dos detalhes da oferta. Ambas reutilizam exatamente o asset da primeira direção, com texto editável e IDs próprios. Os planos foram preparados no MCP; a renderização e a conferência visual ficam para o coordenador. A ferramenta não resolveu as fontes, que pertencem ao catálogo informado. Nenhuma nova imagem foi solicitada. Após comparar, você pode escolher A, B, pedir ajustes ou recusar ambas."
+      },
+      "T5": {
+        "headline_layer_id": "a-headline",
+        "headline_index": 3,
+        "source_piece_id": "estrutura-var-a",
+        "source_version": "proposta-v1",
+        "revision_version": "proposta-v2",
+        "diff": [
+          {
+            "path": "/layers/3/font_size_px",
+            "before": 52,
+            "after": 36
+          },
+          {
+            "path": "/layers/3/text",
+            "before": "Você conhece o assunto.\nVamos organizar seu curso?",
+            "after": "Você conhece o assunto. Vamos organizar seu curso?"
+          },
+          {
+            "path": "/version",
+            "before": "proposta-v1",
+            "after": "proposta-v2"
+          }
+        ],
+        "allowed_changes_only": true,
+        "headline_words_equal_after_newline_only_normalization": true,
+        "original_headline": "Você conhece o assunto.\nVamos organizar seu curso?",
+        "revised_headline": "Você conhece o assunto. Vamos organizar seu curso?",
+        "font_size_before": 52,
+        "font_size_after": 36,
+        "font_size_reduced": true,
+        "all_other_layers_identical": true,
+        "image_layers_identical": true,
+        "caption_unchanged": true,
+        "second_variation_not_reissued_as_modified_in_T5": true,
+        "feedback_summary": {
+          "source_piece_id": "estrutura-var-a",
+          "source_version": "proposta-v1",
+          "aspects": [
+            {
+              "aspect": "Escala e quebra da headline",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-headline"
+              },
+              "reported": "Ocupa espaço demais e disputa atenção com o restante.",
+              "proposed_change": "Reduzir de 52 para 36 px e remover a quebra explícita, mantendo palavras, pontuação, caixa e demais propriedades."
+            },
+            {
+              "aspect": "Paleta",
+              "target": {
+                "kind": "piece",
+                "piece_id": "estrutura-var-a"
+              },
+              "reported": "Gostou e quer preservar.",
+              "action": "Preservar ameixa #532B54, argila #C76B4B e creme #F4EBDD."
+            }
+          ],
+          "scope": "Somente esta peça; não constitui preferência geral da marca.",
+          "preserved": [
+            "Imagem e referência do asset original",
+            "Demais camadas da primeira variação",
+            "Legenda da primeira variação",
+            "Segunda variação integralmente"
+          ]
+        },
+        "outcome": {
+          "revision_status": "Plano preparado no MCP; renderização revisada ainda não recebida.",
+          "download": {
+            "reported_possibility": "Pode baixar o rascunho para ver depois.",
+            "completed": false,
+            "future_intent_confirmed": false
+          },
+          "need_resolved": null,
+          "task_complete": false,
+          "additional_reason": null,
+          "additional_reason_status": "A pessoa declarou não ter motivo adicional para informar.",
+          "revision_evaluation": "Pendente; não se sabe se o ajuste resolve a necessidade.",
+          "new_image_requested": false
+        },
+        "conversation_response": "A proposta reduz a presença visual da headline sem reposicionar os elementos. O MCP preparou a estrutura, mas não verificou o encaixe tipográfico nem renderizou a revisão; essa conferência permanece para o coordenador. A tarefa continua em aberto.",
+        "feedback_layer_refs_exist": true,
+        "synthetic_feedback_provenance": "Scripted case prompt; not real user feedback or an observed download.",
+        "scope_review": "Final feedback explicitly limits the edit to this piece and does not promote a general brand/product preference.",
+        "outcome_review": "Explicit task non-completion preserved; potential later download and need resolution remain unknown. No additional cause for the global non-completion was invented. The local headline complaint stays distinct from the positive palette feedback.",
+        "T5_prepare_calls_only_revision_identity": true
+      },
+      "asset_continuity": [
+        {
+          "asset_ref": "pedido-trama-estrutura-visual-v1",
+          "t3_sha256": "1679bcee39cef93ebb52c29786d53e56b9e83d9201685316df0a822ed843b959",
+          "t4_sha256": "1679bcee39cef93ebb52c29786d53e56b9e83d9201685316df0a822ed843b959",
+          "t5_sha256": "1679bcee39cef93ebb52c29786d53e56b9e83d9201685316df0a822ed843b959",
+          "same_bytes": true,
+          "current_file_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/assets/pedido-trama-estrutura-visual-v1.png",
+          "current_file_sha256": "1679bcee39cef93ebb52c29786d53e56b9e83d9201685316df0a822ed843b959",
+          "file_bytes_hashed_without_pixel_inspection": true
+        }
+      ],
+      "native_calls": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-04.json",
+          "json_pointer": "/events/5/item",
+          "turn": 4,
+          "event_index": 5,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "da4f235bee1b275c829910f5bec82e24c30b5c81623d27219d68e568e6e1d07b",
+          "wire_matches": [
+            {
+              "process_id": 22718,
+              "request_id": 2,
+              "request_line": 33,
+              "response_line": 34,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "estrutura-var-a",
+            "version": "proposta-v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-04.json",
+          "json_pointer": "/events/7/item",
+          "turn": 4,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "d2a5e1d0eb7f3849f53a683446f1e2f9817140f03ef74e94b2d6f903c3acda9e",
+          "wire_matches": [
+            {
+              "process_id": 22718,
+              "request_id": 3,
+              "request_line": 35,
+              "response_line": 36,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "estrutura-var-b",
+            "version": "proposta-v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "a01c34d25066749891357e9db9e12b367fd750386d6da5997a5e1ddf4816ab8d",
+          "wire_matches": [
+            {
+              "process_id": 22877,
+              "request_id": 2,
+              "request_line": 42,
+              "response_line": 43,
+              "successful": true
+            }
+          ]
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-05.json",
+          "json_pointer": "/events/7/item",
+          "turn": 5,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "0188b699c06a6191cd6e57956dedad6870b5834eed6e8dd14d597935eef840b7",
+          "wire_matches": [
+            {
+              "process_id": 22877,
+              "request_id": 3,
+              "request_line": 44,
+              "response_line": 45,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "estrutura-var-a",
+            "version": "proposta-v2"
+          }
+        }
+      ],
+      "annotation_checks": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "a01c34d25066749891357e9db9e12b367fd750386d6da5997a5e1ddf4816ab8d",
+          "wire_matches": [
+            {
+              "process_id": 22877,
+              "request_id": 2,
+              "request_line": 42,
+              "response_line": 43,
+              "successful": true
+            }
+          ],
+          "piece_exactly_matches_reviewed_first_variation": true,
+          "annotations": [
+            {
+              "id": "feedback-headline-a-v1",
+              "piece_version": "proposta-v1",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-headline"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra de linha, preservando palavras. Escopo apenas esta peça.",
+              "edit_scope_claim": "layer",
+              "memory_scope_claim": "task"
+            },
+            {
+              "id": "feedback-paleta-a-v1",
+              "piece_version": "proposta-v1",
+              "target": {
+                "kind": "area",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                }
+              },
+              "note": "Gostou da paleta e quer preservá-la nesta peça; alvo é a paleta do conjunto, não uma camada isolada.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task"
+            }
+          ],
+          "result_annotations": [
+            {
+              "id": "feedback-headline-a-v1",
+              "piece_version": "proposta-v1",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-headline"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra de linha, preservando palavras. Escopo apenas esta peça.",
+              "edit_scope_claim": "layer",
+              "memory_scope_claim": "task",
+              "candidate_layer_ids": [
+                "a-headline"
+              ],
+              "selection_status": "explicit_layer",
+              "warnings": [],
+              "memory_scope_status": "unverified_claim",
+              "candidate_detection": "explicit_layer_id"
+            },
+            {
+              "id": "feedback-paleta-a-v1",
+              "piece_version": "proposta-v1",
+              "target": {
+                "kind": "area",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                }
+              },
+              "note": "Gostou da paleta e quer preservá-la nesta peça; alvo é a paleta do conjunto, não uma camada isolada.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task",
+              "candidate_layer_ids": [
+                "estrutura-var-a-fundo",
+                "estrutura-var-a-acento",
+                "a-marca",
+                "a-headline",
+                "a-imagem",
+                "a-apoio",
+                "a-oferta",
+                "a-convite"
+              ],
+              "selection_status": "ambiguous_candidates",
+              "warnings": [
+                {
+                  "code": "area_has_multiple_candidates"
+                }
+              ],
+              "memory_scope_status": "unverified_claim",
+              "candidate_detection": "bounding_box_only"
+            }
+          ],
+          "result_limits": {
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "persists_data": false,
+            "input_snapshot_authenticated": false
+          },
+          "all_explicit_layer_targets_exist": true
+        }
+      ],
+      "final_plan_provenance": [
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/0",
+          "piece_id": "estrutura-var-a",
+          "version": "proposta-v1",
+          "mcp_evidence": [
+            {
+              "event_index": 5,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22718,
+                  "request_id": 2,
+                  "request_line": 33,
+                  "response_line": 34
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/1",
+          "piece_id": "estrutura-var-b",
+          "version": "proposta-v1",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 22718,
+                  "request_id": 3,
+                  "request_line": 35,
+                  "response_line": 36
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-05.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/revision",
+          "piece_id": "estrutura-var-a",
+          "version": "proposta-v2",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 22877,
+                  "request_id": 3,
+                  "request_line": 44,
+                  "response_line": 45
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        }
+      ],
+      "renderer_metadata": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/renders/estrutura-var-a.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/renders/estrutura-var-b.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts/renders/estrutura-var-a-revisao-v2.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        }
+      ],
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/report-003.json",
+        "last_confirmed_complete_turn": 5,
+        "final_cumulative_input": 283462,
+        "final_cumulative_output": 10513,
+        "final_total_input_plus_output": 293975,
+        "cached_input_subset": 254720,
+        "reasoning_output_subset": 64,
+        "T4_delta": {
+          "input_tokens": 59177,
+          "cached_input_tokens": 51840,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3186,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 62363
+        },
+        "T5_delta": {
+          "input_tokens": 120320,
+          "cached_input_tokens": 111360,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2364,
+          "reasoning_output_tokens": 12,
+          "total_tokens": 122684
+        },
+        "unique_delta_sums_equal_final_counters": {
+          "input_tokens": true,
+          "output_tokens": true,
+          "cached_input_tokens": true,
+          "reasoning_output_tokens": true
+        },
+        "no_cumulative_snapshot_sum_performed": true,
+        "billing_observed": false,
+        "T4_plus_T5_incremental_total": 185047
+      },
+      "gates": {
+        "G02": "passed_observed_reuse_no_new_generation_request; actual generator-tool refusal not exercised",
+        "G04": "passed_textual_local_scope; actual memory persistence not exercised",
+        "G05": "passed_structural_diff_and_identity",
+        "G06": "passed_synthetic_outcome_separation; no real human outcome inferred",
+        "G08": "passed_exact_MCP_final_plans; Terra E0 uses corrected extractor output a2",
+        "G09": "passed_editable_text_structure; pixel quality not evaluated"
+      }
+    },
+    {
+      "run": "r1-mentoria-sol-E0",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-04.json",
+          "sha256": "7252bf809ec3411af6f579df634e5ed5c7fd3f59bd91bf33411aec1dc182c1a7"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-05.json",
+          "sha256": "44fdc23390c22202632b52d60a10dc0746c1b1f840a082f23d4691d43e1e673e"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/report-003.json",
+          "sha256": "5b01a1af15d8b0622b9df8719d9f15586aba3c5cc2ba3035ea0de17f4debedbb"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t4-artifacts/report.json",
+          "sha256": "d00ae233b08ef6365f0dfd96a3268a5611c49df81396df402384574c9be6ae1a"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts/report.json",
+          "sha256": "77e5f1f8c6e4fd7cf112a6aa42812ade2a549630a6140835b8a0906515343431"
+        }
+      ],
+      "status": "technical_followups_completed",
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/report-003.json",
+        "json_pointer": "/turns",
+        "observed": [
+          {
+            "turn": 4,
+            "model": "gpt-6.1-sol",
+            "effort": "low"
+          },
+          {
+            "turn": 5,
+            "model": "gpt-6.1-sol",
+            "effort": "low"
+          }
+        ],
+        "provider_response_model": null,
+        "runtime_report_status": "completed",
+        "interpretation": "Runtime completed five scripted turns; this is not human or persona task completion."
+      },
+      "artifacts_used": {
+        "T4": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t4-artifacts",
+        "T5": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts",
+        "technical_patches_T4": [],
+        "technical_patches_T5": []
+      },
+      "T4": {
+        "two_variations": true,
+        "selected_first_direction_asset_refs": [
+          "asset-trama-estrutura-v1"
+        ],
+        "both_reuse_selected_asset_refs": true,
+        "conversation_response": "As duas variações mantêm o conceito escolhido e reutilizam exatamente asset-trama-estrutura-v1. A privilegia uma abertura acolhedora em forma de pergunta, com imagem menor à direita. B usa uma chamada direta e amplia a trama à esquerda, dando mais presença à metáfora de construção. Oferta, paleta, fontes e convite por mensagem permanecem comparáveis. Os planos foram preparados no MCP; não houve nova geração nem renderização. O MCP sinalizou fontes não resolvidas, embora as referências sigam o catálogo informado; o encaixe final depende da renderização do coordenador."
+      },
+      "T5": {
+        "headline_layer_id": "a-headline",
+        "headline_index": 3,
+        "source_piece_id": "trama-estrutura-a",
+        "source_version": "v1",
+        "revision_version": "v2",
+        "diff": [
+          {
+            "path": "/layers/3/font_size_px",
+            "before": 54,
+            "after": 44
+          },
+          {
+            "path": "/layers/3/text",
+            "before": "Você conhece o assunto.\nVamos organizar\nseu primeiro curso?",
+            "after": "Você conhece o assunto.\nVamos organizar seu primeiro curso?"
+          },
+          {
+            "path": "/version",
+            "before": "v1",
+            "after": "v2"
+          }
+        ],
+        "allowed_changes_only": true,
+        "headline_words_equal_after_newline_only_normalization": true,
+        "original_headline": "Você conhece o assunto.\nVamos organizar\nseu primeiro curso?",
+        "revised_headline": "Você conhece o assunto.\nVamos organizar seu primeiro curso?",
+        "font_size_before": 54,
+        "font_size_after": 44,
+        "font_size_reduced": true,
+        "all_other_layers_identical": true,
+        "image_layers_identical": true,
+        "caption_unchanged": true,
+        "second_variation_not_reissued_as_modified_in_T5": true,
+        "feedback_summary": {
+          "scope": "Somente esta peça; não constitui preferência geral da marca.",
+          "aspects": [
+            {
+              "aspect": "Escala e hierarquia da headline",
+              "target": {
+                "piece_id": "trama-estrutura-a",
+                "reviewed_version": "v1",
+                "layer_id": "a-headline"
+              },
+              "reported": "A headline ocupa espaço demais e disputa atenção com o restante.",
+              "adjustment": "Fonte reduzida de 54 para 44 px; texto redistribuído de três para duas linhas, preservando palavras, pontuação e caixa."
+            },
+            {
+              "aspect": "Paleta",
+              "target": {
+                "piece_id": "trama-estrutura-a",
+                "layer_ids": [
+                  "a-fundo",
+                  "a-marca",
+                  "a-acento",
+                  "a-headline",
+                  "a-apoio",
+                  "a-oferta",
+                  "a-divisor",
+                  "a-convite"
+                ]
+              },
+              "reported": "Gostou da paleta e pediu sua preservação.",
+              "adjustment": "Cores mantidas."
+            }
+          ],
+          "preserved": {
+            "other_layers": "Todas as demais camadas da primeira variação permanecem iguais.",
+            "asset_ref": "asset-trama-estrutura-v1",
+            "caption": "Mantida.",
+            "second_variation": "trama-estrutura-b v1 permanece inalterada."
+          }
+        },
+        "outcome": {
+          "reported": {
+            "download": "Ainda não realizado; a pessoa considera baixar o rascunho para ver depois.",
+            "task_completed": false,
+            "meets_need": "A pessoa ainda não sabe se o rascunho resolve sua necessidade.",
+            "additional_reason": "Nenhum motivo adicional informado."
+          },
+          "revision_status": "Plano v2 preparado no MCP, aguardando renderização pelo coordenador e avaliação da pessoa.",
+          "unknown": [
+            "Se a revisão resolve a disputa de atenção.",
+            "Se haverá download posterior.",
+            "Se a peça atenderá à necessidade e a tarefa será considerada concluída."
+          ]
+        },
+        "conversation_response": "Apenas a escala e a quebra de linha de a-headline foram alteradas. Nenhuma imagem nova foi solicitada ou gerada. O MCP sinalizou fontes não resolvidas; a revisão ainda precisa ser renderizada para conferir o encaixe visual.",
+        "feedback_layer_refs_exist": true,
+        "synthetic_feedback_provenance": "Scripted case prompt; not real user feedback or an observed download.",
+        "scope_review": "Final feedback explicitly limits the edit to this piece and does not promote a general brand/product preference.",
+        "outcome_review": "Explicit task non-completion preserved; potential later download and need resolution remain unknown. No additional cause for the global non-completion was invented. The local headline complaint stays distinct from the positive palette feedback.",
+        "T5_prepare_calls_only_revision_identity": true
+      },
+      "asset_continuity": [
+        {
+          "asset_ref": "asset-trama-estrutura-v1",
+          "t3_sha256": "11b8bdb974db6be29cef4d25c4874450a5783ae762bb2a303a4ddc5412b82687",
+          "t4_sha256": "11b8bdb974db6be29cef4d25c4874450a5783ae762bb2a303a4ddc5412b82687",
+          "t5_sha256": "11b8bdb974db6be29cef4d25c4874450a5783ae762bb2a303a4ddc5412b82687",
+          "same_bytes": true,
+          "current_file_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/assets/asset-trama-estrutura-v1.png",
+          "current_file_sha256": "11b8bdb974db6be29cef4d25c4874450a5783ae762bb2a303a4ddc5412b82687",
+          "file_bytes_hashed_without_pixel_inspection": true
+        }
+      ],
+      "native_calls": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-04.json",
+          "json_pointer": "/events/5/item",
+          "turn": 4,
+          "event_index": 5,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "76d67d1a42e7712562ae26c8d67a588ba52dd643429c5ee4ca22693b7d2112f4",
+          "wire_matches": [
+            {
+              "process_id": 22425,
+              "request_id": 2,
+              "request_line": 33,
+              "response_line": 34,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-estrutura-a",
+            "version": "v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-04.json",
+          "json_pointer": "/events/7/item",
+          "turn": 4,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "a70db731a1b546cec11bc6d3d0a5b247d15aca39b5d206d846c270ffa8ba8b5e",
+          "wire_matches": [
+            {
+              "process_id": 22425,
+              "request_id": 3,
+              "request_line": 35,
+              "response_line": 36,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-estrutura-b",
+            "version": "v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "c50f1d22b88034ef181dd7a778f01daa68dc15e98540844757a2fee762f73a00",
+          "wire_matches": [
+            {
+              "process_id": 22647,
+              "request_id": 2,
+              "request_line": 42,
+              "response_line": 43,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-estrutura-a",
+            "version": "v2"
+          }
+        }
+      ],
+      "annotation_checks": [],
+      "final_plan_provenance": [
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/0",
+          "piece_id": "trama-estrutura-a",
+          "version": "v1",
+          "mcp_evidence": [
+            {
+              "event_index": 5,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22425,
+                  "request_id": 2,
+                  "request_line": 33,
+                  "response_line": 34
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/1",
+          "piece_id": "trama-estrutura-b",
+          "version": "v1",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 22425,
+                  "request_id": 3,
+                  "request_line": 35,
+                  "response_line": 36
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/turn-05.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/revision",
+          "piece_id": "trama-estrutura-a",
+          "version": "v2",
+          "mcp_evidence": [
+            {
+              "event_index": 5,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22647,
+                  "request_id": 2,
+                  "request_line": 42,
+                  "response_line": 43
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        }
+      ],
+      "renderer_metadata": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t4-artifacts/renders/var-estrutura-a.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t4-artifacts/renders/var-estrutura-b.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts/renders/rev-estrutura-a-v2.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        }
+      ],
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/report-003.json",
+        "last_confirmed_complete_turn": 5,
+        "final_cumulative_input": 239490,
+        "final_cumulative_output": 11223,
+        "final_total_input_plus_output": 250713,
+        "cached_input_subset": 214144,
+        "reasoning_output_subset": 63,
+        "T4_delta": {
+          "input_tokens": 59192,
+          "cached_input_tokens": 51584,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3462,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 62654
+        },
+        "T5_delta": {
+          "input_tokens": 78895,
+          "cached_input_tokens": 73216,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2490,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 81385
+        },
+        "unique_delta_sums_equal_final_counters": {
+          "input_tokens": true,
+          "output_tokens": true,
+          "cached_input_tokens": true,
+          "reasoning_output_tokens": true
+        },
+        "no_cumulative_snapshot_sum_performed": true,
+        "billing_observed": false,
+        "T4_plus_T5_incremental_total": 144039
+      },
+      "gates": {
+        "G02": "passed_observed_reuse_no_new_generation_request; actual generator-tool refusal not exercised",
+        "G04": "passed_textual_local_scope; actual memory persistence not exercised",
+        "G05": "passed_structural_diff_and_identity",
+        "G06": "passed_synthetic_outcome_separation; no real human outcome inferred",
+        "G08": "passed_exact_MCP_final_plans; Terra E0 uses corrected extractor output a2",
+        "G09": "passed_editable_text_structure; pixel quality not evaluated"
+      }
+    },
+    {
+      "run": "r1-mentoria-sol-E1",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-04.json",
+          "sha256": "61e6be4b1248b6aa21bcfe400c3df442532405df504f45fe43445bdac31e1306"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-05.json",
+          "sha256": "4b73e272df36716e65f2abe3caca3ad5dc86a5b195fb9b27d2c815c8377c884d"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/report-003.json",
+          "sha256": "1449bbd83e6a2e39c5d5d607e954c08b86c2e163c437cd2adccdf5a165e16261"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/report.json",
+          "sha256": "f47f0d6b138c9da3e66213616bec6de40faa13bdfa06244f073a4cc3fd8203ed"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts/report.json",
+          "sha256": "ed7355368f887ccab7012c21aec62ca4dadb94e996b51a3d107901bcca1b1ce1"
+        }
+      ],
+      "status": "technical_followups_completed",
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/report-003.json",
+        "json_pointer": "/turns",
+        "observed": [
+          {
+            "turn": 4,
+            "model": "gpt-6.1-sol",
+            "effort": "low"
+          },
+          {
+            "turn": 5,
+            "model": "gpt-6.1-sol",
+            "effort": "low"
+          }
+        ],
+        "provider_response_model": null,
+        "runtime_report_status": "completed",
+        "interpretation": "Runtime completed five scripted turns; this is not human or persona task completion."
+      },
+      "artifacts_used": {
+        "T4": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts",
+        "T5": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts",
+        "technical_patches_T4": [],
+        "technical_patches_T5": []
+      },
+      "T4": {
+        "two_variations": true,
+        "selected_first_direction_asset_refs": [
+          "ta-asset-percurso-proposto-v1"
+        ],
+        "both_reuse_selected_asset_refs": true,
+        "conversation_response": "A reconhece o conhecimento da pessoa e mantém a imagem em destaque antes da oferta. B abre uma pergunta sobre o recorte do curso, apresenta a oferta antes da imagem e amplia o texto sobre o formato. Ambas reutilizam exatamente ta-asset-percurso-proposto-v1, com textos editáveis, a mesma paleta e o mesmo convite. Os dois planos foram preparados no MCP; a renderização das variações ainda está pendente. Nenhuma nova imagem foi solicitada."
+      },
+      "T5": {
+        "headline_layer_id": "a-chamada",
+        "headline_index": 2,
+        "source_piece_id": "ta-percurso-variacao-a",
+        "source_version": "v1",
+        "revision_version": "v2",
+        "diff": [
+          {
+            "path": "/layers/2/font_size_px",
+            "before": 58,
+            "after": 40
+          },
+          {
+            "path": "/layers/2/text",
+            "before": "Você conhece o assunto.\nVamos organizar seu curso?",
+            "after": "Você conhece o assunto.\nVamos organizar\nseu curso?"
+          },
+          {
+            "path": "/version",
+            "before": "v1",
+            "after": "v2"
+          }
+        ],
+        "allowed_changes_only": true,
+        "headline_words_equal_after_newline_only_normalization": true,
+        "original_headline": "Você conhece o assunto.\nVamos organizar seu curso?",
+        "revised_headline": "Você conhece o assunto.\nVamos organizar\nseu curso?",
+        "font_size_before": 58,
+        "font_size_after": 40,
+        "font_size_reduced": true,
+        "all_other_layers_identical": true,
+        "image_layers_identical": true,
+        "caption_unchanged": true,
+        "second_variation_not_reissued_as_modified_in_T5": true,
+        "feedback_summary": {
+          "scope": "Somente ta-percurso-variacao-a; não constitui preferência geral da marca.",
+          "aspects": [
+            {
+              "aspect": "Escala e quebra da headline",
+              "target": {
+                "piece_id": "ta-percurso-variacao-a",
+                "source_version": "v1",
+                "layer_id": "a-chamada"
+              },
+              "reported": "Ocupa espaço demais e disputa atenção com o restante.",
+              "adjustment": "Fonte reduzida de 58 para 40 px; texto distribuído em três linhas, preservando palavras, pontuação, caixa, posição e demais estilos.",
+              "reason": "As três linhas com entrelinha 1.15 ocupam 138 px e cabem na caixa original de 150 px."
+            },
+            {
+              "aspect": "Paleta",
+              "target": {
+                "piece_id": "ta-percurso-variacao-a",
+                "scope": "piece"
+              },
+              "reported": "Gostou e deseja preservar.",
+              "adjustment": "Preservadas ameixa #532B54, argila #C76B4B e creme #F4EBDD."
+            },
+            {
+              "aspect": "Elementos preservados",
+              "target": {
+                "layer_ids": [
+                  "a-fundo",
+                  "a-marca",
+                  "a-visual",
+                  "a-divisor",
+                  "a-oferta",
+                  "a-formato",
+                  "a-convite"
+                ],
+                "other_piece_id": "ta-percurso-variacao-b"
+              },
+              "adjustment": "Imagem, demais elementos, legenda e segunda variação mantidos."
+            }
+          ]
+        },
+        "outcome": {
+          "download": {
+            "reported_intent": "Pode baixar o rascunho para ver depois.",
+            "completed": false,
+            "availability_verified": false
+          },
+          "need_met": "desconhecido",
+          "task_completed": false,
+          "additional_reason": {
+            "provided": false,
+            "inferred": false
+          },
+          "revision_status": "Plano v2 preparado no MCP; renderização e avaliação desta revisão pendentes.",
+          "new_image_requested": false,
+          "general_brand_preference_saved": false
+        },
+        "conversation_response": "A revisão final usa 40 px, corrigindo a indicação inicial de 46 px para acomodar três linhas na caixa original. Apenas escala e quebras de a-chamada foram alteradas. O resultado permanece um rascunho em revisão, sem conclusão presumida.",
+        "feedback_layer_refs_exist": true,
+        "synthetic_feedback_provenance": "Scripted case prompt; not real user feedback or an observed download.",
+        "scope_review": "Final feedback explicitly limits the edit to this piece and does not promote a general brand/product preference.",
+        "outcome_review": "Explicit task non-completion preserved; potential later download and need resolution remain unknown. No additional cause for the global non-completion was invented. The local headline complaint stays distinct from the positive palette feedback.",
+        "T5_prepare_calls_only_revision_identity": true
+      },
+      "asset_continuity": [
+        {
+          "asset_ref": "ta-asset-percurso-proposto-v1",
+          "t3_sha256": "b019d4aba1dafca418ae60cc4799ecb5d3633b5b6b3e7a3e6811ee51356b8023",
+          "t4_sha256": "b019d4aba1dafca418ae60cc4799ecb5d3633b5b6b3e7a3e6811ee51356b8023",
+          "t5_sha256": "b019d4aba1dafca418ae60cc4799ecb5d3633b5b6b3e7a3e6811ee51356b8023",
+          "same_bytes": true,
+          "current_file_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/assets/ta-asset-percurso-proposto-v1.png",
+          "current_file_sha256": "b019d4aba1dafca418ae60cc4799ecb5d3633b5b6b3e7a3e6811ee51356b8023",
+          "file_bytes_hashed_without_pixel_inspection": true
+        }
+      ],
+      "native_calls": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-04.json",
+          "json_pointer": "/events/5/item",
+          "turn": 4,
+          "event_index": 5,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "7b3ac36411da9f0ac8ef477e917400852d8228f9c93185d0e4e13fe93902612e",
+          "wire_matches": [
+            {
+              "process_id": 21789,
+              "request_id": 2,
+              "request_line": 37,
+              "response_line": 38,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "ta-percurso-variacao-a",
+            "version": "v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-04.json",
+          "json_pointer": "/events/7/item",
+          "turn": 4,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "9b2d0a50567eadd9219af8207408553b975748976058ff177b1b81680ada89de",
+          "wire_matches": [
+            {
+              "process_id": 21789,
+              "request_id": 3,
+              "request_line": 39,
+              "response_line": 40,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "ta-percurso-variacao-b",
+            "version": "v1"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "a95296e09c03aa8a408e0b26a7744c98a7ab4a3b51571d39959adb7f023b1b4d",
+          "wire_matches": [
+            {
+              "process_id": 22073,
+              "request_id": 2,
+              "request_line": 46,
+              "response_line": 47,
+              "successful": true
+            }
+          ]
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-05.json",
+          "json_pointer": "/events/7/item",
+          "turn": 5,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "1137003538a16f376591bd54b15503c74bb0163b37df214ec40b9849bde53251",
+          "wire_matches": [
+            {
+              "process_id": 22073,
+              "request_id": 3,
+              "request_line": 48,
+              "response_line": 49,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "ta-percurso-variacao-a",
+            "version": "v2"
+          }
+        }
+      ],
+      "annotation_checks": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "a95296e09c03aa8a408e0b26a7744c98a7ab4a3b51571d39959adb7f023b1b4d",
+          "wire_matches": [
+            {
+              "process_id": 22073,
+              "request_id": 2,
+              "request_line": 46,
+              "response_line": 47,
+              "successful": true
+            }
+          ],
+          "piece_exactly_matches_reviewed_first_variation": true,
+          "annotations": [
+            {
+              "id": "ta-feedback-headline-a",
+              "piece_version": "v1",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-chamada"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra; manter palavras. Escopo somente esta peça.",
+              "edit_scope_claim": "layer",
+              "memory_scope_claim": "task"
+            }
+          ],
+          "result_annotations": [
+            {
+              "id": "ta-feedback-headline-a",
+              "piece_version": "v1",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-chamada"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra; manter palavras. Escopo somente esta peça.",
+              "edit_scope_claim": "layer",
+              "memory_scope_claim": "task",
+              "candidate_layer_ids": [
+                "a-chamada"
+              ],
+              "selection_status": "explicit_layer",
+              "warnings": [],
+              "memory_scope_status": "unverified_claim",
+              "candidate_detection": "explicit_layer_id"
+            }
+          ],
+          "result_limits": {
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "persists_data": false,
+            "input_snapshot_authenticated": false
+          },
+          "all_explicit_layer_targets_exist": true
+        }
+      ],
+      "final_plan_provenance": [
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/0",
+          "piece_id": "ta-percurso-variacao-a",
+          "version": "v1",
+          "mcp_evidence": [
+            {
+              "event_index": 5,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 21789,
+                  "request_id": 2,
+                  "request_line": 37,
+                  "response_line": 38
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/1",
+          "piece_id": "ta-percurso-variacao-b",
+          "version": "v1",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 21789,
+                  "request_id": 3,
+                  "request_line": 39,
+                  "response_line": 40
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-05.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/revision",
+          "piece_id": "ta-percurso-variacao-a",
+          "version": "v2",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 22073,
+                  "request_id": 3,
+                  "request_line": 48,
+                  "response_line": 49
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        }
+      ],
+      "renderer_metadata": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-a.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-b.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts/renders/ta-percurso-a-revisao-v2.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        }
+      ],
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/report-003.json",
+        "last_confirmed_complete_turn": 5,
+        "final_cumulative_input": 345039,
+        "final_cumulative_output": 11515,
+        "final_total_input_plus_output": 356554,
+        "cached_input_subset": 290816,
+        "reasoning_output_subset": 45,
+        "T4_delta": {
+          "input_tokens": 67455,
+          "cached_input_tokens": 53888,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 3478,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 70933
+        },
+        "T5_delta": {
+          "input_tokens": 135399,
+          "cached_input_tokens": 123520,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2746,
+          "reasoning_output_tokens": 9,
+          "total_tokens": 138145
+        },
+        "unique_delta_sums_equal_final_counters": {
+          "input_tokens": true,
+          "output_tokens": true,
+          "cached_input_tokens": true,
+          "reasoning_output_tokens": true
+        },
+        "no_cumulative_snapshot_sum_performed": true,
+        "billing_observed": false,
+        "T4_plus_T5_incremental_total": 209078
+      },
+      "gates": {
+        "G02": "passed_observed_reuse_no_new_generation_request; actual generator-tool refusal not exercised",
+        "G04": "passed_textual_local_scope; actual memory persistence not exercised",
+        "G05": "passed_structural_diff_and_identity",
+        "G06": "passed_synthetic_outcome_separation; no real human outcome inferred",
+        "G08": "passed_exact_MCP_final_plans; Terra E0 uses corrected extractor output a2",
+        "G09": "passed_editable_text_structure; pixel quality not evaluated"
+      },
+      "observation": "Commentary initially proposed46px; final plan uses40px and explicitly corrects that indication. This is a transparent proposal adjustment, not an extra changed layer or claimed render."
+    },
+    {
+      "run": "r1-mentoria-terra-E0",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+          "sha256": "41dc7152a8419ed3b2e2e665ef2b7191da192a552fec274a28330424f2f3dd72"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-05.json",
+          "sha256": "6c249efe28ba6bea736cd47340ea38be4359960a6ac3661956ac38de755454a1"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/report-003.json",
+          "sha256": "323e84fab11b063f74232374e4077c94641b493ee0c6a56e2a6014e24474bb54"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/report.json",
+          "sha256": "8fb2998b4878e1f009c1969f0f44525602a2006393b1b07771b083cc86cd1c9e"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t5-artifacts/report.json",
+          "sha256": "08eb91470cb46f12357939ccfce86e944496798628e4a0eed33186ce0e47dbbf"
+        }
+      ],
+      "status": "technical_followups_completed",
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/report-003.json",
+        "json_pointer": "/turns",
+        "observed": [
+          {
+            "turn": 4,
+            "model": "gpt-6.1-terra",
+            "effort": "low"
+          },
+          {
+            "turn": 5,
+            "model": "gpt-6.1-terra",
+            "effort": "low"
+          }
+        ],
+        "provider_response_model": null,
+        "runtime_report_status": "completed",
+        "interpretation": "Runtime completed five scripted turns; this is not human or persona task completion."
+      },
+      "artifacts_used": {
+        "T4": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2",
+        "T5": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t5-artifacts",
+        "technical_patches_T4": [],
+        "technical_patches_T5": []
+      },
+      "T4": {
+        "two_variations": true,
+        "selected_first_direction_asset_refs": [
+          "asset-mapa-v1"
+        ],
+        "both_reuse_selected_asset_refs": true,
+        "conversation_response": "As duas variações reutilizam asset-mapa-v1. A primeira destaca o apoio para organizar o caminho; a segunda enfatiza a autoria de quem ensina. Os planos estão preparados para composição e ainda não foram renderizados."
+      },
+      "T5": {
+        "headline_layer_id": "a-titulo",
+        "headline_index": 4,
+        "source_piece_id": "trama-mapa",
+        "source_version": "2a",
+        "revision_version": "3",
+        "diff": [
+          {
+            "path": "/layers/4/font_size_px",
+            "before": 50,
+            "after": 36
+          },
+          {
+            "path": "/layers/4/text",
+            "before": "Seu conhecimento,\num caminho\npara ensinar.",
+            "after": "Seu conhecimento,\num caminho para ensinar."
+          },
+          {
+            "path": "/version",
+            "before": "2a",
+            "after": "3"
+          }
+        ],
+        "allowed_changes_only": true,
+        "headline_words_equal_after_newline_only_normalization": true,
+        "original_headline": "Seu conhecimento,\num caminho\npara ensinar.",
+        "revised_headline": "Seu conhecimento,\num caminho para ensinar.",
+        "font_size_before": 50,
+        "font_size_after": 36,
+        "font_size_reduced": true,
+        "all_other_layers_identical": true,
+        "image_layers_identical": true,
+        "caption_unchanged": true,
+        "second_variation_not_reissued_as_modified_in_T5": true,
+        "feedback_summary": {
+          "source_piece_id": "trama-mapa",
+          "source_version": "2a",
+          "aspects": [
+            {
+              "aspect": "escala e quebra da headline",
+              "target": {
+                "kind": "layer",
+                "layer_id": "a-titulo"
+              },
+              "feedback": "A headline ocupa espaço demais e disputa atenção com o restante.",
+              "change": "Tamanho reduzido de 50 para 36 px e texto redistribuído em duas linhas, mantendo as palavras."
+            },
+            {
+              "aspect": "paleta",
+              "target": {
+                "kind": "piece",
+                "piece_id": "trama-mapa",
+                "variation_ref": "mapa-clareza"
+              },
+              "feedback": "A paleta agradou e deve ser preservada nesta peça."
+            }
+          ],
+          "scope": "Somente esta peça; não é uma preferência geral da marca."
+        },
+        "outcome": {
+          "draft_downloaded": false,
+          "draft_may_be_downloaded_later": true,
+          "meets_need": "desconhecido",
+          "task_complete": false,
+          "additional_reason": "não informado",
+          "revision_rendered": false
+        },
+        "conversation_response": "A revisão mantém o ativo e os demais elementos da primeira variação. A segunda variação não foi alterada. A nova composição ainda precisa ser renderizada para avaliação visual.",
+        "feedback_layer_refs_exist": true,
+        "synthetic_feedback_provenance": "Scripted case prompt; not real user feedback or an observed download.",
+        "scope_review": "Final feedback explicitly limits the edit to this piece and does not promote a general brand/product preference.",
+        "outcome_review": "Explicit task non-completion preserved; potential later download and need resolution remain unknown. No additional cause for the global non-completion was invented. The local headline complaint stays distinct from the positive palette feedback.",
+        "T5_prepare_calls_only_revision_identity": true
+      },
+      "asset_continuity": [
+        {
+          "asset_ref": "asset-mapa-v1",
+          "t3_sha256": "7c1748cbd5cdb1a466af6f7a01b6c4325a665c46a50a8a061ec621b613df8044",
+          "t4_sha256": "7c1748cbd5cdb1a466af6f7a01b6c4325a665c46a50a8a061ec621b613df8044",
+          "t5_sha256": "7c1748cbd5cdb1a466af6f7a01b6c4325a665c46a50a8a061ec621b613df8044",
+          "same_bytes": true,
+          "current_file_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets/asset-mapa-v1.png",
+          "current_file_sha256": "7c1748cbd5cdb1a466af6f7a01b6c4325a665c46a50a8a061ec621b613df8044",
+          "file_bytes_hashed_without_pixel_inspection": true
+        }
+      ],
+      "native_calls": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+          "json_pointer": "/events/6/item",
+          "turn": 4,
+          "event_index": 6,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "245e8ca151b207ffda385cd48465a79d2eef2abdc3068823c084c8178712060b",
+          "wire_matches": [
+            {
+              "process_id": 21735,
+              "request_id": 2,
+              "request_line": 37,
+              "response_line": 39,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-mapa",
+            "version": "2b"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+          "json_pointer": "/events/7/item",
+          "turn": 4,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "0d41715a7933ec7c7296ab47bf079619ae1d6879a34b3e88d43707d1ecccbf3d",
+          "wire_matches": [
+            {
+              "process_id": 21735,
+              "request_id": 3,
+              "request_line": 38,
+              "response_line": 40,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-mapa",
+            "version": "2a"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-05.json",
+          "json_pointer": "/events/5/item",
+          "turn": 5,
+          "event_index": 5,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "b3c8fa65c2e03ff98f152d2c61cbce7789d9f2e2f099adaa77c21818dcb7347c",
+          "wire_matches": [
+            {
+              "process_id": 22912,
+              "request_id": 2,
+              "request_line": 46,
+              "response_line": 47,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-mapa",
+            "version": "3"
+          }
+        }
+      ],
+      "annotation_checks": [],
+      "final_plan_provenance": [
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/0",
+          "piece_id": "trama-mapa",
+          "version": "2a",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 21735,
+                  "request_id": 3,
+                  "request_line": 38,
+                  "response_line": 40
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/1",
+          "piece_id": "trama-mapa",
+          "version": "2b",
+          "mcp_evidence": [
+            {
+              "event_index": 6,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 21735,
+                  "request_id": 2,
+                  "request_line": 37,
+                  "response_line": 39
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-05.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/revision",
+          "piece_id": "trama-mapa",
+          "version": "3",
+          "mcp_evidence": [
+            {
+              "event_index": 5,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22912,
+                  "request_id": 2,
+                  "request_line": 46,
+                  "response_line": 47
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        }
+      ],
+      "renderer_metadata": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-autoria.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-clareza.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t5-artifacts/renders/mapa-clareza-revisao-3.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        }
+      ],
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/report-003.json",
+        "last_confirmed_complete_turn": 5,
+        "final_cumulative_input": 259405,
+        "final_cumulative_output": 10569,
+        "final_total_input_plus_output": 269974,
+        "cached_input_subset": 188672,
+        "reasoning_output_subset": 15,
+        "T4_delta": {
+          "input_tokens": 58472,
+          "cached_input_tokens": 35456,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2615,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 61087
+        },
+        "T5_delta": {
+          "input_tokens": 72854,
+          "cached_input_tokens": 65792,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 1878,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 74732
+        },
+        "unique_delta_sums_equal_final_counters": {
+          "input_tokens": true,
+          "output_tokens": true,
+          "cached_input_tokens": true,
+          "reasoning_output_tokens": true
+        },
+        "no_cumulative_snapshot_sum_performed": true,
+        "billing_observed": false,
+        "T4_plus_T5_incremental_total": 135819
+      },
+      "gates": {
+        "G02": "passed_observed_reuse_no_new_generation_request; actual generator-tool refusal not exercised",
+        "G04": "passed_textual_local_scope; actual memory persistence not exercised",
+        "G05": "passed_structural_diff_and_identity",
+        "G06": "passed_synthetic_outcome_separation; no real human outcome inferred",
+        "G08": "passed_exact_MCP_final_plans; Terra E0 uses corrected extractor output a2",
+        "G09": "passed_editable_text_structure; pixel quality not evaluated"
+      },
+      "observation": "The first T4 extraction rejected duplicate piece_id despite distinct versions2a/2b. That infrastructure error is preserved in t4-artifacts/report.json; t4-artifacts-a2 validates the same native model output without repair."
+    },
+    {
+      "run": "r1-mentoria-terra-E1",
+      "sources": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-04.json",
+          "sha256": "9d9d71930a8bdcf9d83add38590ca0214afd116cf8cf0d4b8eac2069c472a472"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-05.json",
+          "sha256": "e057b8cd32e80bf4cb61e296eaf3ef9af43b70071f15c01a897a1e0ce887f6ea"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/report-003.json",
+          "sha256": "a2643ff5d54823f2e0d5e78c668208bdaf2f19629cd13f46bfd7f9006628e13d"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t4-artifacts/report.json",
+          "sha256": "4aa3109a931d67f14274112fb46e3d0e9bd558a770e51f8e11a146ba28d6bdfb"
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts/report.json",
+          "sha256": "0ce19f7875b1ec87bd15a1566f17b1c3a8de2bb5150956e90c7d35815f6d9421"
+        }
+      ],
+      "status": "technical_followups_completed",
+      "runtime_identity": {
+        "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/report-003.json",
+        "json_pointer": "/turns",
+        "observed": [
+          {
+            "turn": 4,
+            "model": "gpt-6.1-terra",
+            "effort": "low"
+          },
+          {
+            "turn": 5,
+            "model": "gpt-6.1-terra",
+            "effort": "low"
+          }
+        ],
+        "provider_response_model": null,
+        "runtime_report_status": "completed",
+        "interpretation": "Runtime completed five scripted turns; this is not human or persona task completion."
+      },
+      "artifacts_used": {
+        "T4": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t4-artifacts",
+        "T5": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts",
+        "technical_patches_T4": [],
+        "technical_patches_T5": []
+      },
+      "T4": {
+        "two_variations": true,
+        "selected_first_direction_asset_refs": [
+          "asset-proposto-fios-v1"
+        ],
+        "both_reuse_selected_asset_refs": true,
+        "conversation_response": "A primeira variação abre com o conhecimento da pessoa; a segunda destaca o percurso até o plano de aula e coloca os fios antes da chamada. Ambas referenciam exatamente o ativo asset-proposto-fios-v1 já associado à primeira direção. Os planos foram preparados para revisão; a composição e a legibilidade final dependem da renderização pelo coordenador."
+      },
+      "T5": {
+        "headline_layer_id": "fios-titulo",
+        "headline_index": 2,
+        "source_piece_id": "trama-fios",
+        "source_version": "v2-conhecimento",
+        "revision_version": "v3-headline",
+        "diff": [
+          {
+            "path": "/layers/2/font_size_px",
+            "before": 56,
+            "after": 40
+          },
+          {
+            "path": "/layers/2/text",
+            "before": "O que você sabe\npode virar curso.",
+            "after": "O que você sabe pode virar curso."
+          },
+          {
+            "path": "/version",
+            "before": "v2-conhecimento",
+            "after": "v3-headline"
+          }
+        ],
+        "allowed_changes_only": true,
+        "headline_words_equal_after_newline_only_normalization": true,
+        "original_headline": "O que você sabe\npode virar curso.",
+        "revised_headline": "O que você sabe pode virar curso.",
+        "font_size_before": 56,
+        "font_size_after": 40,
+        "font_size_reduced": true,
+        "all_other_layers_identical": true,
+        "image_layers_identical": true,
+        "caption_unchanged": true,
+        "second_variation_not_reissued_as_modified_in_T5": true,
+        "feedback_summary": {
+          "source_version": "v2-conhecimento",
+          "aspects": [
+            {
+              "aspect": "escala e quebra da headline",
+              "target": {
+                "kind": "layer",
+                "layer_id": "fios-titulo"
+              },
+              "feedback": "A headline ocupa espaço demais e disputa atenção com o restante.",
+              "revision": "Tamanho reduzido de 56 para 40 px e quebra removida, mantendo as palavras."
+            },
+            {
+              "aspect": "paleta",
+              "target": {
+                "kind": "piece",
+                "piece_id": "trama-fios"
+              },
+              "feedback": "Gostou da paleta e quer preservá-la nesta peça."
+            }
+          ],
+          "scope": "Somente esta peça; não é preferência geral."
+        },
+        "outcome": {
+          "task_complete": false,
+          "draft_downloaded": false,
+          "download_later": "possível, sem decisão informada",
+          "resolves_need": "desconhecido",
+          "additional_reason": "não informado"
+        },
+        "conversation_response": "A revisão usa o mesmo ativo de fios e mantém os demais elementos da primeira variação. A segunda variação permanece como estava. O plano está preparado para renderização e revisão; ainda não há resultado visual desta versão.",
+        "feedback_layer_refs_exist": true,
+        "synthetic_feedback_provenance": "Scripted case prompt; not real user feedback or an observed download.",
+        "scope_review": "Final feedback explicitly limits the edit to this piece and does not promote a general brand/product preference.",
+        "outcome_review": "Explicit task non-completion preserved; potential later download and need resolution remain unknown. No additional cause for the global non-completion was invented. The local headline complaint stays distinct from the positive palette feedback.",
+        "T5_prepare_calls_only_revision_identity": true
+      },
+      "asset_continuity": [
+        {
+          "asset_ref": "asset-proposto-fios-v1",
+          "t3_sha256": "0aa107529f2ca0f3b5bf7335796f06db29707883853f5f69accfe3dd46742133",
+          "t4_sha256": "0aa107529f2ca0f3b5bf7335796f06db29707883853f5f69accfe3dd46742133",
+          "t5_sha256": "0aa107529f2ca0f3b5bf7335796f06db29707883853f5f69accfe3dd46742133",
+          "same_bytes": true,
+          "current_file_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets/asset-proposto-fios-v1.png",
+          "current_file_sha256": "0aa107529f2ca0f3b5bf7335796f06db29707883853f5f69accfe3dd46742133",
+          "file_bytes_hashed_without_pixel_inspection": true
+        }
+      ],
+      "native_calls": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-04.json",
+          "json_pointer": "/events/6/item",
+          "turn": 4,
+          "event_index": 6,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "67c3d37ca1e718ea70a0c3dcc19ef4cfe6ddacb830c6c0267ebc9c86446b2656",
+          "wire_matches": [
+            {
+              "process_id": 22237,
+              "request_id": 3,
+              "request_line": 47,
+              "response_line": 49,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-fios",
+            "version": "v2-conhecimento"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-04.json",
+          "json_pointer": "/events/7/item",
+          "turn": 4,
+          "event_index": 7,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "c1a9778f9fae8e3257f8d28174eb19ed5d5877123b450511b069e044cbb526c7",
+          "wire_matches": [
+            {
+              "process_id": 22237,
+              "request_id": 2,
+              "request_line": 48,
+              "response_line": 50,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-fios",
+            "version": "v2-percurso"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-05.json",
+          "json_pointer": "/events/6/item",
+          "turn": 5,
+          "event_index": 6,
+          "tool": "prepare_layered_creative",
+          "status": "completed",
+          "arguments_sha256": "2cc50ae8c92b05d718de5348e3284a66e991f0c5c1efb6f0dae9c1a009aca42d",
+          "wire_matches": [
+            {
+              "process_id": 22338,
+              "request_id": 2,
+              "request_line": 56,
+              "response_line": 58,
+              "successful": true
+            }
+          ],
+          "piece_identity": {
+            "piece_id": "trama-fios",
+            "version": "v3-headline"
+          }
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-05.json",
+          "json_pointer": "/events/7/item",
+          "turn": 5,
+          "event_index": 7,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "bc0b19c0fb04af6b008e143244c967493abd37dc690ac8e2f67b9f8102b56f5e",
+          "wire_matches": [
+            {
+              "process_id": 22338,
+              "request_id": 3,
+              "request_line": 57,
+              "response_line": 59,
+              "successful": true
+            }
+          ]
+        }
+      ],
+      "annotation_checks": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-05.json",
+          "json_pointer": "/events/7/item",
+          "turn": 5,
+          "event_index": 7,
+          "tool": "prepare_annotation_context",
+          "status": "completed",
+          "arguments_sha256": "bc0b19c0fb04af6b008e143244c967493abd37dc690ac8e2f67b9f8102b56f5e",
+          "wire_matches": [
+            {
+              "process_id": 22338,
+              "request_id": 3,
+              "request_line": 57,
+              "response_line": 59,
+              "successful": true
+            }
+          ],
+          "piece_exactly_matches_reviewed_first_variation": true,
+          "annotations": [
+            {
+              "id": "feedback-headline",
+              "piece_version": "v2-conhecimento",
+              "target": {
+                "kind": "layer",
+                "layer_id": "fios-titulo"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção; ajustar escala e quebra mantendo as palavras.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task"
+            },
+            {
+              "id": "feedback-paleta",
+              "piece_version": "v2-conhecimento",
+              "target": {
+                "kind": "area",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                }
+              },
+              "note": "Gostou da paleta e quer preservá-la nesta peça.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task"
+            }
+          ],
+          "result_annotations": [
+            {
+              "id": "feedback-headline",
+              "piece_version": "v2-conhecimento",
+              "target": {
+                "kind": "layer",
+                "layer_id": "fios-titulo"
+              },
+              "note": "Headline ocupa espaço demais e disputa atenção; ajustar escala e quebra mantendo as palavras.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task",
+              "candidate_layer_ids": [
+                "fios-titulo"
+              ],
+              "selection_status": "explicit_layer",
+              "warnings": [],
+              "memory_scope_status": "unverified_claim",
+              "candidate_detection": "explicit_layer_id"
+            },
+            {
+              "id": "feedback-paleta",
+              "piece_version": "v2-conhecimento",
+              "target": {
+                "kind": "area",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                }
+              },
+              "note": "Gostou da paleta e quer preservá-la nesta peça.",
+              "edit_scope_claim": "piece",
+              "memory_scope_claim": "task",
+              "candidate_layer_ids": [
+                "fios-fundo",
+                "fios-marca",
+                "fios-titulo",
+                "fios-imagem",
+                "fios-detalhes",
+                "fios-faixa",
+                "fios-convite"
+              ],
+              "selection_status": "ambiguous_candidates",
+              "warnings": [
+                {
+                  "code": "area_has_multiple_candidates"
+                }
+              ],
+              "memory_scope_status": "unverified_claim",
+              "candidate_detection": "bounding_box_only"
+            }
+          ],
+          "result_limits": {
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "persists_data": false,
+            "input_snapshot_authenticated": false
+          },
+          "all_explicit_layer_targets_exist": true
+        }
+      ],
+      "final_plan_provenance": [
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/0",
+          "piece_id": "trama-fios",
+          "version": "v2-conhecimento",
+          "mcp_evidence": [
+            {
+              "event_index": 6,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22237,
+                  "request_id": 3,
+                  "request_line": 47,
+                  "response_line": 49
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 4,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-04.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/variations/1",
+          "piece_id": "trama-fios",
+          "version": "v2-percurso",
+          "mcp_evidence": [
+            {
+              "event_index": 7,
+              "event_id": "item_3",
+              "wire_candidates": [
+                {
+                  "process_id": 22237,
+                  "request_id": 2,
+                  "request_line": 48,
+                  "response_line": 50
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        },
+        {
+          "turn": 5,
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-05.json",
+          "json_pointer": "/assistant_messages/1",
+          "parsed_json_pointer": "/revision",
+          "piece_id": "trama-fios",
+          "version": "v3-headline",
+          "mcp_evidence": [
+            {
+              "event_index": 6,
+              "event_id": "item_2",
+              "wire_candidates": [
+                {
+                  "process_id": 22338,
+                  "request_id": 2,
+                  "request_line": 56,
+                  "response_line": 58
+                }
+              ],
+              "wire_locator_unique": true
+            }
+          ]
+        }
+      ],
+      "renderer_metadata": [
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t4-artifacts/renders/v2-conhecimento.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t4-artifacts/renders/v2-percurso.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        },
+        {
+          "path": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts/renders/v3-headline.json",
+          "status": "rendered",
+          "source_plan_unchanged": true,
+          "pixels_inspected": false
+        }
+      ],
+      "tokens": {
+        "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/report-003.json",
+        "last_confirmed_complete_turn": 5,
+        "final_cumulative_input": 376643,
+        "final_cumulative_output": 9521,
+        "final_total_input_plus_output": 386164,
+        "cached_input_subset": 310016,
+        "reasoning_output_subset": 91,
+        "T4_delta": {
+          "input_tokens": 59323,
+          "cached_input_tokens": 36096,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2397,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 61720
+        },
+        "T5_delta": {
+          "input_tokens": 110854,
+          "cached_input_tokens": 103168,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 2680,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 113534
+        },
+        "unique_delta_sums_equal_final_counters": {
+          "input_tokens": true,
+          "output_tokens": true,
+          "cached_input_tokens": true,
+          "reasoning_output_tokens": true
+        },
+        "no_cumulative_snapshot_sum_performed": true,
+        "billing_observed": false,
+        "T4_plus_T5_incremental_total": 175254
+      },
+      "gates": {
+        "G02": "passed_observed_reuse_no_new_generation_request; actual generator-tool refusal not exercised",
+        "G04": "passed_textual_local_scope; actual memory persistence not exercised",
+        "G05": "passed_structural_diff_and_identity",
+        "G06": "passed_synthetic_outcome_separation; no real human outcome inferred",
+        "G08": "passed_exact_MCP_final_plans; Terra E0 uses corrected extractor output a2",
+        "G09": "passed_editable_text_structure; pixel quality not evaluated"
+      },
+      "observation": "Annotation target is the real headline layer; edit_scope_claim is piece and memory_scope_claim task. Actual diff is confined to headline layout. Scope claims are unverified; no memory is persisted."
+    }
+  ]
+}

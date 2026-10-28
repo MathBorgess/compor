@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json",
+      "sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets.json",
+      "sha256": "ff9dcb6e75148281e01edd7d834be174eb4404fc4fd58306248617c34720283f"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-fios",
+        "piece_id": "trama-fios",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t3-artifacts/renders/direcao-fios.png",
+        "png_sha256": "a910eb18ea29d179b900e39ef11c6537665e20174b32b5221264b2287ad96c78",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t3-artifacts/renders/direcao-fios.json",
+        "report_sha256": "e32e870ca7b5608e38e0f8489a9e8ba5b0637978d4fa7c5cacb2bee5c859cb69",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 168.493375,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-fios-v1"
+        ],
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-fios-v1"
+          },
+          {
+            "id": "fios-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text"
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-bancada",
+        "piece_id": "trama-bancada",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t3-artifacts/renders/direcao-bancada.png",
+        "png_sha256": "0bc979401d822d625c3716d6e07e36802af74e38ee2535b4bfbb5e7e61f02b92",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t3-artifacts/renders/direcao-bancada.json",
+        "report_sha256": "3221d3b788675d3d227f4607782635c52fcbe743a8583a49f4e4b2d41d3c564a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 151.528041,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-bancada-v1"
+        ],
+        "layers": [
+          {
+            "id": "bancada-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "bancada-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-bancada-v1"
+          },
+          {
+            "id": "bancada-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "bancada-marca",
+            "kind": "text"
+          },
+          {
+            "id": "bancada-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "bancada-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "bancada-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/resume-after-t3.json",
+      "sha256": "a6fe67fa7230beedece9f5ef1994b8a3943a2ef7e5d29e0f5d23453eec043599",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.870917,
+    "total": 334.342541
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-com-quem",
+  "asset_ref": "pedido-vdp-com-quem-asset-v1",
+  "prompt": "Criar um único ativo quadrado 1:1, sem texto, para a camada a-visual da peça vdp-consulta v1. Natureza-morta editorial vista de cima: pequenos recipientes alimentares retornáveis genéricos, fechados, distribuídos em grupos separados sobre superfície de papel fosco. Composição estática, organizada e acolhedora, objetos inteiros com margem em todos os lados. Materialidade tátil discreta, sem brilho. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF, com fundo pedra e textura suave. Sem pessoas, telas, interfaces, gráficos ou alegações visuais de impacto. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água. Não incluir conteúdo verbal. O ativo será encaixado integralmente, sem recorte, em uma caixa quadrada.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-641997c1-9e1e-4ba6-8396-a0bbf0c6849b.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/assets/pedido-vdp-com-quem-asset-v1.png",
+  "sha256": "045894b9265e0d7e641bcf5f8ec8f2705ce605541e2310dc2c81e82e93427583",
+  "elapsed_ms": 21924,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

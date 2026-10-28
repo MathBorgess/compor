@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "ta-direcao-percurso",
+      "piece_id": "ta-percurso-proposta",
+      "version": "v1",
+      "original_piece_sha256": "b15b32d8783d2f5c06dd707540e8ef9a67db67c47cb260e4ca254621ab96c3cd",
+      "mapped_piece_sha256": "be9c20dd12ebc10571f1bc6f98678351a97c78b78bcb85e3e60d4878eb566a42",
+      "mcp_evidence": [
+        {
+          "event_index": 18,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 16462,
+              "request_id": 8,
+              "request_line": 28,
+              "response_line": 29
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "ta-asset-percurso-proposto-v1"
+      ],
+      "unresolved_asset_refs": [
+        "ta-asset-percurso-proposto-v1"
+      ],
+      "render_input": "render-inputs/ta-direcao-percurso.json",
+      "render_input_sha256": "613e9d2a32737e532d09e4b9177eb9ff105a80323b07be879750b3682b5c1bff"
+    },
+    {
+      "id": "ta-direcao-trama",
+      "piece_id": "ta-trama-proposta",
+      "version": "v1",
+      "original_piece_sha256": "229a756ad0fb803034e5506ba41de7de43a91e38d37993979548a9fe9e648571",
+      "mapped_piece_sha256": "73363984c26405b55e8ac9ff712046a5a55f91e7e5264a985598f54d27acf0bf",
+      "mcp_evidence": [
+        {
+          "event_index": 20,
+          "event_id": "item_10",
+          "wire_candidates": [
+            {
+              "process_id": 16462,
+              "request_id": 9,
+              "request_line": 30,
+              "response_line": 31
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "ta-asset-trama-proposto-v1"
+      ],
+      "unresolved_asset_refs": [
+        "ta-asset-trama-proposto-v1"
+      ],
+      "render_input": "render-inputs/ta-direcao-trama.json",
+      "render_input_sha256": "5d66de74f39a75d59d2b758b0a79177f726753eee6dd3c12feb461b5a8078770"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "ta-direcao-percurso",
+      "operation": "add",
+      "layer_id": "p-visual",
+      "field": "asset_ref",
+      "value": "ta-asset-percurso-proposto-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "ta-direcao-trama",
+      "operation": "add",
+      "layer_id": "t-visual",
+      "field": "asset_ref",
+      "value": "ta-asset-trama-proposto-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/turn-03.json",
+    "sha256": "d7b910166591775982cd29f9bbe844430a35fb6765ccf633a8ebb7f37d4ddb19"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "e9277464d09dc6bf0497c335dd5b13ba9d8b783d5c8cddd729e7678db4b20ea0",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "ta-asset-percurso-proposto-v1",
+    "ta-asset-trama-proposto-v1"
+  ]
+}

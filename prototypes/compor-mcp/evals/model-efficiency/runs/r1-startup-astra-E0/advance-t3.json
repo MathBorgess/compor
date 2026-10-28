@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/assets.json",
+      "sha256": "94ab29c6583d8e14cb6bd3bf429345b382576a2d4aabe09f156485cc081b17ac"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp-direcao-controle-v1",
+        "piece_id": "vdp-controle",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts/renders/vdp-direcao-controle-v1.png",
+        "png_sha256": "439f34e888d5fb787c589eb1527ee48e89a046b9f5ebc6646a55b16cf988c27c",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts/renders/vdp-direcao-controle-v1.json",
+        "report_sha256": "b5c95e9c866ac52184114832ba737980d008f34b36c9f4c28e5c87a128f92148",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 259.415,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-controle-01-v1"
+        ],
+        "layers": [
+          {
+            "id": "controle-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "controle-marcador",
+            "kind": "shape"
+          },
+          {
+            "id": "controle-marca",
+            "kind": "text"
+          },
+          {
+            "id": "controle-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "controle-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-controle-01-v1"
+          },
+          {
+            "id": "controle-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "controle-publico",
+            "kind": "text"
+          },
+          {
+            "id": "controle-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "controle-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "vdp-direcao-continuidade-v1",
+        "piece_id": "vdp-continuidade",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts/renders/vdp-direcao-continuidade-v1.png",
+        "png_sha256": "e8301fe101bd4d84b03920d2ef655a25687d308a5f7f5a984ca3822c5a4e442e",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts/renders/vdp-direcao-continuidade-v1.json",
+        "report_sha256": "c034812d71af53b37bbbd92893c67fa19e8e6235b7fafa1272f0d418027be420",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 292.4205,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-continuidade-01-v1"
+        ],
+        "layers": [
+          {
+            "id": "continuidade-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "continuidade-marca",
+            "kind": "text"
+          },
+          {
+            "id": "continuidade-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "continuidade-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-continuidade-01-v1"
+          },
+          {
+            "id": "continuidade-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "continuidade-publico",
+            "kind": "text"
+          },
+          {
+            "id": "continuidade-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "continuidade-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/resume-after-t3.json",
+      "sha256": "a6c88cec50ba872c22f8a5e3d626f7e8816655ba84569d043f2c8fade9a4898b",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 12.491208,
+    "total": 567.4795
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

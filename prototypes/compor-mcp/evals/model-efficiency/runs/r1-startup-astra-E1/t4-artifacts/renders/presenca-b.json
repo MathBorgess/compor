@@ -1,0 +1,388 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "d098a71fc4e47c1068475e70819b45d5986280572863ad4c9a5f75cd94ce4188",
+  "piece_sha256": "41ef9dac5ccc93647db11418c189d381ee53c6254a38a13af36391c54a33e067",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp-presenca-b",
+  "piece_version": "proposta-v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "b-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        65,
+        49,
+        950,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            66,
+            49
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            49,
+            271,
+            72
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        49,
+        270,
+        72
+      ]
+    },
+    {
+      "id": "b-imagem",
+      "kind": "image",
+      "z_index": 2,
+      "rect_px": [
+        65,
+        140,
+        950,
+        360
+      ],
+      "asset_ref": "asset-presenca-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-presenca-v1.png",
+      "asset_sha256": "95d63a9a92a16a3a0b7aa28b7b58cffa2fdd188e3cb1f562df5b4f8263807da6",
+      "source_raw_size_px": [
+        2041,
+        770
+      ],
+      "source_oriented_size_px": [
+        2041,
+        770
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        65,
+        141,
+        950,
+        358
+      ],
+      "letterbox_px": [
+        0,
+        1,
+        0,
+        1
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "b-acento",
+      "kind": "shape",
+      "z_index": 3,
+      "rect_px": [
+        65,
+        551,
+        15,
+        194
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-titulo",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        103,
+        551,
+        912,
+        205
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 54,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 54,
+      "effective_font_size_px": 54,
+      "font_fallback": false,
+      "text_preserved": "Saiba quais potes\nainda estão\ncom seus clientes.",
+      "text_clipped": false,
+      "line_advance_px": 62.099999999999994,
+      "lines": [
+        {
+          "text": "Saiba quais potes",
+          "origin_px": [
+            103,
+            551
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            551,
+            562,
+            602
+          ]
+        },
+        {
+          "text": "ainda estão",
+          "origin_px": [
+            103,
+            613
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            613,
+            400,
+            652
+          ]
+        },
+        {
+          "text": "com seus clientes.",
+          "origin_px": [
+            103,
+            675
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            675,
+            583,
+            714
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        104,
+        551,
+        580,
+        714
+      ]
+    },
+    {
+      "id": "b-apoio",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        103,
+        783,
+        912,
+        130
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 29,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 29,
+      "effective_font_size_px": 29,
+      "font_fallback": false,
+      "text_preserved": "Registre entregas, empréstimos e devoluções\nem uma ferramenta web feita para\npequenos produtores de alimentos.",
+      "text_clipped": false,
+      "line_advance_px": 33.349999999999994,
+      "lines": [
+        {
+          "text": "Registre entregas, empréstimos e devoluções",
+          "origin_px": [
+            103,
+            783
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            783,
+            693,
+            810
+          ]
+        },
+        {
+          "text": "em uma ferramenta web feita para",
+          "origin_px": [
+            103,
+            816
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            816,
+            544,
+            843
+          ]
+        },
+        {
+          "text": "pequenos produtores de alimentos.",
+          "origin_px": [
+            103,
+            850
+          ],
+          "metric_bounds_xyxy_px": [
+            103,
+            850,
+            556,
+            877
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        104,
+        783,
+        692,
+        877
+      ]
+    },
+    {
+      "id": "b-convite-fundo",
+      "kind": "shape",
+      "z_index": 6,
+      "rect_px": [
+        65,
+        977,
+        950,
+        71
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-convite",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        92,
+        989,
+        896,
+        49
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 34,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Conheça uma demonstração",
+      "text_clipped": false,
+      "line_advance_px": 39.099999999999994,
+      "lines": [
+        {
+          "text": "Conheça uma demonstração",
+          "origin_px": [
+            92,
+            989
+          ],
+          "metric_bounds_xyxy_px": [
+            92,
+            989,
+            558,
+            1020
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        93,
+        989,
+        557,
+        1020
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "cb57bdf373976b5a1e5dd6e75b1625bb5b0610a051ed69e675bc9f9621bc4319",
+  "png_sha256": "ab040025e1808b328dfb8d3278b8745b2b4dd7e89b29727876eb33f56fc08a58",
+  "png_bytes": 411908,
+  "report_payload_sha256": "67475e0be85fe171ab79f5b84a8d9e6580c971ba6e690e2ee28b48a2f6612412"
+}

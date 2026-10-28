@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/assets.json",
+      "sha256": "631b69b814f22253d97a92f8f7a37a75982674c768e7124bdc5ad58fd35e1aac"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "dir-com-quem",
+        "piece_id": "vdp-consulta",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts/renders/dir-com-quem.png",
+        "png_sha256": "75fc39cfd84572ae7fb6bb3127555b487a32cf9848a70400e2a6407e66dc7304",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts/renders/dir-com-quem.json",
+        "report_sha256": "4a8d9cf98a239d41e8e2bcb3bf47c61205e422b67af9dd7d440775c3b644f742",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 189.22425,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-vdp-com-quem-asset-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-base",
+            "kind": "shape"
+          },
+          {
+            "id": "a-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-visual",
+            "kind": "image",
+            "asset_ref": "pedido-vdp-com-quem-asset-v1"
+          },
+          {
+            "id": "a-funcao",
+            "kind": "text"
+          },
+          {
+            "id": "a-cta-base",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "dir-cada-movimento",
+        "piece_id": "vdp-percurso",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts/renders/dir-cada-movimento.png",
+        "png_sha256": "70bf2a5bfa2a1adf1402889a65bd87e15ebec41dd45407ab45356249b80d91f7",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts/renders/dir-cada-movimento.json",
+        "report_sha256": "24dc7be30d2df8bc84288d7bb73d17abcd9dd770534d458237b5847960e73cb4",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 363.080625,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-vdp-cada-movimento-asset-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-base",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-visual",
+            "kind": "image",
+            "asset_ref": "pedido-vdp-cada-movimento-asset-v1"
+          },
+          {
+            "id": "b-funcao",
+            "kind": "text"
+          },
+          {
+            "id": "b-cta-base",
+            "kind": "shape"
+          },
+          {
+            "id": "b-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/resume-after-t3.json",
+      "sha256": "584b59008336c0999c48a43b0a6b5dd69a2488d1c2f084a2c6946008b780cd19",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.083,
+    "total": 566.855792
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-controle",
+    "asset_ref": "proposta-asset-controle-v1",
+    "prompt": "Imagem vertical de potes retornáveis simples, organizados sobre uma superfície fosca com textura sutil de papel, em uma cena editorial limpa e próxima da rotina de um pequeno produtor de alimentos. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF, com fundo branco. Sem interface, telas ou funcionalidades representadas. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água."
+  },
+  {
+    "direction_id": "direcao-caminho",
+    "asset_ref": "proposta-asset-caminho-v1",
+    "prompt": "Imagem quadrada de duas pessoas vistas pelas mãos trocando um pote retornável em um ambiente acolhedor de pequeno produtor de alimentos. Materialidade fosca, textura sutil de papel e composição editorial simples. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF, com fundo branco. Sem interface, telas ou funcionalidades representadas. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água."
+  }
+]

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "vdp-dir-localizar",
+      "piece_id": "vdp-localizar-piloto",
+      "version": "v1",
+      "original_piece_sha256": "a6c7dab867644815a9bb572ae3e59e527d70b9aa8a4fd16910a81843a6a55062",
+      "mapped_piece_sha256": "a6c7dab867644815a9bb572ae3e59e527d70b9aa8a4fd16910a81843a6a55062",
+      "mcp_evidence": [
+        {
+          "event_index": 11,
+          "event_id": "item_5",
+          "wire_candidates": [
+            {
+              "process_id": 34866,
+              "request_id": 5,
+              "request_line": 30,
+              "response_line": 31
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp-asset-localizar-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/vdp-dir-localizar.json",
+      "render_input_sha256": "37668397a451bd1f9d9af88d7e256283c6510c4d61e9f95c8b02c833dbb34dc4"
+    },
+    {
+      "id": "vdp-dir-ciclo",
+      "piece_id": "vdp-ciclo-piloto",
+      "version": "v1",
+      "original_piece_sha256": "a1075244bec493051c122a568473feb7d8c43ea39ba87f536cb0a048e297248d",
+      "mapped_piece_sha256": "a1075244bec493051c122a568473feb7d8c43ea39ba87f536cb0a048e297248d",
+      "mcp_evidence": [
+        {
+          "event_index": 13,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 34866,
+              "request_id": 6,
+              "request_line": 32,
+              "response_line": 33
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp-asset-ciclo-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/vdp-dir-ciclo.json",
+      "render_input_sha256": "1e16be9d2f9b636667eab77b27e15a12eb910a10e6b73a174df62918e48256d0"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/turn-03.json",
+    "sha256": "a5cdb8db45e7d27cced23af6051451c94f37c28ce29bbb20cccb53293c81f2e8"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "a4a83aa7e328b31379dc4b5d418ec0a08d5f0f24cea065ee35275169f24f2789",
+  "assets": {
+    "vdp-asset-localizar-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets/vdp-asset-localizar-v1.png",
+      "sha256": "24f78c9902720c707016d61d1e4fa0337fdc881d5fd70c5b8e4d9beee9936598",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets/vdp-asset-localizar-v1.png"
+    },
+    "vdp-asset-ciclo-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets/vdp-asset-ciclo-v1.png",
+      "sha256": "01c754586306aabeb1adf4b640e58a6a7d12e803ba8e4c2d0b666c52aee64da6",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets/vdp-asset-ciclo-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets.json",
+    "sha256": "22de7455805be86a838d7776a1e6f20e7c92be69a307950e4158fd0e7595d4d4",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1"
+  },
+  "unresolved_asset_refs": []
+}

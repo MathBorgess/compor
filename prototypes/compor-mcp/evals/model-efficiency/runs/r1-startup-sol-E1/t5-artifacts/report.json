@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 5,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "vdp-var-pergunta-v2",
+      "piece_id": "vdp-var-pergunta",
+      "version": "v2",
+      "original_piece_sha256": "f6e6b9b8a2c5145434fccb8b056e9aba2f271be47c3d23acefdba77cb68e46e0",
+      "mapped_piece_sha256": "f6e6b9b8a2c5145434fccb8b056e9aba2f271be47c3d23acefdba77cb68e46e0",
+      "mcp_evidence": [
+        {
+          "event_index": 7,
+          "event_id": "item_3",
+          "wire_candidates": [
+            {
+              "process_id": 26251,
+              "request_id": 3,
+              "request_line": 56,
+              "response_line": 57
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-vdp-maos-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/vdp-var-pergunta-v2.json",
+      "render_input_sha256": "4a4dff4b372203bf9c1643fcb739f4f93b8920776549d6cf2670b7a2c906db68"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/turn-05.json",
+    "sha256": "f0b6c3fb254829c818da0a6b17a35dd820f78475f570a47fbcfd0287ae1c92c1"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "2e2dca12cd728cb64ba64c5ca2f5899544031506e6991ad9ea3c1234c4faec9b",
+  "assets": {
+    "asset-proposto-vdp-ciclo-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-ciclo-v1.png",
+      "sha256": "d639df2f895aaff280d2164aae6fba352f0b8c59d1f2bd2f12f6a02eadef8439",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-ciclo-v1.png"
+    },
+    "asset-proposto-vdp-maos-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-maos-v1.png",
+      "sha256": "20149145412e8d5dea1d6d162f701690fae950cc4cc42216636660283b2ccbea",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-maos-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets.json",
+    "sha256": "a77314a7fba24603179db4bfd299f9a3f33a4d2a099f6c9969f3a8511c31cd8a",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1"
+  },
+  "previous": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/report.json",
+    "sha256": "200ab2cc3a870a77dae8147cd597cf43d0dbb5a1a0714ebfa748645842a15db7"
+  },
+  "unresolved_asset_refs": []
+}

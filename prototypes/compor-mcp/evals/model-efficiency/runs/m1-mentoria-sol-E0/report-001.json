@@ -1,0 +1,518 @@
+{
+  "schema_version": 1,
+  "status": "failed",
+  "started_at": "2026-10-28T07:48:06.522525+00:00",
+  "case_id": "mentoria-trama-de-aula",
+  "initial_case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+  "synthetic": true,
+  "model_configured": "gpt-6.1-sol",
+  "model_returned_by_provider": null,
+  "model_returned_limitation": "CLI rollout records runtime model; provider response model is not exposed.",
+  "effort_configured": "medium",
+  "guidance": "baseline",
+  "condition": "C2",
+  "transport": "native_mcp_stdio",
+  "runtime": "codex_exec_resume",
+  "cli_version": "codex-cli 0.162.1",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.12.1",
+  "working_directory": "/private/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-benchmark-cwd-6mb4xs7_",
+  "runner_sha256": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+  "bridge_sha256": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+  "instruction_guard_sha256": "22db64d2e1beac08e0f7889c1d7b71cb85057cbc933f2290a7d3469f90ab5456",
+  "snapshot": {
+    "dist_sha256": "81b0a30b8903129dd2645601fc7209d1973195ad729cc6783c2ac6054459f442",
+    "skills_sha256": "dc2cdc261bc2cecaabe0da3d20fecd1695224e2c3c297ff2c4c7c95089c742f0",
+    "dependencies_sha256": "acf9259a86e2c96c2c37064c2b012480b7dbf6e8151a13865daf25fc44adb5f2",
+    "dependencies_note": "Shared immutable dependency path; digest checked at every resume."
+  },
+  "auth": "native_codex_auth_no_credentials_read_or_copied",
+  "persistence": "Native Codex session required by exec resume; runner does not delete it.",
+  "builtin_tools": {
+    "requested_disabled_features": [
+      "apps",
+      "plugins",
+      "remote_plugin",
+      "recommended_plugins",
+      "browser_use",
+      "browser_use_external",
+      "computer_use",
+      "in_app_browser",
+      "image_generation",
+      "view_image",
+      "memories",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "shell_tool",
+      "unified_exec",
+      "shell_snapshot",
+      "skill_search",
+      "skill_mcp_dependency_install",
+      "goals",
+      "sleep_tool",
+      "code_mode",
+      "workspace_dependencies",
+      "tool_suggest"
+    ],
+    "exact_model_visible_catalog": null,
+    "limitation": "CLI does not expose the full request tool schema; MCP wire is captured."
+  },
+  "turns": [
+    {
+      "id": "t1-objetivo-parcial",
+      "images": [],
+      "prompt_sha256": "a6381972557a9783b87c116d9c5b6af63aef447e5a3c91f37c728392bf279b41",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 33958.194583,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 49323,
+        "cached_input_tokens": 43008,
+        "output_tokens": 508,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 16
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 49323,
+        "cached_input_tokens": 43008,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 508,
+        "reasoning_output_tokens": 16,
+        "total_tokens": 49831
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-sol",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a1817b-133d-7a12-a3a0-d02a284728cd",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "9d4793864882363df83e2a6c1b2f5c1ff0d6f656cb4b48bdc98d4ac06b4015e7",
+        "developer_system_messages_sha256": "54ae8341b5ee4b513f2fa85f3ca9c10149ce55c4df6472d08868f9038e651ce4",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-sol",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c9c10397f84cb67a0917406c51eb34bab0e8258ec469dff9311e5e44d11a2db6",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 49323,
+            "cached_input_tokens": 43008,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 508,
+            "reasoning_output_tokens": 16,
+            "total_tokens": 49831
+          },
+          "last_token_usage": {
+            "input_tokens": 13505,
+            "cached_input_tokens": 12672,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 314,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 13819
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10604,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10679
+            },
+            "last_token_usage": {
+              "input_tokens": 10604,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10679
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 23002,
+              "cached_input_tokens": 18048,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 119,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 23121
+            },
+            "last_token_usage": {
+              "input_tokens": 12398,
+              "cached_input_tokens": 10496,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 44,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 12442
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35818,
+              "cached_input_tokens": 30336,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 194,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 36012
+            },
+            "last_token_usage": {
+              "input_tokens": 12816,
+              "cached_input_tokens": 12288,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12891
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49323,
+              "cached_input_tokens": 43008,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 508,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 49831
+            },
+            "last_token_usage": {
+              "input_tokens": 13505,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 314,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13819
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t2-referencias-e-ajuste",
+      "images": [],
+      "prompt_sha256": "31c321efa890112b7ecb3ff0afaef85cf7a28b25603e82515fb9576e01afae9a",
+      "exit_code": 1,
+      "timed_out": false,
+      "wall_clock_ms": 2502.034166,
+      "owned_process_exited": true,
+      "usage_cli": null,
+      "usage_delta_from_rollout": {
+        "input_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 0,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 0
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-sol",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a1817b-133d-7a12-a3a0-d02a284728cd",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "9d4793864882363df83e2a6c1b2f5c1ff0d6f656cb4b48bdc98d4ac06b4015e7",
+        "developer_system_messages_sha256": "54ae8341b5ee4b513f2fa85f3ca9c10149ce55c4df6472d08868f9038e651ce4",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-sol",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c9c10397f84cb67a0917406c51eb34bab0e8258ec469dff9311e5e44d11a2db6",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-sol",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "d60854dcf1502abc6c0a67f3cfde7a8af48ad92de18bd5ac1169563936ba56b7",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 49323,
+            "cached_input_tokens": 43008,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 508,
+            "reasoning_output_tokens": 16,
+            "total_tokens": 49831
+          },
+          "last_token_usage": {
+            "input_tokens": 13505,
+            "cached_input_tokens": 12672,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 314,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 13819
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10604,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10679
+            },
+            "last_token_usage": {
+              "input_tokens": 10604,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10679
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 23002,
+              "cached_input_tokens": 18048,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 119,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 23121
+            },
+            "last_token_usage": {
+              "input_tokens": 12398,
+              "cached_input_tokens": 10496,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 44,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 12442
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35818,
+              "cached_input_tokens": 30336,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 194,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 36012
+            },
+            "last_token_usage": {
+              "input_tokens": 12816,
+              "cached_input_tokens": 12288,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 75,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12891
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49323,
+              "cached_input_tokens": 43008,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 508,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 49831
+            },
+            "last_token_usage": {
+              "input_tokens": 13505,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 314,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13819
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49323,
+              "cached_input_tokens": 43008,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 508,
+              "reasoning_output_tokens": 16,
+              "total_tokens": 49831
+            },
+            "last_token_usage": {
+              "input_tokens": 13505,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 314,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13819
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    }
+  ],
+  "invocations": [
+    {
+      "number": 1,
+      "wall_clock_ms": 36483.491333,
+      "through_turn": 3,
+      "case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    }
+  ],
+  "wall_clock_ms": 36483.491333,
+  "configuration": {
+    "model_reasoning_effort": "medium",
+    "approval_policy": "never",
+    "sandbox_mode": "read-only",
+    "project_doc_max_bytes": 0,
+    "web_search": "disabled",
+    "developer_instructions": "Você participa de um ensaio exclusivamente sintético do Compor. Use apenas as seis tools MCP do servidor compor_benchmark e os dados deste chat. Não acesse arquivos, rede, outras sessões, credenciais ou serviços. Não gere imagens nem alegue publicação, execução ou aprovação humana. Responda em português.",
+    "features.skip_host_skill_discovery": true,
+    "skills.include_instructions": false,
+    "skills.bundled.enabled": false,
+    "mcp_servers.compor_benchmark.command": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+    "mcp_servers.compor_benchmark.args": [
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py",
+      "--log",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E0/mcp.jsonl",
+      "--node",
+      "/opt/homebrew/bin/node",
+      "--entry",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E0/mcp-snapshot/dist/stdio.js"
+    ],
+    "mcp_servers.compor_benchmark.env.COMPOR_MCP_GUIDANCE": "baseline",
+    "mcp_servers.compor_benchmark.required": true,
+    "mcp_servers.compor_benchmark.enabled_tools": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "features.apps": false,
+    "features.plugins": false,
+    "features.remote_plugin": false,
+    "features.recommended_plugins": false,
+    "features.browser_use": false,
+    "features.browser_use_external": false,
+    "features.computer_use": false,
+    "features.in_app_browser": false,
+    "features.image_generation": false,
+    "features.view_image": false,
+    "features.memories": false,
+    "features.hooks": false,
+    "features.multi_agent": false,
+    "features.multi_agent_v2": false,
+    "features.shell_tool": false,
+    "features.unified_exec": false,
+    "features.shell_snapshot": false,
+    "features.skill_search": false,
+    "features.skill_mcp_dependency_install": false,
+    "features.goals": false,
+    "features.sleep_tool": false,
+    "features.code_mode": false,
+    "features.workspace_dependencies": false,
+    "features.tool_suggest": false
+  },
+  "configuration_sha256": "5f268ffe12a55bfb8bb615b06ddc477949d93fbb516eb8213ecc27757ecd914f",
+  "thread_id": "01a1817b-133d-7a12-a3a0-d02a284728cd",
+  "own_rollout_path": "/Users/matheusborges/.codex/sessions/2026/10/28/rollout-2026-10-28T04-48-09-01a1817b-133d-7a12-a3a0-d02a284728cd.jsonl",
+  "error": {
+    "type": "RuntimeError",
+    "message": "CLI turn failed or did not emit complete usage"
+  },
+  "finished_at": "2026-10-28T07:48:45.222645+00:00"
+}

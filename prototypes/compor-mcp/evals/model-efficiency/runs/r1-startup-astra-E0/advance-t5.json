@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/resume-after-t4.json",
+      "sha256": "3f4ccc68a1f2e6f1bcef2d6e1b17f4fec2808a6e5e49806bd4d72c3241cf67d7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/assets.json",
+      "sha256": "94ab29c6583d8e14cb6bd3bf429345b382576a2d4aabe09f156485cc081b17ac"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp-controle-var-a-v2",
+        "piece_id": "vdp-controle-var-a",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t5-artifacts/renders/vdp-controle-var-a-v2.png",
+        "png_sha256": "54ff8a23ad4b13dad1171388a6ce325a97139cdc353c7fc712427d842c72888e",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t5-artifacts/renders/vdp-controle-var-a-v2.json",
+        "report_sha256": "b3ca2b5cd5b97881bd24b75c2ae94d54abc51a4d5eafc54be4bf7f9d0f6bdf5a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 244.87625,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-controle-01-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-controle-01-v1"
+          },
+          {
+            "id": "a-publico",
+            "kind": "text"
+          },
+          {
+            "id": "a-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 8.854042,
+    "total": 256.546
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/resume-after-t4.json",
+      "sha256": "a69e51af81652e378aabc838ca3e79d3825e1e70128662f151ccba662cb1ed6d"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets.json",
+      "sha256": "007a5830bcd42f7375190275838eb3c21ade871bb92e9f20cb1c0bfe38483321"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "v3-headline",
+        "piece_id": "trama-fios",
+        "version": "v3-headline",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts/renders/v3-headline.png",
+        "png_sha256": "1cc5d5e7ddc2ed9692e7af5e8cbfd9dd733910fa4ad585e8c153bc48a8b02ff6",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts/renders/v3-headline.json",
+        "report_sha256": "92d1c31af6450655082f0902b746c8f31443bc4d52de12f88786dd5a281c5da1",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 240.620041,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-fios-v1"
+        ],
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text"
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-fios-v1"
+          },
+          {
+            "id": "fios-detalhes",
+            "kind": "text"
+          },
+          {
+            "id": "fios-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.179875,
+    "total": 253.608416
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

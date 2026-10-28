@@ -1,0 +1,947 @@
+{
+  "prompt": "Resultados técnicos do coordenador, sem avaliação criativa:\n{\"completed_turn\":3,\"render_status\":\"rendered\",\"attachments\":[{\"attachment_index\":1,\"artifact_id\":\"direcao-fios\",\"piece_id\":\"trama-fios\",\"version\":\"v1-proposta\",\"render_status\":\"rendered\",\"png_sha256\":\"798314669078994ad28bb1f8fddd27b69a45cbc2a2be412fa6c12e7861613593\",\"asset_refs\":[\"asset-proposto-fios-v1\"],\"layers\":[{\"id\":\"fios-fundo\",\"kind\":\"shape\"},{\"id\":\"fios-marca\",\"kind\":\"text\"},{\"id\":\"fios-titulo\",\"kind\":\"text\"},{\"id\":\"fios-imagem\",\"kind\":\"image\",\"asset_ref\":\"asset-proposto-fios-v1\"},{\"id\":\"fios-detalhes\",\"kind\":\"text\"},{\"id\":\"fios-faixa\",\"kind\":\"shape\"},{\"id\":\"fios-convite\",\"kind\":\"text\"}]},{\"attachment_index\":2,\"artifact_id\":\"direcao-mesa\",\"piece_id\":\"trama-mesa\",\"version\":\"v1-proposta\",\"render_status\":\"rendered\",\"png_sha256\":\"8be38a3a874eae23271d3693fa829aac4fa11954701f2c9549220508a8829a2c\",\"asset_refs\":[\"asset-proposto-mesa-v1\"],\"layers\":[{\"id\":\"mesa-fundo\",\"kind\":\"shape\"},{\"id\":\"mesa-marca\",\"kind\":\"text\"},{\"id\":\"mesa-titulo\",\"kind\":\"text\"},{\"id\":\"mesa-imagem\",\"kind\":\"image\",\"asset_ref\":\"asset-proposto-mesa-v1\"},{\"id\":\"mesa-detalhes\",\"kind\":\"text\"},{\"id\":\"mesa-faixa\",\"kind\":\"shape\"},{\"id\":\"mesa-convite\",\"kind\":\"text\"}]}]}\n\nEscolho explicitamente a PRIMEIRA das duas direções que você apresentou. Quero convergir nela agora: prepare DUAS variações de copy e composição dentro desse mesmo conceito, reutilizando exatamente o mesmo asset de imagem da primeira direção. Mantenha o produto, a voz, a paleta e o formato. Pode mudar headline, texto de apoio, distribuição e escala dos elementos, desde que a informação siga correta e legível. Não gere nova imagem e não retome a segunda direção. Deixe as duas variações comparáveis e identificáveis. Entregue a saída final em JSON no formato {\"variations\":[{\"id\":\"...\",\"title\":\"...\",\"composition_plan\":{},\"caption\":\"...\"}]}, com duas entradas. composition_plan é o objeto piece exatamente fornecido à tool MCP real. Você pode acrescentar conversation_response para sua explicação.",
+  "images": [
+    {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-fios.png",
+      "sha256": "798314669078994ad28bb1f8fddd27b69a45cbc2a2be412fa6c12e7861613593"
+    },
+    {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/renders/direcao-mesa.png",
+      "sha256": "8be38a3a874eae23271d3693fa829aac4fa11954701f2c9549220508a8829a2c"
+    }
+  ],
+  "events": [
+    {
+      "type": "thread.started",
+      "thread_id": "01a18150-dd6b-7783-b568-fe732808e7de"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_0",
+        "type": "error",
+        "message": "Under-development features enabled: skip_host_skill_discovery. Under-development features are incomplete and may behave unpredictably. To suppress this warning, set `suppress_unstable_features_warning = true` in /Users/matheusborges/.codex/config.toml."
+      }
+    },
+    {
+      "type": "turn.started"
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_1",
+        "type": "agent_message",
+        "text": "Vou preparar duas variações da direção escolhida, ambas vinculadas ao mesmo ativo de fios, com diferenças de mensagem e hierarquia para facilitar a comparação."
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_2",
+        "type": "mcp_tool_call",
+        "server": "compor_benchmark",
+        "tool": "prepare_layered_creative",
+        "arguments": {
+          "piece": {
+            "piece_id": "trama-fios",
+            "version": "v2-conhecimento",
+            "variation_ref": "v2-conhecimento",
+            "width_px": 1080,
+            "height_px": 1080,
+            "layers": [
+              {
+                "id": "fios-fundo",
+                "kind": "shape",
+                "name": "Fundo creme",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                },
+                "fill_hex": "#F4EBDD",
+                "z_index": 0
+              },
+              {
+                "id": "fios-marca",
+                "kind": "text",
+                "name": "Nome da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.05,
+                  "width": 0.85,
+                  "height": 0.05
+                },
+                "text": "TRAMA DE AULA",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 28,
+                "color_hex": "#532B54",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 1
+              },
+              {
+                "id": "fios-titulo",
+                "kind": "text",
+                "name": "Chamada principal",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.13,
+                  "width": 0.85,
+                  "height": 0.15
+                },
+                "text": "O que você sabe\npode virar curso.",
+                "font_ref": "georgia",
+                "font_weight": 700,
+                "font_size_px": 56,
+                "color_hex": "#532B54",
+                "line_height": 1.15,
+                "text_align": "left",
+                "z_index": 2
+              },
+              {
+                "id": "fios-imagem",
+                "kind": "image",
+                "name": "Trama de fios",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.3,
+                  "width": 0.85,
+                  "height": 0.32
+                },
+                "asset_ref": "asset-proposto-fios-v1",
+                "z_index": 3
+              },
+              {
+                "id": "fios-detalhes",
+                "kind": "text",
+                "name": "Formato da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.67,
+                  "width": 0.85,
+                  "height": 0.12
+                },
+                "text": "Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.",
+                "font_ref": "arial",
+                "font_weight": 400,
+                "font_size_px": 32,
+                "color_hex": "#532B54",
+                "line_height": 1.25,
+                "text_align": "left",
+                "z_index": 4
+              },
+              {
+                "id": "fios-faixa",
+                "kind": "shape",
+                "name": "Faixa do convite",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.84,
+                  "width": 0.85,
+                  "height": 0.09
+                },
+                "fill_hex": "#532B54",
+                "z_index": 5
+              },
+              {
+                "id": "fios-convite",
+                "kind": "text",
+                "name": "Convite para contato",
+                "rect": {
+                  "x": 0.1,
+                  "y": 0.865,
+                  "width": 0.8,
+                  "height": 0.05
+                },
+                "text": "Peça informações por mensagem",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 30,
+                "color_hex": "#F4EBDD",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 6
+              }
+            ]
+          }
+        },
+        "result": null,
+        "error": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.started",
+      "item": {
+        "id": "item_3",
+        "type": "mcp_tool_call",
+        "server": "compor_benchmark",
+        "tool": "prepare_layered_creative",
+        "arguments": {
+          "piece": {
+            "piece_id": "trama-fios",
+            "version": "v2-percurso",
+            "variation_ref": "v2-percurso",
+            "width_px": 1080,
+            "height_px": 1080,
+            "layers": [
+              {
+                "id": "fios-fundo",
+                "kind": "shape",
+                "name": "Fundo creme",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                },
+                "fill_hex": "#F4EBDD",
+                "z_index": 0
+              },
+              {
+                "id": "fios-marca",
+                "kind": "text",
+                "name": "Nome da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.05,
+                  "width": 0.85,
+                  "height": 0.05
+                },
+                "text": "TRAMA DE AULA",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 28,
+                "color_hex": "#532B54",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 1
+              },
+              {
+                "id": "fios-titulo",
+                "kind": "text",
+                "name": "Chamada principal",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.47,
+                  "width": 0.85,
+                  "height": 0.15
+                },
+                "text": "Do conhecimento\nao plano de aula.",
+                "font_ref": "georgia",
+                "font_weight": 700,
+                "font_size_px": 54,
+                "color_hex": "#532B54",
+                "line_height": 1.15,
+                "text_align": "left",
+                "z_index": 2
+              },
+              {
+                "id": "fios-imagem",
+                "kind": "image",
+                "name": "Trama de fios",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.12,
+                  "width": 0.85,
+                  "height": 0.3
+                },
+                "asset_ref": "asset-proposto-fios-v1",
+                "z_index": 3
+              },
+              {
+                "id": "fios-detalhes",
+                "kind": "text",
+                "name": "Formato da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.66,
+                  "width": 0.85,
+                  "height": 0.12
+                },
+                "text": "Organize seu primeiro curso curto em uma mentoria.\n4 encontros semanais ao vivo + revisão de plano de aula.",
+                "font_ref": "arial",
+                "font_weight": 400,
+                "font_size_px": 32,
+                "color_hex": "#532B54",
+                "line_height": 1.25,
+                "text_align": "left",
+                "z_index": 4
+              },
+              {
+                "id": "fios-faixa",
+                "kind": "shape",
+                "name": "Faixa do convite",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.84,
+                  "width": 0.85,
+                  "height": 0.09
+                },
+                "fill_hex": "#532B54",
+                "z_index": 5
+              },
+              {
+                "id": "fios-convite",
+                "kind": "text",
+                "name": "Convite para contato",
+                "rect": {
+                  "x": 0.1,
+                  "y": 0.865,
+                  "width": 0.8,
+                  "height": 0.05
+                },
+                "text": "Converse e saiba mais",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 30,
+                "color_hex": "#F4EBDD",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 6
+              }
+            ]
+          }
+        },
+        "result": null,
+        "error": null,
+        "status": "in_progress"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_2",
+        "type": "mcp_tool_call",
+        "server": "compor_benchmark",
+        "tool": "prepare_layered_creative",
+        "arguments": {
+          "piece": {
+            "piece_id": "trama-fios",
+            "version": "v2-conhecimento",
+            "variation_ref": "v2-conhecimento",
+            "width_px": 1080,
+            "height_px": 1080,
+            "layers": [
+              {
+                "id": "fios-fundo",
+                "kind": "shape",
+                "name": "Fundo creme",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                },
+                "fill_hex": "#F4EBDD",
+                "z_index": 0
+              },
+              {
+                "id": "fios-marca",
+                "kind": "text",
+                "name": "Nome da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.05,
+                  "width": 0.85,
+                  "height": 0.05
+                },
+                "text": "TRAMA DE AULA",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 28,
+                "color_hex": "#532B54",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 1
+              },
+              {
+                "id": "fios-titulo",
+                "kind": "text",
+                "name": "Chamada principal",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.13,
+                  "width": 0.85,
+                  "height": 0.15
+                },
+                "text": "O que você sabe\npode virar curso.",
+                "font_ref": "georgia",
+                "font_weight": 700,
+                "font_size_px": 56,
+                "color_hex": "#532B54",
+                "line_height": 1.15,
+                "text_align": "left",
+                "z_index": 2
+              },
+              {
+                "id": "fios-imagem",
+                "kind": "image",
+                "name": "Trama de fios",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.3,
+                  "width": 0.85,
+                  "height": 0.32
+                },
+                "asset_ref": "asset-proposto-fios-v1",
+                "z_index": 3
+              },
+              {
+                "id": "fios-detalhes",
+                "kind": "text",
+                "name": "Formato da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.67,
+                  "width": 0.85,
+                  "height": 0.12
+                },
+                "text": "Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.",
+                "font_ref": "arial",
+                "font_weight": 400,
+                "font_size_px": 32,
+                "color_hex": "#532B54",
+                "line_height": 1.25,
+                "text_align": "left",
+                "z_index": 4
+              },
+              {
+                "id": "fios-faixa",
+                "kind": "shape",
+                "name": "Faixa do convite",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.84,
+                  "width": 0.85,
+                  "height": 0.09
+                },
+                "fill_hex": "#532B54",
+                "z_index": 5
+              },
+              {
+                "id": "fios-convite",
+                "kind": "text",
+                "name": "Convite para contato",
+                "rect": {
+                  "x": 0.1,
+                  "y": 0.865,
+                  "width": 0.8,
+                  "height": 0.05
+                },
+                "text": "Peça informações por mensagem",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 30,
+                "color_hex": "#F4EBDD",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 6
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"v2-conhecimento\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"v2-conhecimento\",\"layers\":[{\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"z_index\":1,\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":28,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"z_index\":2,\"rect\":{\"x\":0.075,\"y\":0.13,\"width\":0.85,\"height\":0.15},\"text\":\"O que você sabe\\npode virar curso.\",\"font_size_px\":56,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"z_index\":3,\"rect\":{\"x\":0.075,\"y\":0.3,\"width\":0.85,\"height\":0.32},\"asset_ref\":\"asset-proposto-fios-v1\"},{\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":4,\"rect\":{\"x\":0.075,\"y\":0.67,\"width\":0.85,\"height\":0.12},\"text\":\"Mentoria para organizar seu primeiro curso curto.\\n4 encontros ao vivo + revisão de plano de aula.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"z_index\":5,\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"z_index\":6,\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações por mensagem\",\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-detalhes\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structured_content": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "v2-conhecimento",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "v2-conhecimento",
+              "layers": [
+                {
+                  "id": "fios-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "fios-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.05,
+                    "width": 0.85,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 28,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-titulo",
+                  "kind": "text",
+                  "name": "Chamada principal",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.13,
+                    "width": 0.85,
+                    "height": 0.15
+                  },
+                  "text": "O que você sabe\npode virar curso.",
+                  "font_size_px": 56,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-imagem",
+                  "kind": "image",
+                  "name": "Trama de fios",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.3,
+                    "width": 0.85,
+                    "height": 0.32
+                  },
+                  "asset_ref": "asset-proposto-fios-v1"
+                },
+                {
+                  "id": "fios-detalhes",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.67,
+                    "width": 0.85,
+                    "height": 0.12
+                  },
+                  "text": "Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-faixa",
+                  "kind": "shape",
+                  "name": "Faixa do convite",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.84,
+                    "width": 0.85,
+                    "height": 0.09
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "fios-convite",
+                  "kind": "text",
+                  "name": "Convite para contato",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.865,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Peça informações por mensagem",
+                  "font_size_px": 30,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-detalhes"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        },
+        "error": null,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_3",
+        "type": "mcp_tool_call",
+        "server": "compor_benchmark",
+        "tool": "prepare_layered_creative",
+        "arguments": {
+          "piece": {
+            "piece_id": "trama-fios",
+            "version": "v2-percurso",
+            "variation_ref": "v2-percurso",
+            "width_px": 1080,
+            "height_px": 1080,
+            "layers": [
+              {
+                "id": "fios-fundo",
+                "kind": "shape",
+                "name": "Fundo creme",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0,
+                  "y": 0,
+                  "width": 1,
+                  "height": 1
+                },
+                "fill_hex": "#F4EBDD",
+                "z_index": 0
+              },
+              {
+                "id": "fios-marca",
+                "kind": "text",
+                "name": "Nome da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.05,
+                  "width": 0.85,
+                  "height": 0.05
+                },
+                "text": "TRAMA DE AULA",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 28,
+                "color_hex": "#532B54",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 1
+              },
+              {
+                "id": "fios-titulo",
+                "kind": "text",
+                "name": "Chamada principal",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.47,
+                  "width": 0.85,
+                  "height": 0.15
+                },
+                "text": "Do conhecimento\nao plano de aula.",
+                "font_ref": "georgia",
+                "font_weight": 700,
+                "font_size_px": 54,
+                "color_hex": "#532B54",
+                "line_height": 1.15,
+                "text_align": "left",
+                "z_index": 2
+              },
+              {
+                "id": "fios-imagem",
+                "kind": "image",
+                "name": "Trama de fios",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.12,
+                  "width": 0.85,
+                  "height": 0.3
+                },
+                "asset_ref": "asset-proposto-fios-v1",
+                "z_index": 3
+              },
+              {
+                "id": "fios-detalhes",
+                "kind": "text",
+                "name": "Formato da mentoria",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.66,
+                  "width": 0.85,
+                  "height": 0.12
+                },
+                "text": "Organize seu primeiro curso curto em uma mentoria.\n4 encontros semanais ao vivo + revisão de plano de aula.",
+                "font_ref": "arial",
+                "font_weight": 400,
+                "font_size_px": 32,
+                "color_hex": "#532B54",
+                "line_height": 1.25,
+                "text_align": "left",
+                "z_index": 4
+              },
+              {
+                "id": "fios-faixa",
+                "kind": "shape",
+                "name": "Faixa do convite",
+                "shape": "rectangle",
+                "rect": {
+                  "x": 0.075,
+                  "y": 0.84,
+                  "width": 0.85,
+                  "height": 0.09
+                },
+                "fill_hex": "#532B54",
+                "z_index": 5
+              },
+              {
+                "id": "fios-convite",
+                "kind": "text",
+                "name": "Convite para contato",
+                "rect": {
+                  "x": 0.1,
+                  "y": 0.865,
+                  "width": 0.8,
+                  "height": 0.05
+                },
+                "text": "Converse e saiba mais",
+                "font_ref": "arial",
+                "font_weight": 700,
+                "font_size_px": 30,
+                "color_hex": "#F4EBDD",
+                "line_height": 1.2,
+                "text_align": "left",
+                "z_index": 6
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"v2-percurso\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"v2-percurso\",\"layers\":[{\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"z_index\":1,\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":28,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"z_index\":2,\"rect\":{\"x\":0.075,\"y\":0.47,\"width\":0.85,\"height\":0.15},\"text\":\"Do conhecimento\\nao plano de aula.\",\"font_size_px\":54,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"z_index\":3,\"rect\":{\"x\":0.075,\"y\":0.12,\"width\":0.85,\"height\":0.3},\"asset_ref\":\"asset-proposto-fios-v1\"},{\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":4,\"rect\":{\"x\":0.075,\"y\":0.66,\"width\":0.85,\"height\":0.12},\"text\":\"Organize seu primeiro curso curto em uma mentoria.\\n4 encontros semanais ao vivo + revisão de plano de aula.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"z_index\":5,\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"z_index\":6,\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Converse e saiba mais\",\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-detalhes\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"fios-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structured_content": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "v2-percurso",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "v2-percurso",
+              "layers": [
+                {
+                  "id": "fios-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "fios-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.05,
+                    "width": 0.85,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 28,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-titulo",
+                  "kind": "text",
+                  "name": "Chamada principal",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.47,
+                    "width": 0.85,
+                    "height": 0.15
+                  },
+                  "text": "Do conhecimento\nao plano de aula.",
+                  "font_size_px": 54,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-imagem",
+                  "kind": "image",
+                  "name": "Trama de fios",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.12,
+                    "width": 0.85,
+                    "height": 0.3
+                  },
+                  "asset_ref": "asset-proposto-fios-v1"
+                },
+                {
+                  "id": "fios-detalhes",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.66,
+                    "width": 0.85,
+                    "height": 0.12
+                  },
+                  "text": "Organize seu primeiro curso curto em uma mentoria.\n4 encontros semanais ao vivo + revisão de plano de aula.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "fios-faixa",
+                  "kind": "shape",
+                  "name": "Faixa do convite",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.075,
+                    "y": 0.84,
+                    "width": 0.85,
+                    "height": 0.09
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "fios-convite",
+                  "kind": "text",
+                  "name": "Convite para contato",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.865,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Converse e saiba mais",
+                  "font_size_px": 30,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-detalhes"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "fios-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        },
+        "error": null,
+        "status": "completed"
+      }
+    },
+    {
+      "type": "item.completed",
+      "item": {
+        "id": "item_4",
+        "type": "agent_message",
+        "text": "{\n  \"variations\": [\n    {\n      \"id\": \"v2-conhecimento\",\n      \"title\": \"O que você sabe\",\n      \"composition_plan\": {\n        \"piece_id\": \"trama-fios\",\n        \"version\": \"v2-conhecimento\",\n        \"variation_ref\": \"v2-conhecimento\",\n        \"width_px\": 1080,\n        \"height_px\": 1080,\n        \"layers\": [\n          {\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"shape\":\"rectangle\",\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"fill_hex\":\"#F4EBDD\",\"z_index\":0},\n          {\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":28,\"color_hex\":\"#532B54\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":1},\n          {\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"rect\":{\"x\":0.075,\"y\":0.13,\"width\":0.85,\"height\":0.15},\"text\":\"O que você sabe\\npode virar curso.\",\"font_ref\":\"georgia\",\"font_weight\":700,\"font_size_px\":56,\"color_hex\":\"#532B54\",\"line_height\":1.15,\"text_align\":\"left\",\"z_index\":2},\n          {\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"rect\":{\"x\":0.075,\"y\":0.3,\"width\":0.85,\"height\":0.32},\"asset_ref\":\"asset-proposto-fios-v1\",\"z_index\":3},\n          {\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.67,\"width\":0.85,\"height\":0.12},\"text\":\"Mentoria para organizar seu primeiro curso curto.\\n4 encontros ao vivo + revisão de plano de aula.\",\"font_ref\":\"arial\",\"font_weight\":400,\"font_size_px\":32,\"color_hex\":\"#532B54\",\"line_height\":1.25,\"text_align\":\"left\",\"z_index\":4},\n          {\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"shape\":\"rectangle\",\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"fill_hex\":\"#532B54\",\"z_index\":5},\n          {\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações por mensagem\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":6}\n        ]\n      },\n      \"caption\": \"Você já conhece bem um assunto. A Trama de Aula é uma mentoria para ajudar você a organizar esse conhecimento em seu primeiro curso curto.\\n\\nSão quatro encontros semanais ao vivo e a revisão de um plano de aula.\\n\\nQuer saber mais? Me envie uma mensagem.\"\n    },\n    {\n      \"id\": \"v2-percurso\",\n      \"title\": \"Do conhecimento ao plano\",\n      \"composition_plan\": {\n        \"piece_id\": \"trama-fios\",\n        \"version\": \"v2-percurso\",\n        \"variation_ref\": \"v2-percurso\",\n        \"width_px\": 1080,\n        \"height_px\": 1080,\n        \"layers\": [\n          {\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"shape\":\"rectangle\",\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"fill_hex\":\"#F4EBDD\",\"z_index\":0},\n          {\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":28,\"color_hex\":\"#532B54\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":1},\n          {\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"rect\":{\"x\":0.075,\"y\":0.47,\"width\":0.85,\"height\":0.15},\"text\":\"Do conhecimento\\nao plano de aula.\",\"font_ref\":\"georgia\",\"font_weight\":700,\"font_size_px\":54,\"color_hex\":\"#532B54\",\"line_height\":1.15,\"text_align\":\"left\",\"z_index\":2},\n          {\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"rect\":{\"x\":0.075,\"y\":0.12,\"width\":0.85,\"height\":0.3},\"asset_ref\":\"asset-proposto-fios-v1\",\"z_index\":3},\n          {\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.66,\"width\":0.85,\"height\":0.12},\"text\":\"Organize seu primeiro curso curto em uma mentoria.\\n4 encontros semanais ao vivo + revisão de plano de aula.\",\"font_ref\":\"arial\",\"font_weight\":400,\"font_size_px\":32,\"color_hex\":\"#532B54\",\"line_height\":1.25,\"text_align\":\"left\",\"z_index\":4},\n          {\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"shape\":\"rectangle\",\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"fill_hex\":\"#532B54\",\"z_index\":5},\n          {\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Converse e saiba mais\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":6}\n        ]\n      },\n      \"caption\": \"Você domina um assunto e quer começar a ensiná-lo em um curso curto? A Trama de Aula oferece espaço para organizar esse percurso.\\n\\nA mentoria tem quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\\n\\nMe envie uma mensagem para conhecer os detalhes.\"\n    }\n  ],\n  \"conversation_response\": \"A primeira variação abre com o conhecimento da pessoa; a segunda destaca o percurso até o plano de aula e coloca os fios antes da chamada. Ambas referenciam exatamente o ativo asset-proposto-fios-v1 já associado à primeira direção. Os planos foram preparados para revisão; a composição e a legibilidade final dependem da renderização pelo coordenador.\"\n}"
+      }
+    },
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 265789,
+        "cached_input_tokens": 206848,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 6841,
+        "reasoning_output_tokens": 91
+      }
+    }
+  ],
+  "assistant_messages": [
+    "Vou preparar duas variações da direção escolhida, ambas vinculadas ao mesmo ativo de fios, com diferenças de mensagem e hierarquia para facilitar a comparação.",
+    "{\n  \"variations\": [\n    {\n      \"id\": \"v2-conhecimento\",\n      \"title\": \"O que você sabe\",\n      \"composition_plan\": {\n        \"piece_id\": \"trama-fios\",\n        \"version\": \"v2-conhecimento\",\n        \"variation_ref\": \"v2-conhecimento\",\n        \"width_px\": 1080,\n        \"height_px\": 1080,\n        \"layers\": [\n          {\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"shape\":\"rectangle\",\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"fill_hex\":\"#F4EBDD\",\"z_index\":0},\n          {\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":28,\"color_hex\":\"#532B54\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":1},\n          {\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"rect\":{\"x\":0.075,\"y\":0.13,\"width\":0.85,\"height\":0.15},\"text\":\"O que você sabe\\npode virar curso.\",\"font_ref\":\"georgia\",\"font_weight\":700,\"font_size_px\":56,\"color_hex\":\"#532B54\",\"line_height\":1.15,\"text_align\":\"left\",\"z_index\":2},\n          {\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"rect\":{\"x\":0.075,\"y\":0.3,\"width\":0.85,\"height\":0.32},\"asset_ref\":\"asset-proposto-fios-v1\",\"z_index\":3},\n          {\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.67,\"width\":0.85,\"height\":0.12},\"text\":\"Mentoria para organizar seu primeiro curso curto.\\n4 encontros ao vivo + revisão de plano de aula.\",\"font_ref\":\"arial\",\"font_weight\":400,\"font_size_px\":32,\"color_hex\":\"#532B54\",\"line_height\":1.25,\"text_align\":\"left\",\"z_index\":4},\n          {\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"shape\":\"rectangle\",\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"fill_hex\":\"#532B54\",\"z_index\":5},\n          {\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações por mensagem\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":6}\n        ]\n      },\n      \"caption\": \"Você já conhece bem um assunto. A Trama de Aula é uma mentoria para ajudar você a organizar esse conhecimento em seu primeiro curso curto.\\n\\nSão quatro encontros semanais ao vivo e a revisão de um plano de aula.\\n\\nQuer saber mais? Me envie uma mensagem.\"\n    },\n    {\n      \"id\": \"v2-percurso\",\n      \"title\": \"Do conhecimento ao plano\",\n      \"composition_plan\": {\n        \"piece_id\": \"trama-fios\",\n        \"version\": \"v2-percurso\",\n        \"variation_ref\": \"v2-percurso\",\n        \"width_px\": 1080,\n        \"height_px\": 1080,\n        \"layers\": [\n          {\"id\":\"fios-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"shape\":\"rectangle\",\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"fill_hex\":\"#F4EBDD\",\"z_index\":0},\n          {\"id\":\"fios-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.05,\"width\":0.85,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":28,\"color_hex\":\"#532B54\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":1},\n          {\"id\":\"fios-titulo\",\"kind\":\"text\",\"name\":\"Chamada principal\",\"rect\":{\"x\":0.075,\"y\":0.47,\"width\":0.85,\"height\":0.15},\"text\":\"Do conhecimento\\nao plano de aula.\",\"font_ref\":\"georgia\",\"font_weight\":700,\"font_size_px\":54,\"color_hex\":\"#532B54\",\"line_height\":1.15,\"text_align\":\"left\",\"z_index\":2},\n          {\"id\":\"fios-imagem\",\"kind\":\"image\",\"name\":\"Trama de fios\",\"rect\":{\"x\":0.075,\"y\":0.12,\"width\":0.85,\"height\":0.3},\"asset_ref\":\"asset-proposto-fios-v1\",\"z_index\":3},\n          {\"id\":\"fios-detalhes\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"rect\":{\"x\":0.075,\"y\":0.66,\"width\":0.85,\"height\":0.12},\"text\":\"Organize seu primeiro curso curto em uma mentoria.\\n4 encontros semanais ao vivo + revisão de plano de aula.\",\"font_ref\":\"arial\",\"font_weight\":400,\"font_size_px\":32,\"color_hex\":\"#532B54\",\"line_height\":1.25,\"text_align\":\"left\",\"z_index\":4},\n          {\"id\":\"fios-faixa\",\"kind\":\"shape\",\"name\":\"Faixa do convite\",\"shape\":\"rectangle\",\"rect\":{\"x\":0.075,\"y\":0.84,\"width\":0.85,\"height\":0.09},\"fill_hex\":\"#532B54\",\"z_index\":5},\n          {\"id\":\"fios-convite\",\"kind\":\"text\",\"name\":\"Convite para contato\",\"rect\":{\"x\":0.1,\"y\":0.865,\"width\":0.8,\"height\":0.05},\"text\":\"Converse e saiba mais\",\"font_ref\":\"arial\",\"font_weight\":700,\"font_size_px\":30,\"color_hex\":\"#F4EBDD\",\"line_height\":1.2,\"text_align\":\"left\",\"z_index\":6}\n        ]\n      },\n      \"caption\": \"Você domina um assunto e quer começar a ensiná-lo em um curso curto? A Trama de Aula oferece espaço para organizar esse percurso.\\n\\nA mentoria tem quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\\n\\nMe envie uma mensagem para conhecer os detalhes.\"\n    }\n  ],\n  \"conversation_response\": \"A primeira variação abre com o conhecimento da pessoa; a segunda destaca o percurso até o plano de aula e coloca os fios antes da chamada. Ambas referenciam exatamente o ativo asset-proposto-fios-v1 já associado à primeira direção. Os planos foram preparados para revisão; a composição e a legibilidade final dependem da renderização pelo coordenador.\"\n}"
+  ],
+  "stderr": "",
+  "exit_code": 0,
+  "timed_out": false,
+  "wall_clock_ms": 33143.055292,
+  "owned_process_exited": true
+}

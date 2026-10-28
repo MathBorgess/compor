@@ -1,0 +1,305 @@
+{
+  "variations": [
+    {
+      "id": "mapa-clareza",
+      "title": "Um caminho com apoio",
+      "composition_plan": {
+        "piece_id": "trama-mapa",
+        "version": "2a",
+        "variation_ref": "mapa-clareza",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape",
+            "name": "a-fundo",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "name": "Percurso",
+            "asset_ref": "asset-mapa-v1",
+            "rect": {
+              "x": 0.55,
+              "y": 0.17,
+              "width": 0.38,
+              "height": 0.5
+            },
+            "z_index": 1
+          },
+          {
+            "id": "a-linha",
+            "kind": "shape",
+            "name": "a-linha",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0.07,
+              "y": 0.72,
+              "width": 0.86,
+              "height": 0.01
+            },
+            "fill_hex": "#C76B4B",
+            "z_index": 2
+          },
+          {
+            "id": "a-marca",
+            "kind": "text",
+            "name": "a-marca",
+            "rect": {
+              "x": 0.07,
+              "y": 0.06,
+              "width": 0.8,
+              "height": 0.05
+            },
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text",
+            "name": "a-titulo",
+            "rect": {
+              "x": 0.07,
+              "y": 0.19,
+              "width": 0.46,
+              "height": 0.25
+            },
+            "text": "Seu conhecimento,\num caminho\npara ensinar.",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 50,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text",
+            "name": "a-apoio",
+            "rect": {
+              "x": 0.07,
+              "y": 0.51,
+              "width": 0.45,
+              "height": 0.13
+            },
+            "text": "Organize seu primeiro\ncurso curto com apoio.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "a-formato",
+            "kind": "text",
+            "name": "a-formato",
+            "rect": {
+              "x": 0.07,
+              "y": 0.77,
+              "width": 0.86,
+              "height": 0.09
+            },
+            "text": "4 encontros ao vivo + revisão\nde um plano de aula",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "a-convite",
+            "kind": "text",
+            "name": "a-convite",
+            "rect": {
+              "x": 0.07,
+              "y": 0.9,
+              "width": 0.86,
+              "height": 0.06
+            },
+            "text": "Peça informações por mensagem",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Você já conhece seu assunto. A Trama de Aula oferece apoio para organizar esse conhecimento em seu primeiro curso curto.\n\nA mentoria tem quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\n\nQuer saber mais? Envie uma mensagem pedindo informações."
+    },
+    {
+      "id": "mapa-autoria",
+      "title": "Sua experiência, sua aula",
+      "composition_plan": {
+        "piece_id": "trama-mapa",
+        "version": "2b",
+        "variation_ref": "mapa-autoria",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape",
+            "name": "b-fundo",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "name": "Percurso",
+            "asset_ref": "asset-mapa-v1",
+            "rect": {
+              "x": 0.58,
+              "y": 0.25,
+              "width": 0.34,
+              "height": 0.47
+            },
+            "z_index": 1
+          },
+          {
+            "id": "b-linha",
+            "kind": "shape",
+            "name": "b-linha",
+            "shape": "rectangle",
+            "rect": {
+              "x": 0.07,
+              "y": 0.15,
+              "width": 0.86,
+              "height": 0.01
+            },
+            "fill_hex": "#C76B4B",
+            "z_index": 2
+          },
+          {
+            "id": "b-marca",
+            "kind": "text",
+            "name": "b-marca",
+            "rect": {
+              "x": 0.07,
+              "y": 0.06,
+              "width": 0.8,
+              "height": 0.05
+            },
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text",
+            "name": "b-titulo",
+            "rect": {
+              "x": 0.07,
+              "y": 0.21,
+              "width": 0.48,
+              "height": 0.25
+            },
+            "text": "Você conhece\no assunto.\nCrie sua aula.",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 52,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text",
+            "name": "b-apoio",
+            "rect": {
+              "x": 0.07,
+              "y": 0.52,
+              "width": 0.46,
+              "height": 0.15
+            },
+            "text": "Mentoria para organizar\nseu primeiro curso curto.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "b-formato",
+            "kind": "text",
+            "name": "b-formato",
+            "rect": {
+              "x": 0.07,
+              "y": 0.77,
+              "width": 0.86,
+              "height": 0.09
+            },
+            "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 28,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "b-convite",
+            "kind": "text",
+            "name": "b-convite",
+            "rect": {
+              "x": 0.07,
+              "y": 0.9,
+              "width": 0.86,
+              "height": 0.06
+            },
+            "text": "Peça informações por mensagem",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Seu conhecimento pode ser o ponto de partida para uma aula criada por você.\n\nNa Trama de Aula, a mentoria para organizar seu primeiro curso curto acontece em quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\n\nEnvie uma mensagem para pedir informações."
+    }
+  ],
+  "conversation_response": "As duas variações reutilizam asset-mapa-v1. A primeira destaca o apoio para organizar o caminho; a segunda enfatiza a autoria de quem ensina. Os planos estão preparados para composição e ainda não foram renderizados."
+}

@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets.json",
+      "sha256": "2cd626ef8b9ac00b2174eb233f556e83467741ac7871a92a525981b3d7fd01ec"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-controle",
+        "piece_id": "vp-controle",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t3-artifacts/renders/direcao-controle.png",
+        "png_sha256": "a34ffb123a4522743579259aad5a4d9d280a757718011ffe4487c21e362bd537",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t3-artifacts/renders/direcao-controle.json",
+        "report_sha256": "31239eb63f878a3e6e286900c571e2422684e5b79021f426af29613ce671044d",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 225.381375,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "proposta-asset-controle-v1"
+        ],
+        "layers": [
+          {
+            "id": "c-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "c-imagem",
+            "kind": "image",
+            "asset_ref": "proposta-asset-controle-v1"
+          },
+          {
+            "id": "c-marca",
+            "kind": "text"
+          },
+          {
+            "id": "c-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "c-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "c-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "c-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-caminho",
+        "piece_id": "vp-ciclo",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t3-artifacts/renders/direcao-caminho.png",
+        "png_sha256": "b92f10d85dc262dfc42b07c2a09efd72949ce0f0e7f8f7d94011ef4ca4844179",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t3-artifacts/renders/direcao-caminho.json",
+        "report_sha256": "da6de1c2e3de86ffcab14cba35342f29a0f8c3b361d5edcccd0842c97642f011",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 171.929792,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "proposta-asset-caminho-v1"
+        ],
+        "layers": [
+          {
+            "id": "v-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "v-imagem",
+            "kind": "image",
+            "asset_ref": "proposta-asset-caminho-v1"
+          },
+          {
+            "id": "v-marca",
+            "kind": "text"
+          },
+          {
+            "id": "v-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "v-cartao",
+            "kind": "shape"
+          },
+          {
+            "id": "v-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "v-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "v-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/resume-after-t3.json",
+      "sha256": "715a017a8ce0202fbd1236b9958da95818a2cb7c7f6068609efcffa1e44729d9",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.222542,
+    "total": 410.227458
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

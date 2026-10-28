@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/assets.json",
+      "sha256": "eee30da0496c7a8e5db4c55859abb1ab6bb95f94e547fcf63e81ed2e60f7efbc"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp_presenca",
+        "piece_id": "vdp_presenca_piece",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t3-artifacts/renders/vdp_presenca.png",
+        "png_sha256": "6cefdd8dfe88d71b0e8dac5e4903e14eb3f7f3fdfc9287df43bc792cd01b74a8",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t3-artifacts/renders/vdp_presenca.json",
+        "report_sha256": "e739be6f78fcd98b6a243028cfa7c789d296a847131c31ccec3e24cd25262ce0",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 210.941041,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_presenca_v1"
+        ],
+        "layers": [
+          {
+            "id": "presenca_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "presenca_brand",
+            "kind": "text"
+          },
+          {
+            "id": "presenca_headline",
+            "kind": "text"
+          },
+          {
+            "id": "presenca_body",
+            "kind": "text"
+          },
+          {
+            "id": "presenca_image",
+            "kind": "image",
+            "asset_ref": "vdp_asset_presenca_v1"
+          },
+          {
+            "id": "presenca_cta_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "presenca_cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "vdp_percurso",
+        "piece_id": "vdp_percurso_piece",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t3-artifacts/renders/vdp_percurso.png",
+        "png_sha256": "9443e10f752bf9082357d8764bf0aa4b09b6ebdbf7f35d833651aa04a1dafe90",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t3-artifacts/renders/vdp_percurso.json",
+        "report_sha256": "147942f6c0f0e8272048dd2093bce87e302a9b043ada1ab70a805da89a5165e3",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 313.3575,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_percurso_v1"
+        ],
+        "layers": [
+          {
+            "id": "percurso_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso_brand",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_headline",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_image",
+            "kind": "image",
+            "asset_ref": "vdp_asset_percurso_v1"
+          },
+          {
+            "id": "percurso_rule",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso_delivery",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_loan",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_return",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_body",
+            "kind": "text"
+          },
+          {
+            "id": "percurso_cta_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso_cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/resume-after-t3.json",
+      "sha256": "a3fe9fb623df117e615fc6d024c5f547c33e48a40d878674498233c653304a51",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.263625,
+    "total": 538.186209
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

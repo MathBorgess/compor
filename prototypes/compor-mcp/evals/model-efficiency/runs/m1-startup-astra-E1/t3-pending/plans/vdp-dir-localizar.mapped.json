@@ -1,0 +1,127 @@
+{
+  "piece_id": "vdp-localizar-piloto",
+  "version": "v1",
+  "product_ref": "volta-de-pote",
+  "variation_ref": "vdp-dir-localizar",
+  "width_px": 1080,
+  "height_px": 1080,
+  "layers": [
+    {
+      "id": "a-fundo",
+      "kind": "shape",
+      "name": "Fundo pedra",
+      "shape": "rectangle",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "fill_hex": "#ECE9DF",
+      "z_index": 0
+    },
+    {
+      "id": "a-marca",
+      "kind": "text",
+      "name": "Nome do produto",
+      "rect": {
+        "x": 0.0667,
+        "y": 0.0444,
+        "width": 0.8667,
+        "height": 0.0444
+      },
+      "text": "Volta de Pote",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 32,
+      "color_hex": "#183F32",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 1
+    },
+    {
+      "id": "a-titulo",
+      "kind": "text",
+      "name": "Pergunta principal",
+      "rect": {
+        "x": 0.0667,
+        "y": 0.1148,
+        "width": 0.8667,
+        "height": 0.1667
+      },
+      "text": "Onde estão\nseus potes?",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 76,
+      "color_hex": "#183F32",
+      "line_height": 1.1,
+      "text_align": "left",
+      "z_index": 2
+    },
+    {
+      "id": "a-imagem",
+      "kind": "image",
+      "name": "Proposta de natureza-morta de recipientes",
+      "asset_ref": "vdp-asset-localizar-v1",
+      "rect": {
+        "x": 0.0667,
+        "y": 0.3037,
+        "width": 0.8667,
+        "height": 0.3519
+      },
+      "z_index": 3
+    },
+    {
+      "id": "a-apoio",
+      "kind": "text",
+      "name": "Função comunicada",
+      "rect": {
+        "x": 0.0667,
+        "y": 0.6889,
+        "width": 0.8667,
+        "height": 0.1037
+      },
+      "text": "Consulte quais recipientes\nainda estão com seus clientes.",
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 40,
+      "color_hex": "#183F32",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 4
+    },
+    {
+      "id": "a-faixa",
+      "kind": "shape",
+      "name": "Destaque do convite",
+      "shape": "rectangle",
+      "rect": {
+        "x": 0.0667,
+        "y": 0.8407,
+        "width": 0.8667,
+        "height": 0.0926
+      },
+      "fill_hex": "#C9D94A",
+      "z_index": 5
+    },
+    {
+      "id": "a-convite",
+      "kind": "text",
+      "name": "Convite à demonstração",
+      "rect": {
+        "x": 0.0889,
+        "y": 0.863,
+        "width": 0.8222,
+        "height": 0.0481
+      },
+      "text": "Conheça a demonstração.",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 36,
+      "color_hex": "#183F32",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 6
+    }
+  ]
+}

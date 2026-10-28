@@ -1,0 +1,145 @@
+{
+  "piece_id": "trama-recorte",
+  "version": "proposta-v1",
+  "variation_ref": "direcao-recorte",
+  "width_px": 1080,
+  "height_px": 1080,
+  "layers": [
+    {
+      "id": "recorte-fundo",
+      "kind": "shape",
+      "name": "Fundo creme",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD",
+      "z_index": 0
+    },
+    {
+      "id": "recorte-marca",
+      "kind": "text",
+      "name": "Nome da mentoria",
+      "rect": {
+        "x": 0.066667,
+        "y": 0.05,
+        "width": 0.866667,
+        "height": 0.048148
+      },
+      "text": "Trama de Aula",
+      "font_ref": "arial",
+      "font_size_px": 36,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 1
+    },
+    {
+      "id": "recorte-imagem",
+      "kind": "image",
+      "name": "Proposta de asset: seleção entre módulos",
+      "rect": {
+        "x": 0.066667,
+        "y": 0.157407,
+        "width": 0.37037,
+        "height": 0.453704
+      },
+      "z_index": 2,
+      "asset_ref": "pedido-asset-recorte-v1"
+    },
+    {
+      "id": "recorte-titulo",
+      "kind": "text",
+      "name": "Escolha de escopo",
+      "rect": {
+        "x": 0.481481,
+        "y": 0.164815,
+        "width": 0.451852,
+        "height": 0.333333
+      },
+      "text": "Você sabe\nmuito.\nO que quer\nensinar\nprimeiro?",
+      "font_ref": "arial",
+      "font_size_px": 56,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 3
+    },
+    {
+      "id": "recorte-apoio",
+      "kind": "text",
+      "name": "Autonomia para escolher",
+      "rect": {
+        "x": 0.481481,
+        "y": 0.524074,
+        "width": 0.451852,
+        "height": 0.07963
+      },
+      "text": "Um curso curto começa\ncom uma escolha.",
+      "font_ref": "arial",
+      "font_size_px": 30,
+      "font_weight": 400,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 4
+    },
+    {
+      "id": "recorte-acento",
+      "kind": "shape",
+      "name": "Divisor argila",
+      "rect": {
+        "x": 0.066667,
+        "y": 0.668519,
+        "width": 0.074074,
+        "height": 0.005556
+      },
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B",
+      "z_index": 5
+    },
+    {
+      "id": "recorte-oferta",
+      "kind": "text",
+      "name": "Formato e público",
+      "rect": {
+        "x": 0.066667,
+        "y": 0.705556,
+        "width": 0.866667,
+        "height": 0.166667
+      },
+      "text": "Mentoria online para organizar\nseu primeiro curso curto.\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "font_ref": "arial",
+      "font_size_px": 34,
+      "font_weight": 400,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 6
+    },
+    {
+      "id": "recorte-convite",
+      "kind": "text",
+      "name": "Convite por mensagem",
+      "rect": {
+        "x": 0.066667,
+        "y": 0.905556,
+        "width": 0.866667,
+        "height": 0.044444
+      },
+      "text": "Quer saber mais? Envie uma mensagem.",
+      "font_ref": "arial",
+      "font_size_px": 32,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 7
+    }
+  ]
+}

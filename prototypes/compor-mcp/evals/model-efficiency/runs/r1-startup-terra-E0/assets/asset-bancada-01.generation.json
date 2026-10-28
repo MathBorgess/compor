@@ -1,0 +1,15 @@
+{
+  "direction_id": "direcao-bancada",
+  "asset_ref": "asset-bancada-01",
+  "prompt": "Cena horizontal editorial de uma bancada de pequeno produtor de alimentos com recipientes retornáveis de vidro, composição calma e próxima, superfícies foscas e textura sutil de papel. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF. Imagem sem letras, palavras, números, rótulos, logotipos ou marcas-d'água; sem telas ou interfaces.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-4560f68c-c20c-432d-9acf-534ce00c57f4.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-bancada-01.png",
+  "sha256": "924490090efd64778cb4179c363d10c0fdfb738a09a86ffa8d05f6874c33c3df",
+  "elapsed_ms": 24337,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

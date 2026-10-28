@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-fios",
+      "piece_id": "trama-fios",
+      "version": "v1-proposta",
+      "original_piece_sha256": "aed5b0d4b371e575bce910dc9d76f5aa04d79084259a91762b7be7543f073910",
+      "mapped_piece_sha256": "94bc8c642fb06852ef4afc32fe333f7c6aa156f964569765430ddd857ed25493",
+      "mcp_evidence": [
+        {
+          "event_index": 21,
+          "event_id": "item_10",
+          "wire_candidates": [
+            {
+              "process_id": 17916,
+              "request_id": 9,
+              "request_line": 38,
+              "response_line": 40
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-fios-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-fios.json",
+      "render_input_sha256": "527fc3364e739e1842b69098235724aa00f4bcabd343d290a9cb9ba334e819e4"
+    },
+    {
+      "id": "direcao-mesa",
+      "piece_id": "trama-mesa",
+      "version": "v1-proposta",
+      "original_piece_sha256": "9567f489a993b67a2144bbb4303324a556c6f5730453861a337344782d4509ba",
+      "mapped_piece_sha256": "905cf73893511998aaa904f8b4458abba2114405fc4f67cc9c69e7d4ce58764b",
+      "mcp_evidence": [
+        {
+          "event_index": 22,
+          "event_id": "item_11",
+          "wire_candidates": [
+            {
+              "process_id": 17916,
+              "request_id": 10,
+              "request_line": 39,
+              "response_line": 41
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-mesa-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-mesa.json",
+      "render_input_sha256": "4374420cd01566598dcd85a1c2155f7696f96aebea4abf19a085cd8b9d712e8d"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-fios",
+      "operation": "add",
+      "layer_id": "fios-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-fios-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-mesa",
+      "operation": "add",
+      "layer_id": "mesa-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-mesa-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/turn-03.json",
+    "sha256": "c8a73243fa84bc4a7138535b3310cdf11b035073e0c39e1c3369ba89dc87730d"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "64c2d3558c003112a6ee870847eee2f012735ea915ae42626affca1d6e338537",
+  "assets": {
+    "asset-proposto-fios-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets/asset-proposto-fios-v1.png",
+      "sha256": "0aa107529f2ca0f3b5bf7335796f06db29707883853f5f69accfe3dd46742133",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets/asset-proposto-fios-v1.png"
+    },
+    "asset-proposto-mesa-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets/asset-proposto-mesa-v1.png",
+      "sha256": "3d3c72ff569b193cb90f6026c7e9c281fd4ffff9eb8b434745ecab9804ade506",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets/asset-proposto-mesa-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/assets.json",
+    "sha256": "007a5830bcd42f7375190275838eb3c21ade871bb92e9f20cb1c0bfe38483321",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1"
+  },
+  "unresolved_asset_refs": []
+}

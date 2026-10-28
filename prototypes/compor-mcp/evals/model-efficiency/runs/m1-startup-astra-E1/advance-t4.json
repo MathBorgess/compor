@@ -1,0 +1,130 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/resume-after-t3.json",
+      "sha256": "7c9f60d47d7574e409c79d3b04547300ebf0a8edccf6796a93d34b0ae283cb49"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets.json",
+      "sha256": "22de7455805be86a838d7776a1e6f20e7c92be69a307950e4158fd0e7595d4d4"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp-localizar-var-a",
+        "piece_id": "vdp-localizar-va",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t4-artifacts/renders/vdp-localizar-var-a.png",
+        "png_sha256": "b7b7f2a0c3d603fff9cf68bf2a43115d1a5cd47dad94f252c0e80018e23b36b3",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t4-artifacts/renders/vdp-localizar-var-a.json",
+        "report_sha256": "43b6004d749d4db1d72b1257eb9b43809a290671405d7222946789e19afe560a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 284.666167,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-localizar-v1"
+        ],
+        "layers": [
+          {
+            "id": "va-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "va-marca",
+            "kind": "text"
+          },
+          {
+            "id": "va-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "va-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-localizar-v1"
+          },
+          {
+            "id": "va-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "va-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "va-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "vdp-localizar-var-b",
+        "piece_id": "vdp-localizar-vb",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t4-artifacts/renders/vdp-localizar-var-b.png",
+        "png_sha256": "ef022266fab138d503ca0b13b94b5289d8f597309f698ae8a9a3bcef1635831a",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t4-artifacts/renders/vdp-localizar-var-b.json",
+        "report_sha256": "7179faf0fc225e39c2bf63c97b44a2ba140f371d6a012e645d78beece27151ed",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 277.784875,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-localizar-v1"
+        ],
+        "layers": [
+          {
+            "id": "vb-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "vb-marca",
+            "kind": "text"
+          },
+          {
+            "id": "vb-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-localizar-v1"
+          },
+          {
+            "id": "vb-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "vb-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "vb-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "vb-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/resume-after-t4.json",
+      "sha256": "658c49670591a12a0dcb6175046a7ad9243de6890f1bb86d43ba348c519febdf",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.176292,
+    "total": 576.907
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/resume-after-t4.json",
+      "sha256": "1537be61fc23a70459592df97839aa2032fd6a7a7f19d221379a97322d95ab0f"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/assets.json",
+      "sha256": "9ecfa1b0ee2e1516d4d2c49ce7fa3f91372bd6256ee13f85e4a4c72182521f31"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "pergunta_var_a_v2",
+        "piece_id": "vdp_pergunta_var_a",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t5-artifacts/renders/pergunta_var_a_v2.png",
+        "png_sha256": "567dd60448a055f169f5abb4e2e4c4818a1b59f7624cadf5b5a6d1ae0f6fff67",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/t5-artifacts/renders/pergunta_var_a_v2.json",
+        "report_sha256": "fad156c6896ef5ece7140eff648040d1b5ef185c50fdd38fd95cd68ace77b5c3",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 325.071041,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_pergunta_v1"
+        ],
+        "layers": [
+          {
+            "id": "va_fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "va_marca",
+            "kind": "text"
+          },
+          {
+            "id": "va_titulo",
+            "kind": "text"
+          },
+          {
+            "id": "va_apoio",
+            "kind": "text"
+          },
+          {
+            "id": "va_imagem",
+            "kind": "image",
+            "asset_ref": "vdp_asset_pergunta_v1"
+          },
+          {
+            "id": "va_faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "va_convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.441959,
+    "total": 337.549792
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

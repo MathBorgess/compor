@@ -1,0 +1,4152 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "started_at": "2026-10-28T08:00:45.473160+00:00",
+  "case_id": "mentoria-trama-de-aula",
+  "initial_case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+  "synthetic": true,
+  "model_configured": "gpt-6.1-terra",
+  "model_returned_by_provider": null,
+  "model_returned_limitation": "CLI rollout records runtime model; provider response model is not exposed.",
+  "effort_configured": "medium",
+  "guidance": "baseline",
+  "condition": "C2",
+  "transport": "native_mcp_stdio",
+  "runtime": "codex_exec_resume",
+  "cli_version": "codex-cli 0.162.1",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.12.1",
+  "working_directory": "/private/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-benchmark-cwd-kcyjq972",
+  "runner_sha256": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+  "bridge_sha256": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+  "instruction_guard_sha256": "22db64d2e1beac08e0f7889c1d7b71cb85057cbc933f2290a7d3469f90ab5456",
+  "snapshot": {
+    "dist_sha256": "81b0a30b8903129dd2645601fc7209d1973195ad729cc6783c2ac6054459f442",
+    "skills_sha256": "dc2cdc261bc2cecaabe0da3d20fecd1695224e2c3c297ff2c4c7c95089c742f0",
+    "dependencies_sha256": "acf9259a86e2c96c2c37064c2b012480b7dbf6e8151a13865daf25fc44adb5f2",
+    "dependencies_note": "Shared immutable dependency path; digest checked at every resume."
+  },
+  "auth": "native_codex_auth_no_credentials_read_or_copied",
+  "persistence": "Native Codex session required by exec resume; runner does not delete it.",
+  "builtin_tools": {
+    "requested_disabled_features": [
+      "apps",
+      "plugins",
+      "remote_plugin",
+      "recommended_plugins",
+      "browser_use",
+      "browser_use_external",
+      "computer_use",
+      "in_app_browser",
+      "image_generation",
+      "view_image",
+      "memories",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "shell_tool",
+      "unified_exec",
+      "shell_snapshot",
+      "skill_search",
+      "skill_mcp_dependency_install",
+      "goals",
+      "sleep_tool",
+      "code_mode",
+      "workspace_dependencies",
+      "tool_suggest"
+    ],
+    "exact_model_visible_catalog": null,
+    "limitation": "CLI does not expose the full request tool schema; MCP wire is captured."
+  },
+  "turns": [
+    {
+      "id": "t1-objetivo-parcial",
+      "images": [],
+      "prompt_sha256": "a6381972557a9783b87c116d9c5b6af63aef447e5a3c91f37c728392bf279b41",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 11338.151708,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 22873,
+        "cached_input_tokens": 15104,
+        "output_tokens": 375,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 30
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 22873,
+        "cached_input_tokens": 15104,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 375,
+        "reasoning_output_tokens": 30,
+        "total_tokens": 23248
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+        "developer_system_messages_sha256": "8f82e271dd4e6dbe5447e7a313c01abce9b1378345f63700c0ed7e943d64729f",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "0343222b7982d53d98db45ad9b3624686476574b7509a9f96955870392a6dfab",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 22873,
+            "cached_input_tokens": 15104,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 375,
+            "reasoning_output_tokens": 30,
+            "total_tokens": 23248
+          },
+          "last_token_usage": {
+            "input_tokens": 12339,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 289,
+            "reasoning_output_tokens": 30,
+            "total_tokens": 12628
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "last_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 22873,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 375,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 23248
+            },
+            "last_token_usage": {
+              "input_tokens": 12339,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 289,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 12628
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t2-referencias-e-ajuste",
+      "images": [],
+      "prompt_sha256": "31c321efa890112b7ecb3ff0afaef85cf7a28b25603e82515fb9576e01afae9a",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 17690.939166,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 64718,
+        "cached_input_tokens": 51712,
+        "output_tokens": 1465,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 52
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 41845,
+        "cached_input_tokens": 36608,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 1090,
+        "reasoning_output_tokens": 22,
+        "total_tokens": 42935
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+        "developer_system_messages_sha256": "8f82e271dd4e6dbe5447e7a313c01abce9b1378345f63700c0ed7e943d64729f",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "0343222b7982d53d98db45ad9b3624686476574b7509a9f96955870392a6dfab",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "39b870520db0f90eaaf2cdbb2c26e0eac5d066d2db6956d0f44cd524f2317316",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 64718,
+            "cached_input_tokens": 51712,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1465,
+            "reasoning_output_tokens": 52,
+            "total_tokens": 66183
+          },
+          "last_token_usage": {
+            "input_tokens": 15227,
+            "cached_input_tokens": 13568,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 351,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 15578
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "last_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 22873,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 375,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 23248
+            },
+            "last_token_usage": {
+              "input_tokens": 12339,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 289,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 12628
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35786,
+              "cached_input_tokens": 25472,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 799,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 36585
+            },
+            "last_token_usage": {
+              "input_tokens": 12913,
+              "cached_input_tokens": 10368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 424,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13337
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49491,
+              "cached_input_tokens": 38144,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1114,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50605
+            },
+            "last_token_usage": {
+              "input_tokens": 13705,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 315,
+              "reasoning_output_tokens": 22,
+              "total_tokens": 14020
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 64718,
+              "cached_input_tokens": 51712,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1465,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 66183
+            },
+            "last_token_usage": {
+              "input_tokens": 15227,
+              "cached_input_tokens": 13568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 351,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 15578
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t3-explorar-duas-direcoes",
+      "images": [],
+      "prompt_sha256": "0fde509da444ee7c4a04054617e789e99aeb31f3e29ff4956c4fcd7456847bc3",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 54090.536042,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 123934,
+        "cached_input_tokens": 102016,
+        "output_tokens": 6265,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 63
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 59216,
+        "cached_input_tokens": 50304,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4800,
+        "reasoning_output_tokens": 11,
+        "total_tokens": 64016
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+        "developer_system_messages_sha256": "8f82e271dd4e6dbe5447e7a313c01abce9b1378345f63700c0ed7e943d64729f",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "0343222b7982d53d98db45ad9b3624686476574b7509a9f96955870392a6dfab",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "39b870520db0f90eaaf2cdbb2c26e0eac5d066d2db6956d0f44cd524f2317316",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c64ae93aa6cd2dfbf2609acc7b0a091583ef6856cd1a5d44262c469538395e29",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 123934,
+            "cached_input_tokens": 102016,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 6265,
+            "reasoning_output_tokens": 63,
+            "total_tokens": 130199
+          },
+          "last_token_usage": {
+            "input_tokens": 23632,
+            "cached_input_tokens": 19456,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2407,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 26039
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "last_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 22873,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 375,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 23248
+            },
+            "last_token_usage": {
+              "input_tokens": 12339,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 289,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 12628
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35786,
+              "cached_input_tokens": 25472,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 799,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 36585
+            },
+            "last_token_usage": {
+              "input_tokens": 12913,
+              "cached_input_tokens": 10368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 424,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13337
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49491,
+              "cached_input_tokens": 38144,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1114,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50605
+            },
+            "last_token_usage": {
+              "input_tokens": 13705,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 315,
+              "reasoning_output_tokens": 22,
+              "total_tokens": 14020
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 64718,
+              "cached_input_tokens": 51712,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1465,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 66183
+            },
+            "last_token_usage": {
+              "input_tokens": 15227,
+              "cached_input_tokens": 13568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 351,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 15578
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 80655,
+              "cached_input_tokens": 66816,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2637,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 83292
+            },
+            "last_token_usage": {
+              "input_tokens": 15937,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1172,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17109
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 100302,
+              "cached_input_tokens": 82560,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3858,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 104160
+            },
+            "last_token_usage": {
+              "input_tokens": 19647,
+              "cached_input_tokens": 15744,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1221,
+              "reasoning_output_tokens": 11,
+              "total_tokens": 20868
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 123934,
+              "cached_input_tokens": 102016,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6265,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 130199
+            },
+            "last_token_usage": {
+              "input_tokens": 23632,
+              "cached_input_tokens": 19456,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2407,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 26039
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t4-convergir-primeira",
+      "images": [
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t3-artifacts/renders/direcao-fios.png",
+          "sha256": "cda640ccac1c04724664f40eb9691c230cc02020b78c1bc2507daf10f5214a36"
+        },
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t3-artifacts/renders/direcao-percurso.png",
+          "sha256": "5765256fc2ae636ec02ea1a2bce0a37dc27e87d41ea527ea719aae9de5141393"
+        }
+      ],
+      "prompt_sha256": "f9777f7f63e69e72f5cd3b14a256eaaeecb98edf29cf657ac2f5f7c0cd37db84",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 35980.174833,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 185763,
+        "cached_input_tokens": 139008,
+        "output_tokens": 9962,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 63
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 61829,
+        "cached_input_tokens": 36992,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3697,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 65526
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+        "developer_system_messages_sha256": "8f82e271dd4e6dbe5447e7a313c01abce9b1378345f63700c0ed7e943d64729f",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "0343222b7982d53d98db45ad9b3624686476574b7509a9f96955870392a6dfab",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "39b870520db0f90eaaf2cdbb2c26e0eac5d066d2db6956d0f44cd524f2317316",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c64ae93aa6cd2dfbf2609acc7b0a091583ef6856cd1a5d44262c469538395e29",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "988435fcc136429e8a8265cbdb77b59e1f8c1adbe6637c4998c0355e3be6e5f9",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 185763,
+            "cached_input_tokens": 139008,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 9962,
+            "reasoning_output_tokens": 63,
+            "total_tokens": 195725
+          },
+          "last_token_usage": {
+            "input_tokens": 32307,
+            "cached_input_tokens": 29440,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2309,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 34616
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "last_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 22873,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 375,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 23248
+            },
+            "last_token_usage": {
+              "input_tokens": 12339,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 289,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 12628
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35786,
+              "cached_input_tokens": 25472,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 799,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 36585
+            },
+            "last_token_usage": {
+              "input_tokens": 12913,
+              "cached_input_tokens": 10368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 424,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13337
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49491,
+              "cached_input_tokens": 38144,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1114,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50605
+            },
+            "last_token_usage": {
+              "input_tokens": 13705,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 315,
+              "reasoning_output_tokens": 22,
+              "total_tokens": 14020
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 64718,
+              "cached_input_tokens": 51712,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1465,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 66183
+            },
+            "last_token_usage": {
+              "input_tokens": 15227,
+              "cached_input_tokens": 13568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 351,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 15578
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 80655,
+              "cached_input_tokens": 66816,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2637,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 83292
+            },
+            "last_token_usage": {
+              "input_tokens": 15937,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1172,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17109
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 100302,
+              "cached_input_tokens": 82560,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3858,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 104160
+            },
+            "last_token_usage": {
+              "input_tokens": 19647,
+              "cached_input_tokens": 15744,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1221,
+              "reasoning_output_tokens": 11,
+              "total_tokens": 20868
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 123934,
+              "cached_input_tokens": 102016,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6265,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 130199
+            },
+            "last_token_usage": {
+              "input_tokens": 23632,
+              "cached_input_tokens": 19456,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2407,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 26039
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 153456,
+              "cached_input_tokens": 109568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 7653,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 161109
+            },
+            "last_token_usage": {
+              "input_tokens": 29522,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1388,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 30910
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 185763,
+              "cached_input_tokens": 139008,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 9962,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 195725
+            },
+            "last_token_usage": {
+              "input_tokens": 32307,
+              "cached_input_tokens": 29440,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2309,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 34616
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t5-critica-local-e-desfecho",
+      "images": [
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t4-artifacts/renders/fios-essencia.png",
+          "sha256": "04aabca7a955d10849fd885b7862994b77b1f001d07044bd4aca934e94869aea"
+        },
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t4-artifacts/renders/fios-pratica.png",
+          "sha256": "5edfa0fb6cee862ae4a2fcbfb26d49360daac8051b35df46b8f660c20adefefe"
+        }
+      ],
+      "prompt_sha256": "4b4662c05bef1bf6221b155c3c424dfe7a793bbc28f0e77db1a19208fb28a9ce",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 25400.01875,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 263574,
+        "cached_input_tokens": 209280,
+        "output_tokens": 12092,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 63
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 77811,
+        "cached_input_tokens": 70272,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2130,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 79941
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "medium",
+      "rollout_evidence": {
+        "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+        "developer_system_messages_sha256": "8f82e271dd4e6dbe5447e7a313c01abce9b1378345f63700c0ed7e943d64729f",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "0343222b7982d53d98db45ad9b3624686476574b7509a9f96955870392a6dfab",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "39b870520db0f90eaaf2cdbb2c26e0eac5d066d2db6956d0f44cd524f2317316",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c64ae93aa6cd2dfbf2609acc7b0a091583ef6856cd1a5d44262c469538395e29",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "988435fcc136429e8a8265cbdb77b59e1f8c1adbe6637c4998c0355e3be6e5f9",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6.1-terra",
+            "effort": "medium",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "e88b4c492b3682a94c1327f3c9b5a7ab2304a32c84d9ca0d250121985852190d",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 263574,
+            "cached_input_tokens": 209280,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 12092,
+            "reasoning_output_tokens": 63,
+            "total_tokens": 275666
+          },
+          "last_token_usage": {
+            "input_tokens": 39617,
+            "cached_input_tokens": 38144,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1411,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 41028
+          },
+          "model_context_window": 475000
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "last_token_usage": {
+              "input_tokens": 10534,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 86,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 10620
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 22873,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 375,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 23248
+            },
+            "last_token_usage": {
+              "input_tokens": 12339,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 289,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 12628
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 35786,
+              "cached_input_tokens": 25472,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 799,
+              "reasoning_output_tokens": 30,
+              "total_tokens": 36585
+            },
+            "last_token_usage": {
+              "input_tokens": 12913,
+              "cached_input_tokens": 10368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 424,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 13337
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 49491,
+              "cached_input_tokens": 38144,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1114,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50605
+            },
+            "last_token_usage": {
+              "input_tokens": 13705,
+              "cached_input_tokens": 12672,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 315,
+              "reasoning_output_tokens": 22,
+              "total_tokens": 14020
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 64718,
+              "cached_input_tokens": 51712,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1465,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 66183
+            },
+            "last_token_usage": {
+              "input_tokens": 15227,
+              "cached_input_tokens": 13568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 351,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 15578
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 80655,
+              "cached_input_tokens": 66816,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2637,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 83292
+            },
+            "last_token_usage": {
+              "input_tokens": 15937,
+              "cached_input_tokens": 15104,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1172,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17109
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 100302,
+              "cached_input_tokens": 82560,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3858,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 104160
+            },
+            "last_token_usage": {
+              "input_tokens": 19647,
+              "cached_input_tokens": 15744,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1221,
+              "reasoning_output_tokens": 11,
+              "total_tokens": 20868
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 123934,
+              "cached_input_tokens": 102016,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 6265,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 130199
+            },
+            "last_token_usage": {
+              "input_tokens": 23632,
+              "cached_input_tokens": 19456,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2407,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 26039
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 153456,
+              "cached_input_tokens": 109568,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 7653,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 161109
+            },
+            "last_token_usage": {
+              "input_tokens": 29522,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1388,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 30910
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 185763,
+              "cached_input_tokens": 139008,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 9962,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 195725
+            },
+            "last_token_usage": {
+              "input_tokens": 32307,
+              "cached_input_tokens": 29440,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2309,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 34616
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 223957,
+              "cached_input_tokens": 171136,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 10681,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 234638
+            },
+            "last_token_usage": {
+              "input_tokens": 38194,
+              "cached_input_tokens": 32128,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 719,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 38913
+            },
+            "model_context_window": 475000
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 263574,
+              "cached_input_tokens": 209280,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 12092,
+              "reasoning_output_tokens": 63,
+              "total_tokens": 275666
+            },
+            "last_token_usage": {
+              "input_tokens": 39617,
+              "cached_input_tokens": 38144,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1411,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 41028
+            },
+            "model_context_window": 475000
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    }
+  ],
+  "invocations": [
+    {
+      "number": 1,
+      "wall_clock_ms": 83180.118583,
+      "through_turn": 3,
+      "case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    {
+      "number": 2,
+      "wall_clock_ms": 36016.59325,
+      "through_turn": 4,
+      "case_sha256": "3e367d5ec7f98b91a48df86f720495c27a1d62e847a4020aa889430b5786d106"
+    },
+    {
+      "number": 3,
+      "wall_clock_ms": 25424.4745,
+      "through_turn": 5,
+      "case_sha256": "24168878da7e0ef63f692165099a52d01e26983ba684d8ce8ef3b45da5700076"
+    }
+  ],
+  "wall_clock_ms": 144621.18633300002,
+  "configuration": {
+    "model_reasoning_effort": "medium",
+    "approval_policy": "never",
+    "sandbox_mode": "read-only",
+    "project_doc_max_bytes": 0,
+    "web_search": "disabled",
+    "developer_instructions": "Você participa de um ensaio exclusivamente sintético do Compor. Use apenas as seis tools MCP do servidor compor_benchmark e os dados deste chat. Não acesse arquivos, rede, outras sessões, credenciais ou serviços. Não gere imagens nem alegue publicação, execução ou aprovação humana. Responda em português.",
+    "features.skip_host_skill_discovery": true,
+    "skills.include_instructions": false,
+    "skills.bundled.enabled": false,
+    "mcp_servers.compor_benchmark.command": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+    "mcp_servers.compor_benchmark.args": [
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py",
+      "--log",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/mcp.jsonl",
+      "--node",
+      "/opt/homebrew/bin/node",
+      "--entry",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/mcp-snapshot/dist/stdio.js"
+    ],
+    "mcp_servers.compor_benchmark.env.COMPOR_MCP_GUIDANCE": "baseline",
+    "mcp_servers.compor_benchmark.required": true,
+    "mcp_servers.compor_benchmark.enabled_tools": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "features.apps": false,
+    "features.plugins": false,
+    "features.remote_plugin": false,
+    "features.recommended_plugins": false,
+    "features.browser_use": false,
+    "features.browser_use_external": false,
+    "features.computer_use": false,
+    "features.in_app_browser": false,
+    "features.image_generation": false,
+    "features.view_image": false,
+    "features.memories": false,
+    "features.hooks": false,
+    "features.multi_agent": false,
+    "features.multi_agent_v2": false,
+    "features.shell_tool": false,
+    "features.unified_exec": false,
+    "features.shell_snapshot": false,
+    "features.skill_search": false,
+    "features.skill_mcp_dependency_install": false,
+    "features.goals": false,
+    "features.sleep_tool": false,
+    "features.code_mode": false,
+    "features.workspace_dependencies": false,
+    "features.tool_suggest": false
+  },
+  "configuration_sha256": "c25d640e2e1dedba51d46bfe5ff603c785dacc2a2d2e3eff3127d8f8432dd477",
+  "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+  "own_rollout_path": "/Users/matheusborges/.codex/sessions/2026/10/28/rollout-2026-10-28T05-00-47-01a18186-a6a7-7472-9c64-b96111f99264.jsonl",
+  "mcp": {
+    "tool_names": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "schema_sha256": "b634efb6f0ab0cbe52d42dbcf54b5e03472d030d24b2aeef75ee1160325c2d99",
+    "schema_consistent_across_processes": true,
+    "instructions_sha256": [
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534"
+    ],
+    "calls": [
+      {
+        "process_id": 30045,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-cccc39cc-3991-4543-8e25-1aa13dae548d",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18186-d4f8-76b1-9d7c-e5534308e72e",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174459642,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0833c6e8c17950a7016ae1abbde89881919aeab34b29f38fdf",
+            "progressToken": 1
+          },
+          "name": "prepare_moodboard",
+          "arguments": {
+            "board_id": "trama-quadro",
+            "board_version": "1",
+            "direction": "Peça de feed para apresentar a mentoria Trama de Aula e convidar a pedir informações.",
+            "elements": [
+              {
+                "id": "r1",
+                "kind": "reference",
+                "intent": "inspire",
+                "label": "voz da minha marca",
+                "meaning": "Explicações claras, acolhedoras e diretas; reconhecer o conhecimento prévio do público.",
+                "aspects": [
+                  "other"
+                ]
+              },
+              {
+                "id": "r2",
+                "kind": "reference",
+                "intent": "inspire",
+                "label": "gosto do ritmo visual",
+                "meaning": "Intervalos generosos entre blocos e alternância de pesos; referência restrita a ritmo e hierarquia.",
+                "aspects": [
+                  "composition",
+                  "typography"
+                ]
+              },
+              {
+                "id": "r3",
+                "kind": "reference",
+                "intent": "avoid",
+                "label": "não quero esse tom",
+                "meaning": "Chamada insistente baseada no medo de ficar para trás.",
+                "aspects": [
+                  "other"
+                ]
+              },
+              {
+                "id": "ameixa",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#532B54",
+                "label": "ameixa"
+              },
+              {
+                "id": "argila",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#C76B4B",
+                "label": "argila"
+              },
+              {
+                "id": "creme",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#F4EBDD",
+                "label": "creme"
+              }
+            ],
+            "restrictions": [
+              {
+                "aspect": "color",
+                "rule": "must_keep",
+                "value": "Ameixa #532B54, argila #C76B4B e creme #F4EBDD nesta peça."
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "Elementos inválidos: IDs devem ser únicos e apenas referências devem ter asset_ref."
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 30045,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-bc5575dc-308f-4241-9b62-99adecbb8aa6",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18186-d4f8-76b1-9d7c-e5534308e72e",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174459642,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0833c6e8c17950a7016ae1abbde89881919aeab34b29f38fdf",
+            "progressToken": 2
+          },
+          "name": "prepare_word_cloud",
+          "arguments": {
+            "words": [
+              {
+                "word": "acolhimento"
+              },
+              {
+                "word": "prática"
+              },
+              {
+                "word": "clareza"
+              },
+              {
+                "word": "autonomia"
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"words\":[{\"word\":\"acolhimento\",\"frequency\":null,\"suggested_weight\":null,\"chosen_weight\":null,\"effective_weight\":null,\"effective_source\":\"unavailable\"},{\"word\":\"prática\",\"frequency\":null,\"suggested_weight\":null,\"chosen_weight\":null,\"effective_weight\":null,\"effective_source\":\"unavailable\"},{\"word\":\"clareza\",\"frequency\":null,\"suggested_weight\":null,\"chosen_weight\":null,\"effective_weight\":null,\"effective_source\":\"unavailable\"},{\"word\":\"autonomia\",\"frequency\":null,\"suggested_weight\":null,\"chosen_weight\":null,\"effective_weight\":null,\"effective_source\":\"unavailable\"}],\"creates_confirmed_preference\":false}"
+            }
+          ],
+          "structuredContent": {
+            "words": [
+              {
+                "word": "acolhimento",
+                "frequency": null,
+                "suggested_weight": null,
+                "chosen_weight": null,
+                "effective_weight": null,
+                "effective_source": "unavailable"
+              },
+              {
+                "word": "prática",
+                "frequency": null,
+                "suggested_weight": null,
+                "chosen_weight": null,
+                "effective_weight": null,
+                "effective_source": "unavailable"
+              },
+              {
+                "word": "clareza",
+                "frequency": null,
+                "suggested_weight": null,
+                "chosen_weight": null,
+                "effective_weight": null,
+                "effective_source": "unavailable"
+              },
+              {
+                "word": "autonomia",
+                "frequency": null,
+                "suggested_weight": null,
+                "chosen_weight": null,
+                "effective_weight": null,
+                "effective_source": "unavailable"
+              }
+            ],
+            "creates_confirmed_preference": false
+          }
+        }
+      },
+      {
+        "process_id": 30045,
+        "id": 4,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-af6e582b-495b-4615-9bea-5f5478d71d6a",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18186-d4f8-76b1-9d7c-e5534308e72e",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174459642,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0833c6e8c17950a7016ae1abc3cce8819181b219adcc4b9d66",
+            "progressToken": 3
+          },
+          "name": "prepare_moodboard",
+          "arguments": {
+            "board_id": "trama-quadro",
+            "board_version": "1",
+            "direction": "Apresentar a mentoria e convidar a pedir informações.",
+            "elements": [
+              {
+                "id": "r1",
+                "kind": "text",
+                "intent": "inspire",
+                "label": "voz da minha marca",
+                "meaning": "Clara, acolhedora e direta; reconhecer conhecimento prévio."
+              },
+              {
+                "id": "r2",
+                "kind": "text",
+                "intent": "inspire",
+                "label": "gosto do ritmo visual",
+                "meaning": "Intervalos generosos e alternância de pesos; somente ritmo e hierarquia.",
+                "aspects": [
+                  "composition",
+                  "typography"
+                ]
+              },
+              {
+                "id": "r3",
+                "kind": "text",
+                "intent": "avoid",
+                "label": "não quero esse tom",
+                "meaning": "Chamada insistente com medo de ficar para trás."
+              },
+              {
+                "id": "ameixa",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#532B54"
+              },
+              {
+                "id": "argila",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#C76B4B"
+              },
+              {
+                "id": "creme",
+                "kind": "color",
+                "intent": "keep",
+                "value": "#F4EBDD"
+              }
+            ],
+            "restrictions": [
+              {
+                "aspect": "color",
+                "rule": "must_keep",
+                "value": "Ameixa #532B54, argila #C76B4B e creme #F4EBDD nesta peça."
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"board_id\":\"trama-quadro\",\"board_version\":\"1\",\"direction\":\"Apresentar a mentoria e convidar a pedir informações.\",\"elements\":[{\"id\":\"r1\",\"kind\":\"text\",\"value\":null,\"asset_ref\":null,\"label\":\"voz da minha marca\",\"meaning\":\"Clara, acolhedora e direta; reconhecer conhecimento prévio.\",\"aspects\":null,\"intent\":\"inspire\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"},{\"id\":\"r2\",\"kind\":\"text\",\"value\":null,\"asset_ref\":null,\"label\":\"gosto do ritmo visual\",\"meaning\":\"Intervalos generosos e alternância de pesos; somente ritmo e hierarquia.\",\"aspects\":[\"composition\",\"typography\"],\"intent\":\"inspire\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"},{\"id\":\"r3\",\"kind\":\"text\",\"value\":null,\"asset_ref\":null,\"label\":\"não quero esse tom\",\"meaning\":\"Chamada insistente com medo de ficar para trás.\",\"aspects\":null,\"intent\":\"avoid\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"},{\"id\":\"ameixa\",\"kind\":\"color\",\"value\":\"#532B54\",\"asset_ref\":null,\"label\":null,\"meaning\":null,\"aspects\":null,\"intent\":\"keep\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"},{\"id\":\"argila\",\"kind\":\"color\",\"value\":\"#C76B4B\",\"asset_ref\":null,\"label\":null,\"meaning\":null,\"aspects\":null,\"intent\":\"keep\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"},{\"id\":\"creme\",\"kind\":\"color\",\"value\":\"#F4EBDD\",\"asset_ref\":null,\"label\":null,\"meaning\":null,\"aspects\":null,\"intent\":\"keep\",\"priority\":null,\"origin_claim\":null,\"geometry\":null,\"visual_role\":\"client_described\"}],\"restrictions\":[{\"aspect\":\"color\",\"value\":\"Ameixa #532B54, argila #C76B4B e creme #F4EBDD nesta peça.\",\"rule\":\"must_keep\",\"origin_claim\":null}],\"warnings\":[{\"code\":\"element_value_unspecified\",\"element_id\":\"r1\"},{\"code\":\"element_value_unspecified\",\"element_id\":\"r2\"},{\"code\":\"element_value_unspecified\",\"element_id\":\"r3\"}],\"conflict_detection\":\"literal_only\",\"origins_verified\":false,\"client_data_is_untrusted\":true,\"style_hints_require_literal_reproduction\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "board_id": "trama-quadro",
+            "board_version": "1",
+            "direction": "Apresentar a mentoria e convidar a pedir informações.",
+            "elements": [
+              {
+                "id": "r1",
+                "kind": "text",
+                "value": null,
+                "asset_ref": null,
+                "label": "voz da minha marca",
+                "meaning": "Clara, acolhedora e direta; reconhecer conhecimento prévio.",
+                "aspects": null,
+                "intent": "inspire",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              },
+              {
+                "id": "r2",
+                "kind": "text",
+                "value": null,
+                "asset_ref": null,
+                "label": "gosto do ritmo visual",
+                "meaning": "Intervalos generosos e alternância de pesos; somente ritmo e hierarquia.",
+                "aspects": [
+                  "composition",
+                  "typography"
+                ],
+                "intent": "inspire",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              },
+              {
+                "id": "r3",
+                "kind": "text",
+                "value": null,
+                "asset_ref": null,
+                "label": "não quero esse tom",
+                "meaning": "Chamada insistente com medo de ficar para trás.",
+                "aspects": null,
+                "intent": "avoid",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              },
+              {
+                "id": "ameixa",
+                "kind": "color",
+                "value": "#532B54",
+                "asset_ref": null,
+                "label": null,
+                "meaning": null,
+                "aspects": null,
+                "intent": "keep",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              },
+              {
+                "id": "argila",
+                "kind": "color",
+                "value": "#C76B4B",
+                "asset_ref": null,
+                "label": null,
+                "meaning": null,
+                "aspects": null,
+                "intent": "keep",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              },
+              {
+                "id": "creme",
+                "kind": "color",
+                "value": "#F4EBDD",
+                "asset_ref": null,
+                "label": null,
+                "meaning": null,
+                "aspects": null,
+                "intent": "keep",
+                "priority": null,
+                "origin_claim": null,
+                "geometry": null,
+                "visual_role": "client_described"
+              }
+            ],
+            "restrictions": [
+              {
+                "aspect": "color",
+                "value": "Ameixa #532B54, argila #C76B4B e creme #F4EBDD nesta peça.",
+                "rule": "must_keep",
+                "origin_claim": null
+              }
+            ],
+            "warnings": [
+              {
+                "code": "element_value_unspecified",
+                "element_id": "r1"
+              },
+              {
+                "code": "element_value_unspecified",
+                "element_id": "r2"
+              },
+              {
+                "code": "element_value_unspecified",
+                "element_id": "r3"
+              }
+            ],
+            "conflict_detection": "literal_only",
+            "origins_verified": false,
+            "client_data_is_untrusted": true,
+            "style_hints_require_literal_reproduction": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 30061,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-d848f0ed-56ee-421c-936d-ad11cf1d71e1",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18187-1a3e-7b51-80a6-202d7de92e55",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174477376,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0eb702736886210b016ae1abcf90408191b1f9beb40e99b0ca",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-direcao-fios",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fios-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "fios-imagem",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "asset_ref": "asset-trama-fios-01",
+                  "rect": {
+                    "x": 610,
+                    "y": 90,
+                    "width": 380,
+                    "height": 590
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "fios-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 80,
+                    "y": 80,
+                    "width": 500,
+                    "height": 45
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "fios-titulo",
+                  "kind": "text",
+                  "name": "Chamada principal",
+                  "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+                  "rect": {
+                    "x": 80,
+                    "y": 175,
+                    "width": 530,
+                    "height": 240
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "fios-descricao",
+                  "kind": "text",
+                  "name": "Descrição da mentoria",
+                  "text": "Mentoria para organizar\nseu primeiro curso curto.",
+                  "rect": {
+                    "x": 80,
+                    "y": 465,
+                    "width": 500,
+                    "height": 105
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "fios-faixa",
+                  "kind": "shape",
+                  "name": "Faixa de convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 80,
+                    "y": 790,
+                    "width": 920,
+                    "height": 180
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 5
+                },
+                {
+                  "id": "fios-cta",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações\nsobre a mentoria.",
+                  "rect": {
+                    "x": 115,
+                    "y": 830,
+                    "width": 820,
+                    "height": 100
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 36,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 6
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 30061,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-b356e2df-5ba5-4ea5-8310-51523811581f",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18187-1a3e-7b51-80a6-202d7de92e55",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174477376,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0eb702736886210b016ae1abcf90408191b1f9beb40e99b0ca",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-direcao-percurso",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "percurso-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 80,
+                    "y": 65,
+                    "width": 600,
+                    "height": 45
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 1
+                },
+                {
+                  "id": "percurso-titulo",
+                  "kind": "text",
+                  "name": "Chamada principal",
+                  "text": "Do que você sabe\nao seu primeiro\ncurso curto.",
+                  "rect": {
+                    "x": 80,
+                    "y": 135,
+                    "width": 920,
+                    "height": 220
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 54,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "percurso-imagem",
+                  "kind": "image",
+                  "name": "Percurso em etapas",
+                  "asset_ref": "asset-trama-percurso-01",
+                  "rect": {
+                    "x": 80,
+                    "y": 390,
+                    "width": 420,
+                    "height": 370
+                  },
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-linha",
+                  "kind": "shape",
+                  "name": "Divisor",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 540,
+                    "y": 400,
+                    "width": 6,
+                    "height": 345
+                  },
+                  "fill_hex": "#C76B4B",
+                  "z_index": 4
+                },
+                {
+                  "id": "percurso-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "text": "4 encontros semanais\nao vivo\n\nRevisão de um\nplano de aula",
+                  "rect": {
+                    "x": 585,
+                    "y": 405,
+                    "width": 420,
+                    "height": 290
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "percurso-cta-fundo",
+                  "kind": "shape",
+                  "name": "Fundo do convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 80,
+                    "y": 825,
+                    "width": 920,
+                    "height": 130
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 6
+                },
+                {
+                  "id": "percurso-cta",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações sobre a mentoria.",
+                  "rect": {
+                    "x": 110,
+                    "y": 865,
+                    "width": 860,
+                    "height": 55
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "center",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect\nToo big: expected number to be <=1 at piece.layers[7].rect.x\nToo big: expected number to be <=1 at piece.layers[7].rect.y\nToo big: expected number to be <=1 at piece.layers[7].rect.width\nToo big: expected number to be <=1 at piece.layers[7].rect.height\nRetângulo deve caber na imagem. at piece.layers[7].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 30061,
+        "id": 4,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-5ff8d464-d332-467e-a0db-d427f78e2d05",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18187-1a3e-7b51-80a6-202d7de92e55",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174477376,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0eb702736886210b016ae1abdcabc48191bf75d91be4053e49",
+            "progressToken": 3
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "asset_ref": "asset-fios-01",
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "text": "Mentoria para organizar\nseu primeiro curso curto.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.73,
+                    "width": 0.86,
+                    "height": 0.17
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 5
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações\nsobre a mentoria.",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.76,
+                    "width": 0.77,
+                    "height": 0.11
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 36,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 6
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"1\",\"width_px\":1080,\"height_px\":1080,\"layers\":[{\"id\":\"fundo\",\"kind\":\"shape\",\"name\":\"Fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"imagem-fios\",\"kind\":\"image\",\"name\":\"Fios organizados\",\"z_index\":1,\"rect\":{\"x\":0.57,\"y\":0.08,\"width\":0.35,\"height\":0.55},\"asset_ref\":\"asset-fios-01\"},{\"id\":\"marca\",\"kind\":\"text\",\"name\":\"Marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.07,\"width\":0.46,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":27,\"color_hex\":\"#C76B4B\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"titulo\",\"kind\":\"text\",\"name\":\"Chamada\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.16,\"width\":0.49,\"height\":0.23},\"text\":\"Seu conhecimento\\npode ganhar\\nforma de curso.\",\"font_size_px\":52,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"descricao\",\"kind\":\"text\",\"name\":\"Descrição\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.43,\"width\":0.46,\"height\":0.11},\"text\":\"Mentoria para organizar\\nseu primeiro curso curto.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"faixa\",\"kind\":\"shape\",\"name\":\"Faixa convite\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.73,\"width\":0.86,\"height\":0.17},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"convite\",\"kind\":\"text\",\"name\":\"Convite\",\"z_index\":6,\"rect\":{\"x\":0.1,\"y\":0.76,\"width\":0.77,\"height\":0.11},\"text\":\"Peça informações\\nsobre a mentoria.\",\"font_size_px\":36,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"descricao\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "asset_ref": "asset-fios-01"
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "text": "Mentoria para organizar\nseu primeiro curso curto.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.73,
+                    "width": 0.86,
+                    "height": 0.17
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.76,
+                    "width": 0.77,
+                    "height": 0.11
+                  },
+                  "text": "Peça informações\nsobre a mentoria.",
+                  "font_size_px": 36,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "descricao"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 30061,
+        "id": 5,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-d9e9aa7a-5e8a-4a50-9582-66c05812cf2a",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a18187-1a3e-7b51-80a6-202d7de92e55",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174477376,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0eb702736886210b016ae1abdcabc48191bf75d91be4053e49",
+            "progressToken": 4
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.06,
+                    "width": 0.56,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 1
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "text": "Do que você sabe\nao seu primeiro\ncurso curto.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.13,
+                    "width": 0.85,
+                    "height": 0.21
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 54,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "imagem-percurso",
+                  "kind": "image",
+                  "name": "Percurso em etapas",
+                  "asset_ref": "asset-percurso-01",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.39,
+                    "height": 0.34
+                  },
+                  "z_index": 3
+                },
+                {
+                  "id": "divisor",
+                  "kind": "shape",
+                  "name": "Divisor",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.5,
+                    "y": 0.37,
+                    "width": 0.006,
+                    "height": 0.32
+                  },
+                  "fill_hex": "#C76B4B",
+                  "z_index": 4
+                },
+                {
+                  "id": "oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "text": "4 encontros semanais\nao vivo\n\nRevisão de um\nplano de aula",
+                  "rect": {
+                    "x": 0.54,
+                    "y": 0.37,
+                    "width": 0.39,
+                    "height": 0.28
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.76,
+                    "width": 0.86,
+                    "height": 0.12
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 6
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações sobre a mentoria.",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.79,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "center",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-percurso\",\"version\":\"1\",\"width_px\":1080,\"height_px\":1080,\"layers\":[{\"id\":\"fundo\",\"kind\":\"shape\",\"name\":\"Fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"marca\",\"kind\":\"text\",\"name\":\"Marca\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.06,\"width\":0.56,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":27,\"color_hex\":\"#C76B4B\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"titulo\",\"kind\":\"text\",\"name\":\"Chamada\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.13,\"width\":0.85,\"height\":0.21},\"text\":\"Do que você sabe\\nao seu primeiro\\ncurso curto.\",\"font_size_px\":54,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"imagem-percurso\",\"kind\":\"image\",\"name\":\"Percurso em etapas\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.36,\"width\":0.39,\"height\":0.34},\"asset_ref\":\"asset-percurso-01\"},{\"id\":\"divisor\",\"kind\":\"shape\",\"name\":\"Divisor\",\"z_index\":4,\"rect\":{\"x\":0.5,\"y\":0.37,\"width\":0.006,\"height\":0.32},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"oferta\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":5,\"rect\":{\"x\":0.54,\"y\":0.37,\"width\":0.39,\"height\":0.28},\"text\":\"4 encontros semanais\\nao vivo\\n\\nRevisão de um\\nplano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"faixa\",\"kind\":\"shape\",\"name\":\"Faixa convite\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.76,\"width\":0.86,\"height\":0.12},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"convite\",\"kind\":\"text\",\"name\":\"Convite\",\"z_index\":7,\"rect\":{\"x\":0.1,\"y\":0.79,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações sobre a mentoria.\",\"font_size_px\":32,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"center\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.06,
+                    "width": 0.56,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.13,
+                    "width": 0.85,
+                    "height": 0.21
+                  },
+                  "text": "Do que você sabe\nao seu primeiro\ncurso curto.",
+                  "font_size_px": 54,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "imagem-percurso",
+                  "kind": "image",
+                  "name": "Percurso em etapas",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.39,
+                    "height": 0.34
+                  },
+                  "asset_ref": "asset-percurso-01"
+                },
+                {
+                  "id": "divisor",
+                  "kind": "shape",
+                  "name": "Divisor",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.5,
+                    "y": 0.37,
+                    "width": 0.006,
+                    "height": 0.32
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.54,
+                    "y": 0.37,
+                    "width": 0.39,
+                    "height": 0.28
+                  },
+                  "text": "4 encontros semanais\nao vivo\n\nRevisão de um\nplano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.76,
+                    "width": 0.86,
+                    "height": 0.12
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.79,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "center"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 31212,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-9568cb41-ac3d-4537-8dcd-854a068d5169",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a1818b-383c-7bf3-bae8-8477a2e46874",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174747200,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0ed325bef854b3af016ae1acddce688191870c9d6b1580ff7d",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "2b",
+              "variation_ref": "fios-pratica",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "asset_ref": "asset-fios-01",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.31,
+                    "width": 0.33,
+                    "height": 0.48
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.06,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "text": "Vamos organizar seu\nprimeiro curso curto?",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.13,
+                    "width": 0.86,
+                    "height": 0.15
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 49,
+                  "color_hex": "#532B54",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "text": "Você já conhece o assunto.\nA mentoria ajuda a dar\nforma ao seu curso.",
+                  "rect": {
+                    "x": 0.46,
+                    "y": 0.34,
+                    "width": 0.47,
+                    "height": 0.16
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 30,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "rect": {
+                    "x": 0.46,
+                    "y": 0.56,
+                    "width": 0.47,
+                    "height": 0.11
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 26,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.82,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 6
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações sobre a mentoria online.",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.845,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 28,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "center",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"2b\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"fios-pratica\",\"layers\":[{\"id\":\"fundo\",\"kind\":\"shape\",\"name\":\"Fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"imagem-fios\",\"kind\":\"image\",\"name\":\"Fios organizados\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.31,\"width\":0.33,\"height\":0.48},\"asset_ref\":\"asset-fios-01\"},{\"id\":\"marca\",\"kind\":\"text\",\"name\":\"Marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.06,\"width\":0.46,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":27,\"color_hex\":\"#C76B4B\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"titulo\",\"kind\":\"text\",\"name\":\"Chamada\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.13,\"width\":0.86,\"height\":0.15},\"text\":\"Vamos organizar seu\\nprimeiro curso curto?\",\"font_size_px\":49,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"descricao\",\"kind\":\"text\",\"name\":\"Descrição\",\"z_index\":4,\"rect\":{\"x\":0.46,\"y\":0.34,\"width\":0.47,\"height\":0.16},\"text\":\"Você já conhece o assunto.\\nA mentoria ajuda a dar\\nforma ao seu curso.\",\"font_size_px\":30,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"formato\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":5,\"rect\":{\"x\":0.46,\"y\":0.56,\"width\":0.47,\"height\":0.11},\"text\":\"4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":26,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"faixa\",\"kind\":\"shape\",\"name\":\"Faixa convite\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.82,\"width\":0.86,\"height\":0.1},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"convite\",\"kind\":\"text\",\"name\":\"Convite\",\"z_index\":7,\"rect\":{\"x\":0.1,\"y\":0.845,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações sobre a mentoria online.\",\"font_size_px\":28,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"center\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"descricao\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"formato\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "2b",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "fios-pratica",
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.31,
+                    "width": 0.33,
+                    "height": 0.48
+                  },
+                  "asset_ref": "asset-fios-01"
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.06,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.13,
+                    "width": 0.86,
+                    "height": 0.15
+                  },
+                  "text": "Vamos organizar seu\nprimeiro curso curto?",
+                  "font_size_px": 49,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.46,
+                    "y": 0.34,
+                    "width": 0.47,
+                    "height": 0.16
+                  },
+                  "text": "Você já conhece o assunto.\nA mentoria ajuda a dar\nforma ao seu curso.",
+                  "font_size_px": 30,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.46,
+                    "y": 0.56,
+                    "width": 0.47,
+                    "height": 0.11
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 26,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.82,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.845,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Peça informações sobre a mentoria online.",
+                  "font_size_px": 28,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "center"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "descricao"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "formato"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 31212,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-a9c27888-c016-4e94-bdb9-b6f471bc2f20",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a1818b-383c-7bf3-bae8-8477a2e46874",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174747200,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0ed325bef854b3af016ae1acddce688191870c9d6b1580ff7d",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "2a",
+              "variation_ref": "fios-essencia",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "asset_ref": "asset-fios-01",
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "text": "Organize seu primeiro\ncurso curto com apoio.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "text": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.64,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 27,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.77,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 6
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações sobre a mentoria.",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.81,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"2a\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"fios-essencia\",\"layers\":[{\"id\":\"fundo\",\"kind\":\"shape\",\"name\":\"Fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"imagem-fios\",\"kind\":\"image\",\"name\":\"Fios organizados\",\"z_index\":1,\"rect\":{\"x\":0.57,\"y\":0.08,\"width\":0.35,\"height\":0.55},\"asset_ref\":\"asset-fios-01\"},{\"id\":\"marca\",\"kind\":\"text\",\"name\":\"Marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.07,\"width\":0.46,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":27,\"color_hex\":\"#C76B4B\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"titulo\",\"kind\":\"text\",\"name\":\"Chamada\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.16,\"width\":0.49,\"height\":0.23},\"text\":\"Seu conhecimento\\npode ganhar\\nforma de curso.\",\"font_size_px\":52,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"descricao\",\"kind\":\"text\",\"name\":\"Descrição\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.43,\"width\":0.46,\"height\":0.11},\"text\":\"Organize seu primeiro\\ncurso curto com apoio.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"formato\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.64,\"width\":0.86,\"height\":0.09},\"text\":\"Mentoria online · 4 encontros ao vivo\\nRevisão de um plano de aula\",\"font_size_px\":27,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"faixa\",\"kind\":\"shape\",\"name\":\"Faixa convite\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.77,\"width\":0.86,\"height\":0.13},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"convite\",\"kind\":\"text\",\"name\":\"Convite\",\"z_index\":7,\"rect\":{\"x\":0.1,\"y\":0.81,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações sobre a mentoria.\",\"font_size_px\":32,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"descricao\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"formato\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "2a",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "fios-essencia",
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "asset_ref": "asset-fios-01"
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "text": "Seu conhecimento\npode ganhar\nforma de curso.",
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "text": "Organize seu primeiro\ncurso curto com apoio.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.64,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "text": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+                  "font_size_px": 27,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.77,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.81,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "descricao"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "formato"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 31747,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-3e080b24-bd01-412d-b6ba-873243792118",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "thread_id": "01a18186-a6a7-7472-9c64-b96111f99264",
+              "reasoning_effort": "medium",
+              "turn_id": "01a1818b-d0f9-7012-8d44-959274bc8303",
+              "model": "gpt-6.1-terra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793174786302,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "sessionId": "01a18186-a6a7-7472-9c64-b96111f99264",
+            "windowId": "01a18186-a6a7-7472-9c64-b96111f99264:0",
+            "itemId": "ctc_0818f43c25d1d7f4016ae1ad052a448191b8a3db10cd66fe48",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "3a",
+              "variation_ref": "fios-essencia",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "asset_ref": "asset-fios-01",
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "text": "TRAMA DE AULA",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "text": "Seu conhecimento\npode ganhar forma\nde curso.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "text": "Organize seu primeiro\ncurso curto com apoio.",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "text": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.64,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "font_size_px": 27,
+                  "color_hex": "#532B54",
+                  "line_height": 1.25,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "shape": "rectangle",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.77,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "fill_hex": "#532B54",
+                  "z_index": 6
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "text": "Peça informações sobre a mentoria.",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.81,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "line_height": 1.2,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-fios\",\"version\":\"3a\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"fios-essencia\",\"layers\":[{\"id\":\"fundo\",\"kind\":\"shape\",\"name\":\"Fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"imagem-fios\",\"kind\":\"image\",\"name\":\"Fios organizados\",\"z_index\":1,\"rect\":{\"x\":0.57,\"y\":0.08,\"width\":0.35,\"height\":0.55},\"asset_ref\":\"asset-fios-01\"},{\"id\":\"marca\",\"kind\":\"text\",\"name\":\"Marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.07,\"width\":0.46,\"height\":0.05},\"text\":\"TRAMA DE AULA\",\"font_size_px\":27,\"color_hex\":\"#C76B4B\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"titulo\",\"kind\":\"text\",\"name\":\"Chamada\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.16,\"width\":0.49,\"height\":0.23},\"text\":\"Seu conhecimento\\npode ganhar forma\\nde curso.\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"},{\"id\":\"descricao\",\"kind\":\"text\",\"name\":\"Descrição\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.43,\"width\":0.46,\"height\":0.11},\"text\":\"Organize seu primeiro\\ncurso curto com apoio.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"formato\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.64,\"width\":0.86,\"height\":0.09},\"text\":\"Mentoria online · 4 encontros ao vivo\\nRevisão de um plano de aula\",\"font_size_px\":27,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.25,\"text_align\":\"left\"},{\"id\":\"faixa\",\"kind\":\"shape\",\"name\":\"Faixa convite\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.77,\"width\":0.86,\"height\":0.13},\"shape\":\"rectangle\",\"fill_hex\":\"#532B54\"},{\"id\":\"convite\",\"kind\":\"text\",\"name\":\"Convite\",\"z_index\":7,\"rect\":{\"x\":0.1,\"y\":0.81,\"width\":0.8,\"height\":0.05},\"text\":\"Peça informações sobre a mentoria.\",\"font_size_px\":32,\"color_hex\":\"#F4EBDD\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.2,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"titulo\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"descricao\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"formato\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-fios",
+              "version": "3a",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "fios-essencia",
+              "layers": [
+                {
+                  "id": "fundo",
+                  "kind": "shape",
+                  "name": "Fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "imagem-fios",
+                  "kind": "image",
+                  "name": "Fios organizados",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.57,
+                    "y": 0.08,
+                    "width": 0.35,
+                    "height": 0.55
+                  },
+                  "asset_ref": "asset-fios-01"
+                },
+                {
+                  "id": "marca",
+                  "kind": "text",
+                  "name": "Marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.07,
+                    "width": 0.46,
+                    "height": 0.05
+                  },
+                  "text": "TRAMA DE AULA",
+                  "font_size_px": 27,
+                  "color_hex": "#C76B4B",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "titulo",
+                  "kind": "text",
+                  "name": "Chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.16,
+                    "width": 0.49,
+                    "height": 0.23
+                  },
+                  "text": "Seu conhecimento\npode ganhar forma\nde curso.",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                },
+                {
+                  "id": "descricao",
+                  "kind": "text",
+                  "name": "Descrição",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.43,
+                    "width": 0.46,
+                    "height": 0.11
+                  },
+                  "text": "Organize seu primeiro\ncurso curto com apoio.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "formato",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.64,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "text": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+                  "font_size_px": 27,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.25,
+                  "text_align": "left"
+                },
+                {
+                  "id": "faixa",
+                  "kind": "shape",
+                  "name": "Faixa convite",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.77,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#532B54"
+                },
+                {
+                  "id": "convite",
+                  "kind": "text",
+                  "name": "Convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.81,
+                    "width": 0.8,
+                    "height": 0.05
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_size_px": 32,
+                  "color_hex": "#F4EBDD",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.2,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "titulo"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "descricao"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "formato"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      }
+    ],
+    "listings_observed": 5
+  },
+  "finished_at": "2026-10-28T08:06:50.509544+00:00"
+}

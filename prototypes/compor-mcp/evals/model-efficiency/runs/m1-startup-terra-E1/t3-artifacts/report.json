@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-controle",
+      "piece_id": "vp-controle",
+      "version": "proposta-v1",
+      "original_piece_sha256": "25fe2a9ac7958253e42170c53c59a595a2c115f4adfbb02d7367c7f67b235c7d",
+      "mapped_piece_sha256": "8a4a4174877879bdb2d20fd70fb05dbb568eba0b063a2bdfb4afd669a8167dc2",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 33459,
+              "request_id": 5,
+              "request_line": 33,
+              "response_line": 35
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "proposta-asset-controle-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-controle.json",
+      "render_input_sha256": "c12de65f50b66a41d1c21b0f389515525d6bc54ba47f9338163277d22b0d2fc2"
+    },
+    {
+      "id": "direcao-caminho",
+      "piece_id": "vp-ciclo",
+      "version": "proposta-v1",
+      "original_piece_sha256": "6b5e8e6839f64b5fb8967a7ad4a614e221935467bb4a6f123d646bb8d3b2fc75",
+      "mapped_piece_sha256": "76f70f847a4abbdb4a1a1c8ec00bcf1cb2722246d99ea6fcbba59ecfd0c99c50",
+      "mcp_evidence": [
+        {
+          "event_index": 14,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 33459,
+              "request_id": 6,
+              "request_line": 32,
+              "response_line": 34
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "proposta-asset-caminho-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-caminho.json",
+      "render_input_sha256": "c03950ec777c002096369b23969b7b9d2e93ab79e815befac146fc78131853c4"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-controle",
+      "operation": "add",
+      "layer_id": "c-imagem",
+      "field": "asset_ref",
+      "value": "proposta-asset-controle-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-caminho",
+      "operation": "add",
+      "layer_id": "v-imagem",
+      "field": "asset_ref",
+      "value": "proposta-asset-caminho-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/turn-03.json",
+    "sha256": "e42ddb15a03b14dd364ec0ec2e0865c3d418028b4c167986b0640d198aa00aab"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "eb52d7db1dc6f03f69e88f6d66f1c6255bd16c9cbd05324091c7d3575ee9359b",
+  "assets": {
+    "proposta-asset-caminho-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets/proposta-asset-caminho-v1.png",
+      "sha256": "bd99aca8474109d02b5f5648d1c97d3569c7eac9576a069ce6206f21e14c6199",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets/proposta-asset-caminho-v1.png"
+    },
+    "proposta-asset-controle-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets/proposta-asset-controle-v1.png",
+      "sha256": "28181bffbdef6574b2c001b53c377ff4a6b9844f6ce76c1f35d2f605f163ff1e",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets/proposta-asset-controle-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets.json",
+    "sha256": "2cd626ef8b9ac00b2174eb233f556e83467741ac7871a92a525981b3d7fd01ec",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1"
+  },
+  "unresolved_asset_refs": []
+}

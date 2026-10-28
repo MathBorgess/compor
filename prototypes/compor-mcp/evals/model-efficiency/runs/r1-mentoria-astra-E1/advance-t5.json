@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/resume-after-t4.json",
+      "sha256": "036ccde24558dbacbcc22e9e3cc77f3ac6c8d27d9374c519b8ef755385dfe180"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/assets.json",
+      "sha256": "e8573e0fbd264ea2267192592ed5efcfc76d515a4c2b3db8fad1603ded677207"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "estrutura-var-a-revisao-v2",
+        "piece_id": "estrutura-var-a",
+        "version": "proposta-v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts/renders/estrutura-var-a-revisao-v2.png",
+        "png_sha256": "9e43665255e3ceed4bec83f61aa06384fdb46f24e0fa93933ad06c7c97aa7d77",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts/renders/estrutura-var-a-revisao-v2.json",
+        "report_sha256": "8dee21f430c5119e1e52865532bd7c6f03babcea9cd13055c7d36673eb56cade",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 412.97475,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-trama-estrutura-visual-v1"
+        ],
+        "layers": [
+          {
+            "id": "estrutura-var-a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "estrutura-var-a-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-headline",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "pedido-trama-estrutura-visual-v1"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 8.224834,
+    "total": 424.549083
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

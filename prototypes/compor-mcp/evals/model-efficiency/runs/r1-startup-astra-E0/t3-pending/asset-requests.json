@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "vdp-direcao-controle-v1",
+    "asset_ref": "vdp-asset-controle-01-v1",
+    "prompt": "Criar um único ativo visual vertical, proporção 3:4, para uma peça sobre acompanhamento de recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta editorial de três potes alimentícios reutilizáveis com tampas, inteiros e separados, organizados em alturas diferentes, com contornos claros e aparência fosca. Tratamento de maquete artesanal em papel, textura sutil e iluminação uniforme. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra preenchendo toda a imagem. Manter margem interna para todos os objetos, pois o ativo será encaixado inteiro, sem recorte. Comunicar organização e presença concreta dos recipientes; não representar dashboard, interface, lista, etiquetas, indicadores ou funcionalidades. Sem letras, palavras, números, logotipos, marcas-d'água ou símbolos de certificação. Todo conteúdo verbal será adicionado em camadas editáveis fora do ativo. Associação futura: peça vdp-controle, versão v1, camada controle-imagem."
+  },
+  {
+    "direction_id": "vdp-direcao-continuidade-v1",
+    "asset_ref": "vdp-asset-continuidade-01-v1",
+    "prompt": "Criar um único ativo visual horizontal, proporção 68:25, como ilustração editorial de papel recortado com superfícies foscas e textura sutil. Duas mãos estilizadas em lados opostos e dois recipientes alimentícios reutilizáveis dispostos ao longo de uma fita curva oval aberta, sugerindo a passagem de recipientes entre produtor e cliente e a possibilidade de retorno. Movimento acolhedor e orgânico, sem aparência de fluxograma técnico. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas; fundo pedra preenchendo toda a imagem. Manter todos os elementos inteiros com margem interna: o ativo será encaixado proporcionalmente, sem recorte. Não representar telas, rastreamento automático, notificações ou funções do software; não usar folhas, selos ambientais ou símbolos de reciclagem. Sem letras, palavras, números, logotipos ou marcas-d'água. Todo conteúdo verbal será adicionado em camadas editáveis fora do ativo. Associação futura: peça vdp-continuidade, versão v1, camada continuidade-imagem."
+  }
+]

@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-fios",
+      "piece_id": "trama-fios",
+      "version": "1",
+      "original_piece_sha256": "09cf48741874e198161a30b4255c59cecaeb255367771681378876bd77c70aa9",
+      "mapped_piece_sha256": "09cf48741874e198161a30b4255c59cecaeb255367771681378876bd77c70aa9",
+      "mcp_evidence": [
+        {
+          "event_index": 10,
+          "event_id": "item_5",
+          "wire_candidates": [
+            {
+              "process_id": 30061,
+              "request_id": 4,
+              "request_line": 26,
+              "response_line": 28
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-fios-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-fios.json",
+      "render_input_sha256": "eb3b20419b08fcef53b6aed766e2fa588a679475acdfbd3a87b0b2b52df9d8fe"
+    },
+    {
+      "id": "direcao-percurso",
+      "piece_id": "trama-percurso",
+      "version": "1",
+      "original_piece_sha256": "06eec9c92a599ff4b3f897503b86751d9c74f3f844c435fab57634583261d066",
+      "mapped_piece_sha256": "06eec9c92a599ff4b3f897503b86751d9c74f3f844c435fab57634583261d066",
+      "mcp_evidence": [
+        {
+          "event_index": 11,
+          "event_id": "item_4",
+          "wire_candidates": [
+            {
+              "process_id": 30061,
+              "request_id": 5,
+              "request_line": 27,
+              "response_line": 29
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-percurso-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-percurso.json",
+      "render_input_sha256": "89b09b82cf1732907a7414eae728f358efbdc7d51797fa52dd2ceceb6b9c6909"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/turn-03.json",
+    "sha256": "92cad9359e97f06abd550a0bca057c5d58a739c7bef1e8839335ea20987cca6c"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "67cef2df566373a9a2493295b32004bcca3f842ec2f4f526ea2250c632767a72",
+  "assets": {
+    "asset-percurso-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets/asset-percurso-01.png",
+      "sha256": "bcf99aabad15bbe79d4a96b982906281f972268cb2ca974b8942cdfcc7cc59d8",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets/asset-percurso-01.png"
+    },
+    "asset-fios-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets/asset-fios-01.png",
+      "sha256": "6b3a2fcf07e11b0e3d319ffb2750aa12cc627bc22dce310e8b7c5e410647cfd0",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets/asset-fios-01.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets.json",
+    "sha256": "13421ceccae30c62da81b7efaf2b34abf9f3f02b1363cdb84762a9bdb80468af",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0"
+  },
+  "unresolved_asset_refs": []
+}

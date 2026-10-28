@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-caminho",
+    "asset_ref": "asset-proposto-caminho-pote",
+    "prompt": "Ilustração editorial vertical, proporção aproximada 450:690, mostrando um mesmo pote retornável em três momentos de um percurso sugerido por formas curvas simples: saída, circulação e retorno. Visual acolhedor, superfícies foscas e textura sutil de papel, usando floresta #183F32, lima #C9D94A e pedra #ECE9DF. Sem interface ou tela. Sem letras, palavras, números, logotipos ou marcas-d'água."
+  },
+  {
+    "direction_id": "direcao-pergunta",
+    "asset_ref": "asset-proposto-potes-cotidiano",
+    "prompt": "Imagem editorial horizontal, proporção aproximada 890:330, de uma bancada acolhedora de pequeno produtor de alimentos, com alguns potes retornáveis e mãos preparando uma entrega. Superfícies foscas, textura sutil de papel, cores floresta #183F32, lima #C9D94A e pedra #ECE9DF. Sem interface, tela ou rótulos. Sem letras, palavras, números, logotipos ou marcas-d'água."
+  }
+]

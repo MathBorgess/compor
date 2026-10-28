@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/resume-after-t3.json",
+      "sha256": "037663669c509edf8a861bac749264f573d225a644e937a329d6064a818073d7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets.json",
+      "sha256": "b7cea329324ca1f94fc6ab285b64961221836b1cbcea29b05c0bde789128bd69"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "presenca-a",
+        "piece_id": "vdp-presenca-a",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/renders/presenca-a.png",
+        "png_sha256": "1e5bf81a4a045025a35495d8d1e30c70c91271b528ef228fdcf5573b15ee7448",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/renders/presenca-a.json",
+        "report_sha256": "fd8d4357cac9c2a9b92d57700f2b8dea3b42fc3558c7a2d889f36502a471d0ac",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 390.060917,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-presenca-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-presenca-v1"
+          },
+          {
+            "id": "a-funcoes",
+            "kind": "text"
+          },
+          {
+            "id": "a-publico",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "presenca-b",
+        "piece_id": "vdp-presenca-b",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/renders/presenca-b.png",
+        "png_sha256": "ab040025e1808b328dfb8d3278b8745b2b4dd7e89b29727876eb33f56fc08a58",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/renders/presenca-b.json",
+        "report_sha256": "2e1b38f340ac84c4587127e9ce171ef0938e950257b4059f113b2e930c17bfa8",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 352.977041,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-presenca-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-presenca-v1"
+          },
+          {
+            "id": "b-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/resume-after-t4.json",
+      "sha256": "e20c622110c86bea000426a8691a7ba11a1c44cbd377337c7c1f9709bb54fd5f",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.742083,
+    "total": 757.612583
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,144 @@
+{
+  "piece_id": "ta-percurso-proposta",
+  "version": "v1",
+  "width_px": 1080,
+  "height_px": 1080,
+  "layers": [
+    {
+      "id": "p-fundo",
+      "kind": "shape",
+      "name": "Fundo creme",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "z_index": 0,
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD"
+    },
+    {
+      "id": "p-marca",
+      "kind": "text",
+      "name": "Nome da mentoria",
+      "text": "Trama de Aula",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.048148,
+        "width": 0.881481,
+        "height": 0.05
+      },
+      "z_index": 1,
+      "font_ref": "arial",
+      "font_size_px": 36,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left"
+    },
+    {
+      "id": "p-chamada",
+      "kind": "text",
+      "name": "Chamada percurso",
+      "text": "Seu conhecimento.\nUm percurso para ensinar.",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.137037,
+        "width": 0.881481,
+        "height": 0.138889
+      },
+      "z_index": 2,
+      "font_ref": "arial",
+      "font_size_px": 62,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left"
+    },
+    {
+      "id": "p-visual",
+      "kind": "image",
+      "name": "Asset proposto: percurso entre possibilidades",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.301852,
+        "width": 0.881481,
+        "height": 0.314815
+      },
+      "z_index": 3,
+      "asset_ref": "ta-asset-percurso-proposto-v1"
+    },
+    {
+      "id": "p-divisor",
+      "kind": "shape",
+      "name": "Divisor argila",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.653704,
+        "width": 0.881481,
+        "height": 0.003704
+      },
+      "z_index": 4,
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B"
+    },
+    {
+      "id": "p-oferta",
+      "kind": "text",
+      "name": "Oferta da mentoria",
+      "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.687037,
+        "width": 0.881481,
+        "height": 0.088889
+      },
+      "z_index": 5,
+      "font_ref": "arial",
+      "font_size_px": 38,
+      "font_weight": 400,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left"
+    },
+    {
+      "id": "p-formato",
+      "kind": "text",
+      "name": "Formato e revisão",
+      "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.792593,
+        "width": 0.881481,
+        "height": 0.075926
+      },
+      "z_index": 6,
+      "font_ref": "arial",
+      "font_size_px": 32,
+      "font_weight": 400,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left"
+    },
+    {
+      "id": "p-convite",
+      "kind": "text",
+      "name": "Convite para informações",
+      "text": "Quer saber mais? Envie TRAMA por mensagem.",
+      "rect": {
+        "x": 0.059259,
+        "y": 0.907407,
+        "width": 0.881481,
+        "height": 0.044444
+      },
+      "z_index": 7,
+      "font_ref": "arial",
+      "font_size_px": 32,
+      "font_weight": 700,
+      "color_hex": "#532B54",
+      "line_height": 1.15,
+      "text_align": "left"
+    }
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 5,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "presenca-a-revisao-2",
+      "piece_id": "vdp-presenca-a",
+      "version": "proposta-v2",
+      "original_piece_sha256": "f78e5d9981d61e475c870dbd64fb827f0b3b8771d08009238bd88c603dd03e9b",
+      "mapped_piece_sha256": "f78e5d9981d61e475c870dbd64fb827f0b3b8771d08009238bd88c603dd03e9b",
+      "mcp_evidence": [
+        {
+          "event_index": 7,
+          "event_id": "item_3",
+          "wire_candidates": [
+            {
+              "process_id": 24638,
+              "request_id": 3,
+              "request_line": 54,
+              "response_line": 55
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-presenca-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/presenca-a-revisao-2.json",
+      "render_input_sha256": "4dc28f542926380c030b8e67264a192c9c2b4c74715c18a12bbd4ab5b177311b"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/turn-05.json",
+    "sha256": "457bab04367bf08d721550c6bc2712a1ede8dd049f8ed7883e4ce1674dfd18e3"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "08b6fc6fa3b55f4d9e47975a09630581fe71ab5b7c0f80ccb94601cf0e59effc",
+  "assets": {
+    "asset-percurso-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-percurso-v1.png",
+      "sha256": "6450f9f64ecc539ae5aa21fca7c749cf65ff6ccf2bd7c85c2bcbe932485a251e",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-percurso-v1.png"
+    },
+    "asset-presenca-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-presenca-v1.png",
+      "sha256": "95d63a9a92a16a3a0b7aa28b7b58cffa2fdd188e3cb1f562df5b4f8263807da6",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-presenca-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets.json",
+    "sha256": "b7cea329324ca1f94fc6ab285b64961221836b1cbcea29b05c0bde789128bd69",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1"
+  },
+  "previous": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/report.json",
+    "sha256": "e38c45689bec74270eb8f37432e4925b507b3f271d74ae4b1907705892bca328"
+  },
+  "unresolved_asset_refs": []
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "vdp-direcao-controle-v1",
+      "piece_id": "vdp-controle",
+      "version": "v1",
+      "original_piece_sha256": "90686c754da90aa5de07bb658dd07332038a5578d4b1a57717207d452c0f2a7e",
+      "mapped_piece_sha256": "732aef6875e056df84eae8512b162aae1e58aa66a29f161803ae317e51032cff",
+      "mcp_evidence": [
+        {
+          "event_index": 14,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 22076,
+              "request_id": 6,
+              "request_line": 24,
+              "response_line": 26
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp-asset-controle-01-v1"
+      ],
+      "unresolved_asset_refs": [
+        "vdp-asset-controle-01-v1"
+      ],
+      "render_input": "render-inputs/vdp-direcao-controle-v1.json",
+      "render_input_sha256": "319512727d94cda35ab42fdaadf21bb997e0a5f0e1c3c4274d465eaea8036890"
+    },
+    {
+      "id": "vdp-direcao-continuidade-v1",
+      "piece_id": "vdp-continuidade",
+      "version": "v1",
+      "original_piece_sha256": "0a20bc571798fa502efac87f6777c353accfe39e52d3168672d621b41bb19e65",
+      "mapped_piece_sha256": "59dff8864c7088d5906304f63f313724c6cc8535e417076f9897159a5d4b8295",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 22076,
+              "request_id": 7,
+              "request_line": 25,
+              "response_line": 27
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp-asset-continuidade-01-v1"
+      ],
+      "unresolved_asset_refs": [
+        "vdp-asset-continuidade-01-v1"
+      ],
+      "render_input": "render-inputs/vdp-direcao-continuidade-v1.json",
+      "render_input_sha256": "7d80775812c2565f2ac6c5bf5f8e90c42dee5bc08d02570752b32390e2ae8c83"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "vdp-direcao-controle-v1",
+      "operation": "add",
+      "layer_id": "controle-imagem",
+      "field": "asset_ref",
+      "value": "vdp-asset-controle-01-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "vdp-direcao-continuidade-v1",
+      "operation": "add",
+      "layer_id": "continuidade-imagem",
+      "field": "asset_ref",
+      "value": "vdp-asset-continuidade-01-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/turn-03.json",
+    "sha256": "dbf423a2ee50c252f79049e69eead1334fd7e40aa60baeaf59e181293dbb96f0"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "7e4b38d7d67a41e57526939ec8a2e68df3b7be84e80d7447d96341fe49359e58",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "vdp-asset-continuidade-01-v1",
+    "vdp-asset-controle-01-v1"
+  ]
+}

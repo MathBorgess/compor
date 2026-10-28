@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-presenca",
+  "asset_ref": "asset-presenca-v1",
+  "prompt": "Criar um único ativo visual horizontal, proporção 119:45, para uma peça sobre embalagens retornáveis de pequenos produtores de alimentos. Natureza-morta editorial vista de cima: quatro recipientes alimentares com tampas, formas simples e reconhecíveis, separados e organizados com bastante espaço entre eles. Aparência tátil, superfícies foscas e textura sutil de papel. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo uniforme pedra até as bordas. Manter todos os objetos inteiros dentro da imagem, com margem interna de segurança. Transmitir organização e clareza, sem telas, interfaces, indicadores, gráficos ou funcionalidades. Sem letras, palavras, números, rótulos, logotipos, assinaturas ou marcas-d'água. Não incluir símbolos de certificação ambiental. O ativo será encaixado integralmente, sem recorte, numa caixa horizontal.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-b8ec7d57-bb50-4bd4-acf0-0b8743b265c5.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-presenca-v1.png",
+  "sha256": "95d63a9a92a16a3a0b7aa28b7b58cffa2fdd188e3cb1f562df5b4f8263807da6",
+  "elapsed_ms": 12852,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

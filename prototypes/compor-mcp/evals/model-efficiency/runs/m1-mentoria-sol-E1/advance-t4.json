@@ -1,0 +1,146 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/resume-after-t3.json",
+      "sha256": "0ce5219f9697c66a00a04c258f77df6a77bf57d77b3639aec77c5b5a50e74f00"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/assets.json",
+      "sha256": "0c0bfa606a52c8e0305dc85e845208e7570e3088ba3819f0902466eeed30aa23"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "tecer-var-a",
+        "piece_id": "trama-feed-tecer-var-a",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/t4-artifacts/renders/tecer-var-a.png",
+        "png_sha256": "f186057bc1be18fe3ea6b0ba634b9406a8a3b95f86c91fe5fbce647121e54d97",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/t4-artifacts/renders/tecer-var-a.json",
+        "report_sha256": "252ad6210b322331ec5f2329e7cf3fe18f13ecbed9fcfed7db19828e39a03d0a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 208.496084,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-tecer-v1"
+        ],
+        "layers": [
+          {
+            "id": "tva-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "tva-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "tva-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "tva-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-tecer-v1"
+          },
+          {
+            "id": "tva-marca",
+            "kind": "text"
+          },
+          {
+            "id": "tva-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "tva-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "tva-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "tva-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "tecer-var-b",
+        "piece_id": "trama-feed-tecer-var-b",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/t4-artifacts/renders/tecer-var-b.png",
+        "png_sha256": "878cb3618990a524c8b70bd5c5209cae82db91bf2cceddc5f1f6a32999c2122b",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/t4-artifacts/renders/tecer-var-b.json",
+        "report_sha256": "d4f655431e2f77fbe246b8a7869d52a81c759a9b398510ba0be0670cc99543f9",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 179.87375,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-tecer-v1"
+        ],
+        "layers": [
+          {
+            "id": "tvb-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "tvb-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "tvb-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "tvb-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-tecer-v1"
+          },
+          {
+            "id": "tvb-marca",
+            "kind": "text"
+          },
+          {
+            "id": "tvb-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "tvb-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "tvb-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "tvb-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-sol-E1/resume-after-t4.json",
+      "sha256": "3c2bffaf607b06f71e024bc44b929bfd2316793b79986770f38eafca3591a291",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.146875,
+    "total": 402.97275
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

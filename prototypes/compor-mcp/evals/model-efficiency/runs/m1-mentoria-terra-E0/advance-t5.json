@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/resume-after-t4.json",
+      "sha256": "24168878da7e0ef63f692165099a52d01e26983ba684d8ce8ef3b45da5700076"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/assets.json",
+      "sha256": "13421ceccae30c62da81b7efaf2b34abf9f3f02b1363cdb84762a9bdb80468af"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "fios-essencia-revisao-3a",
+        "piece_id": "trama-fios",
+        "version": "3a",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t5-artifacts/renders/fios-essencia-revisao-3a.png",
+        "png_sha256": "57387bc266f20ec790ca2365b77df142b5aaaa084bd1af7eb099df1e68144d19",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/t5-artifacts/renders/fios-essencia-revisao-3a.json",
+        "report_sha256": "49ad00466ded9a4f56dad860e4445d802b937aef3b0564a79fc765bc2e762844",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 183.718667,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-fios-01"
+        ],
+        "layers": [
+          {
+            "id": "fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "imagem-fios",
+            "kind": "image",
+            "asset_ref": "asset-fios-01"
+          },
+          {
+            "id": "marca",
+            "kind": "text"
+          },
+          {
+            "id": "titulo",
+            "kind": "text"
+          },
+          {
+            "id": "descricao",
+            "kind": "text"
+          },
+          {
+            "id": "formato",
+            "kind": "text"
+          },
+          {
+            "id": "faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 8.852375,
+    "total": 195.300834
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

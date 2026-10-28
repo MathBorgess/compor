@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-estrutura",
+  "asset_ref": "asset-trama-estrutura-v1",
+  "prompt": "Criar um único asset visual quadrado, sem conteúdo verbal, para a metáfora de conhecimento ganhando estrutura. Fotografia editorial tátil, vista superior aproximada de fitas de tecido que passam de pontas soltas para uma pequena trama organizada e ainda em construção. Composição adulta, simples e acolhedora, sem aparência de artesanato infantil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas, luz difusa e textura discreta. Objeto inteiro centralizado com margem interna generosa, pensado para encaixe proporcional sem recorte em uma caixa quase quadrada. Sem moldura, sem pessoas, sem letras, palavras, números, logotipos, assinaturas ou marcas-d'água. Não incluir título nem simulação de peça publicitária. Associação futura à camada est-imagem da peça trama-estrutura v1.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-746a8624-2735-42c4-8de4-8fe9e1a53544.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/assets/asset-trama-estrutura-v1.png",
+  "sha256": "11b8bdb974db6be29cef4d25c4874450a5783ae762bb2a303a4ddc5412b82687",
+  "elapsed_ms": 19043,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

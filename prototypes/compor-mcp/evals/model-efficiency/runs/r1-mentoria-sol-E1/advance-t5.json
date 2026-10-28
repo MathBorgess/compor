@@ -1,0 +1,83 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/resume-after-t4.json",
+      "sha256": "33056f22b8f53cdcce29f8927b9c632841d4d45746950a18a226166a0438d2d0"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/assets.json",
+      "sha256": "c7d8a72f8945cd41016d6e3c9793b9546ba912e41a711108d10702436eb5aee1"
+    },
+    "extractor_sha256": "a0f39d28f8c4e8028d715ca9dbeaafb73035a7dec9a4d0798bbc30744194e6cb",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "ta-percurso-a-revisao-v2",
+        "piece_id": "ta-percurso-variacao-a",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts/renders/ta-percurso-a-revisao-v2.png",
+        "png_sha256": "9ea9e471f3adbecbd65373cef3eb007f34f457167fb788348ef1bc88dfa62513",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts/renders/ta-percurso-a-revisao-v2.json",
+        "report_sha256": "f309db0621b7e4c0df79441fa138f5563670b4898a91ee7b742600d49c89c7ac",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 438.164667,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "ta-asset-percurso-proposto-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-chamada",
+            "kind": "text"
+          },
+          {
+            "id": "a-visual",
+            "kind": "image",
+            "asset_ref": "ta-asset-percurso-proposto-v1"
+          },
+          {
+            "id": "a-divisor",
+            "kind": "shape"
+          },
+          {
+            "id": "a-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "a-formato",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.399709,
+    "total": 450.528
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

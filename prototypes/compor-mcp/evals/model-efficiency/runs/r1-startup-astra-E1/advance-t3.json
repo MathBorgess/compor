@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets.json",
+      "sha256": "b7cea329324ca1f94fc6ab285b64961221836b1cbcea29b05c0bde789128bd69"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "dir-presenca",
+        "piece_id": "vdp-presenca",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts/renders/dir-presenca.png",
+        "png_sha256": "c46389de0dcf96b04da298313eaa5f47d9a9e3cf4ae1d0a248bc2ca6bdaa8df1",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts/renders/dir-presenca.json",
+        "report_sha256": "3d207f43f977901c64aff15c8d990cbda2e9b6ce68762a9688a5c6c0ddddba0a",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 379.302459,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-presenca-v1"
+        ],
+        "layers": [
+          {
+            "id": "presenca-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "presenca-marca",
+            "kind": "text"
+          },
+          {
+            "id": "presenca-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "presenca-imagem",
+            "kind": "image",
+            "asset_ref": "asset-presenca-v1"
+          },
+          {
+            "id": "presenca-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "presenca-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "presenca-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "dir-percurso",
+        "piece_id": "vdp-percurso",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts/renders/dir-percurso.png",
+        "png_sha256": "60d8128cbb2fa8bbd8a876e9c3f70b7ef56e78674e2886cab3c1723611301f1b",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts/renders/dir-percurso.json",
+        "report_sha256": "8732873be54a5c72b4dbba66f01d05ca2d0758b4445fc10c7a5c69367cdb9a63",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 214.295916,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-percurso-v1"
+        ],
+        "layers": [
+          {
+            "id": "percurso-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso-marca",
+            "kind": "text"
+          },
+          {
+            "id": "percurso-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "percurso-imagem",
+            "kind": "image",
+            "asset_ref": "asset-percurso-v1"
+          },
+          {
+            "id": "percurso-funcoes",
+            "kind": "text"
+          },
+          {
+            "id": "percurso-consulta",
+            "kind": "text"
+          },
+          {
+            "id": "percurso-publico",
+            "kind": "text"
+          },
+          {
+            "id": "percurso-convite-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "percurso-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/resume-after-t3.json",
+      "sha256": "037663669c509edf8a861bac749264f573d225a644e937a329d6064a818073d7",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 16.623916,
+    "total": 613.706167
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

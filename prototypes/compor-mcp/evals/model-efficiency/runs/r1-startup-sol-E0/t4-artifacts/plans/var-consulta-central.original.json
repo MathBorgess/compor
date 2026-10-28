@@ -1,0 +1,141 @@
+{
+  "piece_id": "vdp-consulta-var-b",
+  "version": "v1",
+  "product_ref": "volta-de-pote",
+  "variation_ref": "var-consulta-central",
+  "width_px": 1080,
+  "height_px": 1080,
+  "layers": [
+    {
+      "id": "vb-base",
+      "kind": "shape",
+      "name": "Base pedra",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "z_index": 0
+    },
+    {
+      "id": "vb-marca",
+      "kind": "text",
+      "name": "Marca",
+      "text": "Volta de Pote",
+      "rect": {
+        "x": 0.06,
+        "y": 0.04,
+        "width": 0.88,
+        "height": 0.05
+      },
+      "font_ref": "arial",
+      "font_size_px": 32,
+      "font_weight": 700,
+      "color_hex": "#183F32",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 1
+    },
+    {
+      "id": "vb-titulo",
+      "kind": "text",
+      "name": "Pergunta principal",
+      "text": "Quais recipientes ainda\nestão com seus clientes?",
+      "rect": {
+        "x": 0.06,
+        "y": 0.12,
+        "width": 0.88,
+        "height": 0.14
+      },
+      "font_ref": "arial",
+      "font_size_px": 54,
+      "font_weight": 700,
+      "color_hex": "#183F32",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 2
+    },
+    {
+      "id": "vb-imagem",
+      "kind": "image",
+      "name": "Mesmo ativo da primeira direção",
+      "asset_ref": "pedido-vdp-com-quem-asset-v1",
+      "rect": {
+        "x": 0.31,
+        "y": 0.29,
+        "width": 0.38,
+        "height": 0.38
+      },
+      "z_index": 3
+    },
+    {
+      "id": "vb-acento",
+      "kind": "shape",
+      "name": "Separador lima",
+      "rect": {
+        "x": 0.06,
+        "y": 0.71,
+        "width": 0.88,
+        "height": 0.012
+      },
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "z_index": 4
+    },
+    {
+      "id": "vb-apoio",
+      "kind": "text",
+      "name": "Explicação funcional",
+      "text": "Registre entregas, empréstimos e devoluções.\nConsulte os recipientes que estão com clientes.",
+      "rect": {
+        "x": 0.06,
+        "y": 0.75,
+        "width": 0.88,
+        "height": 0.09
+      },
+      "font_ref": "arial",
+      "font_size_px": 32,
+      "font_weight": 400,
+      "color_hex": "#183F32",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 5
+    },
+    {
+      "id": "vb-cta-base",
+      "kind": "shape",
+      "name": "Faixa lima",
+      "rect": {
+        "x": 0.06,
+        "y": 0.89,
+        "width": 0.88,
+        "height": 0.07
+      },
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "z_index": 6
+    },
+    {
+      "id": "vb-cta",
+      "kind": "text",
+      "name": "Convite",
+      "text": "Conheça uma demonstração",
+      "rect": {
+        "x": 0.08,
+        "y": 0.9,
+        "width": 0.84,
+        "height": 0.05
+      },
+      "font_ref": "arial",
+      "font_size_px": 34,
+      "font_weight": 700,
+      "color_hex": "#183F32",
+      "line_height": 1.15,
+      "text_align": "left",
+      "z_index": 7
+    }
+  ]
+}

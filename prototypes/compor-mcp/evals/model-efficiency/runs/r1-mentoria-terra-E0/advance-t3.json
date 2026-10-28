@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json",
+      "sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets.json",
+      "sha256": "cce2d270d274aadf880c6d577c1e49fba6c7d88aded397be4741f7a9e9ba0c21"
+    },
+    "extractor_sha256": "a0f39d28f8c4e8028d715ca9dbeaafb73035a7dec9a4d0798bbc30744194e6cb",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-mapa",
+        "piece_id": "trama-mapa",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts/renders/direcao-mapa.png",
+        "png_sha256": "0ea44be9b7ebc527bb7fb59708994bfafb93ed1f611bfe5455a3713c71192953",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts/renders/direcao-mapa.json",
+        "report_sha256": "0d98f5575e4a1e9b5ab5cd3b453dcc48a24a89ab5f628796fbf939e09cc24c6a",
+        "reused_verified": true,
+        "render_and_verify_wall_ms": null,
+        "reuse_verification_wall_ms": 31.426208,
+        "asset_refs": [
+          "asset-mapa-v1"
+        ],
+        "layers": [
+          {
+            "id": "mapa-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "mapa-imagem",
+            "kind": "image",
+            "asset_ref": "asset-mapa-v1"
+          },
+          {
+            "id": "mapa-detalhe",
+            "kind": "shape"
+          },
+          {
+            "id": "mapa-marca",
+            "kind": "text"
+          },
+          {
+            "id": "mapa-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "mapa-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "mapa-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-trama",
+        "piece_id": "trama-tecido",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts/renders/direcao-trama.png",
+        "png_sha256": "1951749a71e39266c2c12967e5bfe327e9dba0436695add9b56547cdf3d57913",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts/renders/direcao-trama.json",
+        "report_sha256": "d7f45036c3d428ddba2fad19e338e5e43833c7b3f1dcee3c7eeaa47bbdf584a6",
+        "reused_verified": true,
+        "render_and_verify_wall_ms": null,
+        "reuse_verification_wall_ms": 5.2795,
+        "asset_refs": [
+          "asset-trama-v1"
+        ],
+        "layers": [
+          {
+            "id": "tecido-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "tecido-imagem",
+            "kind": "image",
+            "asset_ref": "asset-trama-v1"
+          },
+          {
+            "id": "tecido-detalhe",
+            "kind": "shape"
+          },
+          {
+            "id": "tecido-marca",
+            "kind": "text"
+          },
+          {
+            "id": "tecido-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "tecido-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "tecido-formato",
+            "kind": "text"
+          },
+          {
+            "id": "tecido-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/resume-after-t3.json",
+      "sha256": "f68c035e81ca7db16b6cc33112c802c5b4a1fdde592a33edcc339f6df1dffb3d",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.821292,
+    "total": 50.162917
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": true
+}

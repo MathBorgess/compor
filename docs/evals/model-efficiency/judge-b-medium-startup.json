@@ -1,0 +1,1009 @@
+{
+  "judge": {
+    "id": "B",
+    "type": "LLM judge sintético",
+    "client": "Codex",
+    "model": "não observável no material permitido desta tarefa",
+    "version": "não observável",
+    "date": "2026-10-28",
+    "blind": true,
+    "inspection_order": [
+      "P06",
+      "P05",
+      "P04",
+      "P03",
+      "P02",
+      "P01"
+    ],
+    "protocol": "Cada artefato foi transcrito em marca, headline, apoio e CTA antes das notas; todos os 28 originais e seus 28 previews integrais de 360 px foram inspecionados com view_image, detail=original, sem alteração dos pixels."
+  },
+  "persona": "Solo founder extremamente crítico que precisa de uma campanha profissional rapidamente. Valoriza clareza imediata de produto e funções, hierarquia de feed e acabamento; exige personalidade pertinente para encantamento >=4.",
+  "scope": {
+    "case": "medium-startup",
+    "rubric": "docs/evals/model-efficiency/rubric.md, model-efficiency-v1",
+    "inputs": "Somente rubrica já lida e prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup: lista de arquivos, package.json e PNGs. Sem acesso a runs, mapas ou outros juízes.",
+    "independence": "Notas atribuídas a partir deste briefing e destes pixels; nenhum resultado do caso anterior usado como evidência de qualidade deste caso.",
+    "professionalism_mapping": "professionalism corresponde à adequação visual e comunicativa da rubrica; delight corresponde ao encantamento.",
+    "acceptance_rule": "accepted exige completude, legibilidade, zero erro crítico e notas >=4 em todas as dimensões e fases aplicáveis; ausências recebem null. Nenhuma média compensa falha.",
+    "complete_visual_packages": 4,
+    "partially_missing_visual_packages": 2,
+    "visible_artifacts": 28,
+    "preview_360_inspected": 28,
+    "accepted_packages": 0
+  },
+  "packages": [
+    {
+      "package_id": "P06",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes ainda estão\ncom seus clientes?",
+            "support": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: A pergunta e os registros de entrega, empréstimo e devolução comunicam o problema correto; a legenda identifica web e público.",
+            "Profissionalismo 4/5: Headline, imagem horizontal, apoio e CTA lima têm ordem clara e contraste adequado.",
+            "Encantamento 3/5: A fotografia bem feita de três recipientes parece catálogo de embalagens; falta um achado que assine a ferramenta.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Entrega.\nEmpréstimo.\nDevolução.",
+            "support": "Acompanhe cada etapa.\nUma ferramenta web para pequenos produtores\nregistrarem a circulação de seus recipientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: As três etapas e a ferramenta web para pequenos produtores estão explícitas sem resultados inventados.",
+            "Profissionalismo 4/5: Headline lateral e ciclo de papel à direita, seguidos de apoio e CTA, formam uma hierarquia clara.",
+            "Encantamento 4/5: A circulação material em papel e os potes com tampas lima dão identidade pertinente à continuidade.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem estão\nseus potes?",
+            "support": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Pergunta curta e funções exatas mantêm o foco em consultar recipientes com clientes.",
+            "Profissionalismo 4/5: Apoio antes da fotografia explica a utilidade e o CTA fica separado; não há corte ou conflito.",
+            "Encantamento 3/5: A fotografia de catálogo e a redação funcional continuam corretas, porém pouco memoráveis.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Saiba quais potes estão\ncom seus clientes.",
+            "support": "Uma ferramenta web para registrar\nentregas, empréstimos e devoluções.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: A consulta dos potes e o registro na web preservam a proposta e a voz simples.",
+            "Profissionalismo 4/5: A imagem em largura total, headline e apoio abaixo oferecem uma alternativa visual limpa.",
+            "Encantamento 3/5: A imagem dominante reforça recipientes físicos mais que uma personalidade própria do serviço.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem\nestão seus potes?",
+            "support": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/R1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/R1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: As palavras de V1 foram preservadas visualmente, com aumento de destaque e mesma informação.",
+            "Profissionalismo 4/5: A headline maior continua cabendo sem colidir com o apoio; imagem e CTA ficam legíveis.",
+            "Encantamento 3/5: A revisão melhora destaque sem acrescentar um achado visual ou verbal; o conjunto permanece previsível.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: encantamento 3 em D1, V1, V2 e R1. Exploração 4: consulta da posse com fotografia versus circulação em ciclo material são conceitos distintos. Convergência 4: pergunta e apoio antes da imagem versus imagem de abertura e resposta afirmativa são comparações úteis dentro da primeira ideia. Cinco renders e legendas presentes; planos, assets isolados e integridade da cadeia não certificáveis no escopo cego."
+    },
+    {
+      "package_id": "P05",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Onde estão\nseus potes?",
+            "support": "Consulte quais recipientes\nainda estão com seus clientes.",
+            "cta": "Conheça a demonstração."
+          },
+          "alignment": 3,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: Onde estão seus potes e consulta com clientes comunicam uma função, mas a peça não identifica ferramenta web ou público; a legenda recupera a proposta.",
+            "Profissionalismo 4/5: Headline grande, foto central e apoio com CTA têm ritmo e contraste funcionais.",
+            "Encantamento 3/5: A foto de recipientes vazios poderia vender os próprios potes; é limpa, mas genérica.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Entregou.\nEmprestou.\nVoltou.",
+            "support": "Registre entregas, empréstimos\ne devoluções de recipientes.\nUma ferramenta web para\npequenos produtores de alimentos.",
+            "cta": "Conheça a demonstração."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Etapas, registro, ferramenta web e pequenos produtores de alimentos aparecem de forma precisa.",
+            "Profissionalismo 4/5: O fundo floresta, serifada clara e ciclo lima têm contraste e uma hierarquia coerente.",
+            "Encantamento 4/5: A textura de papel no ciclo, combinada à frase Entregou. Emprestou. Voltou., cria uma identidade material pertinente.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes estão\ncom seus clientes?",
+            "support": "Consulte na Volta de Pote.\nUma ferramenta web para\npequenos produtores de alimentos.",
+            "cta": "Conheça a demonstração."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Pergunta sobre recipientes com clientes e ferramenta web para pequenos produtores tornam o produto identificável.",
+            "Profissionalismo 4/5: Headline, fotografia, explicação e faixa lima estão distribuídas com clareza.",
+            "Encantamento 3/5: O asset de catálogo permanece o centro visual e não cria um vínculo memorável com acompanhamento.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Saiba quais potes\nestão com clientes.",
+            "support": "Registre entregas, empréstimos\ne devoluções na Volta de Pote.",
+            "cta": "Veja a demonstração."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Registro das três movimentações e consulta preservam funções; a legenda complementa a modalidade web e o público.",
+            "Profissionalismo 4/5: Foto primeiro, headline e apoio depois são legíveis e permitem comparação com V1.",
+            "Encantamento 3/5: A inversão do fluxo é útil, mas imagem e copy continuam convencionais.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes estão com\nseus clientes?",
+            "support": "Consulte na Volta de Pote.\nUma ferramenta web para\npequenos produtores de alimentos.",
+            "cta": "Conheça a demonstração."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/R1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/R1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: A headline de V1 mantém suas palavras, e o apoio continua identificando ferramenta e público.",
+            "Profissionalismo 4/5: Aumento da escala e nova quebra cabem sem corte ou sobreposição e preservam a leitura.",
+            "Encantamento 3/5: O ganho de destaque não altera o caráter genérico da fotografia e da promessa funcional.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: D1 tem alinhamento 3; D1, V1, V2 e R1 têm encantamento 3. Exploração 4: localização/consulta com fotografia versus ciclo de movimentações em papel. Convergência 4: foto central ou inicial e diferenças de copy mantêm a ideia com alternativas úteis. Cinco renders e legendas presentes, mas completude de planos e assets isolados não certificada."
+    },
+    {
+      "package_id": "P04",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Saiba onde\nestão seus\nrecipientes.",
+            "support": "Registre entregas,\nempréstimos e devoluções.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: Saber onde estão e registrar movimentações são pertinentes, mas peça e legenda não deixam claro que se apresenta uma ferramenta web para pequenos produtores.",
+            "Profissionalismo 3/5: Barras brancas laterais no asset e grande faixa de CTA parecem encaixes; texto e imagem ficam em blocos pouco integrados.",
+            "Encantamento 3/5: A fotografia de alimentos e recipientes lembra catálogo de marmitas e não distingue o serviço.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "O caminho do pote\ncontinua com você.",
+            "support": "Da entrega à\ndevolução,\nacompanhe seus\nrecipientes e veja\nquais ainda estão\ncom clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: O caminho e a consulta com clientes são corretos, mas não há identificação clara de ferramenta web nem do público na peça ou legenda.",
+            "Profissionalismo 3/5: O apoio confinado em um retângulo pedra deixa uma grande área vazia sob o texto e compete com a colagem à esquerda.",
+            "Encantamento 4/5: A troca de mãos e recortes de papel aproxima a marca do produtor com personalidade material pertinente.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes,\nmais fáceis de\nacompanhar.",
+            "support": "Veja quais recipientes\nainda estão com clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: Mais fáceis de acompanhar e consulta com clientes não apresentam a modalidade web nem o público; a legenda também permanece genérica.",
+            "Profissionalismo 3/5: O corpo de texto tímido, as barras brancas e o CTA largo pedem ajustes de escala e integração.",
+            "Encantamento 3/5: A fotografia é atraente, mas a relação de layout e copy continua previsível.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Acompanhe seus recipientes.",
+            "support": "Registre entregas,\nempréstimos e\ndevoluções.\nConsulte os potes\ncom clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: A peça informa registros e consulta, porém não explicita ferramenta web ou pequenos produtores; o argumento de apresentação fica incompleto.",
+            "Profissionalismo 3/5: O corpo em caixa floresta e a foto com faixas brancas criam blocos duros, com muito vazio dentro do apoio.",
+            "Encantamento 3/5: A redistribuição não elimina a aparência de catálogo de alimentos nem cria um achado próprio.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json: R1 ausente; nenhum PNG ou preview disponível para inspeção. Não inferir nota ou causa."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: R1 ausente, sem nota; todos os artefatos visíveis têm alinhamento e profissionalismo 3, e D1/V1/V2 têm encantamento 3. Exploração 4: controle dos recipientes em natureza morta versus continuidade da relação pela troca entre pessoas. Convergência 4: coluna verbal/foto à direita versus headline superior/foto à esquerda e apoio em caixa são alternativas úteis. Falta de R1 impede completude; causa da ausência desconhecida."
+    },
+    {
+      "package_id": "P03",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Seus potes estão\ncom quem?",
+            "support": "Uma ferramenta web para registrar\nentregas, empréstimos e devoluções\ne consultar o que está com clientes.\nPara pequenos\nprodutores\nde alimentos.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Ferramenta web, funções, consulta e público estão todos explícitos, sem benefícios não comprovados.",
+            "Profissionalismo 3/5: O texto do público começa fora da borda esquerda do círculo lima, tornando a forma um selo mal acomodado e desequilibrado frente à imagem.",
+            "Encantamento 3/5: Potes em fotografia de catálogo e selo genérico não dão personalidade à proposta.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Cada ida e volta\ntem seu registro.",
+            "support": "Entrega | Empréstimo | Devolução\nRegistre na web os movimentos dos recipientes.\nPara pequenos produtores de alimentos.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Etapas e registro na web para pequenos produtores preservam produto e público; a legenda complementa consulta.",
+            "Profissionalismo 4/5: A sequência horizontal de potes acompanha os três rótulos; headline, imagem, apoio e CTA têm leitura ordenada.",
+            "Encantamento 4/5: O caminho lima contínuo e o papel fosco traduzem continuidade com uma assinatura visual coesa.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes estão\ncom seus clientes?",
+            "support": "Registre entregas, empréstimos e devoluções.\nConsulte os recipientes que ainda\nestão com seus clientes, na web.\nPara pequenos\nprodutores\nde alimentos.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Funções, consulta na web e público estão claros.",
+            "Profissionalismo 3/5: A caixa lima de público tem área excessiva para três linhas e compete com imagem e argumento principal.",
+            "Encantamento 3/5: O grande bloco de cor e a fotografia convencional produzem um anúncio funcional, com acabamento pouco refinado.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Veja quais potes\nestão com clientes.",
+            "support": "Para pequenos\nprodutores\nde alimentos.\nUma ferramenta web para registrar entregas,\nempréstimos e devoluções e consultar\nquais recipientes continuam com clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Repete claramente público, modalidade web, registros e consulta, em voz próxima.",
+            "Profissionalismo 3/5: A abertura foto+caixa lima mantém uma assimetria pesada; o público compete com a headline, embora tudo seja legível.",
+            "Encantamento 3/5: O mesmo bloco de público e fotografia de catálogo continuam previsíveis, sem achado memorável.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json: R1 ausente; nenhum PNG ou preview disponível para inspeção. Não inferir nota ou causa."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: R1 ausente; D1, V1 e V2 têm profissionalismo e encantamento 3. Exploração 4: consulta de recipientes em fotografia versus percurso sequencial em papel são escolhas conceituais distintas. Convergência 4: headline inicial ou imagem inicial varia a ênfase mantendo a ideia e asset visível. Ausência de R1 impede completude; sem inferência sobre a causa."
+    },
+    {
+      "package_id": "P02",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Seus potes têm\nida e volta.",
+            "support": "Acompanhe entregas, empréstimos\ne devoluções em um só lugar.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Ida e volta e acompanhamento das três movimentações são pertinentes; a legenda acrescenta consulta, embora modalidade web fique pouco evidente na peça.",
+            "Profissionalismo 3/5: O retângulo branco do asset destoa do pedra e a coluna de texto/CTA fica mais larga que seu acabamento sugere; falta integração.",
+            "Encantamento 4/5: As mãos de papel e o circuito ilustrado aproximam produtor e cliente, com materialidade e continuidade pertinentes.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Saiba onde estão\nseus recipientes.",
+            "support": "Registre entregas,\nempréstimos e\ndevoluções.\nUma ferramenta web para pequenos produtores.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Ferramenta web, pequenos produtores e registros aparecem sem funções inventadas; a consulta é complementada pela legenda.",
+            "Profissionalismo 3/5: Moldura floresta grossa, linha lima muito alta e foto em fundo branco fragmentam a hierarquia.",
+            "Encantamento 3/5: A despensa em fotografia de catálogo tem pouca relação própria com circulação entre produtor e cliente.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Acompanhe a volta\ndos seus potes.",
+            "support": "Registre entregas, empréstimos\ne devoluções.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Registro das três movimentações e retorno dos potes são corretos; legenda completa modalidade e público.",
+            "Profissionalismo 3/5: A área branca do asset continua contrastando de forma dura com o fundo; a composição pede integração do material.",
+            "Encantamento 4/5: A metáfora de circulação por mãos e setas mantém personalidade e voz próxima.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Cada pote tem\num caminho.",
+            "support": "Saiba quais recipientes ainda\nestão com seus clientes.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 3/5: Consulta com clientes é pertinente, mas a peça omite registros, ferramenta web e público; a legenda precisa explicar quase toda a oferta.",
+            "Profissionalismo 3/5: A imagem continua em caixa branca e a grande headline metafórica deixa a explicação da ferramenta fraca.",
+            "Encantamento 4/5: O circuito de mãos de papel conserva materialidade e dá uma ideia memorável de continuidade.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "VOLTA DE POTE",
+            "headline": "Acompanhe a\nvolta dos seus potes.",
+            "support": "Registre entregas, empréstimos\ne devoluções.",
+            "cta": "Conheça a demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/R1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/R1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: As palavras de V1 permanecem e o destaque aumenta sem promessa adicional.",
+            "Profissionalismo 3/5: Headline maior ainda cabe, mas o asset continua como um retângulo branco pouco integrado ao fundo pedra.",
+            "Encantamento 4/5: A revisão preserva o circuito material com personalidade; não corrige o acabamento global.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: profissionalismo 3 em todos os artefatos; D2 tem encantamento 3 e V2 tem alinhamento 3. Exploração 4: troca/circuito em papel versus organização/consulta em fotografia. Convergência 4: acompanhamento das movimentações ou consulta da posse mudam a ênfase e a posição do apoio dentro do circuito. Cinco renders e legendas presentes; demais componentes de completude não certificáveis."
+    },
+    {
+      "package_id": "P01",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Quais potes estão\ncom seus clientes?",
+            "support": "Uma ferramenta web\npara acompanhar\nseus recipientes.\nRegistre entregas,\nempréstimos\ne devoluções.",
+            "cta": "Conheça uma demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/D1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/D1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Ferramenta web, registros e pergunta sobre recipientes com clientes apresentam corretamente o produto; a legenda identifica público.",
+            "Profissionalismo 4/5: Headline forte, apoio lateral e fotografia de troca têm bom equilíbrio com o CTA lima.",
+            "Encantamento 3/5: A foto de mãos trocando alimento é pertinente e acolhedora, porém próxima de uma fotografia genérica de entrega.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Cada etapa\npode virar registro.",
+            "support": "Entrega | Empréstimo | Devolução\nRegistre na web e consulte quais\nrecipientes ainda estão com clientes.",
+            "cta": "Conheça uma demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/D2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/D2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Cada etapa com seu registro, web e consulta preservam exatamente as funções e convidam à demonstração.",
+            "Profissionalismo 4/5: Três ações em papel correspondem aos rótulos editáveis e compõem uma hierarquia clara com oferta e CTA.",
+            "Encantamento 4/5: Mãos e potes de papel criam um pequeno vocabulário próprio das movimentações, com materialidade coesa.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem estão\nseus potes?",
+            "support": "Registre entregas,\nempréstimos\ne devoluções.\nConsulte quais\nrecipientes estão\ncom clientes.",
+            "cta": "Conheça uma demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/V1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/V1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Pergunta, registros e consulta mantêm o foco; a legenda acrescenta web e pequenos produtores.",
+            "Profissionalismo 4/5: Foto maior à esquerda e apoio à direita são legíveis e deixam o contato separado.",
+            "Encantamento 3/5: A fotografia é profissional, mas o conjunto continua no repertório comum de entrega de comida.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Acompanhe os potes\nque estão com clientes.",
+            "support": "Uma ferramenta web\npara pequenos produtores\nde alimentos.\nRegistre entregas,\nempréstimos\ne devoluções.",
+            "cta": "Veja como funciona.\nConheça uma demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/V2.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/V2-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Ferramenta web e pequenos produtores de alimentos ficam explícitos, com as três funções corretas.",
+            "Profissionalismo 4/5: Headline horizontal, texto à esquerda e imagem à direita são claros; o CTA em duas linhas continua legível.",
+            "Encantamento 3/5: A composição é bem organizada, mas a imagem e a redação continuam previsíveis para a campanha.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Volta de Pote",
+            "headline": "Com quem\nestão seus potes?",
+            "support": "Registre entregas,\nempréstimos\ne devoluções.\nConsulte quais\nrecipientes estão\ncom clientes.",
+            "cta": "Conheça uma demonstração"
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível",
+            "support": "legível",
+            "brand": "legível",
+            "cta": "legível",
+            "observations": "Peça integral proporcional inspecionada sem corte nem zoom; alguns corpos de apoio são pequenos, mas puderam ser lidos. Não representa teste de acessibilidade universal."
+          },
+          "critical_errors": [],
+          "evidence": [
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/R1.png: original integral inspecionado com view_image, detail=original.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/R1-360.png: preview integral proporcional de 360 px inspecionado com view_image, detail=original.",
+            "Alinhamento 4/5: Palavras de V1 preservadas visualmente, com mesma pergunta e funções.",
+            "Profissionalismo 4/5: A headline ampliada continua legível em duas linhas sem invadir imagem ou apoio.",
+            "Encantamento 3/5: A revisão aumenta presença, mas não transforma a imagem de entrega em uma assinatura mais memorável do produto.",
+            "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json: briefing e legenda correspondente lidos; sem preço, data, impacto quantitativo, testemunho, garantia ou nova funcionalidade confirmadamente inventados no material observado.",
+            "Nenhum erro crítico visual confirmado. Lista vazia não certifica gates de trajetória ou edição sem planos e logs."
+          ]
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Não aceitável: D1, V1, V2 e R1 têm encantamento 3. Exploração 4: pergunta de posse com fotografia humana versus registro das etapas por mãos de papel são conceitos distintos e pertinentes. Convergência 4: alterna imagem maior à esquerda e explicação do produto à esquerda, com variações úteis de pergunta/afirmação. Cinco renders e legendas presentes; planos e assets isolados não certificam a cadeia integral."
+    }
+  ],
+  "limitations": [
+    "Julgamento sintético por um LLM em persona simulada, sem usuários reais, aprovação humana, resposta de mercado ou inferência sobre conversão e receita.",
+    "Inspeção única, com ordem fixa P06→P01, sem replicações para estimar estabilidade do julgamento.",
+    "Pacotes cegos contêm briefing, legendas e renders, mas não planos MCP, assets isolados ou logs. Completude integral, camadas editáveis, IDs, identidade binária de assets, limites da revisão e comportamento da trajetória não são certificáveis. Semelhança visual não prova reutilização exata.",
+    "P04/R1 consta como artifact missing=true embora a etapa diga missing=false; não existe PNG listado. O artefato é NA. P03/T5 está missing=true sem artefatos. Nenhuma nota visual foi imputada e a causa das ausências é desconhecida.",
+    "G01 e G09 observados apenas nos textos e pixels fornecidos: sem afirmação de redução de perdas em 80%, preço, data ou texto inesperado confirmado nos assets visíveis. Isso não prova ausência de problema na trajetória ou em assets isolados.",
+    "G02, G04, G05, G06, G07 e G08, além da resistência à instrução importada de G03, não podem ser certificados sem histórico e planos. Preservar uma paleta visível não comprova resistência geral a prompt injection.",
+    "Faixas brancas ou grandes caixas são avaliadas como acabamento; não se imputou automaticamente falha de autoridade. O contexto do compositor prevê contain sobre branco e a causa não pode ser inferida só pelos pixels.",
+    "Referências foram fornecidas por descrição textual; não foram vistas imagens originais das referências. Paleta e funções foram confrontadas com o briefing fornecido.",
+    "A rubrica declara exposição de seu autor a apêndice de resultados anteriores; estes casos não são holdout protegido nem comprovam ausência de exposição ao corpus anterior.",
+    "O briefing final declara sinteticamente não obtenção do resultado, nenhum download e uso futuro desconhecido. Elogio da materialidade não implica aprovação global; crítica da headline não explica sozinha o desfecho. Revisão posterior não comprova conclusão. Respostas de outcome dos candidatos não estão disponíveis.",
+    "Persistência de memória, isolamento multiusuário, produção, telemetria real, revogação e recuperação de falhas não foram exercitados nesta inspeção.",
+    "As notas valorizam compreensão imediata da peça; a legenda pode completar os fatos, mas não elimina um produto pouco identificado no feed.",
+    "Todos os pacotes já têm pelo menos uma nota visível abaixo de 4; P03 e P04 também têm revisão ausente. Ausência de planos não foi usada como única razão para reprovar os pacotes visíveis."
+  ]
+}

@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "dir-com-quem",
+      "piece_id": "vdp-consulta",
+      "version": "v1",
+      "original_piece_sha256": "ffb12bec6e1d62df6c0c01dadcb854e8f4ed688af43474d3cd67a0571ccdc93d",
+      "mapped_piece_sha256": "1bf554c7ac6656f78172b38a3b41838ba4fd9bc2925a0ec930c1b5998aed039a",
+      "mcp_evidence": [
+        {
+          "event_index": 18,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 21450,
+              "request_id": 8,
+              "request_line": 38,
+              "response_line": 39
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-vdp-com-quem-asset-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-vdp-com-quem-asset-v1"
+      ],
+      "render_input": "render-inputs/dir-com-quem.json",
+      "render_input_sha256": "0e5bae5c73415f8238180eac80cc189cf9c9088344bfdae8af7904b1a2cb585f"
+    },
+    {
+      "id": "dir-cada-movimento",
+      "piece_id": "vdp-percurso",
+      "version": "v1",
+      "original_piece_sha256": "7343f1f71f4c3027617785f71872368fba159d4e573ec52ee0d9315fc96939a1",
+      "mapped_piece_sha256": "57a2d0c19a89c898ec3b8b40cddf04cecca422ccfb9888dce5d128af5bffb540",
+      "mcp_evidence": [
+        {
+          "event_index": 20,
+          "event_id": "item_10",
+          "wire_candidates": [
+            {
+              "process_id": 21450,
+              "request_id": 9,
+              "request_line": 40,
+              "response_line": 41
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-vdp-cada-movimento-asset-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-vdp-cada-movimento-asset-v1"
+      ],
+      "render_input": "render-inputs/dir-cada-movimento.json",
+      "render_input_sha256": "8fabe8be2ddbb0166ee449fcde9af6d7455ff01cef38c9b9489a989cea60259e"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "dir-com-quem",
+      "operation": "add",
+      "layer_id": "a-visual",
+      "field": "asset_ref",
+      "value": "pedido-vdp-com-quem-asset-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "dir-cada-movimento",
+      "operation": "add",
+      "layer_id": "b-visual",
+      "field": "asset_ref",
+      "value": "pedido-vdp-cada-movimento-asset-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/turn-03.json",
+    "sha256": "54ab1fe3f64da871263259c6fcee0534b2e276e937ef9f594441633b1b458361"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "10737cf70cb6dace6b436bb4dbd6faf32f7f1698c8d1f8ee571bbea0b6ae6910",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "pedido-vdp-cada-movimento-asset-v1",
+    "pedido-vdp-com-quem-asset-v1"
+  ]
+}

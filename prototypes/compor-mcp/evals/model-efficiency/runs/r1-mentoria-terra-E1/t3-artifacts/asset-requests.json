@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-fios",
+    "asset_ref": "asset-proposto-fios-v1",
+    "prompt": "Ilustração editorial abstrata horizontal, proporção aproximada 2,36:1, com fundo branco. Fios delicados em ameixa #532B54, argila #C76B4B e creme #F4EBDD partem de pontos distintos e se entrelaçam em uma trama simples e organizada no centro. Formas orgânicas, composição arejada, aparência artesanal contemporânea. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+  },
+  {
+    "direction_id": "direcao-mesa",
+    "asset_ref": "asset-proposto-mesa-v1",
+    "prompt": "Imagem editorial horizontal, proporção aproximada 2,36:1, com fundo branco: vista de cima de uma mesa de planejamento com folhas e cartões inteiramente em branco, dispostos em grupos organizados, e um lápis simples. Use ameixa #532B54, argila #C76B4B e creme #F4EBDD nos objetos, com composição arejada e luz suave. Sem letras, palavras, números, inscrições, logotipos ou marcas-d'água."
+  }
+]

@@ -1,0 +1,130 @@
+{
+  "revision": {
+    "id": "variacao-a-revisao-1",
+    "composition_plan": {
+      "piece_id": "peca-caminho-variacao-va",
+      "version": "proposta-2",
+      "width_px": 1080,
+      "height_px": 1080,
+      "layers": [
+        {
+          "id": "va-fundo",
+          "kind": "shape",
+          "name": "Fundo pedra",
+          "shape": "rectangle",
+          "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+          "z_index": 0,
+          "fill_hex": "#ECE9DF"
+        },
+        {
+          "id": "va-imagem",
+          "kind": "image",
+          "name": "Imagem caminho do pote",
+          "asset_ref": "asset-proposto-caminho-pote",
+          "rect": {"x": 0.5278, "y": 0.1111, "width": 0.4167, "height": 0.6389},
+          "z_index": 1
+        },
+        {
+          "id": "va-marca",
+          "kind": "text",
+          "name": "Nome do produto",
+          "rect": {"x": 0.0648, "y": 0.0648, "width": 0.4444, "height": 0.0509},
+          "z_index": 2,
+          "text": "Volta de Pote",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 36,
+          "color_hex": "#183F32",
+          "line_height": 1.1,
+          "text_align": "left"
+        },
+        {
+          "id": "va-titulo",
+          "kind": "text",
+          "name": "Título",
+          "rect": {"x": 0.0648, "y": 0.1806, "width": 0.4537, "height": 0.213},
+          "z_index": 3,
+          "text": "O pote vai.\nVocê\nacompanha.",
+          "font_ref": "georgia",
+          "font_weight": 700,
+          "font_size_px": 64,
+          "color_hex": "#183F32",
+          "line_height": 1.1,
+          "text_align": "left"
+        },
+        {
+          "id": "va-corpo",
+          "kind": "text",
+          "name": "Descrição",
+          "rect": {"x": 0.0648, "y": 0.4398, "width": 0.4444, "height": 0.1481},
+          "z_index": 4,
+          "text": "Registre entregas,\nempréstimos e devoluções\nde recipientes.",
+          "font_ref": "arial",
+          "font_weight": 400,
+          "font_size_px": 33,
+          "color_hex": "#183F32",
+          "line_height": 1.2,
+          "text_align": "left"
+        },
+        {
+          "id": "va-faixa",
+          "kind": "shape",
+          "name": "Fundo do convite",
+          "shape": "rectangle",
+          "rect": {"x": 0.0648, "y": 0.8009, "width": 0.537, "height": 0.0926},
+          "z_index": 5,
+          "fill_hex": "#C9D94A"
+        },
+        {
+          "id": "va-convite",
+          "kind": "text",
+          "name": "Convite à demonstração",
+          "rect": {"x": 0.088, "y": 0.825, "width": 0.4907, "height": 0.0463},
+          "z_index": 6,
+          "text": "Conheça a demonstração",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 32,
+          "color_hex": "#183F32",
+          "line_height": 1.1,
+          "text_align": "left"
+        }
+      ]
+    },
+    "caption": "Seus recipientes seguem com os produtos; você acompanha o caminho. Na Volta de Pote, registre entregas, empréstimos e devoluções e consulte quais ainda estão com clientes. Conheça a demonstração."
+  },
+  "feedback_summary": {
+    "referencia": {
+      "piece_id": "peca-caminho-variacao-va",
+      "version": "proposta-1"
+    },
+    "aspectos": [
+      {
+        "alvo": "va-titulo",
+        "aspecto": "destaque da headline",
+        "feedback": "A headline pareceu tímida perto do restante.",
+        "alteracao_proposta": "Aumentar de 50 para 64 px e distribuir as mesmas palavras em três linhas."
+      },
+      {
+        "alvo": "va-imagem",
+        "aspecto": "materialidade da imagem",
+        "feedback": "A materialidade agradou; manter a imagem exatamente como está.",
+        "alteracao_proposta": "Nenhuma."
+      },
+      {
+        "alvo": "peca como um todo",
+        "aspecto": "resultado geral",
+        "feedback": "O resultado buscado ainda não foi alcançado; nenhuma outra explicação foi informada."
+      }
+    ],
+    "escopo": "Somente esta peça; não é uma preferência permanente de produto ou marca."
+  },
+  "outcome": {
+    "resultado_buscado": "Ainda não alcançado, segundo relato.",
+    "download": "Ainda não realizado.",
+    "uso_da_peca": "Indeciso.",
+    "avaliacao_da_revisao": "Desconhecida; o plano ainda precisa ser composto e avaliado.",
+    "outra_causa_do_resultado_geral": "Desconhecida."
+  },
+  "conversation_response": "A revisão altera apenas o tamanho e as quebras da camada va-titulo. O coordenador deve verificar o encaixe do texto na composição; nenhuma imagem nova foi gerada."
+}

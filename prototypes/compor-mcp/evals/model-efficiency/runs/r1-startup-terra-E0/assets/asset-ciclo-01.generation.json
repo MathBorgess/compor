@@ -1,0 +1,15 @@
+{
+  "direction_id": "direcao-ciclo",
+  "asset_ref": "asset-ciclo-01",
+  "prompt": "Ilustração horizontal de recipientes retornáveis percorrendo um caminho de ida e volta entre uma pequena produção de alimentos e seus clientes, usando formas simples e textura fosca de papel. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF. Imagem sem letras, palavras, números, logotipos ou marcas-d'água; sem telas ou interfaces.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-0fcbaca6-ae9a-4099-857e-bc9d9d078f3f.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-ciclo-01.png",
+  "sha256": "145e51187d405c141e7ad59e1db56b85f3ebcfb958f1d2d4f64b7b324d971e3d",
+  "elapsed_ms": 20589,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

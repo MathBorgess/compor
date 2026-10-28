@@ -1,0 +1,361 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "4d43e0714f746836e418be035c89ca057ca3d7c261cd659d407ae2d4a4f47bc3",
+  "piece_sha256": "3f2ab48e834eb23f83eef27b7ab2757b10cffbd1792afcf90fd3e0a3644ddfa5",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp-presenca",
+  "piece_version": "proposta-v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "presenca-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "presenca-marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        64,
+        48,
+        900,
+        48
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            65,
+            48
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            48,
+            270,
+            71
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        65,
+        48,
+        269,
+        71
+      ]
+    },
+    {
+      "id": "presenca-titulo",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        64,
+        130,
+        940,
+        164
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 68,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 68,
+      "effective_font_size_px": 68,
+      "font_fallback": false,
+      "text_preserved": "Com quem estão\nseus potes?",
+      "text_clipped": false,
+      "line_advance_px": 78.19999999999999,
+      "lines": [
+        {
+          "text": "Com quem estão",
+          "origin_px": [
+            64,
+            130
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            130,
+            614,
+            194
+          ]
+        },
+        {
+          "text": "seus potes?",
+          "origin_px": [
+            64,
+            208
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            208,
+            464,
+            272
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        65,
+        130,
+        612,
+        272
+      ]
+    },
+    {
+      "id": "presenca-imagem",
+      "kind": "image",
+      "z_index": 3,
+      "rect_px": [
+        64,
+        330,
+        952,
+        360
+      ],
+      "asset_ref": "asset-presenca-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/assets/asset-presenca-v1.png",
+      "asset_sha256": "95d63a9a92a16a3a0b7aa28b7b58cffa2fdd188e3cb1f562df5b4f8263807da6",
+      "source_raw_size_px": [
+        2041,
+        770
+      ],
+      "source_oriented_size_px": [
+        2041,
+        770
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        64,
+        330,
+        952,
+        359
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        1
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "presenca-descricao",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        64,
+        724,
+        952,
+        126
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Uma ferramenta web para pequenos\nprodutores de alimentos acompanharem\nsuas embalagens retornáveis.",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Uma ferramenta web para pequenos",
+          "origin_px": [
+            64,
+            724
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            724,
+            591,
+            753
+          ]
+        },
+        {
+          "text": "produtores de alimentos acompanharem",
+          "origin_px": [
+            64,
+            761
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            761,
+            645,
+            790
+          ]
+        },
+        {
+          "text": "suas embalagens retornáveis.",
+          "origin_px": [
+            64,
+            798
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            798,
+            495,
+            827
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        65,
+        724,
+        643,
+        827
+      ]
+    },
+    {
+      "id": "presenca-convite-fundo",
+      "kind": "shape",
+      "z_index": 5,
+      "rect_px": [
+        64,
+        904,
+        952,
+        104
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "presenca-convite",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        92,
+        934,
+        890,
+        52
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 36,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 36,
+      "effective_font_size_px": 36,
+      "font_fallback": false,
+      "text_preserved": "Conheça uma demonstração",
+      "text_clipped": false,
+      "line_advance_px": 41.4,
+      "lines": [
+        {
+          "text": "Conheça uma demonstração",
+          "origin_px": [
+            92,
+            934
+          ],
+          "metric_bounds_xyxy_px": [
+            92,
+            934,
+            584,
+            968
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        93,
+        934,
+        583,
+        968
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "0e3f92788f6b35aba9c8d34a2075fca969dd6b5133380d912006c8a4fd5934ac",
+  "png_sha256": "c46389de0dcf96b04da298313eaa5f47d9a9e3cf4ae1d0a248bc2ca6bdaa8df1",
+  "png_bytes": 415762,
+  "report_payload_sha256": "102a1c8495c4507fa3f5617e75c5a26c850567d23ce1b506fb21ce27bd2c4c85"
+}

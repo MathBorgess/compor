@@ -1,0 +1,348 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "cdcfadead09761280010958f5b9c96313b60a0505bff4584376e9848992868b9",
+  "piece_sha256": "e59e956718158be9f43fc9c1d38c2a94676c566c35a04fef06047e0a2736c638",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp_pergunta_var_a",
+  "piece_version": "v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "va_fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "va_marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        65,
+        43,
+        950,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 34,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 39.099999999999994,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            66,
+            43
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            43,
+            281,
+            68
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        43,
+        280,
+        68
+      ]
+    },
+    {
+      "id": "va_titulo",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        65,
+        140,
+        950,
+        184
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 68,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 68,
+      "effective_font_size_px": 68,
+      "font_fallback": false,
+      "text_preserved": "Com quem estão\nseus potes?",
+      "text_clipped": false,
+      "line_advance_px": 78.19999999999999,
+      "lines": [
+        {
+          "text": "Com quem estão",
+          "origin_px": [
+            65,
+            140
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            140,
+            615,
+            204
+          ]
+        },
+        {
+          "text": "seus potes?",
+          "origin_px": [
+            65,
+            218
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            218,
+            465,
+            282
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        140,
+        613,
+        282
+      ]
+    },
+    {
+      "id": "va_apoio",
+      "kind": "text",
+      "z_index": 3,
+      "rect_px": [
+        65,
+        356,
+        950,
+        98
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Registre entregas, empréstimos e devoluções.",
+          "origin_px": [
+            65,
+            356
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            356,
+            780,
+            386
+          ]
+        },
+        {
+          "text": "Consulte quais recipientes estão com clientes.",
+          "origin_px": [
+            65,
+            393
+          ],
+          "metric_bounds_xyxy_px": [
+            65,
+            393,
+            786,
+            422
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        356,
+        784,
+        422
+      ]
+    },
+    {
+      "id": "va_imagem",
+      "kind": "image",
+      "z_index": 4,
+      "rect_px": [
+        65,
+        486,
+        950,
+        475
+      ],
+      "asset_ref": "vdp_asset_pergunta_v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/assets/vdp_asset_pergunta_v1.png",
+      "asset_sha256": "74e3274db6f08cf70b35619aa80e7e04e7b900a4a88fa625e4c17994d12e3795",
+      "source_raw_size_px": [
+        1774,
+        887
+      ],
+      "source_oriented_size_px": [
+        1774,
+        887
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        65,
+        486,
+        950,
+        475
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "va_faixa",
+      "kind": "shape",
+      "z_index": 5,
+      "rect_px": [
+        65,
+        983,
+        950,
+        70
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "va_convite",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        86,
+        996,
+        908,
+        48
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 34,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Conheça a demonstração",
+      "text_clipped": false,
+      "line_advance_px": 39.099999999999994,
+      "lines": [
+        {
+          "text": "Conheça a demonstração",
+          "origin_px": [
+            86,
+            996
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            996,
+            501,
+            1027
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        87,
+        996,
+        500,
+        1027
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "7206ba2d394887eb9ac6b480c50d1c15c41497afaba58354a6ed1b4e37a2e422",
+  "png_sha256": "2a9d5c4d2f430be3860c7add4a174c4b0f33db139a473e9bcac8986b9a64f795",
+  "png_bytes": 621725,
+  "report_payload_sha256": "263b8a6da3938aa8b8fc043ff22c811c2b14e513e28c9b2c8343239fab06f523"
+}

@@ -1,0 +1,154 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/resume-after-t3.json",
+      "sha256": "2b773fbfc125c05147032f9ccd2327f8534b5a7c1a4a25bf622a0c88964c3a03"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/assets.json",
+      "sha256": "fe6ba9b08481ff5fd98ab6118e1d0a895b1c4fc9a8862f59c971747e7ad60269"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "var-paradeiro-pergunta",
+        "piece_id": "vdp-paradeiro-var-pergunta",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t4-artifacts/renders/var-paradeiro-pergunta.png",
+        "png_sha256": "199331b0054c588f16d34989d513f43672c6725600823ddc3dcfb4469e361712",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t4-artifacts/renders/var-paradeiro-pergunta.json",
+        "report_sha256": "c2581421845da6ef0c2db76843ae58e541ac066b4e02dc24b910a6becddfaa09",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 220.9695,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-vdp-paradeiro-01-proposto"
+        ],
+        "layers": [
+          {
+            "id": "p1-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "p1-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "p1-painel",
+            "kind": "shape"
+          },
+          {
+            "id": "p1-imagem",
+            "kind": "image",
+            "asset_ref": "asset-vdp-paradeiro-01-proposto"
+          },
+          {
+            "id": "p1-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "p1-marca",
+            "kind": "text"
+          },
+          {
+            "id": "p1-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "p1-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "p1-publico",
+            "kind": "text"
+          },
+          {
+            "id": "p1-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "var-paradeiro-consulta",
+        "piece_id": "vdp-paradeiro-var-consulta",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t4-artifacts/renders/var-paradeiro-consulta.png",
+        "png_sha256": "9e281b0e34cc339af77f4b5c9a2d886110420cc9566ce887996e4a70f32ae573",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t4-artifacts/renders/var-paradeiro-consulta.json",
+        "report_sha256": "e77707f9fe11245149dd16b72a76cd6591fbef01a55098f5d18cbf1a293089ea",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 188.769125,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-vdp-paradeiro-01-proposto"
+        ],
+        "layers": [
+          {
+            "id": "p2-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "p2-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "p2-painel",
+            "kind": "shape"
+          },
+          {
+            "id": "p2-imagem",
+            "kind": "image",
+            "asset_ref": "asset-vdp-paradeiro-01-proposto"
+          },
+          {
+            "id": "p2-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "p2-marca",
+            "kind": "text"
+          },
+          {
+            "id": "p2-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "p2-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "p2-publico",
+            "kind": "text"
+          },
+          {
+            "id": "p2-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/resume-after-t4.json",
+      "sha256": "89254b859af96dfd35f017380c1b722b304165aa1eab4789a491bef690b73248",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.99,
+    "total": 425.357834
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}
