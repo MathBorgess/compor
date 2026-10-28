@@ -1,0 +1,14 @@
+{
+  "assets": {
+    "asset-editorial-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-editorial-01.png",
+      "sha256": "f798377b2820b54a7d98f9849a642ffe4518eeb59b4ce98810a8c59003967fac"
+    },
+    "asset-trama-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-trama-01.png",
+      "sha256": "b58e68a3883c84a1f1b13cc733463e2c10e707ac105fb59bced346b789b534e9"
+    }
+  },
+  "output_root": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/e3/transport-probe-01/evidence",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305"
+}

@@ -1,0 +1,10 @@
+{
+  "tool_calls": 1,
+  "input_piece_unchanged": true,
+  "image_blocks": 1,
+  "image_sha256": "a9d6503e7304e4309eaf546e8c540e6db9aab8e3d74c62cd73ac3ebc7a6ef531",
+  "structured_status": "rendered",
+  "attempt": 1,
+  "native_exit_code": 0,
+  "scope": "Native MCP transport only; exact model internal schema/attention not exposed"
+}

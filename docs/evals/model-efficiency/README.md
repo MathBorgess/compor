@@ -40,6 +40,8 @@ O [candidato E2 e seu replay diagnóstico](e2-development.md) foram implementado
 
 Não é necessário ampliar o produto para multiagentes, MCP Apps, execução offline ou persistência neste ensaio. A arquitetura permanece v0. O PR entrega código experimental, evidências e propostas para crítica, sem promoção automática do harness.
 
+O [adaptador E3 de preview](e3-preview-adapter.md) já passou em testes de contrato e em um probe nativo de transporte visual. Ainda não foi avaliado na criação de campanhas nem comparado com E2 sob ativos fixos.
+
 ## Evidência e limites
 
 | Fonte | O que verifica |

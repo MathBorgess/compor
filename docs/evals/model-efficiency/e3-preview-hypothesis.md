@@ -1,6 +1,6 @@
 # Próxima hipótese: retorno verificável de composição
 
-28/10/2026. Proposta, sem implementação ou resultado. A avaliação E2 ainda está sendo fechada; este desenho não pressupõe sua aprovação.
+28/10/2026. Proposta histórica. Estado atual: [adaptador local implementado e transporte verificado](e3-preview-adapter.md); ainda sem comparação criativa. O E2 foi rejeitado pelos dois Judges.
 
 E2 testa instruções curtas e uma skill. A próxima intervenção, se a qualidade permanecer insuficiente, deve fornecer ao agente retorno do compositor durante a criação: encaixe medido e preview real, com uma oportunidade limitada de reparo antes da entrega. Não acrescentar outra lista de preferências estéticas derivadas dos mesmos Judges.
 
