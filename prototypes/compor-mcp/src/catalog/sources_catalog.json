@@ -1,0 +1,84 @@
+{
+  "catalog_version": "1.0.0",
+  "uri": "compor://catalog/sources",
+  "description": "Catálogo auditável de fontes curadas para descoberta de referências visuais no Compor. Nenhuma busca externa pode executar fora deste catálogo.",
+  "policy": {
+    "headless_browser_allowed": false,
+    "download_on_search_allowed": false,
+    "require_explicit_user_consent": true,
+    "default_license_scope": "inspiration_only"
+  },
+  "sources": [
+    {
+      "source_id": "pinterest_curated_design",
+      "name": "Pinterest Curated Editorial & Ad Design Boards",
+      "domain": "pinterest.com",
+      "allowed_boards_or_queries": [
+        "compor-curated/editorial-typography-grids",
+        "compor-curated/social-carousel-systems",
+        "compor-curated/brand-campaign-composition",
+        "compor-curated/color-contrast-direction"
+      ],
+      "access_method": "curated_board_http",
+      "license_default": "inspiration_only",
+      "cost_tier": "free_http",
+      "rate_limit": {
+        "requests_per_minute": 30,
+        "timeout_ms": 5000
+      },
+      "active": true
+    },
+    {
+      "source_id": "pinterest_curated_photography",
+      "name": "Pinterest Curated Commercial Photography Boards",
+      "domain": "pinterest.com",
+      "allowed_boards_or_queries": [
+        "compor-curated/product-studio-lighting",
+        "compor-curated/editorial-portrait-direction",
+        "compor-curated/still-life-texture-composition"
+      ],
+      "access_method": "curated_board_http",
+      "license_default": "inspiration_only",
+      "cost_tier": "free_http",
+      "rate_limit": {
+        "requests_per_minute": 30,
+        "timeout_ms": 5000
+      },
+      "active": true
+    },
+    {
+      "source_id": "meta_ad_library",
+      "name": "Meta Ad Library Official Creative Archive",
+      "domain": "facebook.com",
+      "allowed_boards_or_queries": [
+        "commercial_active_ads",
+        "carousel_sequence_ads",
+        "vertical_story_ads"
+      ],
+      "access_method": "api_official",
+      "license_default": "inspiration_only",
+      "cost_tier": "free_official_api",
+      "rate_limit": {
+        "requests_per_minute": 20,
+        "timeout_ms": 5000
+      },
+      "active": true
+    },
+    {
+      "source_id": "pinterest_unverified_experimental",
+      "name": "Pinterest Unverified Experimental Board (Inactive)",
+      "domain": "pinterest.com",
+      "allowed_boards_or_queries": [
+        "experimental/unmoderated-feed"
+      ],
+      "access_method": "curated_board_http",
+      "license_default": "inspiration_only",
+      "cost_tier": "free_http",
+      "rate_limit": {
+        "requests_per_minute": 10,
+        "timeout_ms": 5000
+      },
+      "active": false
+    }
+  ]
+}
