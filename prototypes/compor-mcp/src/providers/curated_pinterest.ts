@@ -35,8 +35,132 @@ export interface PinterestPinJsonItem {
   thumbnail_base64?: string;
 }
 
+const DEFAULT_HTTP_USER_AGENT =
+  'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36';
+
+function decodeXmlEntities(input: string): string {
+  return input
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;|&apos;/g, "'")
+    .replace(/&amp;/g, '&');
+}
+
 /**
- * Lightweight HTTP/GraphQL metadata-only extractor inspired by pinterest-dl / gallery-dl --dump-json.
+ * Parses a public Pinterest board RSS feed (`https://www.pinterest.com/<user>/<board>.rss`)
+ * into normalized `PinterestPinJsonItem` records without any headless browser.
+ */
+export function parsePinterestBoardRss(rssXml: string): PinterestPinJsonItem[] {
+  const items: PinterestPinJsonItem[] = [];
+  const itemMatches = rssXml.match(/<item>[\s\S]*?<\/item>/gi) ?? [];
+
+  for (const itemXml of itemMatches) {
+    const titleRaw = itemXml.match(/<title>([\s\S]*?)<\/title>/i)?.[1] ?? '';
+    const linkRaw =
+      itemXml.match(/<link>([\s\S]*?)<\/link>/i)?.[1] ??
+      itemXml.match(/<guid[^>]*>([\s\S]*?)<\/guid>/i)?.[1] ??
+      '';
+    const descRaw = itemXml.match(/<description>([\s\S]*?)<\/description>/i)?.[1] ?? '';
+
+    const decodedTitle = decodeXmlEntities(titleRaw).trim();
+    const decodedLink = decodeXmlEntities(linkRaw).trim();
+    const decodedDescHtml = decodeXmlEntities(descRaw).trim();
+
+    const pinIdMatch = decodedLink.match(/\/pin\/([^/?#]+)/i);
+    const pinId = pinIdMatch?.[1] ?? `rss_${items.length + 1}`;
+    const imgMatch = decodedDescHtml.match(/https:\/\/i\.pinimg\.com\/[^"'\s<>]+/i);
+    const previewUrl = imgMatch?.[0];
+    if (!previewUrl) continue;
+
+    const mediaUrl = previewUrl.replace('/236x/', '/736x/');
+    const plainDesc = decodedDescHtml.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+    items.push({
+      id: pinId,
+      title: decodedTitle || plainDesc.slice(0, 80) || `Pin ${pinId}`,
+      description: plainDesc || decodedTitle,
+      alt_text: plainDesc || decodedTitle,
+      origin_url: decodedLink || `https://www.pinterest.com/pin/${encodeURIComponent(pinId)}/`,
+      preview_url: previewUrl,
+      media_url: mediaUrl,
+    });
+  }
+
+  return items;
+}
+
+/**
+ * Parses embedded `__PWS_INITIAL_PROPS__` JSON from a public Pinterest board HTML page.
+ */
+export function parsePinterestPwsHtml(html: string): PinterestPinJsonItem[] {
+  const match = html.match(
+    /<script[^>]+id="__PWS_INITIAL_PROPS__"[^>]*>([\s\S]*?)<\/script>/i,
+  );
+  if (!match?.[1]) return [];
+  try {
+    const parsed = JSON.parse(match[1]) as {
+      initialReduxState?: { pins?: Record<string, PinterestPinJsonItem> };
+    };
+    const pinsObj = parsed.initialReduxState?.pins;
+    if (!pinsObj || typeof pinsObj !== 'object') return [];
+    return Object.values(pinsObj);
+  } catch {
+    return [];
+  }
+}
+
+function selectCuratedBoardsForQuery(query: ProviderSearchQuery): string[] {
+  const allowed = query.source.allowed_boards_or_queries.filter(
+    (b) => !b.startsWith('compor-curated/'),
+  );
+  if (allowed.length === 0) {
+    return [query.source.allowed_boards_or_queries[0] ?? 'behance/graphic-design'];
+  }
+  const summaryLower = query.briefing_summary.toLowerCase();
+  const prioritized = [...allowed].sort((a, b) => {
+    const score = (board: string) => {
+      let s = 0;
+      if (
+        (summaryLower.includes('anúncio') ||
+          summaryLower.includes('ad') ||
+          summaryLower.includes('campanha') ||
+          summaryLower.includes('oferta')) &&
+        board.includes('advertising')
+      ) {
+        s += 3;
+      }
+      if (query.aspect_focus.includes('typography') && board.includes('graphic-design')) {
+        s += 2;
+      }
+      if (query.aspect_focus.includes('photography') && board.includes('photography')) {
+        s += 3;
+      }
+      return s;
+    };
+    return score(b) - score(a);
+  });
+  return prioritized;
+}
+
+function rankPinsByQuery(pins: PinterestPinJsonItem[], briefingSummary: string): PinterestPinJsonItem[] {
+  const tokens = briefingSummary
+    .toLowerCase()
+    .split(/[^a-z0-9à-ú]+/i)
+    .filter((t) => t.length >= 3);
+  if (tokens.length === 0) return pins;
+
+  return [...pins].sort((a, b) => {
+    const textA = `${a.title ?? ''} ${a.description ?? ''}`.toLowerCase();
+    const textB = `${b.title ?? ''} ${b.description ?? ''}`.toLowerCase();
+    const hitsA = tokens.reduce((acc, tk) => acc + (textA.includes(tk) ? 1 : 0), 0);
+    const hitsB = tokens.reduce((acc, tk) => acc + (textB.includes(tk) ? 1 : 0), 0);
+    return hitsB - hitsA;
+  });
+}
+
+/**
+ * Lightweight HTTP/GraphQL/RSS metadata-only extractor inspired by pinterest-dl / gallery-dl --dump-json.
  * Strictly prohibits Playwright/Puppeteer/Chromium and never writes media files to disk during search.
  */
 export class CuratedPinterestProvider implements ReferenceSearchProvider {
@@ -54,17 +178,24 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
   }
 
   async searchMetadataOnly(query: ProviderSearchQuery): Promise<RawProviderCandidate[]> {
-    const board = query.source.allowed_boards_or_queries[0] ?? 'compor-curated/editorial-typography-grids';
+    const boards = selectCuratedBoardsForQuery(query);
+    const primaryBoard = boards[0] ?? 'behance/graphic-design';
     const timeoutMs = Math.min(5000, query.source.rate_limit.timeout_ms);
+    const limit = query.limit ?? 5;
+
+    let rawPins: PinterestPinJsonItem[] = [];
+    let lastError: Error | null = null;
+
+    // Step 1: Attempt Pinterest JSON BaseSearchResource endpoint (used by mock tests & authenticated sessions)
     const searchParams = new URLSearchParams({
-      source_url: `/${board}/`,
+      source_url: `/${primaryBoard}/`,
       data: JSON.stringify({
         options: {
-          board_slug: board,
+          board_slug: primaryBoard,
           query: query.briefing_summary.slice(0, 120),
           target_format: query.target_format,
           aspect_focus: query.aspect_focus,
-          page_size: query.limit ?? 5,
+          page_size: limit,
         },
         context: {},
       }),
@@ -75,12 +206,12 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
     const timer = setTimeout(() => controller.abort(new Error('Pinterest HTTP timeout')), timeoutMs);
     timer.unref?.();
 
-    let payload: unknown;
     try {
       const response = await this.fetchFn(endpoint, {
         method: 'GET',
         headers: {
           Accept: 'application/json',
+          'User-Agent': DEFAULT_HTTP_USER_AGENT,
           'X-Requested-With': 'XMLHttpRequest',
           'X-Pinterest-AppState': 'active',
           'Referrer-Policy': 'no-referrer',
@@ -88,28 +219,83 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
         signal: controller.signal,
       });
 
-      if (!response.ok) {
-        throw new ProviderUnavailableError(
+      if (response.ok) {
+        const payload = await response.json();
+        rawPins = this.extractPinItems(payload);
+      } else {
+        lastError = new ProviderUnavailableError(
           query.source.source_id,
           `Pinterest HTTP endpoint returned status ${response.status}.`,
         );
       }
-      payload = await response.json();
     } catch (error) {
-      if (error instanceof ProviderUnavailableError) throw error;
-      throw new ProviderUnavailableError(
-        query.source.source_id,
-        error instanceof Error ? error.message : 'Pinterest HTTP request failed.',
-      );
+      lastError =
+        error instanceof ProviderUnavailableError
+          ? error
+          : new ProviderUnavailableError(
+              query.source.source_id,
+              error instanceof Error ? error.message : 'Pinterest HTTP request failed.',
+            );
+      // If the transport itself threw a network error (e.g. ECONNRESET in offline/fallback tests),
+      // do not mask it if we cannot reach the host at all.
     } finally {
       clearTimeout(timer);
     }
 
-    const rawPins = this.extractPinItems(payload);
-    const limit = query.limit ?? 5;
+    // Step 2: If BaseSearchResource returned 403/404 (unauthenticated guest HTTP),
+    // query the public curated board RSS feed (`https://www.pinterest.com/{board}.rss`),
+    // which returns real pins over pure HTTP without headless browsers or login cookies.
+    if (rawPins.length === 0) {
+      for (const board of boards.slice(0, 2)) {
+        const rssEndpoint = `https://www.pinterest.com/${board}.rss`;
+        const rssController = new AbortController();
+        const rssTimer = setTimeout(
+          () => rssController.abort(new Error('Pinterest RSS HTTP timeout')),
+          timeoutMs,
+        );
+        rssTimer.unref?.();
+
+        try {
+          const rssResponse = await this.fetchFn(rssEndpoint, {
+            method: 'GET',
+            headers: {
+              Accept: 'application/rss+xml, application/xml, text/xml, text/html;q=0.8',
+              'User-Agent': DEFAULT_HTTP_USER_AGENT,
+              'Referrer-Policy': 'no-referrer',
+            },
+            signal: rssController.signal,
+          });
+
+          if (rssResponse.ok) {
+            const rssBody = await rssResponse.text();
+            const parsedRssPins = parsePinterestBoardRss(rssBody);
+            const candidatePins =
+              parsedRssPins.length > 0 ? parsedRssPins : parsePinterestPwsHtml(rssBody);
+            const existingIds = new Set(rawPins.map((p) => p.id ?? p.origin_url));
+            for (const pin of candidatePins) {
+              const key = pin.id ?? pin.origin_url;
+              if (key && existingIds.has(key)) continue;
+              if (key) existingIds.add(key);
+              rawPins.push(pin);
+            }
+            if (rawPins.length >= limit) break;
+          }
+        } catch {
+          // Keep original error if RSS fallback also fails
+        } finally {
+          clearTimeout(rssTimer);
+        }
+      }
+    }
+
+    if (rawPins.length === 0 && lastError) {
+      throw lastError;
+    }
+
+    const rankedPins = rankPinsByQuery(rawPins, query.briefing_summary);
 
     return Promise.all(
-      rawPins.slice(0, limit).map(async (pin, idx) => {
+      rankedPins.slice(0, limit).map(async (pin, idx) => {
         const pinId = String(pin.id ?? pin.ref_id ?? `pin_${idx + 1}`);
         const previewUrl =
           pin.preview_url ??

@@ -1159,3 +1159,65 @@ test('Isolamento de store padrão por conexão e substituição de aprovações 
     await serverB.close();
   }
 });
+
+test('Fallback HTTP para feed RSS público de boards curados do Pinterest quando BaseSearchResource retorna 403 sem sessão', async () => {
+  const { pngBuffer } = buildPngWithMetadata({ width: 4, height: 4 });
+  const rssXml = `<?xml version="1.0" encoding="UTF-8"?>
+    <rss version="2.0">
+      <channel>
+        <title>Behance Advertising</title>
+        <item>
+          <title>Harley-Davidson: Faces by Brock Davis, via Behance</title>
+          <link>https://www.pinterest.com/pin/pin_real_01/</link>
+          <description>&lt;a href=&quot;https://www.pinterest.com/pin/pin_real_01/&quot;&gt;&lt;img src=&quot;https://i.pinimg.com/236x/16/03/0d/16030d165cb3b4dad1a84a53df573899.jpg&quot;&gt;&lt;/a&gt;Harley-Davidson: Faces by Brock Davis, via Behance</description>
+        </item>
+      </channel>
+    </rss>`;
+
+  const fetchFn = async (input) => {
+    const url = String(input);
+    if (url.includes('BaseSearchResource/get/')) {
+      return new Response('Forbidden', { status: 403 });
+    }
+    if (url.endsWith('.rss')) {
+      return new Response(rssXml, {
+        status: 200,
+        headers: { 'content-type': 'application/rss+xml' },
+      });
+    }
+    if (url.includes('i.pinimg.com/236x/')) {
+      return new Response(pngBuffer, {
+        status: 200,
+        headers: { 'content-type': 'image/png' },
+      });
+    }
+    throw new Error(`Unexpected URL: ${url}`);
+  };
+
+  const ctx = await createConnectedTestPair({ fetchFn, sessionId: 'sid_rss_fallback' });
+  try {
+    const searchRes = await ctx.client.callTool({
+      name: 'search_curated_references',
+      arguments: {
+        briefing_summary: 'Campanha publicitária editorial com tipografia forte',
+        target_format: 'single_feed',
+        aspect_focus: ['typography', 'composition'],
+        source_ids: ['pinterest_curated_design'],
+        consent_external_search: true,
+      },
+    });
+    assert.equal(searchRes.isError, undefined);
+    assert.equal(searchRes.structuredContent.status, 'ok');
+    assert.equal(searchRes.structuredContent.candidates.length, 1);
+    const cand = searchRes.structuredContent.candidates[0];
+    assert.equal(cand.origin_url, 'https://www.pinterest.com/pin/pin_real_01/');
+    assert.equal(
+      cand.preview_url,
+      'https://i.pinimg.com/236x/16/03/0d/16030d165cb3b4dad1a84a53df573899.jpg',
+    );
+    assert.equal(cand.thumbnail_available, true);
+    assert.match(cand.untrusted_external_caption.title, /Harley-Davidson/i);
+  } finally {
+    await ctx.close();
+  }
+});

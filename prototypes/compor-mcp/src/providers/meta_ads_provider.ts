@@ -48,6 +48,9 @@ export class MetaAdsProvider implements ReferenceSearchProvider {
       fields: 'id,page_name,ad_creative_link_titles,ad_creative_bodies,ad_snapshot_url',
       limit: String(query.limit ?? 5),
     });
+    if (process.env.META_AD_LIBRARY_ACCESS_TOKEN) {
+      params.set('access_token', process.env.META_AD_LIBRARY_ACCESS_TOKEN);
+    }
 
     const endpoint = `https://graph.facebook.com/v19.0/ads_archive?${params.toString()}`;
     const controller = new AbortController();
