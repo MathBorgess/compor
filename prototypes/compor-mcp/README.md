@@ -8,8 +8,8 @@ Protótipo para estudar o protocolo e as quatro skills do Compor antes da integr
 - `load_skill`: carrega instruções de uma das quatro skills locais, por identificador e versão permitidos, com SHA-256 do conteúdo para identificar o texto usado em uma avaliação. A versão é um rótulo do protótipo, não um registro imutável de conteúdo.
 - `prepare_word_cloud`: prepara dados sem persistência ou renderização; preserva frequência, sugestão e escolha **informadas pelo cliente**. O peso efetivo segue essa prioridade: escolha informada, sugestão informada, frequência informada; zero é válido e ausência fica `null`. O protótipo não verifica quem forneceu cada valor. Essa regra é experimental e não confirma preferências nem estabelece que as escalas são equivalentes.
 - `prepare_moodboard`: prepara uma direção versionada com elementos, referências opacas, rótulos, prioridades, pistas visuais e restrições separadas. Não busca imagens, renderiza, gera nem persiste; origem informada é alegação do cliente, não confirmação de autoria. Formas e ícones são pistas de estilo. Aspectos ou restrições omitidos retornam `null`, distintos de listas explicitamente vazias. Conflitos detectados são apenas literais: ausência de aviso não prova que o quadro está consistente.
-- `prepare_layered_creative`: organiza uma peça sintética em camadas de texto, imagem ou forma, com geometria, ordem e estilo opcional. Não cria ativos nem verifica autoria ou acesso.
-- `prepare_annotation_context`: liga notas por camada ou área a um snapshot fornecido pelo cliente; seleção por área devolve apenas candidatas por interseção geométrica. Versão, autoria e escopo não são verificados contra armazenamento real; não infere nem atualiza preferências.
+- `prepare_layered_creative`: organiza uma peça sintética em camadas de texto, imagem ou forma, com geometria, ordem e estilo opcional. Transporta `font_ref`, peso, entrelinha e alinhamento; avisa sobre fonte não resolvida e imagem sem ativo. Não cria ativos, resolve fontes nem verifica autoria ou acesso.
+- `prepare_annotation_context`: liga notas por camada ou área a um snapshot fornecido pelo cliente; seleção por área devolve candidatas por interseção geométrica e distingue ausência, ambiguidade e candidata única. Escopo de memória `product` sempre exige confirmação verificada fora do protótipo. Versão, autoria e escopo não são verificados contra armazenamento real; não infere nem atualiza preferências.
 - `stdio`: processo para um cliente MCP local que executa o servidor como subprocesso.
 - `fetchInProcess`: adaptador experimental para testar MCP Streamable HTTP por `fetch` interno, sem abrir socket. Seu URL `https://compor.invalid/mcp` é um identificador de teste, não um servidor na internet.
 
@@ -24,7 +24,7 @@ npm ci --ignore-scripts
 npm test
 ```
 
-O teste compila TypeScript e executa 17 cenários automatizados, incluindo os seguintes:
+O teste compila TypeScript e executa 25 cenários automatizados, incluindo os seguintes:
 
 1. Negociação MCP em memória, descoberta de tools e carregamento das quatro skills, com `fetch` global bloqueado.
 2. Recusa de versões/identificadores inexistentes e argumentos inválidos, sem divulgar caminhos locais, e erro para a tool inexistente `generate_image`.
@@ -40,7 +40,10 @@ O teste compila TypeScript e executa 17 cenários automatizados, incluindo os se
 12. Aspectos e restrições omitidos são distinguidos de listas explicitamente vazias.
 13. Camadas, anotações por área e por camada, alvos inválidos e lote de críticas sintéticas são verificados pelo MCP, sem gravar memória ou buscar ativos.
 
-**Resultado observado em 27/10/2026:** 17 testes passaram em Node.js v24.16.0. As verificações não exercitam uma chamada de modelo, a Vercel, o app, autenticação ou dados reais. O bloqueio de `fetch` nos testes exercitados não prova ausência geral de toda comunicação de rede ou segurança de isolamento.
+14. Caixa de moodboard fora do quadro, rotação não verificada, pesos acima do teto técnico, ausência de ativo, estado da seleção e confirmação de escopo produto.
+15. Campos tipográficos preservados sem defaults; referências de fonte opacas, valores inválidos e snapshots antigos sem novos campos.
+
+**Resultado observado em 28/10/2026:** 25 testes passaram em Node.js v24.16.0 ([verificação](../../docs/evals/2026-10-28-harness/verification.txt)). A suíte verifica contratos; não exercita uma chamada de modelo, a Vercel, o app, autenticação ou dados reais. O bloqueio de `fetch` nos testes exercitados não prova ausência geral de toda comunicação de rede ou segurança de isolamento. Os experimentos com modelo e imagens têm registros separados abaixo.
 
 ## Teste nativo do Codex app-server
 
@@ -67,9 +70,15 @@ Após `npm ci --ignore-scripts` e `npm run build`, configure o cliente MCP para 
 
 A configuração não faz parte do teste automatizado e não instala nem altera um harness. O processo deve ter acesso de leitura à pasta `skills/` do mesmo protótipo. O cliente deve encerrar o subprocesso ao fechar a conexão. Nunca acrescente credenciais aos argumentos do comando ou ao retorno das tools.
 
-## Próximas verificações, ainda não realizadas
+## Experimentos de trajetória e imagens — 28/10/2026
 
-- Testar uma sessão real com modelo e dados sintéticos quando houver autorização e orçamento; o teste do app-server acima não demonstra uso da skill pelo modelo.
+O [registro das ondas](../../docs/evals/2026-10-28-harness/README.md) compara H0/H1 operando as tools reais por um [bridge local](evals/BRIDGE.md), com briefing fictício, imagens geradas no ambiente e composição de texto separada. H2–H4 testam refinamento da imagem, copy e direção de arte; M1/A1 exercitam escopo da memória e crítica por aspecto. Entradas, erros, hashes, planos, imagens e julgamentos foram preservados. Não é integração de geração do MCP nem execução BYOK do produto; os Judges são personas simuladas.
+
+As correções de contrato têm [antes/depois](evals/contracts/README.md), e a skill [refinar-criativo](evals/candidates/refinar-criativo.md) continua candidata fora do catálogo. O [inventário de trajetórias](../../docs/evals/2026-10-28-trajetorias-mcp.md) distingue observação parcial de capacidade ausente. A [nova verificação do app-server](../../docs/evals/2026-10-28-harness/verification-smoke.json) novamente chamou as seis tools sem iniciar turno de modelo.
+
+## Próximas verificações
+
+- Repetir as sessões de modelo em casos reservados e com mais de uma execução; as sessões sintéticas observadas não são uso humano, teste estatístico ou prova de generalização.
 - Projetar identidade, escopo, autorização por operação, proteção de BYOK, consentimento e isolamento antes de qualquer dado de usuário ou endpoint acessível.
 - Validar o ciclo de vida, cancelamento, concorrência e desempenho com Next.js/Vercel e versões fixadas. `fetchInProcess` é somente para teste, não é uma decisão sobre o adaptador de produção.
 - Definir e implementar as ferramentas de memória, referências, feedback e geração com seus testes; não expor operações que o protótipo não executa.

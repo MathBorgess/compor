@@ -1,0 +1,64 @@
+{
+  "date": "2026-10-28",
+  "command": "python3 scripts/test-codex-app-server.py",
+  "cwd": "prototypes/compor-mcp",
+  "exit_code": 0,
+  "result": {
+    "scope": "isolated_codex_app_server_synthetic_no_auth",
+    "transport": "stdio",
+    "model_turn_started": false,
+    "tests": {
+      "isolated_single_server": true,
+      "app_server_initialize": true,
+      "codex_mcp_discovery": [
+        "list_skills",
+        "load_skill",
+        "prepare_annotation_context",
+        "prepare_layered_creative",
+        "prepare_moodboard",
+        "prepare_word_cloud"
+      ],
+      "ephemeral_thread_without_turn": true,
+      "list_skills": {
+        "ids": [
+          "criar-piloto",
+          "entender-intencao",
+          "explorar-moodboards",
+          "traduzir-direcao"
+        ],
+        "version": "0.1.0-prototype"
+      },
+      "load_skill": {
+        "id": "entender-intencao",
+        "version": "0.1.0-prototype",
+        "content_sha256_matches": true,
+        "contentSha256": "235a0f42510c61e17dcacb8b1cd32fb164dea0433b0c90c4d5acfaaf17587472"
+      },
+      "prepare_word_cloud": {
+        "effective_weight": 0,
+        "effective_source": "client_supplied_choice",
+        "creates_confirmed_preference": false
+      },
+      "prepare_moodboard": {
+        "snapshot_received": true,
+        "style_hint": true,
+        "priority_zero_and_missing": true,
+        "no_generation_or_persistence": true,
+        "origins_verified": false
+      },
+      "unknown_skill_is_error": true,
+      "prepare_layered_creative": {
+        "ordered_layers": true,
+        "synthetic_style": true,
+        "no_generation_or_persistence": true
+      },
+      "prepare_annotation_context": {
+        "layer_and_area": true,
+        "scope_claim_unverified": true,
+        "no_memory_update": true
+      },
+      "own_app_server_exited": true
+    },
+    "codex_cli": "codex-cli 0.162.1"
+  }
+}

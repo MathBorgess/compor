@@ -1,0 +1,15 @@
+# Auditoria independente C2 — 28/10/2026
+
+Revisão de `server.ts`, testes MCP, bridge, compositor experimental e evidência de contratos. Nenhuma nota ou pontuação dos Judges foi consultada. Nenhum código ou resultado anterior foi alterado.
+
+**Conclusão:** não encontrei bloqueio concreto no contrato C2 para o protótipo local. Isso não demonstra integração em produção, confirmação humana, memória persistida ou qualidade criativa.
+
+- **Execução:** `npm test` passou 25/25. Reexecutei em MCP in-memory as 10 entradas preservadas em `type-candidate.json`; as saídas foram idênticas às registradas, sem chamadas ao `fetch` global. `node --check evals/bridge.mjs` passou. Comandos e resultados: [verification.txt](verification.txt).
+- **Identidade:** fonte C2 `fbb3b2ca38ff0c311e89ed01629d0f105cc375a9865ca3fe74936529f5f71b23`, build `ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029` e teste `29bd75b0d070e7d1929d8ce8e5d583831ad70d69b34d607a0a0a2836e19eadf6` conferem com a evidência. A entrada tipográfica do baseline é igual à primeira entrada do candidato; o baseline rejeita os campos novos.
+- **Tipografia:** `font_ref`, peso, entrelinha e alinhamento sobrevivem à preparação e anotação; campos omitidos continuam ausentes. Referências opacas não resolvem fontes e recebem `font_ref_unresolved`. Valores inválidos são rejeitados. Não há promessa de renderização fiel nem fallback dentro do MCP.
+- **Área:** zero, um e múltiplos candidatos geométricos têm estados distintos; nenhum deles vira seleção semântica ou edição automática. Camada por ID permanece explícita. Sobreposição inclui fundo e elementos ocultos por outras camadas: o consumidor ainda precisa resolver a ambiguidade com a pessoa.
+- **Memória de produto:** mesmo com `product_ref`, a resposta exige confirmação verificada externamente; sem produto, há aviso adicional. `user_confirmed` fornecido pelo chamador é rejeitado. A tool não autentica, confirma preferências nem grava memória.
+- **Bridge:** persiste evidência local por chamada, com hash do build executado; a marca `--synthetic` é alegação do operador. Bloquear `fetch` não constitui sandbox geral de rede. H0/H1 usaram C1; H2/M1 usaram C2. Portanto, os PNGs H0/H1 não demonstram a adição tipográfica C2.
+- **Compositor:** hashes de script, planos, quatro ativos e quatro PNGs H0/H1 conferem com `render-report.json`. Ele lê planos experimentais separados; `render-candidates.py` não resolve `font_ref` diretamente. O adaptador H2 contém mapeamento explícito `inter → Inter`, conserva o fallback anterior e verifica equivalência dos demais inputs. Esse mapeamento é específico do ensaio; não há catálogo de fontes integrado ao produto. Não reexecutei renderização nem sobrescrevi seus resultados.
+
+**Limite de reprodução:** o replay de C2 usa as entradas e saídas preservadas; seu arquivo não inclui um runner C2 congelado como o runner de cinco casos C1. O comando de replay está registrado em `verification.txt`. Reproduzir pixels exige também os mesmos arquivos de fontes e Pillow; outra plataforma não está validada.

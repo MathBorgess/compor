@@ -1,0 +1,202 @@
+{
+  "evaluation_id": "judge-v1",
+  "evaluated_on": "2026-10-28",
+  "evaluation_type": "LLM simulada por persona; não é avaliação humana",
+  "persona": "Dona solo da cafeteria de bairro Café Aurora, sem designer, buscando rapidez, campanha profissional e vontade de explorar outras direções.",
+  "blind": true,
+  "authorship_known": false,
+  "inspected_materials": [
+    "prototypes/compor-mcp/evals/sessions/blind/P1.png",
+    "prototypes/compor-mcp/evals/sessions/blind/P2.png",
+    "prototypes/compor-mcp/evals/sessions/blind/Q1.png",
+    "prototypes/compor-mcp/evals/sessions/blind/Q2.png"
+  ],
+  "unavailable_images": [],
+  "uninspected_materials": "Não foram lidos candidates, outputs, traces, render-report, mapping ou schemas do sistema.",
+  "brief_used": "Cafeteria de bairro; azul obrigatório; sem preços, endereço, datas ou promoções inventados; referência descrita como xícara azul em madeira; inspiração surreal surpreendente sem copiar ilha; duas direções úteis distintas; fonte leve; texto separado.",
+  "scales": {
+    "encantamento": {
+      "1": "rejeitaria",
+      "2": "muito retrabalho",
+      "3": "útil sem entusiasmo",
+      "4": "usaria com pequenos ajustes",
+      "5": "usaria e exploraria mais"
+    },
+    "adequacao_profissional": "1 inadequada a 5 muito convincente",
+    "fidelidade_briefing": "1 baixa a 5 alta, apenas nos aspectos visualmente observáveis",
+    "diversidade_util": "1 quase repetição a 5 direções distintas e úteis",
+    "atrito_aparente": "1 baixo a 5 alto; inferência sobre correções visuais, sem medir uso real"
+  },
+  "creatives": [
+    {
+      "id": "P1",
+      "encantamento": 3,
+      "adequacao_profissional": 4,
+      "fidelidade_briefing": 4,
+      "contribuicao_diversidade_no_par": 3,
+      "atrito_aparente": 2,
+      "adequacao_profissional_comment": "Peça organizada, legível e plausível para apresentar uma cafeteria. Cumpre a tarefa, mas a frase e a estrutura parecem bastante convencionais.",
+      "evidencia_visual": [
+        "Xícara e pires azuis grandes sobre madeira, com luz quente e sombras suaves.",
+        "Marca, título, descrição de cafeteria de bairro e chamada ficam em bloco creme separado da foto.",
+        "Título serifado de peso moderado, com boa distância entre os blocos de texto.",
+        "Não há preço, endereço, data ou promoção visível."
+      ],
+      "fidelidade_comment": "Azul, madeira, bairro e separação visual do texto estão presentes. Não apresenta surpresa surreal isoladamente; esta função pode caber à segunda direção do par. Não vi a referência original para comparar fidelidade exata.",
+      "atrito_comment": "Parece próxima de uso para apresentação básica. O principal trabalho seria dar uma característica mais própria à campanha, se desejado.",
+      "motivos_rejeicao": [
+        "Não rejeitaria como peça básica. Não a escolheria sozinha se a principal expectativa fosse surpresa criativa."
+      ],
+      "melhorias_concretas": [
+        "Manter a foto acolhedora e a hierarquia; experimentar uma chamada menos genérica e específica ao posicionamento confirmado da cafeteria.",
+        "Usar a segunda direção do par para explorar um conceito visual mais distinto, preservando esta como opção cotidiana."
+      ]
+    },
+    {
+      "id": "P2",
+      "encantamento": 3,
+      "adequacao_profissional": 3,
+      "fidelidade_briefing": 3,
+      "contribuicao_diversidade_no_par": 2,
+      "atrito_aparente": 3,
+      "adequacao_profissional_comment": "Legível e coerente no azul, mas o título pesado e a cena limpa de estúdio deixam a peça menos acolhedora. A levitação é clara, porém pouco surpreendente.",
+      "evidencia_visual": [
+        "Xícara azul flutua acima de um pires, com sombra oval marcando a suspensão.",
+        "Grande painel azul na parte superior com título branco em negrito.",
+        "A frase, a descrição e a chamada repetem P1; a estrutura de texto em cima e imagem embaixo também se repete.",
+        "A imagem usa superfície clara lisa, sem madeira visível.",
+        "Marca e convite estão visíveis, sem preços, datas, endereço ou promoções."
+      ],
+      "fidelidade_comment": "Atende azul, identificação e separação visual de texto. Há surrealismo por levitação e não há ilha visível. O peso do título contraria a direção de fonte leve; a mudança de conceito em relação a P1 é limitada.",
+      "atrito_comment": "Pediria nova versão tipográfica e maior diferença conceitual antes de escolher esta como a alternativa criativa da campanha.",
+      "motivos_rejeicao": [
+        "Rejeitaria esta versão como resposta final ao pedido de fonte leve.",
+        "Não pagaria por P1 e P2 como se fossem duas explorações muito diferentes apenas pela troca de fundo e levitação."
+      ],
+      "melhorias_concretas": [
+        "Trocar o título em negrito por peso regular ou leve, preservando contraste e legibilidade.",
+        "Explorar uma transformação surreal ligada à ideia de pausa, com composição e mensagem próprias, além de suspender a xícara.",
+        "Recuperar algum calor ou textura da referência se isso couber à direção escolhida."
+      ]
+    },
+    {
+      "id": "Q1",
+      "encantamento": 4,
+      "adequacao_profissional": 4,
+      "fidelidade_briefing": 4,
+      "contribuicao_diversidade_no_par": 4,
+      "atrito_aparente": 1,
+      "adequacao_profissional_comment": "É a peça que parece mais pronta para eu usar. A foto convida à pausa e a tipografia leve não compete com ela.",
+      "evidencia_visual": [
+        "Xícara azul sobre madeira com vapor visível e luz quente.",
+        "Foto ocupa a parte superior e há espaço de madeira ao redor do produto.",
+        "Bloco creme inferior apresenta Café Aurora, título curto em fonte sem serifa de peso leve, referência ao bairro e convite.",
+        "Texto azul sobre creme com alinhamento consistente e sem sobreposição à imagem.",
+        "Nenhum preço, endereço, data ou promoção aparece."
+      ],
+      "fidelidade_comment": "Combina azul, madeira, cafeteria de bairro, texto separado visualmente e título leve. É a direção cotidiana do par; não depende de surrealismo para cumprir esse papel.",
+      "atrito_comment": "Não encontro correção visual indispensável para uma peça básica de apresentação. Uso e edição reais não foram observados.",
+      "motivos_rejeicao": [
+        "Não rejeitaria para apresentação da cafeteria.",
+        "A imagem e a frase são convencionais; não satisfariam sozinhas a expectativa de uma campanha surpreendente."
+      ],
+      "melhorias_concretas": [
+        "Preservar a simplicidade desta direção.",
+        "Se houver um diferencial real confirmado da cafeteria, experimentar incorporá-lo à frase de apoio para reduzir a aparência genérica."
+      ]
+    },
+    {
+      "id": "Q2",
+      "encantamento": 4,
+      "adequacao_profissional": 3,
+      "fidelidade_briefing": 3,
+      "contribuicao_diversidade_no_par": 5,
+      "atrito_aparente": 2,
+      "adequacao_profissional_comment": "É a imagem que me faz querer ver outras ideias. A faixa azul impossível no céu e a frase combinam, mas a peça ainda precisa identificar a cafeteria.",
+      "evidencia_visual": [
+        "Uma grande faixa azul torcida em laço flutua diante de céu e nuvens.",
+        "A xícara azul fica sobre a faixa e ocupa uma área relativamente pequena da imagem.",
+        "O título leve em bloco creme separado diz 'Um café. Outra perspectiva.'.",
+        "Não há nome Café Aurora, descrição de bairro ou chamada visível.",
+        "Não há ilha, preço, endereço, data ou promoção visível."
+      ],
+      "fidelidade_comment": "Entrega azul, fonte leve, separação visual do texto e uma direção surreal mais marcante. A falta de identificação enfraquece a finalidade de divulgar o Café Aurora. A madeira não aparece nesta direção; a aderência à referência fotográfica não pode ser comparada sem o original.",
+      "atrito_comment": "Pediria uma revisão curta de marca e hierarquia antes de publicar. Não precisaria abandonar o conceito.",
+      "motivos_rejeicao": [
+        "Não usaria esta versão isolada como divulgação da cafeteria porque não identifica o estabelecimento.",
+        "A faixa pode ser lembrada mais que o café; se o produto ficar secundário mesmo após ajuste, eu voltaria à direção cotidiana."
+      ],
+      "melhorias_concretas": [
+        "Adicionar Café Aurora e um convite curto no bloco creme, usando o espaço livre e mantendo o peso leve.",
+        "Aumentar moderadamente a xícara ou reduzir a dominância da faixa para tornar o café o ponto focal.",
+        "Preservar a relação entre a imagem impossível e 'Outra perspectiva'; é o elemento que justifica esta direção."
+      ]
+    }
+  ],
+  "pairs": [
+    {
+      "id": "P",
+      "encantamento": 3,
+      "adequacao_profissional": 4,
+      "fidelidade_briefing": 3,
+      "diversidade_util": 2,
+      "atrito_aparente": 3,
+      "evidencia_visual": [
+        "As duas peças mostram nome, apresentação e convite completos.",
+        "Ambas repetem o mesmo texto, divisão horizontal e localização da marca.",
+        "A diferença principal é realismo sobre madeira versus xícara suspensa sobre fundo claro, com painel superior creme versus azul."
+      ],
+      "diversidade_comment": "Há variação suficiente para duas publicações próximas, mas pouca exploração de caminhos distintos. A direção surreal parece uma modificação da foto de produto.",
+      "motivos_rejeicao": [
+        "Não rejeitaria todo o par; escolheria P1 para uso básico.",
+        "Não consideraria encerrada a exploração pedida, principalmente pelo peso da fonte de P2 e pela pequena distância conceitual."
+      ],
+      "melhorias_concretas": [
+        "Manter P1 como rota acolhedora.",
+        "Refazer o conceito, a composição e a tipografia de P2 para uma segunda rota mais específica e leve."
+      ]
+    },
+    {
+      "id": "Q",
+      "encantamento": 4,
+      "adequacao_profissional": 4,
+      "fidelidade_briefing": 4,
+      "diversidade_util": 5,
+      "atrito_aparente": 2,
+      "evidencia_visual": [
+        "Q1 mostra o café em uma situação cotidiana e acolhedora; Q2 coloca o café sobre uma forma impossível no céu.",
+        "Os títulos são distintos e leves: pausa na primeira peça, outra perspectiva na segunda.",
+        "O azul e o bloco creme unem o par, apesar da mudança de mundo visual.",
+        "Q2 omite a marca e o convite presentes em Q1."
+      ],
+      "diversidade_comment": "Oferece uma escolha útil entre apresentação familiar e exploração imaginativa. A segunda direção cria curiosidade sem eliminar o café.",
+      "motivos_rejeicao": [
+        "Não aprovaria Q2 para uso isolado até incluir a identificação.",
+        "A ausência de marca em Q2 impede considerar o conjunto totalmente pronto."
+      ],
+      "melhorias_concretas": [
+        "Completar Q2 com marca e convite.",
+        "Dar mais presença à xícara em Q2.",
+        "Usar Q1 imediatamente como referência de tom e simplicidade para manter coerência no conjunto."
+      ]
+    }
+  ],
+  "preference": {
+    "preferred_pair": "Q",
+    "preferred_creative_for_immediate_use": "Q1",
+    "preferred_creative_for_further_exploration": "Q2",
+    "tie": false,
+    "rationale": "Q oferece uma peça cotidiana quase pronta e outra que traz curiosidade real dentro desta avaliação subjetiva. P tem identificação consistente, porém as alternativas parecem mais próximas e P2 pesa na tipografia.",
+    "ready_without_revision": false,
+    "required_revision": "Identificar Café Aurora em Q2; revisar a predominância da faixa sobre a xícara."
+  },
+  "limitations": [
+    "Este julgamento representa uma persona simulada por LLM, não uma preferência humana observada.",
+    "A autoria e a correspondência dos rótulos P/Q com os sistemas avaliados são desconhecidas.",
+    "Apenas quatro PNGs foram inspecionados. Não foram avaliados schemas, ferramentas, velocidade, cliques, custos, editabilidade ou arquivos em camadas.",
+    "Texto em área visualmente separada não comprova que seja tecnicamente editável ou separado no arquivo.",
+    "A referência original não foi fornecida para comparação direta; só sua descrição foi usada.",
+    "As imagens não comprovam o produto, a louça, o ambiente ou outros fatos reais da cafeteria.",
+    "Não se inferem eficácia, vendas, engajamento, viralização ou aceitação humana a partir destas imagens."
+  ]
+}

@@ -22,7 +22,7 @@ Alvo da alteração, alcance da alteração e escopo de uma hipótese de prefer�
 | Peça | Usar a crítica para orientar esta peça quando apropriado. | Rejeitar uma fonte não rejeita automaticamente a peça inteira. |
 | Variação | Associar a evidência à variação exibida; comparar novas alternativas. | Não copiar a crítica a outras variações sem relação ou confirmação. |
 | Campanha / tarefa | Criar hipótese reversível com origem e evidência, quando a observação apoiar a reutilização contextual. | Não substituir preferência confirmada; duas rejeições distintas do mesmo aspecto e escopo são hipótese inicial de recorrência, não regra validada. |
-| Produto | Possível alcance futuro a ser definido com a pessoa. | Nenhuma propagação automática da hipótese a produto, marca ou organização é comprovada ou decidida. |
+| Produto | Conforme decisão de 28/10/2026, ampliar preferência inferida ao produto exige confirmação da pessoa. | Não há propagação automática a produto, marca ou organização; a checagem e persistência dessa confirmação ainda não estão implementadas. |
 
 Feedback positivo pode orientar a exploração dentro do seu contexto, assim como feedback negativo, sem inferir conclusão da tarefa. Dados para avaliação/curadoria e conteúdo em traces dependem das permissões específicas já acordadas. O protótipo não salva preferência ou evento e, portanto, não prova isolamento ou evolução de memória em nenhum escopo.
 

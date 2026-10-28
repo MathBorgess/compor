@@ -1,0 +1,142 @@
+{
+  "piece": {
+    "piece_id": "aurora-presenca",
+    "version": "v2-proposal",
+    "width_px": 1080,
+    "height_px": 1350,
+    "layers": [
+      {
+        "id": "reading-zone",
+        "kind": "shape",
+        "name": "Zona sólida de leitura",
+        "z_index": 0,
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 0.4
+        },
+        "shape": "rectangle",
+        "fill_hex": "#F4EFE5"
+      },
+      {
+        "id": "hero",
+        "kind": "image",
+        "name": "Arte sem texto — geração pendente",
+        "z_index": 1,
+        "rect": {
+          "x": 0,
+          "y": 0.4,
+          "width": 1,
+          "height": 0.6
+        }
+      },
+      {
+        "id": "brand",
+        "kind": "text",
+        "name": "Nome da cafeteria",
+        "z_index": 2,
+        "rect": {
+          "x": 0.06666666666666667,
+          "y": 0.04,
+          "width": 0.8666666666666667,
+          "height": 0.03111111111111111
+        },
+        "text": "CAFÉ AURORA",
+        "font_size_px": 30,
+        "color_hex": "#1F4C8C",
+        "font_ref": "Arial",
+        "font_weight": 700,
+        "line_height": 1.2
+      },
+      {
+        "id": "headline",
+        "kind": "text",
+        "name": "Título editável",
+        "z_index": 3,
+        "rect": {
+          "x": 0.06666666666666667,
+          "y": 0.09185185185185185,
+          "width": 0.8666666666666667,
+          "height": 0.12148148148148148
+        },
+        "text": "Uma pausa\ncomeça com café.",
+        "font_size_px": 64,
+        "color_hex": "#143150",
+        "font_ref": "Georgia",
+        "font_weight": 400,
+        "line_height": 1.1875
+      },
+      {
+        "id": "copy",
+        "kind": "text",
+        "name": "Convite editável",
+        "z_index": 4,
+        "rect": {
+          "x": 0.06666666666666667,
+          "y": 0.23407407407407407,
+          "width": 0.8666666666666667,
+          "height": 0.05925925925925926
+        },
+        "text": "Conheça o Café Aurora,\na cafeteria do bairro.",
+        "font_size_px": 32,
+        "color_hex": "#143150",
+        "font_ref": "Arial",
+        "font_weight": 400,
+        "line_height": 1.21875
+      },
+      {
+        "id": "cta",
+        "kind": "text",
+        "name": "CTA editável",
+        "z_index": 5,
+        "rect": {
+          "x": 0.06666666666666667,
+          "y": 0.3333333333333333,
+          "width": 0.8666666666666667,
+          "height": 0.02962962962962963
+        },
+        "text": "Venha conhecer",
+        "font_size_px": 28,
+        "color_hex": "#1F4C8C",
+        "font_ref": "Arial",
+        "font_weight": 700,
+        "line_height": 1.2142857142857142
+      }
+    ]
+  },
+  "annotations": [
+    {
+      "id": "a1-tipografia",
+      "piece_version": "v2-proposal",
+      "target": {
+        "kind": "area",
+        "rect": {
+          "x": 0.06666666666666667,
+          "y": 0.04,
+          "width": 0.8666666666666667,
+          "height": 0.32296296296296295
+        }
+      },
+      "note": "Origem: fala de persona fictícia da simulação A1; feedback humano real não observado. Trecho: \"na primeira ideia achei a fonte pesada, não sei dizer por quê. Quero mais leve só nessa peça\". Aspecto proposto pelo agente: tipografia; polaridade proposta: negativa sobre o peso percebido, com direção desejada de maior leveza. Causa desconhecida. A área é uma proposta do agente que abrange todas as caixas de texto; não houve clique, retângulo humano nem seleção de camada. Pode envolver brand, headline, copy ou cta; a sobreposição com o fundo não implica crítica ao fundo. Alcance da possível edição: apenas esta peça. Possível memória: no máximo tarefa, reversível e sem confirmação ou gravação. O snapshot v2-proposal já declara Georgia 400 no título; não atribuir a causa a bold nem repetir uma redução de peso como diagnóstico.",
+      "edit_scope_claim": "piece",
+      "memory_scope_claim": "task"
+    },
+    {
+      "id": "a1-paleta",
+      "piece_version": "v2-proposal",
+      "target": {
+        "kind": "area",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        }
+      },
+      "note": "Origem: fala de persona fictícia da simulação A1; feedback humano real não observado. Trecho: \"no fundo gostei da paleta\". Aspecto proposto pelo agente: cor; polaridade proposta: positiva. Preservar a paleta declarada nesta peça (#F4EFE5, #1F4C8C e #143150); os acentos de madeira e creme continuam descrições sem ativo resolvido. A expressão \"no fundo\" não identifica uma camada de background. A área da peça inteira é proposta do agente para manter a abrangência da paleta, não um retângulo desenhado por pessoa nem aprovação da peça inteira. Causa do elogio desconhecida. Nenhuma alteração de cor solicitada. Alcance de preservação: esta peça. Possível memória: no máximo tarefa, reversível, não confirmada nem gravada.",
+      "edit_scope_claim": "piece",
+      "memory_scope_claim": "task"
+    }
+  ]
+}

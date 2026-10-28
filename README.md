@@ -15,7 +15,7 @@ Compor é uma proposta de espaço no navegador para explorar referências e alte
 - [Dossiê dos relatos](docs/pesquisa/2026-10-23-voz-do-cliente/README.md): 67 registros com fontes, linguagem, satisfações, dores e limites de amostra.
 - [Google Docs e verificação](docs/debate/2026-10-23-reestruturacao/google-docs.md): espelhos editáveis na conta pessoal de Matheus.
 
-## Direção v0 em discussão
+## Arquitetura v0 e experimento MCP
 
 A pessoa explora imagens e frases, atribui rótulos sugeridos ou próprios e compara alternativas para definir uma direção criativa. Pode rejeitar opções, voltar a divergir e produzir um piloto com arte e legenda. O piloto poderá ser baixado em PNG e o texto copiado; download e aprovação são ações distintas.
 
@@ -23,7 +23,9 @@ O Compor será acessado no navegador, com conexão obrigatória. A direção té
 
 Traces e avaliações autorizados usam MLflow privado na Oracle. O reenvio de eventos após falha é futuro, portanto podem existir lacunas. Casos e datasets ajudam a avaliar prompts, tools e trajetórias, sem treinar modelos; promoção do harness exige revisão. Autorização de conteúdo e telemetria é separada do uso da memória para a pessoa. O procedimento de recuperação será manual, com dump do banco e cópia dos arquivos.
 
-O desenho está em revisão e não foi aprovado por completo. Aplicação, integração, custos, recuperação e capacidade ainda não foram comprovados. Consulte o [resumo da arquitetura v0](docs/arquitetura-v0.md), o [Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) e o [Jira](https://compor-mathai.atlassian.net/browse/SCRUM-49).
+A arquitetura v0 foi aprovada por Matheus; o [PR #7](https://github.com/MathBorgess/oficina-em-prancha/pull/7) foi mergeado em 27/10/2026. Aplicação, integração, custos, recuperação e capacidade ainda precisam de implementação e prova. Consulte o [resumo da arquitetura v0](docs/arquitetura-v0.md), o [Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258) e o [Jira](https://compor-mathai.atlassian.net/browse/SCRUM-49).
+
+A [SCRUM-51](https://compor-mathai.atlassian.net/browse/SCRUM-51) investiga camadas e Annotate no [protótipo MCP](prototypes/compor-mcp/README.md). As [ondas de avaliação de trajetórias e criativos](docs/evals/2026-10-28-harness/README.md) preservam candidatos, imagens e julgamentos de personas simuladas. Essas adições continuam experimentais e não herdam a aprovação da arquitetura v0.
 
 ## Referências de trabalho e histórico
 

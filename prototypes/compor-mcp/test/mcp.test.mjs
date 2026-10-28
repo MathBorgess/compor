@@ -445,3 +445,168 @@ test('two annotated targets keep positive and negative notes and their declared 
     assert.equal(context.persists_data, false);
   } finally { await client.close(); await server.close(); }
 });
+
+test('word-cloud technical envelope preserves fractional weights but rejects unsafe magnitudes', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const valid = await client.callTool({ name: 'prepare_word_cloud', arguments: { words: [
+      { word: 'fractional', chosen_weight: 0.5 },
+      { word: 'boundary', chosen_weight: Number.MAX_SAFE_INTEGER },
+    ] } });
+    assert.equal(valid.isError, undefined);
+    assert.deepEqual(valid.structuredContent.words.map(w => w.effective_weight), [0.5, Number.MAX_SAFE_INTEGER]);
+    for (const field of ['frequency', 'suggested_weight', 'chosen_weight']) {
+      const invalid = await client.callTool({ name: 'prepare_word_cloud', arguments: { words: [{ word: 'overflow', [field]: 1e308 }] } });
+      assert.equal(invalid.isError, true);
+    }
+  } finally { await client.close(); await server.close(); }
+});
+
+test('moodboard rejects out-of-canvas boxes and makes unverified rotation bounds explicit', async () => {
+  const { server, client } = await inMemory();
+  const base = { board_id: 'board-1', board_version: 'v1', direction: 'fictitious' };
+  const element = { id: 'shape-1', kind: 'shape', intent: 'keep', value: 'circle' };
+  try {
+    for (const geometry of [
+      { x: 0.95, y: 0, width: 0.5, height: 0.5 },
+      { x: 0, y: 0.95, width: 0.5, height: 0.5 },
+    ]) {
+      const result = await client.callTool({ name: 'prepare_moodboard', arguments: { ...base, elements: [{ ...element, geometry }] } });
+      assert.equal(result.isError, true);
+    }
+    const geometry = { x: 0.5, y: 0.5, width: 0.5, height: 0.5, rotation: 45 };
+    const rotated = await client.callTool({ name: 'prepare_moodboard', arguments: { ...base, elements: [{ ...element, geometry }] } });
+    assert.equal(rotated.isError, undefined);
+    assert.deepEqual(rotated.structuredContent.elements[0].geometry, geometry);
+    assert.deepEqual(rotated.structuredContent.warnings, [{ code: 'rotated_bounds_not_checked', element_id: 'shape-1' }]);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('incomplete image layers are preserved as explicit missing-asset warnings', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const piece = { ...syntheticPiece, layers: syntheticPiece.layers.map(layer => {
+      if (layer.kind !== 'image') return layer;
+      const { asset_ref, ...placeholder } = layer;
+      return placeholder;
+    }) };
+    const result = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece } });
+    assert.equal(result.isError, undefined);
+    assert.deepEqual(result.structuredContent.warnings, [{ code: 'image_asset_missing', layer_id: 'fundo' }]);
+    assert.equal(result.structuredContent.piece.layers[0].asset_ref, undefined);
+    const resolved = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece: syntheticPiece } });
+    assert.deepEqual(resolved.structuredContent.warnings, []);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('area selection distinguishes unresolved, ambiguous and single geometric candidates from explicit layer IDs', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const piece = { ...syntheticPiece, layers: syntheticPiece.layers.filter(layer => layer.id !== 'fundo') };
+    const base = { piece_version: 'v1', note: 'mudar' };
+    const result = await client.callTool({ name: 'prepare_annotation_context', arguments: { piece, annotations: [
+      { ...base, id: 'empty', target: { kind: 'area', rect: { x: 0.8, y: 0.8, width: 0.1, height: 0.1 } } },
+      { ...base, id: 'single', target: { kind: 'area', rect: { x: 0.1, y: 0.1, width: 0.1, height: 0.1 } } },
+      { ...base, id: 'multiple', target: { kind: 'area', rect: { x: 0, y: 0, width: 1, height: 1 } } },
+      { ...base, id: 'explicit', target: { kind: 'layer', layer_id: 'preco' } },
+    ] } });
+    assert.equal(result.isError, undefined);
+    assert.deepEqual(result.structuredContent.annotations.map(a => a.selection_status), [
+      'unresolved', 'single_geometric_candidate', 'ambiguous_candidates', 'explicit_layer',
+    ]);
+    assert.deepEqual(result.structuredContent.annotations[0].warnings, [{ code: 'area_has_no_candidate' }]);
+    assert.deepEqual(result.structuredContent.annotations[2].warnings, [{ code: 'area_has_multiple_candidates' }]);
+    assert.equal(result.structuredContent.input_snapshot_authenticated, false);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('product memory scope always requires externally verified confirmation and warns if product context is absent', async () => {
+  const { server, client } = await inMemory();
+  const annotation = { id: 'a1', piece_version: 'v1', target: { kind: 'layer', layer_id: 'preco' }, note: 'não gosto desta fonte', memory_scope_claim: 'product' };
+  try {
+    for (const product_ref of [undefined, null, 'product-1']) {
+      const result = await client.callTool({ name: 'prepare_annotation_context', arguments: {
+        piece: { ...syntheticPiece, product_ref }, annotations: [annotation],
+      } });
+      assert.equal(result.isError, undefined);
+      const context = result.structuredContent;
+      assert.equal(context.annotations[0].memory_scope_status, 'requires_verified_confirmation');
+      assert.equal(context.annotations[0].warnings.some(w => w.code === 'product_context_missing'), !product_ref);
+      assert.equal(context.scope_claims_verified, false);
+      assert.equal(context.updates_memory, false);
+    }
+    const forged = await client.callTool({ name: 'prepare_annotation_context', arguments: {
+      piece: syntheticPiece, annotations: [{ ...annotation, user_confirmed: true }],
+    } });
+    assert.equal(forged.isError, true);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('typographic intent survives layered creative and annotation round trips without resolving the font', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const intent = { font_ref: 'typeface-synthetic', font_weight: 650, line_height: 1.25, text_align: 'center' };
+    const piece = { ...syntheticPiece, layers: syntheticPiece.layers.map(layer => layer.id === 'preco' ? { ...layer, ...intent } : layer) };
+    const prepared = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece } });
+    assert.equal(prepared.isError, undefined);
+    const annotation = await client.callTool({ name: 'prepare_annotation_context', arguments: {
+      piece: prepared.structuredContent.piece,
+      annotations: [{ id: 'type-note', piece_version: 'v1', target: { kind: 'layer', layer_id: 'preco' }, note: 'Use a intenção tipográfica informada' }],
+    } });
+    assert.equal(annotation.isError, undefined);
+    for (const result of [prepared, annotation]) {
+      const price = result.structuredContent.piece.layers.find(layer => layer.id === 'preco');
+      for (const [field, value] of Object.entries(intent)) assert.equal(price[field], value);
+      assert.equal(price.text, 'R$ 39');
+      assert.deepEqual(result.structuredContent.warnings, [{ code: 'font_ref_unresolved', layer_id: 'preco' }]);
+      assert.equal(result.structuredContent.renders_or_generates_image, false);
+      assert.equal(result.structuredContent.persists_data, false);
+    }
+  } finally { await client.close(); await server.close(); }
+});
+
+test('omitted typographic fields remain absent and supplied numeric bounds do not create a font fallback', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const bareLayer = { id: 'text', name: 'Text', kind: 'text', z_index: 0, rect: { x: 0, y: 0, width: 1, height: 1 }, text: 'Texto' };
+    for (const styles of [{}, { font_weight: 100, line_height: 0.8, text_align: 'left' }, { font_weight: 900, line_height: 3, text_align: 'right' }]) {
+      const piece = { piece_id: 'type-piece', version: 'v1', width_px: 640, height_px: 800, layers: [{ ...bareLayer, ...styles }] };
+      const prepared = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece } });
+      assert.equal(prepared.isError, undefined);
+      const annotated = await client.callTool({ name: 'prepare_annotation_context', arguments: {
+        piece: prepared.structuredContent.piece,
+        annotations: [{ id: 'a', piece_version: 'v1', target: { kind: 'layer', layer_id: 'text' }, note: 'Revisar texto' }],
+      } });
+      assert.equal(annotated.isError, undefined);
+      for (const response of [prepared, annotated]) {
+        const text = response.structuredContent.piece.layers[0];
+        assert.equal(Object.hasOwn(text, 'font_ref'), false);
+        assert.equal(Object.hasOwn(text, 'font_size_px'), false);
+        for (const field of ['font_weight', 'line_height', 'text_align']) {
+          assert.equal(Object.hasOwn(text, field), Object.hasOwn(styles, field));
+          if (Object.hasOwn(styles, field)) assert.equal(text[field], styles[field]);
+        }
+        assert.deepEqual(response.structuredContent.warnings, []);
+      }
+    }
+  } finally { await client.close(); await server.close(); }
+});
+
+test('invalid typographic references, weights, line heights and alignments are rejected', async () => {
+  const { server, client } = await inMemory();
+  try {
+    const text = syntheticPiece.layers.find(layer => layer.kind === 'text');
+    for (const style of [
+      { font_ref: '' }, { font_ref: '../font.ttf' }, { font_ref: 'https://example.com/font.woff' },
+      { font_weight: 99 }, { font_weight: 901 }, { font_weight: 450.5 }, { font_weight: 'bold' },
+      { line_height: 0.79 }, { line_height: 3.01 }, { line_height: '1.2' }, { text_align: 'justify' },
+    ]) {
+      const result = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece: { ...syntheticPiece, layers: [{ ...text, ...style }] } } });
+      assert.equal(result.isError, true, JSON.stringify(style));
+    }
+    const typedShape = await client.callTool({ name: 'prepare_layered_creative', arguments: { piece: {
+      ...syntheticPiece, layers: [{ ...syntheticPiece.layers.find(layer => layer.kind === 'shape'), font_ref: 'unexpected' }],
+    } } });
+    assert.equal(typedShape.isError, true);
+  } finally { await client.close(); await server.close(); }
+});

@@ -1,0 +1,241 @@
+{
+  "evaluation_id": "judge-h3",
+  "date": "2026-10-28",
+  "comparison_kind": "development_comparison_with_reused_judge",
+  "judge": {
+    "persona": "Solo founder muito crítico de cafeteria early-stage, buscando campanha profissional rápida e vontade de explorar direções.",
+    "model": "GPT-6 (família informada no contexto; identificador exato de execução não observável)",
+    "reused_from": "judge-h2",
+    "independent_from_h2": false,
+    "holdout": false,
+    "previous_judgment_in_context": true,
+    "previous_criticism_remembered": "Em H2, preferi o par com café maior na peça surreal e dei encantamento 4/5. O impedimento para nota 5 foi a pouca singularidade da combinação entre frase e composição. Também preservei nota 5 de fidelidade visual e 4 de diversidade e adequação profissional.",
+    "baseline_recognition": "Os hashes de K1 e K2 correspondem respectivamente a Q1 e Y vistos em H2. Portanto reconheci K como o antigo par B. Autoria, configurações e prompts de geração continuam desconhecidos.",
+    "bias_risk": "Familiaridade com a base e com minha crítica anterior pode orientar a atenção para copy e assinatura. Esta rodada serve para desenvolvimento, não como confirmação por avaliador independente."
+  },
+  "judgment_prompt": "Nova comparação de desenvolvimento, preservando sua régua e julgamento anterior. Inspecione quatro PNGs completos em prototypes/compor-mcp/evals/sessions/blind/h3/{K1,K2,L1,L2}.png. K e L são os pares, autoria/configuração não informadas. Use exatamente briefing e escala de antes, transcreva texto e avalie os pares por encantamento, diversidade, fidelidade, adequação. Não leia arquivos de candidatos/prompts/outros Judges. Você não precisa dar5 nem preferir novidade; o user quer crítica honesta. Veja se o vínculo entre frase/imagem dá assinatura útil à campanha ou só vira jogo de palavras. Salve judge-h3.json e .md SEM sobrescrever anteriores; inclua hashes e declare avaliador reaproveitado de H2, com memória da crítica anterior (não independente/holdout). Nenhuma alteração de imagens/código.",
+  "inherited_context": {
+    "brief_path": "prototypes/compor-mcp/evals/sessions/brief.md",
+    "brief_source": "Mesmo briefing sintético lido em H2, mantido no contexto desta conversa.",
+    "rubric_source": "Mesma régua de H2, explicitada em scales.",
+    "scope": "Azul, duas direções distintas, post vertical, texto em zona sólida separada, sem preço/endereço/data/promoção inventados. Leveza tipográfica solicitada apenas na primeira peça. Camadas e conclusão não verificáveis por PNG."
+  },
+  "inspection": {
+    "files_read_this_round": [
+      "prototypes/compor-mcp/evals/sessions/blind/h3/K1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h3/K2.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h3/L1.png",
+      "prototypes/compor-mcp/evals/sessions/blind/h3/L2.png"
+    ],
+    "all_images_viewed_with_original_detail": true,
+    "other_judges_or_candidate_files_read": false,
+    "images_or_product_code_modified": false,
+    "pixel_checks": "Comparação somente em memória: arte (y<810), marca (y=810..909) e CTA (y=1210..1349) de K1/L1 e K2/L2 são respectivamente idênticos. Isto confirma os trechos comuns e evita atribuir à arte diferenças que estão na copy. Nenhum arquivo de imagem foi alterado.",
+    "coordinator_technical_notice": {
+      "received": true,
+      "content": "O compositor confirmou imagens/estilos/marca/CTA iguais entre K e L, apenas título e apoio diferentes; verificação técnica consta à parte, não substitui sua inspeção.",
+      "timing": "Recebido depois da inspeção, da comparação de pixels própria e do primeiro salvamento de judge-h3.json/.md com o placar; antes do fechamento do julgamento ao coordenador.",
+      "effect": "Nenhuma nota ou preferência foi alterada. O aviso converge com a inspeção própria e não revelou autoria, candidatos ou prompts. Ainda assim, este protocolo registra exposição a informação técnica de invariantes durante a rodada; não a descreve como totalmente sem essa informação."
+    }
+  },
+  "inputs": {
+    "K1": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h3/K1.png",
+      "sha256": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "K2": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h3/K2.png",
+      "sha256": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "L1": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h3/L1.png",
+      "sha256": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    },
+    "L2": {
+      "path": "prototypes/compor-mcp/evals/sessions/blind/h3/L2.png",
+      "sha256": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+      "dimensions_px": [
+        1080,
+        1350
+      ]
+    }
+  },
+  "visible_text_transcription": {
+    "K1": [
+      "CAFÉ AURORA",
+      "Uma pausa\ncom café.",
+      "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+      "Venha conhecer."
+    ],
+    "K2": [
+      "CAFÉ AURORA",
+      "Um café.\nOutra perspectiva.",
+      "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+      "Venha conhecer."
+    ],
+    "L1": [
+      "CAFÉ AURORA",
+      "Nem toda aurora\nvem com o sol.",
+      "A sua pode vir numa xícara.\nConheça o Café Aurora, sua cafeteria de bairro.",
+      "Venha conhecer."
+    ],
+    "L2": [
+      "CAFÉ AURORA",
+      "Café de bairro.\nPausa de outro mundo.",
+      "Dê uma volta no seu dia.\nConheça o Café Aurora, sua cafeteria de bairro.",
+      "Venha conhecer."
+    ]
+  },
+  "scales": {
+    "enchantment": {
+      "1": "rejeitaria",
+      "2": "muito retrabalho",
+      "3": "útil sem entusiasmo",
+      "4": "usaria com pequenos ajustes",
+      "5": "usaria e gostaria de explorar mais"
+    },
+    "useful_diversity": "1 = redundante; 3 = alguma variação útil; 5 = direções claramente distintas e igualmente úteis para decidir a campanha.",
+    "professional_suitability": "1 = inadequado para uso; 3 = base utilizável com revisão; 5 = composição profissional pronta no escopo visual.",
+    "brief_fidelity": "1 = violações centrais; 3 = atendimento parcial; 5 = requisitos visuais observáveis atendidos. Não comprova requisitos operacionais invisíveis no PNG."
+  },
+  "image_assessments": {
+    "K1": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "Xícara azul grande, café e crema visíveis, vapor sobre madeira iluminada; o produto é imediatamente reconhecível.",
+        "Headline regular em duas linhas e bloco creme dão leitura e respiro.",
+        "Uma pausa com café descreve a situação sem acrescentar um ponto de vista próprio do Aurora."
+      ],
+      "copy_image_relationship": "Coerente e imediato, porém genérico. A frase poderia acompanhar muitas fotografias de café.",
+      "persona_verdict": "Usaria como peça cotidiana segura; não gera entusiasmo extra."
+    },
+    "K2": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "Xícara grande em cima de uma faixa azul flutuante entre nuvens; café e surpresa permanecem perceptíveis.",
+        "Um café. Outra perspectiva. acompanha a mudança de contexto e a cena impossível.",
+        "A headline aberta ainda depende da arte para explicar qual é a perspectiva e tem pouca ligação particular com o nome Aurora."
+      ],
+      "copy_image_relationship": "Serve à imagem sem atrapalhar, mas funciona mais como legenda abstrata do que como assinatura de campanha.",
+      "persona_verdict": "Usaria com pequenos ajustes. Mantém a avaliação anterior de H2."
+    },
+    "L1": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "A fotografia é a mesma de K1; a luz quente e a xícara sustentam a ideia de começo do dia.",
+        "Nem toda aurora vem com o sol. ativa o nome da marca; A sua pode vir numa xícara. fecha a metáfora no café.",
+        "A foto contém luz solar bastante evidente. Ela não apresenta visualmente uma aurora sem sol; o sentido especial depende da frase e de sua linha explicativa.",
+        "Headline mais longa continua legível e regular; a segunda linha do corpo é mais extensa, mas cabe com margem suficiente."
+      ],
+      "copy_image_relationship": "Há um ganho real de ligação ao nome Aurora, mas ele é principalmente verbal. Não é uma contradição lógica dizer nem toda aurora sobre uma cena de sol; é uma associação visual menos surpreendente do que a promessa da headline.",
+      "signature_usefulness": "Parcial: associa a marca a começo/renovação, mas a sua aurora é uma metáfora aberta e requer a linha seguinte para aterrissar no produto.",
+      "persona_verdict": "Aceitaria para testar, mas é a peça mais fraca de L como avanço criativo. Não daria nota 5 pelo trocadilho com o nome."
+    },
+    "L2": {
+      "enchantment": 4,
+      "professional_suitability": 4,
+      "brief_fidelity_visible": 5,
+      "evidence": [
+        "Café de bairro. apresenta a categoria e a proximidade logo no título; Pausa de outro mundo. tem correspondência clara com a xícara suspensa num céu impossível.",
+        "Dê uma volta no seu dia. se relaciona com a forma em laço da faixa azul e com a ideia de interromper a rotina.",
+        "A xícara permanece grande, com café visível; a frase não desloca a atenção para um assunto estranho à cafeteria.",
+        "O corpo repete sua cafeteria de bairro depois de Café de bairro. na headline. Essa repetição consome espaço sem acrescentar informação."
+      ],
+      "copy_image_relationship": "É a melhora mais útil: cria uma relação compreensível entre cafeteria próxima, pausa e cenário extraordinário. A imagem ajuda a entender a frase imediatamente.",
+      "signature_usefulness": "Mais que um jogo de palavras isolado, há uma premissa de campanha utilizável. Ainda se apoia na expressão publicitária comum de outro mundo, e a combinação com volta adiciona um segundo jogo verbal que pode ser dispensável.",
+      "persona_verdict": "Usaria com pequenos ajustes na redundância do corpo. É a peça que faz L superar K dentro da mesma nota 4."
+    }
+  },
+  "pair_assessments": {
+    "K": {
+      "images": [
+        "K1",
+        "K2"
+      ],
+      "scores": {
+        "enchantment": 4,
+        "useful_diversity": 4,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "evidence": [
+        "Duas atmosferas claras: acolhimento cotidiano em madeira e fantasia entre nuvens.",
+        "Café grande e saliente nas duas peças; bloco creme, azul e hierarquia comum sustentam unidade.",
+        "A copy é legível e direta, mas tanto pausa com café quanto outra perspectiva permanecem genéricas."
+      ],
+      "persona_verdict": "Usaria com pequenos ajustes, mantendo exatamente a conclusão do mesmo par em H2.",
+      "would_truly_delight_persona": false,
+      "concrete_blocker": "A campanha é correta e bonita, mas não oferece uma ideia verbal suficientemente própria para gerar vontade espontânea de explorar mais."
+    },
+    "L": {
+      "images": [
+        "L1",
+        "L2"
+      ],
+      "scores": {
+        "enchantment": 4,
+        "useful_diversity": 4,
+        "professional_suitability": 4,
+        "brief_fidelity_visible": 5
+      },
+      "evidence": [
+        "O par mantém a mesma diversidade visual e saliência do café de K; a mudança observável é a copy.",
+        "L1 liga a mensagem ao nome Aurora; L2 liga a fantasia ao bairro e à pausa. Há mais trabalho de conceito, porém as duas associações não são igualmente fortes.",
+        "L2 une frase e imagem com clareza. L1 precisa explicar o jogo de aurora e sol no corpo.",
+        "O aumento de copy cabe no layout e não reduz a leitura abaixo do nível profissional anterior. A redundância de bairro em L2 é um ajuste concreto."
+      ],
+      "persona_verdict": "Preferiria L para avançar, com pequenos ajustes. L2 mostra um caminho de campanha melhor, mas o conjunto ainda não me encantaria a ponto de dar nota 5.",
+      "would_truly_delight_persona": false,
+      "concrete_blocker": "A assinatura é desigual: L2 tem uma premissa útil, enquanto L1 parece mais um recurso verbal sobre o nome. As duas peças ainda não fazem a campanha inteira parecer particularmente própria do Aurora.",
+      "bounded_next_adjustment": "Preservar o vínculo claro entre bairro e cena extraordinária em L2, retirando redundância no corpo. Se houver outra rodada, priorizar uma alternativa de frase para L1 que tenha relação mais imediata com aquela imagem; não mudar a arte automaticamente."
+    }
+  },
+  "comparison": {
+    "preferred_pair": "L",
+    "preference_strength": "leve a moderada",
+    "enchantment_score_delta_L_minus_K": 0,
+    "interpretation": "Há melhoria qualitativa dentro da mesma categoria ordinal 4, não um salto demonstrado para encantamento 5.",
+    "main_gain": "L2 transforma a cena surreal em expressão de uma pausa fora da rotina oferecida por uma cafeteria de bairro.",
+    "main_reservation": "O jogo com aurora em L1 é específico do nome, mas não tem o mesmo vínculo visual imediato; singularidade nominal não basta para justificar nota 5.",
+    "diversity_changed": false,
+    "neither_pair_scores_5_enchantment": true,
+    "should_be_reported_as_independent_validation": false
+  },
+  "scope_checks": {
+    "blue_retained": true,
+    "solid_text_zone": true,
+    "invented_price_address_date_promotion": false,
+    "type_weight_scope": "Pedido de leveza apenas para primeira peça; nenhuma penalização por possibilidade de peso maior na segunda. O título da primeira peça continua regular e aberto.",
+    "literal_island_copy": false,
+    "editable_layers": "Não verificável.",
+    "click_or_point_feedback": "Não verificável.",
+    "campaign_completion": "Não inferida.",
+    "use_of_other_world_phrase": "Tratada como metáfora publicitária ligada à imagem, não como prova de benefício exclusivo ou promessa factual."
+  },
+  "limitations": [
+    "Avaliador reaproveitado de H2, com memória explícita da crítica e reconhecimento da base por hash. Não é avaliação independente nem holdout.",
+    "Persona simulada não representa aprovação humana de Matheus nem preferência observada de pessoas donas de cafeteria.",
+    "Não foram lidos prompts de geração, configurações de candidatos, código, avaliações de outros Judges ou arquivos do produto.",
+    "Quatro PNGs permitem avaliar composição e texto; não comprovam editabilidade, custo, prazo, publicação ou campanha concluída.",
+    "Não há evidência de engajamento, viralidade, visitas, vendas ou resultado profissional.",
+    "As notas são ordinais e qualitativas; empate na nota 4 admite preferência menor dentro da categoria."
+  ]
+}

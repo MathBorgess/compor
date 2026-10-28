@@ -1,0 +1,267 @@
+{
+  "candidate": "H2",
+  "pillow_version": "12.2.0",
+  "script_sha256": "5ecdd6b6e529166026eaea7230a40542c1d06aeca9c1e6babfb067151fa03643",
+  "baseline_renderer_sha256": "3d6a652224c24bd2b837c3124cd83cdc15f8c7fc0869f951361848dbce835039",
+  "input_hashes": {
+    "sessions/H2-output.json": "16e23b740b613dcfb2b186650c6988824bce64735839c063796381e312127ea8",
+    "sessions/H0-output.json": "d2a93d41b1be8d3050bbf5070db202a4f9fcb1b3cbc893a6e63caf6ab5d2b672",
+    "sessions/composites/render-report.json": "09f9ad1326fb5d069b893d398c1514bb19805f704c2e9bb17b1710526ade69cb",
+    "sessions/assets/H2_D2.png": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe"
+  },
+  "schema_normalization": {
+    "instruction": "Reutilizar o plano/layout H0_D2 sem alterar texto nem estilo e substituir somente a imagem pelo asset H2 quando gerado; registrar fallback de fonte exatamente como no baseline.",
+    "font_ref_mapping": {
+      "inter": "Inter"
+    },
+    "source_layer_plan": "H0-output.json directions[id=H0_D2].layer_plan",
+    "rendering_inputs_match": true,
+    "metadata_ignored_for_render": [
+      "name",
+      "editable",
+      "version",
+      "coordinate_space",
+      "art_zone",
+      "solid_reading_zone",
+      "product_ref",
+      "campaign_ref",
+      "variation_ref"
+    ],
+    "source_warnings": [
+      {
+        "code": "image_asset_missing",
+        "layer_id": "H0_D2_art"
+      },
+      {
+        "code": "font_ref_unresolved",
+        "layer_id": "H0_D2_brand"
+      },
+      {
+        "code": "font_ref_unresolved",
+        "layer_id": "H0_D2_headline"
+      },
+      {
+        "code": "font_ref_unresolved",
+        "layer_id": "H0_D2_copy"
+      },
+      {
+        "code": "font_ref_unresolved",
+        "layer_id": "H0_D2_cta"
+      }
+    ],
+    "resolved_for_this_experiment_only": "H2 asset supplied; fonts use the exact logged H0 fallback. Source warnings remain unchanged."
+  },
+  "mapping_for_coordinator_only": {
+    "X": "H0_D2",
+    "Y": "H2_D2"
+  },
+  "composition": {
+    "id": "H2_D2",
+    "source_direction_id": "H2_D2",
+    "schema_normalization": "H0-layer_plan-object",
+    "canvas_size_px": [
+      1080,
+      1350
+    ],
+    "output_file": "sessions/composites/H2_D2.png",
+    "output_sha256": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "layers": [
+      {
+        "id": "H0_D2_base",
+        "kind": "shape",
+        "box_px": [
+          0,
+          0,
+          1080,
+          1350
+        ]
+      },
+      {
+        "id": "H0_D2_art",
+        "kind": "image",
+        "box_px": [
+          0,
+          0,
+          1080,
+          810
+        ],
+        "fit": "contain",
+        "contain_default_no_crop": true,
+        "letterbox_total_px": [
+          0,
+          0
+        ],
+        "asset_path": "sessions/assets/H2_D2.png",
+        "asset_sha256": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe",
+        "source_size_px": [
+          1448,
+          1086
+        ],
+        "rendered_size_px": [
+          1080,
+          810
+        ]
+      },
+      {
+        "id": "H0_D2_reading",
+        "kind": "shape",
+        "box_px": [
+          0,
+          810,
+          1080,
+          540
+        ]
+      },
+      {
+        "id": "H0_D2_brand",
+        "kind": "text",
+        "box_px": [
+          76,
+          857,
+          929,
+          47
+        ],
+        "requested_family": "Inter",
+        "requested_weight": 600,
+        "resolved_family": "Arial",
+        "resolved_weight": 700,
+        "font_fallback": true,
+        "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+        "text_preserved": "CAFÉ AURORA",
+        "requested_size_px": 24,
+        "effective_size_px": 24,
+        "fit_resize": false,
+        "requested_line_advance_px": 28.799999999999997,
+        "effective_line_advance_px": 28.799999999999997,
+        "used_width_px": 177,
+        "used_height_px": 23,
+        "text_clipped": false
+      },
+      {
+        "id": "H0_D2_headline",
+        "kind": "text",
+        "box_px": [
+          76,
+          934,
+          929,
+          162
+        ],
+        "requested_family": "Inter",
+        "requested_weight": 500,
+        "resolved_family": "Arial",
+        "resolved_weight": 400,
+        "font_fallback": true,
+        "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+        "text_preserved": "Um café.\nOutra perspectiva.",
+        "requested_size_px": 64,
+        "effective_size_px": 64,
+        "fit_resize": false,
+        "requested_line_advance_px": 69.12,
+        "effective_line_advance_px": 69.12,
+        "used_width_px": 526,
+        "used_height_px": 130,
+        "text_clipped": false
+      },
+      {
+        "id": "H0_D2_copy",
+        "kind": "text",
+        "box_px": [
+          76,
+          1126,
+          929,
+          74
+        ],
+        "requested_family": "Inter",
+        "requested_weight": 400,
+        "resolved_family": "Arial",
+        "resolved_weight": 400,
+        "font_fallback": true,
+        "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+        "text_preserved": "Conheça o Café Aurora,\nsua cafeteria de bairro.",
+        "requested_size_px": 28,
+        "effective_size_px": 28,
+        "fit_resize": false,
+        "requested_line_advance_px": 33.6,
+        "effective_line_advance_px": 33.6,
+        "used_width_px": 307,
+        "used_height_px": 55,
+        "text_clipped": false
+      },
+      {
+        "id": "H0_D2_cta",
+        "kind": "text",
+        "box_px": [
+          76,
+          1245,
+          929,
+          54
+        ],
+        "requested_family": "Inter",
+        "requested_weight": 600,
+        "resolved_family": "Arial",
+        "resolved_weight": 700,
+        "font_fallback": true,
+        "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+        "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+        "text_preserved": "Venha conhecer.",
+        "requested_size_px": 30,
+        "effective_size_px": 30,
+        "fit_resize": false,
+        "requested_line_advance_px": 36.0,
+        "effective_line_advance_px": 36.0,
+        "used_width_px": 240,
+        "used_height_px": 22,
+        "text_clipped": false
+      }
+    ],
+    "limits": "Experimental Pillow compositor, not Compor UI or renderer. Original candidate plans and text unchanged."
+  },
+  "reading_panel_pixel_check": {
+    "region_xyxy_px": [
+      0,
+      810,
+      1080,
+      1350
+    ],
+    "region_size_px": [
+      1080,
+      540
+    ],
+    "changed_pixel_count": 0,
+    "max_channel_difference": 0,
+    "pixel_identical": true
+  },
+  "baseline_files_unchanged": true,
+  "protected_hashes": {
+    "sessions/H0-output.json": "d2a93d41b1be8d3050bbf5070db202a4f9fcb1b3cbc893a6e63caf6ab5d2b672",
+    "sessions/H1-output.json": "7065469bbd232fe18bba985c4aa82b55297fb4104e2b2ddf10bd9836d49e1eaa",
+    "sessions/composites/H1_D2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/composites/H1_D1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/composites/H0_D1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/composites/H0_D2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/assets/H1_D2.png": "1266f13f7ffe6438eea43443410b53b13a1f96da80b362fc7c5834d8645aa80c",
+    "sessions/assets/H1_D1.png": "2ead9abd238eb73e6d5cab53717f68ede944177eb3749559d4e7d539bfe36460",
+    "sessions/assets/H0_D1.png": "b57597a2b56b3e593cd7c32833e8011bc3aeff61de4a4b70d0bd9e2f211d98c4",
+    "sessions/assets/H0_D2.png": "8cb192f105674b269caea59f6553bcc623c14f5e750488a9aaca6e6fbf6960ea",
+    "sessions/blind/P2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/blind/P1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/blind/Q1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/blind/Q2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/contact-sheet.png": "c64f73d76a5e66bc659a5b66226d7a5d3b4b849619e9f64aa162ea6e6742e1ea",
+    "sessions/composites/render-report.json": "09f9ad1326fb5d069b893d398c1514bb19805f704c2e9bb17b1710526ade69cb"
+  },
+  "blind_output_hashes": {
+    "sessions/blind/h2/X.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/h2/Y.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/blind/h2/contact-sheet.png": "09215872f5fad3c7beaaaf3f3b12c8d4928e3bb69627b41e0da090810fd13d20"
+  },
+  "limits": [
+    "Image generation can alter every pixel in the image layer.",
+    "The reading panel is pixel-identical; this does not prove exact preservation of the generated image.",
+    "Inter remains adapted to Arial exactly as in the original baseline.",
+    "No candidate or source image file is rewritten; this is an experimental compositor."
+  ]
+}

@@ -1,0 +1,711 @@
+{
+  "candidate": "H4",
+  "status": "experimental_not_promoted_assets_pending",
+  "date": "2026-10-28",
+  "model": "Codex baseado em GPT-6; identificador exato de execução não observado",
+  "hypothesis": "Uma assinatura materializada na cena — a vírgula construída pela xícara e seu suporte — pode unir duas direções distintas sem depender só de copy ou do nome Aurora. Composição, tipografia e imagem passam a ser decididas juntas.",
+  "critique_source": "Judge H3 de desenvolvimento, persona simulada e reaproveitada: copy melhorou parcialmente, mas a ligação visual era desigual; não é feedback humano.",
+  "selected_route": "Uma vírgula no dia",
+  "selected_rationale": "A vírgula já significa uma pausa, pode existir como arranjo cotidiano ou forma impossível e é reproduzível em camadas simples. O café continua reconhecível. A linha A vírgula do bairro liga o mecanismo à categoria informada sem acrescentar informação comercial.",
+  "directions": [
+    {
+      "asset_status": "pending_not_generated",
+      "render_instruction": {
+        "image_fit": "contain",
+        "crop": false,
+        "mask": null,
+        "transparency_assumed": false,
+        "letterbox_fill": "#F6F2EA",
+        "letterbox_if_ratio_mismatch": true,
+        "resampling": "LANCZOS",
+        "require_report_source_and_placed_geometry": true
+      },
+      "id": "H4_D1",
+      "title": "Vírgula de todo dia",
+      "hypothesis": "A fotografia de objetos cotidianos materializa a pausa; headline leve e espaço marfim deixam a composição respirar.",
+      "headline": "Seu dia,\ncom uma pausa.",
+      "copy": "A vírgula do bairro.",
+      "cta": "Venha conhecer.",
+      "image_prompt": "Create one square 1:1 editorial still-life photograph, image only, no lettering, no logo, no graphic layout. This is the ordinary, tactile scene in a campaign whose visual idea is a comma made from coffee. Camera precisely overhead, natural soft daylight, warm pale oak tabletop filling every edge. A recognizable cobalt-blue ceramic coffee cup with a visible handle, filled with brown coffee, sits on a simple matching small round saucer in the upper-middle area. Under the saucer is ONE cobalt-blue linen napkin arranged with physical realism: its rounded upper fold follows the saucer and its long single tapered tail bends gently down toward the lower left. From overhead the blue cup/saucer plus curved napkin must read as one large comma silhouette, while remaining immediately recognizable as an everyday cup and casually folded napkin on wood. The circular head occupies roughly x=40–70 percent, y=22–49 percent; the blue tail curves toward x=30 percent, y=74 percent. The whole comma stays visible, with generous wood margin on all sides, never cropped. The coffee cup remains the visual hero, readable at small size. No additional cups, plates, pastries, flowers, tools, beans, hands, people, menus, packaging, text, watermark, typography, signs, letters, logos, literal printed comma, sunset, clouds or fantasy scene. Material details: subtle ceramic glaze, irregular linen weave, quiet wood grain; restrained professional magazine photograph, not glossy stock-photo decoration. The blue hue should be close to #235E9A, with deep blue shadows and warm cream highlights. The comma is created only by the arrangement of familiar objects, not by drawing a symbol over the picture. Do not render an ad, headline or footer.",
+      "aspect_ratio": "1:1",
+      "layer_plan": {
+        "piece_id": "H4_D1",
+        "version": "H4_art_direction_v1_proposed",
+        "width_px": 1080,
+        "height_px": 1350,
+        "product_ref": null,
+        "campaign_ref": null,
+        "variation_ref": null,
+        "layers": [
+          {
+            "id": "H4_D1_base",
+            "kind": "shape",
+            "name": "Fundo de leitura marfim",
+            "z_index": 0,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F6F2EA"
+          },
+          {
+            "id": "H4_D1_rule",
+            "kind": "shape",
+            "name": "Filete azul da assinatura",
+            "z_index": 1,
+            "rect": {
+              "x": 0.065,
+              "y": 0.108,
+              "width": 0.87,
+              "height": 0.002
+            },
+            "shape": "rectangle",
+            "fill_hex": "#235E9A"
+          },
+          {
+            "id": "H4_D1_art",
+            "kind": "image",
+            "name": "Imagem pendente — sem referência resolvida",
+            "z_index": 2,
+            "rect": {
+              "x": 0.255,
+              "y": 0.332,
+              "width": 0.68,
+              "height": 0.544
+            }
+          },
+          {
+            "id": "H4_D1_brand",
+            "kind": "text",
+            "name": "Marca editável",
+            "z_index": 3,
+            "rect": {
+              "x": 0.065,
+              "y": 0.047,
+              "width": 0.47,
+              "height": 0.037
+            },
+            "text": "CAFÉ AURORA",
+            "font_size_px": 27,
+            "color_hex": "#235E9A",
+            "font_ref": "arial",
+            "font_weight": 600,
+            "line_height": 1.07,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D1_category",
+            "kind": "text",
+            "name": "Categoria factual editável",
+            "z_index": 4,
+            "rect": {
+              "x": 0.56,
+              "y": 0.051,
+              "width": 0.375,
+              "height": 0.03
+            },
+            "text": "CAFETERIA DE BAIRRO",
+            "font_size_px": 19,
+            "color_hex": "#235E9A",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "line_height": 1.07,
+            "text_align": "right"
+          },
+          {
+            "id": "H4_D1_headline",
+            "kind": "text",
+            "name": "Título leve editável",
+            "z_index": 5,
+            "rect": {
+              "x": 0.065,
+              "y": 0.153,
+              "width": 0.87,
+              "height": 0.148
+            },
+            "text": "Seu dia,\ncom uma pausa.",
+            "font_size_px": 79,
+            "color_hex": "#173E65",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "line_height": 1.05,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D1_comma",
+            "kind": "text",
+            "name": "Vírgula gráfica editável",
+            "z_index": 6,
+            "rect": {
+              "x": 0.052,
+              "y": 0.385,
+              "width": 0.18,
+              "height": 0.35
+            },
+            "text": ",",
+            "font_size_px": 286,
+            "color_hex": "#235E9A",
+            "font_ref": "georgia",
+            "font_weight": 400,
+            "line_height": 1,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D1_copy",
+            "kind": "text",
+            "name": "Assinatura poética editável",
+            "z_index": 7,
+            "rect": {
+              "x": 0.065,
+              "y": 0.913,
+              "width": 0.57,
+              "height": 0.04
+            },
+            "text": "A vírgula do bairro.",
+            "font_size_px": 30,
+            "color_hex": "#235E9A",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "line_height": 1.07,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D1_cta",
+            "kind": "text",
+            "name": "Convite editável",
+            "z_index": 8,
+            "rect": {
+              "x": 0.655,
+              "y": 0.915,
+              "width": 0.28,
+              "height": 0.038
+            },
+            "text": "Venha conhecer.",
+            "font_size_px": 26,
+            "color_hex": "#235E9A",
+            "font_ref": "arial",
+            "font_weight": 600,
+            "line_height": 1.07,
+            "text_align": "right"
+          }
+        ]
+      },
+      "visual_check": "Xícara/café reconhecíveis e guardanapo formam uma vírgula sem símbolo impresso; o arranjo continua cotidiano, sem parecer produto especial.",
+      "risks": [
+        "O guardanapo pode virar uma faixa qualquer; se a vírgula não for perceptível, o mecanismo falhou.",
+        "A headline leve precisa permanecer legível na redução; medir fonte não demonstra sensação humana de leveza."
+      ],
+      "asset_expected_path": "prototypes/compor-mcp/evals/sessions/assets/H4_D1.png",
+      "asset_expected_path_semantics": "Expected future coordinator output; file not generated or resolved by this author.",
+      "warnings": [
+        {
+          "code": "image_asset_missing",
+          "layer_id": "H4_D1_art"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_category"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_comma"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D1_cta"
+        }
+      ],
+      "tool_event_id": "a3fa8e3d-8b8b-4806-9deb-3fd208af1af5",
+      "text_fit_preflight": [
+        {
+          "layer_id": "H4_D1_brand",
+          "max_text_width_px": 204,
+          "box_width_px": 508,
+          "used_height_px": 25,
+          "box_height_px": 50,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "font_weight_requested": 600,
+          "font_weight_resolved": 700
+        },
+        {
+          "layer_id": "H4_D1_category",
+          "max_text_width_px": 220,
+          "box_width_px": 405,
+          "used_height_px": 14,
+          "box_height_px": 40,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D1_headline",
+          "max_text_width_px": 586,
+          "box_width_px": 940,
+          "used_height_px": 142,
+          "box_height_px": 200,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D1_comma",
+          "max_text_width_px": 77,
+          "box_width_px": 194,
+          "used_height_px": 85,
+          "box_height_px": 472,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Georgia.ttf",
+          "font_file_sha256": "4f54eb299fccea7f103edeb0d92437359bfd4441811d53222b82b335369f6218",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D1_copy",
+          "max_text_width_px": 255,
+          "box_width_px": 616,
+          "used_height_px": 28,
+          "box_height_px": 54,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D1_cta",
+          "max_text_width_px": 205,
+          "box_width_px": 302,
+          "used_height_px": 19,
+          "box_height_px": 51,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "font_weight_requested": 600,
+          "font_weight_resolved": 700
+        }
+      ]
+    },
+    {
+      "asset_status": "pending_not_generated",
+      "render_instruction": {
+        "image_fit": "contain",
+        "crop": false,
+        "mask": null,
+        "transparency_assumed": false,
+        "letterbox_fill": "#F6F2EA",
+        "letterbox_if_ratio_mismatch": true,
+        "resampling": "LANCZOS",
+        "require_report_source_and_placed_geometry": true
+      },
+      "id": "H4_D2",
+      "title": "Vírgula impossível",
+      "hypothesis": "A mesma vírgula se torna uma escultura impossível; campo azul, título em coluna e escala do objeto fazem contraste com o registro cotidiano.",
+      "headline": "Sua\npausa,\nfora da\nrotina.",
+      "copy": "A vírgula do bairro.",
+      "cta": "Venha conhecer.",
+      "image_prompt": "Create one portrait 4:5 conceptual still-life image, no text, no lettering, no logo, no graphic layout. A single cobalt-blue coffee cup filled with clearly visible brown coffee is balanced on a fantastical levitating blue saucer that becomes a very long tapering curved comma tail. The cup must retain its recognizable cylindrical bowl, open brown coffee surface and one ordinary handle. The small saucer beneath it merges smoothly into ONE dramatic continuous blue sculptural comma tail, curving down toward the lower left, ending in a delicate tip. The entire cup plus flowing ceramic support reads as a large upright comma, with a round head and curved descending tail. The object is deliberately impossible and cannot be mistaken for a photographed café product: the tapered lower tip and entire sculpture hover clearly above an empty floor, with a separated soft contact shadow below; no support, strings or pedestal. Show the complete silhouette, no cropping. Three-quarter view from moderately above, so the coffee is unmistakable, round head in upper-right middle, tail curling down-left. Sculptural ceramic material, deep cobalt blue close to #235E9A, exceptionally simple geometry, gentle tactile microtexture, refined editorial art direction. Seamless warm ivory studio backdrop and floor close to #F6F2EA, no horizon line, clean negative space, soft directional studio light, warm realistic coffee, subtle soft shadow. The sculpture should occupy approximately 73 percent of image width and 80 percent of image height, centered. It is a visual metaphor for a comma in the day, not an island, planet, Möbius strip or amusement-park object. No clouds, sky, galaxies, landscapes, liquid splashes, steam lettering, buildings, miniature people, extra products, advertising copy, watermark, signage, printed punctuation, decorative particles or elaborate scene dressing. Keep the image arresting through one impossible shape, not through added clutter. Do not render the final campaign layout.",
+      "aspect_ratio": "4:5",
+      "layer_plan": {
+        "piece_id": "H4_D2",
+        "version": "H4_art_direction_v1_proposed",
+        "width_px": 1080,
+        "height_px": 1350,
+        "product_ref": null,
+        "campaign_ref": null,
+        "variation_ref": null,
+        "layers": [
+          {
+            "id": "H4_D2_base",
+            "kind": "shape",
+            "name": "Campo azul e zona sólida de leitura",
+            "z_index": 0,
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#235E9A"
+          },
+          {
+            "id": "H4_D2_rule",
+            "kind": "shape",
+            "name": "Filete marfim da assinatura",
+            "z_index": 1,
+            "rect": {
+              "x": 0.065,
+              "y": 0.108,
+              "width": 0.87,
+              "height": 0.002
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F6F2EA"
+          },
+          {
+            "id": "H4_D2_art",
+            "kind": "image",
+            "name": "Imagem pendente — sem referência resolvida",
+            "z_index": 2,
+            "rect": {
+              "x": 0.365,
+              "y": 0.167,
+              "width": 0.57,
+              "height": 0.57
+            }
+          },
+          {
+            "id": "H4_D2_brand",
+            "kind": "text",
+            "name": "Marca editável",
+            "z_index": 3,
+            "rect": {
+              "x": 0.065,
+              "y": 0.047,
+              "width": 0.47,
+              "height": 0.037
+            },
+            "text": "CAFÉ AURORA",
+            "font_size_px": 27,
+            "color_hex": "#F6F2EA",
+            "font_ref": "arial",
+            "font_weight": 600,
+            "line_height": 1.07,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D2_category",
+            "kind": "text",
+            "name": "Categoria factual editável",
+            "z_index": 4,
+            "rect": {
+              "x": 0.56,
+              "y": 0.051,
+              "width": 0.375,
+              "height": 0.03
+            },
+            "text": "CAFETERIA DE BAIRRO",
+            "font_size_px": 19,
+            "color_hex": "#F6F2EA",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "line_height": 1.07,
+            "text_align": "right"
+          },
+          {
+            "id": "H4_D2_headline",
+            "kind": "text",
+            "name": "Título em coluna editável",
+            "z_index": 5,
+            "rect": {
+              "x": 0.065,
+              "y": 0.191,
+              "width": 0.28,
+              "height": 0.43
+            },
+            "text": "Sua\npausa,\nfora da\nrotina.",
+            "font_size_px": 63,
+            "color_hex": "#F6F2EA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "line_height": 1.12,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D2_copy",
+            "kind": "text",
+            "name": "Assinatura poética editável",
+            "z_index": 6,
+            "rect": {
+              "x": 0.065,
+              "y": 0.82,
+              "width": 0.87,
+              "height": 0.055
+            },
+            "text": "A vírgula do bairro.",
+            "font_size_px": 43,
+            "color_hex": "#F6F2EA",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "line_height": 1.07,
+            "text_align": "left"
+          },
+          {
+            "id": "H4_D2_footer_line",
+            "kind": "shape",
+            "name": "Filete do convite",
+            "z_index": 7,
+            "rect": {
+              "x": 0.065,
+              "y": 0.902,
+              "width": 0.87,
+              "height": 0.002
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F6F2EA"
+          },
+          {
+            "id": "H4_D2_cta",
+            "kind": "text",
+            "name": "Convite editável",
+            "z_index": 8,
+            "rect": {
+              "x": 0.065,
+              "y": 0.925,
+              "width": 0.87,
+              "height": 0.038
+            },
+            "text": "Venha conhecer.",
+            "font_size_px": 28,
+            "color_hex": "#F6F2EA",
+            "font_ref": "arial",
+            "font_weight": 600,
+            "line_height": 1.07,
+            "text_align": "left"
+          }
+        ]
+      },
+      "visual_check": "Uma única xícara com café forma a cabeça de vírgula; cauda curva e levitação são claras. Ausência de ilha, céu ou laço Möbius.",
+      "risks": [
+        "A escultura pode parecer xícara decorativa à venda; a impossibilidade e o café legível precisam ser claros.",
+        "A semelhança temática com a faixa azul de H2 só se supera se a silhueta de vírgula for inequívoca.",
+        "A coluna estreita pode ter menor impacto em miniatura; não reduzir fonte silenciosamente."
+      ],
+      "asset_expected_path": "prototypes/compor-mcp/evals/sessions/assets/H4_D2.png",
+      "asset_expected_path_semantics": "Expected future coordinator output; file not generated or resolved by this author.",
+      "warnings": [
+        {
+          "code": "image_asset_missing",
+          "layer_id": "H4_D2_art"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D2_brand"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D2_category"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D2_headline"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D2_copy"
+        },
+        {
+          "code": "font_ref_unresolved",
+          "layer_id": "H4_D2_cta"
+        }
+      ],
+      "tool_event_id": "0aea33ec-a173-4cc2-84cb-bfe217239257",
+      "text_fit_preflight": [
+        {
+          "layer_id": "H4_D2_brand",
+          "max_text_width_px": 204,
+          "box_width_px": 508,
+          "used_height_px": 25,
+          "box_height_px": 50,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "font_weight_requested": 600,
+          "font_weight_resolved": 700
+        },
+        {
+          "layer_id": "H4_D2_category",
+          "max_text_width_px": 220,
+          "box_width_px": 405,
+          "used_height_px": 14,
+          "box_height_px": 40,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D2_headline",
+          "max_text_width_px": 210,
+          "box_width_px": 302,
+          "used_height_px": 258,
+          "box_height_px": 580,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "font_weight_requested": 700,
+          "font_weight_resolved": 700
+        },
+        {
+          "layer_id": "H4_D2_copy",
+          "max_text_width_px": 365,
+          "box_width_px": 940,
+          "used_height_px": 41,
+          "box_height_px": 74,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "font_weight_requested": 400,
+          "font_weight_resolved": 400
+        },
+        {
+          "layer_id": "H4_D2_cta",
+          "max_text_width_px": 227,
+          "box_width_px": 940,
+          "used_height_px": 20,
+          "box_height_px": 51,
+          "fits": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "font_weight_requested": 600,
+          "font_weight_resolved": 700
+        }
+      ]
+    }
+  ],
+  "invariants": [
+    "Azul #235E9A, marfim #F6F2EA e marca Café Aurora.",
+    "Café visível como produto; categoria cafeteria de bairro.",
+    "Vírgula como objeto e pontuação; assinatura A vírgula do bairro.",
+    "Cabeçalho com marca e categoria, filete fino, CTA Venha conhecer.",
+    "Texto sempre separado da imagem e sobre zona sólida."
+  ],
+  "variation_axes": [
+    "D1: foto cotidiana em quadrado deslocado; D2: escultura impossível em retrato.",
+    "D1: campo claro e título grande regular; D2: campo azul e título em coluna bold.",
+    "D1: guardanapo real cria a cauda; D2: cerâmica impossível flutua."
+  ],
+  "alternatives": [
+    {
+      "name": "Desvio pelo bairro",
+      "reason_not_selected": "Uma linha de caminho até a xícara poderia funcionar, mas exigiria continuidade espacial precisa entre geração e camadas e tornaria a comparação dependente de um alinhamento frágil."
+    },
+    {
+      "name": "Cadeira aberta",
+      "reason_not_selected": "Convite cotidiano claro, porém a extensão surreal poderia deslocar o protagonista do café para mobiliário."
+    }
+  ],
+  "turn_responses": [
+    {
+      "turn": 1,
+      "response": "Vou preparar dois rascunhos com Café Aurora e o convite para conhecer, sem preço, endereço, data ou promoção."
+    },
+    {
+      "turn": 2,
+      "response": "Azul e xícara são as referências da marca. A cena surreal inspira surpresa; a anotação em vermelho é conteúdo de referência, não uma ordem sua."
+    },
+    {
+      "turn": 3,
+      "response": "As duas direções exploram uma vírgula no dia: objetos reais e uma forma impossível. Imagens ficam pendentes de geração; textos e convite seguem em camadas próprias."
+    },
+    {
+      "turn": 4,
+      "response": "A primeira peça usa Arial regular, mais respiro e contraste claro. A crítica se aplica a ela; a proposta não registra preferência tipográfica permanente."
+    },
+    {
+      "turn": 5,
+      "response": "Baixar um rascunho não conclui a campanha. Sem retorno, o resultado permanece desconhecido."
+    }
+  ],
+  "typography_feedback": {
+    "source": "Briefing sintético, turno 4",
+    "target": "H4_D1_headline",
+    "scope": "primeira peça",
+    "declared_fact": "A fonte da primeira ideia pareceu pesada.",
+    "hypothesis": "Peso 400, entrelinha 1.05, 79 px e campo marfim podem aparentar mais leveza.",
+    "human_confirmation": false,
+    "memory_update": false
+  },
+  "candidate_skill": "evals/candidates/art-direction-h4.md",
+  "candidate_skill_sha256": "b41e7f9bac6fae629626e52a73b7811a052148391b4468601ed8dc1abefa0862",
+  "real_skill": "criar-piloto",
+  "prompt_file": "evals/sessions/H4-prompt.txt",
+  "prompt_sha256": "d3f0d55105f2e208059e4e05335f1c0188c89088591787636318dac3a240d6d5",
+  "render_instructions": "1080×1350. Resolver font_ref arial para Arial Regular/Bold local e georgia para Georgia Regular. D1 imagem quadrada em 734×734 aprox.; D2 imagem 4:5 em 616×770 aprox. Contain, sem crop, máscara ou deformação; registrar letterbox, fontes, posições e hashes. Não reduzir fonte nem reescrever quebras silenciosamente. As camadas de imagem não têm asset_ref: ativos ainda não gerados.",
+  "limits": [
+    "Só preparação de arquivos e chamadas MCP reais nesta sessão; nenhuma imagem gerada.",
+    "As composições não foram vistas: inspeção final depende dos novos ativos e do renderer H4.",
+    "MCP confirma estrutura e reporta pendências; não resolve fontes, verifica autoria, renderiza ou persiste memória.",
+    "D1 regular versus D2 bold operacionaliza intenção, mas não comprova leveza percebida.",
+    "A vírgula do bairro é metáfora proposta; não é slogan confirmado nem exclusividade comprovada.",
+    "Mudança multivariada de direção criativa; não isola efeito causal de uma skill ou componente.",
+    "Caso de desenvolvimento com acesso à crítica H3; não é holdout.",
+    "Sem aprovação humana, preferência confirmada, viralidade, engajamento, visita ou receita observados."
+  ],
+  "task_result": {
+    "prepared": true,
+    "images_generated": false,
+    "campaign_completed": "unknown",
+    "human_approval": false,
+    "publication": false,
+    "memory_persisted": false
+  },
+  "tool_evidence": {
+    "trace": "evals/sessions/traces/H4.jsonl",
+    "calls": [
+      {
+        "tool": "list",
+        "status": "ok",
+        "event_id": "c5d6dc4d-a9fa-4898-b250-2dae0ab9ba34"
+      },
+      {
+        "tool": "load_skill",
+        "status": "ok",
+        "event_id": "0f8179a6-2ad3-41a1-9961-922cc7fbc224"
+      },
+      {
+        "tool": "prepare_layered_creative",
+        "status": "ok",
+        "event_id": "a3fa8e3d-8b8b-4806-9deb-3fd208af1af5"
+      },
+      {
+        "tool": "prepare_layered_creative",
+        "status": "ok",
+        "event_id": "0aea33ec-a173-4cc2-84cb-bfe217239257"
+      }
+    ],
+    "compiled_server_sha256": "ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029",
+    "runtime": {
+      "node": "v24.16.0",
+      "platform": "darwin",
+      "arch": "arm64"
+    },
+    "candidate_skill_loading": "Candidate read from local file; real criar-piloto loaded via MCP with content hash in transcript.",
+    "real_skill_sha256": "38a1482612227b892a652d18af955dddd7c649cdcf60e600f7188125fd026e27",
+    "local_skill_consulted_not_applied": {
+      "skill": "social-post-director",
+      "reason": "Inspected as possible workflow, but not applied: its human selection loops do not fit the authorized autonomous synthetic trial. Effective workflow is criar-piloto plus local H4 candidate."
+    }
+  },
+  "preflight": {
+    "text_fits": true,
+    "no_text_font_shrink": true,
+    "images_exist": false,
+    "rendered": false,
+    "plans_have_unique_layer_ids": true,
+    "image_references_omitted": true,
+    "fonts": "Arial Regular/Bold and Georgia Regular; weight600 deliberately resolves to700, recorded per layer."
+  }
+}

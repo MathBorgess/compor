@@ -1,0 +1,1557 @@
+{
+  "candidate": "H4",
+  "pillow_version": "12.2.0",
+  "script_sha256": "8a4e5de9e6a1955c50401b08449cf0bc28e5fefc20b3e3157f14d1b26525677a",
+  "input_hashes": {
+    "sessions/H4-output.json": "7b12600eea54605371fc9ce7989e0abeea8e9d4f9f2c86bb0bc225d251547459"
+  },
+  "font_ref_mapping": {
+    "arial": "Arial",
+    "georgia": "Georgia",
+    "inter": "Inter"
+  },
+  "mapping_for_coordinator_only": {
+    "N1": "H3_D1",
+    "N2": "H3_D2",
+    "M1": "H4_D1",
+    "M2": "H4_D2"
+  },
+  "preflight": [
+    {
+      "id": "H4_D1",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "texts": [
+        {
+          "id": "H4_D1_brand",
+          "kind": "text",
+          "box_px": [
+            70,
+            63,
+            508,
+            50
+          ],
+          "text_preserved": "CAFÉ AURORA",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 27,
+          "effective_size_px": 27,
+          "fit_resize": false,
+          "line_advance_px": 28.89,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "CAFÉ AURORA",
+              "origin_px": [
+                70,
+                63
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                63,
+                274,
+                88
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            71,
+            63,
+            274,
+            88
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_category",
+          "kind": "text",
+          "box_px": [
+            605,
+            69,
+            405,
+            40
+          ],
+          "text_preserved": "CAFETERIA DE BAIRRO",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 19,
+          "effective_size_px": 19,
+          "fit_resize": false,
+          "line_advance_px": 20.330000000000002,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "CAFETERIA DE BAIRRO",
+              "origin_px": [
+                790,
+                69
+              ],
+              "metric_bounds_xyxy_px": [
+                790,
+                69,
+                1010,
+                83
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            790,
+            69,
+            1009,
+            83
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_headline",
+          "kind": "text",
+          "box_px": [
+            70,
+            207,
+            940,
+            200
+          ],
+          "text_preserved": "Seu dia,\ncom uma pausa.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 79,
+          "effective_size_px": 79,
+          "fit_resize": false,
+          "line_advance_px": 82.95,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Seu dia,",
+              "origin_px": [
+                70,
+                207
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                207,
+                361,
+                277
+              ]
+            },
+            {
+              "text": "com uma pausa.",
+              "origin_px": [
+                70,
+                290
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                290,
+                656,
+                349
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            73,
+            207,
+            650,
+            349
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_comma",
+          "kind": "text",
+          "box_px": [
+            56,
+            520,
+            194,
+            472
+          ],
+          "text_preserved": ",",
+          "font_ref": "georgia",
+          "requested_family": "Georgia",
+          "resolved_family": "Georgia",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Georgia.ttf",
+          "font_file_sha256": "4f54eb299fccea7f103edeb0d92437359bfd4441811d53222b82b335369f6218",
+          "requested_size_px": 286,
+          "effective_size_px": 286,
+          "fit_resize": false,
+          "line_advance_px": 286,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": ",",
+              "origin_px": [
+                56,
+                520
+              ],
+              "metric_bounds_xyxy_px": [
+                56,
+                520,
+                133,
+                605
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            69,
+            520,
+            116,
+            605
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_copy",
+          "kind": "text",
+          "box_px": [
+            70,
+            1233,
+            616,
+            54
+          ],
+          "text_preserved": "A vírgula do bairro.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 30,
+          "effective_size_px": 30,
+          "fit_resize": false,
+          "line_advance_px": 32.1,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "A vírgula do bairro.",
+              "origin_px": [
+                70,
+                1233
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1233,
+                325,
+                1261
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            1233,
+            323,
+            1261
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_cta",
+          "kind": "text",
+          "box_px": [
+            707,
+            1235,
+            302,
+            51
+          ],
+          "text_preserved": "Venha conhecer.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 26,
+          "effective_size_px": 26,
+          "fit_resize": false,
+          "line_advance_px": 27.82,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "Venha conhecer.",
+              "origin_px": [
+                804,
+                1235
+              ],
+              "metric_bounds_xyxy_px": [
+                803,
+                1235,
+                1009,
+                1254
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            804,
+            1235,
+            1008,
+            1254
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        }
+      ],
+      "asset_path": "sessions/assets/H4_D1.png",
+      "asset_available": true
+    },
+    {
+      "id": "H4_D2",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "texts": [
+        {
+          "id": "H4_D2_brand",
+          "kind": "text",
+          "box_px": [
+            70,
+            63,
+            508,
+            50
+          ],
+          "text_preserved": "CAFÉ AURORA",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 27,
+          "effective_size_px": 27,
+          "fit_resize": false,
+          "line_advance_px": 28.89,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "CAFÉ AURORA",
+              "origin_px": [
+                70,
+                63
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                63,
+                274,
+                88
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            71,
+            63,
+            274,
+            88
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_category",
+          "kind": "text",
+          "box_px": [
+            605,
+            69,
+            405,
+            40
+          ],
+          "text_preserved": "CAFETERIA DE BAIRRO",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 19,
+          "effective_size_px": 19,
+          "fit_resize": false,
+          "line_advance_px": 20.330000000000002,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "CAFETERIA DE BAIRRO",
+              "origin_px": [
+                790,
+                69
+              ],
+              "metric_bounds_xyxy_px": [
+                790,
+                69,
+                1010,
+                83
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            790,
+            69,
+            1009,
+            83
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_headline",
+          "kind": "text",
+          "box_px": [
+            70,
+            258,
+            302,
+            580
+          ],
+          "text_preserved": "Sua\npausa,\nfora da\nrotina.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 700,
+          "resolved_weight": 700,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 63,
+          "effective_size_px": 63,
+          "fit_resize": false,
+          "line_advance_px": 70.56,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Sua",
+              "origin_px": [
+                70,
+                258
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                258,
+                185,
+                305
+              ]
+            },
+            {
+              "text": "pausa,",
+              "origin_px": [
+                70,
+                329
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                329,
+                269,
+                376
+              ]
+            },
+            {
+              "text": "fora da",
+              "origin_px": [
+                70,
+                399
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                399,
+                280,
+                446
+              ]
+            },
+            {
+              "text": "rotina.",
+              "origin_px": [
+                70,
+                470
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                470,
+                263,
+                516
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            258,
+            278,
+            516
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_copy",
+          "kind": "text",
+          "box_px": [
+            70,
+            1107,
+            940,
+            74
+          ],
+          "text_preserved": "A vírgula do bairro.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 43,
+          "effective_size_px": 43,
+          "fit_resize": false,
+          "line_advance_px": 46.010000000000005,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "A vírgula do bairro.",
+              "origin_px": [
+                70,
+                1107
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1107,
+                435,
+                1148
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            69,
+            1107,
+            432,
+            1148
+          ],
+          "text_pixels_outside_box": 1,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 1,
+            "bbox_xyxy_px": [
+              69,
+              1138,
+              70,
+              1139
+            ]
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_cta",
+          "kind": "text",
+          "box_px": [
+            70,
+            1249,
+            940,
+            51
+          ],
+          "text_preserved": "Venha conhecer.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 28,
+          "effective_size_px": 28,
+          "fit_resize": false,
+          "line_advance_px": 29.96,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Venha conhecer.",
+              "origin_px": [
+                70,
+                1249
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1249,
+                297,
+                1269
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            1249,
+            295,
+            1269
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        }
+      ],
+      "asset_path": "sessions/assets/H4_D2.png",
+      "asset_available": true
+    }
+  ],
+  "compositions": [
+    {
+      "id": "H4_D1",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "layers": [
+        {
+          "id": "H4_D1_base",
+          "kind": "shape",
+          "box_px": [
+            0,
+            0,
+            1080,
+            1350
+          ],
+          "shape": "rectangle",
+          "fill_hex": "#F6F2EA",
+          "clipped": false
+        },
+        {
+          "id": "H4_D1_rule",
+          "kind": "shape",
+          "box_px": [
+            70,
+            146,
+            940,
+            3
+          ],
+          "shape": "rectangle",
+          "fill_hex": "#235E9A",
+          "clipped": false
+        },
+        {
+          "id": "H4_D1_art",
+          "kind": "image",
+          "box_px": [
+            275,
+            448,
+            734,
+            734
+          ],
+          "asset_path": "sessions/assets/H4_D1.png",
+          "asset_sha256": "18bb034ce00631cd57775bb5221b1130db075ece66356426db6b35b8b01d61bc",
+          "raw_size_px": [
+            1254,
+            1254
+          ],
+          "raw_mode": "RGB",
+          "source_size_after_exif_px": [
+            1254,
+            1254
+          ],
+          "alpha_extrema": [
+            255,
+            255
+          ],
+          "fit": "contain",
+          "crop": false,
+          "mask": null,
+          "clipped": false,
+          "resampling": "LANCZOS",
+          "letterbox_fill": "#F6F2EA",
+          "letterbox_fill_behavior": "explicit fill",
+          "rendered_size_px": [
+            734,
+            734
+          ],
+          "placed_rect_px": [
+            275,
+            448,
+            734,
+            734
+          ],
+          "letterbox_px": {
+            "left": 0,
+            "top": 0,
+            "right": 0,
+            "bottom": 0
+          },
+          "crop_removed_source_px": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "H4_D1_brand",
+          "kind": "text",
+          "box_px": [
+            70,
+            63,
+            508,
+            50
+          ],
+          "text_preserved": "CAFÉ AURORA",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 27,
+          "effective_size_px": 27,
+          "fit_resize": false,
+          "line_advance_px": 28.89,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "CAFÉ AURORA",
+              "origin_px": [
+                70,
+                63
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                63,
+                274,
+                88
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            71,
+            63,
+            274,
+            88
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_category",
+          "kind": "text",
+          "box_px": [
+            605,
+            69,
+            405,
+            40
+          ],
+          "text_preserved": "CAFETERIA DE BAIRRO",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 19,
+          "effective_size_px": 19,
+          "fit_resize": false,
+          "line_advance_px": 20.330000000000002,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "CAFETERIA DE BAIRRO",
+              "origin_px": [
+                790,
+                69
+              ],
+              "metric_bounds_xyxy_px": [
+                790,
+                69,
+                1010,
+                83
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            790,
+            69,
+            1009,
+            83
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_headline",
+          "kind": "text",
+          "box_px": [
+            70,
+            207,
+            940,
+            200
+          ],
+          "text_preserved": "Seu dia,\ncom uma pausa.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 79,
+          "effective_size_px": 79,
+          "fit_resize": false,
+          "line_advance_px": 82.95,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Seu dia,",
+              "origin_px": [
+                70,
+                207
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                207,
+                361,
+                277
+              ]
+            },
+            {
+              "text": "com uma pausa.",
+              "origin_px": [
+                70,
+                290
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                290,
+                656,
+                349
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            73,
+            207,
+            650,
+            349
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_comma",
+          "kind": "text",
+          "box_px": [
+            56,
+            520,
+            194,
+            472
+          ],
+          "text_preserved": ",",
+          "font_ref": "georgia",
+          "requested_family": "Georgia",
+          "resolved_family": "Georgia",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Georgia.ttf",
+          "font_file_sha256": "4f54eb299fccea7f103edeb0d92437359bfd4441811d53222b82b335369f6218",
+          "requested_size_px": 286,
+          "effective_size_px": 286,
+          "fit_resize": false,
+          "line_advance_px": 286,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": ",",
+              "origin_px": [
+                56,
+                520
+              ],
+              "metric_bounds_xyxy_px": [
+                56,
+                520,
+                133,
+                605
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            69,
+            520,
+            116,
+            605
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_copy",
+          "kind": "text",
+          "box_px": [
+            70,
+            1233,
+            616,
+            54
+          ],
+          "text_preserved": "A vírgula do bairro.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 30,
+          "effective_size_px": 30,
+          "fit_resize": false,
+          "line_advance_px": 32.1,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "A vírgula do bairro.",
+              "origin_px": [
+                70,
+                1233
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1233,
+                325,
+                1261
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            1233,
+            323,
+            1261
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D1_cta",
+          "kind": "text",
+          "box_px": [
+            707,
+            1235,
+            302,
+            51
+          ],
+          "text_preserved": "Venha conhecer.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 26,
+          "effective_size_px": 26,
+          "fit_resize": false,
+          "line_advance_px": 27.82,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "Venha conhecer.",
+              "origin_px": [
+                804,
+                1235
+              ],
+              "metric_bounds_xyxy_px": [
+                803,
+                1235,
+                1009,
+                1254
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            804,
+            1235,
+            1008,
+            1254
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        }
+      ],
+      "output_file": "sessions/composites/H4_D1.png",
+      "output_sha256": "b59f5b530d32687db0328cb485c9675918ed1f2ed55ab1b85d42a5b0dbdcaa6d",
+      "source_plan_unchanged": true,
+      "canvas_initial_fill": "#FFFFFF",
+      "text_clipped": false,
+      "fit_resize": false
+    },
+    {
+      "id": "H4_D2",
+      "canvas_size_px": [
+        1080,
+        1350
+      ],
+      "layers": [
+        {
+          "id": "H4_D2_base",
+          "kind": "shape",
+          "box_px": [
+            0,
+            0,
+            1080,
+            1350
+          ],
+          "shape": "rectangle",
+          "fill_hex": "#235E9A",
+          "clipped": false
+        },
+        {
+          "id": "H4_D2_rule",
+          "kind": "shape",
+          "box_px": [
+            70,
+            146,
+            940,
+            3
+          ],
+          "shape": "rectangle",
+          "fill_hex": "#F6F2EA",
+          "clipped": false
+        },
+        {
+          "id": "H4_D2_art",
+          "kind": "image",
+          "box_px": [
+            394,
+            225,
+            616,
+            769
+          ],
+          "asset_path": "sessions/assets/H4_D2.png",
+          "asset_sha256": "719ed9f682651150aa5922c4f4a0bc3870155b2dcc2986ad3c771b15e40a6cd8",
+          "raw_size_px": [
+            1122,
+            1402
+          ],
+          "raw_mode": "RGB",
+          "source_size_after_exif_px": [
+            1122,
+            1402
+          ],
+          "alpha_extrema": [
+            255,
+            255
+          ],
+          "fit": "contain",
+          "crop": false,
+          "mask": null,
+          "clipped": false,
+          "resampling": "LANCZOS",
+          "letterbox_fill": "#F6F2EA",
+          "letterbox_fill_behavior": "explicit fill",
+          "rendered_size_px": [
+            615,
+            769
+          ],
+          "placed_rect_px": [
+            394,
+            225,
+            615,
+            769
+          ],
+          "letterbox_px": {
+            "left": 0,
+            "top": 0,
+            "right": 1,
+            "bottom": 0
+          },
+          "crop_removed_source_px": [
+            0,
+            0
+          ]
+        },
+        {
+          "id": "H4_D2_brand",
+          "kind": "text",
+          "box_px": [
+            70,
+            63,
+            508,
+            50
+          ],
+          "text_preserved": "CAFÉ AURORA",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 27,
+          "effective_size_px": 27,
+          "fit_resize": false,
+          "line_advance_px": 28.89,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "CAFÉ AURORA",
+              "origin_px": [
+                70,
+                63
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                63,
+                274,
+                88
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            71,
+            63,
+            274,
+            88
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_category",
+          "kind": "text",
+          "box_px": [
+            605,
+            69,
+            405,
+            40
+          ],
+          "text_preserved": "CAFETERIA DE BAIRRO",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 19,
+          "effective_size_px": 19,
+          "fit_resize": false,
+          "line_advance_px": 20.330000000000002,
+          "alignment": "right",
+          "lines": [
+            {
+              "text": "CAFETERIA DE BAIRRO",
+              "origin_px": [
+                790,
+                69
+              ],
+              "metric_bounds_xyxy_px": [
+                790,
+                69,
+                1010,
+                83
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            790,
+            69,
+            1009,
+            83
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_headline",
+          "kind": "text",
+          "box_px": [
+            70,
+            258,
+            302,
+            580
+          ],
+          "text_preserved": "Sua\npausa,\nfora da\nrotina.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 700,
+          "resolved_weight": 700,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 63,
+          "effective_size_px": 63,
+          "fit_resize": false,
+          "line_advance_px": 70.56,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Sua",
+              "origin_px": [
+                70,
+                258
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                258,
+                185,
+                305
+              ]
+            },
+            {
+              "text": "pausa,",
+              "origin_px": [
+                70,
+                329
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                329,
+                269,
+                376
+              ]
+            },
+            {
+              "text": "fora da",
+              "origin_px": [
+                70,
+                399
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                399,
+                280,
+                446
+              ]
+            },
+            {
+              "text": "rotina.",
+              "origin_px": [
+                70,
+                470
+              ],
+              "metric_bounds_xyxy_px": [
+                70,
+                470,
+                263,
+                516
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            258,
+            278,
+            516
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 0,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_copy",
+          "kind": "text",
+          "box_px": [
+            70,
+            1107,
+            940,
+            74
+          ],
+          "text_preserved": "A vírgula do bairro.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 400,
+          "resolved_weight": 400,
+          "font_fallback": false,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+          "font_file_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+          "requested_size_px": 43,
+          "effective_size_px": 43,
+          "fit_resize": false,
+          "line_advance_px": 46.010000000000005,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "A vírgula do bairro.",
+              "origin_px": [
+                70,
+                1107
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1107,
+                435,
+                1148
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            69,
+            1107,
+            432,
+            1148
+          ],
+          "text_pixels_outside_box": 1,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 1,
+            "bbox_xyxy_px": [
+              69,
+              1138,
+              70,
+              1139
+            ]
+          },
+          "text_clipped": false
+        },
+        {
+          "id": "H4_D2_footer_line",
+          "kind": "shape",
+          "box_px": [
+            70,
+            1218,
+            940,
+            3
+          ],
+          "shape": "rectangle",
+          "fill_hex": "#F6F2EA",
+          "clipped": false
+        },
+        {
+          "id": "H4_D2_cta",
+          "kind": "text",
+          "box_px": [
+            70,
+            1249,
+            940,
+            51
+          ],
+          "text_preserved": "Venha conhecer.",
+          "font_ref": "arial",
+          "requested_family": "Arial",
+          "resolved_family": "Arial",
+          "requested_weight": 600,
+          "resolved_weight": 700,
+          "font_fallback": true,
+          "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+          "font_file_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+          "requested_size_px": 28,
+          "effective_size_px": 28,
+          "fit_resize": false,
+          "line_advance_px": 29.96,
+          "alignment": "left",
+          "lines": [
+            {
+              "text": "Venha conhecer.",
+              "origin_px": [
+                70,
+                1249
+              ],
+              "metric_bounds_xyxy_px": [
+                69,
+                1249,
+                297,
+                1269
+              ]
+            }
+          ],
+          "rendered_pixel_bbox_xyxy_px": [
+            70,
+            1249,
+            295,
+            1269
+          ],
+          "text_pixels_outside_box": 0,
+          "typographic_overhang": {
+            "allowed_left_bearing_px": 1,
+            "visible_pixels": 0,
+            "bbox_xyxy_px": null
+          },
+          "text_clipped": false
+        }
+      ],
+      "output_file": "sessions/composites/H4_D2.png",
+      "output_sha256": "471d2850e4360e3ae8bea7b5fd049324158661a091cc8e1044e25474dec68fbb",
+      "source_plan_unchanged": true,
+      "canvas_initial_fill": "#FFFFFF",
+      "text_clipped": false,
+      "fit_resize": false
+    }
+  ],
+  "previous_evidence_and_inputs_unchanged": true,
+  "protected_hashes": {
+    "sessions/H0-output.json": "d2a93d41b1be8d3050bbf5070db202a4f9fcb1b3cbc893a6e63caf6ab5d2b672",
+    "sessions/H1-output.json": "7065469bbd232fe18bba985c4aa82b55297fb4104e2b2ddf10bd9836d49e1eaa",
+    "sessions/H2-output.json": "16e23b740b613dcfb2b186650c6988824bce64735839c063796381e312127ea8",
+    "sessions/H3-output.json": "3095519d9294c79df24da313c8e485661e386b131cf074f7ad1e160f26ac515f",
+    "sessions/H4-output.json": "7b12600eea54605371fc9ce7989e0abeea8e9d4f9f2c86bb0bc225d251547459",
+    "sessions/assets/H1_D2.png": "1266f13f7ffe6438eea43443410b53b13a1f96da80b362fc7c5834d8645aa80c",
+    "sessions/assets/H1_D1.png": "2ead9abd238eb73e6d5cab53717f68ede944177eb3749559d4e7d539bfe36460",
+    "sessions/assets/H4_D1.png": "18bb034ce00631cd57775bb5221b1130db075ece66356426db6b35b8b01d61bc",
+    "sessions/assets/H4_D2.png": "719ed9f682651150aa5922c4f4a0bc3870155b2dcc2986ad3c771b15e40a6cd8",
+    "sessions/assets/H2_D2.png": "2574b88fb55cacd70f118fa0c2334f02e37e5a5349acd9b1a6e77e8e1d0cddfe",
+    "sessions/assets/H0_D1.png": "b57597a2b56b3e593cd7c32833e8011bc3aeff61de4a4b70d0bd9e2f211d98c4",
+    "sessions/assets/H0_D2.png": "8cb192f105674b269caea59f6553bcc623c14f5e750488a9aaca6e6fbf6960ea",
+    "sessions/composites/H3_D1.png": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+    "sessions/composites/H3_D2.png": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+    "sessions/composites/H1_D2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/composites/H1_D1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/composites/H2_D2.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/composites/H0_D1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/composites/H0_D2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/composites/H3-render-report.json": "3c5741fa3543bed641a2d020155f6717a7395b0e7721436d23a5acd43ac0bd10",
+    "sessions/composites/render-report.json": "09f9ad1326fb5d069b893d398c1514bb19805f704c2e9bb17b1710526ade69cb",
+    "sessions/composites/H2-render-report.json": "b5645ef74efb7cf79eaab7bc3fdf6eeb94a7fd32d41233bb07e678f151b13682",
+    "sessions/blind/P2.png": "152e780b6a13053870e92749a58c2cc62298049f18188ec92eb3d4a2dabdbd3f",
+    "sessions/blind/P1.png": "d13a16096e484d8c899015b343582831bac10a631202cc870f0f97e0653bd9ba",
+    "sessions/blind/Q1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/blind/Q2.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/contact-sheet.png": "c64f73d76a5e66bc659a5b66226d7a5d3b4b849619e9f64aa162ea6e6742e1ea",
+    "sessions/blind/h2/Y.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/blind/h2/X.png": "8037b86de55bed89ef78397dabc498d77fea918e7cf5e2e0291910be656f2310",
+    "sessions/blind/h2/contact-sheet.png": "09215872f5fad3c7beaaaf3f3b12c8d4928e3bb69627b41e0da090810fd13d20",
+    "sessions/blind/h3/L1.png": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+    "sessions/blind/h3/L2.png": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+    "sessions/blind/h3/K1.png": "cddcd6a2ce24bd9b2dc068a5540fdee1fdcd317ac459185300c253c4bad78b00",
+    "sessions/blind/h3/K2.png": "9cad6186948f09e132e77f56dbee795b6200e7b259a3ae776fb501a7a7e2304a",
+    "sessions/blind/h3/contact-sheet.png": "c9ecc3eb0c78fdf2f522eaa7e848eff16b6888ada0565b687822ae1e4f4c2f5a",
+    "render-candidates.py": "3d6a652224c24bd2b837c3124cd83cdc15f8c7fc0869f951361848dbce835039",
+    "render-h2.py": "5ecdd6b6e529166026eaea7230a40542c1d06aeca9c1e6babfb067151fa03643",
+    "render-h3.py": "c1f27a524a82d61d9a5d76a20aeccb7b7799d11087a730610c8a37378626dff6"
+  },
+  "blind_output_hashes": {
+    "sessions/blind/h4/M1.png": "b59f5b530d32687db0328cb485c9675918ed1f2ed55ab1b85d42a5b0dbdcaa6d",
+    "sessions/blind/h4/M2.png": "471d2850e4360e3ae8bea7b5fd049324158661a091cc8e1044e25474dec68fbb",
+    "sessions/blind/h4/N1.png": "f4bc3de2671af2660a4212d6ad42e0e86cb1404320e12df38dead2a64d87ef50",
+    "sessions/blind/h4/N2.png": "88ab4e3600d673d297e77ed3130e972d2ddb3090d4b2b38adadebc5742a0c060",
+    "sessions/blind/h4/contact-sheet.png": "7d7c4a5c4ed53c4b67b7deae22962c9e9a4ef86e741bd43530de458f23f9ecf7"
+  },
+  "limits": [
+    "Standalone experimental Pillow compositor, not Compor implementation.",
+    "No source text or layout edited; no font reduction or image crop.",
+    "Contains requested assets without assuming transparency; letterbox is explicit.",
+    "H4 changes imagery, typography, copy and layout; comparison does not isolate a causal effect.",
+    "Pixel-fit checks do not demonstrate creative quality, user preference or approval."
+  ]
+}

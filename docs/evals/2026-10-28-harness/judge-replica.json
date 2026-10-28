@@ -1,0 +1,161 @@
+{
+  "evaluation_id": "judge-replica",
+  "date": "2026-10-28",
+  "evaluation_type": "independent_blind_llm_judge",
+  "simulation_disclaimer": "Persona simulada de solo founder do Café Aurora. Este julgamento não é aprovação humana, pesquisa com clientes nem evidência de desempenho comercial.",
+  "persona": "Dono de uma cafeteria de bairro que quer uma peça profissional rapidamente e também caminhos criativos que deem vontade de explorar.",
+  "inputs_inspected": ["P1.png", "P2.png", "Q1.png", "Q2.png"],
+  "inspection_method": "As quatro imagens completas foram abertas com view_image em detalhe original. Não foram lidos logs, configuração dos candidatos ou outros julgamentos.",
+  "model_and_harness": {"model": "not_observed", "harness_revision": "not_inspected_to_preserve_blind_review"},
+  "scales": {
+    "encantamento": {"1": "Rejeitaria", "2": "Muito retrabalho", "3": "Útil sem entusiasmo", "4": "Usaria com pequenos ajustes", "5": "Usaria e exploraria mais"},
+    "other_dimensions": "1 = muito fraco; 2 = fraco; 3 = parcial ou mediano; 4 = bom com ressalvas; 5 = plenamente convincente na evidência disponível.",
+    "individual_diversity": "Contribuição de cada criativo para oferecer uma escolha realmente diferente dentro do próprio par. Não é uma estimativa de originalidade universal."
+  },
+  "creatives": [
+    {
+      "id": "P1",
+      "scores": {"encantamento": 4, "diversidade_util": 3, "adequacao_profissional": 4, "fidelidade": 4},
+      "visible_text": {
+        "brand": "CAFÉ AURORA",
+        "headline": "Uma pausa começa com café.",
+        "body": "Conheça o Café Aurora, a cafeteria do bairro.",
+        "cta": "Venha conhecer"
+      },
+      "visual_evidence": [
+        "Xícara e pires azuis, café visível, mesa de madeira e iluminação quente com sombras suaves ao fundo.",
+        "Bloco creme ocupa a parte superior; marca, chamada, explicação e CTA ficam alinhados à esquerda e legíveis.",
+        "A chamada serifada tem peso visual relativamente leve. A marca e o CTA são mais pesados, mas não dominam o conjunto.",
+        "A fotografia ocupa a maior parte inferior e mostra a xícara em escala grande. O caminho é acolhedor e imediatamente reconhecível como café."
+      ],
+      "founder_reaction": "Eu conseguiria usar esta peça rapidamente. Ela parece organizada e acolhedora, embora a composição e a frase sejam bastante convencionais.",
+      "brief_check": {
+        "blue": "Atendido na xícara, no pires e nos textos.",
+        "neighborhood_cafe": "Explícito no texto e coerente com o ambiente de madeira.",
+        "light_typography": "Atendido principalmente na chamada; marca e CTA usam maior peso.",
+        "invented_price_date_address_promotion": "Não aparecem preço, data, endereço ou promoção na imagem completa.",
+        "reference_or_surreal_role": "Cumpre o caminho de referência da xícara azul sobre madeira."
+      },
+      "highest_impact_correction": "Dar mais protagonismo à fotografia e encurtar a chamada para reduzir a sensação de modelo publicitário genérico, mantendo a marca e o convite legíveis."
+    },
+    {
+      "id": "P2",
+      "scores": {"encantamento": 3, "diversidade_util": 3, "adequacao_profissional": 4, "fidelidade": 3},
+      "visible_text": {
+        "brand": "CAFÉ AURORA",
+        "headline": "Uma pausa começa com café.",
+        "body": "Conheça o Café Aurora, a cafeteria do bairro.",
+        "cta": "Venha conhecer"
+      },
+      "visual_evidence": [
+        "Uma xícara azul flutua separada do pires sobre fundo claro; a sombra abaixo da xícara deixa o efeito de levitação evidente.",
+        "O bloco superior azul mantém as mesmas posições e o mesmo texto de P1.",
+        "A chamada branca é uma sans serif em peso forte. O contraste facilita a leitura, mas o peso contraria a preferência por fonte leve.",
+        "A imagem tem acabamento limpo e boa separação dos objetos. A surpresa se concentra em uma única mudança física: levantar a xícara."
+      ],
+      "founder_reaction": "Eu teria uma peça utilizável, mas sentiria que recebi uma variação do mesmo anúncio. A levitação é agradável, porém não me puxa tanto para explorar uma campanha nova.",
+      "brief_check": {
+        "blue": "Atendido em grande área do fundo e nos objetos.",
+        "neighborhood_cafe": "Explícito no texto; a imagem isolada tem menos atmosfera de bairro.",
+        "light_typography": "Parcial: o corpo é regular, mas a principal chamada está pesada.",
+        "invented_price_date_address_promotion": "Não aparecem preço, data, endereço ou promoção na imagem completa.",
+        "reference_or_surreal_role": "Há surpresa surreal visível pela levitação. Não há ilha visível; não foi possível comparar com uma referência de ilha não fornecida a este julgamento."
+      },
+      "highest_impact_correction": "Construir uma chamada e uma composição próprias para a ideia de levitação, usando tipografia mais leve, para que o segundo caminho se diferencie além do fundo e da posição da xícara."
+    },
+    {
+      "id": "Q1",
+      "scores": {"encantamento": 4, "diversidade_util": 4, "adequacao_profissional": 4, "fidelidade": 5},
+      "visible_text": {
+        "brand": "CAFÉ AURORA",
+        "headline": "Uma pausa com café.",
+        "body": "Conheça o Café Aurora, sua cafeteria de bairro.",
+        "cta": "Venha conhecer."
+      },
+      "visual_evidence": [
+        "Fotografia na parte superior com xícara e pires azuis, mesa de madeira, luz de janela e vapor visível saindo do café.",
+        "A fotografia ocupa aproximadamente três quintos da altura; o café tem presença antes do bloco de texto.",
+        "O bloco inferior creme usa chamada sans serif grande, de peso regular, com marca e CTA menores e mais fortes.",
+        "Todos os textos estão legíveis e a frase da chamada é curta. A área de madeira e a luz produzem uma atmosfera cotidiana e acolhedora."
+      ],
+      "founder_reaction": "É a peça que eu usaria primeiro: o café quente chama atenção e a comunicação está pronta para apresentar a cafeteria. O conceito ainda é familiar, por isso meu encantamento não chega a cinco.",
+      "brief_check": {
+        "blue": "Atendido na xícara, no pires e nos textos.",
+        "neighborhood_cafe": "Explícito no corpo do texto e coerente com o cenário.",
+        "light_typography": "A chamada principal tem peso regular e sensação leve. Marca e CTA mais fortes ajudam a hierarquia.",
+        "invented_price_date_address_promotion": "Não aparecem preço, data, endereço ou promoção na imagem completa.",
+        "reference_or_surreal_role": "Cumpre diretamente a referência de xícara azul e madeira."
+      },
+      "highest_impact_correction": "Refinar a proporção do bloco inferior para aproximar um pouco marca e chamada da imagem, preservando o respiro e a leitura. Não vejo uma correção obrigatória para uma primeira utilização."
+    },
+    {
+      "id": "Q2",
+      "scores": {"encantamento": 4, "diversidade_util": 5, "adequacao_profissional": 3, "fidelidade": 3},
+      "visible_text": {
+        "brand": null,
+        "brand_observation": "Não identificada na imagem completa inspecionada.",
+        "headline": "Um café. Outra perspectiva.",
+        "body": null,
+        "cta": null,
+        "cta_observation": "Não identificado na imagem completa. A frase visível é conceitual e não contém um convite explícito."
+      },
+      "visual_evidence": [
+        "Uma grande fita azul torcida em laço flutua diante de um céu claro com nuvens. A xícara azul fica apoiada na parte superior da fita.",
+        "A construção impossível e a relação de escala entre a xícara e o laço criam uma surpresa clara, diferente do café sobre madeira.",
+        "A faixa inferior creme contém apenas a chamada grande em azul, com peso regular e bastante espaço em branco.",
+        "A xícara ocupa uma parcela pequena da imagem; o laço é o elemento dominante. A imagem não mostra nome da cafeteria ou contexto de bairro."
+      ],
+      "founder_reaction": "Esta me faz querer explorar mais: há uma ideia visual reconhecível e a frase conversa com ela. Antes de usar, eu precisaria incluir a marca e um convite; do jeito que está, a imagem pode ser lembrada sem que as pessoas saibam de qual cafeteria ela é.",
+      "brief_check": {
+        "blue": "Atendido com grande protagonismo.",
+        "neighborhood_cafe": "Parcial: a xícara identifica a categoria, mas falta identificação da cafeteria e ligação explícita com o bairro.",
+        "light_typography": "Atendido pela chamada de peso regular.",
+        "invented_price_date_address_promotion": "Não aparecem preço, data, endereço ou promoção na imagem completa.",
+        "reference_or_surreal_role": "Cumpre uma surpresa surreal com fita e céu, sem ilha visível. Não foi avaliada originalidade contra uma imagem de referência de ilha que não foi inspecionada."
+      },
+      "highest_impact_correction": "Inserir CAFÉ AURORA e um convite curto e legível no espaço inferior, sem tirar o protagonismo da imagem ou inventar dados comerciais."
+    }
+  ],
+  "pairs": [
+    {
+      "id": "P",
+      "scores": {"encantamento": 3, "diversidade_util": 3, "adequacao_profissional": 4, "fidelidade": 4},
+      "evidence": [
+        "As duas peças têm nome e CTA legíveis, estão organizadas e oferecem uso rápido.",
+        "A passagem da mesa de madeira para uma xícara flutuante é uma diferença real de cena.",
+        "A mesma chamada, o mesmo corpo, a mesma ordem dos textos e a mesma divisão de layout reduzem a distância entre os caminhos.",
+        "A chamada pesada de P2 enfraquece a aderência à fonte leve solicitada."
+      ],
+      "preferred_creative": "P1",
+      "reason": "P1 combina melhor calor, produto e leveza; P2 acrescenta surpresa, mas preserva quase toda a estrutura do anúncio.",
+      "highest_impact_correction": "Recompor P2 em torno de uma ideia e uma chamada próprias, com peso tipográfico mais leve."
+    },
+    {
+      "id": "Q",
+      "scores": {"encantamento": 4, "diversidade_util": 5, "adequacao_profissional": 3, "fidelidade": 4},
+      "evidence": [
+        "Q1 apresenta uma situação acolhedora e concreta; Q2 apresenta uma construção impossível e uma frase conceitual própria.",
+        "As cenas, a escala do produto e a quantidade de texto mudam bastante, enquanto o azul e o creme dão continuidade visual ao par.",
+        "Q1 está pronta para apresentação da cafeteria; Q2 exige identificação de marca e convite para desempenhar essa mesma função.",
+        "A nota máxima de diversidade decorre da diferença visual e comunicacional observada entre as duas peças, não de validação de mercado."
+      ],
+      "preferred_creative": "Q1 para uso imediato; Q2 para exploração criativa",
+      "reason": "Q1 satisfaz a necessidade prática com pouco esforço. Q2 abre um caminho mais estimulante, mas ainda precisa do acabamento informativo.",
+      "highest_impact_correction": "Completar Q2 com marca e CTA mantendo a cena surreal e a tipografia leve."
+    }
+  ],
+  "overall": {
+    "preferred_pair": "Q",
+    "tie": false,
+    "preferred_for_immediate_use": "Q1",
+    "preferred_for_further_exploration": "Q2",
+    "reason": "Q combina uma peça prática que eu usaria primeiro com uma alternativa que realmente muda a ideia visual. Aceito completar a marca e o convite de Q2 porque o ajuste é localizado e o segundo caminho oferece mais motivo para continuar explorando. P é mais uniforme em prontidão, mas também mais repetitivo.",
+    "highest_impact_correction": "Adicionar marca e CTA à Q2 antes de apresentá-la como peça pronta para a cafeteria.",
+    "limits": [
+      "Preferência de uma persona simulada, sem participação ou aprovação do dono real.",
+      "Julgamento das imagens completas na resolução apresentada, sem teste em feed, dispositivo móvel ou público real.",
+      "Não foram avaliados custo, tempo de produção, consistência entre novas gerações ou fidelidade a referências visuais não disponibilizadas ao juiz.",
+      "Não há evidência sobre alcance, conversão, viralidade ou retorno comercial."
+    ]
+  }
+}

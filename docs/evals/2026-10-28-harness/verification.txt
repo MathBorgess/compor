@@ -1,0 +1,74 @@
+Auditoria independente C2, 2026-10-28
+Diretório dos comandos Node: prototypes/compor-mcp
+Runtime observado: Node v24.16.0; npm 11.13.0; macOS
+Não foi executado smoke app-server nesta auditoria.
+
+$ npm test
+exit_code=0
+> @compor/mcp-prototipo@0.0.0 test
+> npm run build && node --test test/*.test.mjs
+> @compor/mcp-prototipo@0.0.0 build
+> tsc -p tsconfig.json
+✔ negotiates MCP in process; lists tools and loads all skills without a network fetch
+✔ rejects unknown versions, paths and malformed arguments without revealing files
+✔ stdio child process negotiates MCP and exposes the same catalog to a harness
+✔ Agents SDK connects and calls MCP via Streamable HTTP in process without OpenAI or network
+✔ word-cloud preparation preserves sources, priority, zero and missing weights
+✔ word-cloud preparation rejects malformed or out-of-bounds inputs
+✔ moodboard preserves direction, reference roles, declared sources and zero without confirming preferences
+✔ moodboard warns about exact conflicts without using priority to override restrictions
+✔ moodboard warns about opposing literal elements and unspecified visual cues
+✔ moodboard distinguishes omitted aspects and restrictions from explicit empty lists
+✔ moodboard rejects invalid IDs, assets, duplicate elements, layout and unsupported markup fields
+✔ moodboard treats embedded instructions as untrusted data and does not fetch assets
+✔ layered creative creates an ordered synthetic snapshot without generating or storing
+✔ annotation by layer or area preserves version, scope claim and geometry without inferring preference
+✔ annotation rejects stale versions, missing layer, duplicate ids and out-of-image regions
+✔ annotation preserves untrusted note data and does not fetch an opaque asset
+✔ two annotated targets keep positive and negative notes and their declared scopes without changing memory
+✔ word-cloud technical envelope preserves fractional weights but rejects unsafe magnitudes
+✔ moodboard rejects out-of-canvas boxes and makes unverified rotation bounds explicit
+✔ incomplete image layers are preserved as explicit missing-asset warnings
+✔ area selection distinguishes unresolved, ambiguous and single geometric candidates from explicit layer IDs
+✔ product memory scope always requires externally verified confirmation and warns if product context is absent
+✔ typographic intent survives layered creative and annotation round trips without resolving the font
+✔ omitted typographic fields remain absent and supplied numeric bounds do not create a font fallback
+✔ invalid typographic references, weights, line heights and alignments are rejected
+tests 25; suites 0; pass 25; fail 0; cancelled 0; skipped 0; todo 0
+duration_ms 1005.484458
+Individual test durations omitted from this copied log; results preserved.
+
+$ node --check evals/bridge.mjs
+exit_code=0
+stdout=(empty)
+
+Replay C2 executed without writing or overwriting evidence:
+$ node --input-type=module <<'JS'
+import { readFile } from 'node:fs/promises';
+import assert from 'node:assert/strict';
+import { Client } from '@modelcontextprotocol/sdk/client/index.js';
+import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
+import { createComporServer } from './dist/server.js';
+const evidence=JSON.parse(await readFile('./evals/contracts/type-candidate.json','utf8'));
+const server=createComporServer();const client=new Client({name:'audit-c2-replay',version:'1'});
+const [ct,st]=InMemoryTransport.createLinkedPair();await server.connect(st);await client.connect(ct);
+let calls=0;let fetches=0;const original=globalThis.fetch;globalThis.fetch=async()=>{fetches++;throw new Error('Unexpected audit fetch');};
+try {for(const test of evidence.candidate.calls){const result=await client.callTool(test.input);assert.deepEqual(result,test.output,test.id);calls++;}console.log(JSON.stringify({replayed_calls:calls,exact_outputs:true,fetches}));}finally{globalThis.fetch=original;await client.close();await server.close();}
+JS
+exit_code=0
+stdout={"replayed_calls":10,"exact_outputs":true,"fetches":0}
+
+SHA-256 observed after the build and matched against type-candidate.json:
+src/server.ts fbb3b2ca38ff0c311e89ed01629d0f105cc375a9865ca3fe74936529f5f71b23
+dist/server.js ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029
+test/mcp.test.mjs 29bd75b0d070e7d1929d8ce8e5d583831ad70d69b34d607a0a0a2836e19eadf6
+baseline.input == candidate.calls[0].input: true
+
+Render evidence check (SHA-256, no rerender):
+script, both H0/H1 source JSONs, four assets and four PNGs all match render-report.json.
+Session build hashes observed:
+H0: 13 records, all 24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b
+H1: 10 records, all 24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b
+H2: 2 records, all ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029
+M1: 4 records, all ebadaabd5515385b4e21d3595fc37e7a4faa4fbe4e73e93286591de4fd019029
+Record counts identify the inspected snapshots, not task success or creative quality.

@@ -1,0 +1,642 @@
+{
+  "label": "candidate",
+  "recorded_at": "2026-10-28T03:12:18.686Z",
+  "runtime": "v24.16.0",
+  "mode": "synthetic_real_mcp_calls_no_model_no_user_data",
+  "server_source_sha256": "91b19828706b806c4097bd6481ee59fbe8e46ac9ec4487baf65210980ef8068f",
+  "server_build_sha256": "24b131240f0ca571abb638f787b60567fe280ae52d53f0c6d56d876990f7df9b",
+  "runner_sha256": "684e581851bae208f661fc011c251ed3bf9c81ff2c09a00c01a2b5258c6a2ce0",
+  "unexpected_fetch_calls": 0,
+  "summary": {
+    "passed": 5,
+    "total": 5
+  },
+  "cases": [
+    {
+      "id": "moodboard_outside_normalized_canvas",
+      "expectation": "Reject an unrotated box extending outside normalized canvas; do not silently clip it.",
+      "calls": [
+        {
+          "name": "prepare_moodboard",
+          "arguments": {
+            "board_id": "board-1",
+            "board_version": "v1",
+            "direction": "fictitious",
+            "elements": [
+              {
+                "id": "shape-1",
+                "kind": "shape",
+                "intent": "keep",
+                "value": "circle",
+                "geometry": {
+                  "x": 0.95,
+                  "y": 0.95,
+                  "width": 0.5,
+                  "height": 0.5
+                }
+              }
+            ]
+          }
+        }
+      ],
+      "results": [
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_moodboard: Caixa sem rotação deve caber no quadro. at elements[0].geometry"
+            }
+          ],
+          "isError": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "area_target_resolution",
+      "expectation": "No intersecting layer is unresolved; two candidates are ambiguous and must not become a silently chosen layer.",
+      "calls": [
+        {
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Price",
+                  "kind": "text",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ]
+            },
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0.8,
+                    "y": 0.8,
+                    "width": 0.1,
+                    "height": 0.1
+                  }
+                },
+                "note": "mude isso"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "background",
+                  "name": "Background",
+                  "kind": "image",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "asset_ref": "asset-1"
+                },
+                {
+                  "id": "price",
+                  "name": "Price",
+                  "kind": "text",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ]
+            },
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  }
+                },
+                "note": "mude isso"
+              }
+            ]
+          }
+        }
+      ],
+      "results": [
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"piece-a\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Price\",\"z_index\":1,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.1},\"text\":\"R$ 99\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[],\"annotations\":[{\"id\":\"a1\",\"piece_version\":\"v1\",\"target\":{\"kind\":\"area\",\"rect\":{\"x\":0.8,\"y\":0.8,\"width\":0.1,\"height\":0.1}},\"note\":\"mude isso\",\"edit_scope_claim\":null,\"memory_scope_claim\":null,\"candidate_layer_ids\":[],\"selection_status\":\"unresolved\",\"warnings\":[{\"code\":\"area_has_no_candidate\"}],\"memory_scope_status\":\"unspecified\",\"candidate_detection\":\"bounding_box_only\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Price",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [],
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0.8,
+                    "y": 0.8,
+                    "width": 0.1,
+                    "height": 0.1
+                  }
+                },
+                "note": "mude isso",
+                "edit_scope_claim": null,
+                "memory_scope_claim": null,
+                "candidate_layer_ids": [],
+                "selection_status": "unresolved",
+                "warnings": [
+                  {
+                    "code": "area_has_no_candidate"
+                  }
+                ],
+                "memory_scope_status": "unspecified",
+                "candidate_detection": "bounding_box_only"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        },
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"piece-a\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"background\",\"kind\":\"image\",\"name\":\"Background\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"asset_ref\":\"asset-1\"},{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Price\",\"z_index\":1,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.1},\"text\":\"R$ 99\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[],\"annotations\":[{\"id\":\"a1\",\"piece_version\":\"v1\",\"target\":{\"kind\":\"area\",\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.1}},\"note\":\"mude isso\",\"edit_scope_claim\":null,\"memory_scope_claim\":null,\"candidate_layer_ids\":[\"background\",\"price\"],\"selection_status\":\"ambiguous_candidates\",\"warnings\":[{\"code\":\"area_has_multiple_candidates\"}],\"memory_scope_status\":\"unspecified\",\"candidate_detection\":\"bounding_box_only\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "background",
+                  "kind": "image",
+                  "name": "Background",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "asset_ref": "asset-1"
+                },
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Price",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [],
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  }
+                },
+                "note": "mude isso",
+                "edit_scope_claim": null,
+                "memory_scope_claim": null,
+                "candidate_layer_ids": [
+                  "background",
+                  "price"
+                ],
+                "selection_status": "ambiguous_candidates",
+                "warnings": [
+                  {
+                    "code": "area_has_multiple_candidates"
+                  }
+                ],
+                "memory_scope_status": "unspecified",
+                "candidate_detection": "bounding_box_only"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "image_layer_without_asset",
+      "expectation": "Preserve an incomplete image placeholder with an explicit missing-asset warning, not a valid resolved asset.",
+      "calls": [
+        {
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "image-1",
+                  "name": "Image",
+                  "kind": "image",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  }
+                }
+              ]
+            }
+          }
+        }
+      ],
+      "results": [
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"piece-a\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"image-1\",\"kind\":\"image\",\"name\":\"Image\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1}}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[{\"code\":\"image_asset_missing\",\"layer_id\":\"image-1\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "image-1",
+                  "kind": "image",
+                  "name": "Image",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  }
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [
+              {
+                "code": "image_asset_missing",
+                "layer_id": "image-1"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "unbounded_word_weight",
+      "expectation": "Reject numeric magnitude above Number.MAX_SAFE_INTEGER as a technical envelope, without assigning a semantic scale.",
+      "calls": [
+        {
+          "name": "prepare_word_cloud",
+          "arguments": {
+            "words": [
+              {
+                "word": "x",
+                "chosen_weight": 1e+308
+              }
+            ]
+          }
+        }
+      ],
+      "results": [
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_word_cloud: Too big: expected number to be <=9007199254740991 at words[0].chosen_weight"
+            }
+          ],
+          "isError": true
+        }
+      ],
+      "passed": true
+    },
+    {
+      "id": "product_scope_requires_verified_confirmation",
+      "expectation": "A product-scope claim always requires external verified confirmation; missing product context is explicit; no memory update.",
+      "calls": [
+        {
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Price",
+                  "kind": "text",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ]
+            },
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "mude isso",
+                "memory_scope_claim": "product"
+              }
+            ]
+          }
+        },
+        {
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "name": "Price",
+                  "kind": "text",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ],
+              "product_ref": "product-1"
+            },
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "mude isso",
+                "memory_scope_claim": "product"
+              }
+            ]
+          }
+        }
+      ],
+      "results": [
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"piece-a\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Price\",\"z_index\":1,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.1},\"text\":\"R$ 99\"}],\"product_ref\":null,\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[],\"annotations\":[{\"id\":\"a1\",\"piece_version\":\"v1\",\"target\":{\"kind\":\"layer\",\"layer_id\":\"price\"},\"note\":\"mude isso\",\"memory_scope_claim\":\"product\",\"edit_scope_claim\":null,\"candidate_layer_ids\":[\"price\"],\"selection_status\":\"explicit_layer\",\"warnings\":[{\"code\":\"product_context_missing\"}],\"memory_scope_status\":\"requires_verified_confirmation\",\"candidate_detection\":\"explicit_layer_id\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Price",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [],
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "mude isso",
+                "memory_scope_claim": "product",
+                "edit_scope_claim": null,
+                "candidate_layer_ids": [
+                  "price"
+                ],
+                "selection_status": "explicit_layer",
+                "warnings": [
+                  {
+                    "code": "product_context_missing"
+                  }
+                ],
+                "memory_scope_status": "requires_verified_confirmation",
+                "candidate_detection": "explicit_layer_id"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        },
+        {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"piece-a\",\"version\":\"v1\",\"width_px\":640,\"height_px\":800,\"product_ref\":\"product-1\",\"layers\":[{\"id\":\"price\",\"kind\":\"text\",\"name\":\"Price\",\"z_index\":1,\"rect\":{\"x\":0.1,\"y\":0.1,\"width\":0.2,\"height\":0.1},\"text\":\"R$ 99\"}],\"campaign_ref\":null,\"variation_ref\":null},\"warnings\":[],\"annotations\":[{\"id\":\"a1\",\"piece_version\":\"v1\",\"target\":{\"kind\":\"layer\",\"layer_id\":\"price\"},\"note\":\"mude isso\",\"memory_scope_claim\":\"product\",\"edit_scope_claim\":null,\"candidate_layer_ids\":[\"price\"],\"selection_status\":\"explicit_layer\",\"warnings\":[],\"memory_scope_status\":\"requires_verified_confirmation\",\"candidate_detection\":\"explicit_layer_id\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "piece-a",
+              "version": "v1",
+              "width_px": 640,
+              "height_px": 800,
+              "product_ref": "product-1",
+              "layers": [
+                {
+                  "id": "price",
+                  "kind": "text",
+                  "name": "Price",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.1,
+                    "y": 0.1,
+                    "width": 0.2,
+                    "height": 0.1
+                  },
+                  "text": "R$ 99"
+                }
+              ],
+              "campaign_ref": null,
+              "variation_ref": null
+            },
+            "warnings": [],
+            "annotations": [
+              {
+                "id": "a1",
+                "piece_version": "v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "price"
+                },
+                "note": "mude isso",
+                "memory_scope_claim": "product",
+                "edit_scope_claim": null,
+                "candidate_layer_ids": [
+                  "price"
+                ],
+                "selection_status": "explicit_layer",
+                "warnings": [],
+                "memory_scope_status": "requires_verified_confirmation",
+                "candidate_detection": "explicit_layer_id"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      ],
+      "passed": true
+    }
+  ]
+}
