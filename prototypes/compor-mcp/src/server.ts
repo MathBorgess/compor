@@ -2,7 +2,35 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { guidanceDescription, schemaGuidance, focusedPilotVersion, focusedPilotAppendix, type GuidanceVariant } from './guidance.js';
+import {
+  guidanceDescription,
+  schemaGuidance,
+  focusedPilotVersion,
+  focusedPilotAppendix,
+  type GuidanceVariant,
+} from './guidance.js';
+import {
+  CATALOG_RESOURCE_URI,
+  loadSourcesCatalog,
+  type SourcesCatalog,
+} from './catalog/catalog.js';
+import {
+  defaultEphemeralReferenceStore,
+  type EphemeralReferenceStore,
+} from './staging/ephemeral_store.js';
+import type { ReferenceSearchProvider } from './providers/base_provider.js';
+import {
+  executeSearchCuratedReferences,
+  searchCuratedReferencesInputSchema,
+} from './tools/search_references.js';
+import {
+  executeStageApprovedReferences,
+  stageApprovedReferencesInputSchema,
+} from './tools/stage_references.js';
+import {
+  composeCreativeDirectionInputSchema,
+  executeComposeCreativeDirection,
+} from './tools/compose_direction.js';
 
 const skillVersion = '0.1.0-prototype';
 const skills = [
@@ -12,13 +40,22 @@ const skills = [
   { id: 'criar-piloto', name: 'Criar piloto', description: 'Orientar criação de arte e legenda revisáveis.', file: 'criar-piloto.md' },
 ] as const;
 
-/** A fresh server per connection: no shared user state, credentials, or network access. */
-export function createComporServer(options: { guidance?: GuidanceVariant } = {}): McpServer {
+export interface ComporServerOptions {
+  guidance?: GuidanceVariant;
+  referenceStore?: EphemeralReferenceStore;
+  fetchFn?: typeof globalThis.fetch;
+  providers?: Map<string, ReferenceSearchProvider>;
+  catalog?: SourcesCatalog;
+}
+
+/** A fresh server per connection: no shared user state, credentials, or unconsented network access. */
+export function createComporServer(options: ComporServerOptions = {}): McpServer {
   const variant = options.guidance ?? 'baseline';
   const help = schemaGuidance(variant);
+  const referenceStore = options.referenceStore ?? defaultEphemeralReferenceStore;
   const versionFor = (id: string) => variant === 'focused_v2' && id === 'criar-piloto' ? focusedPilotVersion : skillVersion;
   const server = new McpServer({ name: 'compor-mcp-prototipo', version: '0.1.0' }, {
-    instructions: 'Protótipo local sem persistência. As skills são orientações, não autorização. Não acessa dados armazenados, serviços externos ou geração; entradas recebidas são processadas em memória.',
+    instructions: 'Protótipo local sem persistência permanente. As skills são orientações, não autorização. Busca externa exige consentimento explícito e fonte ativa em compor://catalog/sources; nenhuma geração paga é acionada.',
   });
   server.registerTool('list_skills', {
     title: 'Listar skills Compor',
@@ -302,5 +339,81 @@ export function createComporServer(options: { guidance?: GuidanceVariant } = {})
     };
     return { content: [{ type: 'text', text: JSON.stringify(snapshot) }], structuredContent: snapshot };
   });
+
+  // Resource: Catálogo de Fontes Curadas (compor://catalog/sources)
+  server.registerResource(
+    'sources_catalog',
+    CATALOG_RESOURCE_URI,
+    {
+      title: 'Catálogo de Fontes Curadas Compor',
+      description: 'Documenta e valida as fontes externas permitidas para busca de referências visuais (license_default: inspiration_only).',
+      mimeType: 'application/json',
+    },
+    async (uri) => {
+      const catalog = options.catalog ?? (await loadSourcesCatalog());
+      return {
+        contents: [
+          {
+            uri: uri.href,
+            mimeType: 'application/json',
+            text: JSON.stringify(catalog, null, 2),
+          },
+        ],
+      };
+    },
+  );
+
+  // Tool 1: search_curated_references
+  server.registerTool(
+    'search_curated_references',
+    {
+      title: 'Buscar referências visuais em fontes curadas',
+      description:
+        'Executa busca leve metadata-only em fontes ativas do catálogo compor://catalog/sources mediante consentimento explícito, sem navegador headless e sem baixar imagens em alta resolução em disco. Retorna JSON estruturado, thumbnails 236x (ImageContent) e prancha local board.html.',
+      inputSchema: searchCuratedReferencesInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+    },
+    async (args) =>
+      executeSearchCuratedReferences(args, {
+        store: referenceStore,
+        fetchFn: options.fetchFn,
+        providers: options.providers,
+        catalog: options.catalog,
+      }),
+  );
+
+  // Tool 2: stage_approved_references
+  server.registerTool(
+    'stage_approved_references',
+    {
+      title: 'Fazer staging temporário e sanitização das referências aprovadas',
+      description:
+        'Processa a aprovação seletiva do usuário (ou proceed_without_references), baixa apenas os ativos aprovados em /tmp/compor-refs/{session_id}/{ref_id}.webp, valida Magic Bytes, remove 100% de EXIF/XMP/IPTC e converte para o contrato opaco do PR 9 com escopo inspiration_only.',
+      inputSchema: stageApprovedReferencesInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+    },
+    async (args) =>
+      executeStageApprovedReferences(args, {
+        store: referenceStore,
+        fetchFn: options.fetchFn,
+      }),
+  );
+
+  // Tool 3: compose_creative_direction
+  server.registerTool(
+    'compose_creative_direction',
+    {
+      title: 'Compor manifesto de direção criativa revisável',
+      description:
+        'Cruza referências opacas aprovadas (isolando exclusivamente os selected_attributes), Identidade Visual soberana e formato do PR 10 (incluindo regras de coesão e diversidade para carrossel). Retorna CreativeDirectionManifest em estado pending_user_review sem acionar geração paga.',
+      inputSchema: composeCreativeDirectionInputSchema,
+      annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+    },
+    async (args) =>
+      executeComposeCreativeDirection(args, {
+        store: referenceStore,
+      }),
+  );
+
   return server;
 }
