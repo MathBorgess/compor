@@ -1,0 +1,116 @@
+{
+  "recorded_on": "2026-10-28",
+  "scope": "Three bounded connectivity probes; not the benchmark matrix, not product evaluation",
+  "cli_version": "codex-cli 0.162.1",
+  "auth": "Native existing Codex authentication; no auth/config contents read, copied or printed",
+  "app_server_limitation": "Installed app-server rejected --ignore-user-config; exec and exec resume advertise it.",
+  "probes": [
+    {
+      "requested_model": "gpt-6.1-sol",
+      "configured_effort": "low",
+      "outcome": "failed",
+      "wall_clock_ms": 8908.147708,
+      "usage_cli": {
+        "input_tokens": 53197,
+        "cached_input_tokens": 42624,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 124,
+        "reasoning_output_tokens": 19
+      },
+      "requested_guidance": "baseline",
+      "provider_returned_model": null,
+      "source_runner_sha256": "2636f7251c5018a497d9f382fbcad0aee81cdbc22869d5c56d46318160087c53",
+      "source_turn_artifact_sha256": "19bb954d716dbd16f712e0c002f6517d46d5567e02bc9420523563c96eb2b881",
+      "runtime_model": "gpt-6.1-sol",
+      "runtime_effort": "low",
+      "invalid_for_benchmark": true,
+      "reason": "Code-mode host was disabled, so MCP unavailable; automatic personal skills catalog present. No private instructions copied into this evidence.",
+      "parser_fix": "Compare canonical cwd paths on macOS (/var and /private/var).",
+      "tokens_are_observed_not_fixture": true,
+      "sanitized_cli_artifact": "sol-initial-invalid.json"
+    },
+    {
+      "requested_model": "gpt-6.1-terra",
+      "configured_effort": "low",
+      "outcome": "completed",
+      "wall_clock_ms": 9786.586916,
+      "usage_cli": {
+        "input_tokens": 20130,
+        "cached_input_tokens": 13184,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 253,
+        "reasoning_output_tokens": 0
+      },
+      "requested_guidance": "baseline",
+      "provider_returned_model": null,
+      "source_runner_sha256": "31b2428353138b6567dc2dc46cf8a3c63711934687c44cf22ecdc846964111bd",
+      "source_turn_artifact_sha256": "6a7120ab670e1502419bcd6141b956a11abf3e01f5325b36115539c9603d23e9",
+      "runtime_model": "gpt-6.1-terra",
+      "runtime_effort": "low",
+      "isolation_markers": {
+        "automatic_skills_catalog": false,
+        "personal_memory_summary": false
+      },
+      "tool_names": [
+        "list_skills",
+        "load_skill",
+        "prepare_annotation_context",
+        "prepare_layered_creative",
+        "prepare_moodboard",
+        "prepare_word_cloud"
+      ],
+      "schema_sha256": "b634efb6f0ab0cbe52d42dbcf54b5e03472d030d24b2aeef75ee1160325c2d99",
+      "mcp_calls": [
+        {
+          "tool": "list_skills",
+          "result_observed": true
+        }
+      ],
+      "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+      "developer_system_messages_sha256": "80b882a917a06be4ffa42cf3c71e34c2d56529001ffce2854c0a16a4e11a48b0",
+      "sanitized_cli_artifact": "terra-native.json"
+    },
+    {
+      "requested_model": "gpt-6-astra",
+      "configured_effort": "low",
+      "outcome": "completed",
+      "wall_clock_ms": 13140.284542,
+      "usage_cli": {
+        "input_tokens": 20105,
+        "cached_input_tokens": 7552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 228,
+        "reasoning_output_tokens": 0
+      },
+      "requested_guidance": "baseline",
+      "provider_returned_model": null,
+      "source_runner_sha256": "31b2428353138b6567dc2dc46cf8a3c63711934687c44cf22ecdc846964111bd",
+      "source_turn_artifact_sha256": "4cf393fca09c53f1b9d713dbff7e5edcd48d6bb46fc3ecf2d63fefb20ec8b4de",
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "isolation_markers": {
+        "automatic_skills_catalog": false,
+        "personal_memory_summary": false
+      },
+      "tool_names": [
+        "list_skills",
+        "load_skill",
+        "prepare_annotation_context",
+        "prepare_layered_creative",
+        "prepare_moodboard",
+        "prepare_word_cloud"
+      ],
+      "schema_sha256": "b634efb6f0ab0cbe52d42dbcf54b5e03472d030d24b2aeef75ee1160325c2d99",
+      "mcp_calls": [
+        {
+          "tool": "list_skills",
+          "result_observed": true
+        }
+      ],
+      "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+      "developer_system_messages_sha256": "641b187bd3ee9752cd6a2f9f1106d8de126f75461813c5a7d01ee5a864fad08f",
+      "sanitized_cli_artifact": "astra-native.json"
+    }
+  ],
+  "sequential_native_resume": "Not exercised against a model within the three-probe budget; fake-process integration test passes."
+}

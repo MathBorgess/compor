@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+**/mcp-snapshot/node_modules
+!**/mcp-snapshot/dist/

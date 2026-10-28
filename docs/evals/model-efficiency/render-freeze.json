@@ -1,0 +1,9 @@
+{
+  "frozen_at": "2026-10-28T06:53:20.094534+00:00",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/render/CONTRACT.md": "88cbf9e83c2576e8db183b1547d9611b2263f3debfe5d486e2195fb8e65c198d",
+    "prototypes/compor-mcp/evals/model-efficiency/render/fonts.json": "d0f0b3fd6162b6527d167a405626b434c8b3bb56dab8988fa3dfec5e654e0a70",
+    "prototypes/compor-mcp/evals/model-efficiency/render/renderer.py": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "prototypes/compor-mcp/evals/model-efficiency/render/test_renderer.py": "ef81f33395d356ad839a6ee2ed0cbb88b5efc8b62c042da1e4466410162f0de4"
+  }
+}

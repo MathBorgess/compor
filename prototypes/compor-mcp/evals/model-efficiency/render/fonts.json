@@ -1,0 +1,19 @@
+{
+  "version": "local-font-catalog-v1",
+  "fonts": {
+    "arial": {
+      "family": "Arial",
+      "weights": {
+        "400": "/System/Library/Fonts/Supplemental/Arial.ttf",
+        "700": "/System/Library/Fonts/Supplemental/Arial Bold.ttf"
+      }
+    },
+    "georgia": {
+      "family": "Georgia",
+      "weights": {
+        "400": "/System/Library/Fonts/Supplemental/Georgia.ttf",
+        "700": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf"
+      }
+    }
+  }
+}
