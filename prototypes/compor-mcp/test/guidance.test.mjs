@@ -15,6 +15,15 @@ import { parseGuidanceVariant } from '../dist/guidance.js';
 // Source SHA-256: fbb3b2ca38ff0c311e89ed01629d0f105cc375a9865ca3fe74936529f5f71b23
 // SDK 1.32.2, Zod 4.6.7; no checkout or fixtures modified to capture it.
 const pr8CatalogSha256 = 'a2b915c3763371b69f373f3aafb9428b8803914f6c74522a3931ea5b09754031';
+const pr8ToolNames = new Set([
+  'list_skills',
+  'load_skill',
+  'prepare_word_cloud',
+  'prepare_moodboard',
+  'prepare_layered_creative',
+  'prepare_annotation_context',
+]);
+const pr8Catalog = catalog => ({ ...catalog, tools: catalog.tools.filter(t => pr8ToolNames.has(t.name)) });
 const cwd = fileURLToPath(new URL('..', import.meta.url));
 
 async function connect(options) {
@@ -40,7 +49,7 @@ test('default and explicit baseline retain the frozen PR #8 tools/list catalog, 
     for (const options of [undefined, { guidance: 'guided_v1' }, { guidance: 'baseline' }, undefined]) {
       const connection = await connect(options);
       connections.push(connection);
-      const catalog = await connection.client.listTools();
+      const catalog = pr8Catalog(await connection.client.listTools());
       if (options?.guidance !== 'guided_v1') {
         assert.equal(createHash('sha256').update(JSON.stringify(catalog)).digest('hex'), pr8CatalogSha256);
       }
@@ -52,8 +61,8 @@ test('E1 changes only descriptions/examples in tools/list and exposes nested fie
   const baseline = await connect();
   const guided = await connect({ guidance: 'guided_v1' });
   try {
-    const original = await baseline.client.listTools();
-    const candidate = await guided.client.listTools();
+    const original = pr8Catalog(await baseline.client.listTools());
+    const candidate = pr8Catalog(await guided.client.listTools());
     assert.deepEqual(withoutHelp(candidate), withoutHelp(original));
     for (const tool of candidate.tools) {
       assert.ok(tool.description.startsWith(original.tools.find(t => t.name === tool.name).description));
@@ -182,7 +191,7 @@ test('stdio host selects E1 explicitly; unset and baseline still expose the froz
         await client.connect(transport);
         const catalog = await client.listTools();
         if (setting === 'guided_v1') assert.deepEqual(catalog, expectedGuided);
-        else assert.equal(createHash('sha256').update(JSON.stringify(catalog)).digest('hex'), pr8CatalogSha256);
+        else assert.equal(createHash('sha256').update(JSON.stringify(pr8Catalog(catalog))).digest('hex'), pr8CatalogSha256);
       } finally { await client.close(); }
     }
   } finally { await guided.close(); }
@@ -205,7 +214,7 @@ test('E2 retains E0/E1 catalogs and limits its schema delta to help under 18 KB'
     const catalogs = [];
     for (const guidance of ['baseline', 'guided_v1', 'focused_v2', 'baseline', 'guided_v1']) {
       const c = await connect({ guidance }); connections.push(c);
-      catalogs.push(await c.client.listTools());
+      catalogs.push(pr8Catalog(await c.client.listTools()));
     }
     const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
     assert.equal(hash(catalogs[0]), pr8CatalogSha256);

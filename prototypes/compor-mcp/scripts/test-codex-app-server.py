@@ -126,7 +126,18 @@ def run():
             server = status["data"][0]
             require(server["name"] == "compor_probe", "Servidor inesperado.")
             require(not server.get("toolsError"), "Falha na descoberta de tools.")
-            require(set(server["tools"]) == {"list_skills", "load_skill", "prepare_word_cloud", "prepare_moodboard", "prepare_layered_creative", "prepare_annotation_context"},
+            expected_tools = {
+                "list_skills",
+                "load_skill",
+                "prepare_word_cloud",
+                "prepare_moodboard",
+                "prepare_layered_creative",
+                "prepare_annotation_context",
+                "search_curated_references",
+                "stage_approved_references",
+                "compose_creative_direction",
+            }
+            require(set(server["tools"]) == expected_tools,
                     "Tools inesperadas.")
             report["tests"]["codex_mcp_discovery"] = sorted(server["tools"])
 
