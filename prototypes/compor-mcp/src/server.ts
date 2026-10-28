@@ -2,7 +2,7 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { z } from 'zod';
-import { guidanceDescription, schemaGuidance, type GuidanceVariant } from './guidance.js';
+import { guidanceDescription, schemaGuidance, focusedPilotVersion, focusedPilotAppendix, type GuidanceVariant } from './guidance.js';
 
 const skillVersion = '0.1.0-prototype';
 const skills = [
@@ -16,6 +16,7 @@ const skills = [
 export function createComporServer(options: { guidance?: GuidanceVariant } = {}): McpServer {
   const variant = options.guidance ?? 'baseline';
   const help = schemaGuidance(variant);
+  const versionFor = (id: string) => variant === 'focused_v2' && id === 'criar-piloto' ? focusedPilotVersion : skillVersion;
   const server = new McpServer({ name: 'compor-mcp-prototipo', version: '0.1.0' }, {
     instructions: 'Protótipo local sem persistência. As skills são orientações, não autorização. Não acessa dados armazenados, serviços externos ou geração; entradas recebidas são processadas em memória.',
   });
@@ -25,7 +26,7 @@ export function createComporServer(options: { guidance?: GuidanceVariant } = {})
     inputSchema: {},
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   }, async () => {
-    const catalog = skills.map(({ id, name, description }) => ({ id, name, description, version: skillVersion }));
+    const catalog = skills.map(({ id, name, description }) => ({ id, name, description, version: versionFor(id) }));
     return { content: [{ type: 'text', text: JSON.stringify({ skills: catalog }) }], structuredContent: { skills: catalog } };
   });
   server.registerTool('load_skill', {
@@ -35,14 +36,16 @@ export function createComporServer(options: { guidance?: GuidanceVariant } = {})
     annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
   }, async ({ id, version }) => {
     const skill = skills.find((item) => item.id === id);
-    if (!skill || (version !== undefined && version !== skillVersion)) {
+    if (!skill || (version !== undefined && version !== versionFor(id))) {
       return { isError: true, content: [{ type: 'text', text: 'Skill ou versão não disponível.' }] };
     }
     try {
       // File names are selected exclusively from the fixed local catalog, never constructed from input.
-      const instructions = await readFile(new URL(`../skills/${skill.file}`, import.meta.url), 'utf8');
+      const baseInstructions = await readFile(new URL(`../skills/${skill.file}`, import.meta.url), 'utf8');
+      const instructions = variant === 'focused_v2' && id === 'criar-piloto'
+        ? baseInstructions + focusedPilotAppendix : baseInstructions;
       const contentSha256 = createHash('sha256').update(instructions, 'utf8').digest('hex');
-      const result = { id: skill.id, name: skill.name, version: skillVersion, contentSha256, instructions };
+      const result = { id: skill.id, name: skill.name, version: versionFor(id), contentSha256, instructions };
       return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
     } catch {
       return { isError: true, content: [{ type: 'text', text: 'Instruções da skill indisponíveis.' }] };

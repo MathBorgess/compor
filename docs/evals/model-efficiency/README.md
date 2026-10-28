@@ -34,9 +34,9 @@ Nos nove pares com cinco turnos nativos concluídos em ambos os braços, E1 cons
 
 A crítica por camada foi útil para auditar o alcance da edição. As revisões preservaram palavras, imagem e outras camadas nos casos verificados; Sol E0 medium/startup ampliou também a altura da caixa da headline, além de escala/quebra previstas. Essa exceção é uma falha do contrato estrito, não um novo critério crítico criado depois do teste. Feedback positivo/negativo e não conclusão são relatos fictícios; não houve gravação de memória de usuário ou comprovação de satisfação real.
 
-## Próximo candidato proposto, ainda não implementado
+## Continuação: candidato E2 em desenvolvimento
 
-A [proposta E2](e2-proposal.md) concentra instruções curtas nos erros de coordenadas e `z_index`, com orientação visual carregada sob demanda. O resultado também sugere experimentar medição de texto/preview durante a composição, permitindo reparar overflow e rever hierarquia **dentro do alcance autorizado**. Isso é hipótese arquitetural: não foi testada nesta rodada e não faz parte de uma nova arquitetura aprovada.
+O [candidato E2 e seu replay diagnóstico](e2-development.md) foram implementados depois desta rodada. Ainda não têm avaliação visual completa. A [proposta E2](e2-proposal.md) concentra instruções curtas nos erros de coordenadas e `z_index`, com orientação visual carregada sob demanda. O resultado também sugere experimentar medição de texto/preview durante a composição, permitindo reparar overflow e rever hierarquia **dentro do alcance autorizado**. Isso é hipótese arquitetural: não foi testada nesta rodada e não faz parte de uma nova arquitetura aprovada.
 
 Não é necessário ampliar o produto para multiagentes, MCP Apps, execução offline ou persistência neste ensaio. A arquitetura permanece v0. O PR entrega código experimental, evidências e propostas para crítica, sem promoção automática do harness.
 

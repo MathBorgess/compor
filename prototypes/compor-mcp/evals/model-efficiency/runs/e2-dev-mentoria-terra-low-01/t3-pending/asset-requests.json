@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-editorial",
+    "asset_ref": "asset-editorial-01",
+    "prompt": "Imagem quadrada para encaixe integral: composição editorial de folhas de papel liso e cartões sem inscrições, organizados com intervalos generosos, vista de cima. Formas simples e táteis que sugiram planejamento. Usar ameixa #532B54, argila #C76B4B e creme #F4EBDD. Fundo creme uniforme até as bordas. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+  },
+  {
+    "direction_id": "direcao-trama",
+    "asset_ref": "asset-trama-01",
+    "prompt": "Imagem quadrada para encaixe integral: poucos fios de tecido entrelaçados formando uma trama aberta e organizada, com textura artesanal delicada e espaço ao redor. Usar ameixa #532B54, argila #C76B4B e creme #F4EBDD. Fundo creme uniforme até as bordas. Sem letras, palavras, números, símbolos tipográficos, logotipos ou marcas-d'água."
+  }
+]

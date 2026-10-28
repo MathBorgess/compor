@@ -191,9 +191,81 @@ test('stdio host selects E1 explicitly; unset and baseline still expose the froz
 test('unsupported host variant fails before stdio negotiation rather than silently mixing arms', () => {
   for (const value of [undefined, '', 'baseline']) assert.equal(parseGuidanceVariant(value), 'baseline');
   assert.equal(parseGuidanceVariant('guided_v1'), 'guided_v1');
-  assert.throws(() => parseGuidanceVariant('guided_v2'), /deve ser baseline ou guided_v1/);
+  assert.throws(() => parseGuidanceVariant('guided_v2'), /deve ser baseline, guided_v1 ou focused_v2/);
   const result = spawnSync(process.execPath, ['dist/stdio.js'], { cwd, env: { ...process.env, COMPOR_MCP_GUIDANCE: 'guided_v2' }, encoding: 'utf8', timeout: 5000 });
   assert.equal(result.status, 1);
   assert.equal(result.stdout, '');
-  assert.match(result.stderr, /deve ser baseline ou guided_v1/);
+  assert.match(result.stderr, /deve ser baseline, guided_v1 ou focused_v2/);
+});
+
+
+test('E2 retains E0/E1 catalogs and limits its schema delta to help under 18 KB', async () => {
+  const connections = [];
+  try {
+    const catalogs = [];
+    for (const guidance of ['baseline', 'guided_v1', 'focused_v2', 'baseline', 'guided_v1']) {
+      const c = await connect({ guidance }); connections.push(c);
+      catalogs.push(await c.client.listTools());
+    }
+    const hash = value => createHash('sha256').update(JSON.stringify(value)).digest('hex');
+    assert.equal(hash(catalogs[0]), pr8CatalogSha256);
+    assert.equal(hash(catalogs[1]), '6d34a5514bf1b251cd980620aa202f67047707076eb9344b73170bb33738d5a6');
+    assert.deepEqual(catalogs[3], catalogs[0]); assert.deepEqual(catalogs[4], catalogs[1]);
+    assert.deepEqual(withoutHelp(catalogs[2]), withoutHelp(catalogs[0]));
+    assert.ok(Buffer.byteLength(JSON.stringify(catalogs[2])) <= 18000);
+    const tools = Object.fromEntries(catalogs[2].tools.map(t => [t.name,t]));
+    const layers = tools.prepare_layered_creative.inputSchema.properties.piece.properties.layers.items;
+    const serialized = JSON.stringify(layers);
+    assert.match(serialized, /x=px\/W/); assert.match(serialized, /inclusive camadas do mesmo tipo/);
+    assert.equal(parseGuidanceVariant('focused_v2'), 'focused_v2');
+  } finally { for (const c of connections) await c.close(); }
+});
+
+test('E2 versions only the pilot appendix and refuses mismatched versions', async () => {
+  const a = await connect(); const b = await connect({ guidance: 'focused_v2' });
+  try {
+    const oldCatalog = (await a.client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills;
+    const newCatalog = (await b.client.callTool({ name: 'list_skills', arguments: {} })).structuredContent.skills;
+    for (const skill of oldCatalog) {
+      const old = await a.client.callTool({ name: 'load_skill', arguments: { id: skill.id, version: skill.version } });
+      const entry = newCatalog.find(s => s.id === skill.id);
+      const candidate = await b.client.callTool({ name: 'load_skill', arguments: { id: skill.id, version: entry.version } });
+      if (skill.id !== 'criar-piloto') { assert.deepEqual(entry, skill); assert.deepEqual(candidate, old); continue; }
+      assert.notEqual(entry.version, skill.version);
+      const data = candidate.structuredContent;
+      assert.ok(data.instructions.startsWith(old.structuredContent.instructions));
+      const appendix = data.instructions.slice(old.structuredContent.instructions.length);
+      assert.ok(appendix.trim().split(/\s+/).length <= 200);
+      assert.match(appendix, /campos autorizados/);
+      assert.match(appendix, /somente quando realmente disponíveis/);
+      assert.equal(data.contentSha256, createHash('sha256').update(data.instructions).digest('hex'));
+      assert.equal((await b.client.callTool({ name:'load_skill', arguments:{ id:skill.id, version:skill.version } })).isError, true);
+      assert.equal((await a.client.callTool({ name:'load_skill', arguments:{ id:skill.id, version:entry.version } })).isError, true);
+    }
+  } finally { await a.close(); await b.close(); }
+});
+
+test('E2 preserves preparation outcomes and rejects pixel boxes and duplicate painting order', async () => {
+  const a = await connect(); const b = await connect({ guidance:'focused_v2' });
+  const payloads = [
+    { name:'prepare_word_cloud', arguments:{words:[{word:'teste',chosen_weight:0}]} },
+    { name:'prepare_moodboard', arguments:board },
+    { name:'prepare_layered_creative', arguments:{piece} },
+    { name:'prepare_annotation_context', arguments:{piece,annotations:[annotation]} },
+    { name:'prepare_layered_creative', arguments:{piece:{...piece,layers:piece.layers.map(l=>({...l,z_index:0}))}} },
+    { name:'prepare_layered_creative', arguments:{piece:{...piece,layers:[{...piece.layers[0],rect:{x:80,y:60,width:400,height:120}}]}} },
+  ];
+  try {
+    for (const request of payloads) assert.deepEqual(await b.client.callTool(request),await a.client.callTool(request));
+    for (const request of payloads.slice(-2)) assert.equal((await b.client.callTool(request)).isError,true);
+  } finally { await a.close();await b.close(); }
+});
+
+test('E2 is delivered through the stdio host only when explicitly selected', async () => {
+  const memory = await connect({guidance:'focused_v2'});
+  const client = new Client({name:'e2-stdio-test',version:'1'});
+  try {
+    await client.connect(new StdioClientTransport({command:process.execPath,args:['dist/stdio.js'],cwd,env:{COMPOR_MCP_GUIDANCE:'focused_v2'},stderr:'pipe'}));
+    assert.deepEqual(await client.listTools(),JSON.parse(JSON.stringify(await memory.client.listTools())));
+  } finally { await client.close();await memory.close(); }
 });

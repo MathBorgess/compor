@@ -1,12 +1,12 @@
 import { z } from 'zod';
 
 /** Evaluation setting selected by the host, never a tool argument or stored user preference. */
-export type GuidanceVariant = 'baseline' | 'guided_v1';
+export type GuidanceVariant = 'baseline' | 'guided_v1' | 'focused_v2';
 
 export function parseGuidanceVariant(value: string | undefined): GuidanceVariant {
   if (value === undefined || value === '' || value === 'baseline') return 'baseline';
-  if (value === 'guided_v1') return value;
-  throw new Error('COMPOR_MCP_GUIDANCE deve ser baseline ou guided_v1.');
+  if (value === 'guided_v1' || value === 'focused_v2') return value;
+  throw new Error('COMPOR_MCP_GUIDANCE deve ser baseline, guided_v1 ou focused_v2.');
 }
 
 const toolHelp = {
@@ -63,12 +63,39 @@ const fields = {
 } satisfies Record<string, Help>;
 
 export function guidanceDescription(variant: GuidanceVariant, tool: keyof typeof toolHelp, baseline: string): string {
+  if (variant === 'focused_v2') return focusedToolHelp[tool] ? `${baseline} ${focusedToolHelp[tool]}` : baseline;
   return variant === 'guided_v1' ? `${baseline} ${toolHelp[tool]}` : baseline;
 }
 
 export function schemaGuidance(variant: GuidanceVariant) {
   // Zod metadata clones the schema without changing parsing, refinements or outputs.
   // Baseline returns the exact original schema, preserving the PR #8 catalog.
-  return <T extends z.ZodType>(key: keyof typeof fields, schema: T): T =>
-    variant === 'guided_v1' ? schema.meta(fields[key]) : schema;
+  return <T extends z.ZodType>(key: keyof typeof fields, schema: T): T => {
+    if (variant === 'focused_v2') {
+      const help = focusedFields[key as keyof typeof focusedFields];
+      return help ? schema.meta(help) : schema;
+    }
+    return variant === 'guided_v1' ? schema.meta(fields[key]) : schema;
+  };
 }
+
+// Separate experimental arm: E0/E1 content remains frozen; no automatic promotion.
+const focusedToolHelp: Partial<Record<keyof typeof toolHelp, string>> = {
+  load_skill: 'Para composição e revisão, carregue criar-piloto na versão do catálogo quando necessário; reutilize a mesma versão já carregada.',
+  prepare_layered_creative: 'Antes da chamada, confira rect em frações e z_index único em toda a peça. Se houver erro, corrija a causa indicada antes de reenviar.',
+};
+const focusedFields = {
+  rect: { description: 'Frações da imagem, não pixels: x=px/W, y=py/H, width=pw/W, height=ph/H; x+width<=1 e y+height<=1. font_size_px continua em pixels. Em 800x600, caixa (80,60,400,120) vira (0.1,0.1,0.5,0.2).', examples: [{ x: 0.1, y: 0.1, width: 0.5, height: 0.2 }] },
+  z_index: { description: 'Inteiro único em toda a peça, inclusive camadas do mesmo tipo. Para novos planos use 0,1,2... na ordem de pintura, nunca um índice por categoria. Na revisão preserve a ordem fora do escopo autorizado.' },
+} satisfies Record<string, Help>;
+
+export const focusedPilotVersion = '0.1.0-prototype-e2';
+export const focusedPilotAppendix = `
+## Composição e revisão — candidato E2
+
+Antes de compor, defina o efeito pretendido e a relação entre mensagem, imagem e hierarquia. Dê a cada bloco uma função: entrada, compreensão ou ação; corte repetição apenas quando o pedido permitir. Uma alternativa deve mudar a ideia ou a leitura de modo útil, conforme a pessoa esteja explorando direções ou variando uma direção escolhida.
+
+Planeje a caixa da imagem considerando o encaixe e o fundo do compositor. Preserve os fatos necessários para entender a peça no contexto de uso; não dependa de legenda quando a peça precisar funcionar sozinha.
+
+Na revisão, identifique o alvo e os campos autorizados. Faça a mudança solicitada, preserve o restante e confira o efeito sobre a hierarquia. Se outra alteração ajudar, apresente-a como opção separada. Use preview e medidas somente quando realmente disponíveis; sem eles, declare o limite e não alegue ter verificado o resultado visual.
+`;

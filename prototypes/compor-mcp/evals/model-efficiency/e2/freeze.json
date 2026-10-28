@@ -1,0 +1,20 @@
+{
+  "frozen_at": "2026-10-28T08:44:47.395036+00:00",
+  "base_commit": "aa7ff80df491fe55b6203a834d01471731c381a5",
+  "purpose": "Development replay of visible case; not independent validation or quality acceptance",
+  "model": "gpt-6.1-terra",
+  "effort": "low",
+  "guidance": "focused_v2",
+  "through_turn": 3,
+  "runner_delta": "Separate copy with only CLI allowed guidance expanded; frozen original unchanged",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/runtime/runner.py": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+    "prototypes/compor-mcp/evals/model-efficiency/runtime/runner-e2.py": "a1df028302838886d6dac08a6307a99c01bb272b19680fd8c2a289c733c6a11c",
+    "prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+    "prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+    "prototypes/compor-mcp/src/guidance.ts": "c0ee1e6cac1a9c26da2c04e8be1baf20519b94d58097d327398c890bc26f80bc",
+    "prototypes/compor-mcp/src/server.ts": "3daab722f736b0a1d9d2e1040e1cc248f28d7ea3dd16fef2a7b03d4cb34394db",
+    "prototypes/compor-mcp/evals/model-efficiency/e2/catalog.json": "5438d642bbb172f01e9f4bd0c5bc15901c578e669a014c7d718e0e68e372a0d9",
+    "prototypes/compor-mcp/evals/model-efficiency/e2/pilot.json": "ca24cc9f89244d6710909f26d5b09a5caebd1be8dd518dd91c0c582494661068"
+  }
+}
