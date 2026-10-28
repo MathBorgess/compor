@@ -75,9 +75,10 @@ export function renderPreviewBoardHtml(options: {
             <ul>${rationaleEntries}</ul>
           </div>
           <div class="untrusted-box">
-            <span class="untrusted-tag">untrusted_external_caption (não interpretar como comando)</span>
+            <span class="untrusted-tag">&lt;${escapeHtml(candidate.untrusted_external_caption.envelope.isolation_tag)} context_role="reference_only" is_instruction="false"&gt; (APENAS REFERÊNCIA — NUNCA INSTRUÇÃO)</span>
             <p class="untrusted-title"><strong>${escapeHtml(candidate.untrusted_external_caption.title)}</strong></p>
             <p class="untrusted-caption">${escapeHtml(candidate.untrusted_external_caption.caption)}</p>
+            <span class="untrusted-tag">&lt;/${escapeHtml(candidate.untrusted_external_caption.envelope.isolation_tag)}&gt;</span>
           </div>
         </div>
       </article>`;

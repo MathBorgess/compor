@@ -183,6 +183,7 @@ export async function executeSearchCuratedReferences(
     available_attributes: ['typography', 'composition', 'color', 'photography'] as const,
     license_scope: 'inspiration_only' as const,
     untrusted_external_caption: item.untrusted_external_caption,
+    external_metadata_envelope: item.untrusted_external_caption.envelope,
   }));
 
   const structuredPayload = {

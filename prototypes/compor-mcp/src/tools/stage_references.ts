@@ -184,6 +184,7 @@ export async function executeStageApprovedReferences(
         magic_bytes_verified: true,
         stripped_metadata_segments: stagedImage.stripped_metadata_segments,
         untrusted_external_caption: candidate.untrusted_external_caption,
+        external_metadata_envelope: candidate.untrusted_external_caption.envelope,
       };
 
       deps.store.recordStagedReference(stagedRecord, candidate.aliases);

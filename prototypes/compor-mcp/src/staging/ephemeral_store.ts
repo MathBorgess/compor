@@ -1,7 +1,10 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { rm } from 'node:fs/promises';
 import { resolve } from 'node:path';
-import type { UntrustedExternalCaptionPayload } from '../security/text_sanitizer.js';
+import type {
+  ExternalMetadataContextEnvelope,
+  UntrustedExternalCaptionPayload,
+} from '../security/text_sanitizer.js';
 import { STAGING_ROOT_DIR } from '../security/image_sanitizer.js';
 
 export type ReferenceAttribute = 'typography' | 'composition' | 'color' | 'photography';
@@ -68,6 +71,7 @@ export interface Pr9CompatibleStagedReference {
   magic_bytes_verified: true;
   stripped_metadata_segments: string[];
   untrusted_external_caption: UntrustedExternalCaptionPayload;
+  external_metadata_envelope: ExternalMetadataContextEnvelope;
 }
 
 export const DEFAULT_TTL_MS = 30 * 60 * 1000; // 30 minutes
