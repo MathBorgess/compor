@@ -1,7 +1,11 @@
 import type { CatalogSource } from '../catalog/catalog.js';
 import type { AspectRationaleMap, ReferenceAttribute } from '../staging/ephemeral_store.js';
-import { createHash } from 'node:crypto';
-import { encodeCleanWebpContainer } from '../security/image_sanitizer.js';
+import {
+  downloadImageWithGuards,
+  IMAGE_DOWNLOAD_TIMEOUT_MS,
+  MAX_IMAGE_DOWNLOAD_BYTES,
+  sanitizeImageBufferToWebp,
+} from '../security/image_sanitizer.js';
 
 export interface ProviderSearchQuery {
   briefing_summary: string;
@@ -20,9 +24,10 @@ export interface RawProviderCandidate {
   raw_title: string;
   raw_caption: string;
   raw_alt_text?: string;
+  raw_aspect_rationale?: AspectRationaleMap;
   aspect_rationale: AspectRationaleMap;
-  thumbnail_base64: string;
-  thumbnail_mime_type: 'image/webp' | 'image/png' | 'image/jpeg';
+  thumbnail_base64: string | null;
+  thumbnail_mime_type: 'image/webp' | 'image/png' | 'image/jpeg' | null;
 }
 
 export interface ReferenceSearchProvider {
@@ -40,15 +45,60 @@ export class ProviderUnavailableError extends Error {
   }
 }
 
-export function buildDefaultThumbnailBase64(seed: string): string {
-  const digest = createHash('sha256').update(seed).digest();
-  return encodeCleanWebpContainer(digest, 236, 236).toString('base64');
+/**
+ * Resolves actual low-resolution preview pixels in memory (never writing to disk during search)
+ * and re-encodes them as a clean, metadata-free WebP thumbnail.
+ * If neither `providedThumbnailBase64` nor `previewUrl` yields a valid image, returns `null`
+ * so the caller can explicitly report `thumbnail_available: false` without fabricating bytes.
+ */
+export async function resolvePreviewThumbnailInMemory(options: {
+  providedThumbnailBase64?: string;
+  previewUrl: string;
+  fetchFn: typeof globalThis.fetch;
+  timeoutMs?: number;
+}): Promise<{ thumbnail_base64: string; thumbnail_mime_type: 'image/webp' } | null> {
+  if (typeof options.providedThumbnailBase64 === 'string' && options.providedThumbnailBase64.trim().length > 0) {
+    try {
+      const decoded = Buffer.from(options.providedThumbnailBase64, 'base64');
+      const sanitized = sanitizeImageBufferToWebp(decoded);
+      return {
+        thumbnail_base64: sanitized.webpBuffer.toString('base64'),
+        thumbnail_mime_type: 'image/webp',
+      };
+    } catch {
+      // Fall through to fetching previewUrl
+    }
+  }
+
+  if (!options.previewUrl) {
+    return null;
+  }
+
+  try {
+    const rawPreviewBytes = await downloadImageWithGuards(
+      options.previewUrl,
+      options.fetchFn,
+      Math.min(IMAGE_DOWNLOAD_TIMEOUT_MS, options.timeoutMs ?? IMAGE_DOWNLOAD_TIMEOUT_MS),
+      MAX_IMAGE_DOWNLOAD_BYTES,
+    );
+    const sanitized = sanitizeImageBufferToWebp(rawPreviewBytes);
+    return {
+      thumbnail_base64: sanitized.webpBuffer.toString('base64'),
+      thumbnail_mime_type: 'image/webp',
+    };
+  } catch {
+    return null;
+  }
 }
 
+/**
+ * Generates trusted local technical justifications for each requested composition aspect.
+ * Untrusted provider-supplied `aspect_rationale` values must NEVER be merged here;
+ * they are sanitized and isolated inside `untrusted_external_caption` and `external_metadata_envelope`.
+ */
 export function buildAspectRationale(
   aspectFocus: ReferenceAttribute[],
   targetFormat: string,
-  overrides: Partial<AspectRationaleMap> = {},
 ): AspectRationaleMap {
   const defaults: Record<ReferenceAttribute, string> = {
     typography: `Hierarquia tipográfica com contraste claro entre chamada principal e apoio para o formato ${targetFormat}.`,
@@ -62,12 +112,7 @@ export function buildAspectRationale(
     aspectFocus.length > 0 ? aspectFocus : ['typography', 'composition', 'color', 'photography'];
 
   for (const aspect of activeAspects) {
-    result[aspect] = overrides[aspect] ?? defaults[aspect];
-  }
-  for (const [k, v] of Object.entries(overrides) as Array<[ReferenceAttribute, string | undefined]>) {
-    if (v && !result[k]) {
-      result[k] = v;
-    }
+    result[aspect] = defaults[aspect];
   }
   return result;
 }

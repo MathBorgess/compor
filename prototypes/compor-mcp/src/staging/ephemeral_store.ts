@@ -28,8 +28,8 @@ export interface EphemeralCandidateReference {
   aspect_rationale: AspectRationaleMap;
   untrusted_external_caption: UntrustedExternalCaptionPayload;
   license_scope: 'inspiration_only';
-  thumbnail_base64: string;
-  thumbnail_mime_type: 'image/webp' | 'image/png' | 'image/jpeg';
+  thumbnail_base64: string | null;
+  thumbnail_mime_type: 'image/webp' | 'image/png' | 'image/jpeg' | null;
   created_at_ms: number;
   expires_at_ms: number;
 }
@@ -163,8 +163,8 @@ export class EphemeralReferenceStore {
       media_url: string;
       aspect_rationale: AspectRationaleMap;
       untrusted_external_caption: UntrustedExternalCaptionPayload;
-      thumbnail_base64: string;
-      thumbnail_mime_type?: 'image/webp' | 'image/png' | 'image/jpeg';
+      thumbnail_base64: string | null;
+      thumbnail_mime_type?: 'image/webp' | 'image/png' | 'image/jpeg' | null;
     }>,
   ): EphemeralCandidateReference[] {
     const sid = this.getActiveSessionId(sessionId);
@@ -197,7 +197,7 @@ export class EphemeralReferenceStore {
         untrusted_external_caption: item.untrusted_external_caption,
         license_scope: 'inspiration_only',
         thumbnail_base64: item.thumbnail_base64,
-        thumbnail_mime_type: item.thumbnail_mime_type ?? 'image/webp',
+        thumbnail_mime_type: item.thumbnail_base64 ? (item.thumbnail_mime_type ?? 'image/webp') : null,
         created_at_ms: now,
         expires_at_ms: expiresAt,
       };

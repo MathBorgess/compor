@@ -147,6 +147,7 @@ export async function executeSearchCuratedReferences(
       title: item.raw_title,
       caption: item.raw_caption,
       alt_text: item.raw_alt_text,
+      aspect_rationale: item.raw_aspect_rationale,
     });
     return {
       preferred_ref_id: item.preferred_ref_id,
@@ -179,6 +180,8 @@ export async function executeSearchCuratedReferences(
     origin_url: item.origin_url,
     preview_url: item.preview_url,
     referrer_policy: 'no-referrer' as const,
+    thumbnail_available: item.thumbnail_base64 !== null,
+    thumbnail_status: item.thumbnail_base64 !== null ? ('available' as const) : ('unavailable' as const),
     aspect_rationale: item.aspect_rationale,
     available_attributes: ['typography', 'composition', 'color', 'photography'] as const,
     license_scope: 'inspiration_only' as const,
@@ -205,11 +208,13 @@ export async function executeSearchCuratedReferences(
   > = [{ type: 'text', text: JSON.stringify(structuredPayload) }];
 
   for (const item of registered) {
-    content.push({
-      type: 'image',
-      mimeType: item.thumbnail_mime_type,
-      data: item.thumbnail_base64,
-    });
+    if (item.thumbnail_base64 !== null && item.thumbnail_mime_type !== null) {
+      content.push({
+        type: 'image',
+        mimeType: item.thumbnail_mime_type,
+        data: item.thumbnail_base64,
+      });
+    }
   }
 
   return {

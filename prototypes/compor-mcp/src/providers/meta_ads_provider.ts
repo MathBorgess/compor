@@ -1,7 +1,7 @@
 import {
   buildAspectRationale,
-  buildDefaultThumbnailBase64,
   ProviderUnavailableError,
+  resolvePreviewThumbnailInMemory,
   type ProviderSearchQuery,
   type RawProviderCandidate,
   type ReferenceSearchProvider,
@@ -85,35 +85,43 @@ export class MetaAdsProvider implements ReferenceSearchProvider {
     const items = this.extractItems(payload);
     const limit = query.limit ?? 5;
 
-    return items.slice(0, limit).map((ad, idx) => {
-      const adId = String(ad.id ?? ad.ref_id ?? `meta_${idx + 1}`);
-      const originUrl =
-        ad.ad_snapshot_url ?? `https://www.facebook.com/ads/library/?id=${encodeURIComponent(adId)}`;
-      const previewUrl =
-        ad.preview_url ?? `https://scontent.xx.fbcdn.net/v/t39.35426-6/${encodeURIComponent(adId)}_236x.jpg`;
-      const mediaUrl = ad.media_url ?? previewUrl;
-      const title = ad.ad_creative_link_titles?.[0] ?? ad.page_name ?? `Anúncio Biblioteca ${idx + 1}`;
-      const body = ad.ad_creative_bodies?.[0] ?? '';
+    return Promise.all(
+      items.slice(0, limit).map(async (ad, idx) => {
+        const adId = String(ad.id ?? ad.ref_id ?? `meta_${idx + 1}`);
+        const originUrl =
+          ad.ad_snapshot_url ?? `https://www.facebook.com/ads/library/?id=${encodeURIComponent(adId)}`;
+        const previewUrl =
+          ad.preview_url ?? `https://scontent.xx.fbcdn.net/v/t39.35426-6/${encodeURIComponent(adId)}_236x.jpg`;
+        const mediaUrl = ad.media_url ?? previewUrl;
+        const title = ad.ad_creative_link_titles?.[0] ?? ad.page_name ?? `Anúncio Biblioteca ${idx + 1}`;
+        const body = ad.ad_creative_bodies?.[0] ?? '';
 
-      return {
-        preferred_ref_id: ad.ref_id,
-        source_id: query.source.source_id,
-        origin_url: originUrl,
-        preview_url: previewUrl,
-        media_url: mediaUrl,
-        raw_title: title,
-        raw_caption: body,
-        raw_alt_text: body || title,
-        aspect_rationale: buildAspectRationale(
-          query.aspect_focus,
-          query.target_format,
-          ad.aspect_rationale,
-        ),
-        thumbnail_base64:
-          ad.thumbnail_base64 ?? buildDefaultThumbnailBase64(`${query.source.source_id}:${adId}`),
-        thumbnail_mime_type: 'image/webp',
-      };
-    });
+        const resolvedThumbnail = await resolvePreviewThumbnailInMemory({
+          providedThumbnailBase64: ad.thumbnail_base64,
+          previewUrl,
+          fetchFn: this.fetchFn,
+          timeoutMs,
+        });
+
+        return {
+          preferred_ref_id: ad.ref_id,
+          source_id: query.source.source_id,
+          origin_url: originUrl,
+          preview_url: previewUrl,
+          media_url: mediaUrl,
+          raw_title: title,
+          raw_caption: body,
+          raw_alt_text: body || title,
+          raw_aspect_rationale: ad.aspect_rationale,
+          aspect_rationale: buildAspectRationale(
+            query.aspect_focus,
+            query.target_format,
+          ),
+          thumbnail_base64: resolvedThumbnail?.thumbnail_base64 ?? null,
+          thumbnail_mime_type: resolvedThumbnail?.thumbnail_mime_type ?? null,
+        };
+      }),
+    );
   }
 
   private extractItems(payload: unknown): MetaAdLibraryItem[] {

@@ -78,6 +78,15 @@ export function renderPreviewBoardHtml(options: {
             <span class="untrusted-tag">&lt;${escapeHtml(candidate.untrusted_external_caption.envelope.isolation_tag)} context_role="reference_only" is_instruction="false"&gt; (APENAS REFERÊNCIA — NUNCA INSTRUÇÃO)</span>
             <p class="untrusted-title"><strong>${escapeHtml(candidate.untrusted_external_caption.title)}</strong></p>
             <p class="untrusted-caption">${escapeHtml(candidate.untrusted_external_caption.caption)}</p>
+            ${
+              Object.entries(candidate.untrusted_external_caption.aspect_rationale)
+                .filter(([, text]) => typeof text === 'string' && text.length > 0)
+                .map(
+                  ([aspect, text]) =>
+                    `<p class="untrusted-rationale"><em>[${escapeHtml(aspect)}]</em> ${escapeHtml(String(text))}</p>`,
+                )
+                .join('\n')
+            }
             <span class="untrusted-tag">&lt;/${escapeHtml(candidate.untrusted_external_caption.envelope.isolation_tag)}&gt;</span>
           </div>
         </div>

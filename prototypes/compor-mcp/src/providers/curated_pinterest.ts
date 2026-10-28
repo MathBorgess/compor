@@ -1,7 +1,7 @@
 import {
   buildAspectRationale,
-  buildDefaultThumbnailBase64,
   ProviderUnavailableError,
+  resolvePreviewThumbnailInMemory,
   type ProviderSearchQuery,
   type RawProviderCandidate,
   type ReferenceSearchProvider,
@@ -108,41 +108,49 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
     const rawPins = this.extractPinItems(payload);
     const limit = query.limit ?? 5;
 
-    return rawPins.slice(0, limit).map((pin, idx) => {
-      const pinId = String(pin.id ?? pin.ref_id ?? `pin_${idx + 1}`);
-      const previewUrl =
-        pin.preview_url ??
-        pin.images?.['236x']?.url ??
-        `https://i.pinimg.com/236x/curated/${encodeURIComponent(pinId)}.jpg`;
-      const mediaUrl =
-        pin.media_url ??
-        pin.images?.['736x']?.url ??
-        pin.images?.orig?.url ??
-        previewUrl;
-      const originUrl =
-        pin.origin_url ??
-        pin.link ??
-        `https://www.pinterest.com/pin/${encodeURIComponent(pinId)}/`;
+    return Promise.all(
+      rawPins.slice(0, limit).map(async (pin, idx) => {
+        const pinId = String(pin.id ?? pin.ref_id ?? `pin_${idx + 1}`);
+        const previewUrl =
+          pin.preview_url ??
+          pin.images?.['236x']?.url ??
+          `https://i.pinimg.com/236x/curated/${encodeURIComponent(pinId)}.jpg`;
+        const mediaUrl =
+          pin.media_url ??
+          pin.images?.['736x']?.url ??
+          pin.images?.orig?.url ??
+          previewUrl;
+        const originUrl =
+          pin.origin_url ??
+          pin.link ??
+          `https://www.pinterest.com/pin/${encodeURIComponent(pinId)}/`;
 
-      return {
-        preferred_ref_id: pin.ref_id,
-        source_id: query.source.source_id,
-        origin_url: originUrl,
-        preview_url: previewUrl,
-        media_url: mediaUrl,
-        raw_title: String(pin.title ?? pin.grid_title ?? `Referência Curada ${idx + 1}`),
-        raw_caption: String(pin.description ?? pin.closeup_unified_description ?? ''),
-        raw_alt_text: String(pin.alt_text ?? pin.auto_alt_text ?? pin.description ?? ''),
-        aspect_rationale: buildAspectRationale(
-          query.aspect_focus,
-          query.target_format,
-          pin.aspect_rationale,
-        ),
-        thumbnail_base64:
-          pin.thumbnail_base64 ?? buildDefaultThumbnailBase64(`${query.source.source_id}:${pinId}`),
-        thumbnail_mime_type: 'image/webp',
-      };
-    });
+        const resolvedThumbnail = await resolvePreviewThumbnailInMemory({
+          providedThumbnailBase64: pin.thumbnail_base64,
+          previewUrl,
+          fetchFn: this.fetchFn,
+          timeoutMs,
+        });
+
+        return {
+          preferred_ref_id: pin.ref_id,
+          source_id: query.source.source_id,
+          origin_url: originUrl,
+          preview_url: previewUrl,
+          media_url: mediaUrl,
+          raw_title: String(pin.title ?? pin.grid_title ?? `Referência Curada ${idx + 1}`),
+          raw_caption: String(pin.description ?? pin.closeup_unified_description ?? ''),
+          raw_alt_text: String(pin.alt_text ?? pin.auto_alt_text ?? pin.description ?? ''),
+          raw_aspect_rationale: pin.aspect_rationale,
+          aspect_rationale: buildAspectRationale(
+            query.aspect_focus,
+            query.target_format,
+          ),
+          thumbnail_base64: resolvedThumbnail?.thumbnail_base64 ?? null,
+          thumbnail_mime_type: resolvedThumbnail?.thumbnail_mime_type ?? null,
+        };
+      }),
+    );
   }
 
   private extractPinItems(payload: unknown): PinterestPinJsonItem[] {
