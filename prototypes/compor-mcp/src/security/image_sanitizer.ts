@@ -6,6 +6,9 @@ import { join, resolve } from 'node:path';
 import { inflateSync } from 'node:zlib';
 
 export const MAX_IMAGE_DOWNLOAD_BYTES = 10 * 1024 * 1024; // 10 MB
+export const MAX_IMAGE_DIMENSION_PX = 4096;
+export const MAX_DECODED_PIXELS = MAX_IMAGE_DIMENSION_PX * MAX_IMAGE_DIMENSION_PX; // 16,777,216 pixels
+export const MAX_PNG_INFLATED_BYTES = MAX_DECODED_PIXELS * 4 + MAX_IMAGE_DIMENSION_PX;
 export const IMAGE_DOWNLOAD_TIMEOUT_MS = 5_000; // 5 seconds
 export const STAGING_ROOT_DIR = '/tmp/compor-refs';
 
@@ -17,6 +20,7 @@ export class ImageSanitizationError extends Error {
     | 'download_timeout'
     | 'download_failed'
     | 'oversized_payload'
+    | 'oversized_dimensions'
     | 'rejected_svg_or_html'
     | 'invalid_magic_bytes'
     | 'corrupted_image';
@@ -25,6 +29,22 @@ export class ImageSanitizationError extends Error {
     super(message);
     this.name = 'ImageSanitizationError';
     this.code = code;
+  }
+}
+
+export function validateImageDimensions(width: number, height: number): void {
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width <= 0 || height <= 0) {
+    throw new ImageSanitizationError('corrupted_image', `Dimensões de imagem inválidas (${width}x${height}).`);
+  }
+  if (
+    width > MAX_IMAGE_DIMENSION_PX ||
+    height > MAX_IMAGE_DIMENSION_PX ||
+    width * height > MAX_DECODED_PIXELS
+  ) {
+    throw new ImageSanitizationError(
+      'oversized_payload',
+      `Dimensões da imagem (${width}x${height}) excedem o orçamento máximo de pixels decodificados (${MAX_IMAGE_DIMENSION_PX}x${MAX_IMAGE_DIMENSION_PX}).`,
+    );
   }
 }
 
@@ -229,10 +249,13 @@ function decodePngPixelsAndStripMetadata(buffer: Buffer): {
   const stripped = new Set<string>();
   const idatParts: Buffer[] = [];
   const retainedRawChunks: Buffer[] = [PNG_MAGIC];
+  let plteData: Buffer | null = null;
+  let trnsData: Buffer | null = null;
   let width = 0;
   let height = 0;
   let bitDepth = 8;
   let colorType = 2;
+  let interlaceMethod = 0;
 
   let offset = 8;
   while (offset + 8 <= buffer.byteLength) {
@@ -249,13 +272,21 @@ function decodePngPixelsAndStripMetadata(buffer: Buffer): {
       height = data.readUInt32BE(4);
       bitDepth = data[8]!;
       colorType = data[9]!;
+      interlaceMethod = data[12]!;
+      validateImageDimensions(width, height);
       retainedRawChunks.push(fullChunk);
     } else if (type === 'IDAT') {
       idatParts.push(data);
       retainedRawChunks.push(fullChunk);
-    } else if (type === 'PLTE' || type === 'tRNS' || type === 'IEND') {
+    } else if (type === 'PLTE') {
+      plteData = Buffer.from(data);
       retainedRawChunks.push(fullChunk);
-      if (type === 'IEND') break;
+    } else if (type === 'tRNS') {
+      trnsData = Buffer.from(data);
+      retainedRawChunks.push(fullChunk);
+    } else if (type === 'IEND') {
+      retainedRawChunks.push(fullChunk);
+      break;
     } else if (type === 'eXIf') {
       stripped.add('EXIF');
     } else if (type === 'iTXt' || type === 'tEXt' || type === 'zTXt') {
@@ -274,16 +305,41 @@ function decodePngPixelsAndStripMetadata(buffer: Buffer): {
   if (width <= 0 || height <= 0 || idatParts.length === 0) {
     throw new ImageSanitizationError('corrupted_image', 'PNG inválido ou sem dados de imagem IDAT.');
   }
+  validateImageDimensions(width, height);
 
   const cleanPngBuffer = Buffer.concat(retainedRawChunks);
+  const compressedIdat = Buffer.concat(idatParts);
 
-  // Decode 8-bit Grayscale (0), RGB (2), Grayscale+Alpha (4), or RGBA (6)
+  // Decode 8-bit Grayscale (0), RGB (2), Indexed (3), Grayscale+Alpha (4), or RGBA (6)
   const channels =
-    colorType === 6 ? 4 : colorType === 2 ? 3 : colorType === 4 ? 2 : colorType === 0 ? 1 : 0;
-  if (bitDepth === 8 && channels > 0) {
-    const decompressed = inflateSync(Buffer.concat(idatParts));
+    colorType === 6
+      ? 4
+      : colorType === 2
+        ? 3
+        : colorType === 4
+          ? 2
+          : colorType === 0 || (colorType === 3 && plteData !== null)
+            ? 1
+            : 0;
+  if (interlaceMethod === 0 && bitDepth === 8 && channels > 0) {
     const stride = width * channels;
     const expectedRawBytes = height * (1 + stride);
+    const maxOutputLength = Math.min(MAX_PNG_INFLATED_BYTES, expectedRawBytes + 64);
+
+    let decompressed: Buffer;
+    try {
+      decompressed = inflateSync(compressedIdat, { maxOutputLength });
+    } catch (error) {
+      const code = (error as { code?: string })?.code;
+      if (code === 'ERR_BUFFER_TOO_LARGE' || error instanceof RangeError) {
+        throw new ImageSanitizationError(
+          'oversized_payload',
+          'PNG comprimido excede o limite de bytes descomprimidos permitido (proteção contra decompression bomb).',
+        );
+      }
+      throw new ImageSanitizationError('corrupted_image', 'Dados IDAT do PNG corrompidos ou inválidos.');
+    }
+
     if (decompressed.byteLength >= expectedRawBytes) {
       const recon = new Uint8Array(height * stride);
       for (let y = 0; y < height; y++) {
@@ -307,32 +363,52 @@ function decodePngPixelsAndStripMetadata(buffer: Buffer): {
         }
       }
 
+      const hasRgbTrns = colorType === 2 && trnsData !== null && trnsData.byteLength >= 6;
+      const trnsR = hasRgbTrns ? trnsData!.readUInt16BE(0) : -1;
+      const trnsG = hasRgbTrns ? trnsData!.readUInt16BE(2) : -1;
+      const trnsB = hasRgbTrns ? trnsData!.readUInt16BE(4) : -1;
+
+      const hasGrayTrns = colorType === 0 && trnsData !== null && trnsData.byteLength >= 2;
+      const trnsGray = hasGrayTrns ? trnsData!.readUInt16BE(0) : -1;
+
       const rgba = new Uint8Array(width * height * 4);
       for (let p = 0; p < width * height; p++) {
         const srcOff = p * channels;
         const dstOff = p * 4;
-        if (channels === 4) {
+        if (colorType === 6) {
           rgba[dstOff] = recon[srcOff]!;
           rgba[dstOff + 1] = recon[srcOff + 1]!;
           rgba[dstOff + 2] = recon[srcOff + 2]!;
           rgba[dstOff + 3] = recon[srcOff + 3]!;
-        } else if (channels === 3) {
-          rgba[dstOff] = recon[srcOff]!;
-          rgba[dstOff + 1] = recon[srcOff + 1]!;
-          rgba[dstOff + 2] = recon[srcOff + 2]!;
-          rgba[dstOff + 3] = 255;
-        } else if (channels === 2) {
+        } else if (colorType === 2) {
+          const r = recon[srcOff]!;
+          const g = recon[srcOff + 1]!;
+          const b = recon[srcOff + 2]!;
+          rgba[dstOff] = r;
+          rgba[dstOff + 1] = g;
+          rgba[dstOff + 2] = b;
+          rgba[dstOff + 3] =
+            hasRgbTrns && r === trnsR && g === trnsG && b === trnsB ? 0 : 255;
+        } else if (colorType === 4) {
           const g = recon[srcOff]!;
           rgba[dstOff] = g;
           rgba[dstOff + 1] = g;
           rgba[dstOff + 2] = g;
           rgba[dstOff + 3] = recon[srcOff + 1]!;
+        } else if (colorType === 3 && plteData !== null) {
+          const idx = recon[srcOff]!;
+          const palOff = idx * 3;
+          rgba[dstOff] = palOff < plteData.byteLength ? plteData[palOff]! : 0;
+          rgba[dstOff + 1] = palOff + 1 < plteData.byteLength ? plteData[palOff + 1]! : 0;
+          rgba[dstOff + 2] = palOff + 2 < plteData.byteLength ? plteData[palOff + 2]! : 0;
+          rgba[dstOff + 3] =
+            trnsData !== null && idx < trnsData.byteLength ? trnsData[idx]! : 255;
         } else {
           const g = recon[srcOff]!;
           rgba[dstOff] = g;
           rgba[dstOff + 1] = g;
           rgba[dstOff + 2] = g;
-          rgba[dstOff + 3] = 255;
+          rgba[dstOff + 3] = hasGrayTrns && g === trnsGray ? 0 : 255;
         }
       }
 
@@ -346,12 +422,25 @@ function decodePngPixelsAndStripMetadata(buffer: Buffer): {
     }
   }
 
-  // Fallback via cwebp + dwebp if indexed/16-bit PNG
+  // Fallback via cwebp + dwebp if interlaced/16-bit/sub-byte PNG, still enforcing inflation limit first
+  try {
+    inflateSync(compressedIdat, { maxOutputLength: MAX_PNG_INFLATED_BYTES });
+  } catch (error) {
+    const code = (error as { code?: string })?.code;
+    if (code === 'ERR_BUFFER_TOO_LARGE' || error instanceof RangeError) {
+      throw new ImageSanitizationError(
+        'oversized_payload',
+        'PNG comprimido excede o limite de bytes descomprimidos permitido.',
+      );
+    }
+    throw new ImageSanitizationError('corrupted_image', 'Dados IDAT do PNG corrompidos ou inválidos.');
+  }
+
   if (CWEBP_BIN) {
     const encoded = spawnSync(
       CWEBP_BIN,
       ['-quiet', '-lossless', '-metadata', 'none', '-o', '-', '--', '-'],
-      { input: cleanPngBuffer, timeout: 4000 },
+      { input: cleanPngBuffer, timeout: 4000, maxBuffer: MAX_PNG_INFLATED_BYTES },
     );
     if (encoded.status === 0 && encoded.stdout.byteLength > 12) {
       const decoded = decodeWebpPixels(encoded.stdout);
@@ -455,6 +544,7 @@ function stripJpegMetadataSegments(buffer: Buffer): {
   if (width <= 0 || height <= 0) {
     throw new ImageSanitizationError('corrupted_image', 'JPEG inválido: segmento SOF ausente ou dimensões inválidas.');
   }
+  validateImageDimensions(width, height);
 
   return {
     width,
@@ -463,6 +553,16 @@ function stripJpegMetadataSegments(buffer: Buffer): {
     cleanJpegBuffer: Buffer.concat(retainedParts),
     entropyBytes: Buffer.concat(entropyChunks),
   };
+}
+
+function buildRiffChunk(fourCC: string, payload: Buffer): Buffer {
+  const chunkSize = payload.byteLength;
+  const paddedSize = chunkSize + (chunkSize % 2);
+  const chunk = Buffer.alloc(8 + paddedSize);
+  chunk.write(fourCC, 0, 'ascii');
+  chunk.writeUInt32LE(chunkSize, 4);
+  payload.copy(chunk, 8);
+  return chunk;
 }
 
 function stripWebpMetadataChunks(buffer: Buffer): {
@@ -474,8 +574,9 @@ function stripWebpMetadataChunks(buffer: Buffer): {
   const stripped = new Set<string>();
   let bitstreamFourCC: 'VP8 ' | 'VP8L' | null = null;
   let bitstreamData: Buffer | null = null;
-  let width = 236;
-  let height = 236;
+  let alphData: Buffer | null = null;
+  let width = 0;
+  let height = 0;
 
   let offset = 12;
   while (offset + 8 <= buffer.byteLength) {
@@ -491,6 +592,15 @@ function stripWebpMetadataChunks(buffer: Buffer): {
       stripped.add('XMP');
     } else if (fourCC === 'ICCP') {
       stripped.add('ICCP');
+    } else if (fourCC === 'VP8X' && data.byteLength >= 10) {
+      const vp8xWidth = (data[4]! | (data[5]! << 8) | (data[6]! << 16)) + 1;
+      const vp8xHeight = (data[7]! | (data[8]! << 8) | (data[9]! << 16)) + 1;
+      if (width === 0 && height === 0) {
+        width = vp8xWidth;
+        height = vp8xHeight;
+      }
+    } else if (fourCC === 'ALPH') {
+      alphData = Buffer.from(data);
     } else if (fourCC === 'VP8L' && data.byteLength >= 5 && data[0] === 0x2f) {
       bitstreamFourCC = 'VP8L';
       bitstreamData = Buffer.from(data);
@@ -504,7 +614,7 @@ function stripWebpMetadataChunks(buffer: Buffer): {
         width = data.readUInt16LE(6) & 0x3fff;
         height = data.readUInt16LE(8) & 0x3fff;
       }
-    } else if (fourCC !== 'VP8X' && fourCC !== 'ALPH') {
+    } else {
       stripped.add(fourCC.trim());
     }
 
@@ -515,17 +625,39 @@ function stripWebpMetadataChunks(buffer: Buffer): {
   if (!bitstreamFourCC || !bitstreamData) {
     throw new ImageSanitizationError('corrupted_image', 'WebP inválido: chunk VP8/VP8L ausente.');
   }
+  if (width <= 0 || height <= 0) {
+    width = 236;
+    height = 236;
+  }
+  validateImageDimensions(width, height);
 
-  const chunkSize = bitstreamData.byteLength;
-  const paddedSize = chunkSize + (chunkSize % 2);
-  const riffSize = 4 + 8 + paddedSize;
-  const out = Buffer.alloc(8 + riffSize);
+  const chunks: Buffer[] = [];
+  if (bitstreamFourCC === 'VP8 ' && alphData !== null) {
+    // Reconstruct a clean VP8X extended header with ONLY the Alpha bit (0x10) set,
+    // clearing ICCP (0x20), EXIF (0x08), XMP (0x04), and Animation (0x02) flags.
+    const vp8xPayload = Buffer.alloc(10);
+    vp8xPayload[0] = 0x10; // Alpha flag
+    const wMinusOne = width - 1;
+    const hMinusOne = height - 1;
+    vp8xPayload[4] = wMinusOne & 0xff;
+    vp8xPayload[5] = (wMinusOne >>> 8) & 0xff;
+    vp8xPayload[6] = (wMinusOne >>> 16) & 0xff;
+    vp8xPayload[7] = hMinusOne & 0xff;
+    vp8xPayload[8] = (hMinusOne >>> 8) & 0xff;
+    vp8xPayload[9] = (hMinusOne >>> 16) & 0xff;
+
+    chunks.push(buildRiffChunk('VP8X', vp8xPayload));
+    chunks.push(buildRiffChunk('ALPH', alphData));
+  }
+  chunks.push(buildRiffChunk(bitstreamFourCC, bitstreamData));
+
+  const chunksBuffer = Buffer.concat(chunks);
+  const riffSize = 4 + chunksBuffer.byteLength;
+  const out = Buffer.alloc(12 + chunksBuffer.byteLength);
   out.write('RIFF', 0, 'ascii');
   out.writeUInt32LE(riffSize, 4);
   out.write('WEBP', 8, 'ascii');
-  out.write(bitstreamFourCC, 12, 'ascii');
-  out.writeUInt32LE(chunkSize, 16);
-  bitstreamData.copy(out, 20);
+  chunksBuffer.copy(out, 12);
 
   return {
     width,

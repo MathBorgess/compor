@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
 import { deflateSync } from 'node:zlib';
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -710,6 +711,115 @@ test('Sanitização binária preserva pixels reais em WebP decodificável, rejei
   } finally {
     await ctx.close();
   }
+
+  // 5. Limite de dimensões decodificadas (IHDR excessivo) e proteção contra PNG decompression bomb (IDAT inflado além do esperado)
+  const signature = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]);
+  const hugeIhdr = Buffer.alloc(13);
+  hugeIhdr.writeUInt32BE(20000, 0);
+  hugeIhdr.writeUInt32BE(20000, 4);
+  hugeIhdr[8] = 8;
+  hugeIhdr[9] = 6;
+  const tinyCompressedIdat = makePngChunk('IDAT', deflateSync(Buffer.alloc(1024)));
+  const iend = makePngChunk('IEND', Buffer.alloc(0));
+  const hugeDimensionPng = Buffer.concat([signature, makePngChunk('IHDR', hugeIhdr), tinyCompressedIdat, iend]);
+
+  await assert.rejects(
+    () =>
+      sanitize_and_stage_image({
+        session_id: 'sid_png_bomb_dim',
+        ref_id: 'ref_huge_dim',
+        raw_buffer: hugeDimensionPng,
+      }),
+    (err) => err.code === 'oversized_payload',
+  );
+
+  // Decompression bomb: IHDR declara 4x4 (expectedRawBytes = 68 bytes), mas IDAT descomprime para 512 KB
+  const smallIhdr = Buffer.alloc(13);
+  smallIhdr.writeUInt32BE(4, 0);
+  smallIhdr.writeUInt32BE(4, 4);
+  smallIhdr[8] = 8;
+  smallIhdr[9] = 6;
+  const bombIdat = makePngChunk('IDAT', deflateSync(Buffer.alloc(512 * 1024)));
+  const idatBombPng = Buffer.concat([signature, makePngChunk('IHDR', smallIhdr), bombIdat, iend]);
+
+  await assert.rejects(
+    () =>
+      sanitize_and_stage_image({
+        session_id: 'sid_png_bomb_idat',
+        ref_id: 'ref_idat_bomb',
+        raw_buffer: idatBombPng,
+      }),
+    (err) => err.code === 'oversized_payload',
+  );
+
+  // 6. Preservação de transparência por chave de cor (tRNS) em PNG RGB 8-bit e Grayscale 8-bit
+  // Exemplo exato: PNG RGB 1x1 preto [0, 0, 0] com chave de transparência preta tRNS -> deve decodificar como [0, 0, 0, 0]
+  const rgb1x1Ihdr = Buffer.alloc(13);
+  rgb1x1Ihdr.writeUInt32BE(1, 0);
+  rgb1x1Ihdr.writeUInt32BE(1, 4);
+  rgb1x1Ihdr[8] = 8; // 8-bit
+  rgb1x1Ihdr[9] = 2; // RGB
+  const trnsBlackKey = makePngChunk('tRNS', Buffer.from([0x00, 0x00, 0x00, 0x00, 0x00, 0x00]));
+  const rgb1x1Scanline = makePngChunk('IDAT', deflateSync(Buffer.from([0x00, 0x00, 0x00, 0x00])));
+  const rgbTrnsPng = Buffer.concat([
+    signature,
+    makePngChunk('IHDR', rgb1x1Ihdr),
+    trnsBlackKey,
+    rgb1x1Scanline,
+    iend,
+  ]);
+
+  const stagedRgbTrns = await sanitize_and_stage_image({
+    session_id: 'sid_trns_rgb',
+    ref_id: 'ref_trns_black',
+    raw_buffer: rgbTrnsPng,
+  });
+  const decodedRgbTrns = decodeWebpPixels(await readFile(stagedRgbTrns.local_path));
+  assert.deepEqual(
+    Array.from(decodedRgbTrns.rgba),
+    [0, 0, 0, 0],
+    'PNG RGB 1x1 preto com tRNS preto deve preservar alpha 0 após sanitização',
+  );
+
+  // 7. Preservação do chunk ALPH e cabeçalho VP8X ao sanitizar WebP lossy com transparência e metadados EXIF
+  const { pngBuffer: rgbaTransparentPng } = buildPngWithMetadata({
+    width: 8,
+    height: 8,
+    topLeftRgba: [0, 0, 0, 0], // pixel (0,0) totalmente transparente
+  });
+  const cwebpLossy = spawnSync(
+    '/opt/homebrew/bin/cwebp',
+    ['-quiet', '-q', '90', '-alpha_q', '100', '-o', '-', '--', '-'],
+    { input: rgbaTransparentPng },
+  );
+  assert.equal(cwebpLossy.status, 0);
+  const lossyWebpWithAlpha = Buffer.from(cwebpLossy.stdout);
+  assert.ok(lossyWebpWithAlpha.includes(Buffer.from('ALPH')), 'cwebp lossy com transparência gera chunk ALPH');
+
+  // Anexa um chunk EXIF malicioso/sensível ao container WebP lossy com ALPH
+  const exifData = Buffer.from('Exif\x00\x00II*\x00SecretCameraSerial9999', 'ascii');
+  const exifRiffChunk = Buffer.alloc(8 + exifData.byteLength + (exifData.byteLength % 2));
+  exifRiffChunk.write('EXIF', 0, 'ascii');
+  exifRiffChunk.writeUInt32LE(exifData.byteLength, 4);
+  exifData.copy(exifRiffChunk, 8);
+  const lossyWebpWithAlphaAndExif = Buffer.concat([lossyWebpWithAlpha, exifRiffChunk]);
+  lossyWebpWithAlphaAndExif.writeUInt32LE(lossyWebpWithAlphaAndExif.byteLength - 8, 4);
+
+  const stagedLossyAlpha = await sanitize_and_stage_image({
+    session_id: 'sid_webp_lossy_alpha',
+    ref_id: 'ref_webp_lossy_alpha',
+    raw_buffer: lossyWebpWithAlphaAndExif,
+  });
+  assert.ok(stagedLossyAlpha.stripped_metadata_segments.includes('EXIF'));
+  const cleanLossyBytes = await readFile(stagedLossyAlpha.local_path);
+  assert.equal(hasResidualMetadata(cleanLossyBytes), false);
+  assert.ok(cleanLossyBytes.includes(Buffer.from('VP8X')), 'deve preservar o cabeçalho VP8X limpo');
+  assert.ok(cleanLossyBytes.includes(Buffer.from('ALPH')), 'deve preservar o chunk ALPH de transparência');
+  const decodedLossyAlpha = decodeWebpPixels(cleanLossyBytes);
+  assert.equal(decodedLossyAlpha.width, 8);
+  assert.equal(decodedLossyAlpha.height, 8);
+  assert.equal(decodedLossyAlpha.rgba[3], 0, 'pixel (0,0) transparente no WebP lossy deve continuar com alpha 0');
+  assert.equal(decodedLossyAlpha.rgba[7], 255, 'pixel (1,0) opaco no WebP lossy deve continuar com alpha 255');
 });
 
 test('Teste 4 — Caso Sem Referências Úteis (Fallback de rede e proceed_without_references: true)', async () => {
