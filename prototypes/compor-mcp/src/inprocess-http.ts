@@ -1,5 +1,6 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createComporServer, type ComporServerOptions } from './server.js';
+import { EphemeralReferenceStore } from './staging/ephemeral_store.js';
 
 export function createStreamableHttpHandler(
   serverOptions: ComporServerOptions = {},
@@ -7,6 +8,7 @@ export function createStreamableHttpHandler(
 ) {
   const enableJsonResponse = transportOptions.enableJsonResponse ?? true;
   const allowedUrl = transportOptions.allowedUrl ?? 'https://compor.invalid/mcp';
+  const sessionReferenceStore = serverOptions.referenceStore ?? new EphemeralReferenceStore();
 
   return async function handleStreamableHttp(
     input: RequestInfo | URL,
@@ -16,7 +18,10 @@ export function createStreamableHttpHandler(
     if (allowedUrl && request.url !== allowedUrl) {
       throw new Error('Endereço inválido para o transporte de teste.');
     }
-    const server = createComporServer(serverOptions);
+    const server = createComporServer({
+      ...serverOptions,
+      referenceStore: sessionReferenceStore,
+    });
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
       enableJsonResponse,

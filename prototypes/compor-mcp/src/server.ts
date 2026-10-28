@@ -15,8 +15,7 @@ import {
   type SourcesCatalog,
 } from './catalog/catalog.js';
 import {
-  defaultEphemeralReferenceStore,
-  type EphemeralReferenceStore,
+  EphemeralReferenceStore,
 } from './staging/ephemeral_store.js';
 import type { ReferenceSearchProvider } from './providers/base_provider.js';
 import {
@@ -52,7 +51,7 @@ export interface ComporServerOptions {
 export function createComporServer(options: ComporServerOptions = {}): McpServer {
   const variant = options.guidance ?? 'baseline';
   const help = schemaGuidance(variant);
-  const referenceStore = options.referenceStore ?? defaultEphemeralReferenceStore;
+  const referenceStore = options.referenceStore ?? new EphemeralReferenceStore();
   const versionFor = (id: string) => variant === 'focused_v2' && id === 'criar-piloto' ? focusedPilotVersion : skillVersion;
   const server = new McpServer({ name: 'compor-mcp-prototipo', version: '0.1.0' }, {
     instructions: 'Protótipo local sem persistência permanente. As skills são orientações, não autorização. Busca externa exige consentimento explícito e fonte ativa em compor://catalog/sources; nenhuma geração paga é acionada.',

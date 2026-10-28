@@ -239,6 +239,29 @@ export class EphemeralReferenceStore {
     }
   }
 
+  async replaceStagedReferences(
+    entries: Array<{ record: Pr9CompatibleStagedReference; aliases?: string[] }>,
+  ): Promise<void> {
+    const previousRecords = this.listStagedReferences();
+    const nextPaths = new Set(entries.map((entry) => resolve(entry.record.local_path)));
+
+    this.staged.clear();
+    for (const { record, aliases = [] } of entries) {
+      this.recordStagedReference(record, aliases);
+    }
+
+    for (const prev of previousRecords) {
+      const prevPath = resolve(prev.local_path);
+      if (!nextPaths.has(prevPath) && prevPath.startsWith(this.stagingRoot + '/')) {
+        try {
+          await rm(prevPath, { force: true });
+        } catch {
+          // Ignore missing file on cleanup
+        }
+      }
+    }
+  }
+
   getStagedReference(refId: string): Pr9CompatibleStagedReference | undefined {
     return this.staged.get(refId);
   }

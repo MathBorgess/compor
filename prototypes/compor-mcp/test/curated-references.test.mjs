@@ -1045,3 +1045,117 @@ test('Consumo Dual-Target via Streamable HTTP (OpenAI Agents SDK) mantém estado
     await store.cleanupSession('sid_agents_sdk_http');
   }
 });
+
+test('Isolamento de store padrão por conexão e substituição de aprovações ao revisar seleção em stage_approved_references', async () => {
+  const fetchFn = createFivePinsMockFetch();
+
+  // Cria duas conexões independentes SEM injetar referenceStore (testa isolamento default de createComporServer)
+  const serverA = createComporServer({ fetchFn });
+  const clientA = new Client({ name: 'conn-a', version: '1.0.0' });
+  const [clientTransA, serverTransA] = InMemoryTransport.createLinkedPair();
+  await serverA.connect(serverTransA);
+  await clientA.connect(clientTransA);
+
+  const serverB = createComporServer({ fetchFn });
+  const clientB = new Client({ name: 'conn-b', version: '1.0.0' });
+  const [clientTransB, serverTransB] = InMemoryTransport.createLinkedPair();
+  await serverB.connect(serverTransB);
+  await clientB.connect(clientTransB);
+
+  let stagedPathRef01 = '';
+  let stagedPathRef03 = '';
+
+  try {
+    // 1. Conexão A busca e aprova inicialmente ref_01 e ref_03
+    await clientA.callTool({
+      name: 'search_curated_references',
+      arguments: {
+        briefing_summary: 'Campanha Conexão A',
+        target_format: 'single_feed',
+        aspect_focus: ['typography', 'color'],
+        source_ids: ['pinterest_curated_design'],
+        consent_external_search: true,
+      },
+    });
+
+    const firstStageA = await clientA.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: false,
+        selections: [
+          { ref_id: 'ref_01', selected_attributes: ['typography'] },
+          { ref_id: 'ref_03', selected_attributes: ['color'] },
+        ],
+      },
+    });
+    assert.equal(firstStageA.isError, undefined);
+    assert.equal(firstStageA.structuredContent.staged_count, 2);
+    stagedPathRef01 = firstStageA.structuredContent.staged_references[0].local_path;
+    stagedPathRef03 = firstStageA.structuredContent.staged_references[1].local_path;
+    assert.equal(existsSync(stagedPathRef01), true);
+    assert.equal(existsSync(stagedPathRef03), true);
+
+    // 2. Conexão B (nova conexão sem store injetado) NÃO deve enxergar aprovações da Conexão A
+    const composeOnFreshB = await clientB.callTool({
+      name: 'compose_creative_direction',
+      arguments: {
+        briefing_summary: 'Campanha Conexão B isolada',
+        target_format: 'single_feed',
+      },
+    });
+    assert.equal(composeOnFreshB.isError, undefined);
+    assert.deepEqual(
+      composeOnFreshB.structuredContent.references_lineage,
+      [],
+      'Conexão B não pode herdar referências aprovadas da Conexão A',
+    );
+
+    // E se Conexão B chamar stage_approved_references com proceed_without_references: true, não pode apagar arquivos da Conexão A
+    await clientB.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: true,
+        selections: [],
+      },
+    });
+    assert.equal(existsSync(stagedPathRef01), true, 'arquivos da Conexão A permanecem intactos');
+    assert.equal(existsSync(stagedPathRef03), true, 'arquivos da Conexão A permanecem intactos');
+
+    // 3. Conexão A revisa sua seleção para manter APENAS ref_03 (descartando ref_01)
+    const revisedStageA = await clientA.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: false,
+        selections: [{ ref_id: 'ref_03', selected_attributes: ['color', 'composition'] }],
+      },
+    });
+    assert.equal(revisedStageA.isError, undefined);
+    assert.equal(revisedStageA.structuredContent.staged_count, 1);
+    assert.equal(existsSync(stagedPathRef01), false, 'ref_01 descartada na revisão deve ser removida do disco');
+    assert.equal(existsSync(stagedPathRef03), true, 'ref_03 mantida na revisão deve permanecer no disco');
+
+    // Chamada subsequente a compose_creative_direction sem approved_ref_ids deve refletir APENAS a seleção revisada (ref_03)
+    const composeAfterRevisionA = await clientA.callTool({
+      name: 'compose_creative_direction',
+      arguments: {
+        briefing_summary: 'Campanha Conexão A após revisão',
+        target_format: 'single_feed',
+      },
+    });
+    assert.equal(composeAfterRevisionA.isError, undefined);
+    assert.deepEqual(
+      composeAfterRevisionA.structuredContent.references_lineage.map((r) => r.ref_id),
+      ['ref_03'],
+      'compose_creative_direction sem approved_ref_ids deve incluir apenas a seleção mais recente (ref_03)',
+    );
+  } finally {
+    await clientA.callTool({
+      name: 'stage_approved_references',
+      arguments: { proceed_without_references: true, selections: [] },
+    });
+    await clientA.close();
+    await serverA.close();
+    await clientB.close();
+    await serverB.close();
+  }
+});
