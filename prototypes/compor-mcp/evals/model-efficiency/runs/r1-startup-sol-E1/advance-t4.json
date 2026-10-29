@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/resume-after-t3.json",
+      "sha256": "13256a4df743749d8479096ecfc89698bc4db113fb4847b9f7ef72a93e67d687"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets.json",
+      "sha256": "a77314a7fba24603179db4bfd299f9a3f33a4d2a099f6c9969f3a8511c31cd8a"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp-var-pergunta",
+        "piece_id": "vdp-var-pergunta",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/renders/vdp-var-pergunta.png",
+        "png_sha256": "3f8651588ddbb19cdeb9ae543f922ca0a575c486e5fb17639525be1a17c770fd",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/renders/vdp-var-pergunta.json",
+        "report_sha256": "3a5804f5e7629c9a2cc838eed8333493ba7b3aea97b164d22ae19bb12f918e0b",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 292.616708,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-vdp-maos-v1"
+        ],
+        "layers": [
+          {
+            "id": "vp-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "vp-marca",
+            "kind": "text"
+          },
+          {
+            "id": "vp-headline",
+            "kind": "text"
+          },
+          {
+            "id": "vp-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-vdp-maos-v1"
+          },
+          {
+            "id": "vp-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "vp-faixa-convite",
+            "kind": "shape"
+          },
+          {
+            "id": "vp-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "vdp-var-consulta",
+        "piece_id": "vdp-var-consulta",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/renders/vdp-var-consulta.png",
+        "png_sha256": "b4f3a0c49ce3c23ea90300d86da39dbaa78994d699139bd0d43eceebbabc49f6",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/renders/vdp-var-consulta.json",
+        "report_sha256": "813e3ef542b431f817bbcd51de5eb3ec0ecdb31c0782994e99a2e621eaedf547",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 259.705875,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-vdp-maos-v1"
+        ],
+        "layers": [
+          {
+            "id": "vc-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "vc-faixa-marca",
+            "kind": "shape"
+          },
+          {
+            "id": "vc-marca",
+            "kind": "text"
+          },
+          {
+            "id": "vc-headline",
+            "kind": "text"
+          },
+          {
+            "id": "vc-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "vc-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-vdp-maos-v1"
+          },
+          {
+            "id": "vc-faixa-convite",
+            "kind": "shape"
+          },
+          {
+            "id": "vc-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/resume-after-t4.json",
+      "sha256": "fcfcc3a5ec715edc7d5a5fd1368853f928ccf95ecef426730181789dd8ac00f0",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.833791,
+    "total": 566.773166
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

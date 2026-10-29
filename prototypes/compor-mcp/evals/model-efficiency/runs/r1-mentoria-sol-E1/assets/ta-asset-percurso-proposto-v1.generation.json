@@ -1,0 +1,15 @@
+{
+  "direction_id": "ta-direcao-percurso",
+  "asset_ref": "ta-asset-percurso-proposto-v1",
+  "prompt": "Criar uma única ilustração editorial abstrata horizontal, proporção 952:340, destinada à camada p-visual da peça ta-percurso-proposta v1. Vista plana de um mapa conceitual sem qualquer escrita: pequenos núcleos geométricos ameixa conectados por linhas delicadas; uma sequência contínua argila percorre parte desses núcleos, sugerindo uma escolha entre possibilidades. Composição arejada, poucos elementos, leitura clara, sem aparência de labirinto ou corrida. Fundo sólido creme #F4EBDD até todas as bordas. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD. Todo o desenho deve caber no enquadramento, com margem interna generosa, adequado a encaixe contain sem recorte. Sem letras, palavras, números, legendas, símbolos tipográficos, logotipos, assinaturas ou marcas-d'água.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-4a4d53e2-9891-407b-bdfb-8a8f15765a1c.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/assets/ta-asset-percurso-proposto-v1.png",
+  "sha256": "b019d4aba1dafca418ae60cc4799ecb5d3633b5b6b3e7a3e6811ee51356b8023",
+  "elapsed_ms": 13999,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

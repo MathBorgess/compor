@@ -1,0 +1,142 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/assets.json",
+      "sha256": "3a0d403e6443e825e16cfdb9c607269db9b25b7f0886c3978c61d3a8f3ef0e78"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "percurso",
+        "piece_id": "volta-percurso",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t3-artifacts/renders/percurso.png",
+        "png_sha256": "926d127e950c4ce440a5696bc5408aa52295fab52b725d3798a21fb7811398b8",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t3-artifacts/renders/percurso.json",
+        "report_sha256": "329fa71bc31932e1e0f8dd88b65b4b37df045a4dcfb52f593693a3955f06fca5",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 352.010625,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-volta-percurso-01"
+        ],
+        "layers": [
+          {
+            "id": "p-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "p-imagem",
+            "kind": "image",
+            "asset_ref": "asset-volta-percurso-01"
+          },
+          {
+            "id": "p-marca",
+            "kind": "text"
+          },
+          {
+            "id": "p-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "p-descricao",
+            "kind": "text"
+          },
+          {
+            "id": "p-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "p-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "organizacao",
+        "piece_id": "volta-organizacao",
+        "version": "1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t3-artifacts/renders/organizacao.png",
+        "png_sha256": "557997fa811c9bdd7b8d5721b39fe7e679a6b7a7051fd148ee4f4b4884d08d3e",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t3-artifacts/renders/organizacao.json",
+        "report_sha256": "6901286b1e1899148ea0680220dbdaa6e511c8c42d1a1b5ca125741fc3dc8736",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 173.292167,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-volta-organizacao-01"
+        ],
+        "layers": [
+          {
+            "id": "o-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "o-painel",
+            "kind": "shape"
+          },
+          {
+            "id": "o-imagem",
+            "kind": "image",
+            "asset_ref": "asset-volta-organizacao-01"
+          },
+          {
+            "id": "o-marca",
+            "kind": "text"
+          },
+          {
+            "id": "o-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "o-linha",
+            "kind": "shape"
+          },
+          {
+            "id": "o-lista",
+            "kind": "text"
+          },
+          {
+            "id": "o-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "o-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "o-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/resume-after-t3.json",
+      "sha256": "1a56e0bb8a3ffc53b79d1a2ea9c6337f23ab53b44e1b84d255e0bfe16876e648",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 81.61825,
+    "total": 617.435958
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "status": "failed",
+  "turn": 4,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0",
+  "errors": [
+    {
+      "type": "ArtifactError",
+      "message": "Duplicate piece_id across alternatives"
+    }
+  ],
+  "limitations": [],
+  "artifacts": [],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-04.json",
+    "sha256": "41dc7152a8419ed3b2e2e665ef2b7191da192a552fec274a28330424f2f3dd72"
+  },
+  "parse_mode": "raw_json"
+}

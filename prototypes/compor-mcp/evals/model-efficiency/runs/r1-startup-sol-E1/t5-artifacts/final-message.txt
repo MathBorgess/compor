@@ -1,0 +1,134 @@
+{
+  "revision": {
+    "id": "vdp-var-pergunta-v2",
+    "composition_plan": {
+      "piece_id": "vdp-var-pergunta",
+      "version": "v2",
+      "product_ref": "volta-de-pote",
+      "variation_ref": "vdp-var-pergunta",
+      "width_px": 1080,
+      "height_px": 1080,
+      "layers": [
+        {
+          "id": "vp-fundo",
+          "kind": "shape",
+          "name": "vp-fundo",
+          "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+          "shape": "rectangle",
+          "fill_hex": "#ECE9DF",
+          "z_index": 0
+        },
+        {
+          "id": "vp-marca",
+          "kind": "text",
+          "name": "vp-marca",
+          "rect": {"x": 0.06, "y": 0.04, "width": 0.88, "height": 0.05},
+          "text": "Volta de Pote",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 36,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 1
+        },
+        {
+          "id": "vp-headline",
+          "kind": "text",
+          "name": "vp-headline",
+          "rect": {"x": 0.06, "y": 0.12, "width": 0.88, "height": 0.17},
+          "text": "Seus potes\nestão com quais clientes?",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 78,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 2
+        },
+        {
+          "id": "vp-imagem",
+          "kind": "image",
+          "name": "Mesma imagem de mãos e potes da direção escolhida",
+          "rect": {"x": 0.06, "y": 0.32, "width": 0.88, "height": 0.351852},
+          "asset_ref": "asset-proposto-vdp-maos-v1",
+          "z_index": 3
+        },
+        {
+          "id": "vp-apoio",
+          "kind": "text",
+          "name": "vp-apoio",
+          "rect": {"x": 0.06, "y": 0.7, "width": 0.88, "height": 0.1},
+          "text": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+          "font_ref": "arial",
+          "font_weight": 400,
+          "font_size_px": 35,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 4
+        },
+        {
+          "id": "vp-faixa-convite",
+          "kind": "shape",
+          "name": "vp-faixa-convite",
+          "rect": {"x": 0.06, "y": 0.84, "width": 0.88, "height": 0.1},
+          "shape": "rectangle",
+          "fill_hex": "#C9D94A",
+          "z_index": 5
+        },
+        {
+          "id": "vp-convite",
+          "kind": "text",
+          "name": "vp-convite",
+          "rect": {"x": 0.085, "y": 0.867, "width": 0.83, "height": 0.05},
+          "text": "Conheça a demonstração",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 40,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 6
+        }
+      ]
+    },
+    "caption": "Seus potes estão com quais clientes? Com a Volta de Pote, pequenos produtores de alimentos podem registrar entregas, empréstimos e devoluções de embalagens retornáveis e consultar quais recipientes continuam com clientes. Conheça a demonstração."
+  },
+  "feedback_summary": {
+    "source": "Relato explícito da pessoa neste turno",
+    "scope": "Somente a peça vdp-var-pergunta; não constitui preferência permanente de produto ou marca.",
+    "aspects": [
+      {
+        "aspect": "Destaque da headline",
+        "target": {"piece_id": "vdp-var-pergunta", "version": "v1", "layer_id": "vp-headline"},
+        "reported": "Headline tímida perto do restante.",
+        "revision": "Fonte aumentada de 68 para 78 px; quebra alterada após 'potes'. Palavras, caixa e demais atributos preservados."
+      },
+      {
+        "aspect": "Materialidade da imagem",
+        "target": {"piece_id": "vdp-var-pergunta", "version": "v1", "layer_id": "vp-imagem"},
+        "reported": "Materialidade apreciada; manter exatamente como está.",
+        "revision": "Mesmo ativo, caixa e posição preservados."
+      },
+      {
+        "aspect": "Resultado geral",
+        "target": {"kind": "piece", "piece_id": "vdp-var-pergunta", "version": "v1"},
+        "reported": "Ainda não conseguiu o resultado buscado.",
+        "cause": "Não há outra explicação informada; não se atribui o resultado geral somente à headline."
+      }
+    ],
+    "other_elements": "Preservados integralmente.",
+    "second_variation": "vdp-var-consulta permanece inalterada."
+  },
+  "outcome": {
+    "download": "Ainda não realizado, conforme relato.",
+    "intended_use": "Indefinido; a pessoa não sabe se usará a peça.",
+    "desired_result": "Ainda não alcançado, conforme relato anterior à revisão.",
+    "revision_satisfaction": "Desconhecida; aguarda visualização e avaliação da pessoa.",
+    "revision_render": "Pendente; o MCP preparou o plano, sem renderizar.",
+    "new_image_requested": false,
+    "completion": "Não confirmada."
+  },
+  "conversation_response": "A revisão altera somente escala e quebra de vp-headline. A legenda foi mantida. O MCP aceitou o plano e sinalizou fontes não resolvidas; o encaixe final ainda depende da renderização com Arial do catálogo informado."
+}

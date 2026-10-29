@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-fios",
+      "piece_id": "trama-fios",
+      "version": "1",
+      "original_piece_sha256": "09cf48741874e198161a30b4255c59cecaeb255367771681378876bd77c70aa9",
+      "mapped_piece_sha256": "09cf48741874e198161a30b4255c59cecaeb255367771681378876bd77c70aa9",
+      "mcp_evidence": [
+        {
+          "event_index": 10,
+          "event_id": "item_5",
+          "wire_candidates": [
+            {
+              "process_id": 30061,
+              "request_id": 4,
+              "request_line": 26,
+              "response_line": 28
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-fios-01"
+      ],
+      "unresolved_asset_refs": [
+        "asset-fios-01"
+      ],
+      "render_input": "render-inputs/direcao-fios.json",
+      "render_input_sha256": "f9fce23614004bdda037723ec8940f9ff004a7d40abe773833e8377df054bf35"
+    },
+    {
+      "id": "direcao-percurso",
+      "piece_id": "trama-percurso",
+      "version": "1",
+      "original_piece_sha256": "06eec9c92a599ff4b3f897503b86751d9c74f3f844c435fab57634583261d066",
+      "mapped_piece_sha256": "06eec9c92a599ff4b3f897503b86751d9c74f3f844c435fab57634583261d066",
+      "mcp_evidence": [
+        {
+          "event_index": 11,
+          "event_id": "item_4",
+          "wire_candidates": [
+            {
+              "process_id": 30061,
+              "request_id": 5,
+              "request_line": 27,
+              "response_line": 29
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-percurso-01"
+      ],
+      "unresolved_asset_refs": [
+        "asset-percurso-01"
+      ],
+      "render_input": "render-inputs/direcao-percurso.json",
+      "render_input_sha256": "a71f862c604fa73543b080855f6ec014f800ac8cc50ec63a13b79fd821d6f652"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E0/turn-03.json",
+    "sha256": "92cad9359e97f06abd550a0bca057c5d58a739c7bef1e8839335ea20987cca6c"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "67cef2df566373a9a2493295b32004bcca3f842ec2f4f526ea2250c632767a72",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "asset-fios-01",
+    "asset-percurso-01"
+  ]
+}

@@ -1,0 +1,12 @@
+{
+  "recorded_at": "2026-10-28T08:27:31.768871+00:00",
+  "scope": "Post-review helper hashes; original medium freeze retained, model/renderer unchanged",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/blind_pack.py": "2d1f0bd8852fd7d81a1a1d0d6e893122fc9fe1aad525e5657a1d08d11e8dc85b",
+    "prototypes/compor-mcp/evals/model-efficiency/run_followups.py": "24d1b62abc1f01fdd79343b4148c37cf80d8f69a4d29ab36bbc968a850fe5f98",
+    "prototypes/compor-mcp/evals/model-efficiency/summarize_metrics.py": "42f1e3312cfc02c397cfa903db500354bb5b1b73ea091f52d64cdfb563f6099f",
+    "prototypes/compor-mcp/evals/model-efficiency/test_blind_pack.py": "df12af91d96575f99e7a86e1731898493c29effc27d8e6cf5b35a9ad6b126131",
+    "prototypes/compor-mcp/evals/model-efficiency/test_followups.py": "278b9778156e750f8801a9a9885ad8afec068c7000b5a96dcbc3bfaa89dc479a",
+    "prototypes/compor-mcp/evals/model-efficiency/test_metrics.py": "c80a467560dc95b9f2c254a64c9a2dc064de189c95c9fb4c1925259fd2d4a8e4"
+  }
+}

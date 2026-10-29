@@ -1,0 +1,138 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/resume-after-t3.json",
+      "sha256": "d3d9dad3b5d4218a2a93f206daac407af7b0039920b46ab9b6deb39577227057"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/assets.json",
+      "sha256": "c7d8a72f8945cd41016d6e3c9793b9546ba912e41a711108d10702436eb5aee1"
+    },
+    "extractor_sha256": "a0f39d28f8c4e8028d715ca9dbeaafb73035a7dec9a4d0798bbc30744194e6cb",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "ta-percurso-a",
+        "piece_id": "ta-percurso-variacao-a",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-a.png",
+        "png_sha256": "2062a3913a6c545196ce76fd0e42e2741d11f77ffa96573be541ec8b54cc4ca0",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-a.json",
+        "report_sha256": "17e88633fa3043420024f2a7c66cd734538164b09f083ebb78bd667cb06d36e2",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 436.937042,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "ta-asset-percurso-proposto-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-chamada",
+            "kind": "text"
+          },
+          {
+            "id": "a-visual",
+            "kind": "image",
+            "asset_ref": "ta-asset-percurso-proposto-v1"
+          },
+          {
+            "id": "a-divisor",
+            "kind": "shape"
+          },
+          {
+            "id": "a-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "a-formato",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ta-percurso-b",
+        "piece_id": "ta-percurso-variacao-b",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-b.png",
+        "png_sha256": "4314f8e916cf02e79f4fe651aef8fcf4be0e8aecc8d5ecd8701a7444b2665662",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/renders/ta-percurso-b.json",
+        "report_sha256": "666dfb180689731cbc58f16cf530da9207ddb34b99d53581e4516ccae48a0da2",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 300.614375,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "ta-asset-percurso-proposto-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-chamada",
+            "kind": "text"
+          },
+          {
+            "id": "b-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "b-visual",
+            "kind": "image",
+            "asset_ref": "ta-asset-percurso-proposto-v1"
+          },
+          {
+            "id": "b-divisor",
+            "kind": "shape"
+          },
+          {
+            "id": "b-formato",
+            "kind": "text"
+          },
+          {
+            "id": "b-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/resume-after-t4.json",
+      "sha256": "33056f22b8f53cdcce29f8927b9c632841d4d45746950a18a226166a0438d2d0",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.043541,
+    "total": 750.595209
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

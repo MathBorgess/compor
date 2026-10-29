@@ -1,0 +1,398 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "5441189ff334509ad88dbbf1d574242fcbf4fae9feb8730e2cb7a131ac913254",
+  "piece_sha256": "3ade08a086b41532441e97081b9c1c57166676c676b08eed6689236dd7f363e6",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "tda-sequencia",
+  "piece_version": "v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "seq-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD",
+      "defaults_applied": {}
+    },
+    {
+      "id": "seq-marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        64,
+        56,
+        952,
+        52
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Trama de Aula · Mentoria online",
+      "text_clipped": false,
+      "line_advance_px": 34.5,
+      "lines": [
+        {
+          "text": "Trama de Aula · Mentoria online",
+          "origin_px": [
+            64,
+            56
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            56,
+            517,
+            78
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        64,
+        56,
+        516,
+        78
+      ]
+    },
+    {
+      "id": "seq-titulo",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        64,
+        140,
+        952,
+        154
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 60,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 60,
+      "effective_font_size_px": 60,
+      "font_fallback": false,
+      "text_preserved": "Seu conhecimento.\nUma sequência para ensinar.",
+      "text_clipped": false,
+      "line_advance_px": 69.0,
+      "lines": [
+        {
+          "text": "Seu conhecimento.",
+          "origin_px": [
+            64,
+            140
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            140,
+            615,
+            185
+          ]
+        },
+        {
+          "text": "Uma sequência para ensinar.",
+          "origin_px": [
+            64,
+            209
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            209,
+            893,
+            264
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        140,
+        889,
+        264
+      ]
+    },
+    {
+      "id": "seq-imagem",
+      "kind": "image",
+      "z_index": 3,
+      "rect_px": [
+        64,
+        330,
+        952,
+        350
+      ],
+      "asset_ref": "tda-asset-sequencia-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E0/assets/tda-asset-sequencia-v1.png",
+      "asset_sha256": "37136a3621fc0516095892186460cb828ccf73bdb0c60cdd0f0d05fc16a3f432",
+      "source_raw_size_px": [
+        2067,
+        761
+      ],
+      "source_oriented_size_px": [
+        2067,
+        761
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        64,
+        330,
+        951,
+        350
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "seq-divisor",
+      "kind": "shape",
+      "z_index": 4,
+      "rect_px": [
+        64,
+        720,
+        952,
+        5
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B",
+      "defaults_applied": {}
+    },
+    {
+      "id": "seq-publico",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        64,
+        752,
+        952,
+        52
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 38,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 38,
+      "effective_font_size_px": 38,
+      "font_fallback": false,
+      "text_preserved": "Organize seu primeiro curso curto.",
+      "text_clipped": false,
+      "line_advance_px": 43.699999999999996,
+      "lines": [
+        {
+          "text": "Organize seu primeiro curso curto.",
+          "origin_px": [
+            64,
+            752
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            752,
+            698,
+            787
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        65,
+        752,
+        695,
+        787
+      ]
+    },
+    {
+      "id": "seq-oferta",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        64,
+        826,
+        952,
+        94
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 34,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "text_clipped": false,
+      "line_advance_px": 39.099999999999994,
+      "lines": [
+        {
+          "text": "4 encontros semanais ao vivo",
+          "origin_px": [
+            64,
+            826
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            826,
+            513,
+            851
+          ]
+        },
+        {
+          "text": "+ revisão de um plano de aula",
+          "origin_px": [
+            64,
+            865
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            865,
+            520,
+            897
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        64,
+        826,
+        519,
+        897
+      ]
+    },
+    {
+      "id": "seq-cta",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        64,
+        972,
+        952,
+        48
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Peça informações por mensagem.",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Peça informações por mensagem.",
+          "origin_px": [
+            64,
+            972
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            972,
+            587,
+            1001
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        66,
+        972,
+        585,
+        1001
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "9128afedfaedc3b12596ab43d01d4fd19cc24666b53de5ff8d293521077a85e8",
+  "png_sha256": "3355ada12added9d6e7f9570b492af08d376bdfb53f70cff56b00c6312cac731",
+  "png_bytes": 315890,
+  "report_payload_sha256": "5fbdb87b8ea546a3f373a35b840108bdc66836d8ed79267dca69ad9230b3a817"
+}

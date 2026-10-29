@@ -1,0 +1,15 @@
+{
+  "direction_id": "direcao-recorte",
+  "asset_ref": "pedido-asset-recorte-v1",
+  "prompt": "Criar uma única ilustração editorial vertical na proporção 400:490, destinada à camada recorte-imagem. Composição geométrica plana de módulos sólidos variados, círculos e retângulos, distribuídos de modo organizado e espaçado. Uma moldura retangular em argila destaca um pequeno grupo desses módulos; outros continuam visíveis fora dela, representando a escolha de um recorte dentro de um repertório amplo. A moldura não corta nenhum módulo. Linguagem adulta, clara e sóbria, sem fios ou metáfora têxtil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas. Amplo respiro, sem sombras, gradientes ou efeitos tridimensionais. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Não incluir a copy da peça. O ativo será encaixado inteiro, proporcionalmente, sem recorte.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-29ba47a4-7b61-4b38-96b0-d99c23d9f908.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-recorte-v1.png",
+  "sha256": "9d75a2e3e78a1c9f946ef0960b7d5aa765d0af114979133badf0f470c6ade56d",
+  "elapsed_ms": 14672,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

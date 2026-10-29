@@ -1,0 +1,142 @@
+{
+  "scope": "transport_only_supplied_plan",
+  "native_metadata": {
+    "session_id": "01a181c9-51b7-7521-9c16-490802f05c9c",
+    "cli_version": "0.162.1",
+    "model_provider": "openai",
+    "base_instructions_sha256": "e82c1ce3a62907754ac289ded83e85010b6847a5f235feef1252b33921c4aec7",
+    "developer_system_messages_sha256": "f6366345cf168ef6b5ef0d2adb0537bd36d79451d92cd1d248ad118277e0bf64",
+    "developer_system_messages_count": 3,
+    "turn_contexts": [
+      {
+        "model": "gpt-6.1-terra",
+        "effort": "low",
+        "approval_policy": "never",
+        "sandbox_policy": {
+          "type": "read-only"
+        },
+        "context_sha256": "8ea2cc4c2e75af36c427616c746779dd1c4f382c7aa1367940082aad5f31e6b6",
+        "context_keys": [
+          "approval_policy",
+          "approvals_reviewer",
+          "collaboration_mode",
+          "comp_hash",
+          "cwd",
+          "disabled_plugin_ids",
+          "effort",
+          "model",
+          "multi_agent_version",
+          "permission_profile",
+          "realtime_active",
+          "root_turn_id",
+          "sandbox_policy",
+          "summary",
+          "turn_id"
+        ]
+      }
+    ],
+    "token_count_latest": {
+      "total_token_usage": {
+        "input_tokens": 35971,
+        "cached_input_tokens": 21632,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 915,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 36886
+      },
+      "last_token_usage": {
+        "input_tokens": 13948,
+        "cached_input_tokens": 7552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 91,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 14039
+      },
+      "model_context_window": 475000
+    },
+    "token_count_events": [
+      {
+        "total_token_usage": {
+          "input_tokens": 10848,
+          "cached_input_tokens": 3456,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 75,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 10923
+        },
+        "last_token_usage": {
+          "input_tokens": 10848,
+          "cached_input_tokens": 3456,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 75,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 10923
+        },
+        "model_context_window": 475000
+      },
+      {
+        "total_token_usage": {
+          "input_tokens": 22023,
+          "cached_input_tokens": 14080,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 824,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 22847
+        },
+        "last_token_usage": {
+          "input_tokens": 11175,
+          "cached_input_tokens": 10624,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 749,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 11924
+        },
+        "model_context_window": 475000
+      },
+      {
+        "total_token_usage": {
+          "input_tokens": 35971,
+          "cached_input_tokens": 21632,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 915,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 36886
+        },
+        "last_token_usage": {
+          "input_tokens": 13948,
+          "cached_input_tokens": 7552,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 91,
+          "reasoning_output_tokens": 0,
+          "total_tokens": 14039
+        },
+        "model_context_window": 475000
+      }
+    ],
+    "isolation_markers": {
+      "automatic_skills_catalog": false,
+      "personal_memory_summary": false,
+      "personal_operating_policy": false
+    },
+    "source": "own_cli_rollout_not_provider_response"
+  },
+  "assistant_messages": [
+    "Vou chamar a prévia uma única vez com o snapshot fornecido e relatar apenas o que estiver disponível no retorno. A consulta à wiki não está disponível dentro das restrições deste teste.",
+    "A prévia D1 retornou pixels, com diagnóstico **`rendered`**: o snapshot foi composto sem quebra automática de linhas, redimensionamento ou recorte.\n\nA marca aparece como **“TRAMA DE AULA”** e o CTA como **“Peça informações por mensagem.”**\n\nNa região da imagem, são visíveis um caderno roxo, uma planta de folhas escuras e um envelope claro."
+  ],
+  "native_exit_code": 0,
+  "elapsed_ms": 16973.347875,
+  "recovery": {
+    "reason": "Original recorder tried to JSON encode own_rollout Path instead of rollout_evidence; original partial result.json retained. No native retry.",
+    "source_events_sha256": "8a6895d71c4fecb0035e189ecb15436eaed1360d0a03c2cc7dc61771c6f8c5fc",
+    "original_report_source_backup": "prototypes/compor-mcp/evals/model-efficiency/e3/probe.before_report_fix.py",
+    "cwd_limitation": "Recovered cwd from own session_meta; not independently retained by original recorder."
+  },
+  "freeze_verification": {
+    "changed_source_files": [
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/e3/probe.py"
+    ],
+    "old_source_preserved_as": "prototypes/compor-mcp/evals/model-efficiency/e3/probe.before_report_fix.py",
+    "all_other_sources_unchanged": true
+  }
+}

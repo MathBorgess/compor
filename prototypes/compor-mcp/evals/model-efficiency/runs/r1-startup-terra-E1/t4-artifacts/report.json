@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 4,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "variacao-a",
+      "piece_id": "peca-caminho-variacao-va",
+      "version": "proposta-1",
+      "original_piece_sha256": "77ab51baaa64437066745787cf176c5baa6671aad26b374a07c77114f18db810",
+      "mapped_piece_sha256": "77ab51baaa64437066745787cf176c5baa6671aad26b374a07c77114f18db810",
+      "mcp_evidence": [
+        {
+          "event_index": 7,
+          "event_id": "item_3",
+          "wire_candidates": [
+            {
+              "process_id": 25215,
+              "request_id": 3,
+              "request_line": 46,
+              "response_line": 48
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-caminho-pote"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/variacao-a.json",
+      "render_input_sha256": "d7ada67f957cf35038588a99f4f06665ce28e8f70f1432de37b2f694d857febc"
+    },
+    {
+      "id": "variacao-b",
+      "piece_id": "peca-caminho-variacao-vb",
+      "version": "proposta-1",
+      "original_piece_sha256": "340508d563ac9b52577ddbd78846a9d0c47ab570647c0707409f5f6c9028cb85",
+      "mapped_piece_sha256": "340508d563ac9b52577ddbd78846a9d0c47ab570647c0707409f5f6c9028cb85",
+      "mcp_evidence": [
+        {
+          "event_index": 6,
+          "event_id": "item_2",
+          "wire_candidates": [
+            {
+              "process_id": 25215,
+              "request_id": 2,
+              "request_line": 45,
+              "response_line": 47
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-caminho-pote"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/variacao-b.json",
+      "render_input_sha256": "2a3721d9c56ae873d49f402f13ceed8f37dc6ebeade3b92508e7e21e101c5eaa"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/turn-04.json",
+    "sha256": "938339a0f40b49a8cc761cada008f32e87902caf4af917284c7b7a701a048cbd"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "d124952621ee56b48fd12030cc4951a69086a4118090294e78f85a1633f9e7f3",
+  "assets": {
+    "asset-proposto-caminho-pote": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets/asset-proposto-caminho-pote.png",
+      "sha256": "f4660fb44618aaeb5653afafda6fde5e77d232d2279b4e99d1a68591d46be859",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets/asset-proposto-caminho-pote.png"
+    },
+    "asset-proposto-potes-cotidiano": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets/asset-proposto-potes-cotidiano.png",
+      "sha256": "878484f9240b239902b82cb7fefee3f535b3bbb25c46d1905304f7eecae89ecc",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets/asset-proposto-potes-cotidiano.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets.json",
+    "sha256": "a2a49229b7f1680420543ada00343190c1fc24bddfa3d0debdd7e1e8c1d0984e",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1"
+  },
+  "previous": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/report.json",
+    "sha256": "8155158eeb3144cce404aecf8d453d2ac13c34f6b776901efc98e9393bb17b57"
+  },
+  "unresolved_asset_refs": []
+}

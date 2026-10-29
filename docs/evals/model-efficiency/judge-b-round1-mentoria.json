@@ -1,0 +1,774 @@
+{
+  "judge": {
+    "requested_model": "gpt-6.1-sol",
+    "effort": "high",
+    "role": "solo founder",
+    "synthetic": true,
+    "observed_model": "Não exposto ao juiz; requested_model registra a solicitação, não comprova execução.",
+    "perspective": "Solo founder extremamente crítico, interessado em agilidade e criativos profissionais."
+  },
+  "methodology": {
+    "scope": "Somente rubric.md, index.json, package.json e PNGs originais/previews do diretório cego round1-mentoria. Nenhum mapa de autoria, run, fonte ou relatório de outro juiz consultado.",
+    "inspection_order": [
+      "P06",
+      "P05",
+      "P04",
+      "P03",
+      "P02",
+      "P01"
+    ],
+    "artifacts_inspected": 27,
+    "originals_inspected": 27,
+    "previews_360_inspected": 27,
+    "procedure": "Transcrição visual de cada artefato antes de registrar notas, seguida de comparação por fase; todos os originais e previews abertos com view_image, sem modificar imagens.",
+    "scores": "Escala 1–5. professional_quality corresponde a adequação visual e comunicativa. legibility_360: 5 leitura especialmente confortável; 4 headline/apoio/CTA lidos sem zoom; 3 leitura com esforço; 2 parte importante ilegível; 1 leitura inviável. null indica NA, sem imputação.",
+    "caption_use": "Legendas consultadas para verificar conteúdo e contexto, sem substituir informação ausente ou qualidade visual da peça.",
+    "critical_scope": "critical_visual_findings lista apenas erro crítico observável nos pixels. Lista vazia não equivale a aprovação dos gates de contrato, autoridade, fatos ou edição.",
+    "blindness": "Identidades ocultas preservadas; não se inferiu autoria."
+  },
+  "packages": [
+    {
+      "id": "P06",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Seu assunto,\num caminho\npara ensinar.",
+            "Mentoria para organizar\nseu primeiro curso curto.",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mentoria, primeiro curso curto e convite por mensagem estão explícitos; voz acolhedora sem pressão.",
+            "professional_quality": "Ameixa sobre creme tem contraste forte; coluna de texto e ilustração equilibradas, mas todos os textos em negrito reduzem a variedade editorial.",
+            "delight": "Caminho sinuoso comunica percurso, porém a metáfora e o arranjo de duas colunas são previsíveis.",
+            "legibility_360": "Headline, apoio e CTA lidos sem zoom no preview; marca pequena mas identificável."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Você já sabe.\nVamos dar\nforma à aula.",
+            "Mentoria para seu\nprimeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Reconhece conhecimento prévio e apresenta mentoria, formato e CTA sem prometer resultado.",
+            "professional_quality": "Hierarquia firme e separador argila organizam oferta e ação; bordas brancas da imagem interrompem discretamente a unidade cromática.",
+            "delight": "Mãos entrelaçando fios materializam Trama de Aula e construção conjunta com mais especificidade que D1.",
+            "legibility_360": "Todo o conteúdo é discernível; informação dos encontros e CTA pequenos, ainda legíveis."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Seu conhecimento,\num caminho\npara ensinar.",
+            "Organize seu primeiro\ncurso curto com apoio.",
+            "4 encontros ao vivo + revisão\nde um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mantém percurso, apoio e curso curto; encontros estão visíveis e legenda preserva periodicidade semanal.",
+            "professional_quality": "Alternância de pesos melhora D1, com separador e CTA distintos; grande intervalo entre headline e apoio deixa a coluna frouxa.",
+            "delight": "Acabamento limpo, mas o caminho e o layout permanecem genéricos.",
+            "legibility_360": "Marca, headline, apoio, detalhes e CTA lidos; detalhes menores exigem mais atenção."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Você conhece\no assunto.\nCrie sua aula.",
+            "Mentoria para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Copy ativa reconhece expertise e mantém mentoria e oferta correta.",
+            "professional_quality": "Divisor superior enquadra headline e imagem; alinhamentos são consistentes, embora a composição ainda tenha intervalos muito largos.",
+            "delight": "Variante funcional sem novo achado visual/verbal memorável.",
+            "legibility_360": "Headline destaca-se; apoio, detalhes e CTA legíveis no preview de 360."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Seu conhecimento,\num caminho para ensinar.",
+            "Organize seu primeiro\ncurso curto com apoio.",
+            "4 encontros ao vivo + revisão\nde um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 3,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mantém palavras de V1 e reduz a ocupação da headline como solicitado, preservando mensagem e paleta.",
+            "professional_quality": "Redução abre um vazio muito grande até o apoio e faz a ilustração dominar; falta reequilíbrio, embora a restrição local explique a limitação.",
+            "delight": "Coerente e limpo, porém menos impacto editorial após redução.",
+            "legibility_360": "Headline menor ainda legível; demais textos seguem legíveis sem zoom."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 4,
+        "evidence": "Percurso/caminho em D1 e construção manual de uma trama em D2 são metáforas diferentes e pertinentes, ainda que usem o mesmo esqueleto de layout."
+      },
+      "diversity_convergence": {
+        "score": 3,
+        "evidence": "V1 enfatiza caminho e apoio; V2 ativa autonomia. O divisor muda de base para topo e a imagem desce, mas o mesmo arranjo em duas colunas oferece contraste compositivo limitado. Reutilizar asset é correto e não foi penalizado."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Julgamento visual sintético, não preferência humana.",
+        "Pixels e legendas não comprovam IDs, schema, autoridade de geração ou integridade de camadas."
+      ]
+    },
+    {
+      "id": "P05",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Seu conhecimento\npode ganhar forma.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 3,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "CTA e formato estão claros, mas a peça não nomeia mentoria nem primeiro curso curto; a legenda supre informação central.",
+            "professional_quality": "Serifada ameixa cria hierarquia editorial, imagem central tem respiro e CTA em bloco tem ótimo contraste.",
+            "delight": "Fios associam-se à marca, porém são decoração abstrata sem transformação claramente perceptível; aspecto de template.",
+            "legibility_360": "Todos os textos visíveis lidos, inclusive marca e CTA; bom contraste creme/ameixa."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Um curso começa\ncom um plano.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 3,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Curso, plano e encontros aproximam oferta; falta identificar mentoria e primeiro curso curto na peça, embora constem na legenda.",
+            "professional_quality": "Boa separação headline/imagem/detalhes/CTA, sem conflitos ou cortes.",
+            "delight": "Flat lay de papelaria é polido e cromaticamente coeso, mas bastante previsível para educação/planejamento.",
+            "legibility_360": "Headline, apoio e CTA claramente lidos sem zoom."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "O que você sabe\npode virar curso.",
+            "Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Corrige a identificação do produto e respeita quem já sabe o assunto; ação direta, sem pressão.",
+            "professional_quality": "Alternância serifada/sans, imagem horizontal e CTA consistente funcionam; apoio em linhas longas é um pouco pequeno.",
+            "delight": "Copy mais concreta melhora utilidade, mas arte abstrata e estrutura continuam convencionais.",
+            "legibility_360": "Apoio menor é legível; CTA claro no bloco escuro."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "Do conhecimento\nao plano de aula.",
+            "Organize seu primeiro curso curto em uma mentoria.\n4 encontros semanais ao vivo + revisão de plano de aula.",
+            "Converse e saiba mais"
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mentoria, primeiro curso, periodicidade e revisão estão presentes; CTA menos específico que V1, ainda compreensível.",
+            "professional_quality": "Imagem antes da headline muda leitura, mantendo organização e contraste; apoio continua pequeno para a quantidade de texto.",
+            "delight": "Boa continuidade, mas sem achado memorável além da textura dos fios.",
+            "legibility_360": "Todo o texto pode ser lido; linha dos encontros é a de maior densidade."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [
+            "TRAMA DE AULA",
+            "O que você sabe pode virar curso.",
+            "Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.",
+            "Peça informações por mensagem"
+          ],
+          "alignment": 4,
+          "professional_quality": 3,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Palavras da headline preservadas em uma linha menor; mensagem da mentoria continua íntegra.",
+            "professional_quality": "Headline menor deixa vazio alto antes da imagem e ganha pouca diferença de peso em relação à marca; resultado mais frouxo.",
+            "delight": "Edição reduz disputa visual solicitada, mas a solução final perde presença sem ganhar refinamento equivalente.",
+            "legibility_360": "Headline em uma linha ainda pode ser lida em 360; apoio e CTA legíveis."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 4,
+        "evidence": "D1 trabalha conhecimento como fios/trama; D2 curso como planejamento material de papelaria. Dois conceitos reconhecíveis, apesar de layout idêntico."
+      },
+      "diversity_convergence": {
+        "score": 4,
+        "evidence": "V1 começa pela transformação do conhecimento em curso, V2 pela imagem seguida do plano de aula; ordem de leitura e copy dão comparação útil dentro do mesmo asset/conceito."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Ausência de produto explícito em D1/D2 é fragilidade comunicativa; legendas recuperam o conteúdo, sem comprovar desempenho.",
+        "Julgamento sintético; edição e regras de autoridade não verificáveis apenas pelos PNGs."
+      ]
+    },
+    {
+      "id": "P04",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "Trama de Aula",
+            "Seu conhecimento,\nem uma sequência\npara ensinar.",
+            "Para quem domina um assunto\ne quer organizar seu primeiro\ncurso curto.",
+            "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações sobre a mentoria."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Público experiente, primeiro curso curto, mentoria online, oferta e ação explícitos e sem urgência.",
+            "professional_quality": "Boa distribuição entre headline serifada, apoio e oferta; fio vertical preenche a segunda coluna e separador organiza rodapé.",
+            "delight": "Trança é pertinente ao nome, porém a relação entre trança e sequência de ensino depende mais do texto que da imagem.",
+            "legibility_360": "Todos os blocos lidos sem zoom; apoio é pequeno, mas tem bom contraste."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "Trama de Aula",
+            "O que cabe no seu\nprimeiro curso curto?",
+            "Você conhece o assunto.\nEscolha um recorte para ensinar.",
+            "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações sobre a mentoria."
+          ],
+          "alignment": 5,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Pergunta e recorte visual conectam precisamente autonomia, clareza, conhecimento prévio e primeiro curso curto; oferta e CTA completos.",
+            "professional_quality": "Pesos e tipografias alternam hierarquia; bloco de oferta com barra argila e CTA firme. Barras brancas laterais da imagem parecem encaixe técnico.",
+            "delight": "Moldura selecionando apenas algumas formas traduz recorte em imagem simples e útil, com correspondência verbal imediata.",
+            "legibility_360": "Headline, apoio, oferta e CTA legíveis; serifada do apoio mantém leitura no tamanho reduzido."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [],
+          "alignment": null,
+          "professional_quality": null,
+          "delight": null,
+          "legibility_360": null,
+          "evidence": {
+            "status": "NA: artefato ausente no pacote; nenhuma nota imputada."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [],
+          "alignment": null,
+          "professional_quality": null,
+          "delight": null,
+          "legibility_360": null,
+          "evidence": {
+            "status": "NA: artefato ausente no pacote; nenhuma nota imputada."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [],
+          "alignment": null,
+          "professional_quality": null,
+          "delight": null,
+          "legibility_360": null,
+          "evidence": {
+            "status": "NA: artefato ausente no pacote; nenhuma nota imputada."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 5,
+        "evidence": "D1 organiza saberes em sequência/conexão por trança vertical; D2 delimita um recorte por seleção de formas. Mudam problema criativo, metáfora, copy e composição, oferecendo uma decisão conceitual clara."
+      },
+      "diversity_convergence": {
+        "score": null,
+        "evidence": "NA: V1 e V2 não estão disponíveis."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Convergência e revisão ausentes; entrega visual completa não avaliável.",
+        "Julgamento visual sintético; não permite concluir êxito, aprovação humana ou ausência de falhas nos gates não visuais."
+      ]
+    },
+    {
+      "id": "P03",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "Trama de Aula",
+            "Seu conhecimento.\nUma estrutura para ensinar.",
+            "Organize seu primeiro curso curto.",
+            "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mentoria online, primeiro curso e formato explícitos; estrutura modular corresponde à organização de conhecimentos.",
+            "professional_quality": "Serifada leve e sans em negrito estabelecem níveis claros; paleta unifica imagem e texto sem sobreposição.",
+            "delight": "Objeto modular de encaixes é um achado concreto para estrutura e organização, menos previsível que papelaria.",
+            "legibility_360": "Marca, headline, apoio, encontros e CTA lidos sem zoom."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "Trama de Aula",
+            "O que você\nquer ensinar\nprimeiro?",
+            "Seu primeiro curso curto\ncomeça com escolhas.",
+            "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Pergunta respeita autonomia e conhecimento prévio; curso, mentoria e convite estão claros.",
+            "professional_quality": "Duas colunas bem separadas, peso no apoio e informação inferior organizada; linha dos encontros e revisão menor que headline, ainda legível.",
+            "delight": "Caminho ramificado é coerente com escolhas, mas a personagem e a paisagem ilustram uma metáfora bastante convencional.",
+            "legibility_360": "Headline, apoio e CTA claros; detalhes de oferta também legíveis."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [
+            "Trama de Aula",
+            "Você conhece o assunto.\nVamos organizar seu curso?",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem."
+          ],
+          "alignment": 5,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Reconhecimento explícito do saber, pergunta acolhedora e apoio preciso tornam público, oferta e ação imediatamente compreensíveis.",
+            "professional_quality": "Imagem central de encaixes faz ponte entre headline e produto; negrito destaca a mentoria sem confundir detalhes.",
+            "delight": "Convite verbal e estrutura de encaixes cooperam com personalidade contida e pertinente.",
+            "legibility_360": "Todos os blocos lidos no preview; detalhes têm contraste suficiente."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [
+            "Trama de Aula",
+            "Dê estrutura ao seu\nprimeiro curso curto.",
+            "Uma mentoria online para organizar\no que você já sabe e quer ensinar.",
+            "4 encontros\nsemanais ao vivo\n+ revisão de um\nplano de aula",
+            "Quer conhecer a mentoria?\nPeça informações por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Oferta, público e ação preservados; 'estrutura' mantém o conceito escolhido.",
+            "professional_quality": "Imagem menor ao lado dos encontros cria outra leitura; a quebra fragmentada da oferta e grande intervalo antes do CTA deixam o conjunto menos fluido que V1.",
+            "delight": "Variante coerente, mas imagem reduzida perde força de achado e o bloco dos encontros fica burocrático.",
+            "legibility_360": "Oferta à direita é o menor bloco, ainda lido; headline e CTA permanecem fáceis."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [
+            "Trama de Aula",
+            "Você conhece o assunto. Vamos organizar seu curso?",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Peça informações por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 3,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Palavras, produto e paleta preservados; headline visualmente reduzida atende ao alvo local.",
+            "professional_quality": "Headline em linha longa e pequena tem menos destaque que marca e apoio; vazio acima da imagem parece residual.",
+            "delight": "Objeto continua interessante, mas a hierarquia final tem menos intenção e impacto que V1.",
+            "legibility_360": "Headline longa exige atenção, mas é legível sem zoom; apoio e CTA seguem claros."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 5,
+        "evidence": "D1 transforma ensino em estrutura modular/encaixe; D2 em decisão de percurso com ramificações. As ideias, imagens, copy e arranjos permitem comparar organização versus escolha."
+      },
+      "diversity_convergence": {
+        "score": 4,
+        "evidence": "V1 usa imagem central e convite conversacional; V2 antecipa benefício, reduz imagem e coloca oferta em coluna lateral. Comparação útil sem mudar estrutura modular ou asset."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Não há texto inesperado identificável nas imagens; essa inspeção não comprova separação editável ou origem dos assets.",
+        "Notas sintéticas não demonstram preferência humana, conversão ou conclusão posterior à revisão."
+      ]
+    },
+    {
+      "id": "P02",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "Trama de Aula",
+            "Seu conhecimento.\nUm percurso para ensinar.",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Quer saber mais? Envie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Público, mentoria e formato claros; percurso visual acompanha ensinar e CTA direto.",
+            "professional_quality": "Escalas consistentes, contraste forte e separador bem posicionado; composição funcional, com pouco contraste de linguagem tipográfica.",
+            "delight": "Rede de pontos e linha é pertinente, mas lembra diagrama genérico e oferece pouca materialidade ou singularidade.",
+            "legibility_360": "Headline, apoio e CTA lidos sem zoom; rede continua reconhecível."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "Trama de Aula",
+            "Seu saber\npode ganhar\nforma de curso.",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Quer saber mais?\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 5,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Fios soltos que viram trama ligam saber, organização e nome da mentoria com precisão; público e produto explícitos.",
+            "professional_quality": "Headline serifada, imagem tátil e rodapé ameixa dividem funções com nitidez; detalhes e CTA contrastam bem no bloco inferior.",
+            "delight": "Transição entre fios e tecido faz a metáfora de transformação visível e específica à marca.",
+            "legibility_360": "Todos os textos lidos; CTA creme no ameixa é claro e destacado."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [
+            "Trama de Aula",
+            "Você conhece o assunto.\nVamos organizar seu curso?",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Quer saber mais? Envie TRAMA por mensagem."
+          ],
+          "alignment": 5,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Reconhece conhecimento prévio e convida com naturalidade; oferta e ação completas.",
+            "professional_quality": "Headline forte e ilustração ampla criam leitura simples; oferta e CTA mantêm espaços suficientes.",
+            "delight": "Copy é mais acolhedora, mas imagem de rede e composição continuam previsíveis.",
+            "legibility_360": "Marca, headline, apoio, oferta e CTA lidos com facilidade."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [
+            "Trama de Aula",
+            "O que você quer ensinar\nno seu primeiro curso?",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Quer saber mais? Envie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Pergunta orienta autonomia e preserva curso curto/mentoria no apoio.",
+            "professional_quality": "Apoio antes da imagem torna produto rápido de identificar; barras brancas laterais da imagem parecem um encaixe menos acabado.",
+            "delight": "Troca de ordem é útil, mas o conjunto segue um cartaz informativo convencional.",
+            "legibility_360": "Texto preserva tamanho e contraste; CTA legível, sem cortes."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [
+            "Trama de Aula",
+            "Você conhece o assunto.\nVamos organizar\nseu curso?",
+            "Mentoria online para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Quer saber mais? Envie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Mantém palavras e diminui headline respeitando a crítica localizada.",
+            "professional_quality": "Três linhas menores ocupam a área de forma coerente, preservando distância até a imagem; hierarquia segue utilizável.",
+            "delight": "Correção profissional, mas não muda o caráter genérico da rede.",
+            "legibility_360": "Headline menor continua legível; demais blocos e CTA lidos sem zoom."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 5,
+        "evidence": "D1 apresenta um percurso diagramático ramificado; D2 mostra fios tornando-se tecido com materialidade. Mudam metáfora, linguagem visual, fonte da headline e organização, criando escolha clara."
+      },
+      "diversity_convergence": {
+        "score": 4,
+        "evidence": "V1 começa pelo reconhecimento do saber e posiciona apoio após a imagem; V2 começa pela escolha do conteúdo e aproxima headline e definição da mentoria. Mesmo percurso e asset são preservados corretamente."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Palavra TRAMA no CTA é instrução de contato visível; não há indicação visual de automação ou promessa adicional.",
+        "Julgamento sintético sem verificação de schema, camadas ou comportamento real."
+      ]
+    },
+    {
+      "id": "P01",
+      "artifacts": [
+        {
+          "id": "D1",
+          "visible_text": [
+            "Trama de Aula · Mentoria online",
+            "Seu conhecimento.\nUm curso com estrutura.",
+            "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "Para organizar seu\nprimeiro curso curto.",
+            "Quer saber mais?\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Identifica mentoria online, curso curto, oferta e ação; a trama material associa organização à marca.",
+            "professional_quality": "Serifada forte contrasta com apoio sans, imagem à direita equilibra informações e CTA tem área própria.",
+            "delight": "Fitas táteis entrelaçadas dão corpo e personalidade à ideia de estruturar o saber.",
+            "legibility_360": "Todos os blocos lidos; marca com descrição e CTA permanecem claros."
+          }
+        },
+        {
+          "id": "D2",
+          "visible_text": [
+            "Trama de Aula · Mentoria online",
+            "O que você\nquer ensinar\nprimeiro?",
+            "Organize seu primeiro\ncurso curto.",
+            "4 encontros semanais\nao vivo + revisão de\num plano de aula",
+            "Vamos conversar sobre a mentoria?\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Pergunta dá autonomia e produto/CTA estão explícitos; imagem de caminhos converge no tema de escolher foco.",
+            "professional_quality": "Imagem à esquerda e blocos à direita funcionam; separador e CTA delimitam a ação sem pressão.",
+            "delight": "Faixas convergentes são limpas, porém abstratas e menos específicas do que a materialidade da primeira direção.",
+            "legibility_360": "Headline, oferta e CTA lidos sem zoom; bloco dos encontros é pequeno, ainda discernível."
+          }
+        },
+        {
+          "id": "V1",
+          "visible_text": [
+            "Trama de Aula · Mentoria online",
+            "Você conhece o assunto.\nVamos organizar\nseu primeiro curso?",
+            "Mentoria para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais\nao vivo + revisão de\num plano de aula",
+            "Quer saber mais?\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 5,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Reconhece expertise, convida a organizar o primeiro curso e preserva todos os fatos da oferta.",
+            "professional_quality": "Headline grande cria entrada inequívoca; texto e fitas dividem região inferior com CTA isolado.",
+            "delight": "Fitas entrelaçadas e convite acolhedor sustentam personalidade pertinente, ainda que sem surpresa de nível máximo.",
+            "legibility_360": "Tudo legível no preview; alternância serifada/sans ajuda diferenciar blocos."
+          }
+        },
+        {
+          "id": "V2",
+          "visible_text": [
+            "Trama de Aula · Mentoria online",
+            "Dê forma ao seu\nprimeiro curso curto.",
+            "Seu conhecimento\né o ponto de partida.",
+            "4 encontros semanais\nao vivo\n+ revisão de um\nplano de aula",
+            "Conheça a mentoria.\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 4,
+          "delight": 4,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Curso curto, conhecimento prévio, mentoria e ação aparecem com clareza, sem garantia ou urgência.",
+            "professional_quality": "Imagem maior à esquerda e apoio à direita dão mais espaço à materialidade; quebras da oferta são um pouco fragmentadas.",
+            "delight": "A escala maior da trama torna textura e conexão mais presentes, com copy curta e pertinente.",
+            "legibility_360": "Headline, apoio e CTA claros; oferta em quatro linhas continua legível."
+          }
+        },
+        {
+          "id": "R1",
+          "visible_text": [
+            "Trama de Aula · Mentoria online",
+            "Você conhece o assunto.\nVamos organizar seu primeiro curso?",
+            "Mentoria para organizar\nseu primeiro curso curto.",
+            "4 encontros semanais\nao vivo + revisão de\num plano de aula",
+            "Quer saber mais?\nEnvie TRAMA por mensagem."
+          ],
+          "alignment": 4,
+          "professional_quality": 3,
+          "delight": 3,
+          "legibility_360": 4,
+          "evidence": {
+            "alignment": "Headline mantém palavras e reduz sua ocupação; produto, oferta e convite preservados.",
+            "professional_quality": "A redução deixa grande vazio entre headline e apoio/imagem; o conjunto perde encadeamento editorial apesar da edição estritamente local.",
+            "delight": "Textura das fitas permanece boa, mas a distribuição final parece menos resolvida que V1.",
+            "legibility_360": "Headline menor ainda lida sem zoom; marca, apoio, detalhes e CTA legíveis."
+          }
+        }
+      ],
+      "diversity_exploration": {
+        "score": 4,
+        "evidence": "D1 usa trama material para estruturar o saber; D2 usa caminhos convergentes e pergunta sobre o que ensinar primeiro. Há distinção de foco e linguagem visual, embora ambos usem linhas/faixas."
+      },
+      "diversity_convergence": {
+        "score": 4,
+        "evidence": "V1 prioriza convite e imagem menor à direita; V2 prioriza benefício curto e trama maior à esquerda. Copy, escala e distribuição permitem uma comparação útil, preservando o asset exigido."
+      },
+      "critical_visual_findings": [],
+      "limitations": [
+        "Diferenças visuais da revisão não provam integridade de IDs/camadas; necessário auditoria separada.",
+        "Nenhuma nota constitui aprovação humana ou demonstração de resultado de campanha."
+      ]
+    }
+  ],
+  "comparative_summary": {
+    "overall": "Nenhum pacote satisfaz todas as dimensões visuais aplicáveis em >=4 por artefato e por fase; P04 também tem convergência/revisão ausentes. Não há vencedor de eficiência identificável por estes materiais.",
+    "strongest_observed_artifacts": [
+      "P03-V1: alinhamento 5 e demais dimensões 4; estrutura modular e convite acolhedor cooperam.",
+      "P02-D2: alinhamento 5 e demais dimensões 4; fios tornando-se tecido dão especificidade à marca.",
+      "P04-D2: alinhamento 5 e demais dimensões 4; recorte de formas e pergunta comunicam seleção de conteúdo."
+    ],
+    "main_tradeoffs": [
+      "Legibilidade é consistente: marca e CTA foram encontrados e transcritos em todos os 27 renders; não observei corte, sobreposição ou texto crítico ilegível em 360.",
+      "P03/P04/P02 expõem escolhas conceituais particularmente claras na exploração; isso não é evidência de sucesso nas etapas ausentes ou em outros gates.",
+      "P05 tem boa ordem e contraste, mas D1/D2 deixam produto/público dependentes da legenda e o encantamento é previsível.",
+      "P06 é claro e consistente, porém a convergência oferece contraste compositivo limitado e várias peças ficam genéricas.",
+      "Reduzir somente escala/quebra da headline resolve o alvo local, mas em P01/P03/P05/P06 deixa vazios e perda de hierarquia. P02-R1 mantém melhor ocupação espacial."
+    ],
+    "visual_threshold": {
+      "all_packages_meet_threshold": false,
+      "by_package": [
+        {
+          "id": "P06",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [],
+          "observed_critical_visual_findings": 0
+        },
+        {
+          "id": "P05",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [],
+          "observed_critical_visual_findings": 0
+        },
+        {
+          "id": "P04",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [
+            "V1",
+            "V2",
+            "R1"
+          ],
+          "observed_critical_visual_findings": 0
+        },
+        {
+          "id": "P03",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [],
+          "observed_critical_visual_findings": 0
+        },
+        {
+          "id": "P02",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [],
+          "observed_critical_visual_findings": 0
+        },
+        {
+          "id": "P01",
+          "all_applicable_scores_at_least_4": false,
+          "missing_artifacts": [],
+          "observed_critical_visual_findings": 0
+        }
+      ]
+    },
+    "limitations": [
+      "Avaliação sintética de uma persona, sem validação humana, experimento de feed, viralização, conversão ou receita.",
+      "Não mede custo, latência, quantidade de interações ou retrabalho real; não permite ordenar eficiência.",
+      "Gates não visuais, completude dos planos/assets/camadas e integridade da revisão precisam de evidência técnica separada.",
+      "A rubrica informa que os casos não são holdout protegido; corpus anterior foi parcialmente visto pelo autor dos casos.",
+      "O input final relata não conclusão, nenhum download e ausência de motivo adicional. A revisão posterior não prova conclusão, e não se atribui causalidade global à crítica da headline.",
+      "Não houve discussão com outro juiz nem tentativa de consenso; divergências devem ser preservadas."
+    ]
+  }
+}

@@ -1,0 +1,191 @@
+{
+  "judge": {
+    "id": "judge-a",
+    "kind": "LLM Judge",
+    "evaluation": "sintética, não humana",
+    "date": "2026-10-28",
+    "model": "Identificador específico não exposto ao juiz nesta tarefa; nenhuma autoria de candidato inferida."
+  },
+  "persona": "Solo founder extremamente crítico que quer uma campanha profissional rapidamente. Prioriza clareza, diferenciação útil e acabamento pronto para feed.",
+  "scope": {
+    "round": "e2-development-01",
+    "package_ids": [
+      "P01"
+    ],
+    "artifact_order": [
+      "D1",
+      "D2",
+      "V1",
+      "V2",
+      "R1"
+    ],
+    "inputs": [
+      "docs/evals/model-efficiency/rubric.md",
+      "prototypes/compor-mcp/evals/model-efficiency/blind/e2-development-01/index.json",
+      "prototypes/compor-mcp/evals/model-efficiency/blind/e2-development-01/P01/package.json",
+      "Os dez PNGs originais e previews de P01, inspecionados com view_image."
+    ],
+    "blind": true,
+    "professionalism_mapping": "professionalism corresponde à adequação visual e comunicativa da rubrica.",
+    "acceptance": "Todos os artefatos e as duas diversidades precisam de nota >=4, legibilidade, completude e zero erro crítico; contratos não observáveis não são presumidos aprovados."
+  },
+  "packages": [
+    {
+      "package_id": "P01",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "marca": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode virar curso.",
+            "apoio": "Mentoria online para organizar\nseu primeiro curso curto.",
+            "detalhes": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "CTA": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "status": "passou",
+            "original": "Headline, apoio, detalhes e CTA lidos sem cortes ou sobreposição no PNG completo.",
+            "preview_360": "Headline, apoio, detalhes e CTA lidos sem zoom no preview integral de 360 px; detalhes ficam pequenos, mas distinguíveis.",
+            "contrast": "Texto ameixa sobre fundo creme com contraste visual forte; não foi medida razão de contraste."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "alignment": "A headline parte de conhecimento já existente, o apoio identifica mentoria online e primeiro curso curto, e os detalhes preservam os quatro encontros e a revisão. O convite por mensagem é direto e sem urgência ou promessa de resultado garantido.",
+            "professionalism": "Alinhamento consistente à esquerda, serifada forte na headline, apoio sem serifa e CTA em negrito estabelecem leitura clara; imagem no alto à direita e áreas generosas de creme preservam respiro.",
+            "delight": "A papelaria em ameixa, argila e creme é coerente e bem iluminada, mas cadernos, lápis e folhas em branco funcionam como ambientação genérica. A headline explica a proposta sem um achado que torne a peça memorável."
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "marca": "TRAMA DE AULA",
+            "headline": "Dê forma ao seu\nprimeiro curso.",
+            "apoio": "Você já conhece seu assunto.\nA mentoria ajuda a organizá-lo\nem um curso curto.",
+            "detalhes": "Online: 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "CTA": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "status": "passou",
+            "original": "Headline, apoio, detalhes e CTA lidos sem cortes ou sobreposição no PNG completo.",
+            "preview_360": "Headline, apoio, detalhes e CTA lidos sem zoom no preview integral de 360 px; detalhes ficam pequenos, mas distinguíveis.",
+            "contrast": "Texto ameixa sobre fundo creme com contraste visual forte; não foi medida razão de contraste."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "alignment": "“Você já conhece seu assunto” respeita a experiência do público; a mentoria organiza esse conhecimento, com quatro encontros ao vivo e revisão. O texto mantém tom acolhedor e não adiciona preço ou data.",
+            "professionalism": "Os dois grandes pontos argila e a frase “Você já conhece seu assunto” em negrito criam um segundo centro de atenção quase tão forte quanto a headline. Os blocos ficam separados por intervalos muito amplos, dando aparência de slide informativo e pouca ligação entre a trama no alto e a sequência textual.",
+            "delight": "A trama de fios materializa o nome da marca de modo pertinente, mas aparece como pequeno quadrado isolado no canto. O restante é uma lista convencional e não desenvolve visualmente a metáfora."
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "marca": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode virar curso.",
+            "apoio": "Organize seu primeiro curso curto\ncom a mentoria Trama de Aula.",
+            "detalhes": "Online: 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "CTA": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "status": "passou",
+            "original": "Headline, apoio, detalhes e CTA lidos sem cortes ou sobreposição no PNG completo.",
+            "preview_360": "Headline, apoio, detalhes e CTA lidos sem zoom no preview integral de 360 px; detalhes ficam pequenos, mas distinguíveis.",
+            "contrast": "Texto ameixa sobre fundo creme com contraste visual forte; não foi medida razão de contraste."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "alignment": "O apoio nomeia explicitamente o produto e o primeiro curso curto; “Online” torna o formato claro. O CTA pede informações e não transforma a campanha em matrícula com urgência.",
+            "professionalism": "Headline serifada em duas linhas, texto auxiliar alinhado à esquerda e CTA separado mantêm hierarquia estável. Os blocos não colidem com a foto de papelaria e o texto permanece legível a 360 px.",
+            "delight": "A mudança de apoio melhora a especificidade da oferta, mas conserva a mesma papelaria decorativa, a mesma headline e a mesma composição de D1. O resultado é organizado, porém previsível."
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "marca": "TRAMA DE AULA",
+            "headline": "Organize seu\nprimeiro curso.",
+            "apoio": "Mentoria online para transformar\nseu assunto em um curso curto.",
+            "detalhes": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "CTA": "Quer saber mais? Envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "status": "passou",
+            "original": "Headline, apoio, detalhes e CTA lidos sem cortes ou sobreposição no PNG completo.",
+            "preview_360": "Headline, apoio, detalhes e CTA lidos sem zoom no preview integral de 360 px; detalhes ficam pequenos, mas distinguíveis.",
+            "contrast": "Texto ameixa sobre fundo creme com contraste visual forte; não foi medida razão de contraste."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "alignment": "O imperativo “Organize” e o apoio sobre transformar seu assunto em curso curto comunicam diretamente a tarefa. A oferta e a chamada por mensagem continuam corretas e sem pressão.",
+            "professionalism": "A headline mais curta cria um bloco compacto e legível. A imagem ligeiramente menor e mais baixa, a coluna esquerda estável e a separação do CTA mantêm equilíbrio e leitura limpa, inclusive no preview.",
+            "delight": "O CTA em pergunta é um pouco mais conversacional, mas headline e foto continuam um arranjo de mentoria bastante convencional. Não há novo vínculo expressivo entre o conhecimento da pessoa e os materiais da imagem."
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "marca": "TRAMA DE AULA",
+            "headline": "Seu conhecimento pode\nvirar curso.",
+            "apoio": "Organize seu primeiro curso curto\ncom a mentoria Trama de Aula.",
+            "detalhes": "Online: 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "CTA": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "status": "passou",
+            "original": "Headline, apoio, detalhes e CTA lidos sem cortes ou sobreposição no PNG completo.",
+            "preview_360": "Headline, apoio, detalhes e CTA lidos sem zoom no preview integral de 360 px; detalhes ficam pequenos, mas distinguíveis.",
+            "contrast": "Texto ameixa sobre fundo creme com contraste visual forte; não foi medida razão de contraste."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "alignment": "As palavras da headline continuam visivelmente iguais às de V1 e a paleta permanece. A mensagem da mentoria, os detalhes e o convite por mensagem seguem claros; a redução responde ao alvo visual da crítica.",
+            "professionalism": "A headline menor para de dominar, mas aproxima sua escala da do apoio e deixa um grande vazio abaixo dela, enquanto a papelaria continua ocupando todo o quadrante superior direito. A hierarquia perde força sem que a distribuição dos blocos recupere equilíbrio.",
+            "delight": "A revisão é localizada e coerente, mas a headline agora mais discreta e o espaço vazio adicional reduzem presença no feed. O conjunto mantém o mesmo caráter genérico da papelaria; não chega a uma solução memorável."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": {
+          "score": 3,
+          "evidence": "D1 usa papelaria organizada como imagem concreta de preparação; D2 usa fios entrelaçados, uma metáfora pertinente à marca. Essa diferença é perceptível, mas ambas mantêm marca e headline no alto à esquerda, imagem quadrada no alto à direita, blocos explicativos abaixo e CTA inferior. As promessas “pode virar curso” e “dê forma ao seu primeiro curso” levam à mesma ideia de organização; a diferença se concentra no objeto ilustrativo e nos pontos da lista, oferecendo pouca escolha de experiência de campanha."
+        },
+        "convergence": {
+          "score": 3,
+          "evidence": "V1 e V2 mantêm a papelaria da primeira direção e a mesma identidade. V2 troca uma headline de possibilidade por um imperativo, altera o CTA para pergunta e desloca/reduz um pouco a imagem. São diferenças visíveis, mas a sequência, os pesos e a estratégia comunicativa permanecem muito semelhantes; a escolha entre versões pouco informa sobre alternativas de composição dentro do conceito."
+        }
+      },
+      "visual_completeness": "passou: dois renders de exploração, dois de convergência e um de revisão presentes; todos com marca, headline, apoio, detalhes, CTA e imagem. As legendas estão presentes no package.json.",
+      "nonobservable_contracts": {
+        "status": "não avaliável",
+        "evidence": "O pacote visual não apresenta planos MCP, camadas editáveis, IDs reais de elementos, arquivos de assets isolados, hashes comparados das imagens reutilizadas ou logs de execução. Não comprova completude da cadeia nem todos os gates G01–G09. A consistência visual de V1/R1 não substitui uma comparação determinística."
+      },
+      "critical_visual_errors_observed": [],
+      "accepted": false,
+      "reason": "Não aceitável segundo esta rubrica: encantamento 3/5 em todos os artefatos; profissionalismo 3/5 em D2 e R1; diversidade de exploração e convergência 3/5. O texto é legível e não observei corte, sobreposição, fato inventado visível ou texto inesperado nas imagens. Esse resultado visual negativo já basta para não atingir o limiar, independentemente dos contratos não avaliáveis."
+    }
+  ],
+  "limitations": [
+    "Julgamento sintético de um LLM segundo uma persona; não demonstra gosto, aprovação, conclusão, download ou resultado de uma pessoa real.",
+    "Somente a rubrica e o diretório cego indicado foram consultados. Não foram lidos runs, mapeamento de candidatos, outros juízes ou relatórios anteriores; nenhuma autoria/modelo de candidato foi inferida.",
+    "Inspeção manual dos cinco PNGs completos e cinco previews de 360 px com view_image; sem zoom nos previews. A legibilidade observada não constitui prova de acessibilidade universal.",
+    "Notas de alinhamento usam exclusivamente briefing e conteúdo visível; contratos de geração, edição, autoridade, memória, consentimento e transporte não observáveis ficam não avaliáveis.",
+    "A presença visual de cinco renders não comprova validade de planos, editabilidade, dimensões verificadas por metadados, IDs, versões ou identidade binária do asset.",
+    "O relato sintético em T5 afirma não conclusão e ausência de download. R1 não comprova que esse desfecho mudou nem permite atribuir a crítica localizada como sua causa completa.",
+    "A rubrica informa que estes casos não são holdout protegido e tiveram autoria com exposição ao corpus anterior. Não se inferem generalização, preferência humana, eficiência, economia, conversão ou promoção."
+  ]
+}

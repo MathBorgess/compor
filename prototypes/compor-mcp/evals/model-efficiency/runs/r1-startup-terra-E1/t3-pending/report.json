@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-caminho",
+      "piece_id": "peca-caminho-pote",
+      "version": "proposta-1",
+      "original_piece_sha256": "15ee4ba02a600df6032d33033720cfd97013a393e2ff69dbd4e51f681f337ae4",
+      "mapped_piece_sha256": "876d719f2477200ddbc525e2173a009d335e21fe233e6125b4f245dffad9c24f",
+      "mcp_evidence": [
+        {
+          "event_index": 18,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 21680,
+              "request_id": 8,
+              "request_line": 37,
+              "response_line": 39
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-caminho-pote"
+      ],
+      "unresolved_asset_refs": [
+        "asset-proposto-caminho-pote"
+      ],
+      "render_input": "render-inputs/direcao-caminho.json",
+      "render_input_sha256": "0228c3bb35d8c2bd0a679dec0766cd4b9882ce2947621e7bdf5087d577a81051"
+    },
+    {
+      "id": "direcao-pergunta",
+      "piece_id": "peca-potes-com-clientes",
+      "version": "proposta-1",
+      "original_piece_sha256": "5cdfa648d916478fb4329583f8bdc78aa5942a69675ebed82bf1d9e66279abb4",
+      "mapped_piece_sha256": "617b3bcf019fc8fccc510c0dd461d14b3e56d73b93afa6901865f8731b6788ff",
+      "mcp_evidence": [
+        {
+          "event_index": 17,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 21680,
+              "request_id": 7,
+              "request_line": 36,
+              "response_line": 38
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-potes-cotidiano"
+      ],
+      "unresolved_asset_refs": [
+        "asset-proposto-potes-cotidiano"
+      ],
+      "render_input": "render-inputs/direcao-pergunta.json",
+      "render_input_sha256": "ab19c70811a7241b8eac710abf2f91c231629fba4a58b4230deae55896b23259"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-caminho",
+      "operation": "add",
+      "layer_id": "cp-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-caminho-pote",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-pergunta",
+      "operation": "add",
+      "layer_id": "pc-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-potes-cotidiano",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/turn-03.json",
+    "sha256": "7f77a4b52a98bf567c6a13891068d844240c4f54e64ace91360535573d724537"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "41fd4034cc71e85cf1546f39df05ff063fa3d039f4e66e53c47153dedea4079c",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "asset-proposto-caminho-pote",
+    "asset-proposto-potes-cotidiano"
+  ]
+}

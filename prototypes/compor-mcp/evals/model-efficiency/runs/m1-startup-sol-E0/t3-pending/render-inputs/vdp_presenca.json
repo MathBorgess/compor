@@ -1,0 +1,130 @@
+{
+  "piece": {
+    "piece_id": "vdp_presenca_piece",
+    "version": "v1",
+    "product_ref": "volta_de_pote",
+    "variation_ref": "vdp_presenca",
+    "width_px": 1080,
+    "height_px": 1080,
+    "layers": [
+      {
+        "id": "presenca_bg",
+        "kind": "shape",
+        "name": "Base pedra",
+        "rect": {
+          "x": 0,
+          "y": 0,
+          "width": 1,
+          "height": 1
+        },
+        "shape": "rectangle",
+        "fill_hex": "#ECE9DF",
+        "z_index": 0
+      },
+      {
+        "id": "presenca_brand",
+        "kind": "text",
+        "name": "Nome do produto",
+        "rect": {
+          "x": 0.066667,
+          "y": 0.051852,
+          "width": 0.866667,
+          "height": 0.046296
+        },
+        "text": "Volta de Pote",
+        "font_ref": "arial",
+        "font_size_px": 32,
+        "font_weight": 700,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left",
+        "z_index": 1
+      },
+      {
+        "id": "presenca_headline",
+        "kind": "text",
+        "name": "Pergunta principal",
+        "rect": {
+          "x": 0.066667,
+          "y": 0.133333,
+          "width": 0.866667,
+          "height": 0.157407
+        },
+        "text": "Quais potes estão\ncom seus clientes?",
+        "font_ref": "arial",
+        "font_size_px": 68,
+        "font_weight": 700,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left",
+        "z_index": 2
+      },
+      {
+        "id": "presenca_body",
+        "kind": "text",
+        "name": "Apresentação funcional",
+        "rect": {
+          "x": 0.066667,
+          "y": 0.348148,
+          "width": 0.407407,
+          "height": 0.324074
+        },
+        "text": "Uma ferramenta web\npara acompanhar\nseus recipientes.\n\nRegistre entregas,\nempréstimos\ne devoluções.",
+        "font_ref": "arial",
+        "font_size_px": 32,
+        "font_weight": 400,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left",
+        "z_index": 3
+      },
+      {
+        "id": "presenca_image",
+        "kind": "image",
+        "name": "Cena de recipientes e mãos — ativo futuro",
+        "asset_ref": "vdp_asset_presenca_v1",
+        "rect": {
+          "x": 0.507407,
+          "y": 0.324074,
+          "width": 0.425926,
+          "height": 0.425926
+        },
+        "z_index": 4
+      },
+      {
+        "id": "presenca_cta_bg",
+        "kind": "shape",
+        "name": "Faixa lima do convite",
+        "rect": {
+          "x": 0.066667,
+          "y": 0.814815,
+          "width": 0.866667,
+          "height": 0.1
+        },
+        "shape": "rectangle",
+        "fill_hex": "#C9D94A",
+        "z_index": 5
+      },
+      {
+        "id": "presenca_cta",
+        "kind": "text",
+        "name": "Convite à demonstração",
+        "rect": {
+          "x": 0.092593,
+          "y": 0.843519,
+          "width": 0.814815,
+          "height": 0.046296
+        },
+        "text": "Conheça uma demonstração",
+        "font_ref": "arial",
+        "font_size_px": 38,
+        "font_weight": 700,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left",
+        "z_index": 6
+      }
+    ]
+  },
+  "assets": {}
+}

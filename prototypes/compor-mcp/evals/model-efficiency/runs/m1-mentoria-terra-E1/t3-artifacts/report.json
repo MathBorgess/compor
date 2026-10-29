@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-fios",
+      "piece_id": "trama-fios",
+      "version": "v1-proposta",
+      "original_piece_sha256": "101ccc3ba246d7fd9660ae6eacf8c2a7c63df1bf30aa6e3dca1b07280c1e5025",
+      "mapped_piece_sha256": "5200f899511aa7b443d80d47c7bc5639a1b22c2f07db81fd1787834374f3aeec",
+      "mcp_evidence": [
+        {
+          "event_index": 18,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 27859,
+              "request_id": 7,
+              "request_line": 35,
+              "response_line": 37
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-fios-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-fios.json",
+      "render_input_sha256": "926d405415099813d70f099f6cc6476a09b84855f5daba60bf63660fb00a52e0"
+    },
+    {
+      "id": "direcao-bancada",
+      "piece_id": "trama-bancada",
+      "version": "v1-proposta",
+      "original_piece_sha256": "445f7bdc87b869ddf0bdfb09c407a0eef8ad5b1654cba00a32b3b69902cf5581",
+      "mapped_piece_sha256": "2fc8071807d40021a290d9a86d5d530d1f6c35cb0b482817e476ef5de1179eb3",
+      "mcp_evidence": [
+        {
+          "event_index": 17,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 27859,
+              "request_id": 8,
+              "request_line": 34,
+              "response_line": 36
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-bancada-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-bancada.json",
+      "render_input_sha256": "1af4f756122f5933d20ff29fde747e0e7913bd54e5341dce8976a2c5bb718fb1"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-fios",
+      "operation": "add",
+      "layer_id": "fios-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-fios-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-bancada",
+      "operation": "add",
+      "layer_id": "bancada-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-bancada-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/turn-03.json",
+    "sha256": "df8bbede61c2d306cf8ab1172bf4c41ca955d07366d713b78bba1fa5a4b43160"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "bb3117bb51f72852cc8aae940c95377ed95ff2353596afc752b94575bf2681eb",
+  "assets": {
+    "asset-proposto-fios-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets/asset-proposto-fios-v1.png",
+      "sha256": "e9e64fb30a539fcf5eff964f6246e0d162012f7a4a376de57344cb2d19f1fdd5",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets/asset-proposto-fios-v1.png"
+    },
+    "asset-proposto-bancada-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets/asset-proposto-bancada-v1.png",
+      "sha256": "cce6d2e0e3bd48e3959472d170ae0e3fdd847d28dc6eee69c99714a1a5c26105",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets/asset-proposto-bancada-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets.json",
+    "sha256": "ff9dcb6e75148281e01edd7d834be174eb4404fc4fd58306248617c34720283f",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1"
+  },
+  "unresolved_asset_refs": []
+}

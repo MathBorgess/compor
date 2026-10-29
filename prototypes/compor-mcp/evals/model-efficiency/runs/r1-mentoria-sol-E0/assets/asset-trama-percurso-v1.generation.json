@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-percurso",
+  "asset_ref": "asset-trama-percurso-v1",
+  "prompt": "Criar um único asset visual vertical na proporção 13:18, sem conteúdo verbal. Ilustração editorial plana e minimalista de um percurso que se ramifica em possibilidades abertas, com um pequeno disco marcando um ponto de escolha. Os caminhos devem ter igual dignidade, sem caminho errado, sem pódio, troféu, chegada ou hierarquia de sucesso. Metáfora de autonomia para escolher um primeiro recorte de ensino. Formas curvas largas, composição arejada e adulta, diferente de uma trama ou tecelagem. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo uniforme creme até as bordas. Manter toda a ilustração dentro de margens generosas para encaixe proporcional sem recorte. Sem sombras, gradientes, pessoas, letras, palavras, números, rótulos, logotipos, assinaturas ou marcas-d'água. Não incluir título nem simulação de peça publicitária. Associação futura à camada per-imagem da peça trama-percurso v1.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-2eaf390b-7dd0-4fae-bb25-77cc94960b0b.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/assets/asset-trama-percurso-v1.png",
+  "sha256": "1165662098e2b988b37ac8a3680938a134c82101ecebb695cdc500eb1ed72301",
+  "elapsed_ms": 15816,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

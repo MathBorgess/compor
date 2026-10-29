@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-paradeiro",
+  "asset_ref": "asset-vdp-paradeiro-01-proposto",
+  "prompt": "Criar um único ativo fotográfico horizontal, proporção 101:60, para uma peça sobre recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta próxima e cotidiana: um pote simples fechado em primeiro plano à direita e dois recipientes semelhantes agrupados mais atrás à esquerda, separados por espaço vazio visível. Todos inteiros, com margens generosas e sem cortes. Superfície fosca com textura sutil de papel. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, admitindo variações de luminosidade para volume. Luz suave, detalhes simples, aparência tátil. Fundo pedra contínuo preenchendo toda a imagem; a composição deve funcionar inteira em encaixe proporcional contain, sem depender de recorte. Sem pessoas, interfaces, telas, gráficos, selos, símbolos de reciclagem ou elementos que sugiram rastreamento automático. Sem letras, palavras, números, logotipos, etiquetas escritas, assinaturas ou marcas-d'água. Não incorporar título, copy ou convite.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-f7a39188-7b51-4b54-98be-c052ee9bdd8f.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/assets/asset-vdp-paradeiro-01-proposto.png",
+  "sha256": "aff2ab90b1b4cb7db464d2ea64ffaf5470b7ba09d0a07e25fb4977d178ec12bf",
+  "elapsed_ms": 19196,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

@@ -1,0 +1,15 @@
+{
+  "direction_id": "direcao_pergunta",
+  "asset_ref": "vdp_asset_pergunta_v1",
+  "prompt": "Criar um único asset horizontal, proporção 2:1, para uma peça editorial sobre recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta com três potes reutilizáveis de tamanhos diferentes, tampas simples e sem rótulos, distribuídos sobre superfície fosca com textura discreta de papel. Tratamento fotográfico estilizado, acolhedor e cotidiano. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra uniforme nas bordas. Objetos inteiros, centralizados, com margem interna ampla para encaixe proporcional sem recorte. Sem letras, palavras, números, logotipos, marcas-d'água ou qualquer texto. Sem telas, interfaces, gráficos, selos ou símbolos de resultados ambientais. Entregar apenas a imagem dos objetos; todo conteúdo verbal será adicionado em camadas editáveis.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-7e1a489e-de93-4018-a98f-a3c54c8d92ed.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/assets/vdp_asset_pergunta_v1.png",
+  "sha256": "74e3274db6f08cf70b35619aa80e7e04e7b900a4a88fa625e4c17994d12e3795",
+  "elapsed_ms": 16396,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

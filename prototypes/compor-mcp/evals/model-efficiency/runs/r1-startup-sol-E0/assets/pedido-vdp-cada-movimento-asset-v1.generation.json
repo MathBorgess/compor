@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-cada-movimento",
+  "asset_ref": "pedido-vdp-cada-movimento-asset-v1",
+  "prompt": "Criar um único ativo horizontal 2:1, sem texto, para a camada b-visual da peça vdp-percurso v1. Ilustração editorial em recortes de papel fosco: duas pequenas cenas lado a lado, com espaço entre elas. À esquerda, um par de mãos oferece um recipiente alimentar retornável fechado a outro par de mãos; à direita, mãos devolvem um recipiente semelhante vazio. Gestos simples e próximos, anatomia coerente, objetos inteiros com margens generosas. A repetição do recipiente sugere continuidade e ida e volta. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra e textura de papel discreta. Sem telas, interfaces, painéis, símbolos ambientais ou gráficos de resultados. Sem letras, palavras, números, rótulos, logotipos ou marcas-d'água. Não incluir conteúdo verbal. O ativo será encaixado integralmente, sem recorte, em uma caixa horizontal 2:1.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-d55a052e-5a88-4732-b9ca-181e03e52886.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/assets/pedido-vdp-cada-movimento-asset-v1.png",
+  "sha256": "f358e61f46c3598fce7cac8cc087cdb1b9665a03ba821659c67c28842403abc5",
+  "elapsed_ms": 15898,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

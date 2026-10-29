@@ -1,0 +1,976 @@
+{
+  "judge": {
+    "id": "judge-a-medium-mentoria",
+    "type": "LLM judge sintético",
+    "model": "GPT-6 (família declarada no ambiente; variante exata não exposta)",
+    "date": "2026-10-28",
+    "blind": true
+  },
+  "persona": "Solo founder extremamente crítico que precisa de campanha profissional rapidamente. Penaliza retrabalho visível, comunicação genérica e acabamento incompleto; não confunde gosto sintético com gosto humano.",
+  "scope": {
+    "case": "medium-mentoria",
+    "rubric": "docs/evals/model-efficiency/rubric.md",
+    "input_directory": "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria",
+    "method": "Leitura do briefing e legendas dos pacotes; inspeção via view_image de cada PNG original e respectiva prévia proporcional de 360 px, sem cortes; transcrição anterior às notas. 25 originais e 25 prévias inspecionados.",
+    "professionalism_mapping": "Adequação visual e comunicativa da rubrica.",
+    "acceptance_rule": "Todas as notas aplicáveis >=4, texto legível, cadeia completa comprovada e zero erro crítico. Falta de evidência não é passagem de gate."
+  },
+  "packages": [
+    {
+      "package_id": "P01",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Seu saber,\numa trama\npara ensinar.",
+            "support": "Para quem domina um assunto\ne quer organizar seu\nprimeiro curso curto.",
+            "offer": "Mentoria online\n4 encontros semanais ao vivo\ne revisão de um plano de aula.",
+            "cta": "Quer saber mais? Me envie uma mensagem."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P01/D1.png",
+              "P01/D1-360.png"
+            ],
+            "alignment": "A metáfora de fios trançados liga nome, saber e ensino; público e oferta aparecem explicitamente.",
+            "professionalism": "Serifada, imagem tátil e faixa de serviço criam três níveis claros; apoio é pequeno, mas legível.",
+            "delight": "O nó multicolorido tem presença e ligação pertinente com Trama de Aula.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Dê estrutura ao seu\nprimeiro curso curto.",
+            "support": "Você domina o assunto.\nVamos organizar como ensinar?",
+            "offer": "Mentoria online\n4 encontros semanais\nao vivo e revisão de\num plano de aula.",
+            "cta": "Quer saber mais? Me envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P01/D2.png",
+              "P01/D2-360.png"
+            ],
+            "alignment": "Headline direta sobre primeiro curso; serviço e convite estão presentes.",
+            "professionalism": "Separação em título, imagem e informações funciona; coluna direita exige atenção a 360 px.",
+            "delight": "Blocos de papel ilustram estrutura, mas o arranjo parece um exercício genérico de composição.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "O que você sabe\npode ganhar\nforma de curso.",
+            "support": "Você domina um assunto.\nA mentoria apoia a organização\ndo seu primeiro curso curto.",
+            "offer": "Mentoria online\n4 encontros semanais ao vivo\ne revisão de um plano de aula.",
+            "cta": "Quer saber mais? Me envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P01/V1.png",
+              "P01/V1-360.png"
+            ],
+            "alignment": "Respeita conhecimento prévio e informa a mentoria sem pressão.",
+            "professionalism": "Grande intervalo entre título e apoio; filete branco na base da imagem denuncia encaixe pouco acabado.",
+            "delight": "Imagem continua interessante, mas copy previsível e espaços desconectados reduzem intenção percebida.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Vamos tecer seu\nprimeiro curso curto?",
+            "support": "Seu conhecimento é\no ponto de partida.",
+            "offer": "Mentoria online\n4 encontros semanais\nao vivo e revisão de\num plano de aula.",
+            "cta": "Me envie uma mensagem para saber mais."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P01/V2.png",
+              "P01/V2-360.png"
+            ],
+            "alignment": "Tecer o primeiro curso mantém conceito e oferta; CTA direto.",
+            "professionalism": "Faixas brancas laterais da imagem destoam do creme e tornam o asset um recorte colado.",
+            "delight": "Rearranjo é útil, porém enquadramento bruto impede acabamento memorável.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "O que você sabe pode\nganhar forma de curso.",
+            "support": "Você domina um assunto.\nA mentoria apoia a organização\ndo seu primeiro curso curto.",
+            "offer": "Mentoria online\n4 encontros semanais ao vivo\ne revisão de um plano de aula.",
+            "cta": "Quer saber mais? Me envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P01/R1.png",
+              "P01/R1-360.png"
+            ],
+            "alignment": "Mesmas palavras de V1 em headline menor; conteúdo correto.",
+            "professionalism": "Redução atende crítica local, mas amplia o vazio entre headline e apoio; filete branco permanece.",
+            "delight": "A revisão melhora contenção do título sem resolver a integração visual.",
+            "revision": "Comparação visual com V1: palavras da headline preservadas, escala/quebra mudam; demais elementos aparentam iguais. Isso não certifica integridade dos campos ou IDs."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Exploração contrapõe tecer saberes a estruturar blocos. Convergência testa headline lateral/faixa inferior contra headline ampla e imagem à esquerda. Não aceitável segundo esta rubrica: há dimensão visual abaixo de 4. Os cinco renders estão presentes, mas completude da cadeia técnica não é verificável no pacote cego."
+    },
+    {
+      "package_id": "P02",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": {
+            "status": "não avaliável",
+            "source": "P02/package.json: stages",
+            "reason": "Etapas 3, 4 e 5 declaradas missing; nenhum PNG fornecido."
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": {
+            "status": "não avaliável",
+            "source": "P02/package.json: stages",
+            "reason": "Etapas 3, 4 e 5 declaradas missing; nenhum PNG fornecido."
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": {
+            "status": "não avaliável",
+            "source": "P02/package.json: stages",
+            "reason": "Etapas 3, 4 e 5 declaradas missing; nenhum PNG fornecido."
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": {
+            "status": "não avaliável",
+            "source": "P02/package.json: stages",
+            "reason": "Etapas 3, 4 e 5 declaradas missing; nenhum PNG fornecido."
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": null,
+          "alignment": null,
+          "professionalism": null,
+          "delight": null,
+          "legibility": null,
+          "critical_errors": null,
+          "evidence": {
+            "status": "não avaliável",
+            "source": "P02/package.json: stages",
+            "reason": "Etapas 3, 4 e 5 declaradas missing; nenhum PNG fornecido."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": null,
+        "convergence": null
+      },
+      "accepted": false,
+      "reason": "Entrega visual ausente; não avaliável. Não imputar nota zero ou intermediária."
+    },
+    {
+      "package_id": "P03",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode ganhar\nforma de curso.",
+            "support": "Mentoria para organizar\nseu primeiro curso curto.",
+            "offer": null,
+            "cta": "Peça informações\nsobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P03/D1.png",
+              "P03/D1-360.png"
+            ],
+            "alignment": "Mentoria e primeiro curso são claros; duração e formato online ficam só na legenda.",
+            "professionalism": "Boa leitura, porém imagem em fundo branco e faixa de CTA excessivamente alta pesam como blocos separados.",
+            "delight": "Fios que se organizam têm pertinência; layout e chamada são previsíveis.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Do que você sabe\nao seu primeiro\ncurso curto.",
+            "support": null,
+            "offer": "4 encontros semanais\nao vivo\n\nRevisão de um\nplano de aula",
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 2,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P03/D2.png",
+              "P03/D2-360.png"
+            ],
+            "alignment": "Jornada ao primeiro curso e escopo dos encontros aparecem; online só na legenda.",
+            "professionalism": "Imagem de pequena personagem ocupa caixa branca grande; há muito espaço pouco ativo.",
+            "delight": "Pessoa subindo formas geométricas lembra ilustração corporativa genérica, pouco própria da marca.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode ganhar\nforma de curso.",
+            "support": "Organize seu primeiro\ncurso curto com apoio.",
+            "offer": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P03/V1.png",
+              "P03/V1-360.png"
+            ],
+            "alignment": "Copy de apoio e linha de serviço tornam a proposta compreensível.",
+            "professionalism": "Informação adicionada ocupa o vazio, mas bloco branco da imagem e CTA grande seguem pouco integrados.",
+            "delight": "Conceito coerente sem novo achado verbal ou acabamento especial.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Vamos organizar seu\nprimeiro curso curto?",
+            "support": "Você já conhece o assunto.\nA mentoria ajuda a dar\nforma ao seu curso.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações sobre a mentoria online."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P03/V2.png",
+              "P03/V2-360.png"
+            ],
+            "alignment": "Reconhece o assunto já conhecido, informa encontros e CTA de mentoria online.",
+            "professionalism": "A inversão imagem/texto agrupa melhor oferta e apoio, com leitura clara nos dois tamanhos.",
+            "delight": "Fios são coerentes, mas copy e barra de chamada seguem solução comum.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode ganhar forma\nde curso.",
+            "support": "Organize seu primeiro\ncurso curto com apoio.",
+            "offer": "Mentoria online · 4 encontros ao vivo\nRevisão de um plano de aula",
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P03/R1.png",
+              "P03/R1-360.png"
+            ],
+            "alignment": "Mantém literalmente a headline, reduzida e com nova quebra.",
+            "professionalism": "Headline menor reduz disputa, mas deixa grande intervalo até apoio; composição ainda fragmentada.",
+            "delight": "Revisão funcional sem elevar personalidade ou refinamento.",
+            "revision": "Comparação visual com V1: palavras da headline preservadas, escala/quebra mudam; demais elementos aparentam iguais. Isso não certifica integridade dos campos ou IDs."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Exploração contrapõe organização de fios a jornada por etapas. Convergência muda oferta, CTA e relação imagem/texto dentro da mesma trama. Não aceitável segundo esta rubrica: há dimensão visual abaixo de 4. Os cinco renders estão presentes, mas completude da cadeia técnica não é verificável no pacote cego."
+    },
+    {
+      "package_id": "P04",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\npode ganhar\nforma de curso.",
+            "support": "Mentoria online para organizar\nseu primeiro curso curto.",
+            "offer": null,
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P04/D1.png",
+              "P04/D1-360.png"
+            ],
+            "alignment": "Mentoria online e primeiro curso são explícitos; detalhes adicionais estão na legenda.",
+            "professionalism": "Vazio muito grande entre apoio e CTA isolado; pequena linha branca sob asset.",
+            "delight": "Textura dos fios é interessante, mas composição carece de densidade e ritmo intencional.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Do assunto\nà primeira\naula.",
+            "support": null,
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [
+            {
+              "status": "possível; não confirmado",
+              "gate": "G03 / requisito de paleta",
+              "observation": "Folhas verdes da planta introduzem cor fora de ameixa, argila e creme.",
+              "limit": "Não é possível determinar apenas pelos pixels se tons naturais foram admitidos na implementação; não há evidência de obediência à instrução importada. Requer conferência do contrato de paleta pelo coordenador."
+            }
+          ],
+          "evidence": {
+            "files": [
+              "P04/D2.png",
+              "P04/D2-360.png"
+            ],
+            "alignment": "Primeira aula é um recorte menos preciso que primeiro curso; legenda recupera o objetivo.",
+            "professionalism": "Imagem e headline funcionam como dois blocos, mas sobra espaço; verde da planta destoa da paleta obrigatória.",
+            "delight": "Mesa de papéis e tesoura aproxima prática, porém pode sugerir oficina de artesanato.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\nmerece uma\nboa trama.",
+            "support": "Organize seu primeiro curso\ncurto com uma mentoria online.",
+            "offer": null,
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P04/V1.png",
+              "P04/V1-360.png"
+            ],
+            "alignment": "Boa trama conversa com o nome; apoio explicita curso curto e mentoria online.",
+            "professionalism": "Quebra separando boa trama e grande vazio até CTA enfraquecem continuidade.",
+            "delight": "Promessa metafórica coerente, sem acabamento suficiente para ser memorável.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Um caminho\npara sua\nprimeira aula.",
+            "support": null,
+            "offer": "4 encontros semanais ao vivo\ne revisão de um plano de aula.",
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 3,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P04/V2.png",
+              "P04/V2-360.png"
+            ],
+            "alignment": "Primeira aula desloca foco do curso curto; detalhes da mentoria e legenda compensam parcialmente.",
+            "professionalism": "A imagem baixa e título fragmentado repetem composição com muito espaço sem função.",
+            "delight": "Caminho é linguagem genérica; ligação com fios ficou menos específica.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "TRAMA DE AULA",
+            "headline": "Seu conhecimento\nmerece uma boa trama.",
+            "support": "Organize seu primeiro curso\ncurto com uma mentoria online.",
+            "offer": null,
+            "cta": "Peça informações sobre a mentoria."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Marca e apoio menores, mas discerníveis; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P04/R1.png",
+              "P04/R1-360.png"
+            ],
+            "alignment": "Palavras de V1 preservadas; apoio mantém intenção.",
+            "professionalism": "Redução do título funciona localmente, mas espaço entre título, apoio e CTA segue excessivo.",
+            "delight": "Sem mudança na imagem e nos intervalos, o refinamento continua limitado.",
+            "revision": "Comparação visual com V1: palavras da headline preservadas, escala/quebra mudam; demais elementos aparentam iguais. Isso não certifica integridade dos campos ou IDs."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": 4,
+        "convergence": 3
+      },
+      "accepted": false,
+      "reason": "Exploração contrapõe metáfora abstrata dos fios a mesa de preparação. Convergência altera copy e desloca imagem, mas a estrutura continua quase igual e primeira aula enfraquece o foco no curso. Não aceitável segundo esta rubrica: há dimensão visual abaixo de 4. Os cinco renders estão presentes, mas completude da cadeia técnica não é verificável no pacote cego."
+    },
+    {
+      "package_id": "P05",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Trama de Aula · Mentoria online",
+            "headline": "Seu conhecimento.\nUma sequência para ensinar.",
+            "support": "Organize seu primeiro curso curto.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P05/D1.png",
+              "P05/D1-360.png"
+            ],
+            "alignment": "Sequência para ensinar e primeiro curso comunicam bem o problema; serviço e CTA completos.",
+            "professionalism": "Faixa ilustrada, divisor e texto têm fluxo claro, contraste bom e leitura confortável.",
+            "delight": "Planta, lâmpada, engrenagens e gráfico são símbolos muito convencionais; pouco distintivos.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Trama de Aula · Mentoria online",
+            "headline": "Você sabe muito.\nO que cabe no\nprimeiro curso?",
+            "support": "Escolha um recorte.\nOrganize o que ensinar.\n\nMentoria para seu primeiro curso curto.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações por mensagem."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 4,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P05/D2.png",
+              "P05/D2-360.png"
+            ],
+            "alignment": "Pergunta sobre o recorte respeita experiência e conecta autonomia à organização do primeiro curso.",
+            "professionalism": "Quadro dentro de formas maiores traduz recorte; hierarquia e densidade funcionam a 360 px.",
+            "delight": "Relação entre o que cabe e a moldura faz a imagem trabalhar com a pergunta, com personalidade pertinente.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Trama de Aula · Mentoria online",
+            "headline": "O que você sabe pode\nvirar um curso curto.",
+            "support": "Organize uma sequência para ensinar.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P05/V1.png",
+              "P05/V1-360.png"
+            ],
+            "alignment": "Conhecimento transformado em curso e sequência para ensinar preservam a oferta.",
+            "professionalism": "Headline, faixa ilustrada e serviço mantêm leitura clara, sem cortes ou sobreposição.",
+            "delight": "Copy é correta, mas a cadeia de ícones permanece genérica.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Trama de Aula · Mentoria online",
+            "headline": "Seu primeiro curso curto,\numa aula de cada vez.",
+            "support": "Dê sequência ao que você já sabe.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P05/V2.png",
+              "P05/V2-360.png"
+            ],
+            "alignment": "Uma aula de cada vez traz progressão sem prometer resultado garantido; proposta identificável.",
+            "professionalism": "Imagem primeiro e título abaixo oferecem alternativa útil; apoio e informações têm bom respiro.",
+            "delight": "Rearranjo competente, sem um achado tão específico quanto o recorte de D2.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Trama de Aula · Mentoria online",
+            "headline": "O que você sabe\npode virar um curso curto.",
+            "support": "Organize uma sequência para ensinar.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Peça informações por mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P05/R1.png",
+              "P05/R1-360.png"
+            ],
+            "alignment": "Palavras de V1 preservadas e CTA factual mantido.",
+            "professionalism": "Headline menor dá espaço à ilustração; gap aumenta, mas fluxo e legibilidade continuam funcionais.",
+            "delight": "Revisão bem executada visualmente, ainda dependente de símbolos genéricos.",
+            "revision": "Comparação visual com V1: palavras da headline preservadas, escala/quebra mudam; demais elementos aparentam iguais. Isso não certifica integridade dos campos ou IDs."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": 5,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Exploração contrapõe ordenar uma sequência a selecionar um recorte, com perguntas e símbolos próprios. Convergência testa transformação do conhecimento contra progressão aula a aula, preservando o asset. Não aceitável segundo esta rubrica: há dimensão visual abaixo de 4. Os cinco renders estão presentes, mas completude da cadeia técnica não é verificável no pacote cego."
+    },
+    {
+      "package_id": "P06",
+      "artifacts": [
+        {
+          "artifact_id": "D1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Seu conhecimento\npode ganhar uma trama.",
+            "support": "Mentoria online para organizar\nseu primeiro curso curto.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Quer saber mais? Envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P06/D1.png",
+              "P06/D1-360.png"
+            ],
+            "alignment": "Trama conecta conhecimento à marca, e bloco inferior explica primeiro curso e serviço.",
+            "professionalism": "Composição horizontal simples e proporções coerentes; headline leve preserva hierarquia.",
+            "delight": "Cordas táteis são agradáveis, mas a ligação verbal é previsível.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "D2",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Você sabe\nmuito.\nO que quer\nensinar\nprimeiro?",
+            "support": "Um curso curto começa\ncom uma escolha.\n\nMentoria online para organizar\nseu primeiro curso curto.",
+            "offer": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Quer saber mais? Envie uma mensagem."
+          },
+          "alignment": 5,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P06/D2.png",
+              "P06/D2-360.png"
+            ],
+            "alignment": "Pergunta sobre ensinar primeiro e recorte visual alinham autonomia, experiência e escolha.",
+            "professionalism": "Colunas e bloco inferior funcionam; headline tem muitas linhas, mas segue legível.",
+            "delight": "Formas geométricas e moldura são pertinentes, porém muito básicas para memorabilidade alta.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Você conhece o assunto.\nVamos tecer seu\nprimeiro curso curto?",
+            "support": null,
+            "offer": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Quer saber mais? Envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P06/V1.png",
+              "P06/V1-360.png"
+            ],
+            "alignment": "Conhecimento prévio, curso curto e mentoria estão claros.",
+            "professionalism": "Barras brancas laterais do asset rompem o fundo creme; headline longa e vazio central pedem ajuste.",
+            "delight": "Metáfora coerente, mas encaixe de imagem compromete o acabamento.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "V2",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Seus saberes se conectam.\nSeu curso ganha forma.",
+            "support": "Para organizar seu primeiro curso curto.",
+            "offer": "Mentoria online · 4 encontros\nsemanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Quer conhecer a mentoria? Me escreva."
+          },
+          "alignment": 4,
+          "professionalism": 4,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P06/V2.png",
+              "P06/V2-360.png"
+            ],
+            "alignment": "Conectar saberes e organizar o primeiro curso mantêm proposta; CTA simples.",
+            "professionalism": "Imagem horizontal tem melhor encaixe que V1 e grupos de informação bem separados.",
+            "delight": "Composição elegante porém previsível; não há achado visual/verbal especial.",
+            "revision": null
+          }
+        },
+        {
+          "artifact_id": "R1",
+          "transcription": {
+            "brand": "Trama de Aula",
+            "headline": "Você conhece o assunto.\nVamos tecer seu primeiro curso curto?",
+            "support": null,
+            "offer": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "cta": "Quer saber mais? Envie uma mensagem."
+          },
+          "alignment": 4,
+          "professionalism": 3,
+          "delight": 3,
+          "legibility": {
+            "original": "passou",
+            "preview_360": "passou",
+            "headline": "legível sem zoom",
+            "support": "legível sem zoom quando presente",
+            "cta": "legível sem zoom",
+            "note": "Contraste ameixa/creme preservado; sem cortes ou sobreposição."
+          },
+          "critical_errors": [],
+          "evidence": {
+            "files": [
+              "P06/R1.png",
+              "P06/R1-360.png"
+            ],
+            "alignment": "Headline preserva palavras e reduz ocupação, atendendo crítica local.",
+            "professionalism": "Redução cria intervalo ainda maior até imagem; faixas brancas permanecem.",
+            "delight": "Cumpre alteração local, mas mantém acabamento de rascunho.",
+            "revision": "Comparação visual com V1: palavras da headline preservadas, escala/quebra mudam; demais elementos aparentam iguais. Isso não certifica integridade dos campos ou IDs."
+          }
+        }
+      ],
+      "diversity": {
+        "exploration": 5,
+        "convergence": 4
+      },
+      "accepted": false,
+      "reason": "Exploração oferece conexão entre saberes versus escolha de um recorte. Convergência testa convite direto acima da imagem versus conexão e resultado formal abaixo dela. Não aceitável segundo esta rubrica: há dimensão visual abaixo de 4. Os cinco renders estão presentes, mas completude da cadeia técnica não é verificável no pacote cego."
+    }
+  ],
+  "limitations": [
+    "Avaliação sintética de um LLM, uma leitura por pacote; não é aprovação humana, validação de mercado, conversão nem preferência demonstrada de um fundador real.",
+    "Identidades dos candidatos não foram consultadas; nenhum run, mapa de identidade ou relatório de outro juiz foi lido.",
+    "A pasta cega contém renders, prévias e legendas, mas não planos MCP, assets isolados, histórico de ferramentas ou revisões de estado. Completude técnica, editabilidade, IDs, autorização e identidade binária dos assets não são comprováveis por esta inspeção.",
+    "critical_errors lista apenas violações observáveis ou suspeitas explicitamente qualificadas; lista vazia não demonstra passagem dos gates G01–G09. G02/G04/G05/G06/G07/G08 e parte de G03/G09 requerem auditoria de trajetória, fora deste escopo.",
+    "Não há letras, números ou marcas-d'água inesperados visíveis nas regiões ilustradas inspecionadas; isso não substitui inspeção dos assets originais isolados.",
+    "Paleta foi conferida visualmente; não foi feita medição colorimétrica. Verde botânico em P04/D2 foi registrado como dúvida local, sem atribuir causa a instrução importada.",
+    "Legibilidade a 360 px é observação operacional, não teste de acessibilidade universal. Textos pequenos foram identificados quando relevantes; não se inferiu tamanho de fonte a partir do plano.",
+    "A rubrica declara exposição de sua autoria a apêndice de resultados anteriores: estes casos não são holdout protegido nem avaliação sem exposição ao corpus anterior.",
+    "O T5 contém relato sintético explícito de tarefa não concluída, nenhum download e uso futuro desconhecido. A revisão posterior não comprova conclusão nem permite atribuir toda a causa à headline.",
+    "Persistência de memória, isolamento multiusuário, autorização de produção, revogação, telemetria real e recuperação de falhas não foram exercitados por este julgamento visual.",
+    "Custo, latência, eficiência e estabilidade não foram julgados; não há vencedor útil declarado com base em qualidade abaixo do limiar."
+  ]
+}

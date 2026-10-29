@@ -1,0 +1,15 @@
+{
+  "direction_id": "direcao-caminho",
+  "asset_ref": "asset-proposto-caminho-pote",
+  "prompt": "Ilustração editorial vertical, proporção aproximada 450:690, mostrando um mesmo pote retornável em três momentos de um percurso sugerido por formas curvas simples: saída, circulação e retorno. Visual acolhedor, superfícies foscas e textura sutil de papel, usando floresta #183F32, lima #C9D94A e pedra #ECE9DF. Sem interface ou tela. Sem letras, palavras, números, logotipos ou marcas-d'água.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-2d4ee67e-18ec-47b0-a545-3f2ad5f19172.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets/asset-proposto-caminho-pote.png",
+  "sha256": "f4660fb44618aaeb5653afafda6fde5e77d232d2279b4e99d1a68591d46be859",
+  "elapsed_ms": 19138,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

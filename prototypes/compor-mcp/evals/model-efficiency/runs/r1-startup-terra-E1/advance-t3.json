@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/assets.json",
+      "sha256": "a2a49229b7f1680420543ada00343190c1fc24bddfa3d0debdd7e1e8c1d0984e"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-caminho",
+        "piece_id": "peca-caminho-pote",
+        "version": "proposta-1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/renders/direcao-caminho.png",
+        "png_sha256": "8ac5e8527a88a47982b950fc6426001fedcd3e702f7b3f420c3d3bf80ac08a88",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/renders/direcao-caminho.json",
+        "report_sha256": "ca4983870c538bcf96d272e022372cb9cf260ddccf90557601dc48b9fd206438",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 190.878292,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-caminho-pote"
+        ],
+        "layers": [
+          {
+            "id": "cp-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "cp-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-caminho-pote"
+          },
+          {
+            "id": "cp-marca",
+            "kind": "text"
+          },
+          {
+            "id": "cp-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "cp-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "cp-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "cp-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-pergunta",
+        "piece_id": "peca-potes-com-clientes",
+        "version": "proposta-1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/renders/direcao-pergunta.png",
+        "png_sha256": "d90d38186a2e959174822f379862d4c47ba11714113ac7f4f4e376f4472e0779",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/renders/direcao-pergunta.json",
+        "report_sha256": "58786d9c498b0d5df63e49ba8c4d577ec8dddd77beb33afaed5d24b338c48021",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 167.620208,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-potes-cotidiano"
+        ],
+        "layers": [
+          {
+            "id": "pc-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "pc-painel",
+            "kind": "shape"
+          },
+          {
+            "id": "pc-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-potes-cotidiano"
+          },
+          {
+            "id": "pc-marca",
+            "kind": "text"
+          },
+          {
+            "id": "pc-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "pc-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "pc-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "pc-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/resume-after-t3.json",
+      "sha256": "ffb08207b9fad773b81c06c9ddc57c688142192e270df59e90ae85a2313108d2",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.67525,
+    "total": 373.319125
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

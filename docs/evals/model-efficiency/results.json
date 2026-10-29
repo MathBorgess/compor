@@ -1,0 +1,1107 @@
+{
+  "scope": "Synthetic exploratory comparison; no human acceptance or candidate promotion. Minimum scores preserve worst dimension, not average. Full criteria remain in frozen rubric.",
+  "source_sha256": {
+    "docs/evals/model-efficiency/metrics-low-v2.json": "c397c1a44387a6d101eead6957ff22057bb9aebc6aa5aed7df4c5e5ce3b8e3f2",
+    "docs/evals/model-efficiency/blind-map-round1-mentoria.json": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+    "docs/evals/model-efficiency/judge-a-round1-mentoria.json": "644323539acbf7f04301af6b8817a93b508849d8d8b16b96e68ccf2011d949ea",
+    "docs/evals/model-efficiency/judge-b-round1-mentoria.json": "10dc9b6fdbeb61c40083aa0b8bfe835d58da1437a78f9e8a44ac4daca421cb94",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P01/package.json": "85da0f186fa20ca83bb650e93c2e130ad59f7355554a53dabdddacceb3409c18",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P02/package.json": "815792566532261fa055f77ff8821ba341feecee0f69b47b3a09d5ebe2599b91",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P03/package.json": "9a722f424ceaaf0d33129c9d7536b95dbb01d52d311faca08d7935bcf4fcfa60",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P04/package.json": "fc9491d3bcb2c3cec50be998bbc58004dc216dec83dadfbd588d64d0b3dfea3e",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P05/package.json": "cb30c82c7e2fb5a91b32324f4ff7d123b746d396acab9de50f86bea7d5e50491",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P06/package.json": "2d80678f6b726533d6f86946225c72c98f8c8c4cdd7fa2d666df528733b966f6",
+    "docs/evals/model-efficiency/blind-map-round1-startup.json": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+    "docs/evals/model-efficiency/judge-a-round1-startup.json": "d62ec627426d074fb1897ce437bcafd5a59d02f1d2f3b635a00248199a3b6b2b",
+    "docs/evals/model-efficiency/judge-b-round1-startup.json": "c307bf2f1257627a538fdb2ce07c15693824ed62dbe90963998e2849b8ce3b05",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P01/package.json": "3db30d9298d7cde094fd57981cc05a45c2bbfece66c6913bd1dbc99eb10c6b49",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P02/package.json": "f0b375fb8eb3081f604c7ac0242d3b1e298c80fef6b9e07f85e0ea6f67346d93",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P03/package.json": "3fb685f675d55a3b85d1ebf07e4787758da3657dcaaf68ce2deed8edd90198d5",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P04/package.json": "3a27e23936c972c21a600221331f07bbfe7e8f294ac57a78510df46dd9d94e3f",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P05/package.json": "42467272893954d7cc15cbfa0e733ecf6d2425bcbfb83ee62395c7ae2d4d0e36",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P06/package.json": "e3666b14d199456174d6c2908ab764b01b94d35d00936dcb237261af0973697a",
+    "docs/evals/model-efficiency/metrics-medium.json": "555f1e5dec03dc6cd166330dd85a5049df37bfa8de538a680ac3226e1e7f27c5",
+    "docs/evals/model-efficiency/blind-map-medium-mentoria.json": "b5d4e058e975d06d6813cc6daf87be5d73081038ea7aede6f333e5649e358f0c",
+    "docs/evals/model-efficiency/judge-a-medium-mentoria.json": "61c951d9252c6a6603566b0979c4e107cdc320bbb19296eeaf99abd563499a6d",
+    "docs/evals/model-efficiency/judge-b-medium-mentoria.json": "bb7b4fccddd309efaa25d38c2ae1990fedf03f63c55d8a746a42fc10ba6cf34b",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P01/package.json": "68bb387279e5952e6f2c6ca29fea88c2141ad34a7f6a8357b52fa148aa5d34f4",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P02/package.json": "cf9c5f5c71cf54302041b8acd75f8e6be9f71cdb299e0ff835c177bf9f0c5e17",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P03/package.json": "641a44dc51984684e155c1b24fc59ad718947350432044976eb903a8f21da15d",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P04/package.json": "d445636ada2fb1cc0ae4bc7653b514eb6d0d532e23d18fd2974d93666379db49",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P05/package.json": "c83b5f8161322a9359816c8171615bb368c1cf28c8ed0447e233d89efa4b8db7",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-mentoria/P06/package.json": "96977735891167747bc8a4723fcb9630426b322446d4f50176afbaaa93eaf0eb",
+    "docs/evals/model-efficiency/blind-map-medium-startup.json": "27db465402a2e9d4cfbd108813d2240074d7baff0208a3592409de2e0f382ac0",
+    "docs/evals/model-efficiency/judge-a-medium-startup.json": "ff9a47268c17869295b64cecdc2925998fdb186b18a780cdd754b66aef7e8349",
+    "docs/evals/model-efficiency/judge-b-medium-startup.json": "9c6c117763d03367f433b2774919b4ad6263c7daea167414ae04a738e98172b2",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P01/package.json": "0261945f55da142cfc091be4107c2c6ad9989d032180a175c53321b5b057596c",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P02/package.json": "3d620c790cb5a2a136b7e6e8bee1a6ead4e14f7cdee82ea76036ebd3da8576b3",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P03/package.json": "79590d1eb06e8001064dfbf089a530ecdf21b4b43d3e04e24d1767f2a5b68627",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P04/package.json": "8fb08c84fd8d0880057b744c65b12bf7a6bb085c722fc235ca9b8072d50efffa",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P05/package.json": "185415dd39ff5fd69d086bdc7857aefc9f76e32859eadb06c35a722f871865c5",
+    "prototypes/compor-mcp/evals/model-efficiency/blind/medium-startup/P06/package.json": "866086ea41907b34d69e43b2e3f1d484c251e365812197d09493e7c796c3b8ca"
+  },
+  "rows": [
+    {
+      "run_id": "r1-mentoria-sol-E0",
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 239490,
+        "output_tokens": 11223,
+        "cached_input_tokens": 214144,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 63,
+        "total_input_plus_output": 250713
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 241670.331542,
+      "mcp_calls": 9,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P01"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 3,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P01"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-mentoria-sol-E1",
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 345039,
+        "output_tokens": 11515,
+        "cached_input_tokens": 290816,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 45,
+        "total_input_plus_output": 356554
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 257021.03341600002,
+      "mcp_calls": 12,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 2,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 5,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P02"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P02"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-mentoria-astra-E1",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 283462,
+        "output_tokens": 10513,
+        "cached_input_tokens": 254720,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 64,
+        "total_input_plus_output": 293975
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 327675.20325,
+      "mcp_calls": 10,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 2,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 6,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P03"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P03"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-mentoria-astra-E0",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "failed",
+      "rendered_artifacts": 2,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 101026,
+        "output_tokens": 5365,
+        "cached_input_tokens": 84864,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 111,
+        "total_input_plus_output": 106391
+      },
+      "usage_unknown_turns": [
+        4
+      ],
+      "runner_active_ms": 213314.348501,
+      "mcp_calls": 6,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 2,
+          "dimensions_below_four": 3,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P04"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 2,
+          "dimensions_below_four": 1,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P04"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-mentoria-terra-E1",
+      "model": "gpt-6.1-terra",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 376643,
+        "output_tokens": 9521,
+        "cached_input_tokens": 310016,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 91,
+        "total_input_plus_output": 386164
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 155111.040125,
+      "mcp_calls": 17,
+      "failed_mcp_calls": 6,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 2,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 12,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P05"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 8,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P05"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-mentoria-terra-E0",
+      "model": "gpt-6.1-terra",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 259405,
+        "output_tokens": 10569,
+        "cached_input_tokens": 188672,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 15,
+        "total_input_plus_output": 269974
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 129625.889917,
+      "mcp_calls": 11,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 2,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 11,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-a-round1-mentoria.json",
+          "package": "P06"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 6,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-mentoria.json",
+          "package": "P06"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-sol-E1",
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 4,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 390057,
+        "output_tokens": 10852,
+        "cached_input_tokens": 359296,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 221,
+        "total_input_plus_output": 400909
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 272247.964458,
+      "mcp_calls": 16,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 1,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P01"
+        },
+        "b": {
+          "lowest_quality_score": 4,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 0,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P01"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-astra-E1",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 334437,
+        "output_tokens": 11434,
+        "cached_input_tokens": 303104,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 116,
+        "total_input_plus_output": 345871
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 356955.206833,
+      "mcp_calls": 15,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P02"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P02"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-sol-E0",
+      "model": "gpt-6.1-sol",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 355975,
+        "output_tokens": 12154,
+        "cached_input_tokens": 302336,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 290,
+        "total_input_plus_output": 368129
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 207376.199,
+      "mcp_calls": 17,
+      "failed_mcp_calls": 5,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 7,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P03"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P03"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-astra-E0",
+      "model": "gpt-6-astra",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 236356,
+        "output_tokens": 10709,
+        "cached_input_tokens": 211328,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 156,
+        "total_input_plus_output": 247065
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 341077.048083,
+      "mcp_calls": 9,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 7,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P04"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P04"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-terra-E0",
+      "model": "gpt-6.1-terra",
+      "effort": "low",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 297419,
+        "output_tokens": 10406,
+        "cached_input_tokens": 239104,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 36,
+        "total_input_plus_output": 307825
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 135718.7685,
+      "mcp_calls": 12,
+      "failed_mcp_calls": 3,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 11,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P05"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 2,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P05"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "r1-startup-terra-E1",
+      "model": "gpt-6.1-terra",
+      "effort": "low",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 459814,
+        "output_tokens": 11860,
+        "cached_input_tokens": 387072,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 29,
+        "total_input_plus_output": 471674
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 162501.450167,
+      "mcp_calls": 16,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 8,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-round1-startup.json",
+          "package": "P06"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 1,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": null,
+          "source": "docs/evals/model-efficiency/judge-b-round1-startup.json",
+          "package": "P06"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-sol-E1",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 448712,
+        "output_tokens": 14522,
+        "cached_input_tokens": 392448,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 873,
+        "total_input_plus_output": 463234
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 368251.231458,
+      "mcp_calls": 18,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 7,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P01"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 3,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P01"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-sol-E0",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "failed",
+      "rendered_artifacts": 0,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 49323,
+        "output_tokens": 508,
+        "cached_input_tokens": 43008,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 16,
+        "total_input_plus_output": 49831
+      },
+      "usage_unknown_turns": [
+        2
+      ],
+      "runner_active_ms": 36483.491333,
+      "mcp_calls": 2,
+      "failed_mcp_calls": 0,
+      "judges": {
+        "a": {
+          "lowest_quality_score": null,
+          "scored_artifacts": 0,
+          "dimensions_below_four": 0,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P02"
+        },
+        "b": {
+          "lowest_quality_score": null,
+          "scored_artifacts": 0,
+          "dimensions_below_four": 0,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P02"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-terra-E0",
+      "model": "gpt-6.1-terra",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 263574,
+        "output_tokens": 12092,
+        "cached_input_tokens": 209280,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 63,
+        "total_input_plus_output": 275666
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 144621.18633300002,
+      "mcp_calls": 10,
+      "failed_mcp_calls": 3,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 2,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 9,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P03"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 5,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P03"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-terra-E1",
+      "model": "gpt-6.1-terra",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 332507,
+        "output_tokens": 11335,
+        "cached_input_tokens": 272640,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 68,
+        "total_input_plus_output": 343842
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 151763.00895699998,
+      "mcp_calls": 15,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 13,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P04"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 14,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P04"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-astra-E0",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 311531,
+        "output_tokens": 11498,
+        "cached_input_tokens": 283008,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 200,
+        "total_input_plus_output": 323029
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 356990.78141600004,
+      "mcp_calls": 10,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P05"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 5,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P05"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-mentoria-astra-E1",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "mentoria-trama-de-aula",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 241578,
+        "output_tokens": 10477,
+        "cached_input_tokens": 210560,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 73,
+        "total_input_plus_output": 252055
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 297573.256666,
+      "mcp_calls": 10,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 7,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-mentoria.json",
+          "package": "P06"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 5,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-mentoria.json",
+          "package": "P06"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-sol-E0",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 387816,
+        "output_tokens": 11968,
+        "cached_input_tokens": 343808,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 338,
+        "total_input_plus_output": 399784
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 284288.353166,
+      "mcp_calls": 16,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P01"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P01"
+        }
+      },
+      "strict_revision_issue": true,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-terra-E0",
+      "model": "gpt-6.1-terra",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 327396,
+        "output_tokens": 11072,
+        "cached_input_tokens": 250368,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 206,
+        "total_input_plus_output": 338468
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 142143.182084,
+      "mcp_calls": 13,
+      "failed_mcp_calls": 3,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 11,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P02"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 7,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P02"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-sol-E1",
+      "model": "gpt-6.1-sol",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "failed",
+      "rendered_artifacts": 4,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 338424,
+        "output_tokens": 13063,
+        "cached_input_tokens": 298496,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 815,
+        "total_input_plus_output": 351487
+      },
+      "usage_unknown_turns": [
+        5
+      ],
+      "runner_active_ms": 337502.283167,
+      "mcp_calls": 14,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P03"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 6,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P03"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-terra-E1",
+      "model": "gpt-6.1-terra",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 4,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 409748,
+        "output_tokens": 11422,
+        "cached_input_tokens": 341632,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 206,
+        "total_input_plus_output": 421170
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 143700.08599999998,
+      "mcp_calls": 15,
+      "failed_mcp_calls": 2,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 12,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P04"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 4,
+          "dimensions_below_four": 11,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P04"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-astra-E1",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "guidance": "guided_v1",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 369734,
+        "output_tokens": 12524,
+        "cached_input_tokens": 315008,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 220,
+        "total_input_plus_output": 382258
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 377187.320166,
+      "mcp_calls": 15,
+      "failed_mcp_calls": 4,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P05"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 5,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P05"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    },
+    {
+      "run_id": "m1-startup-astra-E0",
+      "model": "gpt-6-astra",
+      "effort": "medium",
+      "guidance": "baseline",
+      "case_id": "startup-volta-de-pote",
+      "native_status": "completed",
+      "rendered_artifacts": 5,
+      "expected_artifacts": 5,
+      "confirmed_tokens": {
+        "input_tokens": 316117,
+        "output_tokens": 11583,
+        "cached_input_tokens": 264064,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 113,
+        "total_input_plus_output": 327700
+      },
+      "usage_unknown_turns": [],
+      "runner_active_ms": 347869.919292,
+      "mcp_calls": 13,
+      "failed_mcp_calls": 5,
+      "judges": {
+        "a": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 6,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-a-medium-startup.json",
+          "package": "P06"
+        },
+        "b": {
+          "lowest_quality_score": 3,
+          "scored_artifacts": 5,
+          "dimensions_below_four": 4,
+          "all_required_scores_at_least_four": false,
+          "reported_accepted": false,
+          "source": "docs/evals/model-efficiency/judge-b-medium-startup.json",
+          "package": "P06"
+        }
+      },
+      "strict_revision_issue": false,
+      "acceptable_complete_package": false
+    }
+  ]
+}

@@ -1,0 +1,8 @@
+{
+  "catalog_received_count": 3,
+  "catalog_canonical_sha256": "5ef6c8681aacc6d3f32cd88d98bcc066e054431ca1a55476435cccfafea95e76",
+  "pilot_loaded_count": 1,
+  "pilot_content_sha256": "0520bdaf765e4719447e10b8a0f2f8528aafb445e716b68d08cf67cbbe0e15e6",
+  "note": "JSON key order differs between raw wire and client output; structural equality checked, not raw serialization equality",
+  "scope": "Delivery to MCP client and successful skill loading; not proof of attention or exact model request schema"
+}

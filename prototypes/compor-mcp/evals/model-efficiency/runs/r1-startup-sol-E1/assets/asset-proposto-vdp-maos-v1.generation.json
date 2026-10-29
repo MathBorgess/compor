@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-com-quem",
+  "asset_ref": "asset-proposto-vdp-maos-v1",
+  "prompt": "Criar um único ativo horizontal, proporção 952:380, para associação futura à camada a-imagem da peça vdp-com-quem v1. Ilustração editorial tátil de duas mãos estilizadas passando um pote reutilizável de alimentos entre si, com outros dois recipientes discretos sobre uma superfície. Cena cotidiana próxima e acolhedora, enquadramento completo das mãos e dos recipientes, margem interna generosa, sem elementos cortados. Superfícies foscas e textura sutil de papel. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas. Fundo integral pedra #ECE9DF, arte opaca com toda a textura incorporada. Sem letras, palavras, números, rótulos, logotipos, marcas-d'água, telas ou interface. Não representar resultados, métricas ou funcionalidades digitais. A imagem será encaixada inteira, sem recorte; todo o conteúdo verbal será composto separadamente.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-2f6e50e2-069a-4192-ba56-38e41ce378e5.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-maos-v1.png",
+  "sha256": "20149145412e8d5dea1d6d162f701690fae950cc4cc42216636660283b2ccbea",
+  "elapsed_ms": 18513,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

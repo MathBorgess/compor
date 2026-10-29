@@ -1,0 +1,12 @@
+{
+  "scope": "Technical adapter checkpoint, not a creative benchmark preregistration",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/e3/test_preview_worker.py": "29bb38b7f267af2694c6ff92334317e104741155779bdbfed7810d558e1b76cb",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/probe.before_report_fix.py": "1e044911d71869ac494f1d714dc1d5ea8a22d1951e7f774be018615f2c63d6c8",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/preview_server.mjs": "2dbfab4098d7a020727547e8234024907f22bd6897c2d54b7c1b1814c3dbe740",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/probe.py": "82ada973ef9a7884dba17ca3cd4d65b071b9c7f5ccdde6663b10c82a13facd65",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/preview_worker.py": "267e071b2ab6bc050efad2ae3abc1e3dccd2e11b33f2677789f745b5f09fbdc9",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/preview_stdio.mjs": "3f4e4510f7d92b2d6bb5075c62779dbd01423b8e437e44f7cddba07ced9f3cf2",
+    "prototypes/compor-mcp/evals/model-efficiency/e3/test_preview_server.mjs": "d0badf3fc1bb045f0a02968ba40a0aaa163c85aa40341a0250a65d72a4ccff2e"
+  }
+}

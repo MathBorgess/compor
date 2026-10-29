@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/resume-after-t4.json",
+      "sha256": "dde1ae9faaf48b1e545c2dc1a7bdcdb9f91f052b1af7e28410f845c7d6407d47"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/assets.json",
+      "sha256": "3a0d403e6443e825e16cfdb9c607269db9b25b7f0886c3978c61d3a8f3ef0e78"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "percurso-a-revisao-3a",
+        "piece_id": "volta-percurso",
+        "version": "3a",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t5-artifacts/renders/percurso-a-revisao-3a.png",
+        "png_sha256": "00ea65337e60c215da4bc9df7896cd364313329cb1ce0248b84d7df3b439ed6d",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/t5-artifacts/renders/percurso-a-revisao-3a.json",
+        "report_sha256": "153d73ed068b76e926ed89c759c821d6e46d4bf7c7bf2abf00532d14d4126781",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 346.031709,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-volta-percurso-01"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-volta-percurso-01"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 54.707042,
+    "total": 403.791209
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

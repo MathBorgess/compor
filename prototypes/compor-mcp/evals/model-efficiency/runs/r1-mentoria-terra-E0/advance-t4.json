@@ -1,0 +1,35 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0",
+  "turn": 4,
+  "status": "failed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/resume-after-t3.json",
+      "sha256": "f68c035e81ca7db16b6cc33112c802c5b4a1fdde592a33edcc339f6df1dffb3d"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets.json",
+      "sha256": "cce2d270d274aadf880c6d577c1e49fba6c7d88aded397be4741f7a9e9ba0c21"
+    },
+    "extractor_sha256": "a0f39d28f8c4e8028d715ca9dbeaafb73035a7dec9a4d0798bbc30744194e6cb",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "a413dcefe04010ca91911fc9f67aa7b5bf08bdedebdea30438d930dc3150a06f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts",
+    "renders": [],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "total": 4.268292
+  },
+  "errors": [
+    {
+      "type": "ValueError",
+      "message": "Extraction blocked: failed; inspect /Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts/report.json"
+    }
+  ],
+  "generation_executed": false,
+  "model_execution_started": false
+}

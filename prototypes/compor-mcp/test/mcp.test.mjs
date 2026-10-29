@@ -8,12 +8,24 @@ import { createComporServer } from '../dist/server.js';
 import { fileURLToPath } from 'node:url';
 
 const expectedIds = ['entender-intencao', 'traduzir-direcao', 'explorar-moodboards', 'criar-piloto'];
+const expectedTools = [
+  'compose_creative_direction',
+  'list_skills',
+  'load_skill',
+  'prepare_annotation_context',
+  'prepare_layered_creative',
+  'prepare_moodboard',
+  'prepare_word_cloud',
+  'search_curated_references',
+  'stage_approved_references',
+];
 
 async function checkCatalog(client) {
   const capabilities = client.getServerCapabilities();
   assert.ok(capabilities?.tools, 'handshake announces tools');
+  assert.ok(capabilities?.resources, 'handshake announces resources');
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(t => t.name).sort(), ['list_skills', 'load_skill', 'prepare_annotation_context', 'prepare_layered_creative', 'prepare_moodboard', 'prepare_word_cloud']);
+  assert.deepEqual(tools.tools.map(t => t.name).sort(), expectedTools);
   const listing = await client.callTool({ name: 'list_skills', arguments: {} });
   assert.equal(listing.isError, undefined);
   const catalog = listing.structuredContent.skills;
@@ -119,7 +131,7 @@ test('Agents SDK connects and calls MCP via Streamable HTTP in process without O
   try {
     await server.connect();
     const tools = await server.listTools();
-    assert.deepEqual(tools.map(t => t.name).sort(), ['list_skills', 'load_skill', 'prepare_annotation_context', 'prepare_layered_creative', 'prepare_moodboard', 'prepare_word_cloud']);
+    assert.deepEqual(tools.map(t => t.name).sort(), expectedTools);
     const result = await server.callToolResult('load_skill', { id: 'entender-intencao' });
     assert.equal(result.isError, undefined);
     assert.equal(result.structuredContent.id, 'entender-intencao');

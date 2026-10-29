@@ -1,0 +1,97 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 4,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "estrutura-var-a",
+      "piece_id": "trama-estrutura-var-a",
+      "version": "proposta-v1",
+      "original_piece_sha256": "c9ee727f353f490212e023bf0636fc3a5e5bf19ae31f241055b2557228d8f898",
+      "mapped_piece_sha256": "c9ee727f353f490212e023bf0636fc3a5e5bf19ae31f241055b2557228d8f898",
+      "mcp_evidence": [
+        {
+          "event_index": 6,
+          "event_id": "item_3",
+          "wire_candidates": [
+            {
+              "process_id": 27922,
+              "request_id": 3,
+              "request_line": 33,
+              "response_line": 35
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-asset-estrutura-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/estrutura-var-a.json",
+      "render_input_sha256": "90743644b7d5ec5ebffc5a9e5a05c59799c54b874c245a96e2c1257e688c4d6b"
+    },
+    {
+      "id": "estrutura-var-b",
+      "piece_id": "trama-estrutura-var-b",
+      "version": "proposta-v1",
+      "original_piece_sha256": "15a569d1b69b4fc16fd228b340718fa3c018f65787f83b1635aefb197cf04a90",
+      "mapped_piece_sha256": "15a569d1b69b4fc16fd228b340718fa3c018f65787f83b1635aefb197cf04a90",
+      "mcp_evidence": [
+        {
+          "event_index": 7,
+          "event_id": "item_2",
+          "wire_candidates": [
+            {
+              "process_id": 27922,
+              "request_id": 2,
+              "request_line": 34,
+              "response_line": 36
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-asset-estrutura-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/estrutura-var-b.json",
+      "render_input_sha256": "8ab0f6b7e2b5c10673828c97ee4335bbd8ac38d6f41e6e2045a03e3199cb8bc8"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/turn-04.json",
+    "sha256": "6a593d721293cfc01a8dd5559630954ab874d37e7b2e7ae54fe2f8e53076b5e3"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "0210f00bc97afd9aa4cf00aa6e4783ced12c10df5fbecea4141fb50ed578bf67",
+  "assets": {
+    "pedido-asset-estrutura-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-estrutura-v1.png",
+      "sha256": "80379a3005e63a35a0e6c3a0a92804d04213a152634df15041225c61b5411431",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-estrutura-v1.png"
+    },
+    "pedido-asset-recorte-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-recorte-v1.png",
+      "sha256": "9d75a2e3e78a1c9f946ef0960b7d5aa765d0af114979133badf0f470c6ade56d",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-recorte-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets.json",
+    "sha256": "2e1770146b677e7eb1becbffea9f7897845715a21165d2338f6a5f50464ac75e",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1"
+  },
+  "previous": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts/report.json",
+    "sha256": "0f57362f48f03dec65323f5825a6a00bd6a7c0e8e04e9fb1f31bb0ba347208ab"
+  },
+  "unresolved_asset_refs": []
+}

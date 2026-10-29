@@ -1,0 +1,15 @@
+{
+  "direction_id": "organizacao",
+  "asset_ref": "asset-volta-organizacao-01",
+  "prompt": "Imagem vertical de recipientes retornáveis simples organizados em uma pequena prateleira, como uma natureza-morta editorial para pequenos produtores de alimentos. Formas claras, alinhamento ordenado, superfícies foscas e textura sutil de papel; cores floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo branco, objetos inteiros visíveis, proporção aproximada 7:8. Sem letras, palavras, números, marcas-d'água, logotipos, telas ou interfaces.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-1448f8de-cd2f-44e3-b577-30d27b9a04fa.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E0/assets/asset-volta-organizacao-01.png",
+  "sha256": "26c1bc9efecf77a9c4419d4d4cdeff2cde4b0fa4e9b555823c3d7c1854c44f33",
+  "elapsed_ms": 22112,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

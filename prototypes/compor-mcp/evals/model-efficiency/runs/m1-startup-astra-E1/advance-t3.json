@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets.json",
+      "sha256": "22de7455805be86a838d7776a1e6f20e7c92be69a307950e4158fd0e7595d4d4"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp-dir-localizar",
+        "piece_id": "vdp-localizar-piloto",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t3-artifacts/renders/vdp-dir-localizar.png",
+        "png_sha256": "87b534ed3fd8e9178b54078253712237713d3ceaa36ae931bbf6cac47735a8ef",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t3-artifacts/renders/vdp-dir-localizar.json",
+        "report_sha256": "a2be329b8c4e69e13ea5924e947e7da5bd5e3fc162dc0e4b9de152ac83c01c8f",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 277.595708,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-localizar-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-localizar-v1"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "vdp-dir-ciclo",
+        "piece_id": "vdp-ciclo-piloto",
+        "version": "v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t3-artifacts/renders/vdp-dir-ciclo.png",
+        "png_sha256": "b97606ff9921b9b2acf5debc9a51f42a93d57fd530fbe8ffdbbda4c0bb384500",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/t3-artifacts/renders/vdp-dir-ciclo.json",
+        "report_sha256": "194e7b26da593fc995c9ebf62720e254ebe0a96e10c148318429ecd83bb857a2",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 181.177375,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp-asset-ciclo-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "vdp-asset-ciclo-v1"
+          },
+          {
+            "id": "b-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "b-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/resume-after-t3.json",
+      "sha256": "7c9f60d47d7574e409c79d3b04547300ebf0a8edccf6796a93d34b0ae283cb49",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.424916,
+    "total": 472.063459
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

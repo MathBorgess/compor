@@ -1,0 +1,186 @@
+{
+  "revision": {
+    "id": "pergunta_var_a_v2",
+    "composition_plan": {
+      "piece_id": "vdp_pergunta_var_a",
+      "version": "v2",
+      "variation_ref": "pergunta_var_a",
+      "product_ref": "volta_de_pote",
+      "width_px": 1080,
+      "height_px": 1080,
+      "layers": [
+        {
+          "id": "va_fundo",
+          "name": "va_fundo",
+          "kind": "shape",
+          "shape": "rectangle",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          },
+          "fill_hex": "#ECE9DF",
+          "z_index": 0
+        },
+        {
+          "id": "va_marca",
+          "name": "Nome do produto",
+          "kind": "text",
+          "text": "Volta de Pote",
+          "rect": {
+            "x": 0.06,
+            "y": 0.04,
+            "width": 0.88,
+            "height": 0.05
+          },
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 34,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 1
+        },
+        {
+          "id": "va_titulo",
+          "name": "Pergunta principal",
+          "kind": "text",
+          "text": "Com quem\nestão seus potes?",
+          "rect": {
+            "x": 0.06,
+            "y": 0.13,
+            "width": 0.88,
+            "height": 0.17
+          },
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 78,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 2
+        },
+        {
+          "id": "va_apoio",
+          "name": "Explicação do produto",
+          "kind": "text",
+          "text": "Registre entregas, empréstimos e devoluções.\nConsulte quais recipientes estão com clientes.",
+          "rect": {
+            "x": 0.06,
+            "y": 0.33,
+            "width": 0.88,
+            "height": 0.09
+          },
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 32,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 3
+        },
+        {
+          "id": "va_imagem",
+          "name": "Potes — ativo original",
+          "kind": "image",
+          "asset_ref": "vdp_asset_pergunta_v1",
+          "rect": {
+            "x": 0.06,
+            "y": 0.45,
+            "width": 0.88,
+            "height": 0.44
+          },
+          "z_index": 4
+        },
+        {
+          "id": "va_faixa",
+          "name": "va_faixa",
+          "kind": "shape",
+          "shape": "rectangle",
+          "rect": {
+            "x": 0.06,
+            "y": 0.91,
+            "width": 0.88,
+            "height": 0.065
+          },
+          "fill_hex": "#C9D94A",
+          "z_index": 5
+        },
+        {
+          "id": "va_convite",
+          "name": "Convite à demonstração",
+          "kind": "text",
+          "text": "Conheça a demonstração",
+          "rect": {
+            "x": 0.08,
+            "y": 0.922,
+            "width": 0.84,
+            "height": 0.045
+          },
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 34,
+          "color_hex": "#183F32",
+          "line_height": 1.15,
+          "text_align": "left",
+          "z_index": 6
+        }
+      ]
+    },
+    "caption": "Com quem estão seus potes? Na Volta de Pote, você registra entregas, empréstimos e devoluções e consulta quais recipientes ainda estão com clientes. Uma ferramenta web para pequenos produtores de alimentos acompanharem suas embalagens retornáveis. Conheça a demonstração."
+  },
+  "feedback_summary": {
+    "source": "Relato explícito do usuário neste turno",
+    "piece_id": "vdp_pergunta_var_a",
+    "reviewed_version": "v1",
+    "scope": "Somente esta peça; não constitui preferência permanente de produto ou marca.",
+    "aspects": [
+      {
+        "aspect": "Destaque da headline",
+        "target": {
+          "kind": "layer",
+          "layer_id": "va_titulo"
+        },
+        "reported": "Headline tímida perto do restante.",
+        "change": "Fonte de 68 para 78 px; quebra alterada para Com quem\\nestão seus potes?. Palavras e demais propriedades preservadas."
+      },
+      {
+        "aspect": "Materialidade da imagem",
+        "target": {
+          "kind": "layer",
+          "layer_id": "va_imagem"
+        },
+        "reported": "Gostou da materialidade e deseja manter a imagem exatamente como está.",
+        "change": "Nenhuma. Mesmo ativo, caixa e ordem de camada."
+      },
+      {
+        "aspect": "Resultado geral",
+        "target": {
+          "kind": "piece",
+          "piece_id": "vdp_pergunta_var_a"
+        },
+        "reported": "Ainda não conseguiu o resultado que buscava; não tem outra explicação para o resultado geral.",
+        "interpretation": "A avaliação positiva da imagem não implica satisfação com a peça. A causa do resultado geral não foi estabelecida."
+      }
+    ],
+    "preserved": "Demais camadas, legenda e segunda variação sem alterações."
+  },
+  "outcome": {
+    "reported": {
+      "desired_result_achieved": false,
+      "download_occurred": false,
+      "future_use": "Indeciso",
+      "additional_explanation_for_overall_result": "Não fornecida; o usuário relata não ter outra explicação."
+    },
+    "unknown": [
+      "Se a revisão v2 resolverá a falta de destaque percebida.",
+      "Se o usuário ficará satisfeito com o resultado geral revisado.",
+      "Se a peça será usada."
+    ],
+    "revision_status": "Plano v2 preparado no MCP; composição e avaliação da revisão pendentes.",
+    "new_image_requested": false,
+    "permanent_preference_created": false
+  },
+  "conversation_response": "A revisão altera apenas o tamanho da fonte e a quebra de linha de va_titulo, além da versão do plano. O MCP manteve o aviso de fonte não resolvida; Arial consta no catálogo informado do compositor. A revisão ainda precisa ser composta pelo coordenador."
+}

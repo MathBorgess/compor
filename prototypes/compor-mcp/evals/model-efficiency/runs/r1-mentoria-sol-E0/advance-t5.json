@@ -1,0 +1,87 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/resume-after-t4.json",
+      "sha256": "bce1976d4406b7fb91867a8c472e1d1de87e271a6c414373e6740abad122cfa8"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/assets.json",
+      "sha256": "e3096b5d319f54f457fc64b60c3e737005a22fd4049306086673f84d18f14517"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "rev-estrutura-a-v2",
+        "piece_id": "trama-estrutura-a",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts/renders/rev-estrutura-a-v2.png",
+        "png_sha256": "5ff54a02a1674c4c1352a5b47e5457eecfb1942bf654fed565be5db79f231c6f",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts/renders/rev-estrutura-a-v2.json",
+        "report_sha256": "3cc4460d13edd2886a8066d4bff57a3aea25db786a11c35a8ba44d8b1dfc55e7",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 222.761541,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-trama-estrutura-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "a-headline",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-trama-estrutura-v1"
+          },
+          {
+            "id": "a-divisor",
+            "kind": "shape"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.427833,
+    "total": 235.928208
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

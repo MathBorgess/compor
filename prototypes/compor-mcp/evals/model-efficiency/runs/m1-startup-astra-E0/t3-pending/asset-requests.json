@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao_pergunta",
+    "asset_ref": "vdp_asset_pergunta_v1",
+    "prompt": "Criar um único asset horizontal, proporção 2:1, para uma peça editorial sobre recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta com três potes reutilizáveis de tamanhos diferentes, tampas simples e sem rótulos, distribuídos sobre superfície fosca com textura discreta de papel. Tratamento fotográfico estilizado, acolhedor e cotidiano. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra uniforme nas bordas. Objetos inteiros, centralizados, com margem interna ampla para encaixe proporcional sem recorte. Sem letras, palavras, números, logotipos, marcas-d'água ou qualquer texto. Sem telas, interfaces, gráficos, selos ou símbolos de resultados ambientais. Entregar apenas a imagem dos objetos; todo conteúdo verbal será adicionado em camadas editáveis."
+  },
+  {
+    "direction_id": "direcao_ciclo",
+    "asset_ref": "vdp_asset_ciclo_v1",
+    "prompt": "Criar um único asset vertical na proporção 43:50. Ilustração editorial artesanal com aparência de recortes de papel fosco, representando continuidade na circulação de recipientes: três silhuetas de potes reutilizáveis dispostas ao redor de uma faixa curva contínua e oval. A faixa é uma metáfora visual de percurso, sem setas de reciclagem e sem sugerir automação. Formas simples e legíveis, textura de papel discreta. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra uniforme nas bordas. Conjunto inteiro centralizado com margem interna ampla para encaixe proporcional sem recorte. Sem letras, palavras, números, logotipos, marcas-d'água ou qualquer texto. Sem telas, interfaces, gráficos, selos ambientais ou indicadores de impacto. Entregar apenas a ilustração; os nomes das etapas serão textos editáveis separados."
+  }
+]

@@ -1,0 +1,6 @@
+{
+  "packages": [
+    "P01"
+  ],
+  "scope": "Visual synthetic judging only; labels hide model/arm; missing stages are not scored."
+}

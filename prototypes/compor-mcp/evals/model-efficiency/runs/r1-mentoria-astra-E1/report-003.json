@@ -1,0 +1,4526 @@
+{
+  "schema_version": 1,
+  "status": "completed",
+  "started_at": "2026-10-28T07:05:53.028666+00:00",
+  "case_id": "mentoria-trama-de-aula",
+  "initial_case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+  "synthetic": true,
+  "model_configured": "gpt-6-astra",
+  "model_returned_by_provider": null,
+  "model_returned_limitation": "CLI rollout records runtime model; provider response model is not exposed.",
+  "effort_configured": "low",
+  "guidance": "guided_v1",
+  "condition": "C2",
+  "transport": "native_mcp_stdio",
+  "runtime": "codex_exec_resume",
+  "cli_version": "codex-cli 0.162.1",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.12.1",
+  "working_directory": "/private/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-benchmark-cwd-zhbc0j2c",
+  "runner_sha256": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+  "bridge_sha256": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+  "instruction_guard_sha256": "22db64d2e1beac08e0f7889c1d7b71cb85057cbc933f2290a7d3469f90ab5456",
+  "snapshot": {
+    "dist_sha256": "81b0a30b8903129dd2645601fc7209d1973195ad729cc6783c2ac6054459f442",
+    "skills_sha256": "dc2cdc261bc2cecaabe0da3d20fecd1695224e2c3c297ff2c4c7c95089c742f0",
+    "dependencies_sha256": "acf9259a86e2c96c2c37064c2b012480b7dbf6e8151a13865daf25fc44adb5f2",
+    "dependencies_note": "Shared immutable dependency path; digest checked at every resume."
+  },
+  "auth": "native_codex_auth_no_credentials_read_or_copied",
+  "persistence": "Native Codex session required by exec resume; runner does not delete it.",
+  "builtin_tools": {
+    "requested_disabled_features": [
+      "apps",
+      "plugins",
+      "remote_plugin",
+      "recommended_plugins",
+      "browser_use",
+      "browser_use_external",
+      "computer_use",
+      "in_app_browser",
+      "image_generation",
+      "view_image",
+      "memories",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "shell_tool",
+      "unified_exec",
+      "shell_snapshot",
+      "skill_search",
+      "skill_mcp_dependency_install",
+      "goals",
+      "sleep_tool",
+      "code_mode",
+      "workspace_dependencies",
+      "tool_suggest"
+    ],
+    "exact_model_visible_catalog": null,
+    "limitation": "CLI does not expose the full request tool schema; MCP wire is captured."
+  },
+  "turns": [
+    {
+      "id": "t1-objetivo-parcial",
+      "images": [],
+      "prompt_sha256": "a6381972557a9783b87c116d9c5b6af63aef447e5a3c91f37c728392bf279b41",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 31388.038541,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 10540,
+        "cached_input_tokens": 7552,
+        "output_tokens": 419,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 25
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 10540,
+        "cached_input_tokens": 7552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 419,
+        "reasoning_output_tokens": 25,
+        "total_tokens": 10959
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "0e89b8b4ec25a339bb856ad8ec7b24fdd43b74f4302bde9ef29b5975c4e0efbd",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "b8ed6445233bd945fac7e417aa0ae9e113b18ae13c576a90b675f7a796b69429",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 10540,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 419,
+            "reasoning_output_tokens": 25,
+            "total_tokens": 10959
+          },
+          "last_token_usage": {
+            "input_tokens": 10540,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 419,
+            "reasoning_output_tokens": 25,
+            "total_tokens": 10959
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "last_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t2-referencias-e-ajuste",
+      "images": [],
+      "prompt_sha256": "31c321efa890112b7ecb3ff0afaef85cf7a28b25603e82515fb9576e01afae9a",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 26920.405208,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 21784,
+        "cached_input_tokens": 18304,
+        "output_tokens": 935,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 25
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 11244,
+        "cached_input_tokens": 10752,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 516,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 11760
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "0e89b8b4ec25a339bb856ad8ec7b24fdd43b74f4302bde9ef29b5975c4e0efbd",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "b8ed6445233bd945fac7e417aa0ae9e113b18ae13c576a90b675f7a796b69429",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "2750922c4c45f911051165c50331871c9ad1062c8953525e3f760527aa0adc58",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 21784,
+            "cached_input_tokens": 18304,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 935,
+            "reasoning_output_tokens": 25,
+            "total_tokens": 22719
+          },
+          "last_token_usage": {
+            "input_tokens": 11244,
+            "cached_input_tokens": 10752,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 516,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 11760
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "last_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21784,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 935,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 22719
+            },
+            "last_token_usage": {
+              "input_tokens": 11244,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 516,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11760
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t3-explorar-duas-direcoes",
+      "images": [],
+      "prompt_sha256": "0fde509da444ee7c4a04054617e789e99aeb31f3e29ff4956c4fcd7456847bc3",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 125362.74225,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 103965,
+        "cached_input_tokens": 91520,
+        "output_tokens": 4963,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 52
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 82181,
+        "cached_input_tokens": 73216,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4028,
+        "reasoning_output_tokens": 27,
+        "total_tokens": 86209
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "0e89b8b4ec25a339bb856ad8ec7b24fdd43b74f4302bde9ef29b5975c4e0efbd",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "b8ed6445233bd945fac7e417aa0ae9e113b18ae13c576a90b675f7a796b69429",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "2750922c4c45f911051165c50331871c9ad1062c8953525e3f760527aa0adc58",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "6a49ac482e59a792e95d3edb69888f52ed25d8f6da2e0dd31a0649eb84c68bee",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 103965,
+            "cached_input_tokens": 91520,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 4963,
+            "reasoning_output_tokens": 52,
+            "total_tokens": 108928
+          },
+          "last_token_usage": {
+            "input_tokens": 20879,
+            "cached_input_tokens": 17152,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 3053,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 23932
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "last_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21784,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 935,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 22719
+            },
+            "last_token_usage": {
+              "input_tokens": 11244,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 516,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11760
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 33903,
+              "cached_input_tokens": 29824,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1013,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 34916
+            },
+            "last_token_usage": {
+              "input_tokens": 12119,
+              "cached_input_tokens": 11520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 78,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12197
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 48781,
+              "cached_input_tokens": 41856,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1754,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50535
+            },
+            "last_token_usage": {
+              "input_tokens": 14878,
+              "cached_input_tokens": 12032,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 741,
+              "reasoning_output_tokens": 27,
+              "total_tokens": 15619
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 65849,
+              "cached_input_tokens": 57344,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1846,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 67695
+            },
+            "last_token_usage": {
+              "input_tokens": 17068,
+              "cached_input_tokens": 15488,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 92,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17160
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 83086,
+              "cached_input_tokens": 74368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1910,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 84996
+            },
+            "last_token_usage": {
+              "input_tokens": 17237,
+              "cached_input_tokens": 17024,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 64,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17301
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 103965,
+              "cached_input_tokens": 91520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4963,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 108928
+            },
+            "last_token_usage": {
+              "input_tokens": 20879,
+              "cached_input_tokens": 17152,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3053,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 23932
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t4-convergir-primeira",
+      "images": [
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t3-artifacts/renders/dir-estrutura.png",
+          "sha256": "f31860273cd0b23c5802d677d708e5190152f56028d3b7ab4f922a8699a36d4d"
+        },
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t3-artifacts/renders/dir-percurso.png",
+          "sha256": "6742c546f210c59a7801d99f4fdd8fee3696110c3d93b917a498f1a3d50f196c"
+        }
+      ],
+      "prompt_sha256": "5a1018e9d34629d495475299dc31eda44d530c7c44b03ad54b25a1a9808d2a2c",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 76119.880459,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 163142,
+        "cached_input_tokens": 143360,
+        "output_tokens": 8149,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 52
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 59177,
+        "cached_input_tokens": 51840,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 3186,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 62363
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "0e89b8b4ec25a339bb856ad8ec7b24fdd43b74f4302bde9ef29b5975c4e0efbd",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "b8ed6445233bd945fac7e417aa0ae9e113b18ae13c576a90b675f7a796b69429",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "2750922c4c45f911051165c50331871c9ad1062c8953525e3f760527aa0adc58",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "6a49ac482e59a792e95d3edb69888f52ed25d8f6da2e0dd31a0649eb84c68bee",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "8ac93cca2ce09f55bb1081b91668430f6637d14af9ad6a64469e128830321d3f",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 163142,
+            "cached_input_tokens": 143360,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 8149,
+            "reasoning_output_tokens": 52,
+            "total_tokens": 171291
+          },
+          "last_token_usage": {
+            "input_tokens": 31703,
+            "cached_input_tokens": 28032,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 2436,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 34139
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "last_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21784,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 935,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 22719
+            },
+            "last_token_usage": {
+              "input_tokens": 11244,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 516,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11760
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 33903,
+              "cached_input_tokens": 29824,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1013,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 34916
+            },
+            "last_token_usage": {
+              "input_tokens": 12119,
+              "cached_input_tokens": 11520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 78,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12197
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 48781,
+              "cached_input_tokens": 41856,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1754,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50535
+            },
+            "last_token_usage": {
+              "input_tokens": 14878,
+              "cached_input_tokens": 12032,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 741,
+              "reasoning_output_tokens": 27,
+              "total_tokens": 15619
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 65849,
+              "cached_input_tokens": 57344,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1846,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 67695
+            },
+            "last_token_usage": {
+              "input_tokens": 17068,
+              "cached_input_tokens": 15488,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 92,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17160
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 83086,
+              "cached_input_tokens": 74368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1910,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 84996
+            },
+            "last_token_usage": {
+              "input_tokens": 17237,
+              "cached_input_tokens": 17024,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 64,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17301
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 103965,
+              "cached_input_tokens": 91520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4963,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 108928
+            },
+            "last_token_usage": {
+              "input_tokens": 20879,
+              "cached_input_tokens": 17152,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3053,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 23932
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 131439,
+              "cached_input_tokens": 115328,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5713,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 137152
+            },
+            "last_token_usage": {
+              "input_tokens": 27474,
+              "cached_input_tokens": 23808,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 750,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 28224
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 163142,
+              "cached_input_tokens": 143360,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 8149,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 171291
+            },
+            "last_token_usage": {
+              "input_tokens": 31703,
+              "cached_input_tokens": 28032,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2436,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 34139
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t5-critica-local-e-desfecho",
+      "images": [
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/renders/estrutura-var-a.png",
+          "sha256": "66a2ec3aaa06fca50b3662bdc3e0e66820f5810580e6f1400dd4033544f49a19"
+        },
+        {
+          "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/renders/estrutura-var-b.png",
+          "sha256": "d01d390be22f6b01534687d762d5d065bbeb79e14340e2e24812883490d9b80e"
+        }
+      ],
+      "prompt_sha256": "0fa4febb96c39e0483b991b53d0739128626facf5db062ef62b9b88d92d362f6",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 67782.181125,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 283462,
+        "cached_input_tokens": 254720,
+        "output_tokens": 10513,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 64
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 120320,
+        "cached_input_tokens": 111360,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 2364,
+        "reasoning_output_tokens": 12,
+        "total_tokens": 122684
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "0e89b8b4ec25a339bb856ad8ec7b24fdd43b74f4302bde9ef29b5975c4e0efbd",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "b8ed6445233bd945fac7e417aa0ae9e113b18ae13c576a90b675f7a796b69429",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "2750922c4c45f911051165c50331871c9ad1062c8953525e3f760527aa0adc58",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "6a49ac482e59a792e95d3edb69888f52ed25d8f6da2e0dd31a0649eb84c68bee",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "8ac93cca2ce09f55bb1081b91668430f6637d14af9ad6a64469e128830321d3f",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "c526e5c91b5302630d0d86ab2ceb7f60cf91e2a583f9d579403f53150914ce85",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 283462,
+            "cached_input_tokens": 254720,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 10513,
+            "reasoning_output_tokens": 64,
+            "total_tokens": 293975
+          },
+          "last_token_usage": {
+            "input_tokens": 43609,
+            "cached_input_tokens": 39552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 1598,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 45207
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "last_token_usage": {
+              "input_tokens": 10540,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 419,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 10959
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21784,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 935,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 22719
+            },
+            "last_token_usage": {
+              "input_tokens": 11244,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 516,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11760
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 33903,
+              "cached_input_tokens": 29824,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1013,
+              "reasoning_output_tokens": 25,
+              "total_tokens": 34916
+            },
+            "last_token_usage": {
+              "input_tokens": 12119,
+              "cached_input_tokens": 11520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 78,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12197
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 48781,
+              "cached_input_tokens": 41856,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1754,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 50535
+            },
+            "last_token_usage": {
+              "input_tokens": 14878,
+              "cached_input_tokens": 12032,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 741,
+              "reasoning_output_tokens": 27,
+              "total_tokens": 15619
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 65849,
+              "cached_input_tokens": 57344,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1846,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 67695
+            },
+            "last_token_usage": {
+              "input_tokens": 17068,
+              "cached_input_tokens": 15488,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 92,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17160
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 83086,
+              "cached_input_tokens": 74368,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1910,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 84996
+            },
+            "last_token_usage": {
+              "input_tokens": 17237,
+              "cached_input_tokens": 17024,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 64,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 17301
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 103965,
+              "cached_input_tokens": 91520,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 4963,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 108928
+            },
+            "last_token_usage": {
+              "input_tokens": 20879,
+              "cached_input_tokens": 17152,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3053,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 23932
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 131439,
+              "cached_input_tokens": 115328,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5713,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 137152
+            },
+            "last_token_usage": {
+              "input_tokens": 27474,
+              "cached_input_tokens": 23808,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 750,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 28224
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 163142,
+              "cached_input_tokens": 143360,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 8149,
+              "reasoning_output_tokens": 52,
+              "total_tokens": 171291
+            },
+            "last_token_usage": {
+              "input_tokens": 31703,
+              "cached_input_tokens": 28032,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2436,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 34139
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 200907,
+              "cached_input_tokens": 177408,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 8272,
+              "reasoning_output_tokens": 64,
+              "total_tokens": 209179
+            },
+            "last_token_usage": {
+              "input_tokens": 37765,
+              "cached_input_tokens": 34048,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 123,
+              "reasoning_output_tokens": 12,
+              "total_tokens": 37888
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 239853,
+              "cached_input_tokens": 215168,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 8915,
+              "reasoning_output_tokens": 64,
+              "total_tokens": 248768
+            },
+            "last_token_usage": {
+              "input_tokens": 38946,
+              "cached_input_tokens": 37760,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 643,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 39589
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 283462,
+              "cached_input_tokens": 254720,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 10513,
+              "reasoning_output_tokens": 64,
+              "total_tokens": 293975
+            },
+            "last_token_usage": {
+              "input_tokens": 43609,
+              "cached_input_tokens": 39552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1598,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 45207
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    }
+  ],
+  "invocations": [
+    {
+      "number": 1,
+      "wall_clock_ms": 183731.038958,
+      "through_turn": 3,
+      "case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    {
+      "number": 2,
+      "wall_clock_ms": 76144.311625,
+      "through_turn": 4,
+      "case_sha256": "141ad2991b1dad33de867ab6d9464c06992efb309107bb3168f70cb8260a4e44"
+    },
+    {
+      "number": 3,
+      "wall_clock_ms": 67799.852667,
+      "through_turn": 5,
+      "case_sha256": "036ccde24558dbacbcc22e9e3cc77f3ac6c8d27d9374c519b8ef755385dfe180"
+    }
+  ],
+  "wall_clock_ms": 327675.20325,
+  "configuration": {
+    "model_reasoning_effort": "low",
+    "approval_policy": "never",
+    "sandbox_mode": "read-only",
+    "project_doc_max_bytes": 0,
+    "web_search": "disabled",
+    "developer_instructions": "Você participa de um ensaio exclusivamente sintético do Compor. Use apenas as seis tools MCP do servidor compor_benchmark e os dados deste chat. Não acesse arquivos, rede, outras sessões, credenciais ou serviços. Não gere imagens nem alegue publicação, execução ou aprovação humana. Responda em português.",
+    "features.skip_host_skill_discovery": true,
+    "skills.include_instructions": false,
+    "skills.bundled.enabled": false,
+    "mcp_servers.compor_benchmark.command": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+    "mcp_servers.compor_benchmark.args": [
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py",
+      "--log",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/mcp.jsonl",
+      "--node",
+      "/opt/homebrew/bin/node",
+      "--entry",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/mcp-snapshot/dist/stdio.js"
+    ],
+    "mcp_servers.compor_benchmark.env.COMPOR_MCP_GUIDANCE": "guided_v1",
+    "mcp_servers.compor_benchmark.required": true,
+    "mcp_servers.compor_benchmark.enabled_tools": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "features.apps": false,
+    "features.plugins": false,
+    "features.remote_plugin": false,
+    "features.recommended_plugins": false,
+    "features.browser_use": false,
+    "features.browser_use_external": false,
+    "features.computer_use": false,
+    "features.in_app_browser": false,
+    "features.image_generation": false,
+    "features.view_image": false,
+    "features.memories": false,
+    "features.hooks": false,
+    "features.multi_agent": false,
+    "features.multi_agent_v2": false,
+    "features.shell_tool": false,
+    "features.unified_exec": false,
+    "features.shell_snapshot": false,
+    "features.skill_search": false,
+    "features.skill_mcp_dependency_install": false,
+    "features.goals": false,
+    "features.sleep_tool": false,
+    "features.code_mode": false,
+    "features.workspace_dependencies": false,
+    "features.tool_suggest": false
+  },
+  "configuration_sha256": "7064e6832cf9b52f66b16cf8657c28dd3cec8f836f435fb2abae4061bb76e9a3",
+  "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+  "own_rollout_path": "/Users/matheusborges/.codex/sessions/2026/10/28/rollout-2026-10-28T04-05-56-01a18154-6b98-7812-bcff-68554af749c7.jsonl",
+  "mcp": {
+    "tool_names": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "schema_sha256": "8a03f7cd5790efaade78b535dadc7e9eaf09925bfc42d975d8f4a88f524a9487",
+    "schema_consistent_across_processes": true,
+    "instructions_sha256": [
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534"
+    ],
+    "calls": [
+      {
+        "process_id": 18841,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-fbd931c8-b3c3-490e-a295-20955db72b9f",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f1b877c8191b751c054c1694238",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-estrutura",
+              "version": "proposta-v1",
+              "variation_ref": "dir-estrutura",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-fundo",
+                  "kind": "shape",
+                  "name": "estrutura-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-acento",
+                  "kind": "shape",
+                  "name": "estrutura-acento",
+                  "rect": {
+                    "x": 72,
+                    "y": 158,
+                    "width": 90,
+                    "height": 8
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-marca",
+                  "kind": "text",
+                  "name": "estrutura-marca",
+                  "rect": {
+                    "x": 72,
+                    "y": 64,
+                    "width": 936,
+                    "height": 65
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-chamada",
+                  "kind": "text",
+                  "name": "estrutura-chamada",
+                  "rect": {
+                    "x": 72,
+                    "y": 205,
+                    "width": 936,
+                    "height": 135
+                  },
+                  "text": "Seu conhecimento.\nUma estrutura para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 54,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-imagem",
+                  "kind": "image",
+                  "name": "Proposta: módulos que formam uma estrutura",
+                  "rect": {
+                    "x": 72,
+                    "y": 380,
+                    "width": 936,
+                    "height": 310
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "estrutura-proposta",
+                  "kind": "text",
+                  "name": "estrutura-proposta",
+                  "rect": {
+                    "x": 72,
+                    "y": 735,
+                    "width": 936,
+                    "height": 55
+                  },
+                  "text": "Organize seu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-oferta",
+                  "kind": "text",
+                  "name": "estrutura-oferta",
+                  "rect": {
+                    "x": 72,
+                    "y": 818,
+                    "width": 936,
+                    "height": 95
+                  },
+                  "text": "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-convite",
+                  "kind": "text",
+                  "name": "estrutura-convite",
+                  "rect": {
+                    "x": 72,
+                    "y": 965,
+                    "width": 936,
+                    "height": 50
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect\nToo big: expected number to be <=1 at piece.layers[7].rect.x\nToo big: expected number to be <=1 at piece.layers[7].rect.y\nToo big: expected number to be <=1 at piece.layers[7].rect.width\nToo big: expected number to be <=1 at piece.layers[7].rect.height\nRetângulo deve caber na imagem. at piece.layers[7].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 18841,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-4ceea3c7-8868-4a24-bb48-e22e3d548601",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f1b877c8191b751c054c1694238",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "proposta-v1",
+              "variation_ref": "dir-percurso",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "percurso-fundo",
+                  "kind": "shape",
+                  "name": "percurso-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-acento",
+                  "kind": "shape",
+                  "name": "percurso-acento",
+                  "rect": {
+                    "x": 72,
+                    "y": 158,
+                    "width": 90,
+                    "height": 8
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-marca",
+                  "kind": "text",
+                  "name": "percurso-marca",
+                  "rect": {
+                    "x": 72,
+                    "y": 64,
+                    "width": 936,
+                    "height": 65
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-chamada",
+                  "kind": "text",
+                  "name": "percurso-chamada",
+                  "rect": {
+                    "x": 72,
+                    "y": 220,
+                    "width": 510,
+                    "height": 240
+                  },
+                  "text": "O que você\nquer ensinar\nprimeiro?",
+                  "font_ref": "georgia",
+                  "font_size_px": 64,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-imagem",
+                  "kind": "image",
+                  "name": "Proposta: percurso com escolhas",
+                  "rect": {
+                    "x": 620,
+                    "y": 210,
+                    "width": 388,
+                    "height": 480
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "percurso-proposta",
+                  "kind": "text",
+                  "name": "percurso-proposta",
+                  "rect": {
+                    "x": 72,
+                    "y": 535,
+                    "width": 520,
+                    "height": 115
+                  },
+                  "text": "Seu primeiro curso curto\ncomeça com escolhas.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-oferta",
+                  "kind": "text",
+                  "name": "percurso-oferta",
+                  "rect": {
+                    "x": 72,
+                    "y": 755,
+                    "width": 936,
+                    "height": 135
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-convite",
+                  "kind": "text",
+                  "name": "percurso-convite",
+                  "rect": {
+                    "x": 72,
+                    "y": 965,
+                    "width": 936,
+                    "height": 50
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect\nToo big: expected number to be <=1 at piece.layers[7].rect.x\nToo big: expected number to be <=1 at piece.layers[7].rect.y\nToo big: expected number to be <=1 at piece.layers[7].rect.width\nToo big: expected number to be <=1 at piece.layers[7].rect.height\nRetângulo deve caber na imagem. at piece.layers[7].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 18841,
+        "id": 4,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-98cfb94b-8910-40aa-a625-6bea89b8452b",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f36177c8191aebbfb25fa9986f5",
+            "progressToken": 3
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-estrutura",
+              "version": "proposta-v1",
+              "variation_ref": "dir-estrutura",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-fundo",
+                  "kind": "shape",
+                  "name": "estrutura-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-acento",
+                  "kind": "shape",
+                  "name": "estrutura-acento",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-marca",
+                  "kind": "text",
+                  "name": "estrutura-marca",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-chamada",
+                  "kind": "text",
+                  "name": "estrutura-chamada",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.189815,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Seu conhecimento.\nUma estrutura para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 54,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-imagem",
+                  "kind": "image",
+                  "name": "Proposta: módulos que formam uma estrutura",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.351852,
+                    "width": 0.866667,
+                    "height": 0.287037
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "estrutura-proposta",
+                  "kind": "text",
+                  "name": "estrutura-proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.680556,
+                    "width": 0.866667,
+                    "height": 0.050926
+                  },
+                  "text": "Organize seu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-oferta",
+                  "kind": "text",
+                  "name": "estrutura-oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.866667,
+                    "height": 0.087963
+                  },
+                  "text": "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-convite",
+                  "kind": "text",
+                  "name": "estrutura-convite",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "IDs e índices de camadas devem ser únicos."
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 18841,
+        "id": 5,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-c2ccb555-9d69-4184-b89f-fd1bca6f845a",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f36177c8191aebbfb25fa9986f5",
+            "progressToken": 4
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "proposta-v1",
+              "variation_ref": "dir-percurso",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "percurso-fundo",
+                  "kind": "shape",
+                  "name": "percurso-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-acento",
+                  "kind": "shape",
+                  "name": "percurso-acento",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-marca",
+                  "kind": "text",
+                  "name": "percurso-marca",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-chamada",
+                  "kind": "text",
+                  "name": "percurso-chamada",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.203704,
+                    "width": 0.472222,
+                    "height": 0.222222
+                  },
+                  "text": "O que você\nquer ensinar\nprimeiro?",
+                  "font_ref": "georgia",
+                  "font_size_px": 64,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-imagem",
+                  "kind": "image",
+                  "name": "Proposta: percurso com escolhas",
+                  "rect": {
+                    "x": 0.574074,
+                    "y": 0.194444,
+                    "width": 0.359259,
+                    "height": 0.444444
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "percurso-proposta",
+                  "kind": "text",
+                  "name": "percurso-proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.49537,
+                    "width": 0.481481,
+                    "height": 0.106481
+                  },
+                  "text": "Seu primeiro curso curto\ncomeça com escolhas.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-oferta",
+                  "kind": "text",
+                  "name": "percurso-oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.699074,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-convite",
+                  "kind": "text",
+                  "name": "percurso-convite",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "IDs e índices de camadas devem ser únicos."
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 18841,
+        "id": 6,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-7379730a-7555-49c2-8d72-89dd5542c4f4",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f3b1f4881918ecf8d95f92a7090",
+            "progressToken": 5
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-estrutura",
+              "version": "proposta-v1",
+              "variation_ref": "dir-estrutura",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-fundo",
+                  "kind": "shape",
+                  "name": "estrutura-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-acento",
+                  "kind": "shape",
+                  "name": "estrutura-acento",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "estrutura-marca",
+                  "kind": "text",
+                  "name": "estrutura-marca",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "estrutura-chamada",
+                  "kind": "text",
+                  "name": "estrutura-chamada",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.189815,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Seu conhecimento.\nUma estrutura para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 54,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "estrutura-imagem",
+                  "kind": "image",
+                  "name": "Proposta: módulos que formam uma estrutura",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.351852,
+                    "width": 0.866667,
+                    "height": 0.287037
+                  },
+                  "z_index": 4
+                },
+                {
+                  "id": "estrutura-proposta",
+                  "kind": "text",
+                  "name": "estrutura-proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.680556,
+                    "width": 0.866667,
+                    "height": 0.050926
+                  },
+                  "text": "Organize seu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "estrutura-oferta",
+                  "kind": "text",
+                  "name": "estrutura-oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.866667,
+                    "height": 0.087963
+                  },
+                  "text": "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "estrutura-convite",
+                  "kind": "text",
+                  "name": "estrutura-convite",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-estrutura\",\"version\":\"proposta-v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"dir-estrutura\",\"layers\":[{\"id\":\"estrutura-fundo\",\"kind\":\"shape\",\"name\":\"estrutura-fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"estrutura-acento\",\"kind\":\"shape\",\"name\":\"estrutura-acento\",\"z_index\":1,\"rect\":{\"x\":0.066667,\"y\":0.146296,\"width\":0.083333,\"height\":0.007407},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"estrutura-marca\",\"kind\":\"text\",\"name\":\"estrutura-marca\",\"z_index\":2,\"rect\":{\"x\":0.066667,\"y\":0.059259,\"width\":0.866667,\"height\":0.060185},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"estrutura-chamada\",\"kind\":\"text\",\"name\":\"estrutura-chamada\",\"z_index\":3,\"rect\":{\"x\":0.066667,\"y\":0.189815,\"width\":0.866667,\"height\":0.125},\"text\":\"Seu conhecimento.\\nUma estrutura para ensinar.\",\"font_size_px\":54,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"estrutura-imagem\",\"kind\":\"image\",\"name\":\"Proposta: módulos que formam uma estrutura\",\"z_index\":4,\"rect\":{\"x\":0.066667,\"y\":0.351852,\"width\":0.866667,\"height\":0.287037}},{\"id\":\"estrutura-proposta\",\"kind\":\"text\",\"name\":\"estrutura-proposta\",\"z_index\":5,\"rect\":{\"x\":0.066667,\"y\":0.680556,\"width\":0.866667,\"height\":0.050926},\"text\":\"Organize seu primeiro curso curto.\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"estrutura-oferta\",\"kind\":\"text\",\"name\":\"estrutura-oferta\",\"z_index\":6,\"rect\":{\"x\":0.066667,\"y\":0.757407,\"width\":0.866667,\"height\":0.087963},\"text\":\"Mentoria online • 4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"estrutura-convite\",\"kind\":\"text\",\"name\":\"estrutura-convite\",\"z_index\":7,\"rect\":{\"x\":0.066667,\"y\":0.893519,\"width\":0.866667,\"height\":0.046296},\"text\":\"Peça informações por mensagem.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"estrutura-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"estrutura-chamada\"},{\"code\":\"image_asset_missing\",\"layer_id\":\"estrutura-imagem\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"estrutura-proposta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"estrutura-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"estrutura-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-estrutura",
+              "version": "proposta-v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "dir-estrutura",
+              "layers": [
+                {
+                  "id": "estrutura-fundo",
+                  "kind": "shape",
+                  "name": "estrutura-fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "estrutura-acento",
+                  "kind": "shape",
+                  "name": "estrutura-acento",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "estrutura-marca",
+                  "kind": "text",
+                  "name": "estrutura-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "estrutura-chamada",
+                  "kind": "text",
+                  "name": "estrutura-chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.189815,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Seu conhecimento.\nUma estrutura para ensinar.",
+                  "font_size_px": 54,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "estrutura-imagem",
+                  "kind": "image",
+                  "name": "Proposta: módulos que formam uma estrutura",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.351852,
+                    "width": 0.866667,
+                    "height": 0.287037
+                  }
+                },
+                {
+                  "id": "estrutura-proposta",
+                  "kind": "text",
+                  "name": "estrutura-proposta",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.680556,
+                    "width": 0.866667,
+                    "height": 0.050926
+                  },
+                  "text": "Organize seu primeiro curso curto.",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "estrutura-oferta",
+                  "kind": "text",
+                  "name": "estrutura-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.866667,
+                    "height": 0.087963
+                  },
+                  "text": "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "estrutura-convite",
+                  "kind": "text",
+                  "name": "estrutura-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "estrutura-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "estrutura-chamada"
+              },
+              {
+                "code": "image_asset_missing",
+                "layer_id": "estrutura-imagem"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "estrutura-proposta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "estrutura-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "estrutura-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 18841,
+        "id": 7,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-bafb723d-e647-47d6-b809-c9d902ac1b81",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18155-5053-7401-b4f2-203a13ac4bb4",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793171214421,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0e9bce90e624a4e9016ae19f3b1f4881918ecf8d95f92a7090",
+            "progressToken": 6
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "proposta-v1",
+              "variation_ref": "dir-percurso",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "percurso-fundo",
+                  "kind": "shape",
+                  "name": "percurso-fundo",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "percurso-acento",
+                  "kind": "shape",
+                  "name": "percurso-acento",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "percurso-marca",
+                  "kind": "text",
+                  "name": "percurso-marca",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "percurso-chamada",
+                  "kind": "text",
+                  "name": "percurso-chamada",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.203704,
+                    "width": 0.472222,
+                    "height": 0.222222
+                  },
+                  "text": "O que você\nquer ensinar\nprimeiro?",
+                  "font_ref": "georgia",
+                  "font_size_px": 64,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "percurso-imagem",
+                  "kind": "image",
+                  "name": "Proposta: percurso com escolhas",
+                  "rect": {
+                    "x": 0.574074,
+                    "y": 0.194444,
+                    "width": 0.359259,
+                    "height": 0.444444
+                  },
+                  "z_index": 4
+                },
+                {
+                  "id": "percurso-proposta",
+                  "kind": "text",
+                  "name": "percurso-proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.49537,
+                    "width": 0.481481,
+                    "height": 0.106481
+                  },
+                  "text": "Seu primeiro curso curto\ncomeça com escolhas.",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "percurso-oferta",
+                  "kind": "text",
+                  "name": "percurso-oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.699074,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "percurso-convite",
+                  "kind": "text",
+                  "name": "percurso-convite",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"trama-percurso\",\"version\":\"proposta-v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"dir-percurso\",\"layers\":[{\"id\":\"percurso-fundo\",\"kind\":\"shape\",\"name\":\"percurso-fundo\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"percurso-acento\",\"kind\":\"shape\",\"name\":\"percurso-acento\",\"z_index\":1,\"rect\":{\"x\":0.066667,\"y\":0.146296,\"width\":0.083333,\"height\":0.007407},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"percurso-marca\",\"kind\":\"text\",\"name\":\"percurso-marca\",\"z_index\":2,\"rect\":{\"x\":0.066667,\"y\":0.059259,\"width\":0.866667,\"height\":0.060185},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"percurso-chamada\",\"kind\":\"text\",\"name\":\"percurso-chamada\",\"z_index\":3,\"rect\":{\"x\":0.066667,\"y\":0.203704,\"width\":0.472222,\"height\":0.222222},\"text\":\"O que você\\nquer ensinar\\nprimeiro?\",\"font_size_px\":64,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"percurso-imagem\",\"kind\":\"image\",\"name\":\"Proposta: percurso com escolhas\",\"z_index\":4,\"rect\":{\"x\":0.574074,\"y\":0.194444,\"width\":0.359259,\"height\":0.444444}},{\"id\":\"percurso-proposta\",\"kind\":\"text\",\"name\":\"percurso-proposta\",\"z_index\":5,\"rect\":{\"x\":0.066667,\"y\":0.49537,\"width\":0.481481,\"height\":0.106481},\"text\":\"Seu primeiro curso curto\\ncomeça com escolhas.\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"percurso-oferta\",\"kind\":\"text\",\"name\":\"percurso-oferta\",\"z_index\":6,\"rect\":{\"x\":0.066667,\"y\":0.699074,\"width\":0.866667,\"height\":0.125},\"text\":\"Mentoria online\\n4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":34,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"percurso-convite\",\"kind\":\"text\",\"name\":\"percurso-convite\",\"z_index\":7,\"rect\":{\"x\":0.066667,\"y\":0.893519,\"width\":0.866667,\"height\":0.046296},\"text\":\"Peça informações por mensagem.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"percurso-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"percurso-chamada\"},{\"code\":\"image_asset_missing\",\"layer_id\":\"percurso-imagem\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"percurso-proposta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"percurso-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"percurso-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "trama-percurso",
+              "version": "proposta-v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "dir-percurso",
+              "layers": [
+                {
+                  "id": "percurso-fundo",
+                  "kind": "shape",
+                  "name": "percurso-fundo",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "percurso-acento",
+                  "kind": "shape",
+                  "name": "percurso-acento",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.146296,
+                    "width": 0.083333,
+                    "height": 0.007407
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "percurso-marca",
+                  "kind": "text",
+                  "name": "percurso-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.060185
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "percurso-chamada",
+                  "kind": "text",
+                  "name": "percurso-chamada",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.203704,
+                    "width": 0.472222,
+                    "height": 0.222222
+                  },
+                  "text": "O que você\nquer ensinar\nprimeiro?",
+                  "font_size_px": 64,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "percurso-imagem",
+                  "kind": "image",
+                  "name": "Proposta: percurso com escolhas",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.574074,
+                    "y": 0.194444,
+                    "width": 0.359259,
+                    "height": 0.444444
+                  }
+                },
+                {
+                  "id": "percurso-proposta",
+                  "kind": "text",
+                  "name": "percurso-proposta",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.49537,
+                    "width": 0.481481,
+                    "height": 0.106481
+                  },
+                  "text": "Seu primeiro curso curto\ncomeça com escolhas.",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "percurso-oferta",
+                  "kind": "text",
+                  "name": "percurso-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.699074,
+                    "width": 0.866667,
+                    "height": 0.125
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 34,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "percurso-convite",
+                  "kind": "text",
+                  "name": "percurso-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.893519,
+                    "width": 0.866667,
+                    "height": 0.046296
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "percurso-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "percurso-chamada"
+              },
+              {
+                "code": "image_asset_missing",
+                "layer_id": "percurso-imagem"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "percurso-proposta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "percurso-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "percurso-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 22718,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-4858909a-7a89-4829-a06c-6eef3ea6ce7a",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18162-35bc-7ca0-bf63-301943ff4df7",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793172059584,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0412b8720b6be19f016ae1a2621a3081919f2a95e882612a9f",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v1",
+              "variation_ref": "estrutura-var-a",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto.\nVamos organizar seu curso?",
+                  "font_ref": "georgia",
+                  "font_size_px": 52,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "asset_ref": "pedido-trama-estrutura-visual-v1",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "z_index": 4
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 38,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 30,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"estrutura-var-a\",\"version\":\"proposta-v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"estrutura-var-a\",\"layers\":[{\"id\":\"estrutura-var-a-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"estrutura-var-a-acento\",\"kind\":\"shape\",\"name\":\"Acento argila\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.145,\"width\":0.09,\"height\":0.008},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"a-marca\",\"kind\":\"text\",\"name\":\"a-marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.05,\"width\":0.86,\"height\":0.06},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-headline\",\"kind\":\"text\",\"name\":\"a-headline\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.19,\"width\":0.86,\"height\":0.13},\"text\":\"Você conhece o assunto.\\nVamos organizar seu curso?\",\"font_size_px\":52,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-imagem\",\"kind\":\"image\",\"name\":\"Asset original da direção estrutura\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.36,\"width\":0.86,\"height\":0.285},\"asset_ref\":\"pedido-trama-estrutura-visual-v1\"},{\"id\":\"a-apoio\",\"kind\":\"text\",\"name\":\"a-apoio\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.68,\"width\":0.86,\"height\":0.1},\"text\":\"Mentoria online para organizar\\nseu primeiro curso curto.\",\"font_size_px\":38,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-oferta\",\"kind\":\"text\",\"name\":\"a-oferta\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.81,\"width\":0.86,\"height\":0.08},\"text\":\"4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-convite\",\"kind\":\"text\",\"name\":\"a-convite\",\"z_index\":7,\"rect\":{\"x\":0.07,\"y\":0.93,\"width\":0.86,\"height\":0.045},\"text\":\"Peça informações por mensagem.\",\"font_size_px\":30,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-headline\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-apoio\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "estrutura-var-a",
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto.\nVamos organizar seu curso?",
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "asset_ref": "pedido-trama-estrutura-visual-v1"
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_size_px": 38,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_size_px": 30,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-headline"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-apoio"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 22718,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-596fe9ce-b6ec-4695-9c91-c9bd78ca7ea0",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18162-35bc-7ca0-bf63-301943ff4df7",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793172059584,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_0412b8720b6be19f016ae1a2621a3081919f2a95e882612a9f",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "estrutura-var-b",
+              "version": "proposta-v1",
+              "variation_ref": "estrutura-var-b",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-var-b-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-var-b-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "b-marca",
+                  "kind": "text",
+                  "name": "b-marca",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "b-headline",
+                  "kind": "text",
+                  "name": "b-headline",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.14
+                  },
+                  "text": "Dê estrutura ao seu\nprimeiro curso curto.",
+                  "font_ref": "georgia",
+                  "font_size_px": 56,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "b-apoio",
+                  "kind": "text",
+                  "name": "b-apoio",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.38,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "text": "Uma mentoria online para organizar\no que você já sabe e quer ensinar.",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "b-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "asset_ref": "pedido-trama-estrutura-visual-v1",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.54,
+                    "width": 0.53,
+                    "height": 0.175534
+                  },
+                  "z_index": 5
+                },
+                {
+                  "id": "b-oferta",
+                  "kind": "text",
+                  "name": "b-oferta",
+                  "rect": {
+                    "x": 0.64,
+                    "y": 0.535,
+                    "width": 0.3,
+                    "height": 0.19
+                  },
+                  "text": "4 encontros\nsemanais ao vivo\n+ revisão de um\nplano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 29,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "b-convite",
+                  "kind": "text",
+                  "name": "b-convite",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.85,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Quer conhecer a mentoria?\nPeça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"estrutura-var-b\",\"version\":\"proposta-v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"estrutura-var-b\",\"layers\":[{\"id\":\"estrutura-var-b-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"estrutura-var-b-acento\",\"kind\":\"shape\",\"name\":\"Acento argila\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.145,\"width\":0.09,\"height\":0.008},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"b-marca\",\"kind\":\"text\",\"name\":\"b-marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.05,\"width\":0.86,\"height\":0.06},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"b-headline\",\"kind\":\"text\",\"name\":\"b-headline\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.19,\"width\":0.86,\"height\":0.14},\"text\":\"Dê estrutura ao seu\\nprimeiro curso curto.\",\"font_size_px\":56,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"b-apoio\",\"kind\":\"text\",\"name\":\"b-apoio\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.38,\"width\":0.86,\"height\":0.09},\"text\":\"Uma mentoria online para organizar\\no que você já sabe e quer ensinar.\",\"font_size_px\":34,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"b-imagem\",\"kind\":\"image\",\"name\":\"Asset original da direção estrutura\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.54,\"width\":0.53,\"height\":0.175534},\"asset_ref\":\"pedido-trama-estrutura-visual-v1\"},{\"id\":\"b-oferta\",\"kind\":\"text\",\"name\":\"b-oferta\",\"z_index\":6,\"rect\":{\"x\":0.64,\"y\":0.535,\"width\":0.3,\"height\":0.19},\"text\":\"4 encontros\\nsemanais ao vivo\\n+ revisão de um\\nplano de aula\",\"font_size_px\":29,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"b-convite\",\"kind\":\"text\",\"name\":\"b-convite\",\"z_index\":7,\"rect\":{\"x\":0.07,\"y\":0.85,\"width\":0.86,\"height\":0.1},\"text\":\"Quer conhecer a mentoria?\\nPeça informações por mensagem.\",\"font_size_px\":34,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"b-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"b-headline\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"b-apoio\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"b-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"b-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "estrutura-var-b",
+              "version": "proposta-v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "estrutura-var-b",
+              "layers": [
+                {
+                  "id": "estrutura-var-b-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "estrutura-var-b-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "b-marca",
+                  "kind": "text",
+                  "name": "b-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "b-headline",
+                  "kind": "text",
+                  "name": "b-headline",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.14
+                  },
+                  "text": "Dê estrutura ao seu\nprimeiro curso curto.",
+                  "font_size_px": 56,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "b-apoio",
+                  "kind": "text",
+                  "name": "b-apoio",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.38,
+                    "width": 0.86,
+                    "height": 0.09
+                  },
+                  "text": "Uma mentoria online para organizar\no que você já sabe e quer ensinar.",
+                  "font_size_px": 34,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "b-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.54,
+                    "width": 0.53,
+                    "height": 0.175534
+                  },
+                  "asset_ref": "pedido-trama-estrutura-visual-v1"
+                },
+                {
+                  "id": "b-oferta",
+                  "kind": "text",
+                  "name": "b-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.64,
+                    "y": 0.535,
+                    "width": 0.3,
+                    "height": 0.19
+                  },
+                  "text": "4 encontros\nsemanais ao vivo\n+ revisão de um\nplano de aula",
+                  "font_size_px": 29,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "b-convite",
+                  "kind": "text",
+                  "name": "b-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.85,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Quer conhecer a mentoria?\nPeça informações por mensagem.",
+                  "font_size_px": 34,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "b-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "b-headline"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "b-apoio"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "b-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "b-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 22877,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-f1724ff4-106b-4e69-866a-aaa023e45207",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18163-68cb-7361-b43d-4d1054bfb6db",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793172138188,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_01803cc24a787c74016ae1a2b804f08191a3ce1afe2031f598",
+            "progressToken": 1
+          },
+          "name": "prepare_annotation_context",
+          "arguments": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v1",
+              "variation_ref": "estrutura-var-a",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto.\nVamos organizar seu curso?",
+                  "font_ref": "georgia",
+                  "font_size_px": 52,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "asset_ref": "pedido-trama-estrutura-visual-v1",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "z_index": 4
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 38,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 30,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            },
+            "annotations": [
+              {
+                "id": "feedback-headline-a-v1",
+                "piece_version": "proposta-v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "a-headline"
+                },
+                "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra de linha, preservando palavras. Escopo apenas esta peça.",
+                "edit_scope_claim": "layer",
+                "memory_scope_claim": "task"
+              },
+              {
+                "id": "feedback-paleta-a-v1",
+                "piece_version": "proposta-v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  }
+                },
+                "note": "Gostou da paleta e quer preservá-la nesta peça; alvo é a paleta do conjunto, não uma camada isolada.",
+                "edit_scope_claim": "piece",
+                "memory_scope_claim": "task"
+              }
+            ]
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"estrutura-var-a\",\"version\":\"proposta-v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"estrutura-var-a\",\"layers\":[{\"id\":\"estrutura-var-a-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"estrutura-var-a-acento\",\"kind\":\"shape\",\"name\":\"Acento argila\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.145,\"width\":0.09,\"height\":0.008},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"a-marca\",\"kind\":\"text\",\"name\":\"a-marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.05,\"width\":0.86,\"height\":0.06},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-headline\",\"kind\":\"text\",\"name\":\"a-headline\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.19,\"width\":0.86,\"height\":0.13},\"text\":\"Você conhece o assunto.\\nVamos organizar seu curso?\",\"font_size_px\":52,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-imagem\",\"kind\":\"image\",\"name\":\"Asset original da direção estrutura\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.36,\"width\":0.86,\"height\":0.285},\"asset_ref\":\"pedido-trama-estrutura-visual-v1\"},{\"id\":\"a-apoio\",\"kind\":\"text\",\"name\":\"a-apoio\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.68,\"width\":0.86,\"height\":0.1},\"text\":\"Mentoria online para organizar\\nseu primeiro curso curto.\",\"font_size_px\":38,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-oferta\",\"kind\":\"text\",\"name\":\"a-oferta\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.81,\"width\":0.86,\"height\":0.08},\"text\":\"4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-convite\",\"kind\":\"text\",\"name\":\"a-convite\",\"z_index\":7,\"rect\":{\"x\":0.07,\"y\":0.93,\"width\":0.86,\"height\":0.045},\"text\":\"Peça informações por mensagem.\",\"font_size_px\":30,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-headline\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-apoio\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-convite\"}],\"annotations\":[{\"id\":\"feedback-headline-a-v1\",\"piece_version\":\"proposta-v1\",\"target\":{\"kind\":\"layer\",\"layer_id\":\"a-headline\"},\"note\":\"Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra de linha, preservando palavras. Escopo apenas esta peça.\",\"edit_scope_claim\":\"layer\",\"memory_scope_claim\":\"task\",\"candidate_layer_ids\":[\"a-headline\"],\"selection_status\":\"explicit_layer\",\"warnings\":[],\"memory_scope_status\":\"unverified_claim\",\"candidate_detection\":\"explicit_layer_id\"},{\"id\":\"feedback-paleta-a-v1\",\"piece_version\":\"proposta-v1\",\"target\":{\"kind\":\"area\",\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1}},\"note\":\"Gostou da paleta e quer preservá-la nesta peça; alvo é a paleta do conjunto, não uma camada isolada.\",\"edit_scope_claim\":\"piece\",\"memory_scope_claim\":\"task\",\"candidate_layer_ids\":[\"estrutura-var-a-fundo\",\"estrutura-var-a-acento\",\"a-marca\",\"a-headline\",\"a-imagem\",\"a-apoio\",\"a-oferta\",\"a-convite\"],\"selection_status\":\"ambiguous_candidates\",\"warnings\":[{\"code\":\"area_has_multiple_candidates\"}],\"memory_scope_status\":\"unverified_claim\",\"candidate_detection\":\"bounding_box_only\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"scope_claims_verified\":false,\"updates_memory\":false,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "estrutura-var-a",
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto.\nVamos organizar seu curso?",
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "asset_ref": "pedido-trama-estrutura-visual-v1"
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_size_px": 38,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_size_px": 30,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-headline"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-apoio"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-convite"
+              }
+            ],
+            "annotations": [
+              {
+                "id": "feedback-headline-a-v1",
+                "piece_version": "proposta-v1",
+                "target": {
+                  "kind": "layer",
+                  "layer_id": "a-headline"
+                },
+                "note": "Headline ocupa espaço demais e disputa atenção. Ajustar somente escala e quebra de linha, preservando palavras. Escopo apenas esta peça.",
+                "edit_scope_claim": "layer",
+                "memory_scope_claim": "task",
+                "candidate_layer_ids": [
+                  "a-headline"
+                ],
+                "selection_status": "explicit_layer",
+                "warnings": [],
+                "memory_scope_status": "unverified_claim",
+                "candidate_detection": "explicit_layer_id"
+              },
+              {
+                "id": "feedback-paleta-a-v1",
+                "piece_version": "proposta-v1",
+                "target": {
+                  "kind": "area",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  }
+                },
+                "note": "Gostou da paleta e quer preservá-la nesta peça; alvo é a paleta do conjunto, não uma camada isolada.",
+                "edit_scope_claim": "piece",
+                "memory_scope_claim": "task",
+                "candidate_layer_ids": [
+                  "estrutura-var-a-fundo",
+                  "estrutura-var-a-acento",
+                  "a-marca",
+                  "a-headline",
+                  "a-imagem",
+                  "a-apoio",
+                  "a-oferta",
+                  "a-convite"
+                ],
+                "selection_status": "ambiguous_candidates",
+                "warnings": [
+                  {
+                    "code": "area_has_multiple_candidates"
+                  }
+                ],
+                "memory_scope_status": "unverified_claim",
+                "candidate_detection": "bounding_box_only"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "scope_claims_verified": false,
+            "updates_memory": false,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 22877,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-58dd86c5-35c6-4778-b57a-240074b23ec3",
+            "x-codex-turn-metadata": {
+              "session_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "thread_id": "01a18154-6b98-7812-bcff-68554af749c7",
+              "reasoning_effort": "low",
+              "turn_id": "01a18163-68cb-7361-b43d-4d1054bfb6db",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793172138188,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "sessionId": "01a18154-6b98-7812-bcff-68554af749c7",
+            "windowId": "01a18154-6b98-7812-bcff-68554af749c7:0",
+            "itemId": "ctc_01803cc24a787c74016ae1a2b804f08191a3ce1afe2031f598",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v2",
+              "variation_ref": "estrutura-var-a",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 1
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 40,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto. Vamos organizar seu curso?",
+                  "font_ref": "georgia",
+                  "font_size_px": 36,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "asset_ref": "pedido-trama-estrutura-visual-v1",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "z_index": 4
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 38,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 5
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_ref": "arial",
+                  "font_size_px": 30,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"estrutura-var-a\",\"version\":\"proposta-v2\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"estrutura-var-a\",\"layers\":[{\"id\":\"estrutura-var-a-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"estrutura-var-a-acento\",\"kind\":\"shape\",\"name\":\"Acento argila\",\"z_index\":1,\"rect\":{\"x\":0.07,\"y\":0.145,\"width\":0.09,\"height\":0.008},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"a-marca\",\"kind\":\"text\",\"name\":\"a-marca\",\"z_index\":2,\"rect\":{\"x\":0.07,\"y\":0.05,\"width\":0.86,\"height\":0.06},\"text\":\"Trama de Aula\",\"font_size_px\":40,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-headline\",\"kind\":\"text\",\"name\":\"a-headline\",\"z_index\":3,\"rect\":{\"x\":0.07,\"y\":0.19,\"width\":0.86,\"height\":0.13},\"text\":\"Você conhece o assunto. Vamos organizar seu curso?\",\"font_size_px\":36,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-imagem\",\"kind\":\"image\",\"name\":\"Asset original da direção estrutura\",\"z_index\":4,\"rect\":{\"x\":0.07,\"y\":0.36,\"width\":0.86,\"height\":0.285},\"asset_ref\":\"pedido-trama-estrutura-visual-v1\"},{\"id\":\"a-apoio\",\"kind\":\"text\",\"name\":\"a-apoio\",\"z_index\":5,\"rect\":{\"x\":0.07,\"y\":0.68,\"width\":0.86,\"height\":0.1},\"text\":\"Mentoria online para organizar\\nseu primeiro curso curto.\",\"font_size_px\":38,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-oferta\",\"kind\":\"text\",\"name\":\"a-oferta\",\"z_index\":6,\"rect\":{\"x\":0.07,\"y\":0.81,\"width\":0.86,\"height\":0.08},\"text\":\"4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"a-convite\",\"kind\":\"text\",\"name\":\"a-convite\",\"z_index\":7,\"rect\":{\"x\":0.07,\"y\":0.93,\"width\":0.86,\"height\":0.045},\"text\":\"Peça informações por mensagem.\",\"font_size_px\":30,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-headline\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-apoio\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"a-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "estrutura-var-a",
+              "version": "proposta-v2",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "estrutura-var-a",
+              "layers": [
+                {
+                  "id": "estrutura-var-a-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "estrutura-var-a-acento",
+                  "kind": "shape",
+                  "name": "Acento argila",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.145,
+                    "width": 0.09,
+                    "height": 0.008
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "a-marca",
+                  "kind": "text",
+                  "name": "a-marca",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.05,
+                    "width": 0.86,
+                    "height": 0.06
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 40,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-headline",
+                  "kind": "text",
+                  "name": "a-headline",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.19,
+                    "width": 0.86,
+                    "height": 0.13
+                  },
+                  "text": "Você conhece o assunto. Vamos organizar seu curso?",
+                  "font_size_px": 36,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-imagem",
+                  "kind": "image",
+                  "name": "Asset original da direção estrutura",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.36,
+                    "width": 0.86,
+                    "height": 0.285
+                  },
+                  "asset_ref": "pedido-trama-estrutura-visual-v1"
+                },
+                {
+                  "id": "a-apoio",
+                  "kind": "text",
+                  "name": "a-apoio",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.68,
+                    "width": 0.86,
+                    "height": 0.1
+                  },
+                  "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+                  "font_size_px": 38,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-oferta",
+                  "kind": "text",
+                  "name": "a-oferta",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.81,
+                    "width": 0.86,
+                    "height": 0.08
+                  },
+                  "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "a-convite",
+                  "kind": "text",
+                  "name": "a-convite",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.07,
+                    "y": 0.93,
+                    "width": 0.86,
+                    "height": 0.045
+                  },
+                  "text": "Peça informações por mensagem.",
+                  "font_size_px": 30,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-headline"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-apoio"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "a-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      }
+    ],
+    "listings_observed": 5
+  },
+  "finished_at": "2026-10-28T07:23:25.422078+00:00"
+}

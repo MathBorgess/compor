@@ -1,0 +1,93 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-ciclo",
+      "piece_id": "volta-pote-ciclo",
+      "version": "1",
+      "original_piece_sha256": "adfc69bf2c49f6c00bf0ad09771adcf08d8d4bde9c0106dc8356a4305b5243bb",
+      "mapped_piece_sha256": "adfc69bf2c49f6c00bf0ad09771adcf08d8d4bde9c0106dc8356a4305b5243bb",
+      "mcp_evidence": [
+        {
+          "event_index": 10,
+          "event_id": "item_4",
+          "wire_candidates": [
+            {
+              "process_id": 22894,
+              "request_id": 5,
+              "request_line": 28,
+              "response_line": 30
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-ciclo-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-ciclo.json",
+      "render_input_sha256": "cc65672ee3b1c3528dcf043f1df0fdadfcf6950ef5a18c5d8300ccf0f271a65d"
+    },
+    {
+      "id": "direcao-bancada",
+      "piece_id": "volta-pote-bancada",
+      "version": "1",
+      "original_piece_sha256": "531a8c5cc3c423274f1655a5d9584f207b055ee02dd6795ac58f8fd805e5bcf5",
+      "mapped_piece_sha256": "531a8c5cc3c423274f1655a5d9584f207b055ee02dd6795ac58f8fd805e5bcf5",
+      "mcp_evidence": [
+        {
+          "event_index": 11,
+          "event_id": "item_5",
+          "wire_candidates": [
+            {
+              "process_id": 22894,
+              "request_id": 4,
+              "request_line": 29,
+              "response_line": 31
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-bancada-01"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-bancada.json",
+      "render_input_sha256": "86479047a552245c2ede28dd183bc338d87f48b79a5455d683158afb99737a19"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/turn-03.json",
+    "sha256": "914c8e834880641a5aa606f51180e5603b18bc8aee98ab06829b96693917a94d"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "1cad9147de2bda0eba9a78887852557cdbe1f1b59a83af8262038667e46657ec",
+  "assets": {
+    "asset-bancada-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-bancada-01.png",
+      "sha256": "924490090efd64778cb4179c363d10c0fdfb738a09a86ffa8d05f6874c33c3df",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-bancada-01.png"
+    },
+    "asset-ciclo-01": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-ciclo-01.png",
+      "sha256": "145e51187d405c141e7ad59e1db56b85f3ebcfb958f1d2d4f64b7b324d971e3d",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-ciclo-01.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets.json",
+    "sha256": "7598922e533724804915ecd08e07bf44f1f27ccd12d6c40a2b2f0717e7146908",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0"
+  },
+  "unresolved_asset_refs": []
+}

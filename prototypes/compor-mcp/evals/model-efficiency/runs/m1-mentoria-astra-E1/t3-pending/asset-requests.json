@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-estrutura",
+    "asset_ref": "pedido-asset-estrutura-v1",
+    "prompt": "Criar uma única ilustração editorial horizontal na proporção 936:340, destinada à camada estrutura-imagem. Vista superior de fios largos e delicados que percorrem caminhos individuais e se entrelaçam numa trama aberta no centro, mantendo suas pontas visíveis. Representar conexão entre conhecimentos já existentes, sem sugerir caos ou incompetência. Estética tátil discreta, adulta, acolhedora, com amplo respiro. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas. Manter toda a trama dentro do enquadramento, com margem interna. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Não incluir a copy da peça. O ativo será encaixado inteiro, proporcionalmente, sem recorte."
+  },
+  {
+    "direction_id": "direcao-recorte",
+    "asset_ref": "pedido-asset-recorte-v1",
+    "prompt": "Criar uma única ilustração editorial vertical na proporção 400:490, destinada à camada recorte-imagem. Composição geométrica plana de módulos sólidos variados, círculos e retângulos, distribuídos de modo organizado e espaçado. Uma moldura retangular em argila destaca um pequeno grupo desses módulos; outros continuam visíveis fora dela, representando a escolha de um recorte dentro de um repertório amplo. A moldura não corta nenhum módulo. Linguagem adulta, clara e sóbria, sem fios ou metáfora têxtil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas. Amplo respiro, sem sombras, gradientes ou efeitos tridimensionais. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Não incluir a copy da peça. O ativo será encaixado inteiro, proporcionalmente, sem recorte."
+  }
+]

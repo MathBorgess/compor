@@ -1,0 +1,317 @@
+{
+  "directions": [
+    {
+      "id": "dir-estrutura",
+      "title": "Conhecimento ganha estrutura",
+      "concept": "A mentoria como espaço de organização: módulos visuais se articulam em uma estrutura, representando o trabalho de dar forma ao conhecimento que a pessoa já possui. Prioriza prática e clareza, com uma composição editorial horizontal e pausas generosas.",
+      "composition_plan": {
+        "piece_id": "trama-estrutura",
+        "version": "proposta-v1",
+        "variation_ref": "dir-estrutura",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "estrutura-fundo",
+            "kind": "shape",
+            "name": "estrutura-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "estrutura-acento",
+            "kind": "shape",
+            "name": "estrutura-acento",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.146296,
+              "width": 0.083333,
+              "height": 0.007407
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 1
+          },
+          {
+            "id": "estrutura-marca",
+            "kind": "text",
+            "name": "estrutura-marca",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.059259,
+              "width": 0.866667,
+              "height": 0.060185
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 40,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "estrutura-chamada",
+            "kind": "text",
+            "name": "estrutura-chamada",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.189815,
+              "width": 0.866667,
+              "height": 0.125
+            },
+            "text": "Seu conhecimento.\nUma estrutura para ensinar.",
+            "font_ref": "georgia",
+            "font_size_px": 54,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "estrutura-imagem",
+            "kind": "image",
+            "name": "Proposta: módulos que formam uma estrutura",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.351852,
+              "width": 0.866667,
+              "height": 0.287037
+            },
+            "z_index": 4
+          },
+          {
+            "id": "estrutura-proposta",
+            "kind": "text",
+            "name": "estrutura-proposta",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.680556,
+              "width": 0.866667,
+              "height": 0.050926
+            },
+            "text": "Organize seu primeiro curso curto.",
+            "font_ref": "arial",
+            "font_size_px": 40,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "estrutura-oferta",
+            "kind": "text",
+            "name": "estrutura-oferta",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.757407,
+              "width": 0.866667,
+              "height": 0.087963
+            },
+            "text": "Mentoria online • 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "estrutura-convite",
+            "kind": "text",
+            "name": "estrutura-convite",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.893519,
+              "width": 0.866667,
+              "height": 0.046296
+            },
+            "text": "Peça informações por mensagem.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Você conhece bem um assunto. Como organizar esse conhecimento em um primeiro curso curto?\n\nA Trama de Aula é uma mentoria online com quatro encontros semanais ao vivo e revisão de um plano de aula, para apoiar essa organização.\n\nO lançamento está em preparação; preço e data ainda estão em definição. Quer saber mais? Envie uma mensagem pedindo informações."
+    },
+    {
+      "id": "dir-percurso",
+      "title": "Você escolhe o primeiro percurso",
+      "concept": "A mentoria como apoio às escolhas de quem ensina: um caminho com ramificações representa possibilidades de recorte do assunto. A pergunta central convida à reflexão e enfatiza autonomia, em vez da metáfora de construção da primeira direção. O percurso vertical dialoga com o texto, sem indicar uma opção correta.",
+      "composition_plan": {
+        "piece_id": "trama-percurso",
+        "version": "proposta-v1",
+        "variation_ref": "dir-percurso",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "percurso-fundo",
+            "kind": "shape",
+            "name": "percurso-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "percurso-acento",
+            "kind": "shape",
+            "name": "percurso-acento",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.146296,
+              "width": 0.083333,
+              "height": 0.007407
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 1
+          },
+          {
+            "id": "percurso-marca",
+            "kind": "text",
+            "name": "percurso-marca",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.059259,
+              "width": 0.866667,
+              "height": 0.060185
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 40,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "percurso-chamada",
+            "kind": "text",
+            "name": "percurso-chamada",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.203704,
+              "width": 0.472222,
+              "height": 0.222222
+            },
+            "text": "O que você\nquer ensinar\nprimeiro?",
+            "font_ref": "georgia",
+            "font_size_px": 64,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "percurso-imagem",
+            "kind": "image",
+            "name": "Proposta: percurso com escolhas",
+            "rect": {
+              "x": 0.574074,
+              "y": 0.194444,
+              "width": 0.359259,
+              "height": 0.444444
+            },
+            "z_index": 4
+          },
+          {
+            "id": "percurso-proposta",
+            "kind": "text",
+            "name": "percurso-proposta",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.49537,
+              "width": 0.481481,
+              "height": 0.106481
+            },
+            "text": "Seu primeiro curso curto\ncomeça com escolhas.",
+            "font_ref": "arial",
+            "font_size_px": 40,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "percurso-oferta",
+            "kind": "text",
+            "name": "percurso-oferta",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.699074,
+              "width": 0.866667,
+              "height": 0.125
+            },
+            "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 34,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "percurso-convite",
+            "kind": "text",
+            "name": "percurso-convite",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.893519,
+              "width": 0.866667,
+              "height": 0.046296
+            },
+            "text": "Peça informações por mensagem.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Entre os assuntos que você domina, qual gostaria de ensinar em um primeiro curso curto?\n\nA Trama de Aula oferece apoio para organizar esse curso: são quatro encontros semanais ao vivo, online, e revisão de um plano de aula.\n\nO lançamento está em preparação, com preço e data ainda em definição. Se quiser conhecer a proposta, peça informações por mensagem."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "dir-estrutura",
+      "asset_ref": "pedido-trama-estrutura-visual-v1",
+      "prompt": "Criar uma única ilustração editorial horizontal, proporção 936:310, para a camada estrutura-imagem. Metáfora de organização do conhecimento: módulos geométricos planos de tamanhos diferentes, articulados como uma pequena estrutura arquitetônica aberta, com encaixes legíveis e espaços generosos. Composição adulta, acolhedora e sóbria, sem aparência de brinquedo infantil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo sólido creme até as bordas. Formas inteiras, centralizadas, com margem interna; a imagem será encaixada proporcionalmente sem recorte. Sem letras, palavras, números, marcas-d'água, logotipos, assinaturas ou qualquer elemento tipográfico. Sem sombras, gradientes ou efeitos fotográficos. Não incluir a peça completa nem seu conteúdo verbal."
+    },
+    {
+      "direction_id": "dir-percurso",
+      "asset_ref": "pedido-trama-percurso-visual-v1",
+      "prompt": "Criar uma única ilustração editorial vertical, proporção 388:480, para a camada percurso-imagem. Metáfora de autonomia ao escolher o que ensinar: um percurso orgânico contínuo que se ramifica suavemente em possibilidades abertas, visto de cima, com pequenas áreas circulares de pausa. Caminhos claros e tranquilos, sem labirinto, competição, pódio, chegada ou indicação de opção correta. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo sólido creme até as bordas. Traços largos e formas planas, composição adulta e acolhedora, espaços generosos e margem interna; a imagem será encaixada proporcionalmente sem recorte. Sem letras, palavras, números, marcas-d'água, logotipos, assinaturas ou qualquer elemento tipográfico. Sem sombras, gradientes ou efeitos fotográficos. Não incluir a peça completa nem seu conteúdo verbal."
+    }
+  ],
+  "conversation_response": "As duas propostas foram estruturadas no MCP; nenhuma imagem ou peça foi gerada ou renderizada. Os asset_ref são reservas locais para pedidos futuros: associar cada resultado à camada de imagem indicada no respectivo prompt. As caixas usam coordenadas normalizadas. A ferramenta sinalizou ativos ausentes e fontes não resolvidas; os ativos aguardam geração externa, e as fontes escolhidas pertencem ao catálogo informado. O encaixe visual ainda depende da composição pelo coordenador. Após ver os pilotos, você pode escolher estrutura, percurso, pedir ajustes ou recusar ambas. Estas propostas valem apenas para esta peça."
+}

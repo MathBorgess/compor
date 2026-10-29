@@ -1,0 +1,2182 @@
+{
+  "schema_version": 1,
+  "status": "paused",
+  "started_at": "2026-10-28T06:58:28.396092+00:00",
+  "case_id": "mentoria-trama-de-aula",
+  "initial_case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+  "synthetic": true,
+  "model_configured": "gpt-6-astra",
+  "model_returned_by_provider": null,
+  "model_returned_limitation": "CLI rollout records runtime model; provider response model is not exposed.",
+  "effort_configured": "low",
+  "guidance": "baseline",
+  "condition": "C2",
+  "transport": "native_mcp_stdio",
+  "runtime": "codex_exec_resume",
+  "cli_version": "codex-cli 0.162.1",
+  "platform": "macOS-27.0-arm64-arm-64bit",
+  "python": "3.12.1",
+  "working_directory": "/private/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-benchmark-cwd-j5rbwd38",
+  "runner_sha256": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+  "bridge_sha256": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+  "instruction_guard_sha256": "22db64d2e1beac08e0f7889c1d7b71cb85057cbc933f2290a7d3469f90ab5456",
+  "snapshot": {
+    "dist_sha256": "81b0a30b8903129dd2645601fc7209d1973195ad729cc6783c2ac6054459f442",
+    "skills_sha256": "dc2cdc261bc2cecaabe0da3d20fecd1695224e2c3c297ff2c4c7c95089c742f0",
+    "dependencies_sha256": "acf9259a86e2c96c2c37064c2b012480b7dbf6e8151a13865daf25fc44adb5f2",
+    "dependencies_note": "Shared immutable dependency path; digest checked at every resume."
+  },
+  "auth": "native_codex_auth_no_credentials_read_or_copied",
+  "persistence": "Native Codex session required by exec resume; runner does not delete it.",
+  "builtin_tools": {
+    "requested_disabled_features": [
+      "apps",
+      "plugins",
+      "remote_plugin",
+      "recommended_plugins",
+      "browser_use",
+      "browser_use_external",
+      "computer_use",
+      "in_app_browser",
+      "image_generation",
+      "view_image",
+      "memories",
+      "hooks",
+      "multi_agent",
+      "multi_agent_v2",
+      "shell_tool",
+      "unified_exec",
+      "shell_snapshot",
+      "skill_search",
+      "skill_mcp_dependency_install",
+      "goals",
+      "sleep_tool",
+      "code_mode",
+      "workspace_dependencies",
+      "tool_suggest"
+    ],
+    "exact_model_visible_catalog": null,
+    "limitation": "CLI does not expose the full request tool schema; MCP wire is captured."
+  },
+  "turns": [
+    {
+      "id": "t1-objetivo-parcial",
+      "images": [],
+      "prompt_sha256": "a6381972557a9783b87c116d9c5b6af63aef447e5a3c91f37c728392bf279b41",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 30766.014084,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 10536,
+        "cached_input_tokens": 7552,
+        "output_tokens": 407,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 55
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 10536,
+        "cached_input_tokens": 7552,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 407,
+        "reasoning_output_tokens": 55,
+        "total_tokens": 10943
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "5e320aa7fad6ee6200c9b184fb2aa4ccb9a6429baac51c53d8f3a4642733bf8e",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "30bf27cdadbd99df9ae9798f809af5e08c6dd24637190f5821d836185a0c51b6",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 10536,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 407,
+            "reasoning_output_tokens": 55,
+            "total_tokens": 10943
+          },
+          "last_token_usage": {
+            "input_tokens": 10536,
+            "cached_input_tokens": 7552,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 407,
+            "reasoning_output_tokens": 55,
+            "total_tokens": 10943
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "last_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t2-referencias-e-ajuste",
+      "images": [],
+      "prompt_sha256": "31c321efa890112b7ecb3ff0afaef85cf7a28b25603e82515fb9576e01afae9a",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 37856.569667,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 21764,
+        "cached_input_tokens": 18304,
+        "output_tokens": 983,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 55
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 11228,
+        "cached_input_tokens": 10752,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 576,
+        "reasoning_output_tokens": 0,
+        "total_tokens": 11804
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "5e320aa7fad6ee6200c9b184fb2aa4ccb9a6429baac51c53d8f3a4642733bf8e",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "30bf27cdadbd99df9ae9798f809af5e08c6dd24637190f5821d836185a0c51b6",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "d03adb3f27ff4bb081628efef14b3577c659209b6ad616461b121cb6e164ea3a",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 21764,
+            "cached_input_tokens": 18304,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 983,
+            "reasoning_output_tokens": 55,
+            "total_tokens": 22747
+          },
+          "last_token_usage": {
+            "input_tokens": 11228,
+            "cached_input_tokens": 10752,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 576,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 11804
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "last_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21764,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 983,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 22747
+            },
+            "last_token_usage": {
+              "input_tokens": 11228,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 576,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11804
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    },
+    {
+      "id": "t3-explorar-duas-direcoes",
+      "images": [],
+      "prompt_sha256": "0fde509da444ee7c4a04054617e789e99aeb31f3e29ff4956c4fcd7456847bc3",
+      "exit_code": 0,
+      "timed_out": false,
+      "wall_clock_ms": 140673.103875,
+      "owned_process_exited": true,
+      "usage_cli": {
+        "input_tokens": 101026,
+        "cached_input_tokens": 84864,
+        "output_tokens": 5365,
+        "cache_write_input_tokens": 0,
+        "reasoning_output_tokens": 111
+      },
+      "usage_delta_from_rollout": {
+        "input_tokens": 79262,
+        "cached_input_tokens": 66560,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 4382,
+        "reasoning_output_tokens": 56,
+        "total_tokens": 83644
+      },
+      "tool_audit": {
+        "completed_item_types": [
+          "agent_message",
+          "error",
+          "mcp_tool_call"
+        ],
+        "unexpected_tool_uses": []
+      },
+      "runtime_model": "gpt-6-astra",
+      "runtime_effort": "low",
+      "rollout_evidence": {
+        "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+        "cli_version": "0.162.1",
+        "model_provider": "openai",
+        "base_instructions_sha256": "b00ca317501522822c4091fc98cd4450db73722fd92270d1d538a7f2d652d414",
+        "developer_system_messages_sha256": "5e320aa7fad6ee6200c9b184fb2aa4ccb9a6429baac51c53d8f3a4642733bf8e",
+        "developer_system_messages_count": 3,
+        "turn_contexts": [
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "30bf27cdadbd99df9ae9798f809af5e08c6dd24637190f5821d836185a0c51b6",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "d03adb3f27ff4bb081628efef14b3577c659209b6ad616461b121cb6e164ea3a",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          },
+          {
+            "model": "gpt-6-astra",
+            "effort": "low",
+            "approval_policy": "never",
+            "sandbox_policy": {
+              "type": "read-only"
+            },
+            "context_sha256": "1572a8525ec6a94a9ca6b9db9963e57838bac41da6954a7ca6a02b9a1a168c68",
+            "context_keys": [
+              "approval_policy",
+              "approvals_reviewer",
+              "collaboration_mode",
+              "comp_hash",
+              "cwd",
+              "disabled_plugin_ids",
+              "effort",
+              "model",
+              "multi_agent_version",
+              "permission_profile",
+              "realtime_active",
+              "root_turn_id",
+              "sandbox_policy",
+              "summary",
+              "turn_id"
+            ]
+          }
+        ],
+        "token_count_latest": {
+          "total_token_usage": {
+            "input_tokens": 101026,
+            "cached_input_tokens": 84864,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 5365,
+            "reasoning_output_tokens": 111,
+            "total_tokens": 106391
+          },
+          "last_token_usage": {
+            "input_tokens": 20274,
+            "cached_input_tokens": 16384,
+            "cache_write_input_tokens": 0,
+            "output_tokens": 3210,
+            "reasoning_output_tokens": 0,
+            "total_tokens": 23484
+          },
+          "model_context_window": 258400
+        },
+        "token_count_events": [
+          {
+            "total_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "last_token_usage": {
+              "input_tokens": 10536,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 407,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 10943
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 21764,
+              "cached_input_tokens": 18304,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 983,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 22747
+            },
+            "last_token_usage": {
+              "input_tokens": 11228,
+              "cached_input_tokens": 10752,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 576,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 11804
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 33927,
+              "cached_input_tokens": 25856,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1071,
+              "reasoning_output_tokens": 55,
+              "total_tokens": 34998
+            },
+            "last_token_usage": {
+              "input_tokens": 12163,
+              "cached_input_tokens": 7552,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 88,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 12251
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 47897,
+              "cached_input_tokens": 37504,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 1969,
+              "reasoning_output_tokens": 111,
+              "total_tokens": 49866
+            },
+            "last_token_usage": {
+              "input_tokens": 13970,
+              "cached_input_tokens": 11648,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 898,
+              "reasoning_output_tokens": 56,
+              "total_tokens": 14868
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 64226,
+              "cached_input_tokens": 52224,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2077,
+              "reasoning_output_tokens": 111,
+              "total_tokens": 66303
+            },
+            "last_token_usage": {
+              "input_tokens": 16329,
+              "cached_input_tokens": 14720,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 108,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 16437
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 80752,
+              "cached_input_tokens": 68480,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 2155,
+              "reasoning_output_tokens": 111,
+              "total_tokens": 82907
+            },
+            "last_token_usage": {
+              "input_tokens": 16526,
+              "cached_input_tokens": 16256,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 78,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 16604
+            },
+            "model_context_window": 258400
+          },
+          {
+            "total_token_usage": {
+              "input_tokens": 101026,
+              "cached_input_tokens": 84864,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 5365,
+              "reasoning_output_tokens": 111,
+              "total_tokens": 106391
+            },
+            "last_token_usage": {
+              "input_tokens": 20274,
+              "cached_input_tokens": 16384,
+              "cache_write_input_tokens": 0,
+              "output_tokens": 3210,
+              "reasoning_output_tokens": 0,
+              "total_tokens": 23484
+            },
+            "model_context_window": 258400
+          }
+        ],
+        "isolation_markers": {
+          "automatic_skills_catalog": false,
+          "personal_memory_summary": false,
+          "personal_operating_policy": false
+        },
+        "source": "own_cli_rollout_not_provider_response"
+      }
+    }
+  ],
+  "invocations": [
+    {
+      "number": 1,
+      "wall_clock_ms": 209367.467959,
+      "through_turn": 3,
+      "case_sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    }
+  ],
+  "wall_clock_ms": 209367.467959,
+  "configuration": {
+    "model_reasoning_effort": "low",
+    "approval_policy": "never",
+    "sandbox_mode": "read-only",
+    "project_doc_max_bytes": 0,
+    "web_search": "disabled",
+    "developer_instructions": "Você participa de um ensaio exclusivamente sintético do Compor. Use apenas as seis tools MCP do servidor compor_benchmark e os dados deste chat. Não acesse arquivos, rede, outras sessões, credenciais ou serviços. Não gere imagens nem alegue publicação, execução ou aprovação humana. Responda em português.",
+    "features.skip_host_skill_discovery": true,
+    "skills.include_instructions": false,
+    "skills.bundled.enabled": false,
+    "mcp_servers.compor_benchmark.command": "/Library/Frameworks/Python.framework/Versions/3.12/bin/python3",
+    "mcp_servers.compor_benchmark.args": [
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py",
+      "--log",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/mcp.jsonl",
+      "--node",
+      "/opt/homebrew/bin/node",
+      "--entry",
+      "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/mcp-snapshot/dist/stdio.js"
+    ],
+    "mcp_servers.compor_benchmark.env.COMPOR_MCP_GUIDANCE": "baseline",
+    "mcp_servers.compor_benchmark.required": true,
+    "mcp_servers.compor_benchmark.enabled_tools": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "features.apps": false,
+    "features.plugins": false,
+    "features.remote_plugin": false,
+    "features.recommended_plugins": false,
+    "features.browser_use": false,
+    "features.browser_use_external": false,
+    "features.computer_use": false,
+    "features.in_app_browser": false,
+    "features.image_generation": false,
+    "features.view_image": false,
+    "features.memories": false,
+    "features.hooks": false,
+    "features.multi_agent": false,
+    "features.multi_agent_v2": false,
+    "features.shell_tool": false,
+    "features.unified_exec": false,
+    "features.shell_snapshot": false,
+    "features.skill_search": false,
+    "features.skill_mcp_dependency_install": false,
+    "features.goals": false,
+    "features.sleep_tool": false,
+    "features.code_mode": false,
+    "features.workspace_dependencies": false,
+    "features.tool_suggest": false
+  },
+  "configuration_sha256": "9d4753d739d5656fd14ac49917361773bf66ef0a678a1be87375bab0719810b7",
+  "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+  "own_rollout_path": "/Users/matheusborges/.codex/sessions/2026/10/28/rollout-2026-10-28T03-58-31-01a1814d-a2b1-7f50-bd30-dcab361685bd.jsonl",
+  "mcp": {
+    "tool_names": [
+      "list_skills",
+      "load_skill",
+      "prepare_annotation_context",
+      "prepare_layered_creative",
+      "prepare_moodboard",
+      "prepare_word_cloud"
+    ],
+    "schema_sha256": "b634efb6f0ab0cbe52d42dbcf54b5e03472d030d24b2aeef75ee1160325c2d99",
+    "schema_consistent_across_processes": true,
+    "instructions_sha256": [
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534",
+      "0bc52acbd75ad2abfd3cb86305c7726b912b2458ab6d5470192ccc4bf2b78534"
+    ],
+    "calls": [
+      {
+        "process_id": 17200,
+        "id": 2,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-76de11c2-279e-4304-8684-93e3241bad42",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d6df89c819188b3b378c04610b9",
+            "progressToken": 1
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-recorte",
+              "version": "v1",
+              "variation_ref": "tda-dir-recorte",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "recorte-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "recorte-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 72,
+                    "y": 64,
+                    "width": 936,
+                    "height": 60
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-titulo",
+                  "kind": "text",
+                  "name": "Escolha de um recorte",
+                  "rect": {
+                    "x": 72,
+                    "y": 170,
+                    "width": 936,
+                    "height": 150
+                  },
+                  "text": "O que cabe no seu\nprimeiro curso curto?",
+                  "font_ref": "arial",
+                  "font_size_px": 56,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: seleção em moldura",
+                  "rect": {
+                    "x": 72,
+                    "y": 366,
+                    "width": 936,
+                    "height": 280
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "recorte-publico",
+                  "kind": "text",
+                  "name": "Público e autonomia",
+                  "rect": {
+                    "x": 72,
+                    "y": 684,
+                    "width": 936,
+                    "height": 100
+                  },
+                  "text": "Você conhece o assunto.\nEscolha um recorte para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-acento",
+                  "kind": "shape",
+                  "name": "Marcador argila da oferta",
+                  "rect": {
+                    "x": 72,
+                    "y": 818,
+                    "width": 8,
+                    "height": 120
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 2
+                },
+                {
+                  "id": "recorte-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 104,
+                    "y": 814,
+                    "width": 904,
+                    "height": 132
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 72,
+                    "y": 980,
+                    "width": 936,
+                    "height": 48
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect\nToo big: expected number to be <=1 at piece.layers[7].rect.x\nToo big: expected number to be <=1 at piece.layers[7].rect.y\nToo big: expected number to be <=1 at piece.layers[7].rect.width\nToo big: expected number to be <=1 at piece.layers[7].rect.height\nRetângulo deve caber na imagem. at piece.layers[7].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 17200,
+        "id": 3,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-429ab166-884d-4f14-a139-d04bb733c7dd",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d6df89c819188b3b378c04610b9",
+            "progressToken": 2
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-tecer",
+              "version": "v1",
+              "variation_ref": "tda-dir-tecer",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "tecer-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1080,
+                    "height": 1080
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "tecer-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 72,
+                    "y": 64,
+                    "width": 936,
+                    "height": 60
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-titulo",
+                  "kind": "text",
+                  "name": "Conhecimento conectado",
+                  "rect": {
+                    "x": 72,
+                    "y": 190,
+                    "width": 610,
+                    "height": 240
+                  },
+                  "text": "Seu conhecimento,\nem uma sequência\npara ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 52,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: fios entrelaçados",
+                  "rect": {
+                    "x": 714,
+                    "y": 190,
+                    "width": 294,
+                    "height": 490
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "tecer-publico",
+                  "kind": "text",
+                  "name": "Público e proposta",
+                  "rect": {
+                    "x": 72,
+                    "y": 486,
+                    "width": 610,
+                    "height": 150
+                  },
+                  "text": "Para quem domina um assunto\ne quer organizar seu primeiro\ncurso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-acento",
+                  "kind": "shape",
+                  "name": "Linha argila",
+                  "rect": {
+                    "x": 72,
+                    "y": 708,
+                    "width": 936,
+                    "height": 6
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 2
+                },
+                {
+                  "id": "tecer-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 72,
+                    "y": 762,
+                    "width": 936,
+                    "height": 150
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 72,
+                    "y": 970,
+                    "width": 936,
+                    "height": 52
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "MCP error -32602: Input validation error: Invalid arguments for tool prepare_layered_creative: Too big: expected number to be <=1 at piece.layers[0].rect.width\nToo big: expected number to be <=1 at piece.layers[0].rect.height\nRetângulo deve caber na imagem. at piece.layers[0].rect\nToo big: expected number to be <=1 at piece.layers[1].rect.x\nToo big: expected number to be <=1 at piece.layers[1].rect.y\nToo big: expected number to be <=1 at piece.layers[1].rect.width\nToo big: expected number to be <=1 at piece.layers[1].rect.height\nRetângulo deve caber na imagem. at piece.layers[1].rect\nToo big: expected number to be <=1 at piece.layers[2].rect.x\nToo big: expected number to be <=1 at piece.layers[2].rect.y\nToo big: expected number to be <=1 at piece.layers[2].rect.width\nToo big: expected number to be <=1 at piece.layers[2].rect.height\nRetângulo deve caber na imagem. at piece.layers[2].rect\nToo big: expected number to be <=1 at piece.layers[3].rect.x\nToo big: expected number to be <=1 at piece.layers[3].rect.y\nToo big: expected number to be <=1 at piece.layers[3].rect.width\nToo big: expected number to be <=1 at piece.layers[3].rect.height\nRetângulo deve caber na imagem. at piece.layers[3].rect\nToo big: expected number to be <=1 at piece.layers[4].rect.x\nToo big: expected number to be <=1 at piece.layers[4].rect.y\nToo big: expected number to be <=1 at piece.layers[4].rect.width\nToo big: expected number to be <=1 at piece.layers[4].rect.height\nRetângulo deve caber na imagem. at piece.layers[4].rect\nToo big: expected number to be <=1 at piece.layers[5].rect.x\nToo big: expected number to be <=1 at piece.layers[5].rect.y\nToo big: expected number to be <=1 at piece.layers[5].rect.width\nToo big: expected number to be <=1 at piece.layers[5].rect.height\nRetângulo deve caber na imagem. at piece.layers[5].rect\nToo big: expected number to be <=1 at piece.layers[6].rect.x\nToo big: expected number to be <=1 at piece.layers[6].rect.y\nToo big: expected number to be <=1 at piece.layers[6].rect.width\nToo big: expected number to be <=1 at piece.layers[6].rect.height\nRetângulo deve caber na imagem. at piece.layers[6].rect\nToo big: expected number to be <=1 at piece.layers[7].rect.x\nToo big: expected number to be <=1 at piece.layers[7].rect.y\nToo big: expected number to be <=1 at piece.layers[7].rect.width\nToo big: expected number to be <=1 at piece.layers[7].rect.height\nRetângulo deve caber na imagem. at piece.layers[7].rect"
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 17200,
+        "id": 5,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-c71d9a91-47aa-4d41-9c0a-0cace3bd36a9",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d8d8a5c8191930e2dd4bee37dde",
+            "progressToken": 4
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-tecer",
+              "version": "v1",
+              "variation_ref": "tda-dir-tecer",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "tecer-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "tecer-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-titulo",
+                  "kind": "text",
+                  "name": "Conhecimento conectado",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.175926,
+                    "width": 0.564815,
+                    "height": 0.222222
+                  },
+                  "text": "Seu conhecimento,\nem uma sequência\npara ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 52,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: fios entrelaçados",
+                  "rect": {
+                    "x": 0.661111,
+                    "y": 0.175926,
+                    "width": 0.272222,
+                    "height": 0.453704
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "tecer-publico",
+                  "kind": "text",
+                  "name": "Público e proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.45,
+                    "width": 0.564815,
+                    "height": 0.138889
+                  },
+                  "text": "Para quem domina um assunto\ne quer organizar seu primeiro\ncurso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-acento",
+                  "kind": "shape",
+                  "name": "Linha argila",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.655556,
+                    "width": 0.866667,
+                    "height": 0.005556
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 2
+                },
+                {
+                  "id": "tecer-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.705556,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.898148,
+                    "width": 0.866667,
+                    "height": 0.048148
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "IDs e índices de camadas devem ser únicos."
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 17200,
+        "id": 4,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-dd5a4884-51dc-4605-8d7b-966a2cf9d8cb",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d8d8a5c8191930e2dd4bee37dde",
+            "progressToken": 3
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-recorte",
+              "version": "v1",
+              "variation_ref": "tda-dir-recorte",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "recorte-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "recorte-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-titulo",
+                  "kind": "text",
+                  "name": "Escolha de um recorte",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.157407,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "O que cabe no seu\nprimeiro curso curto?",
+                  "font_ref": "arial",
+                  "font_size_px": 56,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: seleção em moldura",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.338889,
+                    "width": 0.866667,
+                    "height": 0.259259
+                  },
+                  "z_index": 1
+                },
+                {
+                  "id": "recorte-publico",
+                  "kind": "text",
+                  "name": "Público e autonomia",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.633333,
+                    "width": 0.866667,
+                    "height": 0.092593
+                  },
+                  "text": "Você conhece o assunto.\nEscolha um recorte para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-acento",
+                  "kind": "shape",
+                  "name": "Marcador argila da oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.007407,
+                    "height": 0.111111
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 2
+                },
+                {
+                  "id": "recorte-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 0.096296,
+                    "y": 0.753704,
+                    "width": 0.837037,
+                    "height": 0.122222
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.907407,
+                    "width": 0.866667,
+                    "height": 0.044444
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 3
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "IDs e índices de camadas devem ser únicos."
+            }
+          ],
+          "isError": true
+        }
+      },
+      {
+        "process_id": 17200,
+        "id": 6,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-42b25ec2-cbf0-4bd5-b90e-0bc10e3884d3",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d9200b081919b21553bb2735c2d",
+            "progressToken": 5
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-recorte",
+              "version": "v1",
+              "variation_ref": "tda-dir-recorte",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "recorte-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "recorte-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 1
+                },
+                {
+                  "id": "recorte-titulo",
+                  "kind": "text",
+                  "name": "Escolha de um recorte",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.157407,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "O que cabe no seu\nprimeiro curso curto?",
+                  "font_ref": "arial",
+                  "font_size_px": 56,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "recorte-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: seleção em moldura",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.338889,
+                    "width": 0.866667,
+                    "height": 0.259259
+                  },
+                  "z_index": 3
+                },
+                {
+                  "id": "recorte-publico",
+                  "kind": "text",
+                  "name": "Público e autonomia",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.633333,
+                    "width": 0.866667,
+                    "height": 0.092593
+                  },
+                  "text": "Você conhece o assunto.\nEscolha um recorte para ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "recorte-acento",
+                  "kind": "shape",
+                  "name": "Marcador argila da oferta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.007407,
+                    "height": 0.111111
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 5
+                },
+                {
+                  "id": "recorte-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 0.096296,
+                    "y": 0.753704,
+                    "width": 0.837037,
+                    "height": 0.122222
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "recorte-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.907407,
+                    "width": 0.866667,
+                    "height": 0.044444
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"tda-recorte\",\"version\":\"v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"tda-dir-recorte\",\"layers\":[{\"id\":\"recorte-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"recorte-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"z_index\":1,\"rect\":{\"x\":0.066667,\"y\":0.059259,\"width\":0.866667,\"height\":0.055556},\"text\":\"Trama de Aula\",\"font_size_px\":36,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"recorte-titulo\",\"kind\":\"text\",\"name\":\"Escolha de um recorte\",\"z_index\":2,\"rect\":{\"x\":0.066667,\"y\":0.157407,\"width\":0.866667,\"height\":0.138889},\"text\":\"O que cabe no seu\\nprimeiro curso curto?\",\"font_size_px\":56,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"recorte-imagem\",\"kind\":\"image\",\"name\":\"Asset futuro: seleção em moldura\",\"z_index\":3,\"rect\":{\"x\":0.066667,\"y\":0.338889,\"width\":0.866667,\"height\":0.259259}},{\"id\":\"recorte-publico\",\"kind\":\"text\",\"name\":\"Público e autonomia\",\"z_index\":4,\"rect\":{\"x\":0.066667,\"y\":0.633333,\"width\":0.866667,\"height\":0.092593},\"text\":\"Você conhece o assunto.\\nEscolha um recorte para ensinar.\",\"font_size_px\":34,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"recorte-acento\",\"kind\":\"shape\",\"name\":\"Marcador argila da oferta\",\"z_index\":5,\"rect\":{\"x\":0.066667,\"y\":0.757407,\"width\":0.007407,\"height\":0.111111},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"recorte-oferta\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":6,\"rect\":{\"x\":0.096296,\"y\":0.753704,\"width\":0.837037,\"height\":0.122222},\"text\":\"Mentoria online\\n4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"recorte-convite\",\"kind\":\"text\",\"name\":\"Convite sem canal definido\",\"z_index\":7,\"rect\":{\"x\":0.066667,\"y\":0.907407,\"width\":0.866667,\"height\":0.044444},\"text\":\"Peça informações sobre a mentoria.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"recorte-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"recorte-titulo\"},{\"code\":\"image_asset_missing\",\"layer_id\":\"recorte-imagem\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"recorte-publico\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"recorte-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"recorte-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "tda-recorte",
+              "version": "v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "tda-dir-recorte",
+              "layers": [
+                {
+                  "id": "recorte-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "recorte-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 36,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "recorte-titulo",
+                  "kind": "text",
+                  "name": "Escolha de um recorte",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.157407,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "O que cabe no seu\nprimeiro curso curto?",
+                  "font_size_px": 56,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "recorte-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: seleção em moldura",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.338889,
+                    "width": 0.866667,
+                    "height": 0.259259
+                  }
+                },
+                {
+                  "id": "recorte-publico",
+                  "kind": "text",
+                  "name": "Público e autonomia",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.633333,
+                    "width": 0.866667,
+                    "height": 0.092593
+                  },
+                  "text": "Você conhece o assunto.\nEscolha um recorte para ensinar.",
+                  "font_size_px": 34,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "recorte-acento",
+                  "kind": "shape",
+                  "name": "Marcador argila da oferta",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.757407,
+                    "width": 0.007407,
+                    "height": 0.111111
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "recorte-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.096296,
+                    "y": 0.753704,
+                    "width": 0.837037,
+                    "height": 0.122222
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "recorte-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.907407,
+                    "width": 0.866667,
+                    "height": 0.044444
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "recorte-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "recorte-titulo"
+              },
+              {
+                "code": "image_asset_missing",
+                "layer_id": "recorte-imagem"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "recorte-publico"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "recorte-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "recorte-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      },
+      {
+        "process_id": 17200,
+        "id": 7,
+        "arguments": {
+          "_meta": {
+            "callId": "exec-d60720cf-3329-4105-a2b9-f4f2325bc728",
+            "x-codex-turn-metadata": {
+              "session_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "thread_id": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+              "reasoning_effort": "low",
+              "turn_id": "01a1814e-afa7-7313-ae4e-cdc29166fca6",
+              "model": "gpt-6-astra",
+              "thread_source": "user",
+              "turn_trigger": "exec",
+              "sandbox": "seatbelt",
+              "sandbox_mode": "read-only",
+              "auto_review_enabled": false,
+              "node_repl_auto_review_required": true,
+              "node_repl_disabled": false,
+              "turn_started_at_unix_ms": 1793170780074,
+              "codex_version": "0.162.1"
+            },
+            "threadId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "sessionId": "01a1814d-a2b1-7f50-bd30-dcab361685bd",
+            "windowId": "01a1814d-a2b1-7f50-bd30-dcab361685bd:0",
+            "itemId": "ctc_0e90886b609b07f8016ae19d9200b081919b21553bb2735c2d",
+            "progressToken": 6
+          },
+          "name": "prepare_layered_creative",
+          "arguments": {
+            "piece": {
+              "piece_id": "tda-tecer",
+              "version": "v1",
+              "variation_ref": "tda-dir-tecer",
+              "width_px": 1080,
+              "height_px": 1080,
+              "layers": [
+                {
+                  "id": "tecer-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD",
+                  "z_index": 0
+                },
+                {
+                  "id": "tecer-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_ref": "arial",
+                  "font_size_px": 36,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 1
+                },
+                {
+                  "id": "tecer-titulo",
+                  "kind": "text",
+                  "name": "Conhecimento conectado",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.175926,
+                    "width": 0.564815,
+                    "height": 0.222222
+                  },
+                  "text": "Seu conhecimento,\nem uma sequência\npara ensinar.",
+                  "font_ref": "georgia",
+                  "font_size_px": 52,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 2
+                },
+                {
+                  "id": "tecer-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: fios entrelaçados",
+                  "rect": {
+                    "x": 0.661111,
+                    "y": 0.175926,
+                    "width": 0.272222,
+                    "height": 0.453704
+                  },
+                  "z_index": 3
+                },
+                {
+                  "id": "tecer-publico",
+                  "kind": "text",
+                  "name": "Público e proposta",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.45,
+                    "width": 0.564815,
+                    "height": 0.138889
+                  },
+                  "text": "Para quem domina um assunto\ne quer organizar seu primeiro\ncurso curto.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 4
+                },
+                {
+                  "id": "tecer-acento",
+                  "kind": "shape",
+                  "name": "Linha argila",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.655556,
+                    "width": 0.866667,
+                    "height": 0.005556
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B",
+                  "z_index": 5
+                },
+                {
+                  "id": "tecer-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.705556,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_ref": "arial",
+                  "font_size_px": 34,
+                  "font_weight": 400,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 6
+                },
+                {
+                  "id": "tecer-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.898148,
+                    "width": 0.866667,
+                    "height": 0.048148
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_ref": "arial",
+                  "font_size_px": 32,
+                  "font_weight": 700,
+                  "color_hex": "#532B54",
+                  "line_height": 1.15,
+                  "text_align": "left",
+                  "z_index": 7
+                }
+              ]
+            }
+          }
+        },
+        "result": {
+          "content": [
+            {
+              "type": "text",
+              "text": "{\"piece\":{\"piece_id\":\"tda-tecer\",\"version\":\"v1\",\"width_px\":1080,\"height_px\":1080,\"variation_ref\":\"tda-dir-tecer\",\"layers\":[{\"id\":\"tecer-fundo\",\"kind\":\"shape\",\"name\":\"Fundo creme\",\"z_index\":0,\"rect\":{\"x\":0,\"y\":0,\"width\":1,\"height\":1},\"shape\":\"rectangle\",\"fill_hex\":\"#F4EBDD\"},{\"id\":\"tecer-marca\",\"kind\":\"text\",\"name\":\"Nome da mentoria\",\"z_index\":1,\"rect\":{\"x\":0.066667,\"y\":0.059259,\"width\":0.866667,\"height\":0.055556},\"text\":\"Trama de Aula\",\"font_size_px\":36,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"tecer-titulo\",\"kind\":\"text\",\"name\":\"Conhecimento conectado\",\"z_index\":2,\"rect\":{\"x\":0.066667,\"y\":0.175926,\"width\":0.564815,\"height\":0.222222},\"text\":\"Seu conhecimento,\\nem uma sequência\\npara ensinar.\",\"font_size_px\":52,\"color_hex\":\"#532B54\",\"font_ref\":\"georgia\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"tecer-imagem\",\"kind\":\"image\",\"name\":\"Asset futuro: fios entrelaçados\",\"z_index\":3,\"rect\":{\"x\":0.661111,\"y\":0.175926,\"width\":0.272222,\"height\":0.453704}},{\"id\":\"tecer-publico\",\"kind\":\"text\",\"name\":\"Público e proposta\",\"z_index\":4,\"rect\":{\"x\":0.066667,\"y\":0.45,\"width\":0.564815,\"height\":0.138889},\"text\":\"Para quem domina um assunto\\ne quer organizar seu primeiro\\ncurso curto.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"tecer-acento\",\"kind\":\"shape\",\"name\":\"Linha argila\",\"z_index\":5,\"rect\":{\"x\":0.066667,\"y\":0.655556,\"width\":0.866667,\"height\":0.005556},\"shape\":\"rectangle\",\"fill_hex\":\"#C76B4B\"},{\"id\":\"tecer-oferta\",\"kind\":\"text\",\"name\":\"Formato da mentoria\",\"z_index\":6,\"rect\":{\"x\":0.066667,\"y\":0.705556,\"width\":0.866667,\"height\":0.138889},\"text\":\"Mentoria online\\n4 encontros semanais ao vivo\\n+ revisão de um plano de aula\",\"font_size_px\":34,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":400,\"line_height\":1.15,\"text_align\":\"left\"},{\"id\":\"tecer-convite\",\"kind\":\"text\",\"name\":\"Convite sem canal definido\",\"z_index\":7,\"rect\":{\"x\":0.066667,\"y\":0.898148,\"width\":0.866667,\"height\":0.048148},\"text\":\"Peça informações sobre a mentoria.\",\"font_size_px\":32,\"color_hex\":\"#532B54\",\"font_ref\":\"arial\",\"font_weight\":700,\"line_height\":1.15,\"text_align\":\"left\"}],\"product_ref\":null,\"campaign_ref\":null},\"warnings\":[{\"code\":\"font_ref_unresolved\",\"layer_id\":\"tecer-marca\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"tecer-titulo\"},{\"code\":\"image_asset_missing\",\"layer_id\":\"tecer-imagem\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"tecer-publico\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"tecer-oferta\"},{\"code\":\"font_ref_unresolved\",\"layer_id\":\"tecer-convite\"}],\"coordinate_space\":\"normalized_oriented_image\",\"input_snapshot_authenticated\":false,\"client_data_is_untrusted\":true,\"creates_confirmed_preference\":false,\"renders_or_generates_image\":false,\"persists_data\":false}"
+            }
+          ],
+          "structuredContent": {
+            "piece": {
+              "piece_id": "tda-tecer",
+              "version": "v1",
+              "width_px": 1080,
+              "height_px": 1080,
+              "variation_ref": "tda-dir-tecer",
+              "layers": [
+                {
+                  "id": "tecer-fundo",
+                  "kind": "shape",
+                  "name": "Fundo creme",
+                  "z_index": 0,
+                  "rect": {
+                    "x": 0,
+                    "y": 0,
+                    "width": 1,
+                    "height": 1
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#F4EBDD"
+                },
+                {
+                  "id": "tecer-marca",
+                  "kind": "text",
+                  "name": "Nome da mentoria",
+                  "z_index": 1,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.059259,
+                    "width": 0.866667,
+                    "height": 0.055556
+                  },
+                  "text": "Trama de Aula",
+                  "font_size_px": 36,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "tecer-titulo",
+                  "kind": "text",
+                  "name": "Conhecimento conectado",
+                  "z_index": 2,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.175926,
+                    "width": 0.564815,
+                    "height": 0.222222
+                  },
+                  "text": "Seu conhecimento,\nem uma sequência\npara ensinar.",
+                  "font_size_px": 52,
+                  "color_hex": "#532B54",
+                  "font_ref": "georgia",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "tecer-imagem",
+                  "kind": "image",
+                  "name": "Asset futuro: fios entrelaçados",
+                  "z_index": 3,
+                  "rect": {
+                    "x": 0.661111,
+                    "y": 0.175926,
+                    "width": 0.272222,
+                    "height": 0.453704
+                  }
+                },
+                {
+                  "id": "tecer-publico",
+                  "kind": "text",
+                  "name": "Público e proposta",
+                  "z_index": 4,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.45,
+                    "width": 0.564815,
+                    "height": 0.138889
+                  },
+                  "text": "Para quem domina um assunto\ne quer organizar seu primeiro\ncurso curto.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "tecer-acento",
+                  "kind": "shape",
+                  "name": "Linha argila",
+                  "z_index": 5,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.655556,
+                    "width": 0.866667,
+                    "height": 0.005556
+                  },
+                  "shape": "rectangle",
+                  "fill_hex": "#C76B4B"
+                },
+                {
+                  "id": "tecer-oferta",
+                  "kind": "text",
+                  "name": "Formato da mentoria",
+                  "z_index": 6,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.705556,
+                    "width": 0.866667,
+                    "height": 0.138889
+                  },
+                  "text": "Mentoria online\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+                  "font_size_px": 34,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 400,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                },
+                {
+                  "id": "tecer-convite",
+                  "kind": "text",
+                  "name": "Convite sem canal definido",
+                  "z_index": 7,
+                  "rect": {
+                    "x": 0.066667,
+                    "y": 0.898148,
+                    "width": 0.866667,
+                    "height": 0.048148
+                  },
+                  "text": "Peça informações sobre a mentoria.",
+                  "font_size_px": 32,
+                  "color_hex": "#532B54",
+                  "font_ref": "arial",
+                  "font_weight": 700,
+                  "line_height": 1.15,
+                  "text_align": "left"
+                }
+              ],
+              "product_ref": null,
+              "campaign_ref": null
+            },
+            "warnings": [
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "tecer-marca"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "tecer-titulo"
+              },
+              {
+                "code": "image_asset_missing",
+                "layer_id": "tecer-imagem"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "tecer-publico"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "tecer-oferta"
+              },
+              {
+                "code": "font_ref_unresolved",
+                "layer_id": "tecer-convite"
+              }
+            ],
+            "coordinate_space": "normalized_oriented_image",
+            "input_snapshot_authenticated": false,
+            "client_data_is_untrusted": true,
+            "creates_confirmed_preference": false,
+            "renders_or_generates_image": false,
+            "persists_data": false
+          }
+        }
+      }
+    ],
+    "listings_observed": 3
+  },
+  "finished_at": "2026-10-28T07:02:00.096406+00:00"
+}

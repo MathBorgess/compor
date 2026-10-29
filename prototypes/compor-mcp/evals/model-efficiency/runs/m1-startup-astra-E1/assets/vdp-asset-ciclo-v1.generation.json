@@ -1,0 +1,15 @@
+{
+  "direction_id": "vdp-dir-ciclo",
+  "asset_ref": "vdp-asset-ciclo-v1",
+  "prompt": "Criar um único asset quadrado, proporção 1:1. Ilustração editorial artesanal em papel recortado fosco: três silhuetas de recipientes alimentícios reutilizáveis distribuídas ao redor de um centro vazio, conectadas visualmente por três faixas curvas simples, sugerindo circulação e continuidade. A imagem é uma metáfora das movimentações de recipientes, não uma tela ou diagrama de funcionalidades. Textura de papel perceptível e composição circular acolhedora. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo floresta uniforme até todas as bordas, recortes em pedra e lima. Preservar margens e manter todas as formas inteiras: encaixe proporcional sem recorte. Não incluir letras, palavras, números, marcas-d'água, logotipos, etiquetas, telas, interfaces, ícones de automação, folhas, planeta, selo ambiental ou símbolo de reciclagem. Não incluir texto: toda a comunicação verbal será adicionada em camadas editáveis.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-c4808e6c-5a82-4c5d-b9b8-6c4764ddb813.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E1/assets/vdp-asset-ciclo-v1.png",
+  "sha256": "01c754586306aabeb1adf4b640e58a6a7d12e803ba8e4c2d0b666c52aee64da6",
+  "elapsed_ms": 22559,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

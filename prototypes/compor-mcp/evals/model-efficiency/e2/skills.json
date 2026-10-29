@@ -1,0 +1,28 @@
+{
+  "skills": [
+    {
+      "id": "entender-intencao",
+      "name": "Entender intenção e referências",
+      "description": "Sintetizar intenção, referências e dúvidas de forma revisável.",
+      "version": "0.1.0-prototype"
+    },
+    {
+      "id": "traduzir-direcao",
+      "name": "Traduzir conceitos em direção visual",
+      "description": "Propor atributos visuais e palavras revisáveis.",
+      "version": "0.1.0-prototype"
+    },
+    {
+      "id": "explorar-moodboards",
+      "name": "Explorar moodboards",
+      "description": "Orientar comparação e exploração visual sob pedido explícito.",
+      "version": "0.1.0-prototype"
+    },
+    {
+      "id": "criar-piloto",
+      "name": "Criar piloto",
+      "description": "Orientar criação de arte e legenda revisáveis.",
+      "version": "0.1.0-prototype-e2"
+    }
+  ]
+}

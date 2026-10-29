@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-tecer",
+    "asset_ref": "asset-proposto-tecer-v1",
+    "prompt": "Criar um único asset visual vertical, proporção 108:125, destinado à camada tecer-imagem da peça trama-feed-tecer. Ilustração editorial tátil de fios espessos e fitas flexíveis que se entrelaçam numa trama aberta, com pontas livres e intervalos visíveis. A imagem representa relações entre conhecimentos, com movimento orgânico e delicado, sem diagrama de etapas ou comparação antes/depois. Paleta limitada a ameixa #532B54, argila #C76B4B e creme #F4EBDD. Fundo uniforme creme #F4EBDD até as bordas. Objeto inteiro centralizado com margem interna generosa, todos os fios contidos no enquadramento. Textura sutil de fibras, acabamento fosco, iluminação difusa. Sem pessoas. Sem letras, palavras, números, símbolos tipográficos, logotipos, assinaturas ou marcas-d'água. Não incluir qualquer conteúdo verbal; ele será composto separadamente em camadas editáveis."
+  },
+  {
+    "direction_id": "dir-bancada",
+    "asset_ref": "asset-proposto-bancada-v1",
+    "prompt": "Criar um único asset visual horizontal, proporção 14:5, destinado à camada bancada-imagem da peça trama-feed-bancada. Natureza-morta editorial vista exatamente de cima: pequenas placas retangulares lisas de diferentes comprimentos sobre uma bancada, organizadas em agrupamentos espaçados, com algumas peças ainda livres ao lado. Sugerir uma estrutura de curso que pode ser rearranjada, sem representar etapas numeradas, resultados ou quantidade de encontros. Peças físicas de cartão rígido fosco, bordas nítidas, composição geométrica e deliberada, sem fios ou tecidos. Paleta limitada a ameixa #532B54, argila #C76B4B e creme #F4EBDD. Superfície uniforme creme #F4EBDD até as bordas, iluminação difusa, relevo discreto. Todos os objetos inteiros e contidos na imagem, com margens internas generosas. Sem pessoas, telas ou material escrito. Sem letras, palavras, números, símbolos tipográficos, logotipos, assinaturas ou marcas-d'água. Não incluir qualquer conteúdo verbal; ele será composto separadamente em camadas editáveis."
+  }
+]

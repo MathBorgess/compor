@@ -1,0 +1,7 @@
+# Evaluation evidence remains available; keep generated traces out of the default code diff.
+prototypes/compor-mcp/evals/model-efficiency/runs/** linguist-generated=true
+prototypes/compor-mcp/evals/model-efficiency/blind/** linguist-generated=true
+docs/evals/model-efficiency/metrics-*.json linguist-generated=true
+docs/evals/model-efficiency/judge-*.json linguist-generated=true
+docs/evals/model-efficiency/results.json linguist-generated=true
+prototypes/compor-mcp/evals/model-efficiency/e3/transport-probe*/** linguist-generated=true

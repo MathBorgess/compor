@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/resume-after-t3.json",
+      "sha256": "df042b2b2c53e37c0ab01e7b05e2710e23bc96b1727198c10a896267f8f1693f"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets.json",
+      "sha256": "7598922e533724804915ecd08e07bf44f1f27ccd12d6c40a2b2f0717e7146908"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "ciclo-a",
+        "piece_id": "volta-pote-ciclo",
+        "version": "2a",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts/renders/ciclo-a.png",
+        "png_sha256": "c7563ee99b503a1652a9271621e1e4a079f5faffe672348b90fe65a7417e66e6",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts/renders/ciclo-a.json",
+        "report_sha256": "3baeba415d35bea8fc933c22f0b2235d1115ba71aae8eacfb4ca2831f2ef9247",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 262.845291,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-ciclo-01"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-ciclo-01"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-botao",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "ciclo-b",
+        "piece_id": "volta-pote-ciclo",
+        "version": "2b",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts/renders/ciclo-b.png",
+        "png_sha256": "e67276153ba8f18f2de13361a7212dfc7053dd0847d2ea5a73c463ba3a299501",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts/renders/ciclo-b.json",
+        "report_sha256": "1301e2e539ea81d0db35ef91a62c0f53364eac8301260d586be8170ac441b8ce",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 235.241541,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-ciclo-01"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-ciclo-01"
+          },
+          {
+            "id": "b-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-marca-cta",
+            "kind": "shape"
+          },
+          {
+            "id": "b-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/resume-after-t4.json",
+      "sha256": "2e3862c3df3ce166264f07a7557f47863f7f16347925ae93d7bc0aa8245a1540",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 14.020042,
+    "total": 515.769833
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

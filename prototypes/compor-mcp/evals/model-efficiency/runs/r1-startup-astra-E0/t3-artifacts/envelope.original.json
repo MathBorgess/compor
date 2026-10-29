@@ -1,0 +1,329 @@
+{
+  "directions": [
+    {
+      "id": "vdp-direcao-controle-v1",
+      "title": "Com quem estão seus potes?",
+      "concept": "Uma pergunta da rotina apresenta o produto pela visibilidade dos recipientes com clientes. A composição combina título direto, organização estável e uma natureza-morta de potes. Controle e simplicidade lideram; a materialidade fosca aproxima a comunicação do pequeno produtor.",
+      "composition_plan": {
+        "piece_id": "vdp-controle",
+        "version": "v1",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "controle-fundo",
+            "kind": "shape",
+            "name": "controle-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "controle-marcador",
+            "kind": "shape",
+            "name": "controle-marcador",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.1296,
+              "width": 0.0815,
+              "height": 0.0111
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 1
+          },
+          {
+            "id": "controle-marca",
+            "kind": "text",
+            "name": "controle-marca",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.0593,
+              "width": 0.5556,
+              "height": 0.0481
+            },
+            "text": "Volta de Pote",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "controle-titulo",
+            "kind": "text",
+            "name": "controle-titulo",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.1815,
+              "width": 0.4815,
+              "height": 0.2685
+            },
+            "text": "Com quem\nestão seus\npotes?",
+            "font_ref": "arial",
+            "font_size_px": 72,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "controle-imagem",
+            "kind": "image",
+            "name": "Natureza-morta de recipientes",
+            "rect": {
+              "x": 0.5796,
+              "y": 0.1667,
+              "width": 0.3611,
+              "height": 0.4815
+            },
+            "z_index": 4
+          },
+          {
+            "id": "controle-descricao",
+            "kind": "text",
+            "name": "controle-descricao",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.5093,
+              "width": 0.5,
+              "height": 0.1852
+            },
+            "text": "Registre entregas,\nempréstimos e devoluções.\nConsulte quais recipientes\nainda estão com clientes.",
+            "font_ref": "arial",
+            "font_size_px": 34,
+            "font_weight": 400,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "controle-publico",
+            "kind": "text",
+            "name": "controle-publico",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.7315,
+              "width": 0.8704,
+              "height": 0.0926
+            },
+            "text": "Uma ferramenta web para\npequenos produtores de alimentos.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 400,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "controle-cta-fundo",
+            "kind": "shape",
+            "name": "controle-cta-fundo",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.8648,
+              "width": 0.6111,
+              "height": 0.0759
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 7
+          },
+          {
+            "id": "controle-cta",
+            "kind": "text",
+            "name": "controle-cta",
+            "rect": {
+              "x": 0.0815,
+              "y": 0.8833,
+              "width": 0.5648,
+              "height": 0.0444
+            },
+            "text": "Conheça a demonstração",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 8
+          }
+        ]
+      },
+      "caption": "Com quem estão seus potes? A Volta de Pote é uma ferramenta web para pequenos produtores de alimentos registrarem entregas, empréstimos e devoluções de recipientes e consultarem quais ainda estão com clientes. Conheça a demonstração."
+    },
+    {
+      "id": "vdp-direcao-continuidade-v1",
+      "title": "Cada pote tem um caminho de volta",
+      "concept": "O percurso do recipiente apresenta o produto como parte da relação entre produtor e cliente. Uma ilustração de papel com movimento circular sugere entrega e retorno; o título editorial introduz uma narrativa. Continuidade e proximidade lideram, sem representar uma tela ou prometer que toda embalagem será devolvida.",
+      "composition_plan": {
+        "piece_id": "vdp-continuidade",
+        "version": "v1",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "continuidade-fundo",
+            "kind": "shape",
+            "name": "continuidade-fundo",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#ECE9DF",
+            "z_index": 0
+          },
+          {
+            "id": "continuidade-marca",
+            "kind": "text",
+            "name": "continuidade-marca",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.05,
+              "width": 0.5556,
+              "height": 0.0481
+            },
+            "text": "Volta de Pote",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "continuidade-titulo",
+            "kind": "text",
+            "name": "continuidade-titulo",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.1241,
+              "width": 0.8815,
+              "height": 0.1481
+            },
+            "text": "Cada pote tem\num caminho de volta.",
+            "font_ref": "georgia",
+            "font_size_px": 64,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "continuidade-imagem",
+            "kind": "image",
+            "name": "Percurso circular de recipientes",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.3019,
+              "width": 0.8815,
+              "height": 0.3241
+            },
+            "z_index": 3
+          },
+          {
+            "id": "continuidade-descricao",
+            "kind": "text",
+            "name": "continuidade-descricao",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.6611,
+              "width": 0.8815,
+              "height": 0.0963
+            },
+            "text": "Entrega, empréstimo e devolução:\nacompanhe os recipientes com seus clientes.",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 400,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "continuidade-publico",
+            "kind": "text",
+            "name": "continuidade-publico",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.7796,
+              "width": 0.8815,
+              "height": 0.05
+            },
+            "text": "Ferramenta web para pequenos produtores de alimentos.",
+            "font_ref": "arial",
+            "font_size_px": 30,
+            "font_weight": 400,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "continuidade-cta-fundo",
+            "kind": "shape",
+            "name": "continuidade-cta-fundo",
+            "rect": {
+              "x": 0.0593,
+              "y": 0.8648,
+              "width": 0.6111,
+              "height": 0.0759
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C9D94A",
+            "z_index": 6
+          },
+          {
+            "id": "continuidade-cta",
+            "kind": "text",
+            "name": "continuidade-cta",
+            "rect": {
+              "x": 0.0815,
+              "y": 0.8833,
+              "width": 0.5648,
+              "height": 0.0444
+            },
+            "text": "Conheça a demonstração",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#183F32",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "O alimento vai, o recipiente pode voltar. Entre a entrega e a devolução, a Volta de Pote ajuda pequenos produtores de alimentos a acompanhar suas embalagens retornáveis. Registre entregas, empréstimos e devoluções e consulte quais recipientes estão com clientes. Conheça a demonstração."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "vdp-direcao-controle-v1",
+      "asset_ref": "vdp-asset-controle-01-v1",
+      "prompt": "Criar um único ativo visual vertical, proporção 3:4, para uma peça sobre acompanhamento de recipientes retornáveis de pequenos produtores de alimentos. Natureza-morta editorial de três potes alimentícios reutilizáveis com tampas, inteiros e separados, organizados em alturas diferentes, com contornos claros e aparência fosca. Tratamento de maquete artesanal em papel, textura sutil e iluminação uniforme. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra preenchendo toda a imagem. Manter margem interna para todos os objetos, pois o ativo será encaixado inteiro, sem recorte. Comunicar organização e presença concreta dos recipientes; não representar dashboard, interface, lista, etiquetas, indicadores ou funcionalidades. Sem letras, palavras, números, logotipos, marcas-d'água ou símbolos de certificação. Todo conteúdo verbal será adicionado em camadas editáveis fora do ativo. Associação futura: peça vdp-controle, versão v1, camada controle-imagem."
+    },
+    {
+      "direction_id": "vdp-direcao-continuidade-v1",
+      "asset_ref": "vdp-asset-continuidade-01-v1",
+      "prompt": "Criar um único ativo visual horizontal, proporção 68:25, como ilustração editorial de papel recortado com superfícies foscas e textura sutil. Duas mãos estilizadas em lados opostos e dois recipientes alimentícios reutilizáveis dispostos ao longo de uma fita curva oval aberta, sugerindo a passagem de recipientes entre produtor e cliente e a possibilidade de retorno. Movimento acolhedor e orgânico, sem aparência de fluxograma técnico. Usar exclusivamente floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas; fundo pedra preenchendo toda a imagem. Manter todos os elementos inteiros com margem interna: o ativo será encaixado proporcionalmente, sem recorte. Não representar telas, rastreamento automático, notificações ou funções do software; não usar folhas, selos ambientais ou símbolos de reciclagem. Sem letras, palavras, números, logotipos ou marcas-d'água. Todo conteúdo verbal será adicionado em camadas editáveis fora do ativo. Associação futura: peça vdp-continuidade, versão v1, camada continuidade-imagem."
+    }
+  ],
+  "conversation_response": "A primeira direção começa por uma dúvida prática sobre os recipientes; a segunda conta seu percurso entre produtor e cliente. As escolhas tipográficas são hipóteses desta exploração, sem atribuí-las às referências. Os dois planos foram preparados no MCP, sem geração ou renderização. As coordenadas dos retângulos são normalizadas de 0 a 1. Os asset_refs são reservas locais para os dois pedidos futuros; o coordenador deverá associá-los às respectivas camadas de imagem. O MCP apontou ativos ausentes e fontes não resolvidas; Arial e Georgia pertencem ao catálogo informado, mas a composição e o encaixe dos textos ainda dependem da renderização pelo coordenador. Você poderá escolher, revisar ou rejeitar ambas as propostas após ver os pilotos; nada aqui estabelece preferência permanente."
+}

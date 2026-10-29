@@ -1,0 +1,14 @@
+{
+  "frozen_at": "2026-10-28T07:45:14.088672+00:00",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/schedule-medium.json": "4b4242beeaffde6c343d2416c445de78864d2b102130527430b4ddde33fe6ec8",
+    "prototypes/compor-mcp/evals/model-efficiency/run_planning.py": "1162f7c0155b661da58e4652b983633fd11aac0feca9580d892a382855ba4fd9",
+    "prototypes/compor-mcp/evals/model-efficiency/run_followups.py": "17b6782f369e97918dcf22f8fde598e59e0d57bf2b09d67cfd398d65488cc121",
+    "prototypes/compor-mcp/evals/model-efficiency/blind_pack.py": "e6840a0213c674cfb1bd3fad583abc09ad1c06f5504bac746fa3b3a31b147cb6",
+    "prototypes/compor-mcp/evals/model-efficiency/artifacts.py": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "prototypes/compor-mcp/evals/model-efficiency/advance.py": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f",
+    "prototypes/compor-mcp/evals/model-efficiency/record_asset.py": "ed00d03e744946bd0e5dbb7eec029eb7c9388e5ed30fb701bf7d3397c2f5bedc",
+    "docs/evals/model-efficiency/adaptation-01.md": "b826c1cdef7def99d31eecf47ce1e245f39aef0a2f04905c8111e75aacc2b3f0"
+  },
+  "retains_original_model_inputs": true
+}

@@ -1,0 +1,512 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "5aaaf8feb716a83db250a3bbe854a4e4c6c72bca68fa3cee42480a86190fce4d",
+  "piece_sha256": "b2006df38ca71ac390f1be9cca59bcbcecb45ceae5d5e1fe93c370ccfc4fa58f",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp-cada-movimento",
+  "piece_version": "v1-proposta",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "b-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-imagem",
+      "kind": "image",
+      "z_index": 1,
+      "rect_px": [
+        64,
+        310,
+        952,
+        370
+      ],
+      "asset_ref": "asset-vdp-cada-movimento-01-proposto",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/assets/asset-vdp-cada-movimento-01-proposto.png",
+      "asset_sha256": "546c1724f5665a954ad6562b4871bf696a1aac6dec4d3ac4e5817c766c7cb33b",
+      "source_raw_size_px": [
+        2012,
+        782
+      ],
+      "source_oriented_size_px": [
+        2012,
+        782
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        64,
+        310,
+        952,
+        370
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "b-regua",
+      "kind": "shape",
+      "z_index": 2,
+      "rect_px": [
+        64,
+        710,
+        952,
+        74
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-cta-fundo",
+      "kind": "shape",
+      "z_index": 3,
+      "rect_px": [
+        230,
+        950,
+        620,
+        74
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#183F32",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-marca",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        64,
+        48,
+        952,
+        48
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 38.4,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            438,
+            48
+          ],
+          "metric_bounds_xyxy_px": [
+            437,
+            48,
+            643,
+            71
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        438,
+        48,
+        642,
+        71
+      ]
+    },
+    {
+      "id": "b-titulo",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        64,
+        126,
+        952,
+        156
+      ],
+      "settings": {
+        "font_ref": "georgia",
+        "font_weight": 700,
+        "font_size_px": 60,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Georgia",
+      "font_path": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+      "font_sha256": "1cfa9abd55be746c798c22ef4eba88fce82257934897404be2dae53ed0a4142a",
+      "requested_font_size_px": 60,
+      "effective_font_size_px": 60,
+      "font_fallback": false,
+      "text_preserved": "Cada ida e volta\ntem seu registro.",
+      "text_clipped": false,
+      "line_advance_px": 69.0,
+      "lines": [
+        {
+          "text": "Cada ida e volta",
+          "origin_px": [
+            298,
+            126
+          ],
+          "metric_bounds_xyxy_px": [
+            298,
+            126,
+            782,
+            173
+          ]
+        },
+        {
+          "text": "tem seu registro.",
+          "origin_px": [
+            280,
+            195
+          ],
+          "metric_bounds_xyxy_px": [
+            280,
+            195,
+            800,
+            254
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        280,
+        126,
+        796,
+        254
+      ]
+    },
+    {
+      "id": "b-entrega",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        80,
+        729,
+        280,
+        42
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 28,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 28,
+      "effective_font_size_px": 28,
+      "font_fallback": false,
+      "text_preserved": "Entrega",
+      "text_clipped": false,
+      "line_advance_px": 33.6,
+      "lines": [
+        {
+          "text": "Entrega",
+          "origin_px": [
+            168,
+            729
+          ],
+          "metric_bounds_xyxy_px": [
+            168,
+            729,
+            273,
+            755
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        170,
+        729,
+        272,
+        755
+      ]
+    },
+    {
+      "id": "b-emprestimo",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        386,
+        729,
+        308,
+        42
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 28,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 28,
+      "effective_font_size_px": 28,
+      "font_fallback": false,
+      "text_preserved": "Empréstimo",
+      "text_clipped": false,
+      "line_advance_px": 33.6,
+      "lines": [
+        {
+          "text": "Empréstimo",
+          "origin_px": [
+            458,
+            729
+          ],
+          "metric_bounds_xyxy_px": [
+            458,
+            729,
+            621,
+            755
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        460,
+        729,
+        621,
+        755
+      ]
+    },
+    {
+      "id": "b-devolucao",
+      "kind": "text",
+      "z_index": 8,
+      "rect_px": [
+        720,
+        729,
+        280,
+        42
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 28,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 28,
+      "effective_font_size_px": 28,
+      "font_fallback": false,
+      "text_preserved": "Devolução",
+      "text_clipped": false,
+      "line_advance_px": 33.6,
+      "lines": [
+        {
+          "text": "Devolução",
+          "origin_px": [
+            788,
+            729
+          ],
+          "metric_bounds_xyxy_px": [
+            788,
+            729,
+            931,
+            754
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        790,
+        729,
+        931,
+        754
+      ]
+    },
+    {
+      "id": "b-explicacao",
+      "kind": "text",
+      "z_index": 9,
+      "rect_px": [
+        64,
+        822,
+        952,
+        94
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 30,
+        "color_hex": "#183F32",
+        "line_height": 1.3,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Registre na web os movimentos dos recipientes.\nPara pequenos produtores de alimentos.",
+      "text_clipped": false,
+      "line_advance_px": 39.0,
+      "lines": [
+        {
+          "text": "Registre na web os movimentos dos recipientes.",
+          "origin_px": [
+            215,
+            822
+          ],
+          "metric_bounds_xyxy_px": [
+            215,
+            822,
+            865,
+            850
+          ]
+        },
+        {
+          "text": "Para pequenos produtores de alimentos.",
+          "origin_px": [
+            266,
+            861
+          ],
+          "metric_bounds_xyxy_px": [
+            266,
+            861,
+            813,
+            889
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        217,
+        822,
+        863,
+        889
+      ]
+    },
+    {
+      "id": "b-cta",
+      "kind": "text",
+      "z_index": 10,
+      "rect_px": [
+        246,
+        969,
+        588,
+        42
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#ECE9DF",
+        "line_height": 1.2,
+        "text_align": "center"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Conheça a demonstração",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "Conheça a demonstração",
+          "origin_px": [
+            357,
+            969
+          ],
+          "metric_bounds_xyxy_px": [
+            357,
+            969,
+            723,
+            997
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        358,
+        969,
+        723,
+        997
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "29969d56e6f638bc33133e98f898f3cfc1e0ae8eee5a70a7bd00be4637199d68",
+  "png_sha256": "133b7e2d284b5e90d549d2c5ab3b02836f0a869c1c6ba788a7e3e7c5414938a3",
+  "png_bytes": 441000,
+  "report_payload_sha256": "6734ebd1097590399197dc78fe3de5604d8d99cc4f482d04d6adaee3069ce1e2"
+}

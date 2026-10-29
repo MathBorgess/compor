@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-estrutura",
+  "asset_ref": "pedido-trama-estrutura-visual-v1",
+  "prompt": "Criar uma única ilustração editorial horizontal, proporção 936:310, para a camada estrutura-imagem. Metáfora de organização do conhecimento: módulos geométricos planos de tamanhos diferentes, articulados como uma pequena estrutura arquitetônica aberta, com encaixes legíveis e espaços generosos. Composição adulta, acolhedora e sóbria, sem aparência de brinquedo infantil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo sólido creme até as bordas. Formas inteiras, centralizadas, com margem interna; a imagem será encaixada proporcionalmente sem recorte. Sem letras, palavras, números, marcas-d'água, logotipos, assinaturas ou qualquer elemento tipográfico. Sem sombras, gradientes ou efeitos fotográficos. Não incluir a peça completa nem seu conteúdo verbal.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-fb9cb6e9-8b43-4fff-8880-e30398f59ca6.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/assets/pedido-trama-estrutura-visual-v1.png",
+  "sha256": "1679bcee39cef93ebb52c29786d53e56b9e83d9201685316df0a822ed843b959",
+  "elapsed_ms": 13518,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

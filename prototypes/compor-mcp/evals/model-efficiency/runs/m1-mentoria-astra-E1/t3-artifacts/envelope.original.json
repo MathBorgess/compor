@@ -1,0 +1,298 @@
+{
+  "directions": [
+    {
+      "id": "direcao-estrutura",
+      "title": "Conhecimento que ganha trama",
+      "concept": "Conectar saberes existentes em uma estrutura de ensino. A metáfora têxtil enfatiza acolhimento e construção, com imagem horizontal e título editorial em Georgia. É uma proposta conceitual, não uma preferência confirmada da marca.",
+      "composition_plan": {
+        "piece_id": "trama-estrutura",
+        "version": "proposta-v1",
+        "variation_ref": "direcao-estrutura",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "estrutura-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "estrutura-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.05,
+              "width": 0.866667,
+              "height": 0.048148
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "estrutura-titulo",
+            "kind": "text",
+            "name": "Conhecimento conectado",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.133333,
+              "width": 0.866667,
+              "height": 0.144444
+            },
+            "text": "Seu conhecimento\npode ganhar uma trama.",
+            "font_ref": "georgia",
+            "font_size_px": 60,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 2
+          },
+          {
+            "id": "estrutura-imagem",
+            "kind": "image",
+            "name": "Proposta de asset: fios que formam uma trama",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.316667,
+              "width": 0.866667,
+              "height": 0.314815
+            },
+            "z_index": 3
+          },
+          {
+            "id": "estrutura-acento",
+            "kind": "shape",
+            "name": "Divisor argila",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.668519,
+              "width": 0.074074,
+              "height": 0.005556
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 4
+          },
+          {
+            "id": "estrutura-oferta",
+            "kind": "text",
+            "name": "Formato e público",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.705556,
+              "width": 0.866667,
+              "height": 0.166667
+            },
+            "text": "Mentoria online para organizar\nseu primeiro curso curto.\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 34,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "estrutura-convite",
+            "kind": "text",
+            "name": "Convite por mensagem",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.905556,
+              "width": 0.866667,
+              "height": 0.044444
+            },
+            "text": "Quer saber mais? Envie uma mensagem.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Você já conhece bem um assunto. Como conectar esse conhecimento em um primeiro curso curto?\n\nA Trama de Aula é uma mentoria online para apoiar essa organização, com quatro encontros semanais ao vivo e revisão de um plano de aula.\n\nEstou preparando o lançamento. Quer saber mais? Envie uma mensagem com a palavra TRAMA."
+    },
+    {
+      "id": "direcao-recorte",
+      "title": "Escolher o que ensinar primeiro",
+      "concept": "Delimitar um curso dentro de um repertório amplo. A seleção de módulos representa autonomia e clareza: a pessoa decide o foco. A pergunta direta e a ilustração geométrica enfatizam escolha de escopo, enquanto a primeira direção enfatiza conexão entre saberes.",
+      "composition_plan": {
+        "piece_id": "trama-recorte",
+        "version": "proposta-v1",
+        "variation_ref": "direcao-recorte",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "recorte-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "rect": {
+              "x": 0,
+              "y": 0,
+              "width": 1,
+              "height": 1
+            },
+            "shape": "rectangle",
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "recorte-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.05,
+              "width": 0.866667,
+              "height": 0.048148
+            },
+            "text": "Trama de Aula",
+            "font_ref": "arial",
+            "font_size_px": 36,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 1
+          },
+          {
+            "id": "recorte-imagem",
+            "kind": "image",
+            "name": "Proposta de asset: seleção entre módulos",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.157407,
+              "width": 0.37037,
+              "height": 0.453704
+            },
+            "z_index": 2
+          },
+          {
+            "id": "recorte-titulo",
+            "kind": "text",
+            "name": "Escolha de escopo",
+            "rect": {
+              "x": 0.481481,
+              "y": 0.164815,
+              "width": 0.451852,
+              "height": 0.333333
+            },
+            "text": "Você sabe\nmuito.\nO que quer\nensinar\nprimeiro?",
+            "font_ref": "arial",
+            "font_size_px": 56,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "recorte-apoio",
+            "kind": "text",
+            "name": "Autonomia para escolher",
+            "rect": {
+              "x": 0.481481,
+              "y": 0.524074,
+              "width": 0.451852,
+              "height": 0.07963
+            },
+            "text": "Um curso curto começa\ncom uma escolha.",
+            "font_ref": "arial",
+            "font_size_px": 30,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "recorte-acento",
+            "kind": "shape",
+            "name": "Divisor argila",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.668519,
+              "width": 0.074074,
+              "height": 0.005556
+            },
+            "shape": "rectangle",
+            "fill_hex": "#C76B4B",
+            "z_index": 5
+          },
+          {
+            "id": "recorte-oferta",
+            "kind": "text",
+            "name": "Formato e público",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.705556,
+              "width": 0.866667,
+              "height": 0.166667
+            },
+            "text": "Mentoria online para organizar\nseu primeiro curso curto.\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+            "font_ref": "arial",
+            "font_size_px": 34,
+            "font_weight": 400,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 6
+          },
+          {
+            "id": "recorte-convite",
+            "kind": "text",
+            "name": "Convite por mensagem",
+            "rect": {
+              "x": 0.066667,
+              "y": 0.905556,
+              "width": 0.866667,
+              "height": 0.044444
+            },
+            "text": "Quer saber mais? Envie uma mensagem.",
+            "font_ref": "arial",
+            "font_size_px": 32,
+            "font_weight": 700,
+            "color_hex": "#532B54",
+            "line_height": 1.15,
+            "text_align": "left",
+            "z_index": 7
+          }
+        ]
+      },
+      "caption": "Do que você conhece bem, o que gostaria de ensinar primeiro?\n\nEscolher um recorte é um ponto de partida para organizar um curso curto. A Trama de Aula é uma mentoria online para apoiar essa organização, com quatro encontros semanais ao vivo e revisão de um plano de aula.\n\nEstou preparando o lançamento. Quer saber mais? Envie uma mensagem com a palavra TRAMA."
+    }
+  ],
+  "asset_requests": [
+    {
+      "direction_id": "direcao-estrutura",
+      "asset_ref": "pedido-asset-estrutura-v1",
+      "prompt": "Criar uma única ilustração editorial horizontal na proporção 936:340, destinada à camada estrutura-imagem. Vista superior de fios largos e delicados que percorrem caminhos individuais e se entrelaçam numa trama aberta no centro, mantendo suas pontas visíveis. Representar conexão entre conhecimentos já existentes, sem sugerir caos ou incompetência. Estética tátil discreta, adulta, acolhedora, com amplo respiro. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas. Manter toda a trama dentro do enquadramento, com margem interna. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Não incluir a copy da peça. O ativo será encaixado inteiro, proporcionalmente, sem recorte."
+    },
+    {
+      "direction_id": "direcao-recorte",
+      "asset_ref": "pedido-asset-recorte-v1",
+      "prompt": "Criar uma única ilustração editorial vertical na proporção 400:490, destinada à camada recorte-imagem. Composição geométrica plana de módulos sólidos variados, círculos e retângulos, distribuídos de modo organizado e espaçado. Uma moldura retangular em argila destaca um pequeno grupo desses módulos; outros continuam visíveis fora dela, representando a escolha de um recorte dentro de um repertório amplo. A moldura não corta nenhum módulo. Linguagem adulta, clara e sóbria, sem fios ou metáfora têxtil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas. Amplo respiro, sem sombras, gradientes ou efeitos tridimensionais. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Não incluir a copy da peça. O ativo será encaixado inteiro, proporcionalmente, sem recorte."
+    }
+  ],
+  "conversation_response": "Duas propostas preparadas no MCP, sem geração ou renderização. Os retângulos usam coordenadas normalizadas. Os asset_refs são reservas locais para pedidos futuros: associar pedido-asset-estrutura-v1 à camada estrutura-imagem e pedido-asset-recorte-v1 à camada recorte-imagem. O MCP apontou imagens ainda ausentes e fontes não resolvidas por ele; as fontes escolhidas constam no catálogo informado do compositor. A composição visual e o encaixe do texto ainda dependem da renderização pelo coordenador. Ambas preservam a voz de R1, usam R2 somente para ritmo e hierarquia e evitam a pressão de R3. Nenhuma preferência geral foi salva. Ao receber os pilotos, você poderá escolher a conexão entre saberes, a escolha de escopo, pedir ajustes por ID de camada ou recusar ambas."
+}

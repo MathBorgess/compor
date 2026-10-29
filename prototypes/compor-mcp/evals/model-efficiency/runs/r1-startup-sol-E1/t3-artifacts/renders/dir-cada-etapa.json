@@ -1,0 +1,450 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "157625b1faf7c277ce5bf2bbda1114e9dd267950569eb850b7bbeaca21be504e",
+  "piece_sha256": "707adb49b5aa79575186f4803580a28cdc8fe09571f46cde7977e5b560d7457c",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "vdp-cada-etapa",
+  "piece_version": "v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "b-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#183F32",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        64,
+        44,
+        952,
+        55
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 36,
+        "color_hex": "#ECE9DF",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 36,
+      "effective_font_size_px": 36,
+      "font_fallback": false,
+      "text_preserved": "Volta de Pote",
+      "text_clipped": false,
+      "line_advance_px": 41.4,
+      "lines": [
+        {
+          "text": "Volta de Pote",
+          "origin_px": [
+            65,
+            44
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            44,
+            293,
+            70
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        65,
+        44,
+        292,
+        70
+      ]
+    },
+    {
+      "id": "b-chamada",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        64,
+        125,
+        952,
+        170
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 68,
+        "color_hex": "#ECE9DF",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 68,
+      "effective_font_size_px": 68,
+      "font_fallback": false,
+      "text_preserved": "Cada etapa\nmerece um registro.",
+      "text_clipped": false,
+      "line_advance_px": 78.19999999999999,
+      "lines": [
+        {
+          "text": "Cada etapa",
+          "origin_px": [
+            64,
+            125
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            125,
+            429,
+            189
+          ]
+        },
+        {
+          "text": "merece um registro.",
+          "origin_px": [
+            64,
+            203
+          ],
+          "metric_bounds_xyxy_px": [
+            64,
+            203,
+            715,
+            267
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        67,
+        125,
+        711,
+        267
+      ]
+    },
+    {
+      "id": "b-imagem",
+      "kind": "image",
+      "z_index": 3,
+      "rect_px": [
+        64,
+        320,
+        460,
+        430
+      ],
+      "asset_ref": "asset-proposto-vdp-ciclo-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/assets/asset-proposto-vdp-ciclo-v1.png",
+      "asset_sha256": "d639df2f895aaff280d2164aae6fba352f0b8c59d1f2bd2f12f6a02eadef8439",
+      "source_raw_size_px": [
+        1296,
+        1213
+      ],
+      "source_oriented_size_px": [
+        1296,
+        1213
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        64,
+        320,
+        459,
+        430
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        1,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "b-etapas",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        570,
+        350,
+        446,
+        230
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 49,
+        "color_hex": "#C9D94A",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 49,
+      "effective_font_size_px": 49,
+      "font_fallback": false,
+      "text_preserved": "Entrega.\nEmpréstimo.\nDevolução.",
+      "text_clipped": false,
+      "line_advance_px": 56.349999999999994,
+      "lines": [
+        {
+          "text": "Entrega.",
+          "origin_px": [
+            570,
+            350
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            350,
+            766,
+            395
+          ]
+        },
+        {
+          "text": "Empréstimo.",
+          "origin_px": [
+            570,
+            406
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            406,
+            868,
+            452
+          ]
+        },
+        {
+          "text": "Devolução.",
+          "origin_px": [
+            570,
+            463
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            463,
+            831,
+            507
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        573,
+        350,
+        865,
+        507
+      ]
+    },
+    {
+      "id": "b-explicacao",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        570,
+        590,
+        446,
+        170
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 30,
+        "color_hex": "#ECE9DF",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Uma ferramenta web para\npequenos produtores\nacompanharem embalagens\nretornáveis.",
+      "text_clipped": false,
+      "line_advance_px": 34.5,
+      "lines": [
+        {
+          "text": "Uma ferramenta web para",
+          "origin_px": [
+            570,
+            590
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            590,
+            921,
+            618
+          ]
+        },
+        {
+          "text": "pequenos produtores",
+          "origin_px": [
+            570,
+            624
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            624,
+            857,
+            652
+          ]
+        },
+        {
+          "text": "acompanharem embalagens",
+          "origin_px": [
+            570,
+            659
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            659,
+            955,
+            687
+          ]
+        },
+        {
+          "text": "retornáveis.",
+          "origin_px": [
+            570,
+            694
+          ],
+          "metric_bounds_xyxy_px": [
+            570,
+            694,
+            728,
+            716
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        571,
+        590,
+        954,
+        716
+      ]
+    },
+    {
+      "id": "b-convite-fundo",
+      "kind": "shape",
+      "z_index": 6,
+      "rect_px": [
+        64,
+        900,
+        952,
+        104
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-convite",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        92,
+        927,
+        896,
+        55
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 40,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 40,
+      "effective_font_size_px": 40,
+      "font_fallback": false,
+      "text_preserved": "Conheça a demonstração",
+      "text_clipped": false,
+      "line_advance_px": 46.0,
+      "lines": [
+        {
+          "text": "Conheça a demonstração",
+          "origin_px": [
+            92,
+            927
+          ],
+          "metric_bounds_xyxy_px": [
+            92,
+            927,
+            574,
+            963
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        93,
+        927,
+        573,
+        963
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "9166c5f2338cb0e0d4dc41871d0a7cf31ae65830bdee3b90089037bc194b99d2",
+  "png_sha256": "b993ca7822b7834bef6aae75ecc48829a53df401854fe798d89ec919f6cb6948",
+  "png_bytes": 307134,
+  "report_payload_sha256": "92bc6163984d6829add515e1a6875f9c7d1d3dbb9c7a1391dad28a421aaa5d8a"
+}

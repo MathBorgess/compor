@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao_pergunta",
+      "piece_id": "vdp_pergunta",
+      "version": "v1",
+      "original_piece_sha256": "72f711d8961410de5741a505466dc9b09b4f78131630a6eb3ea1e558f23e2922",
+      "mapped_piece_sha256": "72f711d8961410de5741a505466dc9b09b4f78131630a6eb3ea1e558f23e2922",
+      "mcp_evidence": [
+        {
+          "event_index": 9,
+          "event_id": "item_4",
+          "wire_candidates": [
+            {
+              "process_id": 32489,
+              "request_id": 4,
+              "request_line": 28,
+              "response_line": 29
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp_asset_pergunta_v1"
+      ],
+      "unresolved_asset_refs": [
+        "vdp_asset_pergunta_v1"
+      ],
+      "render_input": "render-inputs/direcao_pergunta.json",
+      "render_input_sha256": "d29ded620974ba4c97e36895953a7c7169363bc66a2831003cd942c8a7e38c55"
+    },
+    {
+      "id": "direcao_ciclo",
+      "piece_id": "vdp_ciclo",
+      "version": "v1",
+      "original_piece_sha256": "498ca7084445d7babf209ca125cc01be76ab5503fc6277373f741c5d715f3d8e",
+      "mapped_piece_sha256": "498ca7084445d7babf209ca125cc01be76ab5503fc6277373f741c5d715f3d8e",
+      "mcp_evidence": [
+        {
+          "event_index": 13,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 32489,
+              "request_id": 6,
+              "request_line": 32,
+              "response_line": 33
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "vdp_asset_ciclo_v1"
+      ],
+      "unresolved_asset_refs": [
+        "vdp_asset_ciclo_v1"
+      ],
+      "render_input": "render-inputs/direcao_ciclo.json",
+      "render_input_sha256": "9662d9e34eee273c5e78c9ac57691b72e4b07ca9e1d135f416d5b2619e4dba50"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-astra-E0/turn-03.json",
+    "sha256": "741cfaf63c0cbea7062510aef6726120ff1ce2904415b8c844e0353bd7f2d554"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "4e5670fb86149ac5192935d44a988baae3707b64c791ec79809a738b4e6c1418",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "vdp_asset_ciclo_v1",
+    "vdp_asset_pergunta_v1"
+  ]
+}

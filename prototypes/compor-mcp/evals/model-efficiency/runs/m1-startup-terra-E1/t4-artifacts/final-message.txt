@@ -1,0 +1,48 @@
+{
+  "variations": [
+    {
+      "id": "controle-a",
+      "title": "Potes em acompanhamento",
+      "composition_plan": {
+        "piece_id": "vp-controle",
+        "version": "variacao-a-v1",
+        "variation_ref": "controle-a",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {"id":"a-fundo","kind":"shape","name":"Fundo pedra","shape":"rectangle","rect":{"x":0,"y":0,"width":1,"height":1},"fill_hex":"#ECE9DF","z_index":0},
+          {"id":"a-imagem","kind":"image","name":"Imagem original de recipientes","asset_ref":"proposta-asset-controle-v1","rect":{"x":0.52,"y":0.16,"width":0.43,"height":0.56},"z_index":1},
+          {"id":"a-marca","kind":"text","name":"Nome","rect":{"x":0.06,"y":0.06,"width":0.46,"height":0.05},"text":"Volta de Pote","font_ref":"arial","font_weight":700,"font_size_px":32,"color_hex":"#183F32","line_height":1.2,"text_align":"left","z_index":2},
+          {"id":"a-titulo","kind":"text","name":"Título","rect":{"x":0.06,"y":0.19,"width":0.44,"height":0.24},"text":"Seus potes,\nmais fáceis de\nacompanhar.","font_ref":"arial","font_weight":700,"font_size_px":55,"color_hex":"#183F32","line_height":1.1,"text_align":"left","z_index":3},
+          {"id":"a-apoio","kind":"text","name":"Descrição","rect":{"x":0.06,"y":0.46,"width":0.44,"height":0.17},"text":"Veja quais recipientes\nainda estão com clientes.","font_ref":"arial","font_weight":400,"font_size_px":32,"color_hex":"#183F32","line_height":1.25,"text_align":"left","z_index":4},
+          {"id":"a-faixa","kind":"shape","name":"Faixa do convite","shape":"rectangle","rect":{"x":0.06,"y":0.77,"width":0.88,"height":0.12},"fill_hex":"#C9D94A","z_index":5},
+          {"id":"a-cta","kind":"text","name":"Convite","rect":{"x":0.09,"y":0.805,"width":0.81,"height":0.055},"text":"Conheça a demonstração","font_ref":"arial","font_weight":700,"font_size_px":38,"color_hex":"#183F32","line_height":1.2,"text_align":"left","z_index":6}
+        ]
+      },
+      "caption": "Acompanhe os recipientes da sua produção com a Volta de Pote. Registre entregas, empréstimos e devoluções e consulte quais ainda estão com clientes. Conheça a demonstração."
+    },
+    {
+      "id": "controle-b",
+      "title": "Registre e consulte",
+      "composition_plan": {
+        "piece_id": "vp-controle",
+        "version": "variacao-b-v1",
+        "variation_ref": "controle-b",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {"id":"b-fundo","kind":"shape","name":"Fundo pedra","shape":"rectangle","rect":{"x":0,"y":0,"width":1,"height":1},"fill_hex":"#ECE9DF","z_index":0},
+          {"id":"b-imagem","kind":"image","name":"Imagem original de recipientes","asset_ref":"proposta-asset-controle-v1","rect":{"x":0.07,"y":0.24,"width":0.43,"height":0.55},"z_index":1},
+          {"id":"b-marca","kind":"text","name":"Nome","rect":{"x":0.06,"y":0.05,"width":0.46,"height":0.05},"text":"Volta de Pote","font_ref":"arial","font_weight":700,"font_size_px":32,"color_hex":"#183F32","line_height":1.2,"text_align":"left","z_index":2},
+          {"id":"b-titulo","kind":"text","name":"Título","rect":{"x":0.06,"y":0.12,"width":0.88,"height":0.1},"text":"Acompanhe seus recipientes.","font_ref":"arial","font_weight":700,"font_size_px":53,"color_hex":"#183F32","line_height":1.1,"text_align":"left","z_index":3},
+          {"id":"b-cartao","kind":"shape","name":"Área de descrição","shape":"rectangle","rect":{"x":0.54,"y":0.31,"width":0.39,"height":0.36},"fill_hex":"#183F32","z_index":4},
+          {"id":"b-apoio","kind":"text","name":"Descrição","rect":{"x":0.57,"y":0.35,"width":0.33,"height":0.28},"text":"Registre entregas,\nempréstimos e\ndevoluções.\nConsulte os potes\ncom clientes.","font_ref":"arial","font_weight":400,"font_size_px":31,"color_hex":"#ECE9DF","line_height":1.2,"text_align":"left","z_index":5},
+          {"id":"b-faixa","kind":"shape","name":"Faixa do convite","shape":"rectangle","rect":{"x":0.06,"y":0.82,"width":0.88,"height":0.11},"fill_hex":"#C9D94A","z_index":6},
+          {"id":"b-cta","kind":"text","name":"Convite","rect":{"x":0.09,"y":0.85,"width":0.81,"height":0.055},"text":"Conheça a demonstração","font_ref":"arial","font_weight":700,"font_size_px":38,"color_hex":"#183F32","line_height":1.2,"text_align":"left","z_index":7}
+        ]
+      },
+      "caption": "Da entrega à devolução, registre o percurso dos seus recipientes na Volta de Pote. Quando precisar, consulte quais ainda estão com clientes. Conheça a demonstração."
+    }
+  ],
+  "conversation_response": "A variação A mantém a distribuição da peça escolhida e destaca a consulta aos recipientes com clientes. A variação B coloca a imagem à esquerda e reúne as funções em um bloco floresta. Ambas referenciam exatamente o ativo proposta-asset-controle-v1. Os planos foram preparados, mas não renderizados; a tool sinalizou fontes não resolvidas, então o coordenador deve verificar as fontes locais e o encaixe do texto na composição."
+}

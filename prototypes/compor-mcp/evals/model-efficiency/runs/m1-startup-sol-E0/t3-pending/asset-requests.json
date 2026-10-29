@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "vdp_presenca",
+    "asset_ref": "vdp_asset_presenca_v1",
+    "prompt": "Criar um único ativo fotográfico editorial quadrado, proporção 1:1, para uma peça sobre recipientes retornáveis de pequenos produtores de alimentos. Vista próxima de uma bancada: mãos de duas pessoas passando um pote reutilizável fechado, com outros dois recipientes próximos. Gesto cotidiano e natural, sem rostos. Objetos inteiros dentro do enquadramento, margem interna generosa; composição legível em 460 × 460 px, pois será encaixada integralmente, sem recorte. Superfícies foscas e papel com textura sutil na bancada. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, além dos tons naturais das mãos e transparência do vidro. Fundo pedra, detalhes floresta e pequeno acento lima. Luz difusa e materialidade tátil. Não incluir telas, interface, gráficos, símbolos de certificação ou alegações ambientais. Sem letras, palavras, números, etiquetas, logotipos, assinaturas ou marcas-d'água. Não incorporar título ou legenda; todo conteúdo verbal será composto separadamente."
+  },
+  {
+    "direction_id": "vdp_percurso",
+    "asset_ref": "vdp_asset_percurso_v1",
+    "prompt": "Criar um único ativo panorâmico, proporção 3:1, como ilustração editorial tátil de papel recortado fosco. Três pequenas cenas de igual importância, em uma única faixa horizontal, centralizadas nos terços esquerdo, central e direito. À esquerda, uma mão oferece um pote fechado a outra mão; no centro, mãos de um cliente seguram o pote; à direita, uma mão devolve o pote vazio a outra mão. Repetir o mesmo desenho de recipiente para sugerir continuidade. Formas simples, próximas e reconhecíveis, textura discreta de papel. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo pedra. Todos os elementos inteiros, com margens internas, sem recorte e sem detalhes pequenos; o ativo será exibido integralmente em 936 × 312 px. Não incluir setas, legendas, divisórias, telas, interface, gráficos, selos ou símbolos de reciclagem. Sem letras, palavras, números, logotipos, assinaturas ou marcas-d'água. Os nomes das operações serão acrescentados como texto editável fora do ativo."
+  }
+]

@@ -1,0 +1,144 @@
+{
+  "piece_id": "trama-tecido",
+  "version": "1",
+  "width_px": 1080,
+  "height_px": 1080,
+  "layers": [
+    {
+      "id": "tecido-fundo",
+      "kind": "shape",
+      "name": "tecido-fundo",
+      "shape": "rectangle",
+      "rect": {
+        "x": 0,
+        "y": 0,
+        "width": 1,
+        "height": 1
+      },
+      "fill_hex": "#F4EBDD",
+      "z_index": 0
+    },
+    {
+      "id": "tecido-imagem",
+      "kind": "image",
+      "name": "Trama",
+      "rect": {
+        "x": 0.55,
+        "y": 0.15,
+        "width": 0.38,
+        "height": 0.47
+      },
+      "z_index": 1,
+      "asset_ref": "asset-trama-v1"
+    },
+    {
+      "id": "tecido-detalhe",
+      "kind": "shape",
+      "name": "tecido-detalhe",
+      "shape": "rectangle",
+      "rect": {
+        "x": 0.07,
+        "y": 0.68,
+        "width": 0.86,
+        "height": 0.01
+      },
+      "fill_hex": "#C76B4B",
+      "z_index": 2
+    },
+    {
+      "id": "tecido-marca",
+      "kind": "text",
+      "name": "Marca",
+      "rect": {
+        "x": 0.07,
+        "y": 0.06,
+        "width": 0.7,
+        "height": 0.05
+      },
+      "text": "TRAMA DE AULA",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 28,
+      "color_hex": "#532B54",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 3
+    },
+    {
+      "id": "tecido-titulo",
+      "kind": "text",
+      "name": "Título",
+      "rect": {
+        "x": 0.07,
+        "y": 0.18,
+        "width": 0.46,
+        "height": 0.25
+      },
+      "text": "Você já sabe.\nVamos dar\nforma à aula.",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 56,
+      "color_hex": "#532B54",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 4
+    },
+    {
+      "id": "tecido-descricao",
+      "kind": "text",
+      "name": "Descrição",
+      "rect": {
+        "x": 0.07,
+        "y": 0.49,
+        "width": 0.46,
+        "height": 0.12
+      },
+      "text": "Mentoria para seu\nprimeiro curso curto.",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 30,
+      "color_hex": "#532B54",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 5
+    },
+    {
+      "id": "tecido-formato",
+      "kind": "text",
+      "name": "Formato",
+      "rect": {
+        "x": 0.07,
+        "y": 0.73,
+        "width": 0.86,
+        "height": 0.1
+      },
+      "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 30,
+      "color_hex": "#532B54",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 6
+    },
+    {
+      "id": "tecido-convite",
+      "kind": "text",
+      "name": "Convite",
+      "rect": {
+        "x": 0.07,
+        "y": 0.89,
+        "width": 0.86,
+        "height": 0.06
+      },
+      "text": "Peça informações por mensagem",
+      "font_ref": "arial",
+      "font_weight": 700,
+      "font_size_px": 30,
+      "color_hex": "#532B54",
+      "line_height": 1.2,
+      "text_align": "left",
+      "z_index": 7
+    }
+  ]
+}

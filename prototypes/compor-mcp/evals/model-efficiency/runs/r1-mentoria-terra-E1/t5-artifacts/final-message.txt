@@ -1,0 +1,47 @@
+{
+  "revision": {
+    "id": "v3-headline",
+    "composition_plan": {
+      "piece_id": "trama-fios",
+      "version": "v3-headline",
+      "variation_ref": "v2-conhecimento",
+      "width_px": 1080,
+      "height_px": 1080,
+      "layers": [
+        {"id":"fios-fundo","kind":"shape","name":"Fundo creme","shape":"rectangle","rect":{"x":0,"y":0,"width":1,"height":1},"fill_hex":"#F4EBDD","z_index":0},
+        {"id":"fios-marca","kind":"text","name":"Nome da mentoria","rect":{"x":0.075,"y":0.05,"width":0.85,"height":0.05},"text":"TRAMA DE AULA","font_ref":"arial","font_weight":700,"font_size_px":28,"color_hex":"#532B54","line_height":1.2,"text_align":"left","z_index":1},
+        {"id":"fios-titulo","kind":"text","name":"Chamada principal","rect":{"x":0.075,"y":0.13,"width":0.85,"height":0.15},"text":"O que você sabe pode virar curso.","font_ref":"georgia","font_weight":700,"font_size_px":40,"color_hex":"#532B54","line_height":1.15,"text_align":"left","z_index":2},
+        {"id":"fios-imagem","kind":"image","name":"Trama de fios","rect":{"x":0.075,"y":0.3,"width":0.85,"height":0.32},"asset_ref":"asset-proposto-fios-v1","z_index":3},
+        {"id":"fios-detalhes","kind":"text","name":"Formato da mentoria","rect":{"x":0.075,"y":0.67,"width":0.85,"height":0.12},"text":"Mentoria para organizar seu primeiro curso curto.\n4 encontros ao vivo + revisão de plano de aula.","font_ref":"arial","font_weight":400,"font_size_px":32,"color_hex":"#532B54","line_height":1.25,"text_align":"left","z_index":4},
+        {"id":"fios-faixa","kind":"shape","name":"Faixa do convite","shape":"rectangle","rect":{"x":0.075,"y":0.84,"width":0.85,"height":0.09},"fill_hex":"#532B54","z_index":5},
+        {"id":"fios-convite","kind":"text","name":"Convite para contato","rect":{"x":0.1,"y":0.865,"width":0.8,"height":0.05},"text":"Peça informações por mensagem","font_ref":"arial","font_weight":700,"font_size_px":30,"color_hex":"#F4EBDD","line_height":1.2,"text_align":"left","z_index":6}
+      ]
+    },
+    "caption": "Você já conhece bem um assunto. A Trama de Aula é uma mentoria para ajudar você a organizar esse conhecimento em seu primeiro curso curto.\n\nSão quatro encontros semanais ao vivo e a revisão de um plano de aula.\n\nQuer saber mais? Me envie uma mensagem."
+  },
+  "feedback_summary": {
+    "source_version": "v2-conhecimento",
+    "aspects": [
+      {
+        "aspect": "escala e quebra da headline",
+        "target": {"kind":"layer","layer_id":"fios-titulo"},
+        "feedback": "A headline ocupa espaço demais e disputa atenção com o restante.",
+        "revision": "Tamanho reduzido de 56 para 40 px e quebra removida, mantendo as palavras."
+      },
+      {
+        "aspect": "paleta",
+        "target": {"kind":"piece","piece_id":"trama-fios"},
+        "feedback": "Gostou da paleta e quer preservá-la nesta peça."
+      }
+    ],
+    "scope": "Somente esta peça; não é preferência geral."
+  },
+  "outcome": {
+    "task_complete": false,
+    "draft_downloaded": false,
+    "download_later": "possível, sem decisão informada",
+    "resolves_need": "desconhecido",
+    "additional_reason": "não informado"
+  },
+  "conversation_response": "A revisão usa o mesmo ativo de fios e mantém os demais elementos da primeira variação. A segunda variação permanece como estava. O plano está preparado para renderização e revisão; ainda não há resultado visual desta versão."
+}

@@ -1,0 +1,361 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "1af4f756122f5933d20ff29fde747e0e7913bd54e5341dce8976a2c5bb718fb1",
+  "piece_sha256": "2fc8071807d40021a290d9a86d5d530d1f6c35cb0b482817e476ef5de1179eb3",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "trama-bancada",
+  "piece_version": "v1-proposta",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "bancada-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD",
+      "defaults_applied": {}
+    },
+    {
+      "id": "bancada-imagem",
+      "kind": "image",
+      "z_index": 1,
+      "rect_px": [
+        76,
+        184,
+        421,
+        421
+      ],
+      "asset_ref": "asset-proposto-bancada-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets/asset-proposto-bancada-v1.png",
+      "asset_sha256": "cce6d2e0e3bd48e3959472d170ae0e3fdd847d28dc6eee69c99714a1a5c26105",
+      "source_raw_size_px": [
+        1254,
+        1254
+      ],
+      "source_oriented_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        76,
+        184,
+        421,
+        421
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "bancada-acento",
+      "kind": "shape",
+      "z_index": 2,
+      "rect_px": [
+        76,
+        702,
+        928,
+        9
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B",
+      "defaults_applied": {}
+    },
+    {
+      "id": "bancada-marca",
+      "kind": "text",
+      "z_index": 3,
+      "rect_px": [
+        76,
+        76,
+        864,
+        64
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "TRAMA DE AULA",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "TRAMA DE AULA",
+          "origin_px": [
+            76,
+            76
+          ],
+          "metric_bounds_xyxy_px": [
+            76,
+            76,
+            327,
+            98
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        76,
+        76,
+        327,
+        98
+      ]
+    },
+    {
+      "id": "bancada-titulo",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        551,
+        216,
+        453,
+        270
+      ],
+      "settings": {
+        "font_ref": "georgia",
+        "font_weight": 700,
+        "font_size_px": 52,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Georgia",
+      "font_path": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+      "font_sha256": "1cfa9abd55be746c798c22ef4eba88fce82257934897404be2dae53ed0a4142a",
+      "requested_font_size_px": 52,
+      "effective_font_size_px": 52,
+      "font_fallback": false,
+      "text_preserved": "Do assunto\nà primeira\naula.",
+      "text_clipped": false,
+      "line_advance_px": 62.4,
+      "lines": [
+        {
+          "text": "Do assunto",
+          "origin_px": [
+            551,
+            216
+          ],
+          "metric_bounds_xyxy_px": [
+            551,
+            216,
+            850,
+            253
+          ]
+        },
+        {
+          "text": "à primeira",
+          "origin_px": [
+            551,
+            278
+          ],
+          "metric_bounds_xyxy_px": [
+            551,
+            278,
+            833,
+            328
+          ]
+        },
+        {
+          "text": "aula.",
+          "origin_px": [
+            551,
+            341
+          ],
+          "metric_bounds_xyxy_px": [
+            551,
+            341,
+            683,
+            381
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        552,
+        216,
+        849,
+        381
+      ]
+    },
+    {
+      "id": "bancada-corpo",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        76,
+        745,
+        928,
+        108
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 29,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 29,
+      "effective_font_size_px": 29,
+      "font_fallback": false,
+      "text_preserved": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "text_clipped": false,
+      "line_advance_px": 34.8,
+      "lines": [
+        {
+          "text": "4 encontros semanais ao vivo",
+          "origin_px": [
+            76,
+            745
+          ],
+          "metric_bounds_xyxy_px": [
+            76,
+            745,
+            460,
+            766
+          ]
+        },
+        {
+          "text": "+ revisão de um plano de aula",
+          "origin_px": [
+            76,
+            780
+          ],
+          "metric_bounds_xyxy_px": [
+            76,
+            780,
+            463,
+            807
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        76,
+        745,
+        462,
+        807
+      ]
+    },
+    {
+      "id": "bancada-cta",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        76,
+        918,
+        928,
+        65
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Peça informações sobre a mentoria.",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "Peça informações sobre a mentoria.",
+          "origin_px": [
+            76,
+            918
+          ],
+          "metric_bounds_xyxy_px": [
+            76,
+            918,
+            592,
+            946
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        78,
+        918,
+        591,
+        946
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "f52c5df3f0db2f3dabbbc2130b22adaaf4ef570c622f338d46bf10ec3f81771e",
+  "png_sha256": "0bc979401d822d625c3716d6e07e36802af74e38ee2535b4bfbb5e7e61f02b92",
+  "png_bytes": 296365,
+  "report_payload_sha256": "4f1562d2e5090dde7ee61fec3eea70536c10acb8a33f9cbdd08101e1607cd93d"
+}

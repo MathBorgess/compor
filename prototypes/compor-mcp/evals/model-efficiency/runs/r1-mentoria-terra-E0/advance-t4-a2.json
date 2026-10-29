@@ -1,0 +1,143 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/resume-after-t3.json",
+      "sha256": "f68c035e81ca7db16b6cc33112c802c5b4a1fdde592a33edcc339f6df1dffb3d"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets.json",
+      "sha256": "cce2d270d274aadf880c6d577c1e49fba6c7d88aded397be4741f7a9e9ba0c21"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f",
+    "explicit_destinations": {
+      "artifacts": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2",
+      "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/advance-t4-a2.json",
+      "resume": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/resume-after-t4-a2.json"
+    }
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2",
+    "renders": [
+      {
+        "artifact_id": "mapa-clareza",
+        "piece_id": "trama-mapa",
+        "version": "2a",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-clareza.png",
+        "png_sha256": "864a2440076e00303a60137451cb9869221c38658d0c294215700cb79a02a382",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-clareza.json",
+        "report_sha256": "b3640090410ad4eef0552009e37549ddb9303c6a12d9a57394a95a971ae62bf6",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 279.678417,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-mapa-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-mapa-v1"
+          },
+          {
+            "id": "a-linha",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-formato",
+            "kind": "text"
+          },
+          {
+            "id": "a-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "mapa-autoria",
+        "piece_id": "trama-mapa",
+        "version": "2b",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-autoria.png",
+        "png_sha256": "c628c855d2c8653c57be365d0c4a93fe480d63f33f13f0d9cc2ce17652ed144b",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/renders/mapa-autoria.json",
+        "report_sha256": "e45992398b25fbc40c32b97a1a4d7d2722f95440a6fd06fb58315ad684c14b03",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 208.032667,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-mapa-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-mapa-v1"
+          },
+          {
+            "id": "b-linha",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-formato",
+            "kind": "text"
+          },
+          {
+            "id": "b-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/resume-after-t4-a2.json",
+      "sha256": "aa67fa13c520d30df1124491967965ac263ff061c74f68e404e3e7baeb347d8a",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 9.459459,
+    "total": 500.479333
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

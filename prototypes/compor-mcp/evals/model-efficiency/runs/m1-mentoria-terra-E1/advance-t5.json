@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/resume-after-t4.json",
+      "sha256": "e0e02e0636e291a5bcb751c87f83169b2533ebe8fee9e634a2254fe0435db8b1"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/assets.json",
+      "sha256": "ff9dcb6e75148281e01edd7d834be174eb4404fc4fd58306248617c34720283f"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "variacao-conhecimento-v2",
+        "piece_id": "trama-fios",
+        "version": "variacao-conhecimento-v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t5-artifacts/renders/variacao-conhecimento-v2.png",
+        "png_sha256": "39a52e4987da5aa39adf2e0d2f243ffdd9c1c8b9c89d1d988e75e08d30103624",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-terra-E1/t5-artifacts/renders/variacao-conhecimento-v2.json",
+        "report_sha256": "24f45028e70f3f5d1d87f171d6a3be26f8e0b1a687959a36102d6c54a0df248c",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 170.134208,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-proposto-fios-v1"
+        ],
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "asset_ref": "asset-proposto-fios-v1"
+          },
+          {
+            "id": "fios-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text"
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-corpo",
+            "kind": "text"
+          },
+          {
+            "id": "fios-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.656709,
+    "total": 184.334792
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

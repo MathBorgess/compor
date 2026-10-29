@@ -1,0 +1,15 @@
+{
+  "direction_id": "dir-cada-movimento",
+  "asset_ref": "asset-vdp-cada-movimento-01-proposto",
+  "prompt": "Criar um único ativo de ilustração editorial horizontal, proporção 476:185, com aparência de colagem artesanal em papel fosco. Representar continuidade por uma fita larga suavemente sinuosa que percorre a imagem da esquerda à direita e faz uma curva de retorno. Distribuir três representações semelhantes de potes fechados ao longo desse percurso, como metáfora visual de movimentos de recipientes, sem aparência de tela ou diagrama de software. Formas simples, textura de papel discreta, sem brilho e sem efeito tridimensional fotográfico. Usar somente floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo pedra contínuo; todos os elementos inteiros dentro da imagem, com margens generosas. A composição deve funcionar inteira em encaixe proporcional contain, sem recorte. Sem painéis, botões, tabelas, mapas, gráficos, setas de velocidade, selos ambientais ou indicadores de resultado. Sem letras, palavras, números, logotipos, etiquetas escritas, assinaturas ou marcas-d'água. Os nomes das funções e os demais textos serão camadas editáveis externas a este ativo.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-d510ddae-4f57-45b2-af0a-eae10f1737b2.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/assets/asset-vdp-cada-movimento-01-proposto.png",
+  "sha256": "546c1724f5665a954ad6562b4871bf696a1aac6dec4d3ac4e5817c766c7cb33b",
+  "elapsed_ms": 14107,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

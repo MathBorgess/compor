@@ -1,0 +1,163 @@
+{
+  "revision": {
+    "id": "percurso-a-revisao-3a",
+    "composition_plan": {
+      "piece_id": "volta-percurso",
+      "version": "3a",
+      "width_px": 1080,
+      "height_px": 1080,
+      "product_ref": "volta-de-pote",
+      "variation_ref": "percurso-a",
+      "layers": [
+        {
+          "id": "a-fundo",
+          "kind": "shape",
+          "name": "Fundo pedra",
+          "shape": "rectangle",
+          "rect": {
+            "x": 0,
+            "y": 0,
+            "width": 1,
+            "height": 1
+          },
+          "fill_hex": "#ECE9DF",
+          "z_index": 0
+        },
+        {
+          "id": "a-imagem",
+          "kind": "image",
+          "name": "Imagem original do percurso",
+          "asset_ref": "asset-volta-percurso-01",
+          "rect": {
+            "x": 0.08,
+            "y": 0.32,
+            "width": 0.84,
+            "height": 0.4
+          },
+          "z_index": 1
+        },
+        {
+          "id": "a-marca",
+          "kind": "text",
+          "name": "Nome",
+          "rect": {
+            "x": 0.08,
+            "y": 0.05,
+            "width": 0.84,
+            "height": 0.06
+          },
+          "text": "VOLTA DE POTE",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 30,
+          "color_hex": "#183F32",
+          "line_height": 1.2,
+          "text_align": "left",
+          "z_index": 2
+        },
+        {
+          "id": "a-titulo",
+          "kind": "text",
+          "name": "Título",
+          "rect": {
+            "x": 0.08,
+            "y": 0.13,
+            "width": 0.84,
+            "height": 0.16
+          },
+          "text": "Acompanhe a\nvolta dos seus potes.",
+          "font_ref": "georgia",
+          "font_weight": 700,
+          "font_size_px": 76,
+          "color_hex": "#183F32",
+          "line_height": 1.1,
+          "text_align": "left",
+          "z_index": 3
+        },
+        {
+          "id": "a-apoio",
+          "kind": "text",
+          "name": "Texto de apoio",
+          "rect": {
+            "x": 0.08,
+            "y": 0.75,
+            "width": 0.84,
+            "height": 0.09
+          },
+          "text": "Registre entregas, empréstimos\ne devoluções.",
+          "font_ref": "arial",
+          "font_weight": 400,
+          "font_size_px": 34,
+          "color_hex": "#183F32",
+          "line_height": 1.2,
+          "text_align": "left",
+          "z_index": 4
+        },
+        {
+          "id": "a-faixa",
+          "kind": "shape",
+          "name": "Faixa da chamada",
+          "shape": "rectangle",
+          "rect": {
+            "x": 0.08,
+            "y": 0.87,
+            "width": 0.52,
+            "height": 0.08
+          },
+          "fill_hex": "#C9D94A",
+          "z_index": 5
+        },
+        {
+          "id": "a-cta",
+          "kind": "text",
+          "name": "Chamada",
+          "rect": {
+            "x": 0.1,
+            "y": 0.89,
+            "width": 0.48,
+            "height": 0.05
+          },
+          "text": "Conheça a demonstração",
+          "font_ref": "arial",
+          "font_weight": 700,
+          "font_size_px": 32,
+          "color_hex": "#183F32",
+          "line_height": 1.2,
+          "text_align": "left",
+          "z_index": 6
+        }
+      ]
+    },
+    "caption": "Seus potes vão e voltam. Com a Volta de Pote, você registra entregas, empréstimos e devoluções e consulta quais recipientes ainda estão com clientes. Conheça a demonstração da ferramenta web para pequenos produtores de alimentos."
+  },
+  "feedback_summary": {
+    "aspectos": [
+      {
+        "aspecto": "Destaque da headline",
+        "alvo": {
+          "piece_id": "volta-percurso",
+          "version": "2a",
+          "layer_id": "a-titulo"
+        },
+        "feedback": "A headline ficou tímida perto do restante.",
+        "revisao": "Escala aumentada de 62 para 76 px e quebra de linha ajustada, preservando as palavras."
+      },
+      {
+        "aspecto": "Materialidade da imagem",
+        "alvo": {
+          "piece_id": "volta-percurso",
+          "version": "2a",
+          "layer_id": "a-imagem",
+          "asset_ref": "asset-volta-percurso-01"
+        },
+        "feedback": "Gostou da materialidade e pediu para manter a imagem exatamente como está."
+      }
+    ],
+    "escopo": "Edição somente da primeira variação; não é uma preferência permanente de produto ou marca."
+  },
+  "outcome": {
+    "relatado": "A pessoa ainda não conseguiu o resultado que buscava, apesar de gostar da imagem. Ainda não baixou a peça e não sabe se vai usá-la.",
+    "desconhecido": "Não foi dada outra explicação para a insatisfação geral; o uso futuro e a avaliação desta revisão permanecem desconhecidos."
+  },
+  "conversation_response": "O plano altera somente a escala e a quebra de linha de a-titulo. A imagem e os demais elementos da primeira variação permanecem iguais, assim como a segunda variação. A revisão ainda precisa ser composta para verificar o encaixe da headline; a preparação MCP não renderiza a peça."
+}

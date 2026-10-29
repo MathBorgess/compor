@@ -1,0 +1,79 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0",
+  "turn": 5,
+  "status": "completed",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/resume-after-t4.json",
+      "sha256": "05e608adcb1e0a389faa42cc6b41beede2cc1e4437fdb9f30ad5502d4793df4e"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/assets.json",
+      "sha256": "eee30da0496c7a8e5db4c55859abb1ab6bb95f94e547fcf63e81ed2e60f7efbc"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t5-artifacts",
+    "renders": [
+      {
+        "artifact_id": "vdp_presenca_pergunta_v2",
+        "piece_id": "vdp_presenca_pergunta_piece",
+        "version": "v2",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t5-artifacts/renders/vdp_presenca_pergunta_v2.png",
+        "png_sha256": "0ec05ab8c9024b23f7319db81301f1befcc81b520fa605b3707c80e9cfa12f77",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E0/t5-artifacts/renders/vdp_presenca_pergunta_v2.json",
+        "report_sha256": "953c914abe0d36d7d79f23d7afdbefffded338fe8f20baa1da905ea7e8f32062",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 240.126125,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "vdp_asset_presenca_v1"
+        ],
+        "layers": [
+          {
+            "id": "pergunta_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "pergunta_brand",
+            "kind": "text"
+          },
+          {
+            "id": "pergunta_headline",
+            "kind": "text"
+          },
+          {
+            "id": "pergunta_image",
+            "kind": "image",
+            "asset_ref": "vdp_asset_presenca_v1"
+          },
+          {
+            "id": "pergunta_body",
+            "kind": "text"
+          },
+          {
+            "id": "pergunta_cta_bg",
+            "kind": "shape"
+          },
+          {
+            "id": "pergunta_cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": null
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.122417,
+    "total": 253.422083
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,476 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "82cc5f5605a62ef2ea445cadd6237062a99adc15861a9e5d06e875315443f572",
+  "piece_sha256": "13871db8891e55637273453c16d819a2d1286750212c95a8131a942eeb36fa27",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "trama-recorte",
+  "piece_version": "proposta-v1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "recorte-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD",
+      "defaults_applied": {}
+    },
+    {
+      "id": "recorte-marca",
+      "kind": "text",
+      "z_index": 1,
+      "rect_px": [
+        72,
+        54,
+        936,
+        52
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 36,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 36,
+      "effective_font_size_px": 36,
+      "font_fallback": false,
+      "text_preserved": "Trama de Aula",
+      "text_clipped": false,
+      "line_advance_px": 41.4,
+      "lines": [
+        {
+          "text": "Trama de Aula",
+          "origin_px": [
+            72,
+            54
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            54,
+            320,
+            80
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        72,
+        54,
+        319,
+        80
+      ]
+    },
+    {
+      "id": "recorte-imagem",
+      "kind": "image",
+      "z_index": 2,
+      "rect_px": [
+        72,
+        170,
+        400,
+        490
+      ],
+      "asset_ref": "pedido-asset-recorte-v1",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets/pedido-asset-recorte-v1.png",
+      "asset_sha256": "9d75a2e3e78a1c9f946ef0960b7d5aa765d0af114979133badf0f470c6ade56d",
+      "source_raw_size_px": [
+        1133,
+        1388
+      ],
+      "source_oriented_size_px": [
+        1133,
+        1388
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        72,
+        170,
+        400,
+        490
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "recorte-titulo",
+      "kind": "text",
+      "z_index": 3,
+      "rect_px": [
+        520,
+        178,
+        488,
+        360
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 56,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 56,
+      "effective_font_size_px": 56,
+      "font_fallback": false,
+      "text_preserved": "Você sabe\nmuito.\nO que quer\nensinar\nprimeiro?",
+      "text_clipped": false,
+      "line_advance_px": 64.39999999999999,
+      "lines": [
+        {
+          "text": "Você sabe",
+          "origin_px": [
+            521,
+            178
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            178,
+            797,
+            220
+          ]
+        },
+        {
+          "text": "muito.",
+          "origin_px": [
+            520,
+            242
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            242,
+            689,
+            283
+          ]
+        },
+        {
+          "text": "O que quer",
+          "origin_px": [
+            520,
+            307
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            307,
+            817,
+            359
+          ]
+        },
+        {
+          "text": "ensinar",
+          "origin_px": [
+            520,
+            371
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            371,
+            720,
+            412
+          ]
+        },
+        {
+          "text": "primeiro?",
+          "origin_px": [
+            520,
+            436
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            436,
+            779,
+            488
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        521,
+        178,
+        817,
+        488
+      ]
+    },
+    {
+      "id": "recorte-apoio",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        520,
+        566,
+        488,
+        86
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Um curso curto começa\ncom uma escolha.",
+      "text_clipped": false,
+      "line_advance_px": 34.5,
+      "lines": [
+        {
+          "text": "Um curso curto começa",
+          "origin_px": [
+            520,
+            566
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            566,
+            838,
+            595
+          ]
+        },
+        {
+          "text": "com uma escolha.",
+          "origin_px": [
+            520,
+            600
+          ],
+          "metric_bounds_xyxy_px": [
+            520,
+            600,
+            765,
+            622
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        521,
+        566,
+        837,
+        622
+      ]
+    },
+    {
+      "id": "recorte-acento",
+      "kind": "shape",
+      "z_index": 5,
+      "rect_px": [
+        72,
+        722,
+        80,
+        6
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B",
+      "defaults_applied": {}
+    },
+    {
+      "id": "recorte-oferta",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        72,
+        762,
+        936,
+        180
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 34,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Mentoria online para organizar\nseu primeiro curso curto.\n4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "text_clipped": false,
+      "line_advance_px": 39.099999999999994,
+      "lines": [
+        {
+          "text": "Mentoria online para organizar",
+          "origin_px": [
+            72,
+            762
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            762,
+            534,
+            794
+          ]
+        },
+        {
+          "text": "seu primeiro curso curto.",
+          "origin_px": [
+            72,
+            801
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            801,
+            444,
+            833
+          ]
+        },
+        {
+          "text": "4 encontros semanais ao vivo",
+          "origin_px": [
+            72,
+            840
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            840,
+            521,
+            865
+          ]
+        },
+        {
+          "text": "+ revisão de um plano de aula",
+          "origin_px": [
+            72,
+            879
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            879,
+            528,
+            911
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        72,
+        762,
+        534,
+        911
+      ]
+    },
+    {
+      "id": "recorte-convite",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        72,
+        978,
+        936,
+        48
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 32,
+        "color_hex": "#532B54",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 32,
+      "effective_font_size_px": 32,
+      "font_fallback": false,
+      "text_preserved": "Quer saber mais? Envie uma mensagem.",
+      "text_clipped": false,
+      "line_advance_px": 36.8,
+      "lines": [
+        {
+          "text": "Quer saber mais? Envie uma mensagem.",
+          "origin_px": [
+            72,
+            978
+          ],
+          "metric_bounds_xyxy_px": [
+            72,
+            978,
+            700,
+            1007
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        73,
+        978,
+        698,
+        1007
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "191e2b42b0f21dde3717d1a7de1f5871cecd706543b98b0b7ac5ea9ad71113b8",
+  "png_sha256": "d54f366ed02271c1041e62c533fd5af785649a849585f88e48fe28c9b6d51844",
+  "png_bytes": 235713,
+  "report_payload_sha256": "4628cefa597b49951261ff55fd54bfe2afa3d60bf2a025d62f4ce1a004fe2053"
+}

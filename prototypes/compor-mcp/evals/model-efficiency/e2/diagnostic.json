@@ -1,0 +1,572 @@
+{
+  "purpose": "Visible case development replay through T3 only",
+  "status": "paused",
+  "wall_clock_ms": 78063.897166,
+  "usage_cli_last": {
+    "input_tokens": 147454,
+    "cached_input_tokens": 128256,
+    "output_tokens": 5787,
+    "cache_write_input_tokens": 0,
+    "reasoning_output_tokens": 0
+  },
+  "calls": [
+    {
+      "process_id": 40259,
+      "request_id": 2,
+      "tool": "prepare_word_cloud",
+      "arguments": {
+        "words": [
+          {
+            "word": "acolhimento"
+          },
+          {
+            "word": "prática"
+          },
+          {
+            "word": "clareza"
+          },
+          {
+            "word": "autonomia"
+          }
+        ]
+      },
+      "failed": false,
+      "error": null
+    },
+    {
+      "process_id": 40259,
+      "request_id": 3,
+      "tool": "prepare_moodboard",
+      "arguments": {
+        "board_id": "trama-quadro",
+        "board_version": "1",
+        "direction": "Peça de feed para apresentar a mentoria Trama de Aula e convidar a pedir informações.",
+        "elements": [
+          {
+            "id": "r1",
+            "kind": "reference",
+            "label": "voz da minha marca",
+            "meaning": "Explicações claras, acolhedoras e diretas; reconhecer o conhecimento prévio do público.",
+            "intent": "keep",
+            "aspects": [
+              "other"
+            ],
+            "origin_claim": "Referência descrita pela criadora"
+          },
+          {
+            "id": "r2",
+            "kind": "reference",
+            "label": "gosto do ritmo visual",
+            "meaning": "Intervalos generosos entre blocos e alternância de pesos; referência restrita a ritmo e hierarquia.",
+            "intent": "inspire",
+            "aspects": [
+              "composition",
+              "typography"
+            ],
+            "origin_claim": "Referência descrita pela criadora"
+          },
+          {
+            "id": "r3",
+            "kind": "reference",
+            "label": "não quero esse tom",
+            "meaning": "Evitar chamada insistente baseada no medo de ficar para trás.",
+            "intent": "avoid",
+            "aspects": [
+              "other"
+            ],
+            "origin_claim": "Referência descrita pela criadora"
+          },
+          {
+            "id": "ameixa",
+            "kind": "color",
+            "value": "#532B54",
+            "intent": "keep",
+            "aspects": [
+              "color"
+            ]
+          },
+          {
+            "id": "argila",
+            "kind": "color",
+            "value": "#C76B4B",
+            "intent": "keep",
+            "aspects": [
+              "color"
+            ]
+          },
+          {
+            "id": "creme",
+            "kind": "color",
+            "value": "#F4EBDD",
+            "intent": "keep",
+            "aspects": [
+              "color"
+            ]
+          }
+        ],
+        "restrictions": [
+          {
+            "aspect": "color",
+            "rule": "must_keep",
+            "value": "Ameixa #532B54, argila #C76B4B e creme #F4EBDD para esta peça."
+          },
+          {
+            "aspect": "other",
+            "rule": "must_avoid",
+            "value": "Chamada insistente baseada no medo de ficar para trás."
+          }
+        ]
+      },
+      "failed": true,
+      "error": [
+        {
+          "type": "text",
+          "text": "Elementos inválidos: IDs devem ser únicos e apenas referências devem ter asset_ref."
+        }
+      ]
+    },
+    {
+      "process_id": 40259,
+      "request_id": 4,
+      "tool": "prepare_moodboard",
+      "arguments": {
+        "board_id": "trama-quadro",
+        "board_version": "1",
+        "direction": "Apresentar a mentoria e convidar a pedir informações.",
+        "elements": [
+          {
+            "id": "r1",
+            "kind": "reference",
+            "asset_ref": "referencia-r1-descricao",
+            "label": "voz da minha marca",
+            "meaning": "Clara, acolhedora e direta; reconhecer o conhecimento prévio.",
+            "intent": "keep",
+            "aspects": [
+              "other"
+            ]
+          },
+          {
+            "id": "r2",
+            "kind": "reference",
+            "asset_ref": "referencia-r2-descricao",
+            "label": "gosto do ritmo visual",
+            "meaning": "Intervalos generosos e alternância de pesos, apenas para ritmo e hierarquia.",
+            "intent": "inspire",
+            "aspects": [
+              "composition",
+              "typography"
+            ]
+          },
+          {
+            "id": "r3",
+            "kind": "reference",
+            "asset_ref": "referencia-r3-descricao",
+            "label": "não quero esse tom",
+            "meaning": "Chamada insistente com medo de ficar para trás.",
+            "intent": "avoid",
+            "aspects": [
+              "other"
+            ]
+          },
+          {
+            "id": "c1",
+            "kind": "color",
+            "value": "#532B54",
+            "intent": "keep"
+          },
+          {
+            "id": "c2",
+            "kind": "color",
+            "value": "#C76B4B",
+            "intent": "keep"
+          },
+          {
+            "id": "c3",
+            "kind": "color",
+            "value": "#F4EBDD",
+            "intent": "keep"
+          }
+        ],
+        "restrictions": [
+          {
+            "aspect": "color",
+            "rule": "must_keep",
+            "value": "Ameixa #532B54, argila #C76B4B e creme #F4EBDD nesta peça."
+          }
+        ]
+      },
+      "failed": false,
+      "error": null
+    },
+    {
+      "process_id": 40293,
+      "request_id": 2,
+      "tool": "list_skills",
+      "arguments": {},
+      "failed": false,
+      "error": null
+    },
+    {
+      "process_id": 40293,
+      "request_id": 3,
+      "tool": "load_skill",
+      "arguments": {
+        "id": "criar-piloto",
+        "version": "0.1.0-prototype-e2"
+      },
+      "failed": false,
+      "error": null
+    },
+    {
+      "process_id": 40293,
+      "request_id": 5,
+      "tool": "prepare_layered_creative",
+      "arguments": {
+        "piece": {
+          "piece_id": "trama-trama",
+          "version": "1",
+          "width_px": 1080,
+          "height_px": 1080,
+          "layers": [
+            {
+              "id": "t-fundo",
+              "kind": "shape",
+              "name": "Fundo creme",
+              "shape": "rectangle",
+              "fill_hex": "#F4EBDD",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 1,
+                "height": 1
+              },
+              "z_index": 0
+            },
+            {
+              "id": "t-imagem",
+              "kind": "image",
+              "name": "Fios entrelaçados",
+              "asset_ref": "asset-trama-01",
+              "rect": {
+                "x": 0.62,
+                "y": 0.08,
+                "width": 0.3,
+                "height": 0.3
+              },
+              "z_index": 1
+            },
+            {
+              "id": "t-marca",
+              "kind": "text",
+              "name": "Nome da mentoria",
+              "text": "TRAMA DE AULA",
+              "font_ref": "arial",
+              "font_weight": 700,
+              "font_size_px": 28,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.1,
+                "width": 0.5,
+                "height": 0.05
+              },
+              "z_index": 2
+            },
+            {
+              "id": "t-titulo",
+              "kind": "text",
+              "name": "Chamada principal",
+              "text": "Dê forma ao seu\nprimeiro curso.",
+              "font_ref": "georgia",
+              "font_weight": 700,
+              "font_size_px": 49,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.2,
+                "width": 0.53,
+                "height": 0.15
+              },
+              "z_index": 3
+            },
+            {
+              "id": "t-ponto1",
+              "kind": "shape",
+              "name": "Marcador conhecimento",
+              "shape": "ellipse",
+              "fill_hex": "#C76B4B",
+              "rect": {
+                "x": 0.08,
+                "y": 0.43,
+                "width": 0.025,
+                "height": 0.025
+              },
+              "z_index": 4
+            },
+            {
+              "id": "t-passo1",
+              "kind": "text",
+              "name": "Ponto de partida",
+              "text": "Você já conhece seu assunto.",
+              "font_ref": "arial",
+              "font_weight": 700,
+              "font_size_px": 34,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.13,
+                "y": 0.42,
+                "width": 0.78,
+                "height": 0.06
+              },
+              "z_index": 5
+            },
+            {
+              "id": "t-ponto2",
+              "kind": "shape",
+              "name": "Marcador mentoria",
+              "shape": "ellipse",
+              "fill_hex": "#C76B4B",
+              "rect": {
+                "x": 0.08,
+                "y": 0.54,
+                "width": 0.025,
+                "height": 0.025
+              },
+              "z_index": 6
+            },
+            {
+              "id": "t-passo2",
+              "kind": "text",
+              "name": "Apoio da mentoria",
+              "text": "A mentoria ajuda a organizá-lo\nem um curso curto.",
+              "font_ref": "arial",
+              "font_weight": 400,
+              "font_size_px": 34,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.13,
+                "y": 0.53,
+                "width": 0.79,
+                "height": 0.1
+              },
+              "z_index": 7
+            },
+            {
+              "id": "t-formato",
+              "kind": "text",
+              "name": "Formato",
+              "text": "Online: 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+              "font_ref": "arial",
+              "font_weight": 400,
+              "font_size_px": 29,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.7,
+                "width": 0.84,
+                "height": 0.09
+              },
+              "z_index": 8
+            },
+            {
+              "id": "t-acao",
+              "kind": "text",
+              "name": "Convite",
+              "text": "Peça informações por mensagem.",
+              "font_ref": "arial",
+              "font_weight": 700,
+              "font_size_px": 30,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.88,
+                "width": 0.84,
+                "height": 0.06
+              },
+              "z_index": 9
+            }
+          ]
+        }
+      },
+      "failed": false,
+      "error": null
+    },
+    {
+      "process_id": 40293,
+      "request_id": 4,
+      "tool": "prepare_layered_creative",
+      "arguments": {
+        "piece": {
+          "piece_id": "trama-editorial",
+          "version": "1",
+          "width_px": 1080,
+          "height_px": 1080,
+          "layers": [
+            {
+              "id": "e-fundo",
+              "kind": "shape",
+              "name": "Fundo creme",
+              "shape": "rectangle",
+              "fill_hex": "#F4EBDD",
+              "rect": {
+                "x": 0,
+                "y": 0,
+                "width": 1,
+                "height": 1
+              },
+              "z_index": 0
+            },
+            {
+              "id": "e-imagem",
+              "kind": "image",
+              "name": "Composição de papéis",
+              "asset_ref": "asset-editorial-01",
+              "rect": {
+                "x": 0.55,
+                "y": 0.13,
+                "width": 0.37,
+                "height": 0.37
+              },
+              "z_index": 1
+            },
+            {
+              "id": "e-linha",
+              "kind": "shape",
+              "name": "Linha argila",
+              "shape": "rectangle",
+              "fill_hex": "#C76B4B",
+              "rect": {
+                "x": 0.08,
+                "y": 0.12,
+                "width": 0.12,
+                "height": 0.009
+              },
+              "z_index": 2
+            },
+            {
+              "id": "e-marca",
+              "kind": "text",
+              "name": "Nome da mentoria",
+              "text": "TRAMA DE AULA",
+              "font_ref": "arial",
+              "font_weight": 700,
+              "font_size_px": 28,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.16,
+                "width": 0.46,
+                "height": 0.05
+              },
+              "z_index": 3
+            },
+            {
+              "id": "e-titulo",
+              "kind": "text",
+              "name": "Chamada principal",
+              "text": "Seu conhecimento\npode virar curso.",
+              "font_ref": "georgia",
+              "font_weight": 700,
+              "font_size_px": 48,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.25,
+                "width": 0.48,
+                "height": 0.15
+              },
+              "z_index": 4
+            },
+            {
+              "id": "e-descricao",
+              "kind": "text",
+              "name": "Oferta",
+              "text": "Mentoria online para organizar\nseu primeiro curso curto.",
+              "font_ref": "arial",
+              "font_weight": 400,
+              "font_size_px": 34,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.56,
+                "width": 0.84,
+                "height": 0.1
+              },
+              "z_index": 5
+            },
+            {
+              "id": "e-formato",
+              "kind": "text",
+              "name": "Formato",
+              "text": "4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+              "font_ref": "arial",
+              "font_weight": 400,
+              "font_size_px": 30,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.7,
+                "width": 0.84,
+                "height": 0.1
+              },
+              "z_index": 6
+            },
+            {
+              "id": "e-acao",
+              "kind": "text",
+              "name": "Convite",
+              "text": "Peça informações por mensagem.",
+              "font_ref": "arial",
+              "font_weight": 700,
+              "font_size_px": 30,
+              "color_hex": "#532B54",
+              "line_height": 1.2,
+              "text_align": "left",
+              "rect": {
+                "x": 0.08,
+                "y": 0.88,
+                "width": 0.84,
+                "height": 0.06
+              },
+              "z_index": 7
+            }
+          ]
+        }
+      },
+      "failed": false,
+      "error": null
+    }
+  ],
+  "failed_calls": 1,
+  "pilot_loaded": true,
+  "catalog_hashes_observed_python_serialization": [
+    "437a0f331bbab123ea7d8c1c06d23c7f71e0b9d07b19785859d168096fd7b2e2",
+    "437a0f331bbab123ea7d8c1c06d23c7f71e0b9d07b19785859d168096fd7b2e2",
+    "437a0f331bbab123ea7d8c1c06d23c7f71e0b9d07b19785859d168096fd7b2e2"
+  ],
+  "limitations": [
+    "No assets generated, no renders or Judges; not a quality result",
+    "Known case; one sample; no causal claim",
+    "Same native isolation limitations as E0/E1"
+  ]
+}

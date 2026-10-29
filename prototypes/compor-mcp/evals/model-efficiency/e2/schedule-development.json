@@ -1,0 +1,12 @@
+[
+  {
+    "order": 1,
+    "run_id": "e2-dev-mentoria-terra-low-01",
+    "case_id": "mentoria-trama-de-aula",
+    "model": "gpt-6.1-terra",
+    "effort": "low",
+    "guidance": "focused_v2",
+    "replicate": 1,
+    "phase": "development_replay"
+  }
+]

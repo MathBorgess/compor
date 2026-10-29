@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "dir-estrutura",
+      "piece_id": "trama-estrutura",
+      "version": "proposta-v1",
+      "original_piece_sha256": "1a31adca6c0a2a563f3b5f7bfa555d7e7659b2b44589b6c660ec7071ce6d0ed2",
+      "mapped_piece_sha256": "e807aa25c290673d80ca11cc60579883fe55e6580346e861b378e3c176471720",
+      "mcp_evidence": [
+        {
+          "event_index": 13,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 18841,
+              "request_id": 6,
+              "request_line": 24,
+              "response_line": 25
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-trama-estrutura-visual-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-trama-estrutura-visual-v1"
+      ],
+      "render_input": "render-inputs/dir-estrutura.json",
+      "render_input_sha256": "660dda2740e55bfdfaa547d4aadbb3898b20416556c671d94ee38f5c7532f841"
+    },
+    {
+      "id": "dir-percurso",
+      "piece_id": "trama-percurso",
+      "version": "proposta-v1",
+      "original_piece_sha256": "7f5b54d48bc1e6eb5f58fbaf6e78a77db0f6edbfda43e1985c6ab083e4c3a87d",
+      "mapped_piece_sha256": "b0f86c32375a7843f54bed9e923df033ce6be7601d6484eed8f68fa7e851f2c2",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 18841,
+              "request_id": 7,
+              "request_line": 26,
+              "response_line": 27
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "pedido-trama-percurso-visual-v1"
+      ],
+      "unresolved_asset_refs": [
+        "pedido-trama-percurso-visual-v1"
+      ],
+      "render_input": "render-inputs/dir-percurso.json",
+      "render_input_sha256": "69d7257e2ecb9d9f376d07e6087a9afe2dba704f81b2e438cb5269a5fd810107"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "dir-estrutura",
+      "operation": "add",
+      "layer_id": "estrutura-imagem",
+      "field": "asset_ref",
+      "value": "pedido-trama-estrutura-visual-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "dir-percurso",
+      "operation": "add",
+      "layer_id": "percurso-imagem",
+      "field": "asset_ref",
+      "value": "pedido-trama-percurso-visual-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/turn-03.json",
+    "sha256": "aab854f5282708768ac72a1e2231f3f476aa320919fb6f7a67f96280302fcc25"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "5f9f630d2d8671cff56b2ea73a065f9570a8d39f4175392276703f7172f9045b",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "pedido-trama-estrutura-visual-v1",
+    "pedido-trama-percurso-visual-v1"
+  ]
+}

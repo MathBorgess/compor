@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json",
+      "sha256": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/assets.json",
+      "sha256": "2e1770146b677e7eb1becbffea9f7897845715a21165d2338f6a5f50464ac75e"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "direcao-estrutura",
+        "piece_id": "trama-estrutura",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts/renders/direcao-estrutura.png",
+        "png_sha256": "f264223f40bd6ac627844aa970aeb2abae7c6671fa7b8bde96c3f0d7f97cb636",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts/renders/direcao-estrutura.json",
+        "report_sha256": "0c03cd7ca424636c066acfe768d17bd5f402fca23d9e2321afc6ca4688511ea7",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 306.4085,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-asset-estrutura-v1"
+        ],
+        "layers": [
+          {
+            "id": "estrutura-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "estrutura-marca",
+            "kind": "text"
+          },
+          {
+            "id": "estrutura-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "estrutura-imagem",
+            "kind": "image",
+            "asset_ref": "pedido-asset-estrutura-v1"
+          },
+          {
+            "id": "estrutura-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "estrutura-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "estrutura-convite",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "direcao-recorte",
+        "piece_id": "trama-recorte",
+        "version": "proposta-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts/renders/direcao-recorte.png",
+        "png_sha256": "d54f366ed02271c1041e62c533fd5af785649a849585f88e48fe28c9b6d51844",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/t3-artifacts/renders/direcao-recorte.json",
+        "report_sha256": "4161e9197f31b77a3751685d826e8a4ff2dd282316020235bf39cf96b3296394",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 257.789666,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "pedido-asset-recorte-v1"
+        ],
+        "layers": [
+          {
+            "id": "recorte-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "recorte-marca",
+            "kind": "text"
+          },
+          {
+            "id": "recorte-imagem",
+            "kind": "image",
+            "asset_ref": "pedido-asset-recorte-v1"
+          },
+          {
+            "id": "recorte-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "recorte-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "recorte-acento",
+            "kind": "shape"
+          },
+          {
+            "id": "recorte-oferta",
+            "kind": "text"
+          },
+          {
+            "id": "recorte-convite",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E1/resume-after-t3.json",
+      "sha256": "23490f4358dc0a16adbc7931dd54a5bce1c5f65819be763f86281e7238b96784",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 10.807083,
+    "total": 577.357542
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

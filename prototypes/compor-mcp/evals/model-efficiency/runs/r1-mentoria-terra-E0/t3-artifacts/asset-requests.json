@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-mapa",
+    "asset_ref": "asset-mapa-v1",
+    "prompt": "Ilustração editorial vertical de um caminho sinuoso e aberto conectando formas abstratas simples, com sensação de organização e descoberta, sem setas ou marcos numerados. Use ameixa #532B54 e argila #C76B4B sobre fundo creme uniforme #F4EBDD. Formas planas, composição arejada, sem letras, palavras, números, logotipos ou marcas-d'água."
+  },
+  {
+    "direction_id": "direcao-trama",
+    "asset_ref": "asset-trama-v1",
+    "prompt": "Ilustração editorial vertical de fios largos e orgânicos que se entrelaçam em uma pequena trama aberta, sugerindo ideias reunidas por uma pessoa, com aparência artesanal simples e bastante espaço ao redor. Use ameixa #532B54 e argila #C76B4B sobre fundo creme uniforme #F4EBDD. Sem letras, palavras, números, logotipos ou marcas-d'água."
+  }
+]

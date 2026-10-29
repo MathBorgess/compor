@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-estrutura",
+    "asset_ref": "asset-trama-estrutura-v1",
+    "prompt": "Criar um único asset visual quadrado, sem conteúdo verbal, para a metáfora de conhecimento ganhando estrutura. Fotografia editorial tátil, vista superior aproximada de fitas de tecido que passam de pontas soltas para uma pequena trama organizada e ainda em construção. Composição adulta, simples e acolhedora, sem aparência de artesanato infantil. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo uniforme creme até as bordas, luz difusa e textura discreta. Objeto inteiro centralizado com margem interna generosa, pensado para encaixe proporcional sem recorte em uma caixa quase quadrada. Sem moldura, sem pessoas, sem letras, palavras, números, logotipos, assinaturas ou marcas-d'água. Não incluir título nem simulação de peça publicitária. Associação futura à camada est-imagem da peça trama-estrutura v1."
+  },
+  {
+    "direction_id": "dir-percurso",
+    "asset_ref": "asset-trama-percurso-v1",
+    "prompt": "Criar um único asset visual vertical na proporção 13:18, sem conteúdo verbal. Ilustração editorial plana e minimalista de um percurso que se ramifica em possibilidades abertas, com um pequeno disco marcando um ponto de escolha. Os caminhos devem ter igual dignidade, sem caminho errado, sem pódio, troféu, chegada ou hierarquia de sucesso. Metáfora de autonomia para escolher um primeiro recorte de ensino. Formas curvas largas, composição arejada e adulta, diferente de uma trama ou tecelagem. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD, com fundo uniforme creme até as bordas. Manter toda a ilustração dentro de margens generosas para encaixe proporcional sem recorte. Sem sombras, gradientes, pessoas, letras, palavras, números, rótulos, logotipos, assinaturas ou marcas-d'água. Não incluir título nem simulação de peça publicitária. Associação futura à camada per-imagem da peça trama-percurso v1."
+  }
+]

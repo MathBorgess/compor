@@ -1,0 +1,15 @@
+{
+  "direction_id": "tda-dir-recorte",
+  "asset_ref": "tda-asset-recorte-v1",
+  "prompt": "Criar um único asset de ilustração editorial vertical na proporção 446:490. Representar a escolha de um recorte de conhecimento: um conjunto amplo e espaçado de formas orgânicas e geométricas, com uma moldura retangular argila envolvendo apenas um pequeno subconjunto harmonioso. As demais formas permanecem visíveis fora da moldura, igualmente cuidadas, sugerindo possibilidades preservadas para outro momento. A moldura é um objeto desenhado dentro da imagem, sem ocultar ou cortar formas. Estética de colagem plana de papel, adulta, contemplativa e precisa. Usar exclusivamente ameixa #532B54, argila #C76B4B e creme #F4EBDD; fundo creme uniforme até as bordas. Elementos completos com margens internas, adequados ao encaixe proporcional sem recorte. Sem fios conectores, setas ou percurso sequencial. Sem letras, palavras, números, tipografia, logotipos, assinaturas ou marcas-d'água. Sem neon, sombras ou gradientes. Não incluir a copy da peça.",
+  "source_path": "/Users/matheusborges/.codex/generated_images/01a178fd-ee63-78a1-a5f6-1d79a06d6e60/exec-e21bbe68-71c5-4360-8fbc-b0770268c2e5.png",
+  "output_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-mentoria-astra-E0/assets/tda-asset-recorte-v1.png",
+  "sha256": "4275669a4b5bf8398c2ceb02871ff44a13af02cad45cce98dbe641a49ca19c16",
+  "elapsed_ms": 22474,
+  "tool": "image_gen.imagegen",
+  "provider_model_version": null,
+  "attempt": 1,
+  "transparent_background": false,
+  "kind": "new_generation",
+  "prompt_modified_by_coordinator": false
+}

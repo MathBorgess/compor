@@ -1,0 +1,110 @@
+{
+  "schema_version": 1,
+  "status": "ready_for_render",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "direcao-mapa",
+      "piece_id": "trama-mapa",
+      "version": "1",
+      "original_piece_sha256": "3b8799675c338d41e4f1fa32ce54aa9023b34e44536fcbe79f98d1115e257f3b",
+      "mapped_piece_sha256": "e39db4d151b3b2ff2757a35f60d29f7cf853a421e908419942c313963a4495aa",
+      "mcp_evidence": [
+        {
+          "event_index": 15,
+          "event_id": "item_6",
+          "wire_candidates": [
+            {
+              "process_id": 15136,
+              "request_id": 6,
+              "request_line": 29,
+              "response_line": 31
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-mapa-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-mapa.json",
+      "render_input_sha256": "3366a79e1672382d17c9918057d1ce90b6f03fb615f1e0799b1b1857e9896368"
+    },
+    {
+      "id": "direcao-trama",
+      "piece_id": "trama-tecido",
+      "version": "1",
+      "original_piece_sha256": "4ece0cf76c78f7b9c18cf7394306b107954bcfd756f63f29aeea637f7b0c80d9",
+      "mapped_piece_sha256": "d422fc27363500027cc84e98efd39bbb7a1b324a86182f08986e8566c18c5e62",
+      "mcp_evidence": [
+        {
+          "event_index": 14,
+          "event_id": "item_7",
+          "wire_candidates": [
+            {
+              "process_id": 15136,
+              "request_id": 7,
+              "request_line": 28,
+              "response_line": 30
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-trama-v1"
+      ],
+      "unresolved_asset_refs": [],
+      "render_input": "render-inputs/direcao-trama.json",
+      "render_input_sha256": "cfd0cb0cecce07edec81af46504dc6914fe0f7b316bebd0bfcd9d3964e637f87"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "direcao-mapa",
+      "operation": "add",
+      "layer_id": "mapa-imagem",
+      "field": "asset_ref",
+      "value": "asset-mapa-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "direcao-trama",
+      "operation": "add",
+      "layer_id": "tecido-imagem",
+      "field": "asset_ref",
+      "value": "asset-trama-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/turn-03.json",
+    "sha256": "d98fc821a3b3d082f3a78ea491419d73902d3768a7a6731021ced71b7cc1aa19"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "8dbc693bcaec870df1815b99c429400039875748487c98d49712baf695b2c0fd",
+  "assets": {
+    "asset-mapa-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets/asset-mapa-v1.png",
+      "sha256": "7c1748cbd5cdb1a466af6f7a01b6c4325a665c46a50a8a061ec621b613df8044",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets/asset-mapa-v1.png"
+    },
+    "asset-trama-v1": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets/asset-trama-v1.png",
+      "sha256": "1160c3ab528512c84ac6ecdc8852870cad07565ad4c178faafa2e4ec7adfb6a5",
+      "supplied_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets/asset-trama-v1.png"
+    }
+  },
+  "assets_source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/assets.json",
+    "sha256": "cce2d270d274aadf880c6d577c1e49fba6c7d88aded397be4741f7a9e9ba0c21",
+    "relative_path_base": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0"
+  },
+  "unresolved_asset_refs": []
+}

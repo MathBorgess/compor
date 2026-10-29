@@ -1,0 +1,102 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "dir-com-quem",
+      "piece_id": "vdp-com-quem",
+      "version": "v1",
+      "original_piece_sha256": "5c29d8c509a36edfea4bbfd96082467185f4f6aba2c7dd515afaf4753237235b",
+      "mapped_piece_sha256": "40edf59925fd292712cbd039f6720e7b8681766f3140d0c15b2aa048379f6a2b",
+      "mcp_evidence": [
+        {
+          "event_index": 17,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 22653,
+              "request_id": 8,
+              "request_line": 36,
+              "response_line": 37
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-vdp-maos-v1"
+      ],
+      "unresolved_asset_refs": [
+        "asset-proposto-vdp-maos-v1"
+      ],
+      "render_input": "render-inputs/dir-com-quem.json",
+      "render_input_sha256": "5a7abd7ab6cd0ad811189121d5940ea36f55834af5e0dd87d4cabc86e7b1dd0a"
+    },
+    {
+      "id": "dir-cada-etapa",
+      "piece_id": "vdp-cada-etapa",
+      "version": "v1",
+      "original_piece_sha256": "314276cc776e83cd93239da37aa9ba3b1e5ea7de74096a778c9b1dba745654ec",
+      "mapped_piece_sha256": "707adb49b5aa79575186f4803580a28cdc8fe09571f46cde7977e5b560d7457c",
+      "mcp_evidence": [
+        {
+          "event_index": 19,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 22653,
+              "request_id": 9,
+              "request_line": 38,
+              "response_line": 39
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-proposto-vdp-ciclo-v1"
+      ],
+      "unresolved_asset_refs": [
+        "asset-proposto-vdp-ciclo-v1"
+      ],
+      "render_input": "render-inputs/dir-cada-etapa.json",
+      "render_input_sha256": "9a3d79c52193490d5287b6f391724e7793efa83a6758d4ff0006349f9a33531c"
+    }
+  ],
+  "technical_patches": [
+    {
+      "artifact_id": "dir-com-quem",
+      "operation": "add",
+      "layer_id": "a-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-vdp-maos-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    },
+    {
+      "artifact_id": "dir-cada-etapa",
+      "operation": "add",
+      "layer_id": "b-imagem",
+      "field": "asset_ref",
+      "value": "asset-proposto-vdp-ciclo-v1",
+      "reason": "One direction, one request and one image layer; no content or geometry changed"
+    }
+  ],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/turn-03.json",
+    "sha256": "47fcbb92b600ab40d511e35245666369851cef3e9d74f90cd37cbdec94060b6e"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "980020cc670c43ca251c5f7aeef33a32a72aa064c9c512a1bf34f4ea0781dd23",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "asset-proposto-vdp-ciclo-v1",
+    "asset-proposto-vdp-maos-v1"
+  ]
+}

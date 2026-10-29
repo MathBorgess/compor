@@ -1,0 +1,85 @@
+{
+  "schema_version": 1,
+  "status": "pending_assets",
+  "turn": 3,
+  "run_dir": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1",
+  "errors": [],
+  "limitations": [],
+  "artifacts": [
+    {
+      "id": "dir-paradeiro",
+      "piece_id": "vdp-paradeiro",
+      "version": "v1-proposta",
+      "original_piece_sha256": "8b15857209d4bc92f91fcd88a7d12aa9be8d14f059d6bad6e9355380b4dc8848",
+      "mapped_piece_sha256": "8b15857209d4bc92f91fcd88a7d12aa9be8d14f059d6bad6e9355380b4dc8848",
+      "mcp_evidence": [
+        {
+          "event_index": 16,
+          "event_id": "item_8",
+          "wire_candidates": [
+            {
+              "process_id": 31129,
+              "request_id": 7,
+              "request_line": 36,
+              "response_line": 37
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-vdp-paradeiro-01-proposto"
+      ],
+      "unresolved_asset_refs": [
+        "asset-vdp-paradeiro-01-proposto"
+      ],
+      "render_input": "render-inputs/dir-paradeiro.json",
+      "render_input_sha256": "ce1ca03e69b02048f7469de466d07061c6fdae1bfc84b825d7174a8ea14f6655"
+    },
+    {
+      "id": "dir-cada-movimento",
+      "piece_id": "vdp-cada-movimento",
+      "version": "v1-proposta",
+      "original_piece_sha256": "b2006df38ca71ac390f1be9cca59bcbcecb45ceae5d5e1fe93c370ccfc4fa58f",
+      "mapped_piece_sha256": "b2006df38ca71ac390f1be9cca59bcbcecb45ceae5d5e1fe93c370ccfc4fa58f",
+      "mcp_evidence": [
+        {
+          "event_index": 18,
+          "event_id": "item_9",
+          "wire_candidates": [
+            {
+              "process_id": 31129,
+              "request_id": 8,
+              "request_line": 38,
+              "response_line": 39
+            }
+          ],
+          "wire_locator_unique": true
+        }
+      ],
+      "asset_refs": [
+        "asset-vdp-cada-movimento-01-proposto"
+      ],
+      "unresolved_asset_refs": [
+        "asset-vdp-cada-movimento-01-proposto"
+      ],
+      "render_input": "render-inputs/dir-cada-movimento.json",
+      "render_input_sha256": "dc0f19e8f7e8e917ad0a9e68d51804809a0c6814c2f19e903350a5163f190fdc"
+    }
+  ],
+  "technical_patches": [],
+  "render_executed": false,
+  "generation_executed": false,
+  "source": {
+    "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/turn-03.json",
+    "sha256": "7e538ecfc3d986522048dba801a58cd1b235360424df88d19c28b0af4b32eea5"
+  },
+  "parse_mode": "raw_json",
+  "wire_sha256": "841ec0b95df8aa8a06aaeaf734461a046b3e43105bdaee0c55d713cf70d72b58",
+  "assets": {},
+  "assets_source": null,
+  "unresolved_asset_refs": [
+    "asset-vdp-cada-movimento-01-proposto",
+    "asset-vdp-paradeiro-01-proposto"
+  ]
+}

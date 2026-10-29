@@ -1,0 +1,134 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1",
+  "turn": 4,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/resume-after-t3.json",
+      "sha256": "715a017a8ce0202fbd1236b9958da95818a2cb7c7f6068609efcffa1e44729d9"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/assets.json",
+      "sha256": "2cd626ef8b9ac00b2174eb233f556e83467741ac7871a92a525981b3d7fd01ec"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t4-artifacts",
+    "renders": [
+      {
+        "artifact_id": "controle-a",
+        "piece_id": "vp-controle",
+        "version": "variacao-a-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t4-artifacts/renders/controle-a.png",
+        "png_sha256": "551503e70efdd0c5619ab092ab288f731f61fc9267c1195c561df35bd024664b",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t4-artifacts/renders/controle-a.json",
+        "report_sha256": "0ef9361b2e1222eac8b72b4d1caf07d4c76eefd5755b2db1b3a0c31d0937ef4c",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 228.28775,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "proposta-asset-controle-v1"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "proposta-asset-controle-v1"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "a-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "controle-b",
+        "piece_id": "vp-controle",
+        "version": "variacao-b-v1",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t4-artifacts/renders/controle-b.png",
+        "png_sha256": "3522e94e9033444e21352dd0d26240a80ee764b5eae3f4ee642f401d183fa2bc",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/t4-artifacts/renders/controle-b.json",
+        "report_sha256": "052040279857b2b534ee136da8bff4fd56693a21c73e2b8b0f64949b7a9f2cb7",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 188.346584,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "proposta-asset-controle-v1"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "proposta-asset-controle-v1"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-cartao",
+            "kind": "shape"
+          },
+          {
+            "id": "b-apoio",
+            "kind": "text"
+          },
+          {
+            "id": "b-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "b-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-terra-E1/resume-after-t4.json",
+      "sha256": "9268f8c82c9e3905d35b43db6503c49589da6205c8d97860db120f41a6772dcf",
+      "next_turn": 5,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 15.648875,
+    "total": 435.540334
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

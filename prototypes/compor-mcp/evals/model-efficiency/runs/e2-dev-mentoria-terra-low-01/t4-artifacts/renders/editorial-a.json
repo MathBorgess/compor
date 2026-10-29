@@ -1,0 +1,411 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "75d94bc3ee024c128b24431856f53563fd062b20862f83fbb0fd2dca9f37c224",
+  "piece_sha256": "e39498eb5ad3a7d0a20f11f795ba904d902952d6e8870827109f7c5c9f04745a",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "trama-editorial",
+  "piece_version": "2a",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "e-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#F4EBDD",
+      "defaults_applied": {}
+    },
+    {
+      "id": "e-imagem",
+      "kind": "image",
+      "z_index": 1,
+      "rect_px": [
+        594,
+        140,
+        400,
+        400
+      ],
+      "asset_ref": "asset-editorial-01",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/e2-dev-mentoria-terra-low-01/assets/asset-editorial-01.png",
+      "asset_sha256": "f798377b2820b54a7d98f9849a642ffe4518eeb59b4ce98810a8c59003967fac",
+      "source_raw_size_px": [
+        1254,
+        1254
+      ],
+      "source_oriented_size_px": [
+        1254,
+        1254
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        594,
+        140,
+        400,
+        400
+      ],
+      "letterbox_px": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "e-linha",
+      "kind": "shape",
+      "z_index": 2,
+      "rect_px": [
+        86,
+        130,
+        130,
+        9
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C76B4B",
+      "defaults_applied": {}
+    },
+    {
+      "id": "e-marca",
+      "kind": "text",
+      "z_index": 3,
+      "rect_px": [
+        86,
+        173,
+        497,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 28,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 28,
+      "effective_font_size_px": 28,
+      "font_fallback": false,
+      "text_preserved": "TRAMA DE AULA",
+      "text_clipped": false,
+      "line_advance_px": 33.6,
+      "lines": [
+        {
+          "text": "TRAMA DE AULA",
+          "origin_px": [
+            86,
+            173
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            173,
+            319,
+            193
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        86,
+        173,
+        319,
+        193
+      ]
+    },
+    {
+      "id": "e-titulo",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        86,
+        270,
+        519,
+        162
+      ],
+      "settings": {
+        "font_ref": "georgia",
+        "font_weight": 700,
+        "font_size_px": 48,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Georgia",
+      "font_path": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+      "font_sha256": "1cfa9abd55be746c798c22ef4eba88fce82257934897404be2dae53ed0a4142a",
+      "requested_font_size_px": 48,
+      "effective_font_size_px": 48,
+      "font_fallback": false,
+      "text_preserved": "Seu conhecimento\npode virar curso.",
+      "text_clipped": false,
+      "line_advance_px": 57.599999999999994,
+      "lines": [
+        {
+          "text": "Seu conhecimento",
+          "origin_px": [
+            86,
+            270
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            270,
+            540,
+            308
+          ]
+        },
+        {
+          "text": "pode virar curso.",
+          "origin_px": [
+            86,
+            328
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            328,
+            510,
+            375
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        86,
+        270,
+        538,
+        375
+      ]
+    },
+    {
+      "id": "e-descricao",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        86,
+        605,
+        908,
+        108
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 34,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Organize seu primeiro curso curto\ncom a mentoria Trama de Aula.",
+      "text_clipped": false,
+      "line_advance_px": 40.8,
+      "lines": [
+        {
+          "text": "Organize seu primeiro curso curto",
+          "origin_px": [
+            86,
+            605
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            605,
+            596,
+            637
+          ]
+        },
+        {
+          "text": "com a mentoria Trama de Aula.",
+          "origin_px": [
+            86,
+            646
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            646,
+            560,
+            671
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        87,
+        605,
+        595,
+        671
+      ]
+    },
+    {
+      "id": "e-formato",
+      "kind": "text",
+      "z_index": 6,
+      "rect_px": [
+        86,
+        756,
+        908,
+        108
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Online: 4 encontros semanais ao vivo\n+ revisão de um plano de aula",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "Online: 4 encontros semanais ao vivo",
+          "origin_px": [
+            86,
+            756
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            756,
+            590,
+            778
+          ]
+        },
+        {
+          "text": "+ revisão de um plano de aula",
+          "origin_px": [
+            86,
+            792
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            792,
+            493,
+            820
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        87,
+        756,
+        589,
+        820
+      ]
+    },
+    {
+      "id": "e-acao",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        86,
+        950,
+        908,
+        65
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#532B54",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "Peça informações por mensagem.",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "Peça informações por mensagem.",
+          "origin_px": [
+            86,
+            950
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            950,
+            574,
+            978
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        88,
+        950,
+        573,
+        978
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "bf533bbc82f7e9555bcc15b80b210b93e05e31e8fbdfb081be5681d5e34dd72f",
+  "png_sha256": "95a72aedf921565cdd02bfb599687d66d2171c0947c279b6580ebe8e505b38aa",
+  "png_bytes": 231399,
+  "report_payload_sha256": "4761f5926852174fb9faf8b747bb2670354639308b227011fd99e735a8d1300a"
+}

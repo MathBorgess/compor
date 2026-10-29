@@ -1,0 +1,349 @@
+{
+  "status": "rendered",
+  "policy": {
+    "version": "c2-common-render-v1",
+    "canvas_background": "#FFFFFF",
+    "image_fit": "contain",
+    "image_position": "center_integer_floor",
+    "image_box_background": "#FFFFFF",
+    "image_crop": false,
+    "image_exif_orientation": "transpose_before_fit",
+    "image_color_management": "Pillow_convert_RGBA_no_ICC_transform",
+    "image_resampling": "LANCZOS",
+    "pixel_rectangle": "round_half_even_normalized_edges",
+    "text_wrap": "explicit_newlines_only",
+    "text_alignment_basis": "glyph_metric_box",
+    "text_vertical_position": "top_of_each_line_metric_box",
+    "text_resize": false,
+    "text_overflow": "fail_no_png",
+    "font_fallback": false,
+    "defaults": {
+      "font_ref": "arial",
+      "font_weight": 400,
+      "font_size_px": 48,
+      "color_hex": "#111111",
+      "line_height": 1.2,
+      "text_align": "left",
+      "fill_hex": "#D9D9D9"
+    }
+  },
+  "canvas_budget_pixels": 16777216,
+  "asset_budget_pixels": 16777216,
+  "runtime": {
+    "python": "3.12.14",
+    "pillow": "12.3.0",
+    "platform": "macOS-27.0-arm64-arm-64bit"
+  },
+  "input_sha256": "86479047a552245c2ede28dd183bc338d87f48b79a5455d683158afb99737a19",
+  "piece_sha256": "531a8c5cc3c423274f1655a5d9584f207b055ee02dd6795ac58f8fd805e5bcf5",
+  "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+  "font_catalog_sha256": "bf2152f52803b188e185f2151745799a629f55116222e3bec7d91f4d538e2dcb",
+  "piece_id": "volta-pote-bancada",
+  "piece_version": "1",
+  "size_px": [
+    1080,
+    1080
+  ],
+  "source_plan_unchanged": true,
+  "layers": [
+    {
+      "id": "b-fundo",
+      "kind": "shape",
+      "z_index": 0,
+      "rect_px": [
+        0,
+        0,
+        1080,
+        1080
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#183F32",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-painel",
+      "kind": "shape",
+      "z_index": 1,
+      "rect_px": [
+        43,
+        43,
+        994,
+        994
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#ECE9DF",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-marca",
+      "kind": "text",
+      "z_index": 2,
+      "rect_px": [
+        86,
+        86,
+        908,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 30,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 30,
+      "effective_font_size_px": 30,
+      "font_fallback": false,
+      "text_preserved": "VOLTA DE POTE",
+      "text_clipped": false,
+      "line_advance_px": 36.0,
+      "lines": [
+        {
+          "text": "VOLTA DE POTE",
+          "origin_px": [
+            87,
+            86
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            86,
+            327,
+            108
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        87,
+        86,
+        326,
+        108
+      ]
+    },
+    {
+      "id": "b-imagem",
+      "kind": "image",
+      "z_index": 3,
+      "rect_px": [
+        86,
+        151,
+        908,
+        400
+      ],
+      "asset_ref": "asset-bancada-01",
+      "asset_path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/assets/asset-bancada-01.png",
+      "asset_sha256": "924490090efd64778cb4179c363d10c0fdfb738a09a86ffa8d05f6874c33c3df",
+      "source_raw_size_px": [
+        1536,
+        1024
+      ],
+      "source_oriented_size_px": [
+        1536,
+        1024
+      ],
+      "source_mode": "RGB",
+      "reused_asset_ref": false,
+      "placed_rect_px": [
+        240,
+        151,
+        600,
+        400
+      ],
+      "letterbox_px": [
+        154,
+        0,
+        154,
+        0
+      ],
+      "crop": false,
+      "fit": "contain",
+      "box_background": "#FFFFFF"
+    },
+    {
+      "id": "b-titulo",
+      "kind": "text",
+      "z_index": 4,
+      "rect_px": [
+        86,
+        583,
+        908,
+        141
+      ],
+      "settings": {
+        "font_ref": "georgia",
+        "font_weight": 700,
+        "font_size_px": 51,
+        "color_hex": "#183F32",
+        "line_height": 1.15,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Georgia",
+      "font_path": "/System/Library/Fonts/Supplemental/Georgia Bold.ttf",
+      "font_sha256": "1cfa9abd55be746c798c22ef4eba88fce82257934897404be2dae53ed0a4142a",
+      "requested_font_size_px": 51,
+      "effective_font_size_px": 51,
+      "font_fallback": false,
+      "text_preserved": "Um lugar para acompanhar\nseus recipientes.",
+      "text_clipped": false,
+      "line_advance_px": 58.65,
+      "lines": [
+        {
+          "text": "Um lugar para acompanhar",
+          "origin_px": [
+            86,
+            583
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            583,
+            812,
+            633
+          ]
+        },
+        {
+          "text": "seus recipientes.",
+          "origin_px": [
+            86,
+            642
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            642,
+            524,
+            692
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        87,
+        583,
+        812,
+        692
+      ]
+    },
+    {
+      "id": "b-apoio",
+      "kind": "text",
+      "z_index": 5,
+      "rect_px": [
+        86,
+        756,
+        908,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 400,
+        "font_size_px": 34,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial.ttf",
+      "font_sha256": "525979822591a3447cfc49d943d6f7683508e25543407871c0ed8fed05fd2bd9",
+      "requested_font_size_px": 34,
+      "effective_font_size_px": 34,
+      "font_fallback": false,
+      "text_preserved": "Veja quais ainda estão com clientes.",
+      "text_clipped": false,
+      "line_advance_px": 40.8,
+      "lines": [
+        {
+          "text": "Veja quais ainda estão com clientes.",
+          "origin_px": [
+            86,
+            756
+          ],
+          "metric_bounds_xyxy_px": [
+            86,
+            756,
+            638,
+            788
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        86,
+        756,
+        636,
+        788
+      ]
+    },
+    {
+      "id": "b-destaque",
+      "kind": "shape",
+      "z_index": 6,
+      "rect_px": [
+        86,
+        853,
+        702,
+        108
+      ],
+      "shape": "rectangle",
+      "fill_hex": "#C9D94A",
+      "defaults_applied": {}
+    },
+    {
+      "id": "b-cta",
+      "kind": "text",
+      "z_index": 7,
+      "rect_px": [
+        108,
+        886,
+        659,
+        54
+      ],
+      "settings": {
+        "font_ref": "arial",
+        "font_weight": 700,
+        "font_size_px": 36,
+        "color_hex": "#183F32",
+        "line_height": 1.2,
+        "text_align": "left"
+      },
+      "defaults_applied": {},
+      "font_family": "Arial",
+      "font_path": "/System/Library/Fonts/Supplemental/Arial Bold.ttf",
+      "font_sha256": "d72db21f9242aedd6b917d8549ad5921766b24d5f8d0becfda2ff4c620b3c2e0",
+      "requested_font_size_px": 36,
+      "effective_font_size_px": 36,
+      "font_fallback": false,
+      "text_preserved": "Conheça a demonstração →",
+      "text_clipped": false,
+      "line_advance_px": 43.199999999999996,
+      "lines": [
+        {
+          "text": "Conheça a demonstração →",
+          "origin_px": [
+            108,
+            886
+          ],
+          "metric_bounds_xyxy_px": [
+            108,
+            886,
+            592,
+            920
+          ]
+        }
+      ],
+      "pixel_bbox_xyxy_px": [
+        109,
+        886,
+        591,
+        920
+      ]
+    }
+  ],
+  "unique_assets_read": 1,
+  "render_core_sha256": "3d5c0e37e42965783e2715efddcec79fc0e07a4979c7e3a0defb0475886c4af9",
+  "png_sha256": "f75252ad5ab72884745612aa2c56513da0cdcfbbb300928df1460f213e4df76e",
+  "png_bytes": 501235,
+  "report_payload_sha256": "a463725913acc9f261afe36bdd56e2acb1e8831e2a4c089eb5d94ec4ebbd7615"
+}

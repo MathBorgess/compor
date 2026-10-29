@@ -1,0 +1,479 @@
+{
+  "schema_version": 1,
+  "scope": "Existing round1 maps and artifact lineage only; no Judge notes or scoring read; no artifacts changed.",
+  "method": "Reconstruct original lexical selection, verify previous path/hash, compare packaged PNG bytes with selected source and validate existing render provenance. Original packages did not store selected source paths, so this is a reconstruction, not proof of the original selector execution.",
+  "frozen_original_selector_sha256": "e6840a0213c674cfb1bd3fad583abc09ad1c06f5504bac746fa3b3a31b147cb6",
+  "packages": [
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P01",
+      "run_id": "r1-mentoria-sol-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P01/package.json",
+      "package_sha256": "85da0f186fa20ca83bb650e93c2e130ad59f7355554a53dabdddacceb3409c18",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "197b12675e66635a674b37b3bf90c530329994760a7b09be0dc0ff09517ed745"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "d00ae233b08ef6365f0dfd96a3268a5611c49df81396df402384574c9be6ae1a",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E0/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "77e5f1f8c6e4fd7cf112a6aa42812ade2a549630a6140835b8a0906515343431",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P02",
+      "run_id": "r1-mentoria-sol-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P02/package.json",
+      "package_sha256": "815792566532261fa055f77ff8821ba341feecee0f69b47b3a09d5ebe2599b91",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "e82e139f280ad4c98ee915378479b6b56bc372896ad151800b63a2f259e0cdf0"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "f47f0d6b138c9da3e66213616bec6de40faa13bdfa06244f073a4cc3fd8203ed",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-sol-E1/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "ed7355368f887ccab7012c21aec62ca4dadb94e996b51a3d107901bcca1b1ce1",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P03",
+      "run_id": "r1-mentoria-astra-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P03/package.json",
+      "package_sha256": "9a722f424ceaaf0d33129c9d7536b95dbb01d52d311faca08d7935bcf4fcfa60",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "e4cf0ec2996dfc5cd33f2ed19bb27ebe87ff42d471739f896d09ec927d90d699"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "6ad6c35cbbd8b1fae3404b63a44cc91eb5d9132e41915ec2c39300a167de9d83",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E1/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "1ec8fb241aa2c0444167a9cf6e8afb9e015df4a4dd76dc2d9d2d131df776a088",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P04",
+      "run_id": "r1-mentoria-astra-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P04/package.json",
+      "package_sha256": "fc9491d3bcb2c3cec50be998bbc58004dc216dec83dadfbd588d64d0b3dfea3e",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-astra-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "698df5614d9a874c18fa7fbaccdae775141f1792cd8e67d04518cbe16f75873e"
+        },
+        {
+          "turn": 4,
+          "source": null,
+          "originals_verified": 0,
+          "artifacts_missing": 0,
+          "errors": [],
+          "no_ready_extraction": true
+        },
+        {
+          "turn": 5,
+          "source": null,
+          "originals_verified": 0,
+          "artifacts_missing": 0,
+          "errors": [],
+          "no_ready_extraction": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P05",
+      "run_id": "r1-mentoria-terra-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P05/package.json",
+      "package_sha256": "cb30c82c7e2fb5a91b32324f4ff7d123b746d396acab9de50f86bea7d5e50491",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "90f448f871376234af59fe316cb6b1e72fd65580d7fa8c24d84c4a6ca2a1aa1d"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "4aa3109a931d67f14274112fb46e3d0e9bd558a770e51f8e11a146ba28d6bdfb",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E1/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "0ce19f7875b1ec87bd15a1566f17b1c3a8de2bb5150956e90c7d35815f6d9421",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-mentoria.json",
+      "map_sha256": "c3972e30454ceddc5908a3314b2f56a47251f2768787830f1bac9f5a4941c55d",
+      "label": "P06",
+      "run_id": "r1-mentoria-terra-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-mentoria/P06/package.json",
+      "package_sha256": "2d80678f6b726533d6f86946225c72c98f8c8c4cdd7fa2d666df528733b966f6",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "2e107344bb2c9bc3c1c785e67bf67e4f0a91881be11f09e6fb04cee923207afe"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t4-artifacts-a2/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "8fb2998b4878e1f009c1969f0f44525602a2006393b1b07771b083cc86cd1c9e",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-mentoria-terra-E0/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "08eb91470cb46f12357939ccfce86e944496798628e4a0eed33186ce0e47dbbf",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P01",
+      "run_id": "r1-startup-sol-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P01/package.json",
+      "package_sha256": "3db30d9298d7cde094fd57981cc05a45c2bbfece66c6913bd1dbc99eb10c6b49",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "f98576c36221b757b98fefcb956e80ad47030eba3a5c9110c4bc4dc2cd9aa0e6"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "200ab2cc3a870a77dae8147cd597cf43d0dbb5a1a0714ebfa748645842a15db7",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E1/t5-artifacts/report.json",
+          "originals_verified": 0,
+          "artifacts_missing": 1,
+          "errors": [],
+          "source_sha256": "6deef4ebfb269703294ae38ee1b497c73ae2223b2fa5bbf9d811d2e6c3a35819",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P02",
+      "run_id": "r1-startup-astra-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P02/package.json",
+      "package_sha256": "f0b375fb8eb3081f604c7ac0242d3b1e298c80fef6b9e07f85e0ea6f67346d93",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "6ee71aef5c517e11c1fff4750f2f15f8ae1da8723ad9e16bce57a83b13cc21e6"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "e38c45689bec74270eb8f37432e4925b507b3f271d74ae4b1907705892bca328",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E1/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "d4e43eec7576cd1c1aa2161ff4bc48fd5de09098636d8c05b57578b235aa9539",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P03",
+      "run_id": "r1-startup-sol-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P03/package.json",
+      "package_sha256": "3fb685f675d55a3b85d1ebf07e4787758da3657dcaaf68ce2deed8edd90198d5",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "855bbce2071da6d9265bf415df04e45e95590d2854499bc0f16d655efc466c1f"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "b6501868359bcdf8b8eff4d453622c9f2e5be72eab2838686f21224d1b75e7bf",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-sol-E0/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "46c4257c893c950e6dc5f0134ae1b0c16abbbbdc1712892471e4fd6a9b7d72e1",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P04",
+      "run_id": "r1-startup-astra-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P04/package.json",
+      "package_sha256": "3a27e23936c972c21a600221331f07bbfe7e8f294ac57a78510df46dd9d94e3f",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "3e56d898e8dc1ff41bd327a46ec0e1033a531eaff5438b0e994df474799c64b9"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "cb1593404b986c75baef11347d9d03d87641f4616e49dd54994b8ebdbbfa206f",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-astra-E0/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "898559fd4bf88e4edbf144d3223ed07aac0e9344abdaa9539136cea279ac9778",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P05",
+      "run_id": "r1-startup-terra-E0",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P05/package.json",
+      "package_sha256": "42467272893954d7cc15cbfa0e733ecf6d2425bcbfb83ee62395c7ae2d4d0e36",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "b2e5c00f9d7c7d7efa2a8bb9f65f233b7877a5229ebae4698b03a9b0b0ea3a8d"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "ff003188d7a42e83161f4b83f3176f257d367b66e8a354bfe2805415a7a6d37e",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E0/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "23d2e8b2b1ccebabeeed9ecb4dc333ca84a1a92040c5c858343d893593bf65fa",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    },
+    {
+      "map": "docs/evals/model-efficiency/blind-map-round1-startup.json",
+      "map_sha256": "cd2e331abdb353d4d5a31d4e158641fd7e9aa1366d1083227af53fac008c7782",
+      "label": "P06",
+      "run_id": "r1-startup-terra-E1",
+      "package": "prototypes/compor-mcp/evals/model-efficiency/blind/round1-startup/P06/package.json",
+      "package_sha256": "e3666b14d199456174d6c2908ab764b01b94d35d00936dcb237261af0973697a",
+      "stages": [
+        {
+          "turn": 3,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t3-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "8155158eeb3144cce404aecf8d453d2ac13c34f6b776901efc98e9393bb17b57"
+        },
+        {
+          "turn": 4,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t4-artifacts/report.json",
+          "originals_verified": 2,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "e8f3241e33f4c0a27558f51ef9a2089e00495832fe8a74aee376677427db7576",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        },
+        {
+          "turn": 5,
+          "source": "prototypes/compor-mcp/evals/model-efficiency/runs/r1-startup-terra-E1/t5-artifacts/report.json",
+          "originals_verified": 1,
+          "artifacts_missing": 0,
+          "errors": [],
+          "source_sha256": "0280fbc8818c24cfe7c32cbca9f3f8a4106f5c825f23f595c61c5d00f88835fe",
+          "previous_path_matches": true,
+          "previous_hash_matches": true
+        }
+      ],
+      "errors": []
+    }
+  ],
+  "summary": {
+    "packages": 12,
+    "originals_verified": 56,
+    "missing_artifact_entries": 1,
+    "missing_stages": 2,
+    "errors": 0
+  }
+}

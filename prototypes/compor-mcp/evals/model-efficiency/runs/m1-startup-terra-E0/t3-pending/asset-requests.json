@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "percurso",
+    "asset_ref": "asset-volta-percurso-01",
+    "prompt": "Ilustração horizontal para acompanhar uma peça de feed de uma ferramenta para pequenos produtores de alimentos: recipientes retornáveis simples em uma sequência visual de ida e volta entre duas mãos, sugerindo continuidade e proximidade. Formas artesanais, superfícies foscas e textura sutil de papel; cores floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo branco, composição inteira visível, proporção aproximada 2,1:1. Sem letras, palavras, números, marcas-d'água, logotipos, telas ou interfaces."
+  },
+  {
+    "direction_id": "organizacao",
+    "asset_ref": "asset-volta-organizacao-01",
+    "prompt": "Imagem vertical de recipientes retornáveis simples organizados em uma pequena prateleira, como uma natureza-morta editorial para pequenos produtores de alimentos. Formas claras, alinhamento ordenado, superfícies foscas e textura sutil de papel; cores floresta #183F32, lima #C9D94A e pedra #ECE9DF. Fundo branco, objetos inteiros visíveis, proporção aproximada 7:8. Sem letras, palavras, números, marcas-d'água, logotipos, telas ou interfaces."
+  }
+]

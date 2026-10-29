@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "dir-presenca",
+    "asset_ref": "asset-presenca-v1",
+    "prompt": "Criar um único ativo visual horizontal, proporção 119:45, para uma peça sobre embalagens retornáveis de pequenos produtores de alimentos. Natureza-morta editorial vista de cima: quatro recipientes alimentares com tampas, formas simples e reconhecíveis, separados e organizados com bastante espaço entre eles. Aparência tátil, superfícies foscas e textura sutil de papel. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF; fundo uniforme pedra até as bordas. Manter todos os objetos inteiros dentro da imagem, com margem interna de segurança. Transmitir organização e clareza, sem telas, interfaces, indicadores, gráficos ou funcionalidades. Sem letras, palavras, números, rótulos, logotipos, assinaturas ou marcas-d'água. Não incluir símbolos de certificação ambiental. O ativo será encaixado integralmente, sem recorte, numa caixa horizontal."
+  },
+  {
+    "direction_id": "dir-percurso",
+    "asset_ref": "asset-percurso-v1",
+    "prompt": "Criar um único ativo visual quadrado 1:1: ilustração editorial em papel recortado fosco, com textura de papel sutil. Representar poeticamente a passagem de um recipiente alimentar entre duas mãos estilizadas, entrando de lados opostos, com uma faixa curva aberta que sugira ida e volta. O recipiente é o centro da cena; o gesto deve parecer próximo e cotidiano. Paleta restrita a floresta #183F32, lima #C9D94A e pedra #ECE9DF, inclusive nas mãos estilizadas; fundo pedra até as bordas. Composição inteiramente contida no quadrado, com margens internas. Não representar interface, aplicativo, mapa, localização, rastreamento, automação, confirmação de devolução ou selo de reciclagem. Sem letras, palavras, números, logotipos, rótulos, assinaturas ou marcas-d'água. O ativo será encaixado integralmente, sem recorte, numa caixa quadrada."
+  }
+]

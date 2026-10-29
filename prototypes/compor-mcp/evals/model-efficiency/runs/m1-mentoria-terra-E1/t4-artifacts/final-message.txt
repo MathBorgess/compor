@@ -1,0 +1,197 @@
+{
+  "variations": [
+    {
+      "id": "variacao-conhecimento",
+      "title": "O conhecimento como ponto de partida",
+      "composition_plan": {
+        "piece_id": "trama-fios",
+        "version": "variacao-conhecimento-v1",
+        "variation_ref": "variacao-conhecimento",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "name": "Fios",
+            "asset_ref": "asset-proposto-fios-v1",
+            "rect": {"x": 0.56, "y": 0.23, "width": 0.37, "height": 0.37},
+            "z_index": 1
+          },
+          {
+            "id": "fios-acento",
+            "kind": "shape",
+            "name": "Traço argila",
+            "shape": "rectangle",
+            "rect": {"x": 0.07, "y": 0.17, "width": 0.1, "height": 0.008},
+            "fill_hex": "#C76B4B",
+            "z_index": 2
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {"x": 0.07, "y": 0.07, "width": 0.8, "height": 0.06},
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text",
+            "name": "Título",
+            "rect": {"x": 0.07, "y": 0.23, "width": 0.47, "height": 0.28},
+            "text": "Seu conhecimento\nmerece uma\nboa trama.",
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 52,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "fios-corpo",
+            "kind": "text",
+            "name": "Texto de apoio",
+            "rect": {"x": 0.07, "y": 0.55, "width": 0.48, "height": 0.14},
+            "text": "Organize seu primeiro curso\ncurto com uma mentoria online.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 29,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "fios-cta",
+            "kind": "text",
+            "name": "Convite",
+            "rect": {"x": 0.07, "y": 0.85, "width": 0.86, "height": 0.06},
+            "text": "Peça informações sobre a mentoria.",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Você já conhece bem um assunto. A Trama de Aula é um espaço para organizar esse conhecimento e começar a desenhar seu primeiro curso curto.\n\nA mentoria é online, com quatro encontros semanais ao vivo e revisão de um plano de aula.\n\nQuer conhecer a proposta? Peça informações sobre a mentoria."
+    },
+    {
+      "id": "variacao-percurso",
+      "title": "O percurso até a aula",
+      "composition_plan": {
+        "piece_id": "trama-fios",
+        "version": "variacao-percurso-v1",
+        "variation_ref": "variacao-percurso",
+        "width_px": 1080,
+        "height_px": 1080,
+        "layers": [
+          {
+            "id": "fios-fundo",
+            "kind": "shape",
+            "name": "Fundo creme",
+            "shape": "rectangle",
+            "rect": {"x": 0, "y": 0, "width": 1, "height": 1},
+            "fill_hex": "#F4EBDD",
+            "z_index": 0
+          },
+          {
+            "id": "fios-imagem",
+            "kind": "image",
+            "name": "Fios",
+            "asset_ref": "asset-proposto-fios-v1",
+            "rect": {"x": 0.56, "y": 0.28, "width": 0.37, "height": 0.37},
+            "z_index": 1
+          },
+          {
+            "id": "fios-acento",
+            "kind": "shape",
+            "name": "Traço argila",
+            "shape": "rectangle",
+            "rect": {"x": 0.07, "y": 0.17, "width": 0.1, "height": 0.008},
+            "fill_hex": "#C76B4B",
+            "z_index": 2
+          },
+          {
+            "id": "fios-marca",
+            "kind": "text",
+            "name": "Nome da mentoria",
+            "rect": {"x": 0.07, "y": 0.07, "width": 0.8, "height": 0.06},
+            "text": "TRAMA DE AULA",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 3
+          },
+          {
+            "id": "fios-titulo",
+            "kind": "text",
+            "name": "Título",
+            "rect": {"x": 0.07, "y": 0.23, "width": 0.47, "height": 0.28},
+            "text": "Um caminho\npara sua\nprimeira aula.",
+            "font_ref": "georgia",
+            "font_weight": 700,
+            "font_size_px": 52,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 4
+          },
+          {
+            "id": "fios-corpo",
+            "kind": "text",
+            "name": "Texto de apoio",
+            "rect": {"x": 0.07, "y": 0.56, "width": 0.48, "height": 0.17},
+            "text": "4 encontros semanais ao vivo\ne revisão de um plano de aula.",
+            "font_ref": "arial",
+            "font_weight": 400,
+            "font_size_px": 29,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 5
+          },
+          {
+            "id": "fios-cta",
+            "kind": "text",
+            "name": "Convite",
+            "rect": {"x": 0.07, "y": 0.85, "width": 0.86, "height": 0.06},
+            "text": "Peça informações sobre a mentoria.",
+            "font_ref": "arial",
+            "font_weight": 700,
+            "font_size_px": 30,
+            "color_hex": "#532B54",
+            "line_height": 1.2,
+            "text_align": "left",
+            "z_index": 6
+          }
+        ]
+      },
+      "caption": "Quer organizar seu conhecimento para criar um primeiro curso curto?\n\nNa Trama de Aula, a mentoria acontece online em quatro encontros semanais ao vivo e inclui a revisão de um plano de aula.\n\nPeça informações para conhecer a proposta."
+    }
+  ],
+  "conversation_response": "A primeira variação começa pelo conhecimento que a pessoa já possui; a segunda destaca o percurso e o formato da mentoria. Ambas reutilizam asset-proposto-fios-v1. Os planos foram preparados para comparação; a composição visual ainda depende do coordenador."
+}

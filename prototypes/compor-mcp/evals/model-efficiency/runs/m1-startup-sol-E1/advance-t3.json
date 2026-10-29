@@ -1,0 +1,158 @@
+{
+  "schema_version": 1,
+  "run": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1",
+  "turn": 3,
+  "status": "ready_to_resume",
+  "inputs": {
+    "source_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json",
+      "sha256": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7"
+    },
+    "assets": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/assets.json",
+      "sha256": "fe6ba9b08481ff5fd98ab6118e1d0a895b1c4fc9a8862f59c971747e7ad60269"
+    },
+    "extractor_sha256": "af482426099f781ac880dff564fb37d2a0ec5d5f1ee8cbe8f587197ddf9f29b6",
+    "renderer_sha256": "4cb02579c07e2378b81ee6d4dff69dae7188f09141cfece65d2b12aff32b5305",
+    "coordinator_sha256": "31552c3b6cf4027172a04d006947a16bbeff3273f6a21f606b2ac55c0094843f"
+  },
+  "outputs": {
+    "artifact_directory": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t3-artifacts",
+    "renders": [
+      {
+        "artifact_id": "dir-paradeiro",
+        "piece_id": "vdp-paradeiro",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t3-artifacts/renders/dir-paradeiro.png",
+        "png_sha256": "32012014eebe730d4ba6f512eed7ca637112f9b076d61351a57197641d48dfd6",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t3-artifacts/renders/dir-paradeiro.json",
+        "report_sha256": "db4eebe585805e997996c7bb1ec7e34f2df51bb75428571c2eecadfff122441e",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 212.526292,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-vdp-paradeiro-01-proposto"
+        ],
+        "layers": [
+          {
+            "id": "a-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-faixa",
+            "kind": "shape"
+          },
+          {
+            "id": "a-marca",
+            "kind": "text"
+          },
+          {
+            "id": "a-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "a-explicacao",
+            "kind": "text"
+          },
+          {
+            "id": "a-destaque",
+            "kind": "shape"
+          },
+          {
+            "id": "a-imagem",
+            "kind": "image",
+            "asset_ref": "asset-vdp-paradeiro-01-proposto"
+          },
+          {
+            "id": "a-nota",
+            "kind": "text"
+          },
+          {
+            "id": "a-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "a-cta",
+            "kind": "text"
+          }
+        ]
+      },
+      {
+        "artifact_id": "dir-cada-movimento",
+        "piece_id": "vdp-cada-movimento",
+        "version": "v1-proposta",
+        "png": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t3-artifacts/renders/dir-cada-movimento.png",
+        "png_sha256": "133b7e2d284b5e90d549d2c5ab3b02836f0a869c1c6ba788a7e3e7c5414938a3",
+        "report": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/t3-artifacts/renders/dir-cada-movimento.json",
+        "report_sha256": "ac8cd8ed633c4b34d326ad27da6c44d187ebea7791d0ac7f542d2b4d59a7a325",
+        "reused_verified": false,
+        "render_and_verify_wall_ms": 288.136875,
+        "reuse_verification_wall_ms": null,
+        "asset_refs": [
+          "asset-vdp-cada-movimento-01-proposto"
+        ],
+        "layers": [
+          {
+            "id": "b-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-marca",
+            "kind": "text"
+          },
+          {
+            "id": "b-titulo",
+            "kind": "text"
+          },
+          {
+            "id": "b-imagem",
+            "kind": "image",
+            "asset_ref": "asset-vdp-cada-movimento-01-proposto"
+          },
+          {
+            "id": "b-regua",
+            "kind": "shape"
+          },
+          {
+            "id": "b-entrega",
+            "kind": "text"
+          },
+          {
+            "id": "b-emprestimo",
+            "kind": "text"
+          },
+          {
+            "id": "b-devolucao",
+            "kind": "text"
+          },
+          {
+            "id": "b-explicacao",
+            "kind": "text"
+          },
+          {
+            "id": "b-cta-fundo",
+            "kind": "shape"
+          },
+          {
+            "id": "b-cta",
+            "kind": "text"
+          }
+        ]
+      }
+    ],
+    "resume_case": {
+      "path": "/Users/matheusborges/.codex-workspaces/worktrees/ios-b05023bf-7dfd-4f04-98c1-7a345f84e290/compor/prototypes/compor-mcp/evals/model-efficiency/runs/m1-startup-sol-E1/resume-after-t3.json",
+      "sha256": "2b773fbfc125c05147032f9ccd2327f8534b5a7c1a4a25bf622a0c88964c3a03",
+      "next_turn": 4,
+      "execution_started": false
+    }
+  },
+  "timing_ms": {
+    "extraction_or_verification": 11.433667,
+    "total": 515.216667
+  },
+  "errors": [],
+  "generation_executed": false,
+  "model_execution_started": false,
+  "extraction_reused_verified": false
+}

@@ -1,0 +1,12 @@
+[
+  {
+    "direction_id": "direcao-ciclo",
+    "asset_ref": "asset-ciclo-01",
+    "prompt": "Ilustração horizontal de recipientes retornáveis percorrendo um caminho de ida e volta entre uma pequena produção de alimentos e seus clientes, usando formas simples e textura fosca de papel. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF. Imagem sem letras, palavras, números, logotipos ou marcas-d'água; sem telas ou interfaces."
+  },
+  {
+    "direction_id": "direcao-bancada",
+    "asset_ref": "asset-bancada-01",
+    "prompt": "Cena horizontal editorial de uma bancada de pequeno produtor de alimentos com recipientes retornáveis de vidro, composição calma e próxima, superfícies foscas e textura sutil de papel. Paleta floresta #183F32, lima #C9D94A e pedra #ECE9DF. Imagem sem letras, palavras, números, rótulos, logotipos ou marcas-d'água; sem telas ou interfaces."
+  }
+]

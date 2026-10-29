@@ -1,0 +1,28 @@
+{
+  "frozen_at": "2026-10-28T06:52:48.147433+00:00",
+  "base_commit": "7773b26dfaff7d1bdbc553882f000b31274cd26e",
+  "files": {
+    "prototypes/compor-mcp/evals/model-efficiency/cases/mentoria-trama-de-aula.json": "e5f0a5156022493dcf45d2e64fedc51159f3989190f3c560b491e2a5b81d4529",
+    "prototypes/compor-mcp/evals/model-efficiency/cases/startup-volta-de-pote.json": "6fb10118109a0192d031c2f76a4098b640e276c45012b062859e244fe56d2b0d",
+    "prototypes/compor-mcp/evals/model-efficiency/inputs/mentoria-trama-de-aula.json": "c97099569dce45ada40a91eaf126275459f6bcebbafb78a8b7c6f8e29051c677",
+    "prototypes/compor-mcp/evals/model-efficiency/inputs/startup-volta-de-pote.json": "8abe06ca04e664a8578c50fbf2b714de5d44ce4be3f1d73daedda9af926300c7",
+    "prototypes/compor-mcp/evals/model-efficiency/expectations.json": "afe0ca3402c27edb11a426061f879595d01b7346b86d91208e8c79e11cb0e701",
+    "prototypes/compor-mcp/evals/model-efficiency/common-context.md": "36b06455c7f1a1b01e46779367bffe8d3c9bd693e738d60ab8d22e0390414b8f",
+    "prototypes/compor-mcp/evals/model-efficiency/schedule.json": "36a45780cbf8a437cf39b0c140f3f10fc85a545f154fb5a1952f1fafdd58dd38",
+    "docs/evals/model-efficiency/rubric.md": "7a0be22e4f15ab8c168e2eb39142794f90e8f24c42d3b45b8e2033fba1acc359",
+    "docs/evals/model-efficiency/protocol.md": "25f68f2d029b6cb11ae68972720c4a23af01d30dca9001588de64a06df5240ba",
+    "prototypes/compor-mcp/evals/model-efficiency/runtime/runner.py": "00d97b5632a3f4b2c732a1cc12171109e311634a2287592ffee4db54632e78a6",
+    "prototypes/compor-mcp/evals/model-efficiency/runtime/stdio_bridge.py": "6a73b59988706896f693ae171e8b965dd2bfa87a3447ca8ee7274e0d25d9a27c",
+    "prototypes/compor-mcp/src/guidance.ts": "334dbe0d09446de9d320afae65a5b4dcefa2cd7b1abcbfd0cb08be29d6b333e5",
+    "prototypes/compor-mcp/src/inprocess-http.ts": "8bcfba194f5402df0d57268978a4ac1c9b326a95a31c426b5e74b4fc43dcf6fb",
+    "prototypes/compor-mcp/src/server.ts": "f07e58ae41221bb31c9316450c4b18f2e18b9befc98e405dfee5092587b1b7ff",
+    "prototypes/compor-mcp/src/stdio.ts": "c4efd84ba7480c34b795cec9c4bd5bbd5f8bba859f3a4527b389cb41304d9779",
+    "prototypes/compor-mcp/skills/criar-piloto.md": "38a1482612227b892a652d18af955dddd7c649cdcf60e600f7188125fd026e27",
+    "prototypes/compor-mcp/skills/entender-intencao.md": "235a0f42510c61e17dcacb8b1cd32fb164dea0433b0c90c4d5acfaaf17587472",
+    "prototypes/compor-mcp/skills/explorar-moodboards.md": "a72d202e55cace0afb4131b15f8f316bfa1dd6ebbb969a902d8fc73d5ee74e97",
+    "prototypes/compor-mcp/skills/traduzir-direcao.md": "ff6821e5d2f330dba6a6d756802c4366c4ce2f94b0f6e1f004399edf9661e278",
+    "prototypes/compor-mcp/package-lock.json": "504de47e7a86c0eb226011f802830a705479fb8aeee0d078f669cd0a9e073e12"
+  },
+  "scope": "Inputs/runtime/MCP/skills/rubric frozen before first trajectory. Common renderer separately frozen before rendering. No evaluated outputs exist yet.",
+  "case_prompt_cleanup": "Removed literal backslashes around JSON example quotes before freezing; no semantic change."
+}
