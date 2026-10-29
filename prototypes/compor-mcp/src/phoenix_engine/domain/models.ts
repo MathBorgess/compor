@@ -50,6 +50,8 @@ export type ActionProbabilities = z.infer<typeof actionProbabilitiesSchema>;
 
 export const rankedCandidateSchema = z.strictObject({
   candidate_id: z.string().trim().min(1).max(80),
+  origin_kind: z.enum(['synthetic', 'provider']).optional(),
+  source_id: z.string().optional(),
   board: z.string().trim().min(1).max(120),
   role: compositionalRoleSchema.optional(),
   metadata_sid: z.array(z.string().trim().min(1).max(80)).min(1).max(6),
@@ -103,6 +105,10 @@ export const webDiscoveryResponseSchema = z.strictObject({
   briefing: z.string().trim().min(1).max(1000),
   decision_engine_source: z.enum(['openai_api', 'codex_luna_subagent', 'deterministic_mock']),
   prompt_cache_key: z.string().trim().min(1).max(160),
+  candidate_origin: z.enum(['synthetic', 'provider']),
+  can_proceed_without_references: z.literal(true),
+  provider_diagnostics: z.array(z.string()),
+  embedding_space: z.enum(['local_deterministic_sha256', 'openai_text_embedding_3_small']),
   board_allocations: z.array(boardAllocationSchema),
   required_sid_tags: z.array(z.string()),
   excluded_sid_tags: z.array(z.string()),

@@ -93,20 +93,36 @@ Conjunto restaurável do trabalho que preserva base, campanha, rotas, variantes,
 _Avoid_: Exportação pública, imagem final
 
 **Preferência**:
-Orientação estética ou composicional consolidada a partir de escolhas explícitas e sinais positivos de interação da pessoa, reutilizada para guiar recomendações futuras.
+Orientação estética ou composicional da pessoa, aplicada no contexto escolhido. Pode ser declarada ou inferida a partir de sinais identificados; uma inferência automática, mesmo ambígua, pode alterar uma preferência confirmada, com aviso e possibilidade de desfazer. A origem, o escopo e a versão anterior precisam ser preservados.
 _Avoid_: Correção textual única sem relação estética
 
 **Perfil de gosto de longo prazo**:
-Síntese consolidada do DNA visual da pessoa, reunindo padrões aprovados, fontes de maior retorno por objetivo e restrições negativas acumuladas entre sessões.
+Resumo identificável das preferências e de suas mudanças para personalização, com origem, versão e escopo. Pode incluir hipóteses e escolhas confirmadas, identificadas separadamente; sua persistência e seus controles dependem da implementação.
 _Avoid_: Histórico bruto da sessão, briefing pontual
 
 **Restrição negativa**:
-Padrão visual ou estrutural rejeitado pela pessoa na sessão ou consolidado no perfil de longo prazo, usado para penalizar e bloquear buscas futuras nesses estilos.
+Limite associado a um padrão visual ou estrutural, com origem e escopo identificados. Uma rejeição sem motivo declarado não prova que todo o estilo foi rejeitado nem autoriza, por si só, um bloqueio permanente.
 _Avoid_: Erro técnico da ferramenta, falha de conclusão da tarefa
 
 **Sinal de feedback visual**:
-Evento observável de reação da pessoa diante de uma referência candidata — aprovação como referência, inspeção prolongada, descarte por clichê ou rejeição por conflito de estilo.
+Evento ou comentário da própria pessoa sobre referência, texto ou imagem, associado à versão e à origem. Edição, escolha, rejeição, reação e exportação são sinais distintos; a fala da pessoa e a interpretação do agente são registros separados. Exposição, silêncio ou download não são aprovação.
 _Avoid_: Aprovação final da peça, publicação
+
+**Mudança de preferência**:
+Alteração de uma preferência no escopo escolhido, com valor anterior, novo valor, evidência, origem e versão identificados. Uma mudança automática deve ser informada à pessoa; desfazer restaura o valor anterior e registra a correção.
+_Avoid_: Aprovação tácita, correção apagada
+
+**Autorização de perfil ao mantenedor**:
+Permissão específica, contínua e revogável para enviar o resumo individual ao mantenedor. A revogação interrompe novos envios; dados já recebidos permanecem até decisão de descarte. Textos e imagens integrais exigem autorização separada.
+_Avoid_: Autorização genérica de personalização, consentimento para avaliação
+
+**Compartilhamento para estudo**:
+Permissão específica para disponibilizar o perfil identificável aos colaboradores nomeados para uma finalidade informada, com registro de leituras e compartilhamentos. Escopo de memória não equivale a autorização de acesso.
+_Avoid_: Acesso público, consentimento para enviar textos e imagens integrais
+
+**Dados agregados**:
+Informações reunidas para análise segundo finalidade e autorização identificadas, distintas do perfil individual e da telemetria operacional. O uso em avaliações exige consentimento próprio.
+_Avoid_: Perfil identificável, trace completo, autorização automática para treinamento
 
 **Board curado**:
 Coleção temática ou feed de exploração dentro de uma fonte externa autorizada de onde referências visuais candidatas são recuperadas.

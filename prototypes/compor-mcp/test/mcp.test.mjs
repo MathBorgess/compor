@@ -6,6 +6,9 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createHash } from 'node:crypto';
 import { createComporServer } from '../dist/server.js';
 import { fileURLToPath } from 'node:url';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 
 const expectedIds = ['entender-intencao', 'traduzir-direcao', 'explorar-moodboards', 'criar-piloto'];
 const expectedTools = [
@@ -13,6 +16,15 @@ const expectedTools = [
   'discover_visual_references',
   'list_skills',
   'load_skill',
+  'phoenix_profile_consent',
+  'phoenix_profile_maintainer_consent',
+  'phoenix_profile_read',
+  'phoenix_profile_read_shared',
+  'phoenix_profile_send_summary',
+  'phoenix_profile_share',
+  'phoenix_profile_signal',
+  'phoenix_profile_summary',
+  'phoenix_profile_undo',
   'prepare_annotation_context',
   'prepare_layered_creative',
   'prepare_moodboard',
@@ -101,11 +113,12 @@ test('rejects unknown versions, paths and malformed arguments without revealing 
 
 test('stdio child process negotiates MCP and exposes the same catalog to a harness', async () => {
   const cwd = fileURLToPath(new URL('..', import.meta.url));
+  const profileDir = mkdtempSync(join(tmpdir(), 'compor-mcp-stdio-test-'));
   const transport = new StdioClientTransport({
     command: process.execPath,
     args: ['dist/stdio.js'],
     cwd,
-    env: {},
+    env: { COMPOR_PROFILE_DIR: profileDir },
     stderr: 'pipe',
   });
   const client = new Client({ name: 'stdio-test-harness', version: '1.0.0' });
@@ -113,7 +126,7 @@ test('stdio child process negotiates MCP and exposes the same catalog to a harne
     await client.connect(transport);
     await checkCatalog(client);
     assert.ok(transport.pid);
-  } finally { await client.close(); }
+  } finally { await client.close(); rmSync(profileDir, { recursive: true, force: true }); }
 });
 
 test('Agents SDK connects and calls MCP via Streamable HTTP in process without OpenAI or network', async () => {

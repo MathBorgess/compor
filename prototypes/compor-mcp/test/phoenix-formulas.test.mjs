@@ -279,7 +279,12 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
           excluded_sid_tags: [],
         });
       }
-      return null;
+      return JSON.stringify({
+        p_use_as_layout_grid: 0.8, p_use_as_typography_hook: 0.7,
+        p_use_color_and_vibe: 0.6, p_high_conversion_clarity: 0.6,
+        p_dwell_engagement: 0.5, p_reject_too_generic: 0.1,
+        p_reject_style_mismatch: 0.1, composition_guideline: 'Grid editorial',
+      });
     },
   });
 
@@ -305,6 +310,7 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
   const server = createComporServer({
     phoenixHyperparams: hp,
     phoenixMemoryStore: memoryStore,
+    phoenixActorId: 'matheus_dev',
     phoenixDecisionService: decisionService,
     providers: new Map([['pinterest_curated_design', mockPinterestProvider]]),
   });
@@ -324,8 +330,9 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
         arguments: {
           briefing: 'Carrossel de 5 slides sobre arquitetura de sistemas com estética editorial suíça',
           target_format: 'carousel_editorial_4:5',
-          user_id: 'matheus_dev',
           client_mode: 'codex',
+          consent_external_search: true,
+          consent_model: true,
         },
       });
 
@@ -333,12 +340,12 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
       const codexMarkdown = codexRes.content[0].text;
       assert.equal(typeof codexMarkdown, 'string');
       assert.match(codexMarkdown, /Phoenix Visual Decision Engine/);
-      assert.match(codexMarkdown, /Staging Local:/);
       assert.match(codexMarkdown, /SIDs:/);
       assert.match(codexMarkdown, /gpt-6-luna/);
-      // Must NOT contain raw external URLs or tracking parameters
-      assert.doesNotMatch(codexMarkdown, /https?:\/\//i);
+      assert.match(codexMarkdown, /https:\/\/www\.pinterest\.com\/pin\//i);
       assert.doesNotMatch(codexMarkdown, /utm_/i);
+      assert.equal(codexRes.content.filter(block => block.type === 'image').length, codexRes.structuredContent.top_candidates.length);
+      assert.ok(codexRes.structuredContent.top_candidates.every(c => c.origin_url.startsWith('https://www.pinterest.com/pin/')));
       assert.ok(lunaCalls >= 1, 'Expected subagent Luna runner to be invoked in codex mode without OPENAI_API_KEY');
 
       // 4b. Test decision_fallback_mode="require_key" asking user for OPENAI_API_KEY
@@ -347,13 +354,14 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
         arguments: {
           briefing: 'Post de anúncio de curso',
           target_format: 'ad_performance_4:5',
-          user_id: 'matheus_dev',
           client_mode: 'codex',
+          consent_external_search: true,
+          consent_model: true,
           decision_fallback_mode: 'require_key',
         },
       });
       assert.equal(askKeyRes.structuredContent.status, 'requires_api_key');
-      assert.match(askKeyRes.content[0].text, /openai_api_key/);
+      assert.match(askKeyRes.content[0].text, /OPENAI_API_KEY/);
     } finally {
       if (savedApiKey !== undefined) {
         process.env.OPENAI_API_KEY = savedApiKey;
@@ -366,8 +374,9 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
       arguments: {
         briefing: 'Infográfico executivo B2B para LinkedIn sobre funil de vendas',
         target_format: 'linkedin_infographic',
-        user_id: 'matheus_dev',
         client_mode: 'web',
+        consent_external_search: true,
+        consent_model: true,
         decision_fallback_mode: 'deterministic_mock',
       },
     });
@@ -382,7 +391,7 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
     // Confirm format_mcp_response("codex") vs format_mcp_response("web") directly
     const directCodex = format_mcp_response(parsedWeb, 'codex');
     assert.equal(typeof directCodex, 'string');
-    assert.doesNotMatch(directCodex, /https?:\/\//i);
+    assert.match(directCodex, /https:\/\/www\.pinterest\.com\/pin\//i);
 
     const directWeb = format_mcp_response(parsedWeb, 'web');
     assert.deepEqual(directWeb, parsedWeb);
@@ -392,28 +401,30 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
     const fb1 = await client.callTool({
       name: 'record_visual_feedback',
       arguments: {
-        user_id: 'matheus_dev',
+        event_id: 'first-lock',
         candidate_id: firstCand.candidate_id,
         board: firstCand.board,
         metadata_sid: firstCand.metadata_sid,
         action: 'locked_as_reference',
         dwell_time_ms: 4200,
         client_mode: 'web',
+        consent_external_search: true,
+        consent_model: true,
       },
     });
     assert.equal(fb1.isError, undefined);
     assert.equal(fb1.structuredContent.positive_session_count, 1);
     assert.equal(fb1.structuredContent.compaction_triggered, false);
-    assert.ok(fb1.structuredContent.board_affinity.affinity_score > 0.5);
+    assert.ok(fb1.structuredContent.board_affinity.total_impressions >= 1);
 
     const secondCand = parsedWeb.candidates[1];
     const fb2 = await client.callTool({
       name: 'record_visual_feedback',
       arguments: {
-        user_id: 'matheus_dev',
+        event_id: 'second-reject',
         candidate_id: secondCand.candidate_id,
         board: secondCand.board,
-        metadata_sid: ['carousel_editorial_4:5', 'glassmorphism_ui', 'kinetic_retro_type', 'neo_brutalist_bold'],
+        metadata_sid: secondCand.metadata_sid,
         action: 'style_mismatch',
         dwell_time_ms: 800,
         client_mode: 'codex',
@@ -422,11 +433,7 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
     assert.equal(fb2.isError, undefined);
     assert.equal(fb2.structuredContent.negative_session_count, 1);
     assert.equal(fb2.structuredContent.compaction_triggered, true);
-    assert.ok(
-      fb2.structuredContent.negative_constraints.includes(
-        'carousel_editorial_4:5/glassmorphism_ui',
-      ),
-    );
+    assert.deepEqual(fb2.structuredContent.negative_constraints, []);
   } finally {
     await client.close();
     await server.close();
@@ -529,14 +536,15 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
             }),
           };
         }
-        if (schemaName === 'phoenix_isolated_candidate_ranker') {
+        if (schemaName === 'phoenix_isolated_candidate_action_probs') {
           return {
             output_text: JSON.stringify({
-              p_approve_hook: 0.88,
-              p_high_dwell: 0.82,
-              p_copy_composition: 0.79,
-              p_save_to_board: 0.75,
-              p_skip_generic: 0.06,
+              p_use_as_layout_grid: 0.88,
+              p_use_as_typography_hook: 0.82,
+              p_use_color_and_vibe: 0.79,
+              p_high_conversion_clarity: 0.75,
+              p_dwell_engagement: 0.5,
+              p_reject_too_generic: 0.06,
               p_reject_style_mismatch: 0.04,
               composition_guideline: 'Grid suíço de alta precisão com hierarquia tipográfica clara.',
             }),
@@ -582,6 +590,7 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
   const server = createComporServer({
     phoenixHyperparams: hp,
     phoenixMemoryStore: memoryStore,
+    phoenixActorId: 'user_fixes',
     phoenixDecisionService: decisionService,
     providers: new Map([['pinterest_curated_design', realPinterestProvider]]),
     fetchFn: mockFetchFn,
@@ -599,9 +608,9 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
       arguments: {
         briefing: 'Carrossel editorial suíço sobre engenharia de software',
         target_format: 'carousel_editorial_4:5',
-        user_id: 'user_fixes',
         client_mode: 'web',
-        openai_api_key: 'sk-test-mock-client',
+        consent_external_search: true,
+        consent_model: true,
       },
     });
     assert.equal(disc1Res.isError, undefined);
@@ -637,9 +646,9 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
       arguments: {
         briefing: 'Segundo discovery para outro usuário na mesma instância de store',
         target_format: 'carousel_editorial_4:5',
-        user_id: 'other_user_shared_store',
         client_mode: 'web',
-        openai_api_key: 'sk-test-mock-client',
+        consent_external_search: true,
+        consent_model: true,
       },
     });
     assert.equal(disc2Res.isError, undefined);
@@ -682,14 +691,15 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
     const fbPos = await client.callTool({
       name: 'record_visual_feedback',
       arguments: {
-        user_id: 'user_fixes',
+        event_id: 'fixes-positive',
         candidate_id: targetCand1.candidate_id,
         board: targetCand1.board,
         metadata_sid: targetCand1.metadata_sid,
         action: 'locked_as_reference',
         dwell_time_ms: 5100,
         client_mode: 'web',
-        openai_api_key: 'sk-test-mock-client',
+        consent_external_search: true,
+        consent_model: true,
       },
     });
     assert.equal(fbPos.isError, undefined);
@@ -697,19 +707,15 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
     const fbNeg = await client.callTool({
       name: 'record_visual_feedback',
       arguments: {
-        user_id: 'user_fixes',
+        event_id: 'fixes-negative',
         candidate_id: disc1.candidates[1].candidate_id,
         board: disc1.candidates[1].board,
-        metadata_sid: [
-          'carousel_editorial_4:5',
-          'glassmorphism_ui',
-          'bold_display_hook',
-          'dark_tech_saas',
-        ],
+        metadata_sid: disc1.candidates[1].metadata_sid,
         action: 'style_mismatch',
         dwell_time_ms: 600,
         client_mode: 'web',
-        openai_api_key: 'sk-test-mock-client',
+        consent_external_search: true,
+        consent_model: true,
       },
     });
     assert.equal(fbNeg.isError, undefined);
@@ -723,7 +729,7 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
     );
     assert.equal(userMem.pos_session_vecs.length, 1);
     assert.equal(userMem.neg_session_vecs.length, 1);
-    assert.ok(userMem.long_term_vec !== null, 'Compaction must populate long_term_vec');
+    assert.equal(userMem.long_term_vec, null, 'Feedback efêmero não deve consolidar perfil');
 
     // In our mock OpenAI basis, component [0] is ~0.95 (after L2 norm > 0.85),
     // verifying that feedback and long-term vectors were embedded via OpenAI and NOT local SHA-256!
@@ -735,10 +741,7 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
       userMem.neg_session_vecs[0][0] > 0.85,
       'Negative feedback vector must be in the OpenAI embedding coordinate space',
     );
-    assert.ok(
-      userMem.long_term_vec[0] > 0.85,
-      'Consolidated long-term taste vector must be in the OpenAI embedding coordinate space',
-    );
+
 
     // --- FIX 4: Hard SID exclusion filter blocks rejected SID prefixes before ranking/selection ---
     // Direct unit check on filter_excluded_sid_candidates and matches_excluded_sid
@@ -779,34 +782,136 @@ test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified em
       'All candidates matching excluded SID prefix must be removed before ranking',
     );
 
-    // End-to-end check: user_fixes now has 'carousel_editorial_4:5/glassmorphism_ui' in negative_constraints.
-    // Even though realPinterestProvider returns a glassmorphism item for every board, none may appear in Top-N!
+    // Rejeição bloqueia imediatamente a origem exata, sem inferir rejeição de todo o estilo.
+    const rejectedOrigin = disc1.candidates[1].origin_url;
     const discAfterRejectRes = await client.callTool({
       name: 'discover_visual_references',
       arguments: {
         briefing: 'Carrossel editorial sobre arquitetura limpa',
-        target_format: 'carousel_editorial_4:5',
-        user_id: 'user_fixes',
-        client_mode: 'web',
-        openai_api_key: 'sk-test-mock-client',
+        target_format: 'carousel_editorial_4:5', client_mode: 'web',
+        consent_external_search: true, consent_model: true,
       },
     });
     assert.equal(discAfterRejectRes.isError, undefined);
     const discAfterReject = webDiscoveryResponseSchema.parse(discAfterRejectRes.structuredContent);
-    assert.ok(
-      discAfterReject.excluded_sid_tags.includes('carousel_editorial_4:5/glassmorphism_ui'),
-      'Excluded SID tag from negative_constraints must be active in discovery',
-    );
-    assert.ok(discAfterReject.candidates.length > 0, 'Non-excluded candidates must still be returned');
-    for (const cand of discAfterReject.candidates) {
-      assert.equal(
-        matches_excluded_sid(cand.metadata_sid, ['carousel_editorial_4:5/glassmorphism_ui']),
-        false,
-        `Candidate ${cand.candidate_id} with SID ${cand.metadata_sid.join('/')} should have been blocked by SID exclusion filter`,
-      );
-    }
+    assert.ok(discAfterReject.candidates.every(c => c.origin_url !== rejectedOrigin));
+    assert.deepEqual(userMem.user_taste.negative_constraints, []);
   } finally {
     await client.close();
     await server.close();
   }
+});
+
+test('Phoenix exige autorizações separadas, conta exposições, deduplica feedback e recusa fallback silencioso', async () => {
+  const hp = createPhoenixHyperparams();
+  const memoryStore = new PhoenixMemoryStore({ hp });
+  let searches = 0;
+  let modelCalls = 0;
+  const provider = {
+    sourceId: 'pinterest_curated_design', accessMethod: 'curated_board_http',
+    async searchMetadataOnly({ source }) {
+      searches++;
+      const board = source.allowed_boards_or_queries[0];
+      return [{ source_id: 'pinterest_curated_design', raw_title: 'Referência teste', raw_caption: 'grid',
+        origin_url: `https://www.pinterest.com/pin/${encodeURIComponent(board)}`,
+        preview_url: `https://i.pinimg.com/236x/${encodeURIComponent(board)}.jpg`,
+        media_url: `https://i.pinimg.com/736x/${encodeURIComponent(board)}.jpg`,
+        aspect_rationale: { composition: 'grid' }, thumbnail_base64: null, thumbnail_mime_type: null }];
+    },
+  };
+  const service = new PhoenixDecisionApiService({ hp, subagentRunner: () => { modelCalls++; return null; } });
+  const server = createComporServer({ phoenixActorId: 'actor-test', phoenixMemoryStore: memoryStore,
+    phoenixDecisionService: service, providers: new Map([['pinterest_curated_design', provider]]) });
+  const client = new Client({ name: 'phoenix-consents', version: '1.0.0' });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await server.connect(st); await client.connect(ct);
+  try {
+    const base = { briefing: 'grid', target_format: 'single_feed', client_mode: 'web', decision_fallback_mode: 'deterministic_mock' };
+    const blocked = await client.callTool({ name: 'discover_visual_references', arguments: base });
+    assert.equal(blocked.isError, true);
+    assert.equal(blocked.structuredContent.code, 'consent_required');
+    assert.equal(searches, 0); assert.equal(modelCalls, 0);
+
+    const remoteBlocked = await client.callTool({ name: 'discover_visual_references', arguments: {
+      ...base, client_mode: 'codex', decision_fallback_mode: 'luna_subagent', consent_external_search: true,
+    } });
+    assert.equal(remoteBlocked.isError, true);
+    assert.equal(remoteBlocked.structuredContent.code, 'model_consent_required');
+    assert.equal(searches, 0); assert.equal(modelCalls, 0);
+
+    const found = await client.callTool({ name: 'discover_visual_references', arguments: { ...base, consent_external_search: true } });
+    assert.equal(found.isError, undefined);
+    const result = webDiscoveryResponseSchema.parse(found.structuredContent);
+    assert.equal(result.candidate_origin, 'provider');
+    assert.equal(result.decision_engine_source, 'deterministic_mock');
+    assert.equal(result.can_proceed_without_references, true);
+    const candidate = result.candidates[0];
+    assert.ok(candidate);
+    assert.equal(candidate.origin_kind, 'provider');
+    const priorImpressions = memoryStore.getOrCreateUser('actor-test').board_bandit.get(candidate.board).total_impressions;
+    assert.ok(priorImpressions >= 1);
+    const feedback = { event_id: 'evt-1', candidate_id: candidate.candidate_id, board: candidate.board,
+      metadata_sid: candidate.metadata_sid, action: 'discard_generic', client_mode: 'web' };
+    const first = await client.callTool({ name: 'record_visual_feedback', arguments: feedback });
+    const duplicate = await client.callTool({ name: 'record_visual_feedback', arguments: feedback });
+    assert.equal(first.isError, undefined);
+    assert.equal(duplicate.structuredContent.duplicate, true);
+    assert.equal(memoryStore.getOrCreateUser('actor-test').session_events.length, 1);
+    assert.equal(memoryStore.getOrCreateUser('actor-test').board_bandit.get(candidate.board).total_impressions, priorImpressions);
+    const conflicting = await client.callTool({ name: 'record_visual_feedback', arguments: { ...feedback, action: 'locked_as_reference' } });
+    assert.equal(conflicting.isError, true);
+    const forged = await client.callTool({ name: 'record_visual_feedback', arguments: { ...feedback, event_id: 'evt-2', board: 'fake/board' } });
+    assert.equal(forged.isError, true);
+    const retried = await client.callTool({ name: 'discover_visual_references', arguments: { ...base, consent_external_search: true } });
+    assert.ok(retried.structuredContent.candidates.every(c => c.origin_url !== candidate.origin_url));
+    assert.deepEqual(memoryStore.getOrCreateUser('actor-test').user_taste.negative_constraints, []);
+    assert.equal(memoryStore.getOrCreateUser('actor-test').long_term_vec, null);
+
+    const modelFailed = await client.callTool({ name: 'discover_visual_references', arguments: {
+      ...base, client_mode: 'codex', decision_fallback_mode: 'luna_subagent', consent_external_search: true, consent_model: true,
+    } });
+    assert.equal(modelFailed.isError, true);
+    assert.match(modelFailed.content[0].text, /indisponível|inválida/);
+    assert.equal(modelCalls, 1);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('Diversidade não aumenta nota negativa de candidato repetido', () => {
+  const hp = createPhoenixHyperparams({ sid_diversity_decay_factor: 0.5 });
+  const ranked = apply_sid_diversity_decay([
+    { candidate_id: 'a', metadata_sid: ['same', 'same'], raw_score: -1 },
+    { candidate_id: 'b', metadata_sid: ['same', 'same'], raw_score: -2 },
+  ], hp);
+  const repeated = ranked.find(c => c.candidate_id === 'b');
+  assert.ok(repeated.final_score < repeated.raw_score);
+});
+
+test('Modo sintético é explícito, offline e não pode ser materializado como referência real', async () => {
+  const server = createComporServer();
+  const client = new Client({ name: 'phoenix-mock', version: '1.0.0' });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await server.connect(st); await client.connect(ct);
+  try {
+    const response = await client.callTool({ name: 'discover_visual_references', arguments: {
+      briefing: 'exemplo sintético', target_format: 'single_feed', client_mode: 'web', decision_fallback_mode: 'deterministic_mock',
+    } });
+    assert.equal(response.isError, undefined);
+    const result = webDiscoveryResponseSchema.parse(response.structuredContent);
+    assert.equal(result.candidate_origin, 'synthetic');
+    assert.equal(result.telemetry.board_html_path, null);
+    assert.ok(result.candidates.length > 0);
+    assert.ok(result.candidates.every(c => c.origin_kind === 'synthetic' && c.preview_url.startsWith('synthetic:')));
+    const staged = await client.callTool({ name: 'stage_approved_references', arguments: {
+      proceed_without_references: false, selections: [{ ref_id: result.candidates[0].candidate_id, selected_attributes: ['composition'] }],
+    } });
+    assert.equal(staged.isError, true);
+  } finally { await client.close(); await server.close(); }
+});
+
+test('Escolha explícita de Luna não é substituída por chave do servidor', () => {
+  const hp = createPhoenixHyperparams();
+  const service = new PhoenixDecisionApiService({ hp, apiKey: 'server-only-test-key' });
+  assert.equal(service.resolveExecutionStrategy({ client_mode: 'codex', fallback_mode: 'luna_subagent' }).source, 'codex_luna_subagent');
+  assert.equal(service.resolveExecutionStrategy({ client_mode: 'web', fallback_mode: 'luna_subagent' }).source, 'codex_luna_subagent');
+  assert.equal(service.resolveExecutionStrategy({ client_mode: 'codex', fallback_mode: 'require_key' }).source, 'openai_api');
 });

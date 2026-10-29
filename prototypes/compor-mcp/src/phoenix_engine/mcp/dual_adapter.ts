@@ -1,6 +1,6 @@
 import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
-import { loadSourcesCatalog, type SourcesCatalog } from '../../catalog/catalog.js';
+import { loadSourcesCatalog, validateSourceGovernance, type SourcesCatalog } from '../../catalog/catalog.js';
 import type {
   RawProviderCandidate,
   ReferenceSearchProvider,
@@ -13,7 +13,6 @@ import type {
   EphemeralReferenceStore,
   ReferenceAttribute,
 } from '../../staging/ephemeral_store.js';
-import { writePreviewBoard } from '../../staging/preview_board.js';
 import type { PhoenixHyperparams } from '../config/hyperparams.js';
 import {
   inferCandidateSid,
@@ -72,13 +71,9 @@ export const discoverVisualReferencesInputSchema = {
   decision_fallback_mode: decisionFallbackModeSchema
     .optional()
     .describe('Estratégia quando OPENAI_API_KEY não estiver definida no ambiente: ask_or_luna, luna_subagent, require_key ou deterministic_mock.'),
-  openai_api_key: z
-    .string()
-    .trim()
-    .min(1)
-    .max(300)
-    .optional()
-    .describe('Chave OpenAI opcional em memória para chamar diretamente o modelo de decisão (nunca persistida ou logada).'),
+  consent_external_search: z.boolean().default(false).describe('Autoriza busca externa nesta chamada.'),
+  consent_model: z.boolean().default(false).describe('Autoriza envio ao motor externo nesta chamada.'),
+
 };
 
 export const recordVisualFeedbackInputSchema = {
@@ -117,13 +112,8 @@ export const recordVisualFeedbackInputSchema = {
   client_mode: clientModeSchema
     .default('codex')
     .describe('Modo de serialização dual ("codex" ou "web").'),
-  openai_api_key: z
-    .string()
-    .trim()
-    .min(1)
-    .max(300)
-    .optional()
-    .describe('Chave OpenAI opcional em memória para manter o mesmo espaço de embeddings (nunca persistida ou logada).'),
+  event_id: z.string().trim().min(1).max(120).describe('ID único da interação para evitar duplicações.'),
+
 };
 
 /**
@@ -137,9 +127,20 @@ function stripUrlsAndTracking(text: string): string {
     .trim();
 }
 
+/** A source URL is a reference, never an instruction; remove tracking and fragments. */
+function cleanReferenceUrl(value: string): string | null {
+  try {
+    const parsed = new URL(value);
+    if (parsed.protocol !== 'https:' || parsed.username || parsed.password) return null;
+    parsed.search = '';
+    parsed.hash = '';
+    return parsed.toString();
+  } catch { return null; }
+}
+
 /**
  * Formata a resposta do motor Phoenix de acordo com o `client_mode`:
- * - `codex`: retorna string Markdown enxuta (Top-N, SIDs, `staging_path` local e diretrizes técnicas de composição, sem URLs brutas de rastreio).
+ * - `codex`: retorna Markdown com as referências, origem sem parâmetros e diretrizes de composição.
  * - `web`: retorna objeto JSON estruturado validado pelo schema `webDiscoveryResponseSchema`.
  */
 export function format_mcp_response(
@@ -174,6 +175,9 @@ export function format_mcp_response(
   const lines: string[] = [
     `# Phoenix Visual Decision Engine — Top-${topCandidates.length} Referências (${validated.target_format})`,
     `- **Sessão:** \`${validated.session_token}\` | **Motor:** \`${validated.decision_engine_source}\``,
+    `- **Origem dos candidatos:** ${validated.candidate_origin} | **Embeddings:** ${validated.embedding_space}`,
+    `- **Sem referência:** é possível continuar.`,
+    ...(validated.provider_diagnostics.length ? [`- **Falhas na busca:** ${validated.provider_diagnostics.join('; ')}`] : []),
   ];
 
   if (options.api_key_notice) {
@@ -184,7 +188,7 @@ export function format_mcp_response(
     lines.push(
       '',
       '## Ação Necessária: Chave de Decisão OpenAI',
-      'Deseja informar sua `openai_api_key` para chamar o modelo de decisão na API da OpenAI, ou prefere prosseguir com `decision_fallback_mode: "luna_subagent"`?',
+      'Configure OPENAI_API_KEY no ambiente do servidor ou escolha explicitamente o motor local.',
     );
     return lines.join('\n');
   }
@@ -196,8 +200,9 @@ export function format_mcp_response(
     const cleanDesc = stripUrlsAndTracking(cand.visual_description);
     lines.push(
       `### ${idx + 1}. \`${cand.candidate_id}\` (Board: \`${cand.board}\` | Score Final: \`${cand.final_score.toFixed(2)}\` | Decay: \`${cand.diversity_multiplier.toFixed(2)}\`)`,
+      `- **Origem:** ${cand.origin_kind ?? 'não informada'} | **Fonte:** ${cand.source_id ?? 'não informada'}`,
+      ...(cand.origin_kind === 'provider' && cleanReferenceUrl(cand.origin_url) ? [`- **Referência:** ${cleanReferenceUrl(cand.origin_url)}`] : []),
       `- **SIDs:** \`${cand.metadata_sid.join(' > ')}\``,
-      `- **Staging Local:** \`${cand.staging_path}\``,
       `- **Composição:** ${cleanGuideline}`,
       `- **Estrutura:** ${cleanDesc}`,
       '',
@@ -266,6 +271,7 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
   session_id: string;
   staging_root: string;
   deps: PhoenixDualAdapterDependencies;
+  diagnostics: string[];
 }): Promise<
   Array<
     CandidateToRank & {
@@ -318,6 +324,7 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
   let globalIdx = 0;
 
   for (const alloc of params.allocations) {
+    if (!basePinterestSource.allowed_boards_or_queries.includes(alloc.board)) continue;
     const boardScopedSource = {
       ...basePinterestSource,
       allowed_boards_or_queries: [alloc.board],
@@ -333,6 +340,10 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
       });
 
       for (const rawItem of results) {
+        if (rawItem.source_id !== basePinterestSource.source_id) {
+          params.diagnostics.push(`Fonte divergente ignorada no board ${alloc.board}`);
+          continue;
+        }
         const dedupeKey = `${alloc.board}::${rawItem.origin_url}::${rawItem.preview_url}`;
         if (seenOriginUrls.has(dedupeKey)) continue;
         seenOriginUrls.add(dedupeKey);
@@ -383,7 +394,7 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
           preview_url: rawItem.preview_url,
           origin_url: rawItem.origin_url,
           media_url: rawItem.media_url,
-          staging_path: `${params.staging_root}/${params.session_id}/board.html#${candidateId}`,
+          staging_path: 'não preparada',
           thumbnail_base64: rawItem.thumbnail_base64,
           thumbnail_mime_type: rawItem.thumbnail_mime_type,
           source_id: rawItem.source_id,
@@ -395,7 +406,7 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
         });
       }
     } catch {
-      // Prossegue para o próximo board alocado se uma fonte individual falhar
+      params.diagnostics.push(`Falha na busca do board ${alloc.board}`);
     }
   }
 
@@ -471,10 +482,10 @@ function buildSyntheticMockCandidatesFromAllocations(params: {
         role: alloc.role,
         metadata_sid: [...sid],
         visual_description: desc,
-        preview_url: `https://i.pinimg.com/236x/mock/${encodeURIComponent(alloc.board)}/${candidateId}.jpg`,
-        origin_url: `https://www.pinterest.com/${alloc.board}/`,
-        media_url: `https://i.pinimg.com/736x/mock/${encodeURIComponent(alloc.board)}/${candidateId}.jpg`,
-        staging_path: `${params.staging_root}/${params.session_id}/board.html#${candidateId}`,
+        preview_url: `synthetic:${candidateId}`,
+        origin_url: `synthetic:${candidateId}`,
+        media_url: `synthetic:${candidateId}`,
+        staging_path: 'não preparada',
         thumbnail_base64: null,
         thumbnail_mime_type: null,
         source_id: 'pinterest_curated_design',
@@ -500,7 +511,8 @@ export async function executeDiscoverVisualReferences(
     user_id?: string;
     client_mode?: ClientMode;
     decision_fallback_mode?: DecisionFallbackMode;
-    openai_api_key?: string;
+    consent_external_search?: boolean;
+    consent_model?: boolean;
   },
   deps: PhoenixDualAdapterDependencies,
 ) {
@@ -514,8 +526,26 @@ export async function executeDiscoverVisualReferences(
   const strategy = deps.decisionService.resolveExecutionStrategy({
     client_mode: clientMode,
     fallback_mode: input.decision_fallback_mode,
-    openai_api_key: input.openai_api_key,
+
   });
+
+  const syntheticMode = input.decision_fallback_mode === 'deterministic_mock' &&
+    (!deps.providers || deps.providers.size === 0);
+  if (!syntheticMode) {
+    const governance = await validateSourceGovernance({
+      consent_external_search: input.consent_external_search === true,
+      source_ids: ['pinterest_curated_design'],
+      catalog: deps.catalog,
+    });
+    if (!governance.allowed) {
+      return { isError: true, content: [{ type: 'text' as const, text: governance.message }],
+        structuredContent: { status: 'blocked', code: governance.code, external_requests_made: 0 } };
+    }
+  }
+  if (!strategy.requires_api_key_prompt && strategy.source !== 'deterministic_mock' && input.consent_model !== true) {
+    return { isError: true, content: [{ type: 'text' as const, text: 'Envio ao motor externo requer consent_model: true.' }],
+      structuredContent: { status: 'blocked', code: 'model_consent_required', external_requests_made: 0 } };
+  }
 
   if (strategy.requires_api_key_prompt) {
     const emptyPayload: WebDiscoveryResponse = {
@@ -527,6 +557,10 @@ export async function executeDiscoverVisualReferences(
       briefing: input.briefing,
       decision_engine_source: strategy.source,
       prompt_cache_key: promptCacheKey,
+      candidate_origin: syntheticMode ? 'synthetic' : 'provider',
+      can_proceed_without_references: true,
+      provider_diagnostics: [],
+      embedding_space: 'local_deterministic_sha256',
       board_allocations: [],
       required_sid_tags: [],
       excluded_sid_tags: [...userRecord.user_taste.negative_constraints],
@@ -577,7 +611,7 @@ export async function executeDiscoverVisualReferences(
     board_affinity_table: affinityTable,
     session_events_summary: sessionEventsSummary,
     source: strategy.source,
-    openai_api_key: input.openai_api_key,
+    openai_api_key: undefined,
   });
 
   const effectiveExcludedSids = Array.from(
@@ -593,6 +627,7 @@ export async function executeDiscoverVisualReferences(
     input.decision_fallback_mode === 'deterministic_mock' &&
     (!deps.providers || deps.providers.size === 0);
 
+  const providerDiagnostics: string[] = [];
   let retrievedCandidates = isExplicitMockMode
     ? buildSyntheticMockCandidatesFromAllocations({
         allocations: routerDecision.board_allocations,
@@ -609,14 +644,13 @@ export async function executeDiscoverVisualReferences(
         session_id: sessionId,
         staging_root: deps.referenceStore.getStagingRoot(),
         deps,
+        diagnostics: providerDiagnostics,
       });
 
   // Se o servidor foi instanciado com forceDeterministicMock=true em testes sem provider nem rede,
   // usa os candidatos sintéticos de mock.
   if (
-    retrievedCandidates.length === 0 &&
-    deps.decisionService.isForcedDeterministicMock() &&
-    (!deps.providers || deps.providers.size === 0)
+    retrievedCandidates.length === 0 && syntheticMode
   ) {
     retrievedCandidates = buildSyntheticMockCandidatesFromAllocations({
       allocations: routerDecision.board_allocations,
@@ -630,7 +664,7 @@ export async function executeDiscoverVisualReferences(
 
   // Filtro explícito de padrões SID excluídos (`excluded_sid_tags` + `negative_constraints`) ANTES do ranking e seleção
   const rawCandidates = filter_excluded_sid_candidates(
-    retrievedCandidates,
+    retrievedCandidates.filter((candidate) => !userRecord.rejected_origins.has(candidate.origin_url)),
     effectiveExcludedSids,
   );
 
@@ -645,7 +679,7 @@ export async function executeDiscoverVisualReferences(
   const batchEmbedding = await deps.decisionService.embedBatchConsistent(
     [combinedSyntheticQuery, ...candidateTexts],
     {
-      apiKey: input.openai_api_key,
+      apiKey: undefined,
       forceSpace:
         strategy.source === 'deterministic_mock'
           ? 'local_deterministic_sha256'
@@ -666,7 +700,7 @@ export async function executeDiscoverVisualReferences(
     activeEmbeddingSpace,
     async (texts, forceSpace) => {
       const reemb = await deps.decisionService.embedBatchConsistent(texts, {
-        apiKey: input.openai_api_key,
+        apiKey: undefined,
         forceSpace,
       });
       return reemb.vectors;
@@ -680,6 +714,7 @@ export async function executeDiscoverVisualReferences(
       board: cand.board,
       metadata_sid: cand.metadata_sid,
       visual_description: cand.visual_description,
+      origin_url: cand.origin_url,
       embedding_text: candidateTexts[idx]!,
       vec: candidateVecs[idx]!,
       space: activeEmbeddingSpace,
@@ -694,8 +729,7 @@ export async function executeDiscoverVisualReferences(
     deps.hp,
   );
 
-  // Registra os candidatos no EphemeralReferenceStore com IDs únicos do discovery (`phx_<discoveryId>_<nn>`)
-  // e gera o preview board.html (zero-download de imagens em alta resolução na busca)
+  // Registra os candidatos reais para seleção posterior; as prévias ficam em memória.
   const sanitizedForStore = rawCandidates.map((c) => {
     const { untrusted_external_caption } = sanitize_external_metadata({
       title: c.raw_title,
@@ -716,31 +750,19 @@ export async function executeDiscoverVisualReferences(
     };
   });
 
-  const registeredInStore = deps.referenceStore.registerSearchCandidates(
+  const registeredInStore = syntheticMode ? [] : deps.referenceStore.registerSearchCandidates(
     sessionId,
     sanitizedForStore,
   );
-  const boardHtmlPath =
-    registeredInStore.length > 0
-      ? await writePreviewBoard({
-          session_id: sessionId,
-          briefing_summary: input.briefing,
-          target_format: input.target_format,
-          aspect_focus: ['composition', 'typography', 'color'],
-          candidates: registeredInStore,
-          staging_root: deps.referenceStore.getStagingRoot(),
-        })
-      : null;
+  const boardHtmlPath = null;
 
-  // Estágio 2: Candidate-Isolated Parallel Ranker (100% KV-Cache Prefix Hit)
+  // Estágio 2: Candidate-Isolated Parallel Ranker; cache ainda não medido.
   const isolatedRanked = await Promise.all(
     rawCandidates.map(async (candidate) => {
       const stagedRecord = deps.referenceStore.getStagedReference(candidate.candidate_id);
       const effectiveStagingPath = stagedRecord
         ? stagedRecord.local_path
-        : boardHtmlPath
-          ? `${boardHtmlPath}#${candidate.candidate_id}`
-          : `${deps.referenceStore.getStagingRoot()}/${sessionId}/board.html#${candidate.candidate_id}`;
+        : 'não preparada (prévia disponível na conversa, quando fornecida)';
 
       const actionProbs = await deps.decisionService.rankSingleCandidateIsolated({
         user_id: userId,
@@ -753,7 +775,7 @@ export async function executeDiscoverVisualReferences(
           staging_path: effectiveStagingPath,
         },
         source: strategy.source,
-        openai_api_key: input.openai_api_key,
+        openai_api_key: undefined,
       });
 
       const rawScore =
@@ -766,6 +788,8 @@ export async function executeDiscoverVisualReferences(
 
       return {
         candidate_id: candidate.candidate_id,
+        origin_kind: syntheticMode ? 'synthetic' as const : 'provider' as const,
+        source_id: candidate.source_id,
         board: candidate.board,
         role: candidate.role,
         metadata_sid: candidate.metadata_sid,
@@ -792,6 +816,8 @@ export async function executeDiscoverVisualReferences(
     deps.hp,
   ) as RankedCandidate[];
   const topCandidates = decayedCandidates.slice(0, deps.hp.top_n_results);
+  // Exposição contabiliza itens retornados, não confirmação de visualização humana.
+  deps.memoryStore.recordExposures(userId, topCandidates.map((candidate) => deps.memoryStore.getDiscoveredCandidate(userId, candidate.candidate_id)!));
 
   const explorationWeightTotal = routerDecision.board_allocations
     .filter((a) => a.role === 'wildcard_exploration' || a.board.endsWith('/feed'))
@@ -806,6 +832,10 @@ export async function executeDiscoverVisualReferences(
     briefing: input.briefing,
     decision_engine_source: strategy.source,
     prompt_cache_key: promptCacheKey,
+    candidate_origin: syntheticMode ? 'synthetic' : 'provider',
+    can_proceed_without_references: true,
+    provider_diagnostics: providerDiagnostics,
+    embedding_space: activeEmbeddingSpace,
     board_allocations: routerDecision.board_allocations,
     required_sid_tags: routerDecision.required_sid_tags,
     excluded_sid_tags: effectiveExcludedSids,
@@ -829,8 +859,16 @@ export async function executeDiscoverVisualReferences(
       api_key_notice: strategy.api_key_notice,
       top_n: deps.hp.top_n_results,
     });
+    const content: Array<{ type: 'text'; text: string } | { type: 'image'; mimeType: string; data: string }> = [{ type: 'text', text: markdownText }];
+    for (const candidate of topCandidates) {
+      const reference = registeredInStore.find(item => item.ref_id === candidate.candidate_id);
+      if (reference?.thumbnail_base64 && reference.thumbnail_mime_type) {
+        content.push({ type: 'text', text: `Prévia de ${candidate.candidate_id} (fonte: ${candidate.source_id ?? 'não informada'}).` });
+        content.push({ type: 'image', mimeType: reference.thumbnail_mime_type, data: reference.thumbnail_base64 });
+      }
+    }
     return {
-      content: [{ type: 'text' as const, text: markdownText }],
+      content,
       structuredContent: {
         status: 'ok' as const,
         client_mode: 'codex' as const,
@@ -840,6 +878,9 @@ export async function executeDiscoverVisualReferences(
         markdown: markdownText,
         top_candidates: topCandidates.map((c) => ({
           candidate_id: c.candidate_id,
+          origin_kind: c.origin_kind,
+          source_id: c.source_id,
+          origin_url: cleanReferenceUrl(c.origin_url),
           board: c.board,
           metadata_sid: c.metadata_sid,
           staging_path: c.staging_path,
@@ -867,7 +908,7 @@ export async function executeRecordVisualFeedback(
     action: FeedbackAction;
     dwell_time_ms?: number;
     client_mode?: ClientMode;
-    openai_api_key?: string;
+    event_id: string;
   },
   deps: PhoenixDualAdapterDependencies,
 ) {
@@ -879,6 +920,9 @@ export async function executeRecordVisualFeedback(
     input.user_id,
     input.candidate_id,
   );
+  if (!discoveredEntry || discoveredEntry.board !== input.board || JSON.stringify(discoveredEntry.metadata_sid) !== JSON.stringify(input.metadata_sid)) {
+    return { isError: true, content: [{ type: 'text' as const, text: 'Candidato desconhecido ou metadados divergentes nesta sessão.' }], structuredContent: { status: 'blocked', code: 'candidate_mismatch' } };
+  }
   const candidateEmbeddingText =
     discoveredEntry?.embedding_text ??
     buildCandidateEmbeddingText({
@@ -887,47 +931,17 @@ export async function executeRecordVisualFeedback(
       visual_description: discoveredEntry?.visual_description ?? input.candidate_id,
     });
 
-  // Usa o mesmo backend de embedding ativo do usuário (ou re-embeda de forma consistente)
-  let candidateVec: number[];
-  let activeSpace = userRecord.embedding_space;
-
-  if (
-    discoveredEntry &&
-    discoveredEntry.space === userRecord.embedding_space &&
-    !input.openai_api_key
-  ) {
-    candidateVec = discoveredEntry.vec;
-    activeSpace = discoveredEntry.space;
-  } else {
-    const embResult = await deps.decisionService.embedTextWithSpace(
-      candidateEmbeddingText,
-      {
-        apiKey: input.openai_api_key,
-        forceSpace: input.openai_api_key ? undefined : userRecord.embedding_space,
-      },
-    );
-    candidateVec = embResult.vector;
-    activeSpace = embResult.space;
-
-    await deps.memoryStore.ensureConsistentEmbeddingSpace(
-      input.user_id,
-      activeSpace,
-      async (texts, forceSpace) => {
-        const reemb = await deps.decisionService.embedBatchConsistent(texts, {
-          apiKey: input.openai_api_key,
-          forceSpace,
-        });
-        return reemb.vectors;
-      },
-    );
+  // Um feedback não autoriza nova chamada de embedding externa.
+  // Se o espaço mudou desde a descoberta, solicite nova descoberta antes de registrar.
+  if (discoveredEntry.space !== userRecord.embedding_space) {
+    return { isError: true, content: [{ type: 'text' as const, text: 'O espaço de embeddings mudou; faça uma nova busca antes de registrar o feedback.' }], structuredContent: { status: 'blocked', code: 'embedding_space_changed' } };
   }
-
-  const consolidationSource = deps.decisionService.resolveApiKey(input.openai_api_key)
-    ? ('openai_api' as const)
-    : ('deterministic_mock' as const);
+  const candidateVec = discoveredEntry.vec;
+  const activeSpace = discoveredEntry.space;
 
   const feedbackResult = await deps.memoryStore.recordFeedback({
     user_id: input.user_id,
+    event_id: input.event_id,
     candidate_id: input.candidate_id,
     board: input.board,
     metadata_sid: input.metadata_sid,
@@ -936,37 +950,11 @@ export async function executeRecordVisualFeedback(
     candidate_vec: candidateVec,
     candidate_text: candidateEmbeddingText,
     embedding_space: activeSpace,
-    consolidator: async ({ user_id, previous_taste, session_events, embedding_space }) =>
-      deps.decisionService.consolidateMemory({
-        user_id,
-        previous_taste,
-        session_events,
-        source: consolidationSource,
-        openai_api_key: input.openai_api_key,
-        embedding_space,
-      }),
+
   });
 
-  // Se a ação for `locked_as_reference` e o candidato existir no store efêmero e fetchFn estiver disponível,
-  // tenta materializar o staging WebP sanitizado em `/tmp/compor-refs/{session_id}/{candidate_id}.webp`.
-  let stagedWebpPath: string | null = null;
-  if (input.action === 'locked_as_reference') {
-    const storeCandidate = deps.referenceStore.getCandidate(input.candidate_id);
-    if (storeCandidate && deps.fetchFn) {
-      try {
-        const stagedImg = await sanitize_and_stage_image({
-          session_id: storeCandidate.session_id,
-          ref_id: input.candidate_id,
-          media_url: storeCandidate.media_url,
-          staging_root: deps.referenceStore.getStagingRoot(),
-          fetch_fn: deps.fetchFn,
-        });
-        stagedWebpPath = stagedImg.local_path;
-      } catch {
-        // Se offline ou sem binário de imagem mockado, mantém o path efêmero de sessão
-      }
-    }
-  }
+  // A seleção de atributos e o download pertencem a stage_approved_references.
+  const stagedWebpPath: string | null = null;
 
   const webFeedbackPayload = {
     status: 'recorded' as const,
@@ -981,6 +969,7 @@ export async function executeRecordVisualFeedback(
     positive_session_count: feedbackResult.positive_session_count,
     negative_session_count: feedbackResult.negative_session_count,
     compaction_triggered: feedbackResult.compaction_triggered,
+    duplicate: feedbackResult.duplicate ?? false,
     negative_constraints: feedbackResult.user_taste.negative_constraints,
     embedding_space: feedbackResult.embedding_space,
   };

@@ -1,6 +1,16 @@
 # Compor MCP — protótipo local
 
-Protótipo para estudar o protocolo e as quatro skills do Compor antes da integração com o produto. É independente da interface visual e **não é o backend da v0**. O servidor processa as entradas recebidas em memória, mas não consulta dados armazenados, Supabase, imagens, BYOK ou APIs externas e não fornece persistência, geração de imagens, renderização no produto, edição ou exportação. Use apenas entradas fictícias neste protótipo.
+Protótipo para estudar o protocolo e as skills do Compor antes da integração com o produto. É independente da interface visual e **não é o backend da v0**. As ferramentas de referências podem consultar fontes externas quando autorizadas; as demais capacidades e seus limites estão descritos abaixo. O protótipo não comprova integração com o produto, implantação, autenticação ou isolamento de pessoas. É um protótipo local de uma pessoa, não um serviço autenticado para múltiplas pessoas.
+
+## Phoenix: decisão e limites da expansão
+
+As decisões de 29/10 estão em [SCRUM-57](https://compor-mathai.atlassian.net/browse/SCRUM-57), [SCRUM-58](https://compor-mathai.atlassian.net/browse/SCRUM-58) e no [ADR 0010](../../docs/adr/0010-motor-recomendacao-phoenix-e-mcp-dual.md). A arquitetura e o diagrama são uma proposta; o registro de testes de uma revisão anterior não demonstra sua implantação ou qualidade criativa. A conexão à busca curada deve preservar autorização para a busca externa, origem, atributos escolhidos, distinção entre dados reais e sintéticos e a opção de seguir sem referências.
+
+A expansão requer sinais de edição, escolha, rejeição, reação e exportação por versão, incluindo comentários posteriores; a fala da pessoa e a interpretação do agente têm registros distintos. O perfil é aplicado no escopo escolhido e pode mudar automaticamente, inclusive em resposta ambígua a uma preferência confirmada. A pessoa deve receber aviso na conversa e poder desfazer, restaurando o valor anterior com uma correção registrada. Exposição, silêncio e download não são aprovação.
+
+O resumo para Supabase é uma saída distinta do Markdown local identificável. Envio individual ao mantenedor requer autorização específica, contínua e revogável; após revogação novos envios param e o material já recebido permanece até decisão de descarte. Texto e imagem integrais exigem autorização separada. O compartilhamento do Markdown para estudo exige autorização com colaboradores e finalidade, acesso restrito e registro de leituras e compartilhamentos. Um arquivo local por si só não garante isolamento contra outras pessoas ou processos com acesso à máquina.
+
+Personalização, avaliações, dados agregados e telemetria têm finalidades distintas. Avaliações exigem consentimento próprio. A primeira etapa considera a pessoa e sua conversa, deixando métricas do público para depois. São necessárias evidências próprias para afirmar funcionamento do Supabase, implantação, acesso seguro, qualidade criativa, treinamento ou ganhos de cache, latência e custo; promoção requer avaliação humana.
 
 ## O que está implementado
 
@@ -11,15 +21,17 @@ Protótipo para estudar o protocolo e as quatro skills do Compor antes da integr
 - `prepare_layered_creative`: organiza uma peça sintética em camadas de texto, imagem ou forma, com geometria, ordem e estilo opcional. Transporta `font_ref`, peso, entrelinha e alinhamento; avisa sobre fonte não resolvida e imagem sem ativo. Não cria ativos, resolve fontes nem verifica autoria ou acesso.
 - `prepare_annotation_context`: liga notas por camada ou área a um snapshot fornecido pelo cliente; seleção por área devolve candidatas por interseção geométrica e distingue ausência, ambiguidade e candidata única. Escopo de memória `product` sempre exige confirmação verificada fora do protótipo. Versão, autoria e escopo não são verificados contra armazenamento real; não infere nem atualiza preferências.
 - `compor://catalog/sources` (Resource): catálogo auditável das fontes externas permitidas para busca de referências visuais (`access_method`: `curated_board_http` ou `api_official`, `license_default`: `inspiration_only`).
-- `search_curated_references`: executa busca leve metadata-only nas fontes ativas do catálogo mediante `consent_external_search: true`, sem navegador headless e sem baixar imagens em alta resolução em disco. Sanitiza títulos/descrições externas sob `untrusted_external_caption`, retorna `ImageContent` (thumbnails 236x em memória) e gera `/tmp/compor-refs/{session_id}/board.html`.
+- `search_curated_references`: executa busca leve metadata-only nas fontes ativas do catálogo mediante `consent_external_search: true`, sem navegador headless e sem baixar imagens em alta resolução em disco. Sanitiza títulos/descrições externas sob `untrusted_external_caption`, retorna `ImageContent` (miniaturas em memória) e metadados para o chat, sem gerar uma página HTML.
 - `stage_approved_references`: processa aprovação seletiva por atributo (`typography`, `composition`, `color`, `photography`) ou `proceed_without_references: true`. Baixa temporariamente apenas as referências aprovadas em `/tmp/compor-refs/{session_id}/{ref_id}.webp`, valida Magic Bytes, remove 100% dos metadados EXIF/XMP/IPTC e converte para o contrato opaco do PR 9 com `license_scope: "inspiration_only"`.
 - `compose_creative_direction`: cruza referências opacas aprovadas (isolando exclusivamente os `selected_attributes`), Identidade Visual soberana e formato do PR 10 (incluindo coesão e diversidade de layout para carrossel), gerando um `CreativeDirectionManifest` em estado `pending_user_review` sem acionar geração paga.
-- `discover_visual_references` (Phoenix Decision Engine): executa o Estágio 1 (Decision Router composicional + fusão vetorial da User Tower com Rocchio/EMA) e o Estágio 2 (Candidate-Isolated Parallel Ranker com prefixo KV-Cache estático + Weighted Scorer multi-ação + decaimento de diversidade por prefixo de Semantic ID), adaptando a saída para `client_mode="codex"` (Markdown enxuto sem URLs de rastreio) ou `client_mode="web"` (JSON estruturado completo). Quando `OPENAI_API_KEY` não está configurada no modo Codex, delega ao subagente `gpt-6-luna` ou solicita a chave; em testes, utiliza motor determinístico local.
-- `record_visual_feedback` (Phoenix Decision Engine): registra eventos de interação na sessão (`locked_as_reference`, `expand_zoom`, `discard_generic`, `style_mismatch`), atualiza os vetores da sessão (`pos_session_vecs` / `neg_session_vecs`), os contadores Beta-Bernoulli de afinidade por board e dispara a consolidação assíncrona de memória de longo prazo (`user_taste_json`).
+- `discover_visual_references` (Phoenix Decision Engine): expõe a descoberta e o ranqueamento de referências, com modos de resposta para clientes MCP. A revisão anterior usou candidatos sintéticos; consulte a saída e os testes da revisão atual para identificar a origem e o motor efetivamente usado. Uma configuração de cache não comprova acertos ou economia.
+- `record_visual_feedback` (Phoenix Decision Engine): registra sinais de interação para personalização experimental. Uma interação isolada não equivale a aprovação da peça nem demonstra preferência permanente; os limites de escopo e autorização exigem testes próprios.
+- Ferramentas `phoenix_profile_*`: registram sinais, consentimentos e mudanças por versão e escopo, com desfazer e histórico em Markdown local. A identidade é vinculada pelo host; os testes simulam pessoas, sem comprovar autenticação real. No transporte stdio, o perfil e seu histórico são restaurados de um snapshot privado local; o Markdown é um espelho visível, não a fonte de restauração. Escritores concorrentes e locks residuais falham sem sobrescrever dados.
+- Resumo do mantenedor: pode ser preparado localmente com autorização por destinatário e finalidade. A porta opcional para Supabase exige configuração e verificação de minimização pelo host; não há configuração nem envio por padrão. A validação de valores livres, as políticas de acesso e a persistência real continuam pendentes.
 - `stdio`: processo para um cliente MCP local que executa o servidor como subprocesso.
 - `fetchInProcess` / `createStreamableHttpHandler`: adaptadores para consumir o MCP via Streamable HTTP (OpenAI Agents SDK). Seu URL `https://compor.invalid/mcp` é um identificador de teste em processo.
 
-As skills são instruções revisáveis, não funções executáveis ou autorizações. O servidor retorna apenas instruções do catálogo fixo; texto de referências futuras é dado não confiável. O MVP não implementa autorização, autenticação ou isolamento entre pessoas. **Não exponha este protótipo na rede e não o use com dados reais.**
+As skills são instruções revisáveis, não funções executáveis ou autorizações. O servidor retorna apenas instruções do catálogo fixo; texto de referências futuras é dado não confiável. O protótipo não implementa autenticação nem isolamento entre pessoas. Não o exponha na rede nem o use como serviço compartilhado.
 
 ## Preparação e testes
 
@@ -30,7 +42,19 @@ npm ci --ignore-scripts
 npm test
 ```
 
-O teste compila TypeScript e executa 25 cenários automatizados, incluindo os seguintes:
+## Usar no chat do Codex
+
+Na raiz do repositório, execute `cd prototypes/compor-mcp && npm ci --ignore-scripts && npm run build`. A configuração de projeto `.codex/config.toml` aponta para o MCP stdio. Inicie ou recarregue uma sessão Codex no projeto confiável para descobrir o servidor `compor`; uma sessão já aberta pode precisar ser reiniciada. Peça no chat uma peça, uma busca de referências ou uma revisão. O Codex deve conduzir o fluxo na conversa, pedir autorização quando necessária, mostrar origens e permitir seguir sem referências.
+
+O MCP prepara referências, direção e perfil. Quando solicitado, o cliente Codex pode usar sua própria ferramenta de geração de imagens para criar e mostrar uma peça; a disponibilidade dessa ferramenta depende do cliente. O MCP não gera imagens por conta própria. O classificador pode usar Luna, API configurada pelo host ou mock explícito; o resultado informa o motor e falhas não são convertidas silenciosamente em sucesso.
+
+O stdio guarda o perfil da identidade local do host sob `~/.codex/compor-mcp/profile` (ou `COMPOR_PROFILE_DIR`), com diretório privado e arquivos restritos. Não é autenticação de produção. A aplicação impede sobrescrita por um processo com estado obsoleto; após uma falha é necessário recarregar e, se houver lock residual, investigar antes de removê-lo. O uso com Supabase é opcional e separado.
+
+**Evidência pontual:** em 29/10/2026, uma execução do MCP buscou referências reais do Pinterest e usou Luna para roteamento e ordenação, sem gerar HTML. Os detalhes e limites estão no [registro da verificação](../../docs/evals/2026-10-29-phoenix-conversacional.md). Isso não demonstra autenticação, Supabase, qualidade criativa, treinamento, disponibilidade contínua, licença de reutilização ou ganhos de custo e cache.
+
+Na verificação local desta mudança, 71 testes passaram. O teste isolado do app-server descobriu as 20 ferramentas e chamou o Phoenix sintético; ele não iniciou um turno de modelo.
+
+Os testes compilam TypeScript e incluem os seguintes contratos históricos:
 
 1. Negociação MCP em memória, descoberta de tools e carregamento das quatro skills, com `fetch` global bloqueado.
 2. Recusa de versões/identificadores inexistentes e argumentos inválidos, sem divulgar caminhos locais, e erro para a tool inexistente `generate_image`.
@@ -60,7 +84,7 @@ Em macOS ou outro sistema POSIX, com Codex CLI e Python 3 no `PATH`, execute ap�
 python3 scripts/test-codex-app-server.py
 ```
 
-O script cria um diretório temporário exclusivo para o cliente Codex, sem copiar configurações ou autenticação existentes. Usa um ambiente explícito sem credenciais, um único servidor MCP `stdio` e um provedor fictício com endereço local. Envia `initialize`, consulta `mcpServerStatus/list`, cria uma thread efêmera e chama as seis tools por `mcpServer/tool/call`; não envia `turn/start` nem solicita modelo. O JSON de saída informa os resultados e verifica o SHA-256 das instruções retornadas por `load_skill`. Ao encerrar, o script aguarda o app-server e solicita o encerramento apenas do grupo de processos que criou.
+O script cria um diretório temporário exclusivo para o cliente Codex, sem copiar configurações ou autenticação existentes. Usa um ambiente explícito sem credenciais, um único servidor MCP `stdio` e um provedor fictício com endereço local. Envia `initialize`, consulta `mcpServerStatus/list`, cria uma thread efêmera e chama ferramentas do catálogo e o Phoenix por `mcpServer/tool/call`; não envia `turn/start` nem solicita modelo. O JSON de saída informa os resultados e verifica o SHA-256 das instruções retornadas por `load_skill`. Ao encerrar, o script aguarda o app-server e solicita o encerramento apenas do grupo de processos que criou.
 
 **Resultado observado em 27/10/2026:** Codex CLI `0.162.1` descobriu `list_skills`, `load_skill`, `prepare_word_cloud`, `prepare_moodboard`, `prepare_layered_creative` e `prepare_annotation_context`, listou os quatro IDs na versão `0.1.0-prototype`, confirmou o hash de uma skill, rejeitou ID inexistente e verificou quadro e pesos sintéticos. Isso verifica o cliente app-server via `stdio`, não que um modelo usou a skill, o transporte em processo do aplicativo ou isolamento de usuários reais.
 

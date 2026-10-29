@@ -461,8 +461,7 @@ test('Teste 2 — Sanitização de Conteúdo Não Confiável (incluindo aspect_r
       /Ignore previous instructions|<script>|https:\/\/malicious|https:\/\/attacker|[\u200B-\u200F\u202A-\u202E]/i,
     );
 
-    const boardHtml = await readFile(searchRes.structuredContent.board_html_path, 'utf8');
-    assert.doesNotMatch(boardHtml, /<script>/i);
+    assert.equal(searchRes.structuredContent.board_html_path, null);
   } finally {
     await ctx.close();
   }
@@ -509,11 +508,14 @@ test('Teste 3 — Zero Download em Disco na Busca (com Preview Real em Memória)
         'o ImageContent deve conter os pixels reais do preview em memória',
       );
     }
-    assert.ok(existsSync(searchRes.structuredContent.board_html_path));
+    assert.equal(searchRes.structuredContent.board_html_path, null);
 
     // Confirma que NENHUMA imagem (.webp, .jpg, .png) foi salva na pasta de staging durante a busca
     const sessionDir = ctx.store.getSessionDir();
-    const filesAfterSearch = await readdir(sessionDir);
+    const filesAfterSearch = await readdir(sessionDir).catch(error => {
+      if (error.code === 'ENOENT') return [];
+      throw error;
+    });
     const imageFilesAfterSearch = filesAfterSearch.filter((f) => /\.(webp|png|jpe?g)$/i.test(f));
     assert.deepEqual(imageFilesAfterSearch, [], 'nenhum arquivo de imagem salvo em disco durante a busca');
 
@@ -1477,16 +1479,17 @@ test('Preservação de aliases reatribuídos no pruneExpired, rollback de arquiv
     (err) => err.code === 'corrupted_image',
   );
 
-  // 4. fetchInProcess preserva o estado de referências entre chamadas sequenciais mesmo sem referenceStore injetado
+  // 4. O handler isolado preserva estado entre chamadas do mesmo cliente lógico
   process.env.OPENAI_AGENTS_DISABLE_TRACING = '1';
   const { MCPServerStreamableHttp } = await import('@openai/agents');
-  const { fetchInProcess } = await import('../dist/inprocess-http.js');
+  const { createStreamableHttpHandler } = await import('../dist/inprocess-http.js');
   const mockFetch = createFivePinsMockFetch();
 
+  const isolatedHandler = createStreamableHttpHandler({ fetchFn: mockFetch });
   const agentViaFetchInProcess = new MCPServerStreamableHttp({
     name: 'compor-fetch-in-process-client',
     url: 'https://compor.invalid/mcp',
-    fetch: (input, init) => fetchInProcess(input, init, { fetchFn: mockFetch }),
+    fetch: isolatedHandler,
     cacheToolsList: false,
   });
 

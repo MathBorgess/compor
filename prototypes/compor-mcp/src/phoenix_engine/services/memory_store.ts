@@ -19,6 +19,7 @@ export interface DiscoveredCandidateMemoryEntry {
   board: string;
   metadata_sid: string[];
   visual_description: string;
+  origin_url?: string;
   embedding_text: string;
   vec: number[];
   space: EmbeddingSpaceId;
@@ -38,6 +39,10 @@ export interface UserMemoryRecord {
   long_term_vec: number[] | null;
   compaction_count: number;
   discovered_candidates: Map<string, DiscoveredCandidateMemoryEntry>;
+  exposed_candidates: Set<string>;
+  positive_candidates: Set<string>;
+  rejected_origins: Set<string>;
+  event_signatures: Map<string, string>;
 }
 
 export interface MemoryConsolidatorCallback {
@@ -91,6 +96,10 @@ export class PhoenixMemoryStore {
         long_term_vec: null,
         compaction_count: 0,
         discovered_candidates: new Map<string, DiscoveredCandidateMemoryEntry>(),
+        exposed_candidates: new Set(),
+        positive_candidates: new Set(),
+        rejected_origins: new Set(),
+        event_signatures: new Map(),
       };
       this.users.set(cleanId, existing);
     }
@@ -107,6 +116,17 @@ export class PhoenixMemoryStore {
         ...entry,
         vec: l2_normalize(entry.vec),
       });
+    }
+  }
+
+  recordExposures(userId: string, entries: readonly DiscoveredCandidateMemoryEntry[]): void {
+    const record = this.getOrCreateUser(userId);
+    for (const entry of entries) {
+      if (record.exposed_candidates.has(entry.candidate_id)) continue;
+      record.exposed_candidates.add(entry.candidate_id);
+      const stats = record.board_bandit.get(entry.board) ?? { positive_actions: 0, total_impressions: 0 };
+      stats.total_impressions += 1;
+      record.board_bandit.set(entry.board, stats);
     }
   }
 
@@ -231,6 +251,7 @@ export class PhoenixMemoryStore {
 
   async recordFeedback(params: {
     user_id: string;
+    event_id?: string;
     candidate_id: string;
     board: string;
     metadata_sid: string[];
@@ -248,8 +269,17 @@ export class PhoenixMemoryStore {
     compaction_triggered: boolean;
     user_taste: UserTasteProfile;
     embedding_space: EmbeddingSpaceId;
+    duplicate?: boolean;
   }> {
     const record = this.getOrCreateUser(params.user_id);
+    const signature = JSON.stringify([params.candidate_id, params.board, params.metadata_sid, params.action, params.dwell_time_ms]);
+    if (params.event_id && record.event_signatures.has(params.event_id)) {
+      if (record.event_signatures.get(params.event_id) !== signature) throw new Error('event_id já utilizado com outro conteúdo.');
+      const board_affinity = this.getBoardAffinities(params.user_id).find((x) => x.board === params.board)!;
+      const event = record.session_events.find((x) => (x as SessionEvent & { event_id?: string }).event_id === params.event_id)!;
+      return { event, board_affinity, positive_session_count: record.pos_session_vecs.length, negative_session_count: record.neg_session_vecs.length, compaction_triggered: false, user_taste: record.user_taste, embedding_space: record.embedding_space, duplicate: true };
+    }
+    if (params.event_id) record.event_signatures.set(params.event_id, signature);
     const now = this.nowFn();
     const normVec = l2_normalize(params.candidate_vec);
     const candidateText =
@@ -260,6 +290,7 @@ export class PhoenixMemoryStore {
     }
 
     const event: SessionEvent = {
+      ...(params.event_id ? { event_id: params.event_id } : {}),
       candidate_id: params.candidate_id,
       board: params.board,
       metadata_sid: params.metadata_sid,
@@ -275,30 +306,19 @@ export class PhoenixMemoryStore {
     };
 
     const isPositiveLock = params.action === 'locked_as_reference';
-    const isHighDwellZoom =
-      params.action === 'expand_zoom' &&
-      params.dwell_time_ms >= this.hp.high_dwell_threshold_ms;
     const isNegative =
       params.action === 'discard_generic' || params.action === 'style_mismatch';
 
-    currentBoardStats.total_impressions += 1;
-
-    if (isPositiveLock || isHighDwellZoom) {
+    if (isPositiveLock && !record.positive_candidates.has(params.candidate_id)) {
+      record.positive_candidates.add(params.candidate_id);
       record.pos_session_vecs.push(normVec);
       record.pos_session_texts.push(candidateText);
       currentBoardStats.positive_actions += 1;
     } else if (isNegative) {
       record.neg_session_vecs.push(normVec);
       record.neg_session_texts.push(candidateText);
-      const rejectedSidTag = params.metadata_sid
-        .slice(0, this.hp.sid_prefix_depth)
-        .join('/');
-      if (
-        rejectedSidTag &&
-        !record.user_taste.negative_constraints.includes(rejectedSidTag)
-      ) {
-        record.user_taste.negative_constraints.push(rejectedSidTag);
-      }
+      const origin = record.discovered_candidates.get(params.candidate_id)?.origin_url;
+      if (origin) record.rejected_origins.add(origin);
     }
 
     record.board_bandit.set(params.board, currentBoardStats);
@@ -337,8 +357,6 @@ export class PhoenixMemoryStore {
         if (consolidated.embedding_space) {
           record.embedding_space = consolidated.embedding_space;
         }
-      } else {
-        this.defaultLocalConsolidation(record);
       }
     }
 

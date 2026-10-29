@@ -3,6 +3,8 @@ import { createComporServer, type ComporServerOptions } from './server.js';
 import { EphemeralReferenceStore } from './staging/ephemeral_store.js';
 import { createPhoenixHyperparams } from './phoenix_engine/config/hyperparams.js';
 import { PhoenixMemoryStore } from './phoenix_engine/services/memory_store.js';
+import { ProfileLedger } from './phoenix_engine/services/profile_ledger.js';
+import { randomUUID } from 'node:crypto';
 
 export function createStreamableHttpHandler(
   serverOptions: ComporServerOptions = {},
@@ -10,6 +12,8 @@ export function createStreamableHttpHandler(
 ) {
   const enableJsonResponse = transportOptions.enableJsonResponse ?? true;
   const allowedUrl = transportOptions.allowedUrl ?? 'https://compor.invalid/mcp';
+  const phoenixActorId = serverOptions.phoenixActorId ?? `local_${randomUUID()}`;
+  const phoenixProfileSession = serverOptions.phoenixProfileSession ?? { ledger: new ProfileLedger(phoenixActorId) };
   const sessionReferenceStore = serverOptions.referenceStore ?? new EphemeralReferenceStore();
   const sessionPhoenixMemoryStore =
     serverOptions.phoenixMemoryStore ??
@@ -27,6 +31,8 @@ export function createStreamableHttpHandler(
       ...serverOptions,
       referenceStore: sessionReferenceStore,
       phoenixMemoryStore: sessionPhoenixMemoryStore,
+      phoenixActorId,
+      phoenixProfileSession,
     });
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -52,14 +58,8 @@ export function createStreamableHttpHandler(
   };
 }
 
-const defaultFetchInProcessStore = new EphemeralReferenceStore();
-const defaultFetchInProcessPhoenixMemory = new PhoenixMemoryStore({
-  hp: createPhoenixHyperparams(),
-});
-
 /**
- * Test adapter: handles each MCP Streamable HTTP request in process without a socket,
- * retaining reference state across sequential requests for the logical client.
+ * One-shot test adapter. For a stateful logical client use createStreamableHttpHandler.
  * It does not authenticate users and must not be exposed as an unauthenticated public HTTP endpoint.
  */
 export async function fetchInProcess(
@@ -67,14 +67,9 @@ export async function fetchInProcess(
   init?: RequestInit,
   serverOptions?: ComporServerOptions,
 ): Promise<Response> {
-  const effectiveStore = serverOptions?.referenceStore ?? defaultFetchInProcessStore;
-  const effectivePhoenixMemory =
-    serverOptions?.phoenixMemoryStore ?? defaultFetchInProcessPhoenixMemory;
   const handler = createStreamableHttpHandler(
     {
       ...serverOptions,
-      referenceStore: effectiveStore,
-      phoenixMemoryStore: effectivePhoenixMemory,
     },
     {
       enableJsonResponse: true,

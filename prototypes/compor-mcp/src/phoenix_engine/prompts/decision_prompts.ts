@@ -27,7 +27,7 @@ Pedido: {user_briefing}`;
 /**
  * Prompt de Ranking com Isolamento de Candidatos (Projetado para OpenAI Prompt Caching).
  * IMPORTANTE: O prefixo estático (System + Histórico do Usuário) deve vir ANTES do candidato isolado
- * para garantir 100% de Cache Hit no KV-Cache entre as chamadas paralelas dos K candidatos.
+ * para possibilitar cache entre chamadas; acertos precisam ser medidos.
  */
 export const RANKER_CACHED_PREFIX_SYSTEM_PROMPT = `Você é o Phoenix Visual Ranker. Você avalia uma única referência visual candidata contra o histórico de sessão do usuário e o briefing criativo atual.
 Avalie o candidato de forma estritamente isolada (Candidate Isolation), prevendo probabilidades calibradas entre 0.00 e 1.00 para cada ação positiva ou negativa que o usuário pode tomar:

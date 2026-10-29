@@ -1,0 +1,5 @@
+# Local Compor prototype; run Codex from this repository after npm run build.
+[mcp_servers.compor]
+command = "node"
+args = ["prototypes/compor-mcp/dist/stdio.js"]
+startup_timeout_sec = 30

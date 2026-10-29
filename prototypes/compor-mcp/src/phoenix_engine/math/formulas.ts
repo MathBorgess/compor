@@ -219,7 +219,10 @@ export function apply_sid_diversity_decay<T extends DiversityDecayCandidateInput
     const itemCopy: DiversityDecayCandidateOutput<T> = {
       ...item,
       diversity_multiplier: round4(decayMultiplier),
-      final_score: round4(item.raw_score * decayMultiplier),
+      // Penalidade aditiva para scores negativos: repetição nunca aumenta a nota.
+      final_score: round4(item.raw_score >= 0
+        ? item.raw_score * decayMultiplier
+        : item.raw_score - Math.abs(item.raw_score) * (1 - decayMultiplier)),
     };
     adjustedList.push(itemCopy);
 
