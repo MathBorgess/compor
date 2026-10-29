@@ -1,10 +1,25 @@
+import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
+import { loadSourcesCatalog, type SourcesCatalog } from '../../catalog/catalog.js';
+import type {
+  RawProviderCandidate,
+  ReferenceSearchProvider,
+} from '../../providers/base_provider.js';
+import { CuratedPinterestProvider } from '../../providers/curated_pinterest.js';
+import { MetaAdsProvider } from '../../providers/meta_ads_provider.js';
 import { sanitize_and_stage_image } from '../../security/image_sanitizer.js';
 import { sanitize_external_metadata } from '../../security/text_sanitizer.js';
-import type { EphemeralReferenceStore } from '../../staging/ephemeral_store.js';
+import type {
+  EphemeralReferenceStore,
+  ReferenceAttribute,
+} from '../../staging/ephemeral_store.js';
 import { writePreviewBoard } from '../../staging/preview_board.js';
 import type { PhoenixHyperparams } from '../config/hyperparams.js';
-import { inferCandidateSid } from '../domain/catalog.js';
+import {
+  inferCandidateSid,
+  SID_TAXONOMY,
+  type CompositionalRole,
+} from '../domain/catalog.js';
 import {
   clientModeSchema,
   decisionFallbackModeSchema,
@@ -22,11 +37,12 @@ import {
   compute_phoenix_multi_action_score,
   compute_user_tower_embedding,
   cosine_similarity,
+  filter_excluded_sid_candidates,
+  matches_excluded_sid,
 } from '../math/formulas.js';
-import {
-  computeDeterministicEmbedding,
-  type CandidateToRank,
-  type PhoenixDecisionApiService,
+import type {
+  CandidateToRank,
+  PhoenixDecisionApiService,
 } from '../services/decision_api.js';
 import type { PhoenixMemoryStore } from '../services/memory_store.js';
 
@@ -101,6 +117,13 @@ export const recordVisualFeedbackInputSchema = {
   client_mode: clientModeSchema
     .default('codex')
     .describe('Modo de serialização dual ("codex" ou "web").'),
+  openai_api_key: z
+    .string()
+    .trim()
+    .min(1)
+    .max(300)
+    .optional()
+    .describe('Chave OpenAI opcional em memória para manter o mesmo espaço de embeddings (nunca persistida ou logada).'),
 };
 
 /**
@@ -192,38 +215,255 @@ export interface PhoenixDualAdapterDependencies {
   decisionService: PhoenixDecisionApiService;
   referenceStore: EphemeralReferenceStore;
   fetchFn?: typeof globalThis.fetch;
+  providers?: Map<string, ReferenceSearchProvider>;
+  catalog?: SourcesCatalog;
 }
 
-function buildCandidatesFromAllocations(params: {
+function generateDiscoveryScopeId(sessionId: string, userId: string): string {
+  const nonce = randomBytes(6).toString('hex');
+  return createHash('sha256')
+    .update(`${sessionId}:${userId}:${Date.now()}:${nonce}`)
+    .digest('hex')
+    .slice(0, 8);
+}
+
+function buildDiscoveryCandidateId(discoveryId: string, index: number): string {
+  return `phx_${discoveryId}_${String(index + 1).padStart(2, '0')}`;
+}
+
+function roleToAspectFocus(role: CompositionalRole): ReferenceAttribute[] {
+  switch (role) {
+    case 'hook_cover':
+      return ['typography', 'composition'];
+    case 'structural_grid':
+      return ['composition', 'typography'];
+    case 'ui_component':
+      return ['composition', 'color'];
+    case 'conversion_cta':
+      return ['composition', 'color', 'photography'];
+    case 'wildcard_exploration':
+      return ['color', 'composition', 'typography'];
+  }
+}
+
+export function buildCandidateEmbeddingText(candidate: {
+  board: string;
+  metadata_sid: readonly string[];
+  visual_description: string;
+}): string {
+  return `${candidate.board} ${candidate.metadata_sid.join(' ')} ${candidate.visual_description}`;
+}
+
+/**
+ * Conecta os boards alocados pelo Router aos provedores reais de referências (`CuratedPinterestProvider`,
+ * `MetaAdsProvider` ou `deps.providers` injetados), preservando as URLs reais (`preview_url`, `media_url`,
+ * `origin_url`), thumbnails em memória e legendas externas sanitizadas.
+ */
+async function retrieveRealProviderCandidatesForAllocations(params: {
   allocations: BoardAllocation[];
   target_format: string;
-  briefing: string;
+  discovery_id: string;
   session_id: string;
   staging_root: string;
-  hp: PhoenixHyperparams;
-}): CandidateToRank[] {
-  const candidates: CandidateToRank[] = [];
+  deps: PhoenixDualAdapterDependencies;
+}): Promise<
+  Array<
+    CandidateToRank & {
+      source_id: string;
+      raw_title: string;
+      raw_caption: string;
+      raw_alt_text?: string;
+      raw_aspect_rationale?: RawProviderCandidate['raw_aspect_rationale'];
+      aspect_rationale: RawProviderCandidate['aspect_rationale'];
+    }
+  >
+> {
+  const catalog = params.deps.catalog ?? (await loadSourcesCatalog());
+  const activeSources = catalog.sources.filter((s) => s.active);
+  const basePinterestSource =
+    activeSources.find((s) => s.source_id === 'pinterest_curated_design') ??
+    activeSources[0];
 
-  params.allocations.forEach((alloc, allocIdx) => {
+  if (!basePinterestSource) {
+    return [];
+  }
+
+  const fetchFn = params.deps.fetchFn ?? ((url, init) => globalThis.fetch(url, init));
+  const customProvider =
+    params.deps.providers?.get(basePinterestSource.source_id) ??
+    params.deps.providers?.get('pinterest_curated') ??
+    (params.deps.providers && params.deps.providers.size > 0
+      ? params.deps.providers.values().next().value
+      : undefined);
+  const provider: ReferenceSearchProvider =
+    customProvider ??
+    (basePinterestSource.access_method === 'api_official'
+      ? new MetaAdsProvider({ fetchFn })
+      : new CuratedPinterestProvider({
+          sourceId: basePinterestSource.source_id,
+          fetchFn,
+        }));
+
+  const collected: Array<
+    CandidateToRank & {
+      source_id: string;
+      raw_title: string;
+      raw_caption: string;
+      raw_alt_text?: string;
+      raw_aspect_rationale?: RawProviderCandidate['raw_aspect_rationale'];
+      aspect_rationale: RawProviderCandidate['aspect_rationale'];
+    }
+  > = [];
+  const seenOriginUrls = new Set<string>();
+  let globalIdx = 0;
+
+  for (const alloc of params.allocations) {
+    const boardScopedSource = {
+      ...basePinterestSource,
+      allowed_boards_or_queries: [alloc.board],
+    };
+
+    try {
+      const results = await provider.searchMetadataOnly({
+        briefing_summary: alloc.synthetic_query,
+        target_format: params.target_format,
+        aspect_focus: roleToAspectFocus(alloc.role),
+        source: boardScopedSource,
+        limit: 3,
+      });
+
+      for (const rawItem of results) {
+        const dedupeKey = `${alloc.board}::${rawItem.origin_url}::${rawItem.preview_url}`;
+        if (seenOriginUrls.has(dedupeKey)) continue;
+        seenOriginUrls.add(dedupeKey);
+
+        const candidateId = buildDiscoveryCandidateId(params.discovery_id, globalIdx);
+        globalIdx += 1;
+
+        const rawTitle =
+          rawItem.raw_title ??
+          ((rawItem as unknown as { title?: string }).title ?? '');
+        const rawCaption =
+          rawItem.raw_caption ??
+          ((rawItem as unknown as { caption?: string }).caption ?? '');
+
+        const { untrusted_external_caption } = sanitize_external_metadata({
+          title: rawTitle,
+          caption: rawCaption,
+          alt_text: rawItem.raw_alt_text,
+          aspect_rationale: rawItem.raw_aspect_rationale,
+        });
+
+        const realDescription = [
+          untrusted_external_caption.title,
+          untrusted_external_caption.caption,
+        ]
+          .map((s) => s.trim())
+          .filter(Boolean)
+          .join(' — ');
+
+        const visualDescription =
+          realDescription.length > 0
+            ? realDescription.slice(0, 900)
+            : `Referência visual extraída de ${alloc.board}`;
+
+        const sid = inferCandidateSid({
+          target_format: params.target_format,
+          board: alloc.board,
+          description: `${rawTitle} ${rawCaption} ${rawItem.raw_alt_text ?? ''}`,
+          index: globalIdx - 1,
+        });
+
+        collected.push({
+          candidate_id: candidateId,
+          board: alloc.board,
+          role: alloc.role,
+          metadata_sid: [...sid],
+          visual_description: visualDescription,
+          preview_url: rawItem.preview_url,
+          origin_url: rawItem.origin_url,
+          media_url: rawItem.media_url,
+          staging_path: `${params.staging_root}/${params.session_id}/board.html#${candidateId}`,
+          thumbnail_base64: rawItem.thumbnail_base64,
+          thumbnail_mime_type: rawItem.thumbnail_mime_type,
+          source_id: rawItem.source_id,
+          raw_title: rawItem.raw_title,
+          raw_caption: rawItem.raw_caption,
+          raw_alt_text: rawItem.raw_alt_text,
+          raw_aspect_rationale: rawItem.raw_aspect_rationale,
+          aspect_rationale: rawItem.aspect_rationale,
+        });
+      }
+    } catch {
+      // Prossegue para o próximo board alocado se uma fonte individual falhar
+    }
+  }
+
+  return collected;
+}
+
+/**
+ * Gerador sintético reservado estritamente para o modo de mock explícito
+ * (`decision_fallback_mode === "deterministic_mock"` quando nenhum provider real/injetado é usado).
+ */
+function buildSyntheticMockCandidatesFromAllocations(params: {
+  allocations: BoardAllocation[];
+  target_format: string;
+  discovery_id: string;
+  session_id: string;
+  staging_root: string;
+  excluded_sid_tags: readonly string[];
+}): Array<
+  CandidateToRank & {
+    source_id: string;
+    raw_title: string;
+    raw_caption: string;
+    raw_alt_text?: string;
+    raw_aspect_rationale?: RawProviderCandidate['raw_aspect_rationale'];
+    aspect_rationale: RawProviderCandidate['aspect_rationale'];
+  }
+> {
+  const candidates: Array<
+    CandidateToRank & {
+      source_id: string;
+      raw_title: string;
+      raw_caption: string;
+      raw_alt_text?: string;
+      raw_aspect_rationale?: RawProviderCandidate['raw_aspect_rationale'];
+      aspect_rationale: RawProviderCandidate['aspect_rationale'];
+    }
+  > = [];
+
+  let globalIdx = 0;
+  params.allocations.forEach((alloc) => {
     for (let itemIdx = 0; itemIdx < 2; itemIdx++) {
-      const globalIdx = allocIdx * 2 + itemIdx;
-      const candidateId = `phx_ref_${String(globalIdx + 1).padStart(2, '0')}`;
-      const sid = inferCandidateSid({
+      const candidateId = buildDiscoveryCandidateId(params.discovery_id, globalIdx);
+      let sid = inferCandidateSid({
         target_format: params.target_format,
         board: alloc.board,
         description: `${alloc.synthetic_query} ${alloc.rationale}`,
-        index: globalIdx,
+        index: globalIdx + itemIdx,
       });
+
+      // Para o 2º item do board no modo mock, garante variação de mecânica/estética para exercitar diversidade e filtros SID
+      if (itemIdx === 1) {
+        const altMechanic =
+          SID_TAXONOMY.level_2_mechanic[
+            (globalIdx + 2) % SID_TAXONOMY.level_2_mechanic.length
+          ]!;
+        const altAesthetic =
+          SID_TAXONOMY.level_4_aesthetic[
+            (globalIdx + 2) % SID_TAXONOMY.level_4_aesthetic.length
+          ]!;
+        sid = [sid[0], altMechanic, sid[2], altAesthetic];
+      }
+
+      globalIdx += 1;
 
       const desc =
         itemIdx === 0
-          ? `[${alloc.role}] Composição principal em ${alloc.board}: ${alloc.synthetic_query}. Grid ${sid[1]} com hierarquia ${sid[2]} e atmosfera ${sid[3]}.`
-          : `[${alloc.role}] Variação complementar em ${alloc.board}: estrutura ${sid[1]}, contraste ${sid[2]} e acabamento ${sid[3]}.`;
-
-      const vec = computeDeterministicEmbedding(
-        `${alloc.board} ${sid.join(' ')} ${desc}`,
-        params.hp.embedding_dimension,
-      );
+          ? `[Mock ${alloc.role}] Composição em ${alloc.board}: ${alloc.synthetic_query}. Grid ${sid[1]} com hierarquia ${sid[2]} e atmosfera ${sid[3]}.`
+          : `[Mock ${alloc.role}] Variação complementar em ${alloc.board}: estrutura ${sid[1]}, contraste ${sid[2]} e acabamento ${sid[3]}.`;
 
       candidates.push({
         candidate_id: candidateId,
@@ -231,11 +471,21 @@ function buildCandidatesFromAllocations(params: {
         role: alloc.role,
         metadata_sid: [...sid],
         visual_description: desc,
-        preview_url: `https://i.pinimg.com/236x/phx/${encodeURIComponent(alloc.board)}/${candidateId}.jpg`,
+        preview_url: `https://i.pinimg.com/236x/mock/${encodeURIComponent(alloc.board)}/${candidateId}.jpg`,
         origin_url: `https://www.pinterest.com/${alloc.board}/`,
+        media_url: `https://i.pinimg.com/736x/mock/${encodeURIComponent(alloc.board)}/${candidateId}.jpg`,
         staging_path: `${params.staging_root}/${params.session_id}/board.html#${candidateId}`,
         thumbnail_base64: null,
-        candidate_vec: vec,
+        thumbnail_mime_type: null,
+        source_id: 'pinterest_curated_design',
+        raw_title: `${alloc.board} (${sid.join(', ')})`,
+        raw_caption: desc,
+        raw_alt_text: desc,
+        aspect_rationale: {
+          composition: desc,
+          typography: `Hierarquia ${sid[2]}`,
+          color: `Estética ${sid[3]}`,
+        },
       });
     }
   });
@@ -258,6 +508,7 @@ export async function executeDiscoverVisualReferences(
   const clientMode: ClientMode = input.client_mode ?? 'codex';
   const userRecord = deps.memoryStore.getOrCreateUser(userId);
   const sessionId = deps.referenceStore.getActiveSessionId(userRecord.session_token);
+  const discoveryId = generateDiscoveryScopeId(sessionId, userId);
   const promptCacheKey = `phoenix_ranker_${userId}`;
 
   const strategy = deps.decisionService.resolveExecutionStrategy({
@@ -312,7 +563,7 @@ export async function executeDiscoverVisualReferences(
     };
   }
 
-  // Estágio 1: Decision Router + User Tower Vector Fusion
+  // Estágio 1: Decision Router
   const affinities = deps.memoryStore.getBoardAffinities(userId);
   const affinityTable = deps.memoryStore.formatBoardAffinityTable(userId);
   const sessionEventsSummary = deps.memoryStore.formatSessionEventsSummary(userId);
@@ -329,13 +580,110 @@ export async function executeDiscoverVisualReferences(
     openai_api_key: input.openai_api_key,
   });
 
+  const effectiveExcludedSids = Array.from(
+    new Set([
+      ...routerDecision.excluded_sid_tags,
+      ...userRecord.user_taste.negative_constraints,
+    ]),
+  );
+
+  // Recuperação de candidatos: usa provedores reais de referências por board alocado,
+  // reservando candidatos sintéticos exclusivamente para o modo explícito de mock.
+  const isExplicitMockMode =
+    input.decision_fallback_mode === 'deterministic_mock' &&
+    (!deps.providers || deps.providers.size === 0);
+
+  let retrievedCandidates = isExplicitMockMode
+    ? buildSyntheticMockCandidatesFromAllocations({
+        allocations: routerDecision.board_allocations,
+        target_format: input.target_format,
+        discovery_id: discoveryId,
+        session_id: sessionId,
+        staging_root: deps.referenceStore.getStagingRoot(),
+        excluded_sid_tags: effectiveExcludedSids,
+      })
+    : await retrieveRealProviderCandidatesForAllocations({
+        allocations: routerDecision.board_allocations,
+        target_format: input.target_format,
+        discovery_id: discoveryId,
+        session_id: sessionId,
+        staging_root: deps.referenceStore.getStagingRoot(),
+        deps,
+      });
+
+  // Se o servidor foi instanciado com forceDeterministicMock=true em testes sem provider nem rede,
+  // usa os candidatos sintéticos de mock.
+  if (
+    retrievedCandidates.length === 0 &&
+    deps.decisionService.isForcedDeterministicMock() &&
+    (!deps.providers || deps.providers.size === 0)
+  ) {
+    retrievedCandidates = buildSyntheticMockCandidatesFromAllocations({
+      allocations: routerDecision.board_allocations,
+      target_format: input.target_format,
+      discovery_id: discoveryId,
+      session_id: sessionId,
+      staging_root: deps.referenceStore.getStagingRoot(),
+      excluded_sid_tags: effectiveExcludedSids,
+    });
+  }
+
+  // Filtro explícito de padrões SID excluídos (`excluded_sid_tags` + `negative_constraints`) ANTES do ranking e seleção
+  const rawCandidates = filter_excluded_sid_candidates(
+    retrievedCandidates,
+    effectiveExcludedSids,
+  );
+
+  // Espaço vetorial unificado: calcula o embedding da query sintética e de todos os candidatos
+  // em uma única chamada consistente (`embedBatchConsistent`), sincronizando também os vetores da sessão/longo prazo.
   const combinedSyntheticQuery = [
     input.briefing,
     ...routerDecision.board_allocations.map((a) => a.synthetic_query),
   ].join(' | ');
-  const queryVec = await deps.decisionService.embedText(
-    combinedSyntheticQuery,
-    input.openai_api_key,
+  const candidateTexts = rawCandidates.map((c) => buildCandidateEmbeddingText(c));
+
+  const batchEmbedding = await deps.decisionService.embedBatchConsistent(
+    [combinedSyntheticQuery, ...candidateTexts],
+    {
+      apiKey: input.openai_api_key,
+      forceSpace:
+        strategy.source === 'deterministic_mock'
+          ? 'local_deterministic_sha256'
+          : undefined,
+    },
+  );
+
+  const activeEmbeddingSpace = batchEmbedding.space;
+  const queryVec = batchEmbedding.vectors[0]!;
+  const candidateVecs = batchEmbedding.vectors.slice(1);
+
+  rawCandidates.forEach((cand, idx) => {
+    cand.candidate_vec = candidateVecs[idx]!;
+  });
+
+  await deps.memoryStore.ensureConsistentEmbeddingSpace(
+    userId,
+    activeEmbeddingSpace,
+    async (texts, forceSpace) => {
+      const reemb = await deps.decisionService.embedBatchConsistent(texts, {
+        apiKey: input.openai_api_key,
+        forceSpace,
+      });
+      return reemb.vectors;
+    },
+  );
+
+  deps.memoryStore.registerDiscoveredCandidates(
+    userId,
+    rawCandidates.map((cand, idx) => ({
+      candidate_id: cand.candidate_id,
+      board: cand.board,
+      metadata_sid: cand.metadata_sid,
+      visual_description: cand.visual_description,
+      embedding_text: candidateTexts[idx]!,
+      vec: candidateVecs[idx]!,
+      space: activeEmbeddingSpace,
+    })),
   );
 
   const userTowerVec = compute_user_tower_embedding(
@@ -346,35 +694,25 @@ export async function executeDiscoverVisualReferences(
     deps.hp,
   );
 
-  const rawCandidates = buildCandidatesFromAllocations({
-    allocations: routerDecision.board_allocations,
-    target_format: input.target_format,
-    briefing: input.briefing,
-    session_id: sessionId,
-    staging_root: deps.referenceStore.getStagingRoot(),
-    hp: deps.hp,
-  });
-
-  // Registra os candidatos no EphemeralReferenceStore e gera o preview board.html (zero-download de imagens na busca)
+  // Registra os candidatos no EphemeralReferenceStore com IDs únicos do discovery (`phx_<discoveryId>_<nn>`)
+  // e gera o preview board.html (zero-download de imagens em alta resolução na busca)
   const sanitizedForStore = rawCandidates.map((c) => {
     const { untrusted_external_caption } = sanitize_external_metadata({
-      title: `${c.board} (${c.metadata_sid.join(', ')})`,
-      caption: c.visual_description,
-      alt_text: c.visual_description,
+      title: c.raw_title,
+      caption: c.raw_caption,
+      alt_text: c.raw_alt_text,
+      aspect_rationale: c.raw_aspect_rationale,
     });
     return {
       preferred_ref_id: c.candidate_id,
-      source_id: 'pinterest_curated_design',
+      source_id: c.source_id,
       origin_url: c.origin_url,
       preview_url: c.preview_url,
-      media_url: c.preview_url.replace('/236x/', '/736x/'),
-      aspect_rationale: {
-        composition: c.visual_description,
-        typography: `Hierarquia ${c.metadata_sid[2] ?? 'bold_display_hook'}`,
-        color: `Estética ${c.metadata_sid[3] ?? 'executive_clean_b2b'}`,
-      },
+      media_url: c.media_url ?? c.preview_url.replace('/236x/', '/736x/'),
+      aspect_rationale: c.aspect_rationale,
       untrusted_external_caption,
       thumbnail_base64: c.thumbnail_base64 ?? null,
+      thumbnail_mime_type: c.thumbnail_mime_type ?? null,
     };
   });
 
@@ -382,14 +720,17 @@ export async function executeDiscoverVisualReferences(
     sessionId,
     sanitizedForStore,
   );
-  const boardHtmlPath = await writePreviewBoard({
-    session_id: sessionId,
-    briefing_summary: input.briefing,
-    target_format: input.target_format,
-    aspect_focus: ['composition', 'typography', 'color'],
-    candidates: registeredInStore,
-    staging_root: deps.referenceStore.getStagingRoot(),
-  });
+  const boardHtmlPath =
+    registeredInStore.length > 0
+      ? await writePreviewBoard({
+          session_id: sessionId,
+          briefing_summary: input.briefing,
+          target_format: input.target_format,
+          aspect_focus: ['composition', 'typography', 'color'],
+          candidates: registeredInStore,
+          staging_root: deps.referenceStore.getStagingRoot(),
+        })
+      : null;
 
   // Estágio 2: Candidate-Isolated Parallel Ranker (100% KV-Cache Prefix Hit)
   const isolatedRanked = await Promise.all(
@@ -397,7 +738,9 @@ export async function executeDiscoverVisualReferences(
       const stagedRecord = deps.referenceStore.getStagedReference(candidate.candidate_id);
       const effectiveStagingPath = stagedRecord
         ? stagedRecord.local_path
-        : `${boardHtmlPath}#${candidate.candidate_id}`;
+        : boardHtmlPath
+          ? `${boardHtmlPath}#${candidate.candidate_id}`
+          : `${deps.referenceStore.getStagingRoot()}/${sessionId}/board.html#${candidate.candidate_id}`;
 
       const actionProbs = await deps.decisionService.rankSingleCandidateIsolated({
         user_id: userId,
@@ -417,12 +760,7 @@ export async function executeDiscoverVisualReferences(
         Math.round(compute_phoenix_multi_action_score(actionProbs, deps.hp) * 10000) /
         10000;
 
-      const candVec =
-        candidate.candidate_vec ??
-        computeDeterministicEmbedding(
-          `${candidate.board} ${candidate.metadata_sid.join(' ')} ${candidate.visual_description}`,
-          deps.hp.embedding_dimension,
-        );
+      const candVec = candidate.candidate_vec!;
       const cosSim =
         Math.round(cosine_similarity(userTowerVec, candVec) * 10000) / 10000;
 
@@ -446,9 +784,11 @@ export async function executeDiscoverVisualReferences(
     }),
   );
 
-  // Pós-Ranking: Decaimento de Diversidade por Prefixo SID
+  // Pós-Ranking: Decaimento de Diversidade por Prefixo SID + garantia de bloqueio de SIDs excluídos
   const decayedCandidates = apply_sid_diversity_decay(
-    isolatedRanked,
+    isolatedRanked.filter(
+      (cand) => !matches_excluded_sid(cand.metadata_sid, effectiveExcludedSids),
+    ),
     deps.hp,
   ) as RankedCandidate[];
   const topCandidates = decayedCandidates.slice(0, deps.hp.top_n_results);
@@ -468,12 +808,15 @@ export async function executeDiscoverVisualReferences(
     prompt_cache_key: promptCacheKey,
     board_allocations: routerDecision.board_allocations,
     required_sid_tags: routerDecision.required_sid_tags,
-    excluded_sid_tags: routerDecision.excluded_sid_tags,
+    excluded_sid_tags: effectiveExcludedSids,
     board_affinities: deps.memoryStore.getBoardAffinities(userId).slice(0, 12),
     candidates: topCandidates,
     telemetry: {
       total_candidates_evaluated: rawCandidates.length,
-      exploration_quota_allocated: Math.min(1.0, Math.round(explorationWeightTotal * 10000) / 10000),
+      exploration_quota_allocated: Math.min(
+        1.0,
+        Math.round(explorationWeightTotal * 10000) / 10000,
+      ),
       user_tower_dimension: userTowerVec.length,
       positive_session_events: userRecord.pos_session_vecs.length,
       negative_session_events: userRecord.neg_session_vecs.length,
@@ -524,16 +867,64 @@ export async function executeRecordVisualFeedback(
     action: FeedbackAction;
     dwell_time_ms?: number;
     client_mode?: ClientMode;
+    openai_api_key?: string;
   },
   deps: PhoenixDualAdapterDependencies,
 ) {
   const clientMode: ClientMode = input.client_mode ?? 'codex';
   const dwellMs = input.dwell_time_ms ?? 0;
+  const userRecord = deps.memoryStore.getOrCreateUser(input.user_id);
 
-  const candidateVec = computeDeterministicEmbedding(
-    `${input.board} ${input.metadata_sid.join(' ')} ${input.candidate_id}`,
-    deps.hp.embedding_dimension,
+  const discoveredEntry = deps.memoryStore.getDiscoveredCandidate(
+    input.user_id,
+    input.candidate_id,
   );
+  const candidateEmbeddingText =
+    discoveredEntry?.embedding_text ??
+    buildCandidateEmbeddingText({
+      board: input.board,
+      metadata_sid: input.metadata_sid,
+      visual_description: discoveredEntry?.visual_description ?? input.candidate_id,
+    });
+
+  // Usa o mesmo backend de embedding ativo do usuário (ou re-embeda de forma consistente)
+  let candidateVec: number[];
+  let activeSpace = userRecord.embedding_space;
+
+  if (
+    discoveredEntry &&
+    discoveredEntry.space === userRecord.embedding_space &&
+    !input.openai_api_key
+  ) {
+    candidateVec = discoveredEntry.vec;
+    activeSpace = discoveredEntry.space;
+  } else {
+    const embResult = await deps.decisionService.embedTextWithSpace(
+      candidateEmbeddingText,
+      {
+        apiKey: input.openai_api_key,
+        forceSpace: input.openai_api_key ? undefined : userRecord.embedding_space,
+      },
+    );
+    candidateVec = embResult.vector;
+    activeSpace = embResult.space;
+
+    await deps.memoryStore.ensureConsistentEmbeddingSpace(
+      input.user_id,
+      activeSpace,
+      async (texts, forceSpace) => {
+        const reemb = await deps.decisionService.embedBatchConsistent(texts, {
+          apiKey: input.openai_api_key,
+          forceSpace,
+        });
+        return reemb.vectors;
+      },
+    );
+  }
+
+  const consolidationSource = deps.decisionService.resolveApiKey(input.openai_api_key)
+    ? ('openai_api' as const)
+    : ('deterministic_mock' as const);
 
   const feedbackResult = await deps.memoryStore.recordFeedback({
     user_id: input.user_id,
@@ -543,12 +934,16 @@ export async function executeRecordVisualFeedback(
     action: input.action,
     dwell_time_ms: dwellMs,
     candidate_vec: candidateVec,
-    consolidator: async ({ user_id, previous_taste, session_events }) =>
+    candidate_text: candidateEmbeddingText,
+    embedding_space: activeSpace,
+    consolidator: async ({ user_id, previous_taste, session_events, embedding_space }) =>
       deps.decisionService.consolidateMemory({
         user_id,
         previous_taste,
         session_events,
-        source: 'deterministic_mock',
+        source: consolidationSource,
+        openai_api_key: input.openai_api_key,
+        embedding_space,
       }),
   });
 
@@ -587,6 +982,7 @@ export async function executeRecordVisualFeedback(
     negative_session_count: feedbackResult.negative_session_count,
     compaction_triggered: feedbackResult.compaction_triggered,
     negative_constraints: feedbackResult.user_taste.negative_constraints,
+    embedding_space: feedbackResult.embedding_space,
   };
 
   if (clientMode === 'codex') {

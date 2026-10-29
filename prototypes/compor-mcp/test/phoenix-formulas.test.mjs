@@ -13,8 +13,10 @@ import {
   cosine_similarity,
   createPhoenixHyperparams,
   EXPLORATION_FEED_BOARDS,
+  filter_excluded_sid_candidates,
   format_mcp_response,
   l2_normalize,
+  matches_excluded_sid,
   PhoenixDecisionApiService,
   PhoenixMemoryStore,
   SID_TAXONOMY,
@@ -281,10 +283,30 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
     },
   });
 
+  const mockPinterestProvider = {
+    sourceId: 'pinterest_curated_design',
+    accessMethod: 'curated_board_http',
+    async searchMetadataOnly(query) {
+      const board = query.source?.allowed_boards_or_queries?.[0] || 'behance/typography';
+      return Array.from({ length: query.limit || 2 }, (_, idx) => ({
+        raw_title: `Pin Real de ${board} #${idx + 1}`,
+        raw_caption: `Composição real de ${board} para ${query.briefing_summary} (${idx + 1})`,
+        source_id: 'pinterest_curated_design',
+        origin_url: `https://www.pinterest.com/pin/real_${board.replace(/[^a-z0-9]/gi, '_')}_${idx + 1}/`,
+        preview_url: `https://i.pinimg.com/236x/real/${board}/${idx + 1}.jpg`,
+        media_url: `https://i.pinimg.com/736x/real/${board}/${idx + 1}.jpg`,
+        aspect_rationale: { composition: `Composição de ${board}` },
+        thumbnail_base64: 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoCAAIAAQAcJaQAA3AA/v3AgAA=',
+        thumbnail_mime_type: 'image/webp',
+      }));
+    },
+  };
+
   const server = createComporServer({
     phoenixHyperparams: hp,
     phoenixMemoryStore: memoryStore,
     phoenixDecisionService: decisionService,
+    providers: new Map([['pinterest_curated_design', mockPinterestProvider]]),
   });
   const client = new Client({ name: 'phoenix-dual-test', version: '1.0.0' });
   const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -405,6 +427,384 @@ test('4. Dual MCP Serialization (codex vs web), 3-Tier Memory, and Luna Subagent
         'carousel_editorial_4:5/glassmorphism_ui',
       ),
     );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('5. Review Fixes: real provider retrieval, discovery-scoped IDs, unified embedding space, and hard SID exclusion filter', async () => {
+  const hp = createPhoenixHyperparams({ memory_compaction_threshold: 2 });
+  const memoryStore = new PhoenixMemoryStore({ hp });
+
+  const providerCalls = [];
+  const realPinterestProvider = {
+    sourceId: 'pinterest_curated_design',
+    accessMethod: 'curated_board_http',
+    async searchMetadataOnly(query) {
+      const board = query.source?.allowed_boards_or_queries?.[0] || 'behance/typography';
+      providerCalls.push({ board, query: query.briefing_summary, limit: query.limit });
+      return [
+        {
+          raw_title: `Real Pin A (${board})`,
+          raw_caption: `Real editorial layout from ${board} with swiss grid typography`,
+          source_id: 'pinterest_curated_design',
+          origin_url: `https://www.pinterest.com/pin/real_a_${board.replace(/[^a-z0-9]/gi, '_')}/`,
+          preview_url: `https://i.pinimg.com/236x/real_a/${board}/pin1.jpg`,
+          media_url: `https://i.pinimg.com/736x/real_a/${board}/pin1.jpg`,
+          aspect_rationale: { composition: 'Swiss grid editorial' },
+          thumbnail_base64: 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoCAAIAAQAcJaQAA3AA/v3AgAA=',
+          thumbnail_mime_type: 'image/webp',
+        },
+        {
+          raw_title: `Real Pin B (${board})`,
+          raw_caption: `Real glassmorphism UI concept from ${board} with neon glow`,
+          source_id: 'pinterest_curated_design',
+          origin_url: `https://www.pinterest.com/pin/real_b_${board.replace(/[^a-z0-9]/gi, '_')}/`,
+          preview_url: `https://i.pinimg.com/236x/real_b/${board}/pin2.jpg`,
+          media_url: `https://i.pinimg.com/736x/real_b/${board}/pin2.jpg`,
+          aspect_rationale: { composition: 'Glassmorphism UI' },
+          thumbnail_base64: 'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoCAAIAAQAcJaQAA3AA/v3AgAA=',
+          thumbnail_mime_type: 'image/webp',
+        },
+      ];
+    },
+  };
+
+  // Mock OpenAI client that embeds all texts in a distinctive coordinate basis
+  // (index 0 = 0.99, whereas SHA-256 local embeddings are distributed across 64 dims)
+  const embeddedInputs = [];
+  const makeOpenAiBasisVec = (text) => {
+    const raw = new Array(hp.embedding_dimension).fill(0);
+    raw[0] = 0.95;
+    raw[1] = text.toLowerCase().includes('swiss') ? 0.3 : 0.05;
+    raw[2] = text.toLowerCase().includes('glassmorphism') ? -0.25 : 0.1;
+    raw[3] = (text.length % 17) / 100;
+    return l2_normalize(raw);
+  };
+
+  const mockOpenAiClient = {
+    embeddings: {
+      async create({ input }) {
+        const list = Array.isArray(input) ? input : [input];
+        embeddedInputs.push(...list);
+        return {
+          data: list.map((item) => ({
+            embedding: makeOpenAiBasisVec(String(item)),
+          })),
+        };
+      },
+    },
+    responses: {
+      async create({ text }) {
+        const schemaName = text?.format?.name;
+        if (schemaName === 'phoenix_board_router_decision') {
+          return {
+            output_text: JSON.stringify({
+              board_allocations: [
+                {
+                  board: 'behance/typography',
+                  role: 'hook_cover',
+                  weight: 0.45,
+                  synthetic_query: 'Swiss grid editorial cover typography',
+                  rationale: 'High-impact typographic hook.',
+                },
+                {
+                  board: 'creativemarket/magazine-templates',
+                  role: 'structural_grid',
+                  weight: 0.35,
+                  synthetic_query: 'Modular magazine grid layout',
+                  rationale: 'Clean editorial rhythm.',
+                },
+                {
+                  board: 'dribbble/feed',
+                  role: 'wildcard_exploration',
+                  weight: 0.2,
+                  synthetic_query: 'Experimental UI layout exploration',
+                  rationale: 'Out-of-network discovery.',
+                },
+              ],
+              required_sid_tags: ['carousel_editorial_4:5', 'swiss_grid'],
+              excluded_sid_tags: [],
+            }),
+          };
+        }
+        if (schemaName === 'phoenix_isolated_candidate_ranker') {
+          return {
+            output_text: JSON.stringify({
+              p_approve_hook: 0.88,
+              p_high_dwell: 0.82,
+              p_copy_composition: 0.79,
+              p_save_to_board: 0.75,
+              p_skip_generic: 0.06,
+              p_reject_style_mismatch: 0.04,
+              composition_guideline: 'Grid suíço de alta precisão com hierarquia tipográfica clara.',
+            }),
+          };
+        }
+        if (schemaName === 'phoenix_memory_consolidation') {
+          return {
+            output_text: JSON.stringify({
+              visual_dna_rules: ['Priorizar grid suíço e contraste tipográfico editorial'],
+              negative_constraints: ['carousel_editorial_4:5/glassmorphism_ui'],
+              preferred_boards_by_goal: {
+                'carousel_editorial_4:5': ['behance/typography'],
+              },
+              consolidated_taste_summary: 'swiss grid editorial typography minimal whitespace',
+            }),
+          };
+        }
+        throw new Error(`Unexpected schema: ${schemaName}`);
+      },
+    },
+  };
+
+  const decisionService = new PhoenixDecisionApiService({
+    hp,
+    forceDeterministicMock: false,
+    openaiClient: mockOpenAiClient,
+  });
+
+  // Mock fetchFn for stage_approved_references so staging verifies the real provider media_url is fetched
+  const fetchedUrls = [];
+  const validWebpBytes = Buffer.from(
+    'UklGRiQAAABXRUJQVlA4IBgAAAAwAQCdASoCAAIAAQAcJaQAA3AA/v3AgAA=',
+    'base64',
+  );
+  const mockFetchFn = async (url) => {
+    fetchedUrls.push(String(url));
+    return new Response(validWebpBytes, {
+      status: 200,
+      headers: { 'content-type': 'image/webp' },
+    });
+  };
+
+  const server = createComporServer({
+    phoenixHyperparams: hp,
+    phoenixMemoryStore: memoryStore,
+    phoenixDecisionService: decisionService,
+    providers: new Map([['pinterest_curated_design', realPinterestProvider]]),
+    fetchFn: mockFetchFn,
+  });
+
+  const client = new Client({ name: 'phoenix-fixes-test', version: '1.0.0' });
+  const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+  await server.connect(serverTransport);
+  await client.connect(clientTransport);
+
+  try {
+    // --- FIX 1: Retrieve real references from providers instead of fabricating /mock/ URLs ---
+    const disc1Res = await client.callTool({
+      name: 'discover_visual_references',
+      arguments: {
+        briefing: 'Carrossel editorial suíço sobre engenharia de software',
+        target_format: 'carousel_editorial_4:5',
+        user_id: 'user_fixes',
+        client_mode: 'web',
+        openai_api_key: 'sk-test-mock-client',
+      },
+    });
+    assert.equal(disc1Res.isError, undefined);
+    const disc1 = webDiscoveryResponseSchema.parse(disc1Res.structuredContent);
+
+    assert.ok(providerCalls.length >= 3, 'Expected real provider to be queried for allocated boards');
+    for (const cand of disc1.candidates) {
+      assert.doesNotMatch(
+        cand.preview_url,
+        /\/mock\//,
+        'Non-mock discovery must NOT fabricate /mock/ preview URLs',
+      );
+      assert.match(
+        cand.preview_url,
+        /^https:\/\/i\.pinimg\.com\/236x\/real_[ab]\//,
+        'Candidate preview_url must come from real provider item',
+      );
+      assert.match(
+        cand.origin_url,
+        /^https:\/\/www\.pinterest\.com\/pin\/real_[ab]_/,
+        'Candidate origin_url must come from real provider item',
+      );
+      assert.match(
+        cand.visual_description,
+        /Real (editorial layout|glassmorphism UI concept)/,
+        'Candidate description must come from real provider caption',
+      );
+    }
+
+    // --- FIX 2: Unique discovery-scoped candidate IDs across sequential discoveries ---
+    const disc2Res = await client.callTool({
+      name: 'discover_visual_references',
+      arguments: {
+        briefing: 'Segundo discovery para outro usuário na mesma instância de store',
+        target_format: 'carousel_editorial_4:5',
+        user_id: 'other_user_shared_store',
+        client_mode: 'web',
+        openai_api_key: 'sk-test-mock-client',
+      },
+    });
+    assert.equal(disc2Res.isError, undefined);
+    const disc2 = webDiscoveryResponseSchema.parse(disc2Res.structuredContent);
+
+    const disc1Ids = new Set(disc1.candidates.map((c) => c.candidate_id));
+    const disc2Ids = new Set(disc2.candidates.map((c) => c.candidate_id));
+
+    for (const id of disc1Ids) {
+      assert.notEqual(id, 'phx_ref_01', 'Must not use static phx_ref_01 ID');
+      assert.ok(!disc2Ids.has(id), `Candidate ID ${id} from discovery 1 must not collide with discovery 2`);
+    }
+
+    // Stage a candidate from Discovery #1 AFTER Discovery #2 ran: must still resolve to Discovery #1's session & real URL!
+    const targetCand1 = disc1.candidates[0];
+    const stageRes = await client.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: false,
+        selections: [
+          {
+            ref_id: targetCand1.candidate_id,
+            selected_attributes: ['composition', 'typography'],
+          },
+        ],
+      },
+    });
+    assert.equal(stageRes.isError, undefined);
+    assert.equal(stageRes.structuredContent.status, 'staged');
+    assert.equal(stageRes.structuredContent.staged_references.length, 1);
+    assert.equal(stageRes.structuredContent.staged_references[0].ref_id, targetCand1.candidate_id);
+    assert.equal(stageRes.structuredContent.staged_references[0].origin_url, targetCand1.origin_url);
+    assert.ok(
+      fetchedUrls.some((u) => u.includes('/736x/real_')),
+      'stage_approved_references must download the real provider media_url from Discovery #1',
+    );
+
+    // --- FIX 3: Unified embedding coordinate space across query, candidates, feedback, and long-term taste ---
+    // Record positive feedback on Discovery #1 candidate 0 and negative style_mismatch on glassmorphism
+    const fbPos = await client.callTool({
+      name: 'record_visual_feedback',
+      arguments: {
+        user_id: 'user_fixes',
+        candidate_id: targetCand1.candidate_id,
+        board: targetCand1.board,
+        metadata_sid: targetCand1.metadata_sid,
+        action: 'locked_as_reference',
+        dwell_time_ms: 5100,
+        client_mode: 'web',
+        openai_api_key: 'sk-test-mock-client',
+      },
+    });
+    assert.equal(fbPos.isError, undefined);
+
+    const fbNeg = await client.callTool({
+      name: 'record_visual_feedback',
+      arguments: {
+        user_id: 'user_fixes',
+        candidate_id: disc1.candidates[1].candidate_id,
+        board: disc1.candidates[1].board,
+        metadata_sid: [
+          'carousel_editorial_4:5',
+          'glassmorphism_ui',
+          'bold_display_hook',
+          'dark_tech_saas',
+        ],
+        action: 'style_mismatch',
+        dwell_time_ms: 600,
+        client_mode: 'web',
+        openai_api_key: 'sk-test-mock-client',
+      },
+    });
+    assert.equal(fbNeg.isError, undefined);
+    assert.equal(fbNeg.structuredContent.compaction_triggered, true);
+
+    const userMem = memoryStore.getOrCreateUser('user_fixes');
+    assert.equal(
+      userMem.embedding_space,
+      'openai_text_embedding_3_small',
+      'User memory must track the active OpenAI embedding space',
+    );
+    assert.equal(userMem.pos_session_vecs.length, 1);
+    assert.equal(userMem.neg_session_vecs.length, 1);
+    assert.ok(userMem.long_term_vec !== null, 'Compaction must populate long_term_vec');
+
+    // In our mock OpenAI basis, component [0] is ~0.95 (after L2 norm > 0.85),
+    // verifying that feedback and long-term vectors were embedded via OpenAI and NOT local SHA-256!
+    assert.ok(
+      userMem.pos_session_vecs[0][0] > 0.85,
+      'Positive feedback vector must be in the OpenAI embedding coordinate space',
+    );
+    assert.ok(
+      userMem.neg_session_vecs[0][0] > 0.85,
+      'Negative feedback vector must be in the OpenAI embedding coordinate space',
+    );
+    assert.ok(
+      userMem.long_term_vec[0] > 0.85,
+      'Consolidated long-term taste vector must be in the OpenAI embedding coordinate space',
+    );
+
+    // --- FIX 4: Hard SID exclusion filter blocks rejected SID prefixes before ranking/selection ---
+    // Direct unit check on filter_excluded_sid_candidates and matches_excluded_sid
+    assert.equal(
+      matches_excluded_sid(
+        ['carousel_editorial_4:5', 'glassmorphism_ui', 'bold_display_hook', 'dark_tech_saas'],
+        ['carousel_editorial_4:5/glassmorphism_ui'],
+      ),
+      true,
+    );
+    assert.equal(
+      matches_excluded_sid(
+        ['carousel_editorial_4:5', 'swiss_grid', 'bold_display_hook', 'tactile_paper_texture'],
+        ['carousel_editorial_4:5/glassmorphism_ui'],
+      ),
+      false,
+    );
+    const filteredUnit = filter_excluded_sid_candidates(
+      [
+        {
+          candidate_id: 'blocked_1',
+          metadata_sid: ['carousel_editorial_4:5', 'glassmorphism_ui', 'bold_display_hook', 'dark_tech_saas'],
+        },
+        {
+          candidate_id: 'blocked_2',
+          metadata_sid: ['carousel_editorial_4:5', 'glassmorphism_ui', 'minimal_whitespace', 'dark_tech_saas'],
+        },
+        {
+          candidate_id: 'allowed_1',
+          metadata_sid: ['carousel_editorial_4:5', 'swiss_grid', 'bold_display_hook', 'tactile_paper_texture'],
+        },
+      ],
+      ['carousel_editorial_4:5/glassmorphism_ui'],
+    );
+    assert.deepEqual(
+      filteredUnit.map((c) => c.candidate_id),
+      ['allowed_1'],
+      'All candidates matching excluded SID prefix must be removed before ranking',
+    );
+
+    // End-to-end check: user_fixes now has 'carousel_editorial_4:5/glassmorphism_ui' in negative_constraints.
+    // Even though realPinterestProvider returns a glassmorphism item for every board, none may appear in Top-N!
+    const discAfterRejectRes = await client.callTool({
+      name: 'discover_visual_references',
+      arguments: {
+        briefing: 'Carrossel editorial sobre arquitetura limpa',
+        target_format: 'carousel_editorial_4:5',
+        user_id: 'user_fixes',
+        client_mode: 'web',
+        openai_api_key: 'sk-test-mock-client',
+      },
+    });
+    assert.equal(discAfterRejectRes.isError, undefined);
+    const discAfterReject = webDiscoveryResponseSchema.parse(discAfterRejectRes.structuredContent);
+    assert.ok(
+      discAfterReject.excluded_sid_tags.includes('carousel_editorial_4:5/glassmorphism_ui'),
+      'Excluded SID tag from negative_constraints must be active in discovery',
+    );
+    assert.ok(discAfterReject.candidates.length > 0, 'Non-excluded candidates must still be returned');
+    for (const cand of discAfterReject.candidates) {
+      assert.equal(
+        matches_excluded_sid(cand.metadata_sid, ['carousel_editorial_4:5/glassmorphism_ui']),
+        false,
+        `Candidate ${cand.candidate_id} with SID ${cand.metadata_sid.join('/')} should have been blocked by SID exclusion filter`,
+      );
+    }
   } finally {
     await client.close();
     await server.close();

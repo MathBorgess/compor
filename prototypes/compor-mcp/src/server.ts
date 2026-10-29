@@ -458,6 +458,8 @@ export function createComporServer(options: ComporServerOptions = {}): McpServer
         decisionService: phoenixDecisionService,
         referenceStore,
         fetchFn: options.fetchFn,
+        providers: options.providers,
+        catalog: options.catalog,
       }),
   );
 

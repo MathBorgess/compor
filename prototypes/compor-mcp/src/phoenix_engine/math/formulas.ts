@@ -232,3 +232,70 @@ export function apply_sid_diversity_decay<T extends DiversityDecayCandidateInput
 }
 
 export const applySidDiversityDecay = apply_sid_diversity_decay;
+
+/**
+ * Verifica se a tupla `metadata_sid` de um candidato bate com qualquer padrão bloqueado
+ * em `excluded_sid_tags` / `negative_constraints` (seja uma tag individual como `glassmorphism_ui`,
+ * um prefixo composto como `carousel_editorial_4:5/glassmorphism_ui` ou uma combinação de tags).
+ */
+export function matches_excluded_sid(
+  metadata_sid: readonly string[] | undefined,
+  excluded_sid_patterns: readonly string[],
+): boolean {
+  if (!metadata_sid || metadata_sid.length === 0 || excluded_sid_patterns.length === 0) {
+    return false;
+  }
+
+  const normalizedSids = metadata_sid.map((s) => s.trim().toLowerCase()).filter(Boolean);
+  if (normalizedSids.length === 0) {
+    return false;
+  }
+
+  const sidSet = new Set(normalizedSids);
+  const prefixes = new Set<string>();
+  for (let k = 1; k <= normalizedSids.length; k++) {
+    prefixes.add(normalizedSids.slice(0, k).join('/'));
+  }
+
+  for (const rawPattern of excluded_sid_patterns) {
+    const pat = rawPattern.trim().toLowerCase();
+    if (!pat) continue;
+
+    if (sidSet.has(pat) || prefixes.has(pat)) {
+      return true;
+    }
+
+    const parts = pat
+      .split(/[/>,|]+/)
+      .map((p) => p.trim())
+      .filter(Boolean);
+    if (parts.length > 0 && parts.every((part) => sidSet.has(part))) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+export const matchesExcludedSid = matches_excluded_sid;
+
+/**
+ * Filtra explicitamente candidatos cujo `metadata_sid` corresponda a qualquer padrão excluído
+ * (`excluded_sid_tags` ou `negative_constraints`), garantindo bloqueio efetivo antes do ranking/seleção.
+ */
+export function filter_excluded_sid_candidates<
+  T extends { metadata_sid?: readonly string[] },
+>(
+  candidates: ReadonlyArray<T>,
+  excluded_sid_patterns: readonly string[],
+): T[] {
+  if (excluded_sid_patterns.length === 0) {
+    return [...candidates];
+  }
+  return candidates.filter(
+    (item) => !matches_excluded_sid(item.metadata_sid, excluded_sid_patterns),
+  );
+}
+
+export const filterExcludedSidCandidates = filter_excluded_sid_candidates;
+

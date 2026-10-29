@@ -36,6 +36,10 @@ export type DecisionEngineSource =
   | 'codex_luna_subagent'
   | 'deterministic_mock';
 
+export type EmbeddingSpaceId =
+  | 'openai_text_embedding_3_small'
+  | 'local_deterministic_sha256';
+
 export interface CandidateToRank {
   candidate_id: string;
   board: string;
@@ -44,8 +48,10 @@ export interface CandidateToRank {
   visual_description: string;
   preview_url: string;
   origin_url: string;
+  media_url?: string;
   staging_path: string;
   thumbnail_base64?: string | null;
+  thumbnail_mime_type?: 'image/webp' | 'image/png' | 'image/jpeg' | null;
   candidate_vec?: number[];
 }
 
@@ -156,6 +162,10 @@ export class PhoenixDecisionApiService {
     this.useDecisionsEndpointForRanker = options.useDecisionsEndpointForRanker ?? false;
   }
 
+  isForcedDeterministicMock(): boolean {
+    return this.forceDeterministicMock;
+  }
+
   resolveApiKey(requestApiKey?: string): string | undefined {
     const candidate =
       requestApiKey?.trim() ||
@@ -224,27 +234,84 @@ export class PhoenixDecisionApiService {
     };
   }
 
-  async embedText(text: string, requestApiKey?: string): Promise<number[]> {
-    if (this.forceDeterministicMock) {
-      return computeDeterministicEmbedding(text, this.hp.embedding_dimension);
+  /**
+   * Calcula embeddings para uma lista de textos garantindo um único espaço vetorial consistente
+   * (`openai_text_embedding_3_small` ou `local_deterministic_sha256`).
+   * Se `forceSpace` for especificado, respeita o espaço solicitado; caso contrário tenta a API da OpenAI
+   * e, em caso de ausência de chave ou falha, faz fallback integral de todos os textos para o espaço local.
+   */
+  async embedBatchConsistent(
+    texts: readonly string[],
+    options: {
+      apiKey?: string;
+      forceSpace?: EmbeddingSpaceId;
+    } = {},
+  ): Promise<{ vectors: number[][]; space: EmbeddingSpaceId }> {
+    if (texts.length === 0) {
+      return {
+        vectors: [],
+        space: options.forceSpace ?? 'local_deterministic_sha256',
+      };
     }
-    const client = this.getOpenAIClient(requestApiKey);
-    if (client) {
-      try {
-        const response = await client.embeddings.create({
-          model: 'text-embedding-3-small',
-          input: text,
-          dimensions: this.hp.embedding_dimension,
-        });
-        const vec = response.data?.[0]?.embedding;
-        if (Array.isArray(vec) && vec.length === this.hp.embedding_dimension) {
-          return l2_normalize(vec);
+
+    const canUseOpenAI =
+      !this.forceDeterministicMock &&
+      options.forceSpace !== 'local_deterministic_sha256';
+
+    if (canUseOpenAI) {
+      const client = this.getOpenAIClient(options.apiKey);
+      if (client) {
+        try {
+          const response = await client.embeddings.create({
+            model: 'text-embedding-3-small',
+            input: [...texts],
+            dimensions: this.hp.embedding_dimension,
+          });
+          if (
+            Array.isArray(response.data) &&
+            response.data.length === texts.length &&
+            response.data.every(
+              (item) =>
+                Array.isArray(item.embedding) &&
+                item.embedding.length === this.hp.embedding_dimension,
+            )
+          ) {
+            return {
+              vectors: response.data.map((item) => l2_normalize(item.embedding)),
+              space: 'openai_text_embedding_3_small',
+            };
+          }
+        } catch {
+          // Fallback integral de todos os textos para o mesmo espaço determinístico local
         }
-      } catch {
-        // Fallback determinístico caso offline
       }
     }
-    return computeDeterministicEmbedding(text, this.hp.embedding_dimension);
+
+    return {
+      vectors: texts.map((t) =>
+        computeDeterministicEmbedding(t, this.hp.embedding_dimension),
+      ),
+      space: 'local_deterministic_sha256',
+    };
+  }
+
+  async embedTextWithSpace(
+    text: string,
+    options: {
+      apiKey?: string;
+      forceSpace?: EmbeddingSpaceId;
+    } = {},
+  ): Promise<{ vector: number[]; space: EmbeddingSpaceId }> {
+    const res = await this.embedBatchConsistent([text], options);
+    return {
+      vector: res.vectors[0] ?? computeDeterministicEmbedding(text, this.hp.embedding_dimension),
+      space: res.space,
+    };
+  }
+
+  async embedText(text: string, requestApiKey?: string): Promise<number[]> {
+    const res = await this.embedTextWithSpace(text, { apiKey: requestApiKey });
+    return res.vector;
   }
 
   /**
@@ -327,7 +394,9 @@ export class PhoenixDecisionApiService {
           if (response.output_text) {
             const parsed = routerDecisionSchema.safeParse(JSON.parse(response.output_text));
             if (parsed.success) {
-              return this.enforceExplorationQuota(parsed.data);
+              return this.enforceExplorationQuota(
+                this.mergeNegativeConstraintsIntoExclusions(parsed.data, params.user_taste),
+              );
             }
           }
         } catch {
@@ -341,7 +410,9 @@ export class PhoenixDecisionApiService {
         try {
           const parsed = routerDecisionSchema.safeParse(JSON.parse(rawJson));
           if (parsed.success) {
-            return this.enforceExplorationQuota(parsed.data);
+            return this.enforceExplorationQuota(
+              this.mergeNegativeConstraintsIntoExclusions(parsed.data, params.user_taste),
+            );
           }
         } catch {
           // Segue para roteamento determinístico se JSON do subagente for inválido
@@ -350,6 +421,19 @@ export class PhoenixDecisionApiService {
     }
 
     return this.deterministicRouteBoards(params);
+  }
+
+  private mergeNegativeConstraintsIntoExclusions(
+    decision: RouterDecision,
+    userTaste: UserTasteProfile,
+  ): RouterDecision {
+    const mergedExclusions = Array.from(
+      new Set([...decision.excluded_sid_tags, ...userTaste.negative_constraints]),
+    );
+    return {
+      ...decision,
+      excluded_sid_tags: mergedExclusions,
+    };
   }
 
   private enforceExplorationQuota(decision: RouterDecision): RouterDecision {
@@ -544,7 +628,7 @@ export class PhoenixDecisionApiService {
             text: {
               format: {
                 type: 'json_schema',
-                name: 'phoenix_isolated_candidate_Action_probs',
+                name: 'phoenix_isolated_candidate_action_probs',
                 strict: true,
                 schema: {
                   type: 'object',
@@ -791,9 +875,11 @@ export class PhoenixDecisionApiService {
     session_events: SessionEvent[];
     source: DecisionEngineSource;
     openai_api_key?: string;
+    embedding_space?: EmbeddingSpaceId;
   }): Promise<{
     updated_taste: UserTasteProfile;
     long_term_vec: number[];
+    embedding_space: EmbeddingSpaceId;
   }> {
     const userLog = JSON.stringify(
       {
@@ -827,8 +913,15 @@ export class PhoenixDecisionApiService {
               ).slice(0, 15),
               updated_at: new Date().toISOString(),
             };
-            const vec = await this.embedText(JSON.stringify(updated), params.openai_api_key);
-            return { updated_taste: updated, long_term_vec: vec };
+            const emb = await this.embedTextWithSpace(JSON.stringify(updated), {
+              apiKey: params.openai_api_key,
+              forceSpace: params.embedding_space,
+            });
+            return {
+              updated_taste: updated,
+              long_term_vec: emb.vector,
+              embedding_space: emb.space,
+            };
           }
         } catch {
           // Fallback local abaixo
@@ -867,10 +960,14 @@ export class PhoenixDecisionApiService {
       negative_constraints: Array.from(negConstraints).slice(0, 15),
       updated_at: new Date().toISOString(),
     };
-    const vec = computeDeterministicEmbedding(
-      JSON.stringify(updatedTaste),
-      this.hp.embedding_dimension,
-    );
-    return { updated_taste: updatedTaste, long_term_vec: vec };
+    const emb = await this.embedTextWithSpace(JSON.stringify(updatedTaste), {
+      apiKey: params.openai_api_key,
+      forceSpace: params.embedding_space,
+    });
+    return {
+      updated_taste: updatedTaste,
+      long_term_vec: emb.vector,
+      embedding_space: emb.space,
+    };
   }
 }

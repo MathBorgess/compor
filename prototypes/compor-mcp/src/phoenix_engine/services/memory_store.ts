@@ -12,17 +12,32 @@ import {
   compute_ema_session_vector,
   l2_normalize,
 } from '../math/formulas.js';
+import type { EmbeddingSpaceId } from './decision_api.js';
+
+export interface DiscoveredCandidateMemoryEntry {
+  candidate_id: string;
+  board: string;
+  metadata_sid: string[];
+  visual_description: string;
+  embedding_text: string;
+  vec: number[];
+  space: EmbeddingSpaceId;
+}
 
 export interface UserMemoryRecord {
   user_id: string;
   session_token: string;
+  embedding_space: EmbeddingSpaceId;
   pos_session_vecs: number[][];
+  pos_session_texts: string[];
   neg_session_vecs: number[][];
+  neg_session_texts: string[];
   session_events: SessionEvent[];
   board_bandit: Map<string, { positive_actions: number; total_impressions: number }>;
   user_taste: UserTasteProfile;
   long_term_vec: number[] | null;
   compaction_count: number;
+  discovered_candidates: Map<string, DiscoveredCandidateMemoryEntry>;
 }
 
 export interface MemoryConsolidatorCallback {
@@ -30,9 +45,11 @@ export interface MemoryConsolidatorCallback {
     user_id: string;
     previous_taste: UserTasteProfile;
     session_events: SessionEvent[];
+    embedding_space: EmbeddingSpaceId;
   }): Promise<{
     updated_taste: UserTasteProfile;
     long_term_vec?: number[] | null;
+    embedding_space?: EmbeddingSpaceId;
   }>;
 }
 
@@ -57,8 +74,11 @@ export class PhoenixMemoryStore {
       existing = {
         user_id: cleanId,
         session_token: `phx_sess_${randomBytes(6).toString('hex')}`,
+        embedding_space: 'local_deterministic_sha256',
         pos_session_vecs: [],
+        pos_session_texts: [],
         neg_session_vecs: [],
+        neg_session_texts: [],
         session_events: [],
         board_bandit: bandit,
         user_taste: {
@@ -70,10 +90,78 @@ export class PhoenixMemoryStore {
         },
         long_term_vec: null,
         compaction_count: 0,
+        discovered_candidates: new Map<string, DiscoveredCandidateMemoryEntry>(),
       };
       this.users.set(cleanId, existing);
     }
     return existing;
+  }
+
+  registerDiscoveredCandidates(
+    userId: string,
+    entries: readonly DiscoveredCandidateMemoryEntry[],
+  ): void {
+    const record = this.getOrCreateUser(userId);
+    for (const entry of entries) {
+      record.discovered_candidates.set(entry.candidate_id, {
+        ...entry,
+        vec: l2_normalize(entry.vec),
+      });
+    }
+  }
+
+  getDiscoveredCandidate(
+    userId: string,
+    candidateId: string,
+  ): DiscoveredCandidateMemoryEntry | undefined {
+    const record = this.getOrCreateUser(userId);
+    return record.discovered_candidates.get(candidateId);
+  }
+
+  /**
+   * Garante que todos os vetores históricos da User Tower (`pos_session_vecs`, `neg_session_vecs`
+   * e `long_term_vec`) estejam no mesmo espaço vetorial (`targetSpace`) do vetor de consulta e dos candidatos.
+   */
+  async ensureConsistentEmbeddingSpace(
+    userId: string,
+    targetSpace: EmbeddingSpaceId,
+    embedBatchFn: (
+      texts: readonly string[],
+      forceSpace: EmbeddingSpaceId,
+    ) => Promise<number[][]>,
+  ): Promise<UserMemoryRecord> {
+    const record = this.getOrCreateUser(userId);
+    if (record.embedding_space === targetSpace) {
+      return record;
+    }
+
+    const posCount = record.pos_session_texts.length;
+    const negCount = record.neg_session_texts.length;
+    const hasLongTerm = record.long_term_vec !== null;
+    const longTermText = hasLongTerm ? JSON.stringify(record.user_taste) : null;
+
+    const allTexts: string[] = [
+      ...record.pos_session_texts,
+      ...record.neg_session_texts,
+      ...(longTermText ? [longTermText] : []),
+    ];
+
+    if (allTexts.length > 0) {
+      const reembedded = await embedBatchFn(allTexts, targetSpace);
+      record.pos_session_vecs = reembedded
+        .slice(0, posCount)
+        .map((v) => l2_normalize(v));
+      record.neg_session_vecs = reembedded
+        .slice(posCount, posCount + negCount)
+        .map((v) => l2_normalize(v));
+      if (hasLongTerm) {
+        const ltVec = reembedded[posCount + negCount];
+        record.long_term_vec = ltVec ? l2_normalize(ltVec) : null;
+      }
+    }
+
+    record.embedding_space = targetSpace;
+    return record;
   }
 
   getBoardAffinities(userId: string): BoardAffinityEntry[] {
@@ -123,6 +211,7 @@ export class PhoenixMemoryStore {
     userId: string,
     taste: Partial<UserTasteProfile>,
     longTermVec?: number[] | null,
+    space?: EmbeddingSpaceId,
   ): UserMemoryRecord {
     const record = this.getOrCreateUser(userId);
     record.user_taste = {
@@ -133,6 +222,9 @@ export class PhoenixMemoryStore {
     };
     if (longTermVec !== undefined) {
       record.long_term_vec = longTermVec ? l2_normalize(longTermVec) : null;
+    }
+    if (space) {
+      record.embedding_space = space;
     }
     return record;
   }
@@ -145,6 +237,8 @@ export class PhoenixMemoryStore {
     action: FeedbackAction;
     dwell_time_ms: number;
     candidate_vec: number[];
+    candidate_text?: string;
+    embedding_space?: EmbeddingSpaceId;
     consolidator?: MemoryConsolidatorCallback;
   }): Promise<{
     event: SessionEvent;
@@ -153,10 +247,17 @@ export class PhoenixMemoryStore {
     negative_session_count: number;
     compaction_triggered: boolean;
     user_taste: UserTasteProfile;
+    embedding_space: EmbeddingSpaceId;
   }> {
     const record = this.getOrCreateUser(params.user_id);
     const now = this.nowFn();
     const normVec = l2_normalize(params.candidate_vec);
+    const candidateText =
+      params.candidate_text ??
+      `${params.board} ${params.metadata_sid.join(' ')} ${params.candidate_id}`;
+    if (params.embedding_space) {
+      record.embedding_space = params.embedding_space;
+    }
 
     const event: SessionEvent = {
       candidate_id: params.candidate_id,
@@ -184,9 +285,11 @@ export class PhoenixMemoryStore {
 
     if (isPositiveLock || isHighDwellZoom) {
       record.pos_session_vecs.push(normVec);
+      record.pos_session_texts.push(candidateText);
       currentBoardStats.positive_actions += 1;
     } else if (isNegative) {
       record.neg_session_vecs.push(normVec);
+      record.neg_session_texts.push(candidateText);
       const rejectedSidTag = params.metadata_sid
         .slice(0, this.hp.sid_prefix_depth)
         .join('/');
@@ -225,10 +328,14 @@ export class PhoenixMemoryStore {
           user_id: record.user_id,
           previous_taste: record.user_taste,
           session_events: record.session_events,
+          embedding_space: record.embedding_space,
         });
         record.user_taste = consolidated.updated_taste;
         if (consolidated.long_term_vec) {
           record.long_term_vec = l2_normalize(consolidated.long_term_vec);
+        }
+        if (consolidated.embedding_space) {
+          record.embedding_space = consolidated.embedding_space;
         }
       } else {
         this.defaultLocalConsolidation(record);
@@ -242,6 +349,7 @@ export class PhoenixMemoryStore {
       negative_session_count: record.neg_session_vecs.length,
       compaction_triggered: compactionTriggered,
       user_taste: record.user_taste,
+      embedding_space: record.embedding_space,
     };
   }
 
