@@ -82,6 +82,16 @@ export class ProfileLedger {
   private readonly sentSummaries: unknown[] = [];
   private persistenceRevision = 0;
   private persistencePath: string | null = null;
+  private persistenceQueue: Promise<unknown> = Promise.resolve();
+
+  private enqueuePersistence<T>(task: () => Promise<T>): Promise<T> {
+    const run = this.persistenceQueue.then(task, task);
+    this.persistenceQueue = run.then(
+      () => undefined,
+      () => undefined,
+    );
+    return run;
+  }
 
   constructor(owner: string, now: () => string = () => new Date().toISOString()) {
     this.owner = required(owner, 'owner');
@@ -193,22 +203,24 @@ export class ProfileLedger {
   }
   async syncMarkdown(actor: string, directory: string): Promise<string> {
     this.ownerOnly(actor);
-    const dir = await privateDirectory(directory);
-    const id = createHash('sha256').update(this.owner).digest('hex').slice(0, 24);
-    const path = join(dir, `phoenix-profile-${id}.md`);
-    const temporary = join(dir, `.phoenix-${randomUUID()}.tmp`);
-    const contents = this.markdown(actor);
-    const handle = await open(temporary, 'wx', 0o600);
-    try {
-      await handle.writeFile(contents, 'utf8');
-      await handle.close();
-      await rename(temporary, path);
-    } catch (error) {
-      await handle.close().catch(() => undefined);
-      await unlink(temporary).catch(() => undefined);
-      throw error;
-    }
-    return path;
+    return this.enqueuePersistence(async () => {
+      const dir = await privateDirectory(directory);
+      const id = createHash('sha256').update(this.owner).digest('hex').slice(0, 24);
+      const path = join(dir, `phoenix-profile-${id}.md`);
+      const temporary = join(dir, `.phoenix-${randomUUID()}.tmp`);
+      const contents = this.markdown(actor);
+      const handle = await open(temporary, 'wx', 0o600);
+      try {
+        await handle.writeFile(contents, 'utf8');
+        await handle.close();
+        await rename(temporary, path);
+      } catch (error) {
+        await handle.close().catch(() => undefined);
+        await unlink(temporary).catch(() => undefined);
+        throw error;
+      }
+      return path;
+    });
   }
   /** Load only the host-bound owner. Corrupt snapshots and stale writers fail closed. */
   static async restoreLocal(owner: string, directory: string): Promise<ProfileLedger> {
@@ -239,33 +251,35 @@ export class ProfileLedger {
   /** Atomic replacement with exclusive lock and revision check; stale locks fail closed. */
   async saveLocal(actor: string, directory: string): Promise<string> {
     this.ownerOnly(actor);
-    const dir = await privateDirectory(directory);
-    const path = snapshotPath(dir, this.owner);
-    if (this.persistencePath && this.persistencePath !== path) throw new Error('Profile is bound to another store');
-    const lockPath = `${path}.lock`;
-    const lock = await open(lockPath, 'wx', 0o600);
-    const temporary = join(dir, `.phoenix-state-${randomUUID()}.tmp`);
-    try {
-      const current = await readSnapshot(path);
-      if ((current?.revision ?? 0) !== this.persistenceRevision || (current && current.owner !== this.owner)) throw new Error('Profile snapshot changed; reload before writing');
-      const snapshot = persistedSnapshot.parse({
-        format: 'compor-phoenix-profile-v1', owner: this.owner, revision: this.persistenceRevision + 1,
-        preferences: [...this.preferences.entries()], events: [...this.events.values()], changes: this.changes,
-        consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit, prepared_summaries: this.sentSummaries,
-      });
-      const payload = JSON.stringify(snapshot);
-      if (Buffer.byteLength(payload) > 5_000_000) throw new Error('Profile snapshot too large');
-      const file = await open(temporary, 'wx', 0o600);
-      try { await file.writeFile(payload, 'utf8'); } finally { await file.close(); }
-      await rename(temporary, path);
-      this.persistencePath = path;
-      this.persistenceRevision = snapshot.revision;
-      return path;
-    } finally {
-      await unlink(temporary).catch(() => undefined);
-      await lock.close();
-      await unlink(lockPath);
-    }
+    return this.enqueuePersistence(async () => {
+      const dir = await privateDirectory(directory);
+      const path = snapshotPath(dir, this.owner);
+      if (this.persistencePath && this.persistencePath !== path) throw new Error('Profile is bound to another store');
+      const lockPath = `${path}.lock`;
+      const lock = await open(lockPath, 'wx', 0o600);
+      const temporary = join(dir, `.phoenix-state-${randomUUID()}.tmp`);
+      try {
+        const current = await readSnapshot(path);
+        if ((current?.revision ?? 0) !== this.persistenceRevision || (current && current.owner !== this.owner)) throw new Error('Profile snapshot changed; reload before writing');
+        const snapshot = persistedSnapshot.parse({
+          format: 'compor-phoenix-profile-v1', owner: this.owner, revision: this.persistenceRevision + 1,
+          preferences: [...this.preferences.entries()], events: [...this.events.values()], changes: this.changes,
+          consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit, prepared_summaries: this.sentSummaries,
+        });
+        const payload = JSON.stringify(snapshot);
+        if (Buffer.byteLength(payload) > 5_000_000) throw new Error('Profile snapshot too large');
+        const file = await open(temporary, 'wx', 0o600);
+        try { await file.writeFile(payload, 'utf8'); } finally { await file.close(); }
+        await rename(temporary, path);
+        this.persistencePath = path;
+        this.persistenceRevision = snapshot.revision;
+        return path;
+      } finally {
+        await unlink(temporary).catch(() => undefined);
+        await lock.close();
+        await unlink(lockPath);
+      }
+    });
   }
   markdown(actor: string): string {
     this.ownerOnly(actor);

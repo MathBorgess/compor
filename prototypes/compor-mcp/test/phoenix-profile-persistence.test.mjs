@@ -97,3 +97,90 @@ test('MCP conversations restore profile and continue editing after server restar
     assert.equal(loaded.read('host-bound-owner').changes.at(-1).correction, 'Era só uma sugestão');
   } finally { await rm(dir, { recursive: true, force: true }); }
 });
+
+test('concurrent persistence calls within the same ledger instance serialize without EEXIST and persist late mutations across restart', async () => {
+  const { Client } = await import('@modelcontextprotocol/sdk/client/index.js');
+  const { InMemoryTransport } = await import('@modelcontextprotocol/sdk/inMemory.js');
+  const { createComporServer } = await import('../dist/server.js');
+  const dir = await mkdtemp(join(tmpdir(), 'phoenix-concurrent-ledger-'));
+  try {
+    // 1. Direct concurrent saveLocal calls on the same ledger instance, including a mutation arriving mid-flight
+    const ledger = await ProfileLedger.restoreLocal('owner', dir);
+    ledger.setConsent('owner', 'personalization', true);
+    ledger.record('owner', signal);
+    const firstSavePromise = ledger.saveLocal('owner', dir);
+
+    // Mutate after firstSavePromise has already been initiated (and potentially after it serialized its snapshot)
+    const secondSavePromise = Promise.resolve().then(() => {
+      ledger.record('owner', {
+        ...signal,
+        id: 'e_late',
+        preference: { key: 'tipografia', value: 'grotesca', confidence: 'confirmed' },
+      });
+      return ledger.saveLocal('owner', dir);
+    });
+
+    const [path1, path2] = await Promise.all([firstSavePromise, secondSavePromise]);
+    assert.equal(path1, path2);
+
+    const restoredAfterDirect = await ProfileLedger.restoreLocal('owner', dir);
+    const directProfile = restoredAfterDirect.read('owner');
+    assert.equal(directProfile.events.length, 2);
+    assert.ok(directProfile.preferences.some((p) => p.key === 'tipografia' && p.value === 'grotesca'));
+
+    // 2. Concurrent MCP profile tool calls over the same connection/session
+    const server = createComporServer({
+      phoenixActorId: 'owner',
+      phoenixProfileSession: {
+        ledger: restoredAfterDirect,
+        persistenceDirectory: dir,
+        directory: Promise.resolve(dir),
+      },
+    });
+    const client = new Client({ name: 'concurrent-profile-tools', version: '1' });
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    await server.connect(st);
+    await client.connect(ct);
+
+    try {
+      const [resA, resB, resC] = await Promise.all([
+        client.callTool({
+          name: 'phoenix_profile_signal',
+          arguments: {
+            ...signal,
+            id: 'e_conc_1',
+            preference: { key: 'grid', value: 'suico', confidence: 'confirmed' },
+          },
+        }),
+        client.callTool({
+          name: 'phoenix_profile_signal',
+          arguments: {
+            ...signal,
+            id: 'e_conc_2',
+            preference: { key: 'contraste', value: 'alto', confidence: 'confirmed' },
+          },
+        }),
+        client.callTool({
+          name: 'phoenix_profile_share',
+          arguments: { collaborator: 'alice', purpose: 'review', granted: true },
+        }),
+      ]);
+
+      assert.notEqual(resA.isError, true);
+      assert.notEqual(resB.isError, true);
+      assert.notEqual(resC.isError, true);
+    } finally {
+      await client.close();
+      await server.close();
+    }
+
+    const restoredFinal = await ProfileLedger.restoreLocal('owner', dir);
+    const finalProfile = restoredFinal.read('owner');
+    assert.equal(finalProfile.events.length, 4);
+    assert.ok(finalProfile.preferences.some((p) => p.key === 'grid' && p.value === 'suico'));
+    assert.ok(finalProfile.preferences.some((p) => p.key === 'contraste' && p.value === 'alto'));
+    assert.ok(finalProfile.shares.some((s) => s.collaborator === 'alice' && s.active === true));
+  } finally {
+    await rm(dir, { recursive: true, force: true });
+  }
+});
