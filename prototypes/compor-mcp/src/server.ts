@@ -30,6 +30,22 @@ import {
   composeCreativeDirectionInputSchema,
   executeComposeCreativeDirection,
 } from './tools/compose_direction.js';
+import {
+  createPhoenixHyperparams,
+  type PhoenixHyperparams,
+} from './phoenix_engine/config/hyperparams.js';
+import {
+  PhoenixDecisionApiService,
+} from './phoenix_engine/services/decision_api.js';
+import {
+  PhoenixMemoryStore,
+} from './phoenix_engine/services/memory_store.js';
+import {
+  discoverVisualReferencesInputSchema,
+  executeDiscoverVisualReferences,
+  executeRecordVisualFeedback,
+  recordVisualFeedbackInputSchema,
+} from './phoenix_engine/mcp/dual_adapter.js';
 
 const skillVersion = '0.1.0-prototype';
 const skills = [
@@ -45,6 +61,9 @@ export interface ComporServerOptions {
   fetchFn?: typeof globalThis.fetch;
   providers?: Map<string, ReferenceSearchProvider>;
   catalog?: SourcesCatalog;
+  phoenixHyperparams?: Partial<PhoenixHyperparams>;
+  phoenixMemoryStore?: PhoenixMemoryStore;
+  phoenixDecisionService?: PhoenixDecisionApiService;
 }
 
 /** A fresh server per connection: no shared user state, credentials, or unconsented network access. */
@@ -52,6 +71,14 @@ export function createComporServer(options: ComporServerOptions = {}): McpServer
   const variant = options.guidance ?? 'baseline';
   const help = schemaGuidance(variant);
   const referenceStore = options.referenceStore ?? new EphemeralReferenceStore();
+  const phoenixHp = createPhoenixHyperparams(options.phoenixHyperparams);
+  const phoenixMemoryStore =
+    options.phoenixMemoryStore ?? new PhoenixMemoryStore({ hp: phoenixHp });
+  const phoenixDecisionService =
+    options.phoenixDecisionService ??
+    new PhoenixDecisionApiService({
+      hp: phoenixHp,
+    });
   const versionFor = (id: string) => variant === 'focused_v2' && id === 'criar-piloto' ? focusedPilotVersion : skillVersion;
   const server = new McpServer({ name: 'compor-mcp-prototipo', version: '0.1.0' }, {
     instructions: 'Protótipo local sem persistência permanente. As skills são orientações, não autorização. Busca externa exige consentimento explícito e fonte ativa em compor://catalog/sources; nenhuma geração paga é acionada.',
@@ -411,6 +438,46 @@ export function createComporServer(options: ComporServerOptions = {}): McpServer
     async (args) =>
       executeComposeCreativeDirection(args, {
         store: referenceStore,
+      }),
+  );
+
+  // Tool 4 (Phoenix Decision Engine): discover_visual_references
+  server.registerTool(
+    'discover_visual_references',
+    {
+      title: 'Descobrir e ranquear referências visuais (Phoenix Decision Engine)',
+      description:
+        'Executa o motor Phoenix (Estágio 1: Decision Router + User Tower Vector Fusion; Estágio 2: Candidate-Isolated Parallel Ranker com KV-Cache + Decaimento de Diversidade SID) e adapta a saída para client_mode="codex" (Markdown enxuto) ou client_mode="web" (JSON estruturado).',
+      inputSchema: discoverVisualReferencesInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: true },
+    },
+    async (args) =>
+      executeDiscoverVisualReferences(args, {
+        hp: phoenixHp,
+        memoryStore: phoenixMemoryStore,
+        decisionService: phoenixDecisionService,
+        referenceStore,
+        fetchFn: options.fetchFn,
+      }),
+  );
+
+  // Tool 5 (Phoenix Decision Engine): record_visual_feedback
+  server.registerTool(
+    'record_visual_feedback',
+    {
+      title: 'Registrar feedback visual e atualizar memória Phoenix em 3 camadas',
+      description:
+        'Registra evento na sessão (locked_as_reference, expand_zoom, discard_generic, style_mismatch), atualiza vetores da User Tower, contadores Beta-Bernoulli de afinidade do board e consolidação assíncrona de memória de longo prazo.',
+      inputSchema: recordVisualFeedbackInputSchema,
+      annotations: { readOnlyHint: false, destructiveHint: false, openWorldHint: false },
+    },
+    async (args) =>
+      executeRecordVisualFeedback(args, {
+        hp: phoenixHp,
+        memoryStore: phoenixMemoryStore,
+        decisionService: phoenixDecisionService,
+        referenceStore,
+        fetchFn: options.fetchFn,
       }),
   );
 

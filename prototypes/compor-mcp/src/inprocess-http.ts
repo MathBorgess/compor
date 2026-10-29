@@ -1,6 +1,8 @@
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { createComporServer, type ComporServerOptions } from './server.js';
 import { EphemeralReferenceStore } from './staging/ephemeral_store.js';
+import { createPhoenixHyperparams } from './phoenix_engine/config/hyperparams.js';
+import { PhoenixMemoryStore } from './phoenix_engine/services/memory_store.js';
 
 export function createStreamableHttpHandler(
   serverOptions: ComporServerOptions = {},
@@ -9,6 +11,9 @@ export function createStreamableHttpHandler(
   const enableJsonResponse = transportOptions.enableJsonResponse ?? true;
   const allowedUrl = transportOptions.allowedUrl ?? 'https://compor.invalid/mcp';
   const sessionReferenceStore = serverOptions.referenceStore ?? new EphemeralReferenceStore();
+  const sessionPhoenixMemoryStore =
+    serverOptions.phoenixMemoryStore ??
+    new PhoenixMemoryStore({ hp: createPhoenixHyperparams(serverOptions.phoenixHyperparams) });
 
   return async function handleStreamableHttp(
     input: RequestInfo | URL,
@@ -21,6 +26,7 @@ export function createStreamableHttpHandler(
     const server = createComporServer({
       ...serverOptions,
       referenceStore: sessionReferenceStore,
+      phoenixMemoryStore: sessionPhoenixMemoryStore,
     });
     const transport = new WebStandardStreamableHTTPServerTransport({
       sessionIdGenerator: undefined,
@@ -47,6 +53,9 @@ export function createStreamableHttpHandler(
 }
 
 const defaultFetchInProcessStore = new EphemeralReferenceStore();
+const defaultFetchInProcessPhoenixMemory = new PhoenixMemoryStore({
+  hp: createPhoenixHyperparams(),
+});
 
 /**
  * Test adapter: handles each MCP Streamable HTTP request in process without a socket,
@@ -59,8 +68,14 @@ export async function fetchInProcess(
   serverOptions?: ComporServerOptions,
 ): Promise<Response> {
   const effectiveStore = serverOptions?.referenceStore ?? defaultFetchInProcessStore;
+  const effectivePhoenixMemory =
+    serverOptions?.phoenixMemoryStore ?? defaultFetchInProcessPhoenixMemory;
   const handler = createStreamableHttpHandler(
-    { ...serverOptions, referenceStore: effectiveStore },
+    {
+      ...serverOptions,
+      referenceStore: effectiveStore,
+      phoenixMemoryStore: effectivePhoenixMemory,
+    },
     {
       enableJsonResponse: true,
       allowedUrl: 'https://compor.invalid/mcp',

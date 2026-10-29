@@ -10,12 +10,14 @@ import { fileURLToPath } from 'node:url';
 const expectedIds = ['entender-intencao', 'traduzir-direcao', 'explorar-moodboards', 'criar-piloto'];
 const expectedTools = [
   'compose_creative_direction',
+  'discover_visual_references',
   'list_skills',
   'load_skill',
   'prepare_annotation_context',
   'prepare_layered_creative',
   'prepare_moodboard',
   'prepare_word_cloud',
+  'record_visual_feedback',
   'search_curated_references',
   'stage_approved_references',
 ];

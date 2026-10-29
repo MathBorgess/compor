@@ -93,20 +93,36 @@ Conjunto restaurável do trabalho que preserva base, campanha, rotas, variantes,
 _Avoid_: Exportação pública, imagem final
 
 **Preferência**:
-Orientação reutilizável adotada por escolha explícita do autor para um escopo definido. Uma correção limitada à peça não constitui, por si só, uma preferência.
-_Avoid_: Correção pontual, regra inferida
+Orientação estética ou composicional consolidada a partir de escolhas explícitas e sinais positivos de interação da pessoa, reutilizada para guiar recomendações futuras.
+_Avoid_: Correção textual única sem relação estética
 
-**Hipótese de preferência**:
-Interpretação provisória de uma possível preferência, que pode ser registrada proativamente com escopo e evidência e é reversível.
-_Avoid_: Preferência confirmada, fato da marca
+**Perfil de gosto de longo prazo**:
+Síntese consolidada do DNA visual da pessoa, reunindo padrões aprovados, fontes de maior retorno por objetivo e restrições negativas acumuladas entre sessões.
+_Avoid_: Histórico bruto da sessão, briefing pontual
 
-**Não preferência**:
-Orientação revisável sobre características que a pessoa prefere evitar em um contexto. Rejeições recorrentes podem fornecer evidência para uma hipótese de não preferência, sem torná-la uma regra global.
-_Avoid_: Falha da pessoa, proibição global inferida
+**Restrição negativa**:
+Padrão visual ou estrutural rejeitado pela pessoa na sessão ou consolidado no perfil de longo prazo, usado para penalizar e bloquear buscas futuras nesses estilos.
+_Avoid_: Erro técnico da ferramenta, falha de conclusão da tarefa
 
-**Sinal negativo de preferência**:
-Evidência contextual de rejeição de uma característica ou alternativa, que pode contribuir para identificar uma hipótese de não preferência. Sem motivo explícito da pessoa, a causa interpretada da rejeição permanece uma hipótese.
-_Avoid_: Não conclusão da tarefa, aprovação, treinamento de modelo
+**Sinal de feedback visual**:
+Evento observável de reação da pessoa diante de uma referência candidata — aprovação como referência, inspeção prolongada, descarte por clichê ou rejeição por conflito de estilo.
+_Avoid_: Aprovação final da peça, publicação
+
+**Board curado**:
+Coleção temática ou feed de exploração dentro de uma fonte externa autorizada de onde referências visuais candidatas são recuperadas.
+_Avoid_: Quadro de moodboard da sessão, pasta local
+
+**Papel composicional de board**:
+Função específica atribuída a um board curado na busca de uma peça: gancho de capa, grade estrutural, componente de interface, chamada de conversão ou exploração aberta.
+_Avoid_: Categoria fixa de formato, camada de edição
+
+**Afinidade de board**:
+Medida acumulada de utilidade de um board curado para a pessoa a partir da proporção entre interações positivas e exposições totais.
+_Avoid_: Popularidade pública da fonte, nota editorial fixa
+
+**Identificador semântico visual (SID)**:
+Classificação estruturada de uma referência visual em quatro dimensões: formato da peça, mecânica de layout, hierarquia tipográfica e atmosfera estética.
+_Avoid_: ID opaco de arquivo, legenda externa não confiável
 
 **Memória do Compor**:
 Contexto reutilizável de fatos, preferências e orientações, com escopo explícito, que informa o trabalho de criação.
