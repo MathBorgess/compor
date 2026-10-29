@@ -1,7 +1,8 @@
 /** Offline descriptive comparison on recorded candidates; no service calls. */
 import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-const dir=fileURLToPath(new URL('../../../../docs/evals/2026-10-29-phoenix-e2e/',import.meta.url));
+import { resolve, join } from 'node:path';
+if (!process.argv[2]) throw new Error('Informe o diretório dos registros do experimento para reproduzir o cálculo.');
+const dir=resolve(process.argv[2]);
 const cases=[
  ['Finanças','decision-mcp-evidence.json','48e49c75',[1,0,0,2,2,2,0,0,0]],
  ['Botânica','botanica-decision-evidence.json','1ca465a3',[2,1,0,0,1,1,2,0,0]],
@@ -11,7 +12,7 @@ const cases=[
 ];
 const dcg=xs=>xs.reduce((a,x,i)=>a+(2**x-1)/Math.log2(i+2),0);
 for(const [name,file,prefix,grades] of cases){
- const d=JSON.parse(readFileSync(dir+file,'utf8'));
+ const d=JSON.parse(readFileSync(join(dir,file),'utf8'));
  const results=d.decision_results??d.data.decision_score_batch.candidates;
  const ranking=d.ranking??d.data.candidates;
  const ids=grades.map((_,i)=>`phx_${prefix}_${String(i+1).padStart(2,'0')}`);

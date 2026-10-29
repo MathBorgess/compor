@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Two simulated user turns in a real isolated Codex app-server; no API key or search.
 
-Uses the existing ChatGPT login by a temporary symlink (never copies credentials),
-and a local copy of a previously generated, fictional botanical image.
+Uses the existing ChatGPT login by a temporary symlink (never copies credentials).
+The caller supplies an authorized local PNG and an unused evidence output path.
 """
+import argparse
 import hashlib
 import json
 import os
@@ -12,15 +13,18 @@ import queue
 import shutil
 import signal
 import subprocess
-import sys
 import tempfile
 import threading
 import time
 from creative_result_check import is_expected_edit
 
 ROOT = Path(__file__).resolve().parents[4]
-ORIGINAL = Path.home() / '.codex/generated_images/01a18728-e9e9-7390-b3f0-44dfe62f2488/exec-78d482a1-4849-43da-997b-f79d96a7e7fe.png'
-OUT = Path(sys.argv[1]).resolve() if len(sys.argv) > 1 else ROOT / 'docs/evals/2026-10-29-phoenix-e2e/codex-creative-conversation-probe.json'
+parser = argparse.ArgumentParser(description=__doc__)
+parser.add_argument('--base-png', type=Path, required=True, help='PNG local autorizado para o ensaio')
+parser.add_argument('--output', type=Path, required=True, help='arquivo novo para o registro do ensaio')
+arguments = parser.parse_args()
+ORIGINAL = arguments.base_png.resolve()
+OUT = arguments.output.resolve()
 assert ORIGINAL.is_file() and not OUT.exists()
 home = Path(tempfile.mkdtemp(prefix='compor-conversation-codex-')).resolve()
 profile = home / 'profile'
