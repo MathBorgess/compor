@@ -161,18 +161,25 @@ export function compute_board_affinity_score(
 export const computeBoardAffinityScore = compute_board_affinity_score;
 
 /**
- * Fórmula do Weighted Scorer do Phoenix:
- * Score = sum_i (w_i * P(action_i))
+ * Fórmula do Weighted Scorer do Phoenix combinada opcionalmente com a similaridade Two-Tower:
+ * Score = sum_i (w_i * P(action_i)) + alpha_query_weight * cos_sim(u_t, e_cand)
  */
 export function compute_phoenix_multi_action_score(
   action_probs: Readonly<Record<string, number | string | undefined>>,
   hp: PhoenixHyperparams,
+  user_tower_cosine_similarity?: number,
 ): number {
   let score = 0.0;
   for (const [actionName, weight] of Object.entries(hp.action_weights)) {
     const rawProb = action_probs[actionName];
     const prob = typeof rawProb === 'number' && Number.isFinite(rawProb) ? rawProb : 0.0;
     score += weight * prob;
+  }
+  if (
+    typeof user_tower_cosine_similarity === 'number' &&
+    Number.isFinite(user_tower_cosine_similarity)
+  ) {
+    score += hp.alpha_query_weight * user_tower_cosine_similarity;
   }
   return score;
 }

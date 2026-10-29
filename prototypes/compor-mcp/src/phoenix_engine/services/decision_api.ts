@@ -616,6 +616,19 @@ export class PhoenixDecisionApiService {
     source: DecisionEngineSource;
     openai_api_key?: string;
   }): Promise<ActionProbabilities> {
+    const candVec =
+      params.candidate.candidate_vec &&
+      params.candidate.candidate_vec.length === params.user_tower_vec.length
+        ? params.candidate.candidate_vec
+        : computeDeterministicEmbedding(
+            `${params.candidate.board} ${params.candidate.metadata_sid.join(' ')} ${params.candidate.visual_description}`,
+            params.user_tower_vec.length,
+          );
+    const cosSim =
+      params.user_tower_vec.length > 0 && candVec.length === params.user_tower_vec.length
+        ? cosine_similarity(params.user_tower_vec, candVec)
+        : 0.0;
+
     const cachedUserPrefix = formatRankerCachedUserPrefix({
       user_taste_json: JSON.stringify(params.user_taste, null, 2),
       session_events_log: params.session_events_log,
@@ -626,6 +639,7 @@ export class PhoenixDecisionApiService {
       board: params.candidate.board,
       metadata_sid: params.candidate.metadata_sid,
       visual_description: params.candidate.visual_description,
+      user_tower_cosine_similarity: cosSim,
     });
     const promptCacheKey = `phoenix_ranker_${params.user_id}`;
 

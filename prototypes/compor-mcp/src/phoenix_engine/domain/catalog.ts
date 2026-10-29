@@ -207,64 +207,170 @@ export function inferCandidateSid(params: {
   description: string;
   index?: number;
 }): [SidLevel1Format, SidLevel2Mechanic, SidLevel3Hierarchy, SidLevel4Aesthetic] {
-  const ctx = `${params.target_format} ${params.board} ${params.description}`.toLowerCase();
+  const formatCtx = `${params.target_format} ${params.board} ${params.description}`.toLowerCase();
+  const candidateMetaCtx = `${params.board} ${params.description}`.toLowerCase();
   const idx = params.index ?? 0;
 
   let l1: SidLevel1Format = 'carousel_editorial_4:5';
-  if (ctx.includes('linkedin') && (ctx.includes('pdf') || ctx.includes('slide') || ctx.includes('present'))) {
+  if (
+    (SID_TAXONOMY.level_1_format as readonly string[]).includes(
+      params.target_format.trim().toLowerCase(),
+    )
+  ) {
+    l1 = params.target_format.trim().toLowerCase() as SidLevel1Format;
+  } else if (
+    formatCtx.includes('linkedin') &&
+    (formatCtx.includes('pdf') || formatCtx.includes('slide') || formatCtx.includes('present'))
+  ) {
     l1 = 'linkedin_framework_pdf';
-  } else if (ctx.includes('linkedin') || ctx.includes('infographic') || ctx.includes('infografico') || ctx.includes('venngage') || ctx.includes('hubspot') || ctx.includes('piktochart')) {
+  } else if (
+    formatCtx.includes('linkedin') ||
+    formatCtx.includes('infographic') ||
+    formatCtx.includes('infografico') ||
+    formatCtx.includes('venngage') ||
+    formatCtx.includes('hubspot') ||
+    formatCtx.includes('piktochart')
+  ) {
     l1 = 'linkedin_infographic';
-  } else if (ctx.includes('story') || ctx.includes('stories') || ctx.includes('9:16') || ctx.includes('reels')) {
+  } else if (
+    formatCtx.includes('story') ||
+    formatCtx.includes('stories') ||
+    formatCtx.includes('9:16') ||
+    formatCtx.includes('reels')
+  ) {
     l1 = 'story_interactive_9:16';
-  } else if (ctx.includes('ad') || ctx.includes('anuncio') || ctx.includes('oferta') || ctx.includes('packaging') || ctx.includes('thedieline')) {
-    l1 = ctx.includes('1:1') ? 'ad_conversion_1:1' : 'ad_performance_4:5';
+  } else if (
+    formatCtx.includes('ad') ||
+    formatCtx.includes('anuncio') ||
+    formatCtx.includes('oferta') ||
+    formatCtx.includes('packaging') ||
+    formatCtx.includes('thedieline')
+  ) {
+    l1 = formatCtx.includes('1:1') ? 'ad_conversion_1:1' : 'ad_performance_4:5';
   }
 
-  let l2: SidLevel2Mechanic = SID_TAXONOMY.level_2_mechanic[idx % SID_TAXONOMY.level_2_mechanic.length]!;
-  if (ctx.includes('bento') || ctx.includes('dribbble')) {
-    l2 = 'bento_grid';
-  } else if (ctx.includes('swiss') || ctx.includes('magazine') || ctx.includes('editorial') || ctx.includes('colunas')) {
-    l2 = 'swiss_grid';
-  } else if (ctx.includes('seamless') || ctx.includes('split')) {
-    l2 = 'seamless_split';
-  } else if (ctx.includes('glass') || ctx.includes('uiux') || ctx.includes('interaction')) {
+  let l2: SidLevel2Mechanic =
+    SID_TAXONOMY.level_2_mechanic[idx % SID_TAXONOMY.level_2_mechanic.length]!;
+  if (
+    candidateMetaCtx.includes('glass') ||
+    candidateMetaCtx.includes('translucent') ||
+    candidateMetaCtx.includes('uiux') ||
+    candidateMetaCtx.includes('interaction')
+  ) {
     l2 = 'glassmorphism_ui';
-  } else if (ctx.includes('flow') || ctx.includes('infographic') || ctx.includes('charts')) {
+  } else if (candidateMetaCtx.includes('bento') || candidateMetaCtx.includes('dribbble')) {
+    l2 = 'bento_grid';
+  } else if (candidateMetaCtx.includes('seamless') || candidateMetaCtx.includes('split')) {
+    l2 = 'seamless_split';
+  } else if (
+    candidateMetaCtx.includes('flow') ||
+    candidateMetaCtx.includes('infographic') ||
+    candidateMetaCtx.includes('charts')
+  ) {
     l2 = 'flowchart_comparison';
-  } else if (ctx.includes('packaging') || ctx.includes('produto') || ctx.includes('d2c')) {
+  } else if (
+    candidateMetaCtx.includes('packaging') ||
+    candidateMetaCtx.includes('produto') ||
+    candidateMetaCtx.includes('d2c')
+  ) {
     l2 = 'hero_product_d2c';
-  } else if (ctx.includes('cheatsheet') || ctx.includes('passo')) {
+  } else if (
+    candidateMetaCtx.includes('social proof') ||
+    candidateMetaCtx.includes('depoimento') ||
+    candidateMetaCtx.includes('testimonial')
+  ) {
+    l2 = 'social_proof_card';
+  } else if (candidateMetaCtx.includes('cheatsheet') || candidateMetaCtx.includes('passo')) {
     l2 = 'step_by_step_cheatsheet';
+  } else if (
+    candidateMetaCtx.includes('swiss') ||
+    candidateMetaCtx.includes('magazine') ||
+    candidateMetaCtx.includes('editorial') ||
+    candidateMetaCtx.includes('colunas')
+  ) {
+    l2 = 'swiss_grid';
   }
 
-  let l3: SidLevel3Hierarchy = SID_TAXONOMY.level_3_hierarchy[idx % SID_TAXONOMY.level_3_hierarchy.length]!;
-  if (ctx.includes('retro') || ctx.includes('poster') || ctx.includes('kittl')) {
+  let l3: SidLevel3Hierarchy =
+    SID_TAXONOMY.level_3_hierarchy[idx % SID_TAXONOMY.level_3_hierarchy.length]!;
+  if (
+    candidateMetaCtx.includes('retro') ||
+    candidateMetaCtx.includes('poster') ||
+    candidateMetaCtx.includes('kittl')
+  ) {
     l3 = 'kinetic_retro_type';
-  } else if (ctx.includes('typography') || ctx.includes('hook') || ctx.includes('bold')) {
+  } else if (
+    candidateMetaCtx.includes('typography') ||
+    candidateMetaCtx.includes('hook') ||
+    candidateMetaCtx.includes('bold')
+  ) {
     l3 = 'bold_display_hook';
-  } else if (ctx.includes('data') || ctx.includes('chart') || ctx.includes('infographic')) {
+  } else if (
+    candidateMetaCtx.includes('data') ||
+    candidateMetaCtx.includes('chart') ||
+    candidateMetaCtx.includes('infographic')
+  ) {
     l3 = 'high_density_data';
-  } else if (ctx.includes('minimal') || ctx.includes('clean')) {
+  } else if (
+    candidateMetaCtx.includes('minimal') ||
+    candidateMetaCtx.includes('clean') ||
+    candidateMetaCtx.includes('translucent')
+  ) {
     l3 = 'minimal_whitespace';
-  } else if (ctx.includes('cta') || ctx.includes('ads') || ctx.includes('promo')) {
+  } else if (
+    candidateMetaCtx.includes('cta') ||
+    candidateMetaCtx.includes('ads') ||
+    candidateMetaCtx.includes('promo')
+  ) {
     l3 = 'high_contrast_cta';
-  } else if (ctx.includes('magazine') || ctx.includes('editorial')) {
+  } else if (
+    candidateMetaCtx.includes('magazine') ||
+    candidateMetaCtx.includes('editorial') ||
+    candidateMetaCtx.includes('colunas')
+  ) {
     l3 = 'editorial_multicolumn';
   }
 
-  let l4: SidLevel4Aesthetic = SID_TAXONOMY.level_4_aesthetic[idx % SID_TAXONOMY.level_4_aesthetic.length]!;
-  if (ctx.includes('dark') || ctx.includes('saas') || ctx.includes('tech')) {
+  let l4: SidLevel4Aesthetic =
+    SID_TAXONOMY.level_4_aesthetic[idx % SID_TAXONOMY.level_4_aesthetic.length]!;
+  if (
+    candidateMetaCtx.includes('dark') ||
+    candidateMetaCtx.includes('saas') ||
+    candidateMetaCtx.includes('tech') ||
+    candidateMetaCtx.includes('neon') ||
+    candidateMetaCtx.includes('glass') ||
+    candidateMetaCtx.includes('translucent') ||
+    candidateMetaCtx.includes('uiux') ||
+    candidateMetaCtx.includes('interaction')
+  ) {
     l4 = 'dark_tech_saas';
-  } else if (ctx.includes('paper') || ctx.includes('textura') || ctx.includes('editorial')) {
+  } else if (
+    candidateMetaCtx.includes('paper') ||
+    candidateMetaCtx.includes('textura') ||
+    candidateMetaCtx.includes('editorial') ||
+    candidateMetaCtx.includes('magazine')
+  ) {
     l4 = 'tactile_paper_texture';
-  } else if (ctx.includes('promo') || ctx.includes('oferta') || ctx.includes('varejo')) {
+  } else if (
+    candidateMetaCtx.includes('promo') ||
+    candidateMetaCtx.includes('oferta') ||
+    candidateMetaCtx.includes('varejo')
+  ) {
     l4 = 'vibrant_retail_promo';
-  } else if (ctx.includes('b2b') || ctx.includes('linkedin') || ctx.includes('hubspot') || ctx.includes('executivo')) {
+  } else if (
+    candidateMetaCtx.includes('b2b') ||
+    candidateMetaCtx.includes('linkedin') ||
+    candidateMetaCtx.includes('hubspot') ||
+    candidateMetaCtx.includes('executivo')
+  ) {
     l4 = 'executive_clean_b2b';
-  } else if (ctx.includes('luxury') || ctx.includes('cosmetic') || ctx.includes('packaging')) {
+  } else if (
+    candidateMetaCtx.includes('luxury') ||
+    candidateMetaCtx.includes('cosmetic') ||
+    candidateMetaCtx.includes('packaging')
+  ) {
     l4 = 'luxury_cosmetic_d2c';
-  } else if (ctx.includes('brutalist') || ctx.includes('bold')) {
+  } else if (candidateMetaCtx.includes('brutalist') || candidateMetaCtx.includes('bold')) {
     l4 = 'neo_brutalist_bold';
   }
 

@@ -285,30 +285,12 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
   >
 > {
   const catalog = params.deps.catalog ?? (await loadSourcesCatalog());
-  const activeSources = catalog.sources.filter((s) => s.active);
-  const basePinterestSource =
-    activeSources.find((s) => s.source_id === 'pinterest_curated_design') ??
-    activeSources[0];
-
-  if (!basePinterestSource) {
+  if (catalog.sources.length === 0) {
     return [];
   }
 
   const fetchFn = params.deps.fetchFn ?? ((url, init) => globalThis.fetch(url, init));
-  const customProvider =
-    params.deps.providers?.get(basePinterestSource.source_id) ??
-    params.deps.providers?.get('pinterest_curated') ??
-    (params.deps.providers && params.deps.providers.size > 0
-      ? params.deps.providers.values().next().value
-      : undefined);
-  const provider: ReferenceSearchProvider =
-    customProvider ??
-    (basePinterestSource.access_method === 'api_official'
-      ? new MetaAdsProvider({ fetchFn })
-      : new CuratedPinterestProvider({
-          sourceId: basePinterestSource.source_id,
-          fetchFn,
-        }));
+  const providerCache = new Map<string, ReferenceSearchProvider>();
 
   const collected: Array<
     CandidateToRank & {
@@ -324,9 +306,46 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
   let globalIdx = 0;
 
   for (const alloc of params.allocations) {
-    if (!basePinterestSource.allowed_boards_or_queries.includes(alloc.board)) continue;
+    const matchingSource = catalog.sources.find((s) =>
+      s.allowed_boards_or_queries.includes(alloc.board),
+    );
+    if (!matchingSource) {
+      params.diagnostics.push(`Board ${alloc.board} não encontrado no catálogo de fontes`);
+      continue;
+    }
+
+    const sourceGovernance = await validateSourceGovernance({
+      consent_external_search: true,
+      source_ids: [matchingSource.source_id],
+      catalog,
+    });
+    if (!sourceGovernance.allowed) {
+      params.diagnostics.push(
+        `Board ${alloc.board} bloqueado (${sourceGovernance.code}): ${sourceGovernance.message}`,
+      );
+      continue;
+    }
+
+    let provider = providerCache.get(matchingSource.source_id);
+    if (!provider) {
+      const customProvider =
+        params.deps.providers?.get(matchingSource.source_id) ??
+        (matchingSource.domain === 'pinterest.com'
+          ? params.deps.providers?.get('pinterest_curated')
+          : undefined);
+      provider =
+        customProvider ??
+        (matchingSource.access_method === 'api_official'
+          ? new MetaAdsProvider({ fetchFn })
+          : new CuratedPinterestProvider({
+              sourceId: matchingSource.source_id,
+              fetchFn,
+            }));
+      providerCache.set(matchingSource.source_id, provider);
+    }
+
     const boardScopedSource = {
-      ...basePinterestSource,
+      ...matchingSource,
       allowed_boards_or_queries: [alloc.board],
     };
 
@@ -340,7 +359,7 @@ async function retrieveRealProviderCandidatesForAllocations(params: {
       });
 
       for (const rawItem of results) {
-        if (rawItem.source_id !== basePinterestSource.source_id) {
+        if (rawItem.source_id !== matchingSource.source_id) {
           params.diagnostics.push(`Fonte divergente ignorada no board ${alloc.board}`);
           continue;
         }
@@ -534,7 +553,6 @@ export async function executeDiscoverVisualReferences(
   if (!syntheticMode) {
     const governance = await validateSourceGovernance({
       consent_external_search: input.consent_external_search === true,
-      source_ids: ['pinterest_curated_design'],
       catalog: deps.catalog,
     });
     if (!governance.allowed) {
@@ -729,8 +747,21 @@ export async function executeDiscoverVisualReferences(
     deps.hp,
   );
 
+  // Two-Tower Retrieval (Estágio 1b): calcula a similaridade de cosseno contra a User Tower
+  // e ordena/seleciona o pool de candidatos antes do ranking isolado do Estágio 2.
+  const twoTowerMaxCandidates = Math.max(deps.hp.top_n_results * 2, 12);
+  const candidatesWithTwoTowerSim = rawCandidates
+    .map((candidate) => {
+      const candVec = candidate.candidate_vec!;
+      const cosSim =
+        Math.round(cosine_similarity(userTowerVec, candVec) * 10000) / 10000;
+      return { candidate, cosSim };
+    })
+    .sort((a, b) => b.cosSim - a.cosSim)
+    .slice(0, twoTowerMaxCandidates);
+
   // Registra os candidatos reais para seleção posterior; as prévias ficam em memória.
-  const sanitizedForStore = rawCandidates.map((c) => {
+  const sanitizedForStore = candidatesWithTwoTowerSim.map(({ candidate: c }) => {
     const { untrusted_external_caption } = sanitize_external_metadata({
       title: c.raw_title,
       caption: c.raw_caption,
@@ -758,7 +789,7 @@ export async function executeDiscoverVisualReferences(
 
   // Estágio 2: Candidate-Isolated Parallel Ranker; cache ainda não medido.
   const isolatedRanked = await Promise.all(
-    rawCandidates.map(async (candidate) => {
+    candidatesWithTwoTowerSim.map(async ({ candidate, cosSim }) => {
       const stagedRecord = deps.referenceStore.getStagedReference(candidate.candidate_id);
       const effectiveStagingPath = stagedRecord
         ? stagedRecord.local_path
@@ -779,12 +810,9 @@ export async function executeDiscoverVisualReferences(
       });
 
       const rawScore =
-        Math.round(compute_phoenix_multi_action_score(actionProbs, deps.hp) * 10000) /
-        10000;
-
-      const candVec = candidate.candidate_vec!;
-      const cosSim =
-        Math.round(cosine_similarity(userTowerVec, candVec) * 10000) / 10000;
+        Math.round(
+          compute_phoenix_multi_action_score(actionProbs, deps.hp, cosSim) * 10000,
+        ) / 10000;
 
       return {
         candidate_id: candidate.candidate_id,

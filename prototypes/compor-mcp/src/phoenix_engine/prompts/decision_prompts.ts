@@ -54,6 +54,7 @@ export const RANKER_ISOLATED_CANDIDATE_SUFFIX = `### CANDIDATO ISOLADO PARA AVAL
 ID: {candidate_id}
 Board de Origem: {board}
 Semantic IDs (SID): {metadata_sid}
+Similaridade Vetorial Two-Tower (User Tower): {user_tower_cosine_similarity}
 Descrição Estrutural e Estética: {visual_description}`;
 
 export const MEMORY_CONSOLIDATOR_SYSTEM_PROMPT = `Você é o consolidador de memória estética de longo prazo.
@@ -99,9 +100,16 @@ export function formatRankerIsolatedCandidateSuffix(params: {
   board: string;
   metadata_sid: readonly string[];
   visual_description: string;
+  user_tower_cosine_similarity?: number;
 }): string {
+  const simText =
+    typeof params.user_tower_cosine_similarity === 'number' &&
+    Number.isFinite(params.user_tower_cosine_similarity)
+      ? params.user_tower_cosine_similarity.toFixed(4)
+      : '0.0000';
   return RANKER_ISOLATED_CANDIDATE_SUFFIX.replace('{candidate_id}', params.candidate_id)
     .replace('{board}', params.board)
     .replace('{metadata_sid}', JSON.stringify(params.metadata_sid))
+    .replace('{user_tower_cosine_similarity}', simText)
     .replace('{visual_description}', params.visual_description);
 }

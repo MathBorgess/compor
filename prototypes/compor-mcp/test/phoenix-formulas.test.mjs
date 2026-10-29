@@ -15,6 +15,7 @@ import {
   EXPLORATION_FEED_BOARDS,
   filter_excluded_sid_candidates,
   format_mcp_response,
+  inferCandidateSid,
   l2_normalize,
   matches_excluded_sid,
   PhoenixDecisionApiService,
@@ -914,4 +915,242 @@ test('Escolha explícita de Luna não é substituída por chave do servidor', ()
   assert.equal(service.resolveExecutionStrategy({ client_mode: 'codex', fallback_mode: 'luna_subagent' }).source, 'codex_luna_subagent');
   assert.equal(service.resolveExecutionStrategy({ client_mode: 'web', fallback_mode: 'luna_subagent' }).source, 'codex_luna_subagent');
   assert.equal(service.resolveExecutionStrategy({ client_mode: 'codex', fallback_mode: 'require_key' }).source, 'openai_api');
+});
+
+test('6. Format-independent SID mechanics, per-board catalog source resolution, and User Tower similarity in non-mock selection', async () => {
+  // 1. Format-independent SID mechanics & aesthetics
+  const glassSid = inferCandidateSid({
+    target_format: 'carousel_editorial_4:5',
+    board: 'behance/interaction-design',
+    description: 'Glassmorphism UI with translucent cards',
+  });
+  assert.equal(glassSid[0], 'carousel_editorial_4:5');
+  assert.equal(glassSid[1], 'glassmorphism_ui');
+  assert.notEqual(glassSid[1], 'swiss_grid');
+  assert.equal(glassSid[3], 'dark_tech_saas');
+  assert.notEqual(glassSid[3], 'tactile_paper_texture');
+
+  const seamlessSid = inferCandidateSid({
+    target_format: 'carousel_editorial_4:5',
+    board: 'latermedia/instagram-post-design',
+    description: 'Seamless split layout with bold typography',
+  });
+  assert.equal(seamlessSid[1], 'seamless_split');
+
+  const flowSid = inferCandidateSid({
+    target_format: 'carousel_editorial_4:5',
+    board: 'canva/canva-cheatsheets',
+    description: 'Flowchart comparison diagram with clean minimal whitespace',
+  });
+  assert.equal(flowSid[1], 'flowchart_comparison');
+
+  // 2. Per-board catalog source resolution (pinterest_curated_design + pinterest_curated_photography)
+  // and 3. User Tower similarity applied in non-mock candidate selection
+  const hp = createPhoenixHyperparams({ alpha_query_weight: 5.0 });
+  const memoryStore = new PhoenixMemoryStore({ hp });
+
+  const designBoardsQueried = [];
+  const photoBoardsQueried = [];
+
+  const designProvider = {
+    sourceId: 'pinterest_curated_design',
+    accessMethod: 'curated_board_http',
+    async searchMetadataOnly({ source }) {
+      const board = source.allowed_boards_or_queries[0];
+      designBoardsQueried.push(board);
+      return [
+        {
+          source_id: 'pinterest_curated_design',
+          raw_title: 'Design Reference',
+          raw_caption: 'Swiss grid editorial layout',
+          origin_url: `https://www.pinterest.com/pin/design_${encodeURIComponent(board)}/`,
+          preview_url: `https://i.pinimg.com/236x/design_${encodeURIComponent(board)}.jpg`,
+          media_url: `https://i.pinimg.com/736x/design_${encodeURIComponent(board)}.jpg`,
+          aspect_rationale: { composition: 'swiss grid' },
+          thumbnail_base64: null,
+          thumbnail_mime_type: null,
+        },
+      ];
+    },
+  };
+
+  const photoProvider = {
+    sourceId: 'pinterest_curated_photography',
+    accessMethod: 'curated_board_http',
+    async searchMetadataOnly({ source }) {
+      const board = source.allowed_boards_or_queries[0];
+      photoBoardsQueried.push(board);
+      return [
+        {
+          source_id: 'pinterest_curated_photography',
+          raw_title: 'Photography Reference',
+          raw_caption: 'Editorial portrait photography with dramatic lighting',
+          origin_url: `https://www.pinterest.com/pin/photo_${encodeURIComponent(board)}/`,
+          preview_url: `https://i.pinimg.com/236x/photo_${encodeURIComponent(board)}.jpg`,
+          media_url: `https://i.pinimg.com/736x/photo_${encodeURIComponent(board)}.jpg`,
+          aspect_rationale: { photography: 'dramatic portrait lighting' },
+          thumbnail_base64: null,
+          thumbnail_mime_type: null,
+        },
+      ];
+    },
+  };
+
+  const rankerPrompts = [];
+  const makeTargetedVec = (text) => {
+    const raw = new Array(hp.embedding_dimension).fill(0);
+    const lower = String(text).toLowerCase();
+    // Query and photography candidate share axis 0; design candidate sits on orthogonal/opposite axis 1
+    if (lower.includes('portrait') || lower.includes('photography') || lower.includes('retrato')) {
+      raw[0] = 1.0;
+      raw[1] = 0.0;
+    } else {
+      raw[0] = -0.5;
+      raw[1] = 0.866;
+    }
+    return l2_normalize(raw);
+  };
+
+  const mockOpenAiClient = {
+    embeddings: {
+      async create({ input }) {
+        const list = Array.isArray(input) ? input : [input];
+        return {
+          data: list.map((item) => ({
+            embedding: makeTargetedVec(item),
+          })),
+        };
+      },
+    },
+    responses: {
+      async create({ input, text }) {
+        const schemaName = text?.format?.name;
+        if (schemaName === 'phoenix_board_router_decision') {
+          return {
+            output_text: JSON.stringify({
+              board_allocations: [
+                {
+                  board: 'behance/typography',
+                  role: 'hook_cover',
+                  weight: 0.4,
+                  synthetic_query: 'Tipografia para capa',
+                  rationale: 'Gancho tipográfico.',
+                },
+                {
+                  board: 'behance/photography',
+                  role: 'conversion_cta',
+                  weight: 0.4,
+                  synthetic_query: 'Portrait photography direction',
+                  rationale: 'Fotografia autoral de retrato.',
+                },
+                {
+                  board: 'behance/feed',
+                  role: 'wildcard_exploration',
+                  weight: 0.2,
+                  synthetic_query: 'Editorial photography exploration',
+                  rationale: 'Exploração out-of-network.',
+                },
+              ],
+              required_sid_tags: ['carousel_editorial_4:5'],
+              excluded_sid_tags: [],
+            }),
+          };
+        }
+        if (schemaName === 'phoenix_isolated_candidate_action_probs') {
+          rankerPrompts.push(JSON.stringify(input));
+          // Return identical action probabilities for every candidate so only User Tower similarity differentiates them
+          return {
+            output_text: JSON.stringify({
+              p_use_as_layout_grid: 0.7,
+              p_use_as_typography_hook: 0.7,
+              p_use_color_and_vibe: 0.7,
+              p_high_conversion_clarity: 0.7,
+              p_dwell_engagement: 0.7,
+              p_reject_too_generic: 0.1,
+              p_reject_style_mismatch: 0.05,
+              composition_guideline: 'Direção consistente.',
+            }),
+          };
+        }
+        throw new Error(`Unexpected schema: ${schemaName}`);
+      },
+    },
+  };
+
+  const decisionService = new PhoenixDecisionApiService({
+    hp,
+    forceDeterministicMock: false,
+    apiKey: 'sk-test-per-board-and-usertower',
+    openaiClient: mockOpenAiClient,
+  });
+
+  const server = createComporServer({
+    phoenixActorId: 'user_multiboard',
+    phoenixHyperparams: hp,
+    phoenixMemoryStore: memoryStore,
+    phoenixDecisionService: decisionService,
+    providers: new Map([
+      ['pinterest_curated_design', designProvider],
+      ['pinterest_curated_photography', photoProvider],
+    ]),
+  });
+
+  const client = new Client({ name: 'phoenix-multiboard-test', version: '1.0.0' });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await server.connect(st);
+  await client.connect(ct);
+
+  try {
+    const res = await client.callTool({
+      name: 'discover_visual_references',
+      arguments: {
+        briefing: 'Ensaio de retrato portrait photography editorial',
+        target_format: 'carousel_editorial_4:5',
+        client_mode: 'web',
+        consent_external_search: true,
+        consent_model: true,
+      },
+    });
+    assert.equal(res.isError, undefined);
+    const parsed = webDiscoveryResponseSchema.parse(res.structuredContent);
+
+    // Fix 2 assertions: both pinterest_curated_design and pinterest_curated_photography boards were resolved and queried
+    assert.deepEqual(designBoardsQueried, ['behance/typography']);
+    assert.deepEqual(photoBoardsQueried, ['behance/photography', 'behance/feed']);
+    assert.ok(
+      parsed.candidates.some((c) => c.source_id === 'pinterest_curated_photography' && c.board === 'behance/photography'),
+      'Expected behance/photography from pinterest_curated_photography to be retrieved',
+    );
+    assert.ok(
+      parsed.candidates.some((c) => c.source_id === 'pinterest_curated_photography' && c.board === 'behance/feed'),
+      'Expected behance/feed from pinterest_curated_photography to be retrieved',
+    );
+
+    // Fix 3 assertions: ranker prompt includes User Tower cosine similarity and raw_score reflects Two-Tower similarity
+    assert.ok(rankerPrompts.length >= 3);
+    assert.ok(
+      rankerPrompts.every((p) => p.includes('Similaridade Vetorial Two-Tower (User Tower):')),
+      'Ranker prompt must include the User Tower cosine similarity',
+    );
+
+    const photoCand = parsed.candidates.find((c) => c.board === 'behance/photography');
+    const designCand = parsed.candidates.find((c) => c.board === 'behance/typography');
+    assert.ok(photoCand && designCand);
+    assert.ok(
+      photoCand.user_tower_cosine_similarity > designCand.user_tower_cosine_similarity,
+      'Photography candidate must have higher User Tower cosine similarity for portrait photography query',
+    );
+    assert.ok(
+      photoCand.raw_score > designCand.raw_score,
+      `Expected User Tower similarity to increase raw_score even when LLM action_probs are identical (${photoCand.raw_score} > ${designCand.raw_score})`,
+    );
+    assert.equal(
+      parsed.candidates[0].board,
+      'behance/photography',
+      'Candidate with highest User Tower similarity must rank first when LLM action_probs are tied',
+    );
+  } finally {
+    await client.close();
+    await server.close();
+  }
 });
