@@ -7,7 +7,7 @@ REGRAS DE ROTEAMENTO COMPOSICIONAL:
    - \`structural_grid\`: Boards fortes em diagramação, fluxo e hierarquia (ex: \`creativemarket/magazine-templates\`, \`hubspot/marketing-infographics\`, \`venngage/infographic-design\`, \`vismeapp/business-infographics\`).
    - \`ui_component\`: Boards com estética de interface, cards, bento grids ou mobile (ex: \`dribbble/design-inspiration\`, \`dribbble/uiux-inspiration\`, \`behance/interaction-design\`, \`latermedia/instagram-stories\`).
    - \`conversion_cta\`: Boards comerciais focados em produto/oferta (ex: \`thedieline/promotional-packaging\`, \`kittldesign/ads-designs\`, \`creativemarket/social-media-templates\`).
-   - \`wildcard_exploration\`: Opcionalmente, aloque até {exploration_quota} do peso total em 1 board \`/feed\` (ex: \`dribbble/feed\`, \`weandthecolor/feed\`, \`thedieline/feed\`) para descoberta out-of-network.
+   - \`wildcard_exploration\`: Opcionalmente, aloque até {exploration_quota} do peso combinado total em até {max_exploration_boards} board \`/feed\` (ex: \`dribbble/feed\`, \`weandthecolor/feed\`, \`thedieline/feed\`) para descoberta out-of-network.
 2. Gere uma \`synthetic_query\` densa e técnica para cada board alocado, descrevendo exatamente a composição, iluminação, grid e tipografia esperados.
 3. Preencha \`required_sid_tags\` e \`excluded_sid_tags\` respeitando as restrições negativas históricas do usuário.`;
 
@@ -66,16 +66,18 @@ Atualize o JSON de preferências mantendo-o abaixo de 300 tokens:
 
 export function formatBoardRouterPrompts(params: {
   exploration_quota: number;
+  max_exploration_boards?: number;
   user_taste_json: string;
   board_affinity_table: string;
   session_events_summary: string;
   target_format: string;
   user_briefing: string;
 }): { systemPrompt: string; userPrompt: string } {
+  const maxExpBoards = params.max_exploration_boards ?? 1;
   const systemPrompt = BOARD_ROUTER_SYSTEM_PROMPT.replace(
     '{exploration_quota}',
     params.exploration_quota.toFixed(2),
-  );
+  ).replace('{max_exploration_boards}', String(maxExpBoards));
   const userPrompt = BOARD_ROUTER_USER_TEMPLATE.replace('{user_taste_json}', params.user_taste_json)
     .replace('{board_affinity_table}', params.board_affinity_table)
     .replace('{session_events_summary}', params.session_events_summary)

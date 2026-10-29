@@ -14,11 +14,14 @@ import {
   cosine_similarity,
   createPhoenixHyperparams,
   distillBriefingIntent,
+  enforceExplorationQuotaOnDecision,
   EXPLORATION_FEED_BOARDS,
   filter_excluded_sid_candidates,
   format_mcp_response,
   inferCandidateSid,
+  isExplorationBoardAllocation,
   l2_normalize,
+  loadPhoenixHyperparamsFromEnv,
   matches_excluded_sid,
   MAX_SYNTHETIC_QUERY_LENGTH,
   PhoenixDecisionApiService,
@@ -1286,4 +1289,251 @@ test('7. Multi-step RAG query distillation & projection bounds synthetic_query <
     await client.close();
     await server.close();
   }
+});
+
+test('8. Enforce exploration quota across all allocations for both openai_api and codex_luna_subagent (with tunable hyperparams)', async () => {
+  // 8a. Hyperparams defaults & env overrides
+  const defaultHp = createPhoenixHyperparams();
+  assert.equal(defaultHp.exploration_feed_quota, 0.2);
+  assert.equal(defaultHp.max_exploration_boards, 1);
+
+  const envHp = loadPhoenixHyperparamsFromEnv({
+    PHOENIX_EXPLORATION_FEED_QUOTA: '0.15',
+    PHOENIX_MAX_EXPLORATION_BOARDS: '2',
+  });
+  assert.equal(envHp.exploration_feed_quota, 0.15);
+  assert.equal(envHp.max_exploration_boards, 2);
+
+  // Shared mock router payload returning TWO /feed allocations of weight 0.5 each (combined 1.0 > 0.2)
+  const overBudgetRouterDecisionJson = JSON.stringify({
+    board_allocations: [
+      {
+        board: 'behance/typography',
+        role: 'hook_cover',
+        weight: 0.4,
+        synthetic_query: 'Swiss grid cover typography',
+        rationale: 'Hook tipográfico.',
+      },
+      {
+        board: 'creativemarket/magazine-templates',
+        role: 'structural_grid',
+        weight: 0.3,
+        synthetic_query: 'Editorial modular columns',
+        rationale: 'Grid estrutural.',
+      },
+      {
+        board: 'dribbble/feed',
+        role: 'wildcard_exploration',
+        weight: 0.5,
+        synthetic_query: 'Out-of-network UI exploration 1',
+        rationale: 'Feed de exploração 1.',
+      },
+      {
+        board: 'weandthecolor/feed',
+        role: 'wildcard_exploration',
+        weight: 0.5,
+        synthetic_query: 'Out-of-network art direction exploration 2',
+        rationale: 'Feed de exploração 2.',
+      },
+    ],
+    required_sid_tags: ['carousel_editorial_4:5', 'swiss_grid'],
+    excluded_sid_tags: [],
+  });
+
+  const actionProbsJson = JSON.stringify({
+    p_use_as_layout_grid: 0.85,
+    p_use_as_typography_hook: 0.8,
+    p_use_color_and_vibe: 0.75,
+    p_high_conversion_clarity: 0.7,
+    p_dwell_engagement: 0.6,
+    p_reject_too_generic: 0.08,
+    p_reject_style_mismatch: 0.04,
+    composition_guideline: 'Grid suíço editorial com hierarquia clara.',
+  });
+
+  // 8b. Verify end-to-end discovery with default hyperparams (max_exploration_boards=1, exploration_feed_quota=0.2)
+  // across BOTH openai_api AND codex_luna_subagent
+  for (const mode of ['openai_api', 'codex_luna_subagent']) {
+    const hp = createPhoenixHyperparams({
+      exploration_feed_quota: 0.2,
+      max_exploration_boards: 1,
+    });
+    const memoryStore = new PhoenixMemoryStore({ hp });
+    const queriedBoards = [];
+
+    const mockProvider = {
+      sourceId: 'pinterest_curated_design',
+      accessMethod: 'curated_board_http',
+      async searchMetadataOnly({ source }) {
+        const board = source.allowed_boards_or_queries[0];
+        queriedBoards.push(board);
+        return [
+          {
+            source_id: 'pinterest_curated_design',
+            raw_title: `Pin from ${board}`,
+            raw_caption: `Editorial swiss grid layout from ${board}`,
+            origin_url: `https://www.pinterest.com/pin/quota_${encodeURIComponent(board)}/`,
+            preview_url: `https://i.pinimg.com/236x/quota_${encodeURIComponent(board)}.jpg`,
+            media_url: `https://i.pinimg.com/736x/quota_${encodeURIComponent(board)}.jpg`,
+            aspect_rationale: { composition: 'swiss grid' },
+            thumbnail_base64: null,
+            thumbnail_mime_type: null,
+          },
+        ];
+      },
+    };
+
+    const mockOpenAiClient = {
+      embeddings: {
+        async create({ input }) {
+          const list = Array.isArray(input) ? input : [input];
+          return {
+            data: list.map(() => ({
+              embedding: l2_normalize([1, ...new Array(hp.embedding_dimension - 1).fill(0)]),
+            })),
+          };
+        },
+      },
+      responses: {
+        async create({ text }) {
+          const schemaName = text?.format?.name;
+          if (schemaName === 'phoenix_board_router_decision') {
+            return { output_text: overBudgetRouterDecisionJson };
+          }
+          return { output_text: actionProbsJson };
+        },
+      },
+    };
+
+    const decisionService = new PhoenixDecisionApiService({
+      hp,
+      forceDeterministicMock: false,
+      apiKey: mode === 'openai_api' ? 'sk-test-quota-openai' : undefined,
+      openaiClient: mode === 'openai_api' ? mockOpenAiClient : undefined,
+      subagentRunner:
+        mode === 'codex_luna_subagent'
+          ? (_prompt, schemaName) =>
+              schemaName === 'phoenix_board_router_decision'
+                ? overBudgetRouterDecisionJson
+                : actionProbsJson
+          : undefined,
+    });
+
+    const server = createComporServer({
+      phoenixActorId: `actor_${mode}`,
+      phoenixHyperparams: hp,
+      phoenixMemoryStore: memoryStore,
+      phoenixDecisionService: decisionService,
+      providers: new Map([['pinterest_curated_design', mockProvider]]),
+    });
+    const client = new Client({ name: `quota-test-${mode}`, version: '1.0.0' });
+    const [ct, st] = InMemoryTransport.createLinkedPair();
+    await server.connect(st);
+    await client.connect(ct);
+
+    try {
+      const res = await client.callTool({
+        name: 'discover_visual_references',
+        arguments: {
+          briefing: 'Carrossel editorial B2B com grid suíço',
+          target_format: 'carousel_editorial_4:5',
+          client_mode: 'web',
+          decision_fallback_mode: mode === 'codex_luna_subagent' ? 'luna_subagent' : undefined,
+          consent_external_search: true,
+          consent_model: true,
+        },
+      });
+      assert.equal(res.isError, undefined);
+      const parsed = webDiscoveryResponseSchema.parse(res.structuredContent);
+      assert.equal(parsed.decision_engine_source, mode);
+
+      const expAllocations = parsed.board_allocations.filter((a) =>
+        isExplorationBoardAllocation(a),
+      );
+      assert.equal(
+        expAllocations.length,
+        1,
+        `[${mode}] Default max_exploration_boards=1 must keep at most 1 exploration board`,
+      );
+      const combinedExpWeight = expAllocations.reduce((s, a) => s + a.weight, 0);
+      assert.ok(
+        combinedExpWeight <= hp.exploration_feed_quota + 1e-9,
+        `[${mode}] Combined exploration weight (${combinedExpWeight}) must not exceed quota (${hp.exploration_feed_quota})`,
+      );
+      assert.equal(parsed.telemetry.exploration_quota_allocated, 0.2);
+
+      // Discovery must NOT have queried the second /feed board ('weandthecolor/feed')
+      const queriedFeedBoards = queriedBoards.filter((b) => b.endsWith('/feed'));
+      assert.deepEqual(
+        queriedFeedBoards,
+        ['dribbble/feed'],
+        `[${mode}] Discovery must only retrieve the single kept exploration board`,
+      );
+    } finally {
+      await client.close();
+      await server.close();
+    }
+  }
+
+  // 8c. Multi-board exploration hyperparam (max_exploration_boards=2, exploration_feed_quota=0.2):
+  // two /feed allocations of weight 0.5 each are scaled to 0.1 each (combined 0.2 <= 0.2)
+  const multiBoardHp = createPhoenixHyperparams({
+    exploration_feed_quota: 0.2,
+    max_exploration_boards: 2,
+  });
+  const scaledDecision = enforceExplorationQuotaOnDecision(
+    JSON.parse(overBudgetRouterDecisionJson),
+    multiBoardHp,
+  );
+  const scaledFeeds = scaledDecision.board_allocations.filter((a) =>
+    isExplorationBoardAllocation(a),
+  );
+  assert.equal(scaledFeeds.length, 2);
+  assert.equal(scaledFeeds[0].weight, 0.1);
+  assert.equal(scaledFeeds[1].weight, 0.1);
+  assert.equal(
+    scaledFeeds.reduce((s, a) => s + a.weight, 0),
+    0.2,
+  );
+
+  // 8d. Edge case: remote router returns ONLY 2 /feed boards and 0 core boards with max_exploration_boards=1
+  const onlyFeedsDecision = enforceExplorationQuotaOnDecision(
+    {
+      board_allocations: [
+        {
+          board: 'dribbble/feed',
+          role: 'wildcard_exploration',
+          weight: 0.5,
+          synthetic_query: 'Feed exploration A',
+          rationale: 'Racional A',
+        },
+        {
+          board: 'weandthecolor/feed',
+          role: 'wildcard_exploration',
+          weight: 0.5,
+          synthetic_query: 'Feed exploration B',
+          rationale: 'Racional B',
+        },
+      ],
+      required_sid_tags: ['carousel_editorial_4:5'],
+      excluded_sid_tags: [],
+    },
+    defaultHp,
+  );
+  assert.equal(onlyFeedsDecision.board_allocations.length, 2);
+  const remainingFeeds = onlyFeedsDecision.board_allocations.filter((a) =>
+    isExplorationBoardAllocation(a),
+  );
+  assert.equal(remainingFeeds.length, 1);
+  assert.equal(remainingFeeds[0].weight, 0.2);
+
+  // 8e. Edge case: exploration_feed_quota = 0 removes all exploration allocations
+  const zeroQuotaDecision = enforceExplorationQuotaOnDecision(
+    JSON.parse(overBudgetRouterDecisionJson),
+    createPhoenixHyperparams({ exploration_feed_quota: 0 }),
+  );
+  assert.equal(
+    zeroQuotaDecision.board_allocations.filter((a) => isExplorationBoardAllocation(a)).length,
+    0,
+  );
 });

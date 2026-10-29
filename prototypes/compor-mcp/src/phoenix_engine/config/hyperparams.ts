@@ -51,7 +51,14 @@ export const phoenixHyperparamsSchema = z.object({
     .min(0.0)
     .max(1.0)
     .default(0.20)
-    .describe("Orçamento máximo alocado para boards '/feed'"),
+    .describe("Orçamento máximo combinado alocado para boards '/feed' ou wildcard_exploration"),
+  max_exploration_boards: z
+    .number()
+    .int()
+    .min(0)
+    .max(4)
+    .default(1)
+    .describe("Quantidade máxima de boards '/feed' ou wildcard_exploration permitidos por decisão"),
 
   // 3. Pesos Multi-Ação do Ranker (Weighted Scorer do Phoenix)
   action_weights: z
@@ -118,10 +125,24 @@ export function createPhoenixHyperparams(
 export function loadPhoenixHyperparamsFromEnv(
   env: NodeJS.ProcessEnv = process.env,
 ): PhoenixHyperparams {
+  let overrides: Partial<PhoenixHyperparams> = {};
   const rawJson = env.PHOENIX_HYPERPARAMS_JSON?.trim();
   if (rawJson) {
-    const parsed = JSON.parse(rawJson) as Partial<PhoenixHyperparams>;
-    return createPhoenixHyperparams(parsed);
+    overrides = { ...(JSON.parse(rawJson) as Partial<PhoenixHyperparams>) };
   }
-  return createPhoenixHyperparams();
+  const envQuota = env.PHOENIX_EXPLORATION_FEED_QUOTA?.trim();
+  if (envQuota !== undefined && envQuota !== '') {
+    const num = Number(envQuota);
+    if (Number.isFinite(num)) {
+      overrides.exploration_feed_quota = num;
+    }
+  }
+  const envMaxBoards = env.PHOENIX_MAX_EXPLORATION_BOARDS?.trim();
+  if (envMaxBoards !== undefined && envMaxBoards !== '') {
+    const num = Number(envMaxBoards);
+    if (Number.isFinite(num)) {
+      overrides.max_exploration_boards = Math.trunc(num);
+    }
+  }
+  return createPhoenixHyperparams(overrides);
 }

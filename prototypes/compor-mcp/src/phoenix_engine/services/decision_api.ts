@@ -7,6 +7,7 @@ import {
   CANONICAL_BOARD_SLUGS,
   EXPLORATION_FEED_BOARDS,
   inferCandidateSid,
+  isExplorationFeedBoard,
   ROLE_RECOMMENDED_BOARDS,
   SID_TAXONOMY,
   type BoardSlug,
@@ -425,6 +426,154 @@ export function boundRouterDecisionAllocations(raw: unknown): unknown {
   };
 }
 
+const FALLBACK_CORE_ROLE_BOARDS: ReadonlyArray<{
+  role: Exclude<CompositionalRole, 'wildcard_exploration'>;
+  board: BoardSlug;
+}> = [
+  { role: 'hook_cover', board: 'behance/typography' },
+  { role: 'structural_grid', board: 'creativemarket/magazine-templates' },
+  { role: 'ui_component', board: 'dribbble/design-inspiration' },
+  { role: 'conversion_cta', board: 'kittldesign/ads-designs' },
+];
+
+export function isExplorationBoardAllocation(alloc: BoardAllocation): boolean {
+  return alloc.role === 'wildcard_exploration' || isExplorationFeedBoard(alloc.board);
+}
+
+/**
+ * Impõe a cota máxima combinada de exploração (`exploration_feed_quota`) e o limite máximo
+ * de boards de exploração (`max_exploration_boards`) sobre o conjunto completo de alocações
+ * de qualquer roteador (`openai_api`, `codex_luna_subagent` ou `deterministic_mock`).
+ */
+export function enforceExplorationQuotaOnDecision(
+  decision: RouterDecision,
+  hp: Pick<PhoenixHyperparams, 'exploration_feed_quota' | 'max_exploration_boards'>,
+): RouterDecision {
+  const maxQuota = Math.max(0, Math.min(1, hp.exploration_feed_quota));
+  const configuredMaxBoards = Math.max(
+    0,
+    Math.min(4, Math.trunc(hp.max_exploration_boards ?? 1)),
+  );
+  const maxExpBoards = maxQuota < 0.0001 ? 0 : configuredMaxBoards;
+
+  const coreAllocations: BoardAllocation[] = [];
+  const rawExplorationAllocations: BoardAllocation[] = [];
+
+  for (const alloc of decision.board_allocations) {
+    if (isExplorationBoardAllocation(alloc)) {
+      rawExplorationAllocations.push(alloc);
+    } else {
+      coreAllocations.push({ ...alloc });
+    }
+  }
+
+  // Deduplica alocações de exploração por slug de board (preservando maior peso e ordem de aparição)
+  const dedupedExplorationMap = new Map<
+    BoardSlug,
+    { alloc: BoardAllocation; order: number }
+  >();
+  rawExplorationAllocations.forEach((alloc, idx) => {
+    const existing = dedupedExplorationMap.get(alloc.board);
+    if (!existing) {
+      dedupedExplorationMap.set(alloc.board, { alloc: { ...alloc }, order: idx });
+    } else if (alloc.weight > existing.alloc.weight) {
+      dedupedExplorationMap.set(alloc.board, {
+        alloc: { ...existing.alloc, weight: alloc.weight },
+        order: existing.order,
+      });
+    }
+  });
+
+  const sortedExploration = Array.from(dedupedExplorationMap.values())
+    .sort((a, b) => {
+      if (b.alloc.weight !== a.alloc.weight) {
+        return b.alloc.weight - a.alloc.weight;
+      }
+      return a.order - b.order;
+    })
+    .map((entry) => entry.alloc);
+
+  let keptExploration = sortedExploration.slice(0, maxExpBoards);
+  const droppedExploration = [
+    ...sortedExploration.slice(maxExpBoards),
+    ...rawExplorationAllocations.slice(dedupedExplorationMap.size),
+  ];
+
+  // Se o corte de exploração deixar menos de 2 alocações totais (mínimo exigido pelo schema),
+  // converte alocações excedentes em boards canônicos não-/feed para nunca buscar /feed extra.
+  let fallbackIdx = 0;
+  while (coreAllocations.length + keptExploration.length < 2) {
+    const template = droppedExploration.shift() ?? keptExploration[0] ?? coreAllocations[0];
+    const usedBoards = new Set(coreAllocations.map((c) => c.board));
+    const replacementSpec =
+      FALLBACK_CORE_ROLE_BOARDS.find((cand) => !usedBoards.has(cand.board)) ??
+      FALLBACK_CORE_ROLE_BOARDS[fallbackIdx % FALLBACK_CORE_ROLE_BOARDS.length]!;
+    fallbackIdx += 1;
+
+    coreAllocations.push({
+      board: replacementSpec.board,
+      role: replacementSpec.role,
+      weight: Math.min(
+        1,
+        Math.max(0.05, Math.round((template?.weight ?? 0.4) * 10000) / 10000),
+      ),
+      synthetic_query:
+        template?.synthetic_query ??
+        `Direção composicional para ${replacementSpec.role} em ${replacementSpec.board}`,
+      rationale:
+        template?.rationale ??
+        'Alocação realocada para board estrutural após aplicação do limite de exploração.',
+    });
+  }
+
+  // Impõe o teto combinado `maxQuota` sobre a soma de todos os boards de exploração mantidos
+  if (keptExploration.length > 0) {
+    const maxEffectiveCount = Math.min(
+      keptExploration.length,
+      Math.max(1, Math.floor(maxQuota / 0.0001)),
+    );
+    keptExploration = keptExploration.slice(0, maxEffectiveCount);
+
+    const totalExpWeight = keptExploration.reduce((sum, item) => sum + item.weight, 0);
+    if (totalExpWeight > maxQuota) {
+      if (keptExploration.length === 1) {
+        const single = keptExploration[0]!;
+        keptExploration = [
+          {
+            ...single,
+            weight: Math.max(0.0001, Math.floor(maxQuota * 10000) / 10000),
+          },
+        ];
+      } else {
+        const scale = maxQuota / totalExpWeight;
+        let allocatedSoFar = 0;
+        keptExploration = keptExploration.map((item, idx) => {
+          if (idx === keptExploration.length - 1) {
+            const remainder = Math.max(
+              0.0001,
+              Math.floor(Math.max(0, maxQuota - allocatedSoFar) * 10000) / 10000,
+            );
+            return { ...item, weight: remainder };
+          }
+          const scaled = Math.max(
+            0.0001,
+            Math.floor(item.weight * scale * 10000) / 10000,
+          );
+          allocatedSoFar = Math.round((allocatedSoFar + scaled) * 10000) / 10000;
+          return { ...item, weight: scaled };
+        });
+      }
+    }
+  }
+
+  const finalAllocations = [...coreAllocations, ...keptExploration].slice(0, 4);
+
+  return routerDecisionSchema.parse({
+    ...decision,
+    board_allocations: finalAllocations,
+  });
+}
+
 export class PhoenixDecisionApiService {
   private readonly hp: PhoenixHyperparams;
   private readonly injectedOpenAI?: OpenAI;
@@ -622,6 +771,7 @@ export class PhoenixDecisionApiService {
   }): Promise<RouterDecision> {
     const { systemPrompt, userPrompt } = formatBoardRouterPrompts({
       exploration_quota: this.hp.exploration_feed_quota,
+      max_exploration_boards: this.hp.max_exploration_boards,
       user_taste_json: JSON.stringify(params.user_taste, null, 2),
       board_affinity_table: params.board_affinity_table,
       session_events_summary: params.session_events_summary,
@@ -698,7 +848,7 @@ export class PhoenixDecisionApiService {
         }
       }
     } else if (params.source === 'codex_luna_subagent') {
-      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}\n\nResponda APENAS JSON válido com exatamente as chaves board_allocations, required_sid_tags e excluded_sid_tags. Cada item de board_allocations deve conter exatamente board, role, weight, synthetic_query e rationale; rationale é uma breve justificativa obrigatória. Use de 2 a 4 itens, weight numérico entre 0 e 1 e apenas os boards citados nas regras. As duas listas de tags podem ser vazias.`;
+      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}\n\nResponda APENAS JSON válido com exatamente as chaves board_allocations, required_sid_tags e excluded_sid_tags. Cada item de board_allocations deve conter exatamente board, role, weight, synthetic_query e rationale; rationale é uma breve justificativa obrigatória. Use de 2 a 4 itens, weight numérico entre 0 e 1, respeitando a cota máxima combinada de exploração (${this.hp.exploration_feed_quota.toFixed(2)}) em até ${this.hp.max_exploration_boards} board /feed, e apenas os boards citados nas regras. As duas listas de tags podem ser vazias.`;
       const rawJson = await this.subagentRunner(combinedPrompt, 'phoenix_board_router_decision');
       if (rawJson) {
         try {
@@ -736,20 +886,7 @@ export class PhoenixDecisionApiService {
   }
 
   private enforceExplorationQuota(decision: RouterDecision): RouterDecision {
-    const maxQuota = this.hp.exploration_feed_quota;
-    const allocations = decision.board_allocations.map((alloc) => {
-      if (alloc.role === 'wildcard_exploration' || alloc.board.endsWith('/feed')) {
-        return {
-          ...alloc,
-          weight: Math.min(alloc.weight, maxQuota),
-        };
-      }
-      return alloc;
-    });
-    return {
-      ...decision,
-      board_allocations: allocations,
-    };
+    return enforceExplorationQuotaOnDecision(decision, this.hp);
   }
 
   private deterministicRouteBoards(params: {
@@ -877,7 +1014,7 @@ export class PhoenixDecisionApiService {
       },
     ];
 
-    if (explorationWeight > 0) {
+    if (explorationWeight > 0 && this.hp.max_exploration_boards > 0) {
       allocations.push({
         board: explorationBoard,
         role: 'wildcard_exploration',
@@ -899,12 +1036,14 @@ export class PhoenixDecisionApiService {
 
     const excludedSids = [...params.user_taste.negative_constraints].slice(0, 20);
 
-    return routerDecisionSchema.parse(
-      boundRouterDecisionAllocations({
-        board_allocations: allocations,
-        required_sid_tags: requiredSids,
-        excluded_sid_tags: excludedSids,
-      }),
+    return this.enforceExplorationQuota(
+      routerDecisionSchema.parse(
+        boundRouterDecisionAllocations({
+          board_allocations: allocations,
+          required_sid_tags: requiredSids,
+          excluded_sid_tags: excludedSids,
+        }),
+      ),
     );
   }
 
