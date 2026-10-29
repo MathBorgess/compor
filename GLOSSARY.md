@@ -132,6 +132,10 @@ _Avoid_: Quadro de moodboard da sessão, pasta local
 Função específica atribuída a um board curado na busca de uma peça: gancho de capa, grade estrutural, componente de interface, chamada de conversão ou exploração aberta.
 _Avoid_: Categoria fixa de formato, camada de edição
 
+**Consulta sintética de recuperação**:
+Reformulação compacta e especializada da intenção criativa para buscar referências em um board curado segundo seu papel composicional, priorizando termos visuais e estruturais compatíveis com o acervo catalogado.
+_Avoid_: Briefing bruto da conversa, prompt final de geração de imagem
+
 **Afinidade de board**:
 Medida acumulada de utilidade de um board curado para a pessoa a partir da proporção entre interações positivas e exposições totais.
 _Avoid_: Popularidade pública da fonte, nota editorial fixa

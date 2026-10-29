@@ -495,12 +495,14 @@ function buildSyntheticMockCandidatesFromAllocations(params: {
           ? `[Mock ${alloc.role}] Composição em ${alloc.board}: ${alloc.synthetic_query}. Grid ${sid[1]} com hierarquia ${sid[2]} e atmosfera ${sid[3]}.`
           : `[Mock ${alloc.role}] Variação complementar em ${alloc.board}: estrutura ${sid[1]}, contraste ${sid[2]} e acabamento ${sid[3]}.`;
 
+      const safeDesc = desc.slice(0, 900);
+
       candidates.push({
         candidate_id: candidateId,
         board: alloc.board,
         role: alloc.role,
         metadata_sid: [...sid],
-        visual_description: desc,
+        visual_description: safeDesc,
         preview_url: `synthetic:${candidateId}`,
         origin_url: `synthetic:${candidateId}`,
         media_url: `synthetic:${candidateId}`,
@@ -509,10 +511,10 @@ function buildSyntheticMockCandidatesFromAllocations(params: {
         thumbnail_mime_type: null,
         source_id: 'pinterest_curated_design',
         raw_title: `${alloc.board} (${sid.join(', ')})`,
-        raw_caption: desc,
-        raw_alt_text: desc,
+        raw_caption: safeDesc,
+        raw_alt_text: safeDesc,
         aspect_rationale: {
-          composition: desc,
+          composition: safeDesc,
           typography: `Hierarquia ${sid[2]}`,
           color: `Estética ${sid[3]}`,
         },

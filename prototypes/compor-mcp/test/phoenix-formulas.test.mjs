@@ -5,6 +5,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createComporServer } from '../dist/server.js';
 import {
   apply_sid_diversity_decay,
+  boundRouterDecisionAllocations,
   CANONICAL_BOARD_SLUGS,
   compute_board_affinity_score,
   compute_ema_session_vector,
@@ -12,14 +13,17 @@ import {
   compute_user_tower_embedding,
   cosine_similarity,
   createPhoenixHyperparams,
+  distillBriefingIntent,
   EXPLORATION_FEED_BOARDS,
   filter_excluded_sid_candidates,
   format_mcp_response,
   inferCandidateSid,
   l2_normalize,
   matches_excluded_sid,
+  MAX_SYNTHETIC_QUERY_LENGTH,
   PhoenixDecisionApiService,
   PhoenixMemoryStore,
+  projectRoleSyntheticQuery,
   SID_TAXONOMY,
   webDiscoveryResponseSchema,
 } from '../dist/phoenix_engine/index.js';
@@ -1149,6 +1153,135 @@ test('6. Format-independent SID mechanics, per-board catalog source resolution, 
       'behance/photography',
       'Candidate with highest User Tower similarity must rank first when LLM action_probs are tied',
     );
+  } finally {
+    await client.close();
+    await server.close();
+  }
+});
+
+test('7. Multi-step RAG query distillation & projection bounds synthetic_query <= 600 chars for 600-1000 char briefings in mock and LLM modes', async () => {
+  // Construct a 640-char briefing and a 980-char briefing with specific domain terms at the beginning and end
+  const baseBriefing600 =
+    'Gostaria de criar uma campanha de carrossel editorial para lançamento de plataforma SaaS B2B de observabilidade financeira com estética swiss grid, tipografia grotesca bold de alto contraste, margens generosas, textura sutil de papel editorial e diagramação modular em colunas para explicar métricas de retenção, redução de churn, automação de conciliação bancária, governança de dados corporativos, auditoria em tempo real e fechamento contábil executivo com clareza visual e prova social verificada para diretores financeiros e líderes de engenharia de software em empresas de médio e grande porte no mercado latino-americano com foco em conversão e autoridade técnica.';
+  assert.ok(
+    baseBriefing600.length >= 600 && baseBriefing600.length <= 1000,
+    `Expected briefing length in [600, 1000], got ${baseBriefing600.length}`,
+  );
+
+  const longBriefing960 = `${baseBriefing600} Além disso, o último slide precisa destacar o termo exclusivo " telemetria_quantica_b2b " junto a um card comparativo de arquitetura limpa e chamada executiva para demonstração técnica guiada sem poluição visual ou clichês promocionais.`;
+  assert.ok(
+    longBriefing960.length >= 850 && longBriefing960.length <= 1000,
+    `Expected long briefing length in [850, 1000], got ${longBriefing960.length}`,
+  );
+
+  // Stage 1: distillBriefingIntent extracts SIDs, catalog keywords, and preserves tail entities
+  const distilled = distillBriefingIntent({
+    briefing: longBriefing960,
+    target_format: 'carousel_editorial_4:5',
+    user_taste: {
+      user_id: 'rag_user',
+      preferred_boards_by_goal: {},
+      visual_dna_rules: ['Priorizar grid suíço e contraste tipográfico editorial'],
+      negative_constraints: ['glassmorphism_ui'],
+      updated_at: new Date().toISOString(),
+    },
+  });
+
+  assert.equal(distilled.inferred_sid[0], 'carousel_editorial_4:5');
+  assert.equal(distilled.inferred_sid[1], 'swiss_grid');
+  assert.ok(distilled.matched_catalog_keywords.includes('tipografia'));
+  assert.ok(distilled.matched_catalog_keywords.includes('swiss'));
+  assert.ok(
+    distilled.salient_terms.some((t) => t.includes('telemetria_quantica_b2b')),
+    'Salient term from the tail of a 900+ char briefing must be captured by distillation',
+  );
+  assert.ok(distilled.compact_intent_summary.length <= 220);
+
+  // Stage 2: projectRoleSyntheticQuery front-loads role + SID + catalog keywords in first 120 chars and stays <= 600 chars
+  const projectedHookQuery = projectRoleSyntheticQuery({
+    distilled,
+    board: 'behance/typography',
+    role: 'hook_cover',
+    target_format: 'carousel_editorial_4:5',
+  });
+  assert.ok(projectedHookQuery.length <= MAX_SYNTHETIC_QUERY_LENGTH);
+  assert.ok(
+    projectedHookQuery.slice(0, 120).includes('impacto tipográfico'),
+    'First 120 chars must front-load role descriptors for CuratedPinterestProvider',
+  );
+  assert.ok(
+    projectedHookQuery.slice(0, 120).includes('carousel_editorial_4:5'),
+    'First 120 chars must front-load inferred SID tags',
+  );
+
+  // End-to-end check in discover_visual_references with decision_fallback_mode: "deterministic_mock"
+  const server = createComporServer();
+  const client = new Client({ name: 'phoenix-long-briefing-test', version: '1.0.0' });
+  const [ct, st] = InMemoryTransport.createLinkedPair();
+  await server.connect(st);
+  await client.connect(ct);
+
+  try {
+    for (const briefing of [baseBriefing600, longBriefing960]) {
+      const webRes = await client.callTool({
+        name: 'discover_visual_references',
+        arguments: {
+          briefing,
+          target_format: 'carousel_editorial_4:5',
+          client_mode: 'web',
+          decision_fallback_mode: 'deterministic_mock',
+        },
+      });
+      assert.equal(webRes.isError, undefined);
+      const parsed = webDiscoveryResponseSchema.parse(webRes.structuredContent);
+      assert.ok(parsed.board_allocations.length >= 2);
+      for (const alloc of parsed.board_allocations) {
+        assert.ok(
+          alloc.synthetic_query.length <= MAX_SYNTHETIC_QUERY_LENGTH,
+          `synthetic_query length (${alloc.synthetic_query.length}) must not exceed ${MAX_SYNTHETIC_QUERY_LENGTH}`,
+        );
+        assert.ok(alloc.rationale.length <= 400);
+      }
+
+      const codexRes = await client.callTool({
+        name: 'discover_visual_references',
+        arguments: {
+          briefing,
+          target_format: 'carousel_editorial_4:5',
+          client_mode: 'codex',
+          decision_fallback_mode: 'deterministic_mock',
+        },
+      });
+      assert.equal(codexRes.isError, undefined);
+      assert.match(codexRes.content[0].text, /Phoenix Visual Decision Engine/);
+    }
+
+    // Verify boundRouterDecisionAllocations also protects oversized LLM/Luna router outputs
+    const oversizedRaw = {
+      board_allocations: [
+        {
+          board: 'behance/typography',
+          role: 'hook_cover',
+          weight: 0.5,
+          synthetic_query: ' palavra'.repeat(120).trim(),
+          rationale: ' justificativa'.repeat(50).trim(),
+        },
+        {
+          board: 'creativemarket/magazine-templates',
+          role: 'structural_grid',
+          weight: 0.5,
+          synthetic_query: ' coluna'.repeat(120).trim(),
+          rationale: ' racional'.repeat(50).trim(),
+        },
+      ],
+      required_sid_tags: ['carousel_editorial_4:5'],
+      excluded_sid_tags: [],
+    };
+    const bounded = boundRouterDecisionAllocations(oversizedRaw);
+    for (const alloc of bounded.board_allocations) {
+      assert.ok(alloc.synthetic_query.length <= MAX_SYNTHETIC_QUERY_LENGTH);
+      assert.ok(alloc.rationale.length <= 400);
+    }
   } finally {
     await client.close();
     await server.close();
