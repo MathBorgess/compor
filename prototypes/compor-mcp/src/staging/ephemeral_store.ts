@@ -147,7 +147,9 @@ export class EphemeralReferenceStore {
       if (now >= entry.expires_at_ms) {
         this.candidates.delete(refId);
         for (const alias of entry.aliases) {
-          this.aliasToRefId.delete(alias);
+          if (this.aliasToRefId.get(alias) === refId) {
+            this.aliasToRefId.delete(alias);
+          }
         }
       }
     }
@@ -288,7 +290,9 @@ export class EphemeralReferenceStore {
       if (!sessionId || candidate.session_id === sid) {
         this.candidates.delete(key);
         for (const alias of candidate.aliases) {
-          this.aliasToRefId.delete(alias);
+          if (this.aliasToRefId.get(alias) === key) {
+            this.aliasToRefId.delete(alias);
+          }
         }
       }
     }

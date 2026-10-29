@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { spawnSync } from 'node:child_process';
+import { createHash } from 'node:crypto';
 import { deflateSync } from 'node:zlib';
 import { readdir, readFile } from 'node:fs/promises';
 import { existsSync } from 'node:fs';
@@ -1292,4 +1293,234 @@ test('Fallback HTTP para feed RSS público de boards curados do Pinterest quando
     discovered.map((b) => b.slug),
     ['behance/advertising', 'behance/typography'],
   );
+});
+
+test('Preservação de aliases reatribuídos no pruneExpired, rollback de arquivos sobrescritos em falha parcial, validação de bitstream WebP truncado e estado em fetchInProcess', async () => {
+  // 1. Apenas remove aliases ainda pertencentes ao candidato expirado quando uma segunda busca reatribui ref_01
+  let now = 1000;
+  const clockStore = new EphemeralReferenceStore({
+    ttlMs: 1000,
+    nowFn: () => now,
+    defaultSessionId: 'sid_alias_clock',
+  });
+  const dummyCaption = sanitize_external_metadata({ title: 'T', caption: 'C' }).untrusted_external_caption;
+
+  clockStore.registerSearchCandidates('sid_alias_clock', [
+    {
+      preferred_ref_id: 'ref_search1_a',
+      source_id: 'pinterest_curated_design',
+      origin_url: 'https://www.pinterest.com/pin/1/',
+      preview_url: 'https://i.pinimg.com/236x/1.jpg',
+      media_url: 'https://i.pinimg.com/736x/1.jpg',
+      aspect_rationale: {},
+      untrusted_external_caption: dummyCaption,
+      thumbnail_base64: null,
+    },
+  ]);
+  assert.equal(clockStore.getCandidate('ref_01')?.ref_id, 'ref_search1_a');
+
+  // Segunda busca em t=1500 reatribui o alias posicional ref_01 para ref_search2_b (expira em t=2500)
+  now = 1500;
+  clockStore.registerSearchCandidates('sid_alias_clock', [
+    {
+      preferred_ref_id: 'ref_search2_b',
+      source_id: 'pinterest_curated_design',
+      origin_url: 'https://www.pinterest.com/pin/2/',
+      preview_url: 'https://i.pinimg.com/236x/2.jpg',
+      media_url: 'https://i.pinimg.com/736x/2.jpg',
+      aspect_rationale: {},
+      untrusted_external_caption: dummyCaption,
+      thumbnail_base64: null,
+    },
+  ]);
+  assert.equal(clockStore.getCandidate('ref_01')?.ref_id, 'ref_search2_b');
+
+  // Avança relógio para t=2100: ref_search1_a expira (2100 >= 2000), mas ref_search2_b segue válido (2100 < 2500)
+  now = 2100;
+  assert.equal(clockStore.getCandidate('ref_search1_a'), undefined);
+  assert.equal(
+    clockStore.getCandidate('ref_01')?.ref_id,
+    'ref_search2_b',
+    'ref_01 reatribuído na segunda busca deve continuar resolvendo após expiração da primeira busca',
+  );
+  await clockStore.cleanupSession('sid_alias_clock');
+
+  // 2. Preserva arquivos previamente aprovados em disco caso uma revisão subsequente falhe parcialmente no meio do lote
+  let versionCounter = 0;
+  let failRef02 = false;
+  const rollbackFetch = async (input) => {
+    const url = String(input);
+    if (url.includes('BaseSearchResource/get/')) {
+      return new Response(
+        JSON.stringify({
+          pins: [
+            {
+              id: 'pin_a',
+              ref_id: 'ref_a',
+              title: 'Pin A',
+              description: 'Desc A',
+              origin_url: 'https://www.pinterest.com/pin/pin_a/',
+              preview_url: 'https://i.pinimg.com/236x/pin_a.png',
+              media_url: 'https://i.pinimg.com/736x/pin_a.png',
+            },
+            {
+              id: 'pin_b',
+              ref_id: 'ref_b',
+              title: 'Pin B',
+              description: 'Desc B',
+              origin_url: 'https://www.pinterest.com/pin/pin_b/',
+              preview_url: 'https://i.pinimg.com/236x/pin_b.png',
+              media_url: 'https://i.pinimg.com/736x/pin_b.png',
+            },
+          ],
+        }),
+        { status: 200, headers: { 'content-type': 'application/json' } },
+      );
+    }
+    if (url.includes('236x/')) {
+      const { pngBuffer } = buildPngWithMetadata({ width: 2, height: 2 });
+      return new Response(pngBuffer, { status: 200, headers: { 'content-type': 'image/png' } });
+    }
+    if (url.includes('736x/pin_a.png')) {
+      versionCounter++;
+      const { pngBuffer } = buildPngWithMetadata({
+        width: versionCounter === 1 ? 4 : 8,
+        height: 4,
+        topLeftRgba: versionCounter === 1 ? [10, 20, 30, 255] : [200, 100, 50, 255],
+      });
+      return new Response(pngBuffer, { status: 200, headers: { 'content-type': 'image/png' } });
+    }
+    if (url.includes('736x/pin_b.png')) {
+      if (failRef02) {
+        return new Response('Upstream Failure', { status: 502 });
+      }
+      const { pngBuffer } = buildPngWithMetadata({ width: 4, height: 4 });
+      return new Response(pngBuffer, { status: 200, headers: { 'content-type': 'image/png' } });
+    }
+    throw new Error(`Unexpected URL: ${url}`);
+  };
+
+  const ctx = await createConnectedTestPair({ fetchFn: rollbackFetch, sessionId: 'sid_rollback_test' });
+  try {
+    await ctx.client.callTool({
+      name: 'search_curated_references',
+      arguments: {
+        briefing_summary: 'Teste rollback',
+        target_format: 'single_feed',
+        aspect_focus: ['typography'],
+        source_ids: ['pinterest_curated_design'],
+        consent_external_search: true,
+      },
+    });
+
+    const stage1 = await ctx.client.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: false,
+        selections: [{ ref_id: 'ref_a', selected_attributes: ['typography'] }],
+      },
+    });
+    assert.equal(stage1.isError, undefined);
+    const originalRecordA = stage1.structuredContent.staged_references[0];
+    const originalDiskHashA = createHash('sha256')
+      .update(await readFile(originalRecordA.local_path))
+      .digest('hex');
+    assert.equal(originalDiskHashA, originalRecordA.sha256);
+
+    // Agora tenta revisar com [ref_a (que baixa bytes diferentes), ref_b (que falha no download)]
+    failRef02 = true;
+    const failedRevision = await ctx.client.callTool({
+      name: 'stage_approved_references',
+      arguments: {
+        proceed_without_references: false,
+        selections: [
+          { ref_id: 'ref_a', selected_attributes: ['typography', 'color'] },
+          { ref_id: 'ref_b', selected_attributes: ['composition'] },
+        ],
+      },
+    });
+    assert.equal(failedRevision.isError, true);
+
+    // O arquivo de ref_a em disco DEVE ter sido restaurado para seus bytes originais (mesmo SHA-256 e dimensões do registro retido)
+    const retainedRecordA = ctx.store.getStagedReference('ref_a');
+    assert.equal(retainedRecordA.sha256, originalRecordA.sha256);
+    assert.equal(retainedRecordA.width_px, 4);
+    const restoredDiskHashA = createHash('sha256')
+      .update(await readFile(originalRecordA.local_path))
+      .digest('hex');
+    assert.equal(
+      restoredDiskHashA,
+      originalRecordA.sha256,
+      'o arquivo de ref_a em disco deve preservar exatamente o conteúdo e SHA-256 anteriores quando o lote falha',
+    );
+  } finally {
+    await ctx.close();
+  }
+
+  // 3. Rejeita WebP truncado de 25 bytes contendo apenas o cabeçalho VP8L de 5 bytes sem bitstream de pixels
+  const truncated25ByteWebp = Buffer.alloc(25);
+  truncated25ByteWebp.write('RIFF', 0, 'ascii');
+  truncated25ByteWebp.writeUInt32LE(17, 4);
+  truncated25ByteWebp.write('WEBP', 8, 'ascii');
+  truncated25ByteWebp.write('VP8L', 12, 'ascii');
+  truncated25ByteWebp.writeUInt32LE(5, 16);
+  truncated25ByteWebp[20] = 0x2f; // assinatura VP8L de 5 bytes para 1x1 mas sem árvore Huffman ou pixels
+  truncated25ByteWebp.writeUInt32LE(0, 21);
+
+  await assert.rejects(
+    () =>
+      sanitize_and_stage_image({
+        session_id: 'sid_truncated_webp',
+        ref_id: 'ref_trunc_webp',
+        raw_buffer: truncated25ByteWebp,
+      }),
+    (err) => err.code === 'corrupted_image',
+  );
+
+  // 4. fetchInProcess preserva o estado de referências entre chamadas sequenciais mesmo sem referenceStore injetado
+  process.env.OPENAI_AGENTS_DISABLE_TRACING = '1';
+  const { MCPServerStreamableHttp } = await import('@openai/agents');
+  const { fetchInProcess } = await import('../dist/inprocess-http.js');
+  const mockFetch = createFivePinsMockFetch();
+
+  const agentViaFetchInProcess = new MCPServerStreamableHttp({
+    name: 'compor-fetch-in-process-client',
+    url: 'https://compor.invalid/mcp',
+    fetch: (input, init) => fetchInProcess(input, init, { fetchFn: mockFetch }),
+    cacheToolsList: false,
+  });
+
+  try {
+    await agentViaFetchInProcess.connect();
+    const sRes = await agentViaFetchInProcess.callToolResult('search_curated_references', {
+      briefing_summary: 'Teste fetchInProcess stateful',
+      target_format: 'single_feed',
+      aspect_focus: ['typography'],
+      source_ids: ['pinterest_curated_design'],
+      consent_external_search: true,
+    });
+    assert.equal(sRes.isError, undefined);
+    const refId = sRes.structuredContent.candidates[0].ref_id;
+
+    const stRes = await agentViaFetchInProcess.callToolResult('stage_approved_references', {
+      proceed_without_references: false,
+      selections: [{ ref_id: refId, selected_attributes: ['typography'] }],
+    });
+    assert.equal(stRes.isError, undefined);
+    assert.equal(stRes.structuredContent.staged_count, 1);
+
+    const cRes = await agentViaFetchInProcess.callToolResult('compose_creative_direction', {
+      briefing_summary: 'Teste fetchInProcess stateful',
+      target_format: 'single_feed',
+    });
+    assert.equal(cRes.isError, undefined);
+    assert.equal(cRes.structuredContent.references_lineage.length, 1);
+    assert.equal(cRes.structuredContent.references_lineage[0].ref_id, refId);
+  } finally {
+    await agentViaFetchInProcess.callToolResult('stage_approved_references', {
+      proceed_without_references: true,
+      selections: [],
+    });
+    await agentViaFetchInProcess.close();
+  }
 });

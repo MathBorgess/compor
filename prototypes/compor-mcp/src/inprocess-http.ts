@@ -46,8 +46,11 @@ export function createStreamableHttpHandler(
   };
 }
 
+const defaultFetchInProcessStore = new EphemeralReferenceStore();
+
 /**
- * Test adapter: handles each MCP Streamable HTTP request in process without a socket.
+ * Test adapter: handles each MCP Streamable HTTP request in process without a socket,
+ * retaining reference state across sequential requests for the logical client.
  * It does not authenticate users and must not be exposed as an unauthenticated public HTTP endpoint.
  */
 export async function fetchInProcess(
@@ -55,9 +58,13 @@ export async function fetchInProcess(
   init?: RequestInit,
   serverOptions?: ComporServerOptions,
 ): Promise<Response> {
-  const handler = createStreamableHttpHandler(serverOptions, {
-    enableJsonResponse: true,
-    allowedUrl: 'https://compor.invalid/mcp',
-  });
+  const effectiveStore = serverOptions?.referenceStore ?? defaultFetchInProcessStore;
+  const handler = createStreamableHttpHandler(
+    { ...serverOptions, referenceStore: effectiveStore },
+    {
+      enableJsonResponse: true,
+      allowedUrl: 'https://compor.invalid/mcp',
+    },
+  );
   return handler(input, init);
 }

@@ -691,6 +691,7 @@ export function decodeWebpPixels(webpBuffer: Buffer): {
         const hMatch = headerStr.match(/HEIGHT\s+(\d+)/);
         const width = wMatch ? Number.parseInt(wMatch[1]!, 10) : 0;
         const height = hMatch ? Number.parseInt(hMatch[1]!, 10) : 0;
+        validateImageDimensions(width, height);
         const pixelData = pam.subarray(endHdrIdx + 7);
         if (width > 0 && height > 0 && pixelData.byteLength >= width * height * 4) {
           return {
@@ -701,6 +702,10 @@ export function decodeWebpPixels(webpBuffer: Buffer): {
         }
       }
     }
+    throw new ImageSanitizationError(
+      'corrupted_image',
+      'Bitstream WebP inválido, truncado ou corrompido rejeitado na decodificação.',
+    );
   }
 
   // Fallback pure-TS decoder for flat-Huffman VP8L containers produced by encodeRgbaToLosslessWebp
@@ -714,7 +719,12 @@ export function decodeWebpPixels(webpBuffer: Buffer): {
     const dimBits = webpBuffer.readUInt32LE(21);
     const width = (dimBits & 0x3fff) + 1;
     const height = ((dimBits >>> 14) & 0x3fff) + 1;
+    validateImageDimensions(width, height);
     const totalPixels = width * height;
+    const requiredBytes = 25 + Math.ceil((1230 + totalPixels * 32) / 8);
+    if (webpBuffer.byteLength < requiredBytes) {
+      throw new ImageSanitizationError('corrupted_image', 'Bitstream VP8L truncado.');
+    }
     const rgba = new Uint8Array(totalPixels * 4);
     let bitPos = 25 * 8;
     // Skip header bits of the 5 trees written by encodeRgbaToLosslessWebp:
@@ -833,11 +843,12 @@ export function sanitizeImageBufferToWebp(rawBuffer: Buffer): {
     if (hasResidualMetadata(parsed.cleanWebpBuffer)) {
       throw new ImageSanitizationError('corrupted_image', 'Falha na remoção completa de metadados do WebP.');
     }
+    const decoded = decodeWebpPixels(parsed.cleanWebpBuffer);
     return {
       webpBuffer: parsed.cleanWebpBuffer,
       sourceMime,
-      width: parsed.width,
-      height: parsed.height,
+      width: decoded.width,
+      height: decoded.height,
       strippedMetadataSegments: parsed.strippedMetadataTypes,
     };
   }

@@ -115,9 +115,16 @@ export async function executeStageApprovedReferences(
 
   const stagedBatch: Array<{ record: Pr9CompatibleStagedReference; aliases: string[] }> = [];
   const newlyCreatedPaths: string[] = [];
-  const existingStagedPaths = new Set(
-    deps.store.listStagedReferences().map((ref) => ref.local_path),
-  );
+  const previousFileBackups = new Map<string, Buffer>();
+  const { readFile, rm, writeFile } = await import('node:fs/promises');
+  for (const prevRef of deps.store.listStagedReferences()) {
+    try {
+      const prevBytes = await readFile(prevRef.local_path);
+      previousFileBackups.set(prevRef.local_path, prevBytes);
+    } catch {
+      // Ignore if previous file is not on disk
+    }
+  }
   const fetchFn = deps.fetchFn ?? ((url, init) => globalThis.fetch(url, init));
 
   for (const selection of input.selections) {
@@ -148,7 +155,7 @@ export async function executeStageApprovedReferences(
         staging_root: deps.store.getStagingRoot(),
         fetch_fn: fetchFn,
       });
-      if (!existingStagedPaths.has(stagedImage.local_path)) {
+      if (!previousFileBackups.has(stagedImage.local_path)) {
         newlyCreatedPaths.push(stagedImage.local_path);
       }
 
@@ -200,12 +207,18 @@ export async function executeStageApprovedReferences(
 
       stagedBatch.push({ record: stagedRecord, aliases: candidate.aliases });
     } catch (error) {
-      const { rm } = await import('node:fs/promises');
       for (const createdPath of newlyCreatedPaths) {
         try {
           await rm(createdPath, { force: true });
         } catch {
           // Ignore cleanup errors on partial failure
+        }
+      }
+      for (const [restoredPath, originalBytes] of previousFileBackups.entries()) {
+        try {
+          await writeFile(restoredPath, originalBytes, { mode: 0o600 });
+        } catch {
+          // Ignore restore errors on partial failure
         }
       }
       const code =
