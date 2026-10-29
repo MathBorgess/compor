@@ -584,7 +584,7 @@ function inferTargetCategory(targetFormat: string, briefingSummary: string): Cur
     return 'instagram_carousel';
   }
   if (
-    combined.includes('ad') ||
+    /\bads?\b/.test(combined) ||
     combined.includes('anuncio') ||
     combined.includes('campanha') ||
     combined.includes('single_feed') ||
@@ -626,7 +626,13 @@ export function selectCuratedBoardsForQuery(query: ProviderSearchQuery): string[
         else if (meta.category === 'general_design') s += 2;
 
         for (const kw of meta.intentKeywords) {
-          if (normalizedContext.includes(normalizeText(kw))) {
+          const normalizedKeyword = normalizeText(kw);
+          const matches = normalizedKeyword === 'ad'
+            ? /\bad\b/.test(normalizedContext)
+            : normalizedKeyword === 'ads'
+              ? /\bads\b/.test(normalizedContext)
+              : normalizedContext.includes(normalizedKeyword);
+          if (matches) {
             s += 4;
           }
         }
@@ -715,7 +721,7 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
         return parsePinterestPwsHtml(rssBody);
       }
     } catch {
-      // Ignore individual board failure and allow fallback to next board or {username}/feed.rss
+      // Ignore individual board failure and allow the next explicitly authorized board.
     } finally {
       clearTimeout(rssTimer);
     }
@@ -786,12 +792,13 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
       clearTimeout(timer);
     }
 
-    // Step 2: Query curated board RSS feeds (`https://www.pinterest.com/{user}/{board}.rss`)
-    // with automatic fallback to the account's Firehose RSS (`https://www.pinterest.com/{user}/feed.rss`)
-    // if a folder slug was renamed or returned 404.
+    // Step 2: Query only boards in the source scope. An account-wide feed may be
+    // used as fallback only if that exact feed is also authorized in this scope.
+    // A feed is broader than a single board and cannot inherit its authorization.
     if (rawPins.length === 0) {
       const existingIds = new Set<string>();
       const triedSlugs = new Set<string>();
+      const authorizedSlugs = new Set(query.source.allowed_boards_or_queries.map(slug => slug.toLowerCase()));
 
       for (const board of boards.slice(0, 3)) {
         if (triedSlugs.has(board)) continue;
@@ -799,11 +806,11 @@ export class CuratedPinterestProvider implements ReferenceSearchProvider {
 
         let candidatePins = await this.fetchRssCandidatesFromSlug(board, timeoutMs);
 
-        // Automatic {username}/feed.rss fallback if a specific board returned 404/empty
+        // A related feed is optional; it is never implied by the board's scope.
         if (candidatePins.length === 0 && !board.endsWith('/feed')) {
           const username = board.split('/')[0];
           const firehoseSlug = username ? `${username}/feed` : '';
-          if (firehoseSlug && !triedSlugs.has(firehoseSlug)) {
+          if (firehoseSlug && authorizedSlugs.has(firehoseSlug.toLowerCase()) && !triedSlugs.has(firehoseSlug)) {
             triedSlugs.add(firehoseSlug);
             candidatePins = await this.fetchRssCandidatesFromSlug(firehoseSlug, timeoutMs);
           }

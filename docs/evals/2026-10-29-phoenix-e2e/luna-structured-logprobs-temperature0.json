@@ -1,0 +1,304 @@
+{
+  "date": "2026-10-29T14:55:30.930Z",
+  "scope": "synthetic_persona_real_reference_metadata_only",
+  "endpoint": "chat_completions",
+  "response_format": "structured_enum",
+  "not_decisions_api": true,
+  "summary": {
+    "requested": 9,
+    "scored": 0,
+    "reasons": {
+      "incomplete_categories": 9
+    }
+  },
+  "results": [
+    {
+      "id": "phx_48e49c75_06",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.9574006479957446,
+        "B": 0.026818590055594983
+      },
+      "observed_category_mass": 0.984219,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 153,
+        "completion_tokens": 13,
+        "total_tokens": 166,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1031
+    },
+    {
+      "id": "phx_48e49c75_08",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.9895719648489374
+      },
+      "observed_category_mass": 0.989572,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 156,
+        "completion_tokens": 13,
+        "total_tokens": 169,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1308
+    },
+    {
+      "id": "phx_48e49c75_04",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.7159557161472119,
+        "D": 0.2818091335573496
+      },
+      "observed_category_mass": 0.997765,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 155,
+        "completion_tokens": 13,
+        "total_tokens": 168,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1113
+    },
+    {
+      "id": "phx_48e49c75_05",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.99199086358451
+      },
+      "observed_category_mass": 0.991991,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 158,
+        "completion_tokens": 13,
+        "total_tokens": 171,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 935
+    },
+    {
+      "id": "phx_48e49c75_09",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.730438819932921,
+        "D": 0.14144708062564554,
+        "B": 0.1100881022519768
+      },
+      "observed_category_mass": 0.981974,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 160,
+        "completion_tokens": 13,
+        "total_tokens": 173,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1174
+    },
+    {
+      "id": "phx_48e49c75_02",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.8596697542115166,
+        "D": 0.13808088823705075
+      },
+      "observed_category_mass": 0.997751,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 153,
+        "completion_tokens": 13,
+        "total_tokens": 166,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1010
+    },
+    {
+      "id": "phx_48e49c75_07",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "D": 0.7006176335891,
+        "C": 0.29700326529040266
+      },
+      "observed_category_mass": 0.997621,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"D\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 159,
+        "completion_tokens": 13,
+        "total_tokens": 172,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 934
+    },
+    {
+      "id": "phx_48e49c75_03",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "C": 0.9311287426038573,
+        "B": 0.039422691727674125,
+        "D": 0.020616327799366445
+      },
+      "observed_category_mass": 0.991168,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"C\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 150,
+        "completion_tokens": 13,
+        "total_tokens": 163,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 1325
+    },
+    {
+      "id": "phx_48e49c75_01",
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "D": 0.683581602533102,
+        "C": 0.3147864203119879
+      },
+      "observed_category_mass": 0.998368,
+      "conditional_probabilities": {},
+      "output": "{\"classificacao\":\"D\"}",
+      "actual_model": "gpt-6-luna",
+      "usage": {
+        "prompt_tokens": 154,
+        "completion_tokens": 13,
+        "total_tokens": 167,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      },
+      "latency_ms": 936
+    }
+  ]
+}

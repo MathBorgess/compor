@@ -125,7 +125,7 @@ test('E0/E1 return identical results and errors for valid, boundary and invalid 
   const cases = [];
   const add = (name, args, error = false) => cases.push({ name, arguments: args, error });
   add('list_skills', {});
-  for (const id of ['entender-intencao', 'traduzir-direcao', 'explorar-moodboards', 'criar-piloto']) add('load_skill', { id, version: '0.1.0-prototype' });
+  for (const id of ['entender-intencao', 'traduzir-direcao', 'explorar-moodboards', 'criar-piloto']) add('load_skill', { id, version: id === 'explorar-moodboards' ? '0.1.0-prototype' : id === 'criar-piloto' ? '0.3.0-prototype' : '0.2.0-prototype' });
   for (const args of [{ id: '../file' }, { id: 'entender-intencao', version: 'v0' }, { id: 4 }, {}]) add('load_skill', args, true);
   add('prepare_word_cloud', { words: [{ word: ' zero ', frequency: 2, suggested_weight: 3, chosen_weight: 0 }, { word: 'sugestão', suggested_weight: 0.5 }, { word: 'contagem', frequency: 2 }, { word: 'ausente' }] });
   for (const words of [[], [{ word: '' }], [{ word: 'a', frequency: 1.5 }], [{ word: 'a', suggested_weight: -1 }], [{ word: 'a', chosen_weight: '1' }], [{ word: 'a', extra: true }]]) add('prepare_word_cloud', { words }, true);
@@ -194,7 +194,10 @@ test('stdio host selects E1 explicitly; unset and baseline still expose the froz
       try {
         await client.connect(transport);
         const catalog = await client.listTools();
-        if (setting === 'guided_v1') assert.deepEqual(catalog, expectedGuided);
+        if (setting === 'guided_v1') {
+          assert.ok(catalog.tools.some(t => t.name === 'creative_local_edit_text'));
+          assert.deepEqual({ ...catalog, tools: catalog.tools.filter(t => !t.name.startsWith('creative_local_')) }, expectedGuided);
+        }
         else assert.equal(createHash('sha256').update(JSON.stringify(pr8Catalog(catalog))).digest('hex'), pr8CatalogSha256);
       } finally { await client.close(); }
     }
@@ -282,6 +285,8 @@ test('E2 is delivered through the stdio host only when explicitly selected', asy
   const profileDir = mkdtempSync(join(tmpdir(), 'compor-guidance-e2-'));
   try {
     await client.connect(new StdioClientTransport({command:process.execPath,args:['dist/stdio.js'],cwd,env:{COMPOR_PROFILE_DIR:profileDir,COMPOR_MCP_GUIDANCE:'focused_v2'},stderr:'pipe'}));
-    assert.deepEqual(await client.listTools(),JSON.parse(JSON.stringify(await memory.client.listTools())));
+    const catalog = await client.listTools();
+    assert.ok(catalog.tools.some(t => t.name === 'creative_local_edit_text'));
+    assert.deepEqual({ ...catalog, tools: catalog.tools.filter(t => !t.name.startsWith('creative_local_')) },JSON.parse(JSON.stringify(await memory.client.listTools())));
   } finally { await client.close();await memory.close();rmSync(profileDir, { recursive: true, force: true }); }
 });

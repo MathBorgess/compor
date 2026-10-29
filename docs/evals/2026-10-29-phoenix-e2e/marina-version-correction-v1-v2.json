@@ -1,0 +1,38 @@
+[
+  {
+    "event": {
+      "id": "marina-version-link-v1",
+      "kind": "comment",
+      "version_id": "v_d9aec2eb4f8b4e1697616283688777ae",
+      "scope": {
+        "type": "campaign",
+        "id": "simulada-marina-ceramica"
+      },
+      "source": "correcao-agente",
+      "agent_interpretation": "Correção de rastreabilidade: v1 nos sinais anteriores identifica a versão v_d9aec2eb4f8b4e1697616283688777ae da peça piece_5af02336833e41559f76d0ae408055bc. Preservar os eventos originais.",
+      "timestamp": "2026-10-29T15:51:40.155Z"
+    },
+    "change": null,
+    "duplicate": false,
+    "markdown_path": "local-simulated-profile.md",
+    "message": "Registrei o sinal; nenhuma preferência foi alterada."
+  },
+  {
+    "event": {
+      "id": "marina-version-link-v2",
+      "kind": "comment",
+      "version_id": "v_5cd277f37e2945efade62954eab738ae",
+      "scope": {
+        "type": "campaign",
+        "id": "simulada-marina-ceramica"
+      },
+      "source": "correcao-agente",
+      "agent_interpretation": "Correção de rastreabilidade: v2 nos sinais anteriores identifica a versão v_5cd277f37e2945efade62954eab738ae da peça piece_4b112542cba044629018f976a13dab25. Preservar os eventos originais.",
+      "timestamp": "2026-10-29T15:51:40.159Z"
+    },
+    "change": null,
+    "duplicate": false,
+    "markdown_path": "local-simulated-profile.md",
+    "message": "Registrei o sinal; nenhuma preferência foi alterada."
+  }
+]

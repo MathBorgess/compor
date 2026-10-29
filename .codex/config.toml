@@ -2,4 +2,6 @@
 [mcp_servers.compor]
 command = "node"
 args = ["prototypes/compor-mcp/dist/stdio.js"]
+# Apenas contexto local não secreto; valores inexistentes não são preenchidos.
+env_vars = ["CODEX_HOME", "CODEX_THREAD_ID", "COMPOR_PROFILE_DIR"]
 startup_timeout_sec = 30

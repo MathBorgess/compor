@@ -1,4 +1,5 @@
 import type { PhoenixHyperparams } from '../config/hyperparams.js';
+import { UNKNOWN_SID_LEVELS } from '../domain/catalog.js';
 
 export type NumericVector = readonly number[] | Float64Array;
 
@@ -216,7 +217,9 @@ export function apply_sid_diversity_decay<T extends DiversityDecayCandidateInput
     const sidSlice = Array.isArray(item.metadata_sid)
       ? item.metadata_sid.slice(0, hp.sid_prefix_depth)
       : [];
-    const hasSidPrefix = sidSlice.length > 0;
+    // Unknown is not a shared cluster and must not introduce a fictitious
+    // diversity penalty merely because multiple candidates lack metadata.
+    const hasSidPrefix = sidSlice.length > 0 && !sidSlice.some(sid => (UNKNOWN_SID_LEVELS as readonly string[]).includes(sid));
     const prefixKey = hasSidPrefix ? JSON.stringify(sidSlice) : '';
     const seenCount = hasSidPrefix ? (prefixCounts.get(prefixKey) ?? 0) : 0;
     const decayMultiplier = hasSidPrefix

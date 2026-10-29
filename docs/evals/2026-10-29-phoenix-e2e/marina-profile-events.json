@@ -1,0 +1,229 @@
+[
+  {
+    "seq": 1,
+    "tool": "phoenix_profile_consent",
+    "elapsed_ms": 45,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "consent": {
+        "purpose": "personalization",
+        "granted": true,
+        "timestamp": "2026-10-29T15:27:52.624Z"
+      },
+      "markdown_path": "local-simulated-profile.md"
+    }
+  },
+  {
+    "seq": 2,
+    "tool": "phoenix_profile_consent",
+    "elapsed_ms": 1,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "consent": {
+        "purpose": "evaluation",
+        "granted": true,
+        "timestamp": "2026-10-29T15:27:52.662Z"
+      },
+      "markdown_path": "local-simulated-profile.md"
+    }
+  },
+  {
+    "seq": 4,
+    "tool": "phoenix_profile_reference_decision",
+    "elapsed_ms": 53,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-ref-1",
+        "version_id": "v1",
+        "campaign_id": "simulada-marina-ceramica",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw9rlV8l8XIUcS5gNqEwbHyaf3eKLfY_ObXx1lkq7z5I8cd/",
+        "source_id": "pinterest_curated_design",
+        "action": "select",
+        "selected_attributes": [
+          "composition",
+          "typography"
+        ],
+        "person_statement": "Da referência 1 eu aproveitaria o cuidado com a tipografia e os espaços, sem copiar o visual de template.",
+        "timestamp": "2026-10-29T15:31:52.861Z"
+      },
+      "previous": null,
+      "duplicate": false,
+      "message": "Registrei a escolha da referência nesta campanha, somente para composition, typography.",
+      "markdown_path": "local-simulated-profile.md"
+    }
+  },
+  {
+    "seq": 5,
+    "tool": "phoenix_profile_reference_decision",
+    "elapsed_ms": 2,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-ref-3",
+        "version_id": "v1",
+        "campaign_id": "simulada-marina-ceramica",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzz-2B4og2-7zZgTIGznrcGPAm9y8IIL5y1I9fVAkliQ_UuaQ/",
+        "source_id": "pinterest_curated_design",
+        "action": "select",
+        "selected_attributes": [
+          "color",
+          "typography"
+        ],
+        "person_statement": "Da 3, gosto da energia das letras irregulares e do contraste de cores, mas não da dificuldade de leitura.",
+        "timestamp": "2026-10-29T15:31:52.873Z"
+      },
+      "previous": null,
+      "duplicate": false,
+      "message": "Registrei a escolha da referência nesta campanha, somente para color, typography.",
+      "markdown_path": "local-simulated-profile.md"
+    }
+  },
+  {
+    "seq": 6,
+    "tool": "phoenix_profile_reference_decision",
+    "elapsed_ms": 2,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-ref-2",
+        "version_id": "v1",
+        "campaign_id": "simulada-marina-ceramica",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw6AyyUCtfIl-fj6W0rrZjpjx9mOsu7t2AfU3w552zrgglB/",
+        "source_id": "pinterest_curated_design",
+        "action": "reject",
+        "person_statement": "A 2 não me aproxima da cerâmica que eu quero mostrar.",
+        "timestamp": "2026-10-29T15:31:52.875Z"
+      },
+      "previous": null,
+      "duplicate": false,
+      "message": "Registrei a rejeição dessa origem para esta campanha. Você pode reconsiderá-la explicitamente depois.",
+      "markdown_path": "local-simulated-profile.md"
+    }
+  },
+  {
+    "seq": 7,
+    "tool": "phoenix_profile_signal",
+    "elapsed_ms": 4,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-v1-feedback",
+        "kind": "reaction",
+        "version_id": "v1",
+        "scope": {
+          "type": "campaign",
+          "id": "simulada-marina-ceramica"
+        },
+        "source": "conversa",
+        "person_statement": "Quero outra direção que mostre o gesto de modelar mais de perto, com textura real e uma cor de contraste bem escolhida.",
+        "agent_interpretation": "Prefere gesto de modelar visível, textura e cor contrastante no contexto desta campanha.",
+        "preference": {
+          "key": "direcao_ceramica",
+          "value": "gesto de modelar próximo, textura real e cor contrastante",
+          "confidence": "confirmed"
+        },
+        "timestamp": "2026-10-29T15:31:52.877Z"
+      },
+      "change": {
+        "id": "598b2583-66b3-4f3d-9129-3da5d42f7937",
+        "event_id": "marina-v1-feedback",
+        "previous": null,
+        "current": {
+          "key": "direcao_ceramica",
+          "value": "gesto de modelar próximo, textura real e cor contrastante",
+          "confidence": "confirmed",
+          "source_event_id": "marina-v1-feedback",
+          "scope": {
+            "type": "campaign",
+            "id": "simulada-marina-ceramica"
+          },
+          "version_id": "v1"
+        },
+        "timestamp": "2026-10-29T15:31:52.877Z"
+      },
+      "duplicate": false,
+      "markdown_path": "local-simulated-profile.md",
+      "message": "Atualizei direcao_ceramica no contexto campaign/simulada-marina-ceramica. Agora: gesto de modelar próximo, textura real e cor contrastante (preferência informada como confirmada), a partir do sinal marina-v1-feedback, versão v1. Você pode corrigir ou desfazer esta mudança; o valor anterior será restaurado."
+    }
+  },
+  {
+    "seq": 8,
+    "tool": "phoenix_profile_signal",
+    "elapsed_ms": 12,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-v2-blue",
+        "kind": "choice",
+        "version_id": "v2",
+        "scope": {
+          "type": "campaign",
+          "id": "simulada-marina-ceramica"
+        },
+        "source": "conversa",
+        "person_statement": "Gosto do azul; gostaria de mantê-lo.",
+        "agent_interpretation": "Deseja manter o azul nesta campanha.",
+        "preference": {
+          "key": "cor_de_contraste",
+          "value": "azul",
+          "confidence": "confirmed"
+        },
+        "timestamp": "2026-10-29T15:35:33.275Z"
+      },
+      "change": {
+        "id": "df9e1f4c-dffa-4fc6-8316-063f37fe2e50",
+        "event_id": "marina-v2-blue",
+        "previous": null,
+        "current": {
+          "key": "cor_de_contraste",
+          "value": "azul",
+          "confidence": "confirmed",
+          "source_event_id": "marina-v2-blue",
+          "scope": {
+            "type": "campaign",
+            "id": "simulada-marina-ceramica"
+          },
+          "version_id": "v2"
+        },
+        "timestamp": "2026-10-29T15:35:33.277Z"
+      },
+      "duplicate": false,
+      "markdown_path": "local-simulated-profile.md",
+      "message": "Atualizei cor_de_contraste no contexto campaign/simulada-marina-ceramica. Agora: azul (preferência informada como confirmada), a partir do sinal marina-v2-blue, versão v2. Você pode corrigir ou desfazer esta mudança; o valor anterior será restaurado."
+    }
+  },
+  {
+    "seq": 9,
+    "tool": "phoenix_profile_signal",
+    "elapsed_ms": 2,
+    "isError": false,
+    "api_metrics": [],
+    "data": {
+      "event": {
+        "id": "marina-v2-reaction",
+        "kind": "reaction",
+        "version_id": "v2",
+        "scope": {
+          "type": "campaign",
+          "id": "simulada-marina-ceramica"
+        },
+        "source": "conversa",
+        "person_statement": "Não fiquei encantada nem surpresa. Eu tentaria um recorte ainda mais próximo das mãos e da argila, com menos cenário e uma composição de texto mais expressiva.",
+        "agent_interpretation": "A peça está mais próxima, mas a imagem parece previsível e não gera vontade de compartilhar; pede recorte e tipografia mais expressivos.",
+        "timestamp": "2026-10-29T15:35:33.284Z"
+      },
+      "change": null,
+      "duplicate": false,
+      "markdown_path": "local-simulated-profile.md",
+      "message": "Registrei o sinal; nenhuma preferência foi alterada."
+    }
+  }
+]

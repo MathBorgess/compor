@@ -1,0 +1,828 @@
+{
+  "scope": "synthetic_persona_real_curated_sources",
+  "model_consent": "persona_simulada_explicitamente_autorizou",
+  "preview_consent": "persona_simulada_explicitamente_autorizou",
+  "timing": {
+    "full_discovery_ms": 22677,
+    "decision_requests": [
+      {
+        "count": 8,
+        "latency_ms": 1363,
+        "status": "ok",
+        "input_tokens": 3080,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_write_tokens": 0,
+        "unknown_answer_count": 0
+      },
+      {
+        "count": 1,
+        "latency_ms": 433,
+        "status": "ok",
+        "input_tokens": 575,
+        "output_tokens": 0,
+        "cached_input_tokens": 0,
+        "cache_write_tokens": 0,
+        "unknown_answer_count": 0
+      }
+    ]
+  },
+  "metrics": {
+    "total_candidates_evaluated": 9,
+    "total_candidates_retrieved": 9,
+    "total_candidates_filtered": 0,
+    "total_candidates_scored": 9,
+    "exploration_quota_allocated": 0,
+    "user_tower_dimension": 32,
+    "positive_session_events": 0,
+    "negative_session_events": 0,
+    "board_html_path": null
+  },
+  "decision_engine_source": "openai_api",
+  "ranker_mode": "decision_score",
+  "probability_semantics": "decision_level_probabilities_not_token_logprobs",
+  "ranking": [
+    {
+      "candidate_id": "phx_48e49c75_06",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "creativemarket/social-media-templates",
+      "role": "structural_grid",
+      "metadata_sid": [
+        "carousel_editorial_4:5",
+        "swiss_grid",
+        "editorial_multicolumn",
+        "tactile_paper_texture"
+      ],
+      "visual_description": "Editorial Instagram Templates by Studio TSM on @creativemarket — Editorial Instagram Templates by Studio TSM on Creative Market",
+      "preview_url": "https://i.pinimg.com/236x/46/e0/e1/46e0e134d552a21b0a7932cd477d16ed.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwfB2OQfPQIVqgOEL-IbRScpsFNVppmKYYWSZ29jmnjmgv3/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_06",
+        "status": "scored",
+        "reason": "ok",
+        "score": 0.05000000000000071,
+        "level_score": 1.41,
+        "confidence": 0.33,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.11,
+            "log_probability": -2.2072749131897207
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.41,
+            "log_probability": -0.8915981192837836
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.44,
+            "log_probability": -0.8209805520698302
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0.04,
+            "log_probability": -3.2188758248682006
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": 0.3913,
+      "diversity_multiplier": 1,
+      "final_score": 0.3913,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.6826
+    },
+    {
+      "candidate_id": "phx_48e49c75_05",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "creativemarket/social-media-templates",
+      "role": "structural_grid",
+      "metadata_sid": [
+        "story_interactive_9:16",
+        "flowchart_comparison",
+        "high_contrast_cta",
+        "luxury_cosmetic_d2c"
+      ],
+      "visual_description": "SOLV / Stories Social Media KIT by Pixel And Oblivé on @creativemarket — SOLV / Stories Social Media KIT by Pixel And Oblivé on Creative Market",
+      "preview_url": "https://i.pinimg.com/236x/fa/2f/fa/fa2ffa4cb3677129fca83f70ec981288.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyvgQazb8a6ifyjANaTAzEiDtd3qirBUTQVcFY83dfFx8ko/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_05",
+        "status": "scored",
+        "reason": "ok",
+        "score": -2.3,
+        "level_score": 1.28,
+        "confidence": 0.42,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.15,
+            "log_probability": -1.8971199848858813
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.45,
+            "log_probability": -0.7985076962177716
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.37,
+            "log_probability": -0.994252273343867
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0.03,
+            "log_probability": -3.506557897319982
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": -1.984,
+      "diversity_multiplier": 1,
+      "final_score": -1.984,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.6319
+    },
+    {
+      "candidate_id": "phx_48e49c75_08",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "latermedia/instagram-post-design",
+      "role": "conversion_cta",
+      "metadata_sid": [
+        "carousel_editorial_4:5",
+        "step_by_step_cheatsheet",
+        "kinetic_retro_type",
+        "tactile_paper_texture"
+      ],
+      "visual_description": "Learn how to use carousel posts to boost your engagement, reach new audiences, a — Learn how to use carousel posts to boost your engagement, reach new audiences, and even drive sales in this blog post. Instagram carousel posts are one of the most versatile tools you can use to achie",
+      "preview_url": "https://i.pinimg.com/236x/a7/a6/92/a7a692ffe7121756f10c3105ac58b700.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwsBO5VxhyqKC_71FuOMGlGqmDga9MKrFl3V6DCnwACbFZS/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_08",
+        "status": "scored",
+        "reason": "ok",
+        "score": -10.950000000000001,
+        "level_score": 0.77,
+        "confidence": 0.73,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.25,
+            "log_probability": -1.3862943611198906
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.73,
+            "log_probability": -0.31471074483970024
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.02,
+            "log_probability": -3.912023005428146
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0,
+            "log_probability": null
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": -10.6099,
+      "diversity_multiplier": 1,
+      "final_score": -10.6099,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.6803
+    },
+    {
+      "candidate_id": "phx_48e49c75_04",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "creativemarket/social-media-templates",
+      "role": "structural_grid",
+      "metadata_sid": [
+        "carousel_editorial_4:5",
+        "glassmorphism_ui",
+        "bold_display_hook",
+        "neo_brutalist_bold"
+      ],
+      "visual_description": "Bold Red Canva Instagram Template by And Done Studio on @creativemarket — Bold Red Canva Instagram Template by And Done Studio on Creative Market",
+      "preview_url": "https://i.pinimg.com/236x/a3/b5/a9/a3b5a9557595adfc1c1f0f48fcb313f8.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwQv3i5cv2GOjU1ibGCcRu-3Z_eB4ZXd7_t2mE0SOx4RENl/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_04",
+        "status": "scored",
+        "reason": "ok",
+        "score": -16.599999999999998,
+        "level_score": 0.56,
+        "confidence": 0.44,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.5,
+            "log_probability": -0.6931471805599453
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.44,
+            "log_probability": -0.8209805520698302
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.06,
+            "log_probability": -2.8134107167600364
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0,
+            "log_probability": null
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": -16.2783,
+      "diversity_multiplier": 1,
+      "final_score": -16.2783,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.6434
+    },
+    {
+      "candidate_id": "phx_48e49c75_02",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "behance/typography",
+      "role": "hook_cover",
+      "metadata_sid": [
+        "carousel_editorial_4:5",
+        "bento_grid",
+        "bold_display_hook",
+        "tactile_paper_texture"
+      ],
+      "visual_description": "See more work by Laura and hire her for custom lettering services on — See more work by Laura and hire her for custom lettering services on",
+      "preview_url": "https://i.pinimg.com/236x/04/df/8c/04df8c5ef46f2e07193c31db8cfac51f.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxSuXeNZbwnK-JpW-NEV_mqEkEP__txNXZ1H135VD-I3-w/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_02",
+        "status": "scored",
+        "reason": "ok",
+        "score": -20.6,
+        "level_score": 0.4,
+        "confidence": 0.6,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.66,
+            "log_probability": -0.4155154439616658
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.29,
+            "log_probability": -1.2378743560016174
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.04,
+            "log_probability": -3.2188758248682006
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0.01,
+            "log_probability": -4.605170185988091
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": -20.332,
+      "diversity_multiplier": 1,
+      "final_score": -20.332,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.5361
+    },
+    {
+      "candidate_id": "phx_48e49c75_09",
+      "origin_kind": "provider",
+      "source_id": "pinterest_curated_design",
+      "board": "latermedia/instagram-post-design",
+      "role": "conversion_cta",
+      "metadata_sid": [
+        "ad_performance_4:5",
+        "swiss_grid",
+        "high_density_data",
+        "vibrant_retail_promo"
+      ],
+      "visual_description": "Ready to get ahead of all the must-know graphic design trends for 2022? Each yea — Ready to get ahead of all the must-know graphic design trends for 2022? Each year, we dive into the hottest visual themes shaping the social media landscape — from trending fonts to coveted color pale",
+      "preview_url": "https://i.pinimg.com/236x/08/52/54/085254c564d951392c5a50b21a1c0655.jpg",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwW99TdVxeGPont3UdmzWakiXeGx5RgjZ3ZkHvsyR3QsdE7/",
+      "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+      "action_probs": null,
+      "decision_evaluation": {
+        "candidate_id": "phx_48e49c75_09",
+        "status": "scored",
+        "reason": "ok",
+        "score": -24.200000000000003,
+        "level_score": 0.24,
+        "confidence": 0.76,
+        "level_probabilities": [
+          {
+            "label": "incompatível",
+            "level": 0,
+            "probability": 0.78,
+            "log_probability": -0.2484613592984996
+          },
+          {
+            "label": "limitada",
+            "level": 1,
+            "probability": 0.2,
+            "log_probability": -1.6094379124341003
+          },
+          {
+            "label": "útil",
+            "level": 2,
+            "probability": 0.02,
+            "log_probability": -3.912023005428146
+          },
+          {
+            "label": "muito útil",
+            "level": 3,
+            "probability": 0,
+            "log_probability": null
+          }
+        ],
+        "evidence": "image_and_metadata",
+        "image_note": "sent"
+      },
+      "raw_score": -23.9221,
+      "diversity_multiplier": 1,
+      "final_score": -23.9221,
+      "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+      "user_tower_cosine_similarity": 0.5559
+    }
+  ],
+  "decision_results": [
+    {
+      "candidate_id": "phx_48e49c75_06",
+      "status": "scored",
+      "reason": "ok",
+      "score": 0.05000000000000071,
+      "level_score": 1.41,
+      "confidence": 0.33,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.11,
+          "log_probability": -2.2072749131897207
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.41,
+          "log_probability": -0.8915981192837836
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.44,
+          "log_probability": -0.8209805520698302
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0.04,
+          "log_probability": -3.2188758248682006
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_08",
+      "status": "scored",
+      "reason": "ok",
+      "score": -10.950000000000001,
+      "level_score": 0.77,
+      "confidence": 0.73,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.25,
+          "log_probability": -1.3862943611198906
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.73,
+          "log_probability": -0.31471074483970024
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.02,
+          "log_probability": -3.912023005428146
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0,
+          "log_probability": null
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_04",
+      "status": "scored",
+      "reason": "ok",
+      "score": -16.599999999999998,
+      "level_score": 0.56,
+      "confidence": 0.44,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.5,
+          "log_probability": -0.6931471805599453
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.44,
+          "log_probability": -0.8209805520698302
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.06,
+          "log_probability": -2.8134107167600364
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0,
+          "log_probability": null
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_05",
+      "status": "scored",
+      "reason": "ok",
+      "score": -2.3,
+      "level_score": 1.28,
+      "confidence": 0.42,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.15,
+          "log_probability": -1.8971199848858813
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.45,
+          "log_probability": -0.7985076962177716
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.37,
+          "log_probability": -0.994252273343867
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0.03,
+          "log_probability": -3.506557897319982
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_09",
+      "status": "scored",
+      "reason": "ok",
+      "score": -24.200000000000003,
+      "level_score": 0.24,
+      "confidence": 0.76,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.78,
+          "log_probability": -0.2484613592984996
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.2,
+          "log_probability": -1.6094379124341003
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.02,
+          "log_probability": -3.912023005428146
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0,
+          "log_probability": null
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_02",
+      "status": "scored",
+      "reason": "ok",
+      "score": -20.6,
+      "level_score": 0.4,
+      "confidence": 0.6,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.66,
+          "log_probability": -0.4155154439616658
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.29,
+          "log_probability": -1.2378743560016174
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.04,
+          "log_probability": -3.2188758248682006
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0.01,
+          "log_probability": -4.605170185988091
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_07",
+      "status": "scored",
+      "reason": "ok",
+      "score": -26.5,
+      "level_score": 0.14,
+      "confidence": 0.86,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.86,
+          "log_probability": -0.15082288973458366
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.14,
+          "log_probability": -1.9661128563728327
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0,
+          "log_probability": null
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0,
+          "log_probability": null
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_03",
+      "status": "scored",
+      "reason": "ok",
+      "score": -27.85,
+      "level_score": 0.09,
+      "confidence": 0.91,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.92,
+          "log_probability": -0.08338160893905101
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.07,
+          "log_probability": -2.659260036932778
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.01,
+          "log_probability": -4.605170185988091
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0,
+          "log_probability": null
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    },
+    {
+      "candidate_id": "phx_48e49c75_01",
+      "status": "scored",
+      "reason": "ok",
+      "score": -18.349999999999998,
+      "level_score": 0.49,
+      "confidence": 0.51,
+      "level_probabilities": [
+        {
+          "label": "incompatível",
+          "level": 0,
+          "probability": 0.57,
+          "log_probability": -0.5621189181535413
+        },
+        {
+          "label": "limitada",
+          "level": 1,
+          "probability": 0.38,
+          "log_probability": -0.9675840262617056
+        },
+        {
+          "label": "útil",
+          "level": 2,
+          "probability": 0.04,
+          "log_probability": -3.2188758248682006
+        },
+        {
+          "label": "muito útil",
+          "level": 3,
+          "probability": 0.01,
+          "log_probability": -4.605170185988091
+        }
+      ],
+      "evidence": "image_and_metadata",
+      "image_note": "sent"
+    }
+  ],
+  "previews": [
+    {
+      "id": "phx_48e49c75_06",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwfB2OQfPQIVqgOEL-IbRScpsFNVppmKYYWSZ29jmnjmgv3/",
+      "caption": "Editorial Instagram Templates by Studio TSM on @creativemarket",
+      "sha256": "4aefaeaa379b027ea7bbff56ddcfc1123e0ae8ad9d0e3bc135e9dc3d51e28050",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_08",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwsBO5VxhyqKC_71FuOMGlGqmDga9MKrFl3V6DCnwACbFZS/",
+      "caption": "Learn how to use carousel posts to boost your engagement, reach new audiences, a",
+      "sha256": "95b926de24101ee9a97609d8b3ff32d7d818a3cf6526d05736eecc37a2fd50a8",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_04",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwQv3i5cv2GOjU1ibGCcRu-3Z_eB4ZXd7_t2mE0SOx4RENl/",
+      "caption": "Bold Red Canva Instagram Template by And Done Studio on @creativemarket",
+      "sha256": "32e296042f8e4850d2b2638e362e40a04301d014e71503f9ab613bf1e1187dd9",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_05",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyvgQazb8a6ifyjANaTAzEiDtd3qirBUTQVcFY83dfFx8ko/",
+      "caption": "SOLV / Stories Social Media KIT by Pixel And Oblivé on @creativemarket",
+      "sha256": "de0cb6af20b192255bc94326a2fdcf6196b480d8c48dca6e6bd3320ab458f275",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_09",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwW99TdVxeGPont3UdmzWakiXeGx5RgjZ3ZkHvsyR3QsdE7/",
+      "caption": "Ready to get ahead of all the must-know graphic design trends for 2022? Each yea",
+      "sha256": "e7471ece3501ee1fcb3d5e3fb8392b2b3d4c5329e7de6a5eee900943ad21e519",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_02",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxSuXeNZbwnK-JpW-NEV_mqEkEP__txNXZ1H135VD-I3-w/",
+      "caption": "See more work by Laura and hire her for custom lettering services on",
+      "sha256": "c1eb695e6d55a75cc7ab60e8e3295531e9984effc47bbabb0344cbd5b1fca800",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_07",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw3rN3uTYCPmwK8hWJtAhl20UMgqE99mx08VvHZGFMzv86N/",
+      "caption": "So, how often should you post on Instagram? If you work in social media, you’ve",
+      "sha256": "2097e2ab85ac337589af7ce7c9bd5c0d9324b6b08b5d6d0a1b7edee39e793516",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_03",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzLXXqiSVu_x_aEY1Om18AKjIQJCtZRxCVibGSK0RWpGbw/",
+      "caption": "See more projects by Koivo and hire them on",
+      "sha256": "f10bc692d00849cdb4e43af8ad1985edcf5b6eda068b6f3283ac4784f81d205d",
+      "bytes_preserved_temporarily": true
+    },
+    {
+      "id": "phx_48e49c75_01",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyMowfBeFH9-3ZbItBckE11qf69hdfd7rwY_oXf6pkjxjY/",
+      "caption": "Typography and illustration for the Royal Museum for Central Africa in Tervuren",
+      "sha256": "40559ad90deb483e029bf26b8c4d5458d34458f0c869cb3af7f1dc97007f1017",
+      "bytes_preserved_temporarily": true
+    }
+  ],
+  "followup_feedback": {
+    "status": "recorded",
+    "client_mode": "web",
+    "user_id": "simulation_e2e_20261029",
+    "candidate_id": "phx_48e49c75_06",
+    "board": "creativemarket/social-media-templates",
+    "action": "style_mismatch",
+    "dwell_time_ms": 0,
+    "staged_webp_path": null,
+    "board_affinity": {
+      "board": "creativemarket/social-media-templates",
+      "positive_actions": 0,
+      "total_impressions": 3,
+      "affinity_score": 0.2857
+    },
+    "positive_session_count": 0,
+    "negative_session_count": 1,
+    "compaction_triggered": false,
+    "duplicate": false,
+    "negative_constraints": [],
+    "embedding_space": "openai_text_embedding_3_small"
+  },
+  "limitations": [
+    "Persona, designer e engenheiro são agentes simulados; não representam usuários reais.",
+    "Avaliação visual usa miniaturas do provedor; hashes não são as imagens.",
+    "Tempo total inclui busca e roteamento; uso e custo do roteador/embeddings não foram instrumentados.",
+    "Resultado da etapa de ranking Decision ocorreu após pré-teste e produção do primeiro rascunho; não é um único fluxo linear do zero."
+  ]
+}

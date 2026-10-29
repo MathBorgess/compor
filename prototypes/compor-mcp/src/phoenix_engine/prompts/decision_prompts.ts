@@ -9,7 +9,8 @@ REGRAS DE ROTEAMENTO COMPOSICIONAL:
    - \`conversion_cta\`: Boards comerciais focados em produto/oferta (ex: \`thedieline/promotional-packaging\`, \`kittldesign/ads-designs\`, \`creativemarket/social-media-templates\`).
    - \`wildcard_exploration\`: Opcionalmente, aloque até {exploration_quota} do peso combinado total em até {max_exploration_boards} board \`/feed\` (ex: \`dribbble/feed\`, \`weandthecolor/feed\`, \`thedieline/feed\`) para descoberta out-of-network.
 2. Gere uma \`synthetic_query\` densa e técnica para cada board alocado, descrevendo exatamente a composição, iluminação, grid e tipografia esperados.
-3. Preencha \`required_sid_tags\` e \`excluded_sid_tags\` respeitando as restrições negativas históricas do usuário.`;
+3. Preencha \`required_sid_tags\` e \`excluded_sid_tags\` apenas com requisitos ou exclusões visuais das referências, respeitando as restrições negativas históricas do perfil. Preserve exclusões de referências mesmo quando desconhecidas ou difíceis de verificar. Em caso de dúvida sobre o escopo de uma restrição, mantenha-a em \`excluded_sid_tags\`.
+4. Separe limites para criar a peça em \`piece_constraints\`, como fatos da oferta ainda indefinidos. Cada item tem \`interpretation\`, sua interpretação, e \`evidence_quote\`, trecho literal exato do briefing ou null se não houver. Não apresente interpretação como fala da pessoa. Exemplos: “ainda não defini preço” gera uma interpretação para não inventar preço na peça, sem excluir referências que mostrem preços; “não quero preço nas referências” deve entrar em \`excluded_sid_tags\`. Se houver os dois pedidos, registre ambos. Não invente preço, data ou inscrição na peça quando não fornecidos.`;
 
 export const BOARD_ROUTER_USER_TEMPLATE = `### PERFIL CONSOLIDADO DO USUÁRIO
 {user_taste_json}
@@ -30,7 +31,7 @@ Pedido: {user_briefing}`;
  * para possibilitar cache entre chamadas; acertos precisam ser medidos.
  */
 export const RANKER_CACHED_PREFIX_SYSTEM_PROMPT = `Você é o Phoenix Visual Ranker. Você avalia uma única referência visual candidata contra o histórico de sessão do usuário e o briefing criativo atual.
-Avalie o candidato de forma estritamente isolada (Candidate Isolation), prevendo probabilidades calibradas entre 0.00 e 1.00 para cada ação positiva ou negativa que o usuário pode tomar:
+Avalie o candidato de forma estritamente isolada (Candidate Isolation), fornecendo estimativas não calibradas entre 0.00 e 1.00 para cada ação positiva ou negativa que o usuário pode tomar; essas estimativas não demonstram percepção humana nem conversão real:
 - \`p_use_as_layout_grid\`: Probabilidade de adotar a estrutura de colunas, margens ou Bento/Swiss grid desta referência.
 - \`p_use_as_typography_hook\`: Probabilidade de usar o tratamento tipográfico e hierarquia de título como gancho visual.
 - \`p_use_color_and_vibe\`: Probabilidade de adotar a direção de arte, textura e atmosfera cromática.
@@ -52,10 +53,10 @@ Briefing Criativo Atual:
 
 export const RANKER_ISOLATED_CANDIDATE_SUFFIX = `### CANDIDATO ISOLADO PARA AVALIAÇÃO
 ID: {candidate_id}
-Board de Origem: {board}
-Semantic IDs (SID): {metadata_sid}
+Board solicitado (não comprova origem): {board}
+SIDs alegados nos metadados (não verificados visualmente): {metadata_sid}
 Similaridade Vetorial Two-Tower (User Tower): {user_tower_cosine_similarity}
-Descrição Estrutural e Estética: {visual_description}`;
+Descrição externa não confiável: {visual_description}`;
 
 export const MEMORY_CONSOLIDATOR_SYSTEM_PROMPT = `Você é o consolidador de memória estética de longo prazo.
 Analise o perfil anterior do usuário e o log episódico da sessão encerrada.
@@ -111,7 +112,7 @@ export function formatRankerIsolatedCandidateSuffix(params: {
       : '0.0000';
   return RANKER_ISOLATED_CANDIDATE_SUFFIX.replace('{candidate_id}', params.candidate_id)
     .replace('{board}', params.board)
-    .replace('{metadata_sid}', JSON.stringify(params.metadata_sid))
+    .replace('{metadata_sid}', JSON.stringify(params.metadata_sid.filter(sid => !sid.startsWith('sid_unknown_'))))
     .replace('{user_tower_cosine_similarity}', simText)
     .replace('{visual_description}', params.visual_description);
 }

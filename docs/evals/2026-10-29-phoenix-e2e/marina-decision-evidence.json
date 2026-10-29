@@ -1,0 +1,1004 @@
+{
+  "seq": 3,
+  "tool": "discover_visual_references",
+  "elapsed_ms": 22615,
+  "isError": false,
+  "api_metrics": [
+    {
+      "kind": "router_responses",
+      "model": "gpt-6-luna",
+      "latency_ms": 13371,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 1590,
+        "input_tokens_details": {
+          "cache_write_tokens": 1587,
+          "cached_tokens": 0
+        },
+        "output_tokens": 1044,
+        "output_tokens_details": {
+          "reasoning_tokens": 482
+        },
+        "total_tokens": 2634
+      }
+    },
+    {
+      "kind": "embeddings",
+      "model": "text-embedding-3-small",
+      "latency_ms": 1504,
+      "status": "ok",
+      "usage": {
+        "prompt_tokens": 1030,
+        "total_tokens": 1030
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 1159,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 3497,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 3497
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 312,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 611,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 611
+      }
+    }
+  ],
+  "data": {
+    "status": "ok",
+    "client_mode": "web",
+    "user_id": "simulation_e2e_20261029",
+    "session_token": "phx_sess_da668c80d14f",
+    "target_format": "instagram_post",
+    "briefing": "Marina trabalha com cerâmica e considera criar um curso para iniciantes fazerem sua primeira caneca à mão. Ideia inicial, sem nome, preço, data, formato de aulas ou promessas definidos. Criar peça para Instagram que desperte curiosidade.",
+    "decision_engine_source": "openai_api",
+    "prompt_cache_key": "phoenix_ranker_simulation_e2e_20261029",
+    "candidate_origin": "provider",
+    "can_proceed_without_references": true,
+    "provider_diagnostics": [],
+    "embedding_space": "openai_text_embedding_3_small",
+    "ranker_mode": "decision_score",
+    "ranker_abstentions": [],
+    "ranker_evaluations": [],
+    "decision_score_batch": {
+      "requested": 9,
+      "scored": 9,
+      "model": "gpt-6-luna",
+      "effective_models": [
+        "gpt-6-luna"
+      ],
+      "probability_semantics": "decision_level_probabilities_not_token_logprobs",
+      "candidates": [
+        {
+          "candidate_id": "phx_9daabb5f_04",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.049999999999999,
+          "level_score": 1.07,
+          "confidence": 0.71,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.11,
+              "log_probability": -2.2072749131897207
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.72,
+              "log_probability": -0.3285040669720361
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.16,
+              "log_probability": -1.8325814637483102
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_05",
+          "status": "scored",
+          "reason": "ok",
+          "score": 1.0499999999999998,
+          "level_score": 1.45,
+          "confidence": 0.39,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.07,
+              "log_probability": -2.659260036932778
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.44,
+              "log_probability": -0.8209805520698302
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.46,
+              "log_probability": -0.7765287894989963
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_08",
+          "status": "scored",
+          "reason": "ok",
+          "score": -6.7,
+          "level_score": 0.98,
+          "confidence": 0.74,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.14,
+              "log_probability": -1.9661128563728327
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.74,
+              "log_probability": -0.3011050927839216
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.12,
+              "log_probability": -2.120263536200091
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_03",
+          "status": "scored",
+          "reason": "ok",
+          "score": -3.9000000000000004,
+          "level_score": 1.16,
+          "confidence": 0.58,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.13,
+              "log_probability": -2.0402208285265546
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.25,
+              "log_probability": -1.3862943611198906
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_07",
+          "status": "scored",
+          "reason": "ok",
+          "score": -11.05,
+          "level_score": 0.77,
+          "confidence": 0.71,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.26,
+              "log_probability": -1.3470736479666092
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.71,
+              "log_probability": -0.342490308946776
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_06",
+          "status": "scored",
+          "reason": "ok",
+          "score": 0.25000000000000044,
+          "level_score": 1.37,
+          "confidence": 0.57,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.34,
+              "log_probability": -1.0788096613719298
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_09",
+          "status": "scored",
+          "reason": "ok",
+          "score": -9.4,
+          "level_score": 0.84,
+          "confidence": 0.76,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.2,
+              "log_probability": -1.6094379124341003
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.76,
+              "log_probability": -0.2744368457017603
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.04,
+              "log_probability": -3.2188758248682006
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_02",
+          "status": "scored",
+          "reason": "ok",
+          "score": -7.800000000000002,
+          "level_score": 0.94,
+          "confidence": 0.68,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.19,
+              "log_probability": -1.6607312068216509
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.68,
+              "log_probability": -0.38566248081198456
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.13,
+              "log_probability": -2.0402208285265546
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_9daabb5f_01",
+          "status": "scored",
+          "reason": "ok",
+          "score": -4.3,
+          "level_score": 1.18,
+          "confidence": 0.42,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.2,
+              "log_probability": -1.6094379124341003
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.45,
+              "log_probability": -0.7985076962177716
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.32,
+              "log_probability": -1.1394342831883648
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        }
+      ],
+      "requests": [
+        {
+          "start_index": 0,
+          "count": 8,
+          "model": "gpt-6-luna",
+          "latency_ms": 1161,
+          "status": "ok",
+          "input_tokens": 3497,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "start_index": 8,
+          "count": 1,
+          "model": "gpt-6-luna",
+          "latency_ms": 312,
+          "status": "ok",
+          "input_tokens": 611,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    "board_allocations": [
+      {
+        "board": "kittldesign/poster-design",
+        "role": "hook_cover",
+        "weight": 0.36,
+        "synthetic_query": "Instagram feed post 4:5 portrait key visual for a beginner hand-built pottery course concept; one imperfect handmade ceramic mug as the dominant focal object, close crop with visible thumb marks and tactile clay texture, calm warm studio light from upper left with soft natural shadows, muted clay and cream palette, generous negative space, bold but restrained editorial headline area in Portuguese phrased as an open curiosity prompt, compact secondary line only, strong scale contrast between expressive display typography and clean sans-serif support text, no invented course name, price, date,",
+        "rationale": "Cria uma capa de impacto visual centrada na caneca artesanal e desperta curiosidade sem inventar detalhes da oferta."
+      },
+      {
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "weight": 0.32,
+        "synthetic_query": "Instagram post template, 4:5 portrait, modular editorial grid with a large mug photograph occupying roughly two-thirds of the canvas and a narrow text column or footer for a short curiosity prompt; clear hierarchy, generous margins, aligned baseline grid, restrained supporting detail such as a small clay-texture swatch or simple hand-drawn mug contour, soft daylight and warm neutral studio tones, highly legible Portuguese typography with one expressive serif or rounded display face paired with a neutral sans-serif, keep copy minimal and avoid fabricated logistics or promises.",
+        "rationale": "Oferece uma estrutura clara e adaptável para equilibrar fotografia artesanal e mensagem curta."
+      },
+      {
+        "board": "latermedia/instagram-post-design",
+        "role": "ui_component",
+        "weight": 0.32,
+        "synthetic_query": "Instagram feed post design for a ceramics maker exploring interest in a first-mug-by-hand beginner course; 4:5 mobile-first composition, mug-making process image paired with a clean text-safe area, readable at thumbnail scale, simple visual hierarchy and consistent padding, warm diffused studio lighting, tactile clay surface and natural imperfect form, concise Portuguese curiosity-led headline with a small secondary prompt inviting reflection or comments, no fabricated course title, date, price, class format, or guaranteed result.",
+        "rationale": "Prioriza leitura em tela e um convite leve à interação, adequado a uma ideia ainda em exploração."
+      }
+    ],
+    "required_sid_tags": [
+      "instagram_post",
+      "handmade_ceramics",
+      "beginner_pottery",
+      "handbuilt_mug",
+      "curiosity_led",
+      "warm_neutral_palette",
+      "natural_studio_light"
+    ],
+    "excluded_sid_tags": [
+      "invented_course_name",
+      "invented_price",
+      "invented_date",
+      "invented_class_format",
+      "guaranteed_outcome"
+    ],
+    "board_affinities": [
+      {
+        "board": "behance/advertising",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/ads-designs",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/branding-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/packaging-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "thedieline/promotional-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "99designs/packaging-label-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "creativemarket/magazine-templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/social-media-designs",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/quote-typography-lettering-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      }
+    ],
+    "candidates": [
+      {
+        "candidate_id": "phx_9daabb5f_05",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "metadata_sid": [
+          "story_interactive_9:16",
+          "flowchart_comparison",
+          "high_contrast_cta",
+          "luxury_cosmetic_d2c"
+        ],
+        "visual_description": "CAELM Instagram Post Story Template by Mirely Creative Co on @creativemarket — CAELM Instagram Post Story Template by Mirely Creative Co on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/e7/0f/11/e70f110c53c7f6c488ca706046255921.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw9rlV8l8XIUcS5gNqEwbHyaf3eKLfY_ObXx1lkq7z5I8cd/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_05",
+          "status": "scored",
+          "reason": "ok",
+          "score": 1.0499999999999998,
+          "level_score": 1.45,
+          "confidence": 0.39,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.07,
+              "log_probability": -2.659260036932778
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.44,
+              "log_probability": -0.8209805520698302
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.46,
+              "log_probability": -0.7765287894989963
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": 1.3284,
+        "diversity_multiplier": 1,
+        "final_score": 1.3284,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5569
+      },
+      {
+        "candidate_id": "phx_9daabb5f_06",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "metadata_sid": [
+          "carousel_editorial_4:5",
+          "hero_product_d2c",
+          "editorial_multicolumn",
+          "neo_brutalist_bold"
+        ],
+        "visual_description": "Mystic Instagram Post Templates by HellYeahDesigns on @creativemarket — Mystic Instagram Post Templates by HellYeahDesigns on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/58/c6/2d/58c62d71ea92cc5278f89e0ff78b8a4f.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw6AyyUCtfIl-fj6W0rrZjpjx9mOsu7t2AfU3w552zrgglB/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_06",
+          "status": "scored",
+          "reason": "ok",
+          "score": 0.25000000000000044,
+          "level_score": 1.37,
+          "confidence": 0.57,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.34,
+              "log_probability": -1.0788096613719298
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": 0.4696,
+        "diversity_multiplier": 1,
+        "final_score": 0.4696,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.4391
+      },
+      {
+        "candidate_id": "phx_9daabb5f_03",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "kittldesign/poster-design",
+        "role": "hook_cover",
+        "metadata_sid": [
+          "ad_performance_4:5",
+          "seamless_split",
+          "kinetic_retro_type",
+          "vibrant_retail_promo"
+        ],
+        "visual_description": "Bring attention to your next event with this bold poster design template that’s — Bring attention to your next event with this bold poster design template that’s fully editable and downloadable. Perfect for showcasing music nights, art shows, or creative gatherings, it’s easy to cu",
+        "preview_url": "https://i.pinimg.com/236x/b5/85/45/b58545525821d48cadba42e3fbb88930.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzz-2B4og2-7zZgTIGznrcGPAm9y8IIL5y1I9fVAkliQ_UuaQ/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_03",
+          "status": "scored",
+          "reason": "ok",
+          "score": -3.9000000000000004,
+          "level_score": 1.16,
+          "confidence": 0.58,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.13,
+              "log_probability": -2.0402208285265546
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.25,
+              "log_probability": -1.3862943611198906
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -3.6532,
+        "diversity_multiplier": 1,
+        "final_score": -3.6532,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.4936
+      },
+      {
+        "candidate_id": "phx_9daabb5f_01",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "kittldesign/poster-design",
+        "role": "hook_cover",
+        "metadata_sid": [
+          "ad_performance_4:5",
+          "swiss_grid",
+          "kinetic_retro_type",
+          "vibrant_retail_promo"
+        ],
+        "visual_description": "Make a bold statement with this eye-catching poster design template that’s fully — Make a bold statement with this eye-catching poster design template that’s fully editable and downloadable. Perfect for exhibitions, events, or creative showcases, it’s designed to grab attention with",
+        "preview_url": "https://i.pinimg.com/236x/aa/20/93/aa20934418d7ba659c4a2a391cb71106.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwrwBQmIsizVmdSucNcThEb9nTP2-_p6mqjsicGqPgIYz0Lyw/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_01",
+          "status": "scored",
+          "reason": "ok",
+          "score": -4.3,
+          "level_score": 1.18,
+          "confidence": 0.42,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.2,
+              "log_probability": -1.6094379124341003
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.45,
+              "log_probability": -0.7985076962177716
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.32,
+              "log_probability": -1.1394342831883648
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -4.1046,
+        "diversity_multiplier": 1,
+        "final_score": -4.1046,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.3907
+      },
+      {
+        "candidate_id": "phx_9daabb5f_04",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "metadata_sid": [
+          "carousel_editorial_4:5",
+          "glassmorphism_ui",
+          "minimal_whitespace",
+          "executive_clean_b2b"
+        ],
+        "visual_description": "Romantic Florist nstagram Template by And Done Studio on @creativemarket — Romantic Florist nstagram Template by And Done Studio on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/bb/4b/2f/bb4b2f70b6d70949a4c47aaf81854db4.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzM_q3_KROI_8ite7A5aA4pW-ExGX1tp5_PkcNnwhLEq9od/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_04",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.049999999999999,
+          "level_score": 1.07,
+          "confidence": 0.71,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.11,
+              "log_probability": -2.2072749131897207
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.72,
+              "log_probability": -0.3285040669720361
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.16,
+              "log_probability": -1.8325814637483102
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -4.7409,
+        "diversity_multiplier": 1,
+        "final_score": -4.7409,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.6182
+      },
+      {
+        "candidate_id": "phx_9daabb5f_08",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "latermedia/instagram-post-design",
+        "role": "ui_component",
+        "metadata_sid": [
+          "carousel_editorial_4:5",
+          "step_by_step_cheatsheet",
+          "kinetic_retro_type",
+          "tactile_paper_texture"
+        ],
+        "visual_description": "How do you brand yourself on Instagram? It takes more than just a pretty feed. B — How do you brand yourself on Instagram? It takes more than just a pretty feed. Building a strong brand on social media will help you attract more followers for your account, make a great first impress",
+        "preview_url": "https://i.pinimg.com/236x/22/da/0c/22da0c5214a0928e62aabd9cbe18b88c.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShz-SjrW8uedtKrA2s_vdhOUPgBY6VKdYIQySbrcQ2tpiCk_/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_9daabb5f_08",
+          "status": "scored",
+          "reason": "ok",
+          "score": -6.7,
+          "level_score": 0.98,
+          "confidence": 0.74,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.14,
+              "log_probability": -1.9661128563728327
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.74,
+              "log_probability": -0.3011050927839216
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.12,
+              "log_probability": -2.120263536200091
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -6.4416,
+        "diversity_multiplier": 1,
+        "final_score": -6.4416,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5168
+      }
+    ],
+    "telemetry": {
+      "total_candidates_evaluated": 9,
+      "total_candidates_retrieved": 9,
+      "total_candidates_filtered": 0,
+      "total_candidates_scored": 9,
+      "exploration_quota_allocated": 0,
+      "user_tower_dimension": 32,
+      "positive_session_events": 0,
+      "negative_session_events": 0,
+      "board_html_path": null
+    }
+  },
+  "previews": [
+    {
+      "id": "phx_9daabb5f_04",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzM_q3_KROI_8ite7A5aA4pW-ExGX1tp5_PkcNnwhLEq9od/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_04.webp",
+      "caption": "Romantic Florist nstagram Template by And Done Studio on @creativemarket",
+      "sha256": "d3bf677beb000ebda3ac2d8d95cd7f535017b3e222e868058f45ecd3a4bd229c"
+    },
+    {
+      "id": "phx_9daabb5f_05",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw9rlV8l8XIUcS5gNqEwbHyaf3eKLfY_ObXx1lkq7z5I8cd/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_05.webp",
+      "caption": "CAELM Instagram Post Story Template by Mirely Creative Co on @creativemarket",
+      "sha256": "20ebbbcfda3c852d127a336448d70f392cc6d47cd9be370e63b952b28b7386d4"
+    },
+    {
+      "id": "phx_9daabb5f_08",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShz-SjrW8uedtKrA2s_vdhOUPgBY6VKdYIQySbrcQ2tpiCk_/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_08.webp",
+      "caption": "How do you brand yourself on Instagram? It takes more than just a pretty feed. B",
+      "sha256": "1b083dc824d3f8fc01c0462cb430eaa88a7c8c9af682564db783a5835ffad52c"
+    },
+    {
+      "id": "phx_9daabb5f_03",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzz-2B4og2-7zZgTIGznrcGPAm9y8IIL5y1I9fVAkliQ_UuaQ/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_03.webp",
+      "caption": "Bring attention to your next event with this bold poster design template that’s",
+      "sha256": "742bc004fcef966052bcb8930da55f54b8b3144d1d2822fe6b8aad13ead0aec1"
+    },
+    {
+      "id": "phx_9daabb5f_07",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShy2vo-NCelr4eurSO8KmfSS2oSCKz3FVuebr2AEcbn94yeo/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_07.webp",
+      "caption": "How do you brand yourself on Instagram? It takes more than just a pretty feed. B",
+      "sha256": "4753bd11be6bdf778d72cac861e8338eeda8953df80bf1f76548589f7345273e"
+    },
+    {
+      "id": "phx_9daabb5f_06",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShw6AyyUCtfIl-fj6W0rrZjpjx9mOsu7t2AfU3w552zrgglB/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_06.webp",
+      "caption": "Mystic Instagram Post Templates by HellYeahDesigns on @creativemarket",
+      "sha256": "7f366cb38845a4f0fb6df909d96fa21f7a98365b57137c8ed838fea8449ed9b2"
+    },
+    {
+      "id": "phx_9daabb5f_09",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxJ_dZoNM0agKtVktvD2NxwY2OMeKkVLOPu55joxQ7qa7Av/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_09.webp",
+      "caption": "How do you brand yourself on Instagram? It takes more than just a pretty feed. B",
+      "sha256": "69f2b4d5e5d54e92df89d0772a37872dd8b71419f1ccf8144e62982fa9819d42"
+    },
+    {
+      "id": "phx_9daabb5f_02",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShzBlTm0x19Kcz1N0JJJiR2qo3jx_AfUwI3coMmsLoYNIe82wQ/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_02.webp",
+      "caption": "Turn heads with this striking poster design template that’s fully editable and d",
+      "sha256": "4a8fa8a76a2c4fb0abfb41c135f5e042bb839fb5802c20bbb5f5b4a7911150d4"
+    },
+    {
+      "id": "phx_9daabb5f_01",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwrwBQmIsizVmdSucNcThEb9nTP2-_p6mqjsicGqPgIYz0Lyw/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-g3CCQY/phx_9daabb5f_01.webp",
+      "caption": "Make a bold statement with this eye-catching poster design template that’s fully",
+      "sha256": "79c8b4e0810b78622642d1c43332c5d9b23acdf9dac6d10fcd280b9e6afd8326"
+    }
+  ]
+}

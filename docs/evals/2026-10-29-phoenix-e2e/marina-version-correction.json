@@ -1,0 +1,18 @@
+{
+  "event": {
+    "id": "marina-version-link",
+    "kind": "comment",
+    "version_id": "v_22cc9cd828c24fc799bb2ca28658c036",
+    "scope": {
+      "type": "campaign",
+      "id": "simulada-marina-ceramica"
+    },
+    "source": "correcao-agente",
+    "agent_interpretation": "Correção de rastreabilidade: v3b nos sinais anteriores identifica a versão v_22cc9cd828c24fc799bb2ca28658c036 da peça piece_2ba8ffd336ae4b45b7e9b79d6374e5ad. Preservar os eventos originais.",
+    "timestamp": "2026-10-29T15:51:24.096Z"
+  },
+  "change": null,
+  "duplicate": false,
+  "markdown_path": "local-simulated-profile.md",
+  "message": "Registrei o sinal; nenhuma preferência foi alterada."
+}

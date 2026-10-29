@@ -193,6 +193,43 @@ export type SidLevel2Mechanic = (typeof SID_TAXONOMY.level_2_mechanic)[number];
 export type SidLevel3Hierarchy = (typeof SID_TAXONOMY.level_3_hierarchy)[number];
 export type SidLevel4Aesthetic = (typeof SID_TAXONOMY.level_4_aesthetic)[number];
 
+/** Missing evidence is not a visual category. These markers must not be used as diversity clusters. */
+export const UNKNOWN_SID_LEVELS = ['sid_unknown_format', 'sid_unknown_mechanic', 'sid_unknown_hierarchy', 'sid_unknown_aesthetic'] as const;
+export type EvidenceSid = [SidLevel1Format | typeof UNKNOWN_SID_LEVELS[0], SidLevel2Mechanic | typeof UNKNOWN_SID_LEVELS[1], SidLevel3Hierarchy | typeof UNKNOWN_SID_LEVELS[2], SidLevel4Aesthetic | typeof UNKNOWN_SID_LEVELS[3]];
+
+/**
+ * Extract only labels explicitly mentioned in text. The text can itself be
+ * wrong or untrusted; these labels are claims, never visual verification.
+ * Target format is used only for intent, never to classify a retrieved image.
+ */
+export function inferEvidenceBasedSid(params: { description: string; target_format?: string }): EvidenceSid {
+  const normalize = (value: string) => value.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase().replace(/[_-]+/g, ' ').replace(/\s+/g, ' ').trim();
+  const desc = normalize(params.description);
+  const explicit = (phrase: string) => {
+    const normalized = normalize(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const re = new RegExp(`(^|[^a-z0-9])${normalized}(?=$|[^a-z0-9])`, 'g');
+    for (const match of desc.matchAll(re)) {
+      const start = (match.index ?? 0) + match[1]!.length;
+      const before = desc.slice(Math.max(0, start - 35), start);
+      if (!/\b(?:sem|nao|evitar|evite|no|not|avoid)\s+(?:[a-z0-9]+\s+){0,3}$/.test(before)) return true;
+    }
+    return false;
+  };
+  const find = <T extends string>(values: readonly T[], aliases: Partial<Record<T, readonly string[]>>, unknown: string): T | string => {
+    const hits = values.filter(value => [value, ...(aliases[value] ?? [])].some(explicit));
+    // Contradictory or multiple categories cannot be collapsed to one choice.
+    return hits.length === 1 ? hits[0]! : unknown;
+  };
+  const target = normalize(params.target_format ?? '');
+  const fmt = target
+    ? SID_TAXONOMY.level_1_format.find(value => normalize(value) === target) ?? UNKNOWN_SID_LEVELS[0]
+    : find(SID_TAXONOMY.level_1_format, {}, UNKNOWN_SID_LEVELS[0]);
+  const mechanic = find(SID_TAXONOMY.level_2_mechanic, { swiss_grid:['swiss grid','grid suico'], bento_grid:['bento grid'], seamless_split:['seamless split'], glassmorphism_ui:['glassmorphism'], flowchart_comparison:['flowchart comparison'], hero_product_d2c:['hero product d2c'], social_proof_card:['social proof card'], step_by_step_cheatsheet:['step by step cheatsheet'] }, UNKNOWN_SID_LEVELS[1]);
+  const hierarchy = find(SID_TAXONOMY.level_3_hierarchy, { bold_display_hook:['bold display hook'], kinetic_retro_type:['kinetic retro type'], high_density_data:['high density data'], minimal_whitespace:['minimal whitespace'], high_contrast_cta:['high contrast cta'], editorial_multicolumn:['editorial multicolumn'] }, UNKNOWN_SID_LEVELS[2]);
+  const aesthetic = find(SID_TAXONOMY.level_4_aesthetic, { dark_tech_saas:['dark tech saas'], tactile_paper_texture:['tactile paper texture'], vibrant_retail_promo:['vibrant retail promo'], executive_clean_b2b:['executive clean b2b'], luxury_cosmetic_d2c:['luxury cosmetic d2c'], neo_brutalist_bold:['neo brutalist bold'] }, UNKNOWN_SID_LEVELS[3]);
+  return [fmt, mechanic, hierarchy, aesthetic] as EvidenceSid;
+}
+
 export function isExplorationFeedBoard(slug: string): boolean {
   return (EXPLORATION_FEED_BOARDS as readonly string[]).includes(slug) || slug.endsWith('/feed');
 }
@@ -240,7 +277,7 @@ export function inferCandidateSid(params: {
   ) {
     l1 = 'story_interactive_9:16';
   } else if (
-    formatCtx.includes('ad') ||
+    /(?:^|[^a-z0-9])ads?(?=$|[^a-z0-9])/.test(formatCtx) ||
     formatCtx.includes('anuncio') ||
     formatCtx.includes('oferta') ||
     formatCtx.includes('packaging') ||

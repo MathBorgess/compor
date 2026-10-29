@@ -165,12 +165,18 @@ def run():
             ids = {skill["id"] for skill in catalog}
             expected = {"entender-intencao", "traduzir-direcao", "explorar-moodboards", "criar-piloto"}
             require(ids == expected and len(catalog) == 4, "Catálogo inesperado.")
-            require(all(skill["version"] == "0.1.0-prototype" for skill in catalog), "Versão inesperada.")
-            report["tests"]["list_skills"] = {"ids": sorted(ids), "version": "0.1.0-prototype"}
+            expected_versions = {
+                "entender-intencao": "0.2.0-prototype",
+                "traduzir-direcao": "0.2.0-prototype",
+                "criar-piloto": "0.3.0-prototype",
+                "explorar-moodboards": "0.1.0-prototype",
+            }
+            require({skill["id"]: skill["version"] for skill in catalog} == expected_versions, "Versão inesperada.")
+            report["tests"]["list_skills"] = {"ids": sorted(ids), "versions": expected_versions}
 
             loaded = unpack(call(5, "load_skill", {"id": "entender-intencao"}))
             require(loaded["id"] == "entender-intencao", "Skill inesperada.")
-            require(loaded["version"] == "0.1.0-prototype", "Versão inesperada.")
+            require(loaded["version"] == expected_versions["entender-intencao"], "Versão inesperada.")
             require(len(loaded["instructions"]) > 40, "Instruções insuficientes.")
             digest = hashlib.sha256(loaded["instructions"].encode("utf-8")).hexdigest()
             require(loaded["contentSha256"] == digest, "Hash da skill divergente.")

@@ -1,0 +1,280 @@
+{
+  "date": "2026-10-29T15:06:59.825Z",
+  "synthetic_only": true,
+  "image_inputs": false,
+  "samples_per_arm": 4,
+  "concurrency": {
+    "sequential": 1,
+    "parallel": 2
+  },
+  "observations": [
+    {
+      "mode": "sequential",
+      "repetition": 1,
+      "latency_ms": 2809,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 1997,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 812,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "parallel",
+      "repetition": 1,
+      "latency_ms": 727,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna",
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 727,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 364,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "parallel",
+      "repetition": 2,
+      "latency_ms": 623,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna",
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 279,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 623,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "sequential",
+      "repetition": 2,
+      "latency_ms": 614,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 301,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 313,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "sequential",
+      "repetition": 3,
+      "latency_ms": 763,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 466,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 297,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "parallel",
+      "repetition": 3,
+      "latency_ms": 525,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna",
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 525,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 360,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "parallel",
+      "repetition": 4,
+      "latency_ms": 1228,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna",
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 329,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 1227,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    {
+      "mode": "sequential",
+      "repetition": 4,
+      "latency_ms": 624,
+      "requested": 16,
+      "scored": 16,
+      "unscored": [],
+      "models": [
+        "gpt-6-luna"
+      ],
+      "requests": [
+        {
+          "count": 8,
+          "latency_ms": 303,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "count": 8,
+          "latency_ms": 320,
+          "status": "ok",
+          "input_tokens": 2027,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,81 @@
+{
+  "status": "ok",
+  "transport": "stdio",
+  "reason": "avoid_text_overlap_before_display",
+  "data": {
+    "snapshot": {
+      "format": "compor-local-creative-v1",
+      "piece_id": "piece_2ba8ffd336ae4b45b7e9b79d6374e5ad",
+      "version_id": "v_22cc9cd828c24fc799bb2ca28658c036",
+      "parent_version_id": "v_92f8e60509194134830baf8dcf2c72e0",
+      "revision": 2,
+      "created_at": "2026-10-29T15:38:36.426Z",
+      "width": 1122,
+      "height": 1402,
+      "base_sha256": "5f56b0492eb32c0d5973de0baa715ea3524383cd1d1189047c0c9daa74eb937d",
+      "layers": [
+        {
+          "id": "title-1",
+          "text": "Como seria",
+          "x": 0.07,
+          "y": 0.055,
+          "font_size_px": 86,
+          "color_hex": "#fff7e7",
+          "font_family": "serif",
+          "font_weight": "bold"
+        },
+        {
+          "id": "title-2",
+          "text": "a sua primeira",
+          "x": 0.07,
+          "y": 0.125,
+          "font_size_px": 86,
+          "color_hex": "#fff7e7",
+          "font_family": "serif",
+          "font_style": "italic",
+          "rotate_deg": -2
+        },
+        {
+          "id": "title-3",
+          "text": "caneca?",
+          "x": 0.07,
+          "y": 0.195,
+          "font_size_px": 86,
+          "color_hex": "#fff7e7",
+          "font_family": "serif",
+          "font_weight": "bold"
+        },
+        {
+          "id": "context-1",
+          "text": "Estou imaginando um curso",
+          "x": 0.07,
+          "y": 0.31,
+          "font_size_px": 42,
+          "color_hex": "#fff7e7",
+          "font_family": "sans-serif"
+        },
+        {
+          "id": "context-2",
+          "text": "de cerâmica para iniciantes.",
+          "x": 0.07,
+          "y": 0.35,
+          "font_size_px": 42,
+          "color_hex": "#fff7e7",
+          "font_family": "sans-serif"
+        },
+        {
+          "id": "cta",
+          "text": "Quer criar uma comigo?",
+          "x": 0.07,
+          "y": 0.43,
+          "font_size_px": 42,
+          "color_hex": "#fff7e7",
+          "font_family": "sans-serif",
+          "font_weight": "bold"
+        }
+      ]
+    },
+    "previous_text": "Você teria vontade de aprender comigo?",
+    "svg_path": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-marina-creative-pGwlRY/owner_b9ec68803bf1b097722622a18e9f510f/piece_2ba8ffd336ae4b45b7e9b79d6374e5ad/preview_v_22cc9cd828c24fc799bb2ca28658c036.svg"
+  }
+}

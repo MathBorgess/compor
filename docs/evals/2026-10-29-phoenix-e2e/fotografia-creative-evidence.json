@@ -1,0 +1,67 @@
+{
+  "kind": "synthetic_local_preview",
+  "profile": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-profile-kUB8Qr",
+  "source": "image generation; not a photo of the person's work",
+  "piece_id": "piece_baba3828290f48f7a24c8081c078d79c",
+  "version_id": "v_ef9eb85f576943c5b2b48d95184d0101",
+  "base_sha256": "9dcf750e6c216c973a3433909520a8b4884026a44b2eda2d7b0aabaa28d4646a",
+  "svg_path": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-profile-kUB8Qr/owner_a3f79a46a13bbcc9d7e607fc019f8574/piece_baba3828290f48f7a24c8081c078d79c/preview_v_ef9eb85f576943c5b2b48d95184d0101.svg",
+  "preview": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-primeira-peca.png",
+  "preview_360": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-primeira-peca-360.png",
+  "caption": {
+    "text": "Estou imaginando um curso de fotografia de produtos para pequenos negócios. Como você costuma mostrar o que faz?",
+    "origin": "agent_proposal"
+  },
+  "layers": [
+    {
+      "id": "title_1",
+      "text": "Outro olhar para",
+      "x": 0.085,
+      "y": 0.07,
+      "font_size_px": 79,
+      "color_hex": "#213f3a",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "title_2",
+      "text": "o seu produto",
+      "x": 0.085,
+      "y": 0.135,
+      "font_size_px": 79,
+      "color_hex": "#213f3a",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "support_1",
+      "text": "Estou imaginando um curso de",
+      "x": 0.085,
+      "y": 0.23,
+      "font_size_px": 40,
+      "color_hex": "#213f3a",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_2",
+      "text": "fotografia de produtos para",
+      "x": 0.085,
+      "y": 0.265,
+      "font_size_px": 40,
+      "color_hex": "#213f3a",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_3",
+      "text": "pequenos negócios.",
+      "x": 0.085,
+      "y": 0.3,
+      "font_size_px": 40,
+      "color_hex": "#213f3a",
+      "font_family": "serif",
+      "font_weight": "normal"
+    }
+  ]
+}

@@ -1,0 +1,57 @@
+{
+  "status": "ok",
+  "transport": "stdio",
+  "simulated": true,
+  "data": {
+    "snapshot": {
+      "format": "compor-local-creative-v1",
+      "piece_id": "piece_4b112542cba044629018f976a13dab25",
+      "version_id": "v_5cd277f37e2945efade62954eab738ae",
+      "parent_version_id": null,
+      "revision": 1,
+      "created_at": "2026-10-29T15:33:49.314Z",
+      "width": 1122,
+      "height": 1402,
+      "base_sha256": "e085e53cf8bfe926f2fee610c6a0f6c87a134010daebd035be0ce02c657489f2",
+      "layers": [
+        {
+          "id": "title-1",
+          "text": "Uma caneca",
+          "x": 0.07,
+          "y": 0.07,
+          "font_size_px": 78,
+          "color_hex": "#163a68",
+          "font_family": "serif"
+        },
+        {
+          "id": "title-2",
+          "text": "começa nas mãos.",
+          "x": 0.07,
+          "y": 0.14,
+          "font_size_px": 78,
+          "color_hex": "#163a68",
+          "font_family": "serif"
+        },
+        {
+          "id": "context",
+          "text": "Ideia de curso para iniciantes.",
+          "x": 0.07,
+          "y": 0.25,
+          "font_size_px": 43,
+          "color_hex": "#30241c",
+          "font_family": "sans-serif"
+        },
+        {
+          "id": "cta",
+          "text": "Você gostaria de aprender?",
+          "x": 0.07,
+          "y": 0.32,
+          "font_size_px": 46,
+          "color_hex": "#163a68",
+          "font_family": "sans-serif"
+        }
+      ]
+    },
+    "svg_path": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-marina-creative-pGwlRY/owner_b9ec68803bf1b097722622a18e9f510f/piece_4b112542cba044629018f976a13dab25/preview_v_5cd277f37e2945efade62954eab738ae.svg"
+  }
+}

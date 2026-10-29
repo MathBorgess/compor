@@ -1,0 +1,25 @@
+{
+  "status": "failed",
+  "checks": {
+    "control_env_exposed_by_sysctl": true,
+    "runtime_heap_not_in_sysctl": true,
+    "parent_env_excludes_secret": true,
+    "child_env_excludes_key_name": true,
+    "sandbox_pbpaste_blocked": true,
+    "sibling_task_for_pid_denied": true,
+    "host_responses_do_not_contain_secret": true,
+    "host_error_tested": true,
+    "host_has_tools": true,
+    "sandbox_sysctl_read_host_without_key": true
+  },
+  "bridge": null,
+  "state": {
+    "fake_found_in_mcp_output": false,
+    "tools_called": [],
+    "bridge_error": null
+  },
+  "fake_in_codex_output": false,
+  "codex_exit_code": -5,
+  "events": [],
+  "limitations": "Finite synthetic probes do not prove every possible macOS escape or memory access route."
+}

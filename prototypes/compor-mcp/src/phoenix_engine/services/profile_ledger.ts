@@ -13,6 +13,8 @@ export type Signal = {
   id: string;
   kind: SignalKind;
   version_id: string;
+  /** Present only when a host-bound local piece was verified at registration. */
+  piece_id?: string;
   scope: ProfileScope;
   source: string;
   person_statement?: string;
@@ -22,6 +24,17 @@ export type Signal = {
 export type Preference = { key: string; value: string; confidence: 'ambiguous' | 'confirmed'; source_event_id: string; scope: ProfileScope; version_id: string };
 export type ProfileChange = { id: string; event_id: string; previous: Preference | null; current: Preference | null; timestamp: string; correction?: string; undo_of?: string };
 export type Consent = { purpose: ProfilePurpose; granted: boolean; timestamp: string };
+export type ReferenceDecisionInput = {
+  id: string;
+  version_id: string;
+  campaign_id: string;
+  origin_url: string;
+  source_id?: string | null;
+  action: 'select' | 'reject' | 'reconsider';
+  selected_attributes?: Array<'typography' | 'composition' | 'color' | 'photography'>;
+  person_statement?: string;
+};
+export type ReferenceDecision = ReferenceDecisionInput & { source_id: string | null; timestamp: string };
 type MaintainerConsent = { recipient: string; purpose: string; granted: boolean; timestamp: string };
 type Access = { collaborator: string; purpose: string; active: boolean; timestamp: string };
 type Audit = { action: 'share' | 'revoke_share' | 'read' | 'summary_prepared'; actor: string; timestamp: string; purpose: string };
@@ -30,7 +43,8 @@ type StoredEvent = Signal & { timestamp: string };
 const persistedScope = z.strictObject({ type: z.enum(['session', 'task', 'campaign', 'user']), id: z.string().min(1).max(2000) });
 const persistedPreference = z.strictObject({ key: z.string().min(1).max(2000), value: z.string().min(1).max(2000), confidence: z.enum(['ambiguous', 'confirmed']), source_event_id: z.string().min(1).max(2000), scope: persistedScope, version_id: z.string().min(1).max(2000) });
 const persistedChange = z.strictObject({ id: z.string().min(1).max(2000), event_id: z.string().min(1).max(2000), previous: persistedPreference.nullable(), current: persistedPreference.nullable(), timestamp: z.string(), correction: z.string().max(2000).optional(), undo_of: z.string().max(2000).optional() });
-const persistedEvent = z.strictObject({ id: z.string().min(1).max(2000), kind: z.enum(['edit', 'choice', 'rejection', 'reaction', 'export', 'comment']), version_id: z.string().min(1).max(2000), scope: persistedScope, source: z.string().min(1).max(2000), person_statement: z.string().max(2000).optional(), agent_interpretation: z.string().max(2000).optional(), preference: z.strictObject({ key: z.string().min(1).max(2000), value: z.string().min(1).max(2000), confidence: z.enum(['ambiguous', 'confirmed']) }).optional(), timestamp: z.string() });
+const persistedEvent = z.strictObject({ id: z.string().min(1).max(2000), kind: z.enum(['edit', 'choice', 'rejection', 'reaction', 'export', 'comment']), version_id: z.string().min(1).max(2000), piece_id:z.string().regex(/^piece_[0-9a-f]{32}$/u).optional(), scope: persistedScope, source: z.string().min(1).max(2000), person_statement: z.string().max(2000).optional(), agent_interpretation: z.string().max(2000).optional(), preference: z.strictObject({ key: z.string().min(1).max(2000), value: z.string().min(1).max(2000), confidence: z.enum(['ambiguous', 'confirmed']) }).optional(), timestamp: z.string() }).refine(event => event.piece_id === undefined || /^v_[0-9a-f]{32}$/u.test(event.version_id), 'Invalid local version');
+const persistedReferenceDecision = z.strictObject({ id:z.string().min(1).max(200), version_id:z.string().min(1).max(200), campaign_id:z.string().min(1).max(200), origin_url:z.string().min(1).max(2000), source_id:z.string().regex(/^[A-Za-z0-9_-]{1,80}$/).nullable().default(null), action:z.enum(['select','reject','reconsider']), selected_attributes:z.array(z.enum(['typography','composition','color','photography'])).min(1).max(4).optional(), person_statement:z.string().min(1).max(2000).optional(), timestamp:z.string() });
 const persistedSnapshot = z.strictObject({
   format: z.literal('compor-phoenix-profile-v1'), owner: z.string().min(1).max(2000), revision: z.number().int().positive(),
   preferences: z.array(z.tuple([z.string(), persistedPreference])), events: z.array(persistedEvent), changes: z.array(persistedChange),
@@ -39,6 +53,7 @@ const persistedSnapshot = z.strictObject({
   shares: z.array(z.strictObject({ collaborator: z.string(), purpose: z.string(), active: z.boolean(), timestamp: z.string() })),
   audit: z.array(z.strictObject({ action: z.enum(['share', 'revoke_share', 'read', 'summary_prepared']), actor: z.string(), timestamp: z.string(), purpose: z.string() })),
   prepared_summaries: z.array(z.unknown()),
+  reference_decisions: z.array(persistedReferenceDecision).default([]),
 });
 
 async function privateDirectory(directory: string): Promise<string> {
@@ -69,11 +84,29 @@ const required = (v: string, name: string): string => {
 };
 const scopeKey = (scope: ProfileScope, key: string): string => JSON.stringify([scope.type, scope.id, key]);
 
+/** Canonical origin is a comparison key, never an authorization or a fetch target. */
+export function canonicalReferenceOrigin(value: string): string {
+  const raw = required(value, 'reference origin');
+  let url: URL;
+  try { url = new URL(raw); } catch { throw new Error('Invalid reference origin'); }
+  if (url.protocol !== 'https:' || url.username || url.password) throw new Error('Invalid reference origin');
+  const hostname = url.hostname.toLowerCase();
+  const pin = /^(?:\/pin\/)([A-Za-z0-9_-]+)\/?$/.exec(url.pathname);
+  if (!url.port && (hostname === 'pinterest.com' || hostname.endsWith('.pinterest.com')) && pin) return `https://www.pinterest.com/pin/${pin[1]}/`;
+  url.hash = '';
+  for (const key of [...url.searchParams.keys()]) {
+    if (/^utm_/i.test(key) || /^(?:fbclid|gclid|msclkid)$/i.test(key)) url.searchParams.delete(key);
+  }
+  url.searchParams.sort();
+  return url.toString();
+}
+
 export class ProfileLedger {
   private readonly owner: string;
   private readonly now: () => string;
   private readonly preferences = new Map<string, Preference>();
   private readonly events = new Map<string, StoredEvent>();
+  private readonly referenceDecisions = new Map<string, ReferenceDecision>();
   private readonly changes: ProfileChange[] = [];
   private readonly consents: Consent[] = [];
   private readonly shares: Access[] = [];
@@ -103,6 +136,10 @@ export class ProfileLedger {
   private isGranted(purpose: ProfilePurpose): boolean {
     return [...this.consents].reverse().find((c) => c.purpose === purpose)?.granted === true;
   }
+  isPersonalizationActive(actor: string): boolean {
+    this.ownerOnly(actor);
+    return this.isGranted('personalization');
+  }
   setConsent(actor: string, purpose: ProfilePurpose, granted: boolean): Consent {
     this.ownerOnly(actor);
     if (!['personalization', 'evaluation', 'maintainer_summary', 'full_content'].includes(purpose) || typeof granted !== 'boolean') throw new Error('Invalid consent');
@@ -110,11 +147,12 @@ export class ProfileLedger {
     this.consents.push(consent);
     return copy(consent);
   }
-  record(actor: string, signal: Signal): { event: StoredEvent; change: ProfileChange | null; duplicate: boolean } {
+  record(actor: string, signal: Signal, options?: { localVersionVerified: true }): { event: StoredEvent; change: ProfileChange | null; duplicate: boolean } {
     this.ownerOnly(actor);
     if (!this.isGranted('personalization')) throw new Error('Personalization consent required');
     required(signal.id, 'event id');
     required(signal.version_id, 'version');
+    if (signal.piece_id !== undefined && (!/^piece_[0-9a-f]{32}$/u.test(signal.piece_id) || !/^v_[0-9a-f]{32}$/u.test(signal.version_id) || options?.localVersionVerified !== true)) throw new Error('Verified local piece and version required');
     required(signal.source, 'source');
     if (!['edit', 'choice', 'rejection', 'reaction', 'export', 'comment'].includes(signal.kind)) throw new Error('Invalid signal kind');
     if (!signal.scope || !['session', 'task', 'campaign', 'user'].includes(signal.scope.type)) throw new Error('Invalid scope');
@@ -126,6 +164,7 @@ export class ProfileLedger {
       required(signal.preference.value, 'preference value');
       if (!['ambiguous', 'confirmed'].includes(signal.preference.confidence)) throw new Error('Invalid confidence');
     }
+    if (this.referenceDecisions.has(signal.id)) throw new Error('Conflicting duplicate event');
     const previousEvent = this.events.get(signal.id);
     if (previousEvent) {
       const { timestamp: _timestamp, ...existing } = previousEvent;
@@ -145,6 +184,46 @@ export class ProfileLedger {
     }
     return { event: copy(event), change: copy(change), duplicate: false };
   }
+  recordReferenceDecision(actor: string, input: ReferenceDecisionInput): { event: ReferenceDecision; previous: ReferenceDecision | null; duplicate: boolean } {
+    this.ownerOnly(actor);
+    if (!this.isGranted('personalization')) throw new Error('Personalization consent required');
+    const rawId = required(input.id, 'event id');
+    const version = required(input.version_id, 'version');
+    const campaign = required(input.campaign_id, 'campaign');
+    if (rawId.length > 200 || version.length > 200 || campaign.length > 200 || !['select','reject','reconsider'].includes(input.action)) throw new Error('Invalid reference decision');
+    const allowed = ['typography','composition','color','photography'];
+    if (input.selected_attributes !== undefined && (!Array.isArray(input.selected_attributes) || input.selected_attributes.length < 1 || input.selected_attributes.length > 4 || input.selected_attributes.some(a=>!allowed.includes(a)) || new Set(input.selected_attributes).size !== input.selected_attributes.length)) throw new Error('Invalid reference attributes');
+    if ((input.action === 'select') !== (input.selected_attributes !== undefined)) throw new Error('Only a selection requires selected attributes');
+    const statement = input.person_statement === undefined ? undefined : required(input.person_statement, 'statement');
+    const source = input.source_id == null ? null : required(input.source_id, 'source id');
+    if (source !== null && !/^[A-Za-z0-9_-]{1,80}$/.test(source)) throw new Error('Invalid source id');
+    const normalized: ReferenceDecisionInput & {source_id:string|null} = { id:rawId, version_id:version, campaign_id:campaign, origin_url:canonicalReferenceOrigin(input.origin_url), source_id:source, action:input.action, ...(input.selected_attributes ? { selected_attributes:[...input.selected_attributes].sort() } : {}), ...(statement === undefined ? {} : {person_statement:statement}) };
+    if (this.events.has(rawId)) throw new Error('Conflicting duplicate event');
+    const existing = this.referenceDecisions.get(rawId);
+    if (existing) {
+      const { timestamp: _timestamp, ...original } = existing;
+      if (!isDeepStrictEqual(original, normalized)) throw new Error('Conflicting duplicate event');
+      const entries = [...this.referenceDecisions.values()];
+      const position = entries.findIndex(entry=>entry.id===rawId);
+      const previous = entries.slice(0,position).reverse().find(entry=>entry.campaign_id===campaign && entry.origin_url===normalized.origin_url) ?? null;
+      return {event:copy(existing),previous:copy(previous),duplicate:true};
+    }
+    const previous = [...this.referenceDecisions.values()].reverse().find(entry=>entry.campaign_id===campaign && entry.origin_url===normalized.origin_url) ?? null;
+    if (previous?.action === 'reject' && normalized.action === 'select') throw new Error('Explicit reconsideration required before selecting a rejected reference');
+    const event: ReferenceDecision = {...normalized,timestamp:this.now()};
+    this.referenceDecisions.set(rawId,event);
+    return {event:copy(event),previous:copy(previous),duplicate:false};
+  }
+  /** Current campaign decisions are inactive when personalization is revoked. */
+  activeReferenceDecisions(actor: string, campaignId: string): ReferenceDecision[] {
+    this.ownerOnly(actor);
+    const campaign = required(campaignId, 'campaign');
+    if (campaign.length > 200) throw new Error('Invalid campaign');
+    if (!this.isGranted('personalization')) return [];
+    const latest = new Map<string, ReferenceDecision>();
+    for (const decision of this.referenceDecisions.values()) if (decision.campaign_id === campaign) latest.set(decision.origin_url, decision);
+    return copy([...latest.values()]);
+  }
   undo(actor: string, changeId: string, correction: string): ProfileChange {
     this.ownerOnly(actor);
     const original = this.changes.find((c) => c.id === changeId);
@@ -162,7 +241,7 @@ export class ProfileLedger {
   read(actor: string) {
     this.ownerOnly(actor);
     this.audit.push({ action: 'read', actor, timestamp: this.now(), purpose: 'owner' });
-    return copy({ id: this.owner, preferences: [...this.preferences.values()], events: [...this.events.values()], changes: this.changes, consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit });
+    return copy({ id: this.owner, preferences: [...this.preferences.values()], events: [...this.events.values()], reference_decisions:[...this.referenceDecisions.values()], changes: this.changes, consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit });
   }
   setMaintainerConsent(actor: string, recipient: string, purpose: string, granted: boolean): void {
     this.ownerOnly(actor);
@@ -239,6 +318,10 @@ export class ProfileLedger {
       if (ledger.events.has(event.id)) throw new Error('Duplicate profile event');
       ledger.events.set(event.id, event);
     }
+    for (const decision of snapshot.reference_decisions) {
+      if (ledger.referenceDecisions.has(decision.id) || ledger.events.has(decision.id) || canonicalReferenceOrigin(decision.origin_url) !== decision.origin_url || (decision.action === 'select') !== (decision.selected_attributes !== undefined) || (decision.selected_attributes && new Set(decision.selected_attributes).size !== decision.selected_attributes.length)) throw new Error('Invalid reference decisions');
+      ledger.referenceDecisions.set(decision.id,decision);
+    }
     ledger.changes.push(...snapshot.changes);
     ledger.consents.push(...snapshot.consents);
     ledger.maintainerConsents.push(...snapshot.maintainer_consents);
@@ -264,7 +347,7 @@ export class ProfileLedger {
         const snapshot = persistedSnapshot.parse({
           format: 'compor-phoenix-profile-v1', owner: this.owner, revision: this.persistenceRevision + 1,
           preferences: [...this.preferences.entries()], events: [...this.events.values()], changes: this.changes,
-          consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit, prepared_summaries: this.sentSummaries,
+          consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit, prepared_summaries: this.sentSummaries, reference_decisions:[...this.referenceDecisions.values()],
         });
         const payload = JSON.stringify(snapshot);
         if (Buffer.byteLength(payload) > 5_000_000) throw new Error('Profile snapshot too large');
@@ -285,7 +368,7 @@ export class ProfileLedger {
     this.ownerOnly(actor);
     // JSON fences keep the person's original statement distinct from agent interpretation.
     // Rendering the local file is a write, not a person reading the profile.
-    const snapshot = { id: this.owner, preferences: [...this.preferences.values()], events: [...this.events.values()], changes: this.changes, consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit };
+    const snapshot = { id: this.owner, preferences: [...this.preferences.values()], events: [...this.events.values()], reference_decisions:[...this.referenceDecisions.values()], changes: this.changes, consents: this.consents, maintainer_consents: this.maintainerConsents, shares: this.shares, audit: this.audit };
     const json = JSON.stringify(snapshot, null, 2).replace(/```/g, '\\u0060\\u0060\\u0060');
     return `# Perfil Phoenix — ${this.owner.replace(/[\r\n]/g, ' ')}\n\nProtótipo local; alterações e correções preservadas.\n\n\`\`\`json\n${json}\n\`\`\`\n`;
   }

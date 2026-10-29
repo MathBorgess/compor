@@ -1,0 +1,449 @@
+{
+  "date": "2026-10-29",
+  "scope": "exploratory_nonbaseline_synthetic_metadata",
+  "method": "2 temperatures, 6 synthetic descriptions each; parallel, sampling nonzero, no real user judgments",
+  "summary": {
+    "1": {
+      "scored": 2,
+      "abstained": 4,
+      "errors": 0
+    },
+    "0.5": {
+      "scored": 2,
+      "abstained": 4,
+      "errors": 0
+    }
+  },
+  "rows": [
+    {
+      "id": "case-1",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5219,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 1.2501528663867426e-9
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 301,
+        "completion_tokens": 1,
+        "total_tokens": 302,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-2",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5211,
+      "result": {
+        "status": "abstained",
+        "reason": "invalid_logprobs",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "C": 0.8175254574499855,
+          "D": 0.1824145862462336,
+          "B": 0.00006119327646991092
+        },
+        "observed_category_mass": 1.000001,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 297,
+        "completion_tokens": 1,
+        "total_tokens": 298,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-3",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4960,
+      "result": {
+        "status": "scored",
+        "reason": "ok",
+        "score": 24.997555,
+        "dominant_category": "A",
+        "observed_probabilities": {
+          "A": 0.9998397955489475,
+          "B": 0.00015843593890614804,
+          "C": 0.000002259967292149211,
+          "D": 8.150714724466637e-9
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {
+          "A": 0.999839,
+          "B": 0.000158,
+          "C": 0.000002,
+          "D": 0
+        }
+      },
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 1,
+        "total_tokens": 297,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-4",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4996,
+      "result": {
+        "status": "scored",
+        "reason": "ok",
+        "score": 24.999928,
+        "dominant_category": "A",
+        "observed_probabilities": {
+          "A": 0.9999961853100103,
+          "B": 0.000004785099138389594,
+          "C": 1.1032518237638113e-9,
+          "D": 1.463772930264664e-12
+        },
+        "observed_category_mass": 1.000001,
+        "conditional_probabilities": {
+          "A": 0.999995,
+          "B": 0.000005,
+          "C": 0,
+          "D": 0
+        }
+      },
+      "usage": {
+        "prompt_tokens": 297,
+        "completion_tokens": 1,
+        "total_tokens": 298,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-5",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4852,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "D": 0.8518969037998203,
+          "C": 0.14803748438651926,
+          "B": 0.00006376604212508299
+        },
+        "observed_category_mass": 0.999998,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 1,
+        "total_tokens": 297,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-6",
+      "temperature": 0.5,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5021,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 2.382369667501818e-7,
+          "C": 1.57371021068629e-11
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 299,
+        "completion_tokens": 1,
+        "total_tokens": 300,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-1",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5470,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 1.3176514270095466e-10
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 301,
+        "completion_tokens": 1,
+        "total_tokens": 302,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-2",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4766,
+      "result": {
+        "status": "abstained",
+        "reason": "invalid_logprobs",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "C": 0.8175254574499855,
+          "D": 0.1824145862462336,
+          "B": 0.00006119327646991092
+        },
+        "observed_category_mass": 1.000001,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 297,
+        "completion_tokens": 1,
+        "total_tokens": 298,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-3",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5436,
+      "result": {
+        "status": "scored",
+        "reason": "ok",
+        "score": 24.993272,
+        "dominant_category": "A",
+        "observed_probabilities": {
+          "A": 0.9995614060249232,
+          "B": 0.00043055361949258177,
+          "C": 0.000008935855291693397,
+          "D": 2.8440868622791034e-8
+        },
+        "observed_category_mass": 1.000001,
+        "conditional_probabilities": {
+          "A": 0.99956,
+          "B": 0.000431,
+          "C": 0.000009,
+          "D": 0
+        }
+      },
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 1,
+        "total_tokens": 297,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-4",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4825,
+      "result": {
+        "status": "scored",
+        "reason": "ok",
+        "score": 24.999908,
+        "dominant_category": "A",
+        "observed_probabilities": {
+          "A": 0.9999923706345725,
+          "B": 0.000006144165476886902,
+          "C": 2.3355752197065545e-9,
+          "D": 1.0060316038420207e-12
+        },
+        "observed_category_mass": 0.999999,
+        "conditional_probabilities": {
+          "A": 0.999994,
+          "B": 0.000006,
+          "C": 0,
+          "D": 0
+        }
+      },
+      "usage": {
+        "prompt_tokens": 297,
+        "completion_tokens": 1,
+        "total_tokens": 298,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-5",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 4850,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "D": 0.8518969037998203,
+          "C": 0.14803748438651926,
+          "B": 0.00006376604212508299
+        },
+        "observed_category_mass": 0.999998,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 296,
+        "completion_tokens": 1,
+        "total_tokens": 297,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-6",
+      "temperature": 1,
+      "model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 5030,
+      "result": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 1.855391362615978e-7,
+          "C": 1.3887943864964021e-11
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {}
+      },
+      "usage": {
+        "prompt_tokens": 299,
+        "completion_tokens": 1,
+        "total_tokens": 300,
+        "prompt_tokens_details": {
+          "cached_tokens": 0,
+          "audio_tokens": 0
+        },
+        "completion_tokens_details": {
+          "reasoning_tokens": 0,
+          "audio_tokens": 0,
+          "accepted_prediction_tokens": 0,
+          "rejected_prediction_tokens": 0
+        }
+      }
+    }
+  ]
+}

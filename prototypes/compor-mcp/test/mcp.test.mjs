@@ -6,7 +6,7 @@ import { InMemoryTransport } from '@modelcontextprotocol/sdk/inMemory.js';
 import { createHash } from 'node:crypto';
 import { createComporServer } from '../dist/server.js';
 import { fileURLToPath } from 'node:url';
-import { mkdtempSync, rmSync } from 'node:fs';
+import { mkdtempSync, rmSync, mkdirSync, writeFileSync, readFileSync, realpathSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -20,6 +20,7 @@ const expectedTools = [
   'phoenix_profile_maintainer_consent',
   'phoenix_profile_read',
   'phoenix_profile_read_shared',
+  'phoenix_profile_reference_decision',
   'phoenix_profile_send_summary',
   'phoenix_profile_share',
   'phoenix_profile_signal',
@@ -34,17 +35,18 @@ const expectedTools = [
   'stage_approved_references',
 ];
 
-async function checkCatalog(client) {
+async function checkCatalog(client, creative = false) {
   const capabilities = client.getServerCapabilities();
   assert.ok(capabilities?.tools, 'handshake announces tools');
   assert.ok(capabilities?.resources, 'handshake announces resources');
   const tools = await client.listTools();
-  assert.deepEqual(tools.tools.map(t => t.name).sort(), expectedTools);
+  const expected = creative ? [...expectedTools, 'creative_local_create', 'creative_local_create_from_file', 'creative_local_edit_text', 'creative_local_set_caption', 'creative_local_read'].sort() : expectedTools;
+  assert.deepEqual(tools.tools.map(t => t.name).sort(), expected);
   const listing = await client.callTool({ name: 'list_skills', arguments: {} });
   assert.equal(listing.isError, undefined);
   const catalog = listing.structuredContent.skills;
   assert.deepEqual(catalog.map(s => s.id), expectedIds);
-  assert.ok(catalog.every(s => s.version === '0.1.0-prototype' && s.description));
+  assert.ok(catalog.every(s => s.version === (s.id === 'explorar-moodboards' ? '0.1.0-prototype' : s.id === 'criar-piloto' ? '0.3.0-prototype' : '0.2.0-prototype') && s.description));
   for (const entry of catalog) {
     const loaded = await client.callTool({ name: 'load_skill', arguments: { id: entry.id, version: entry.version } });
     assert.equal(loaded.isError, undefined);
@@ -92,6 +94,26 @@ test('negotiates MCP in process; lists tools and loads all skills without a netw
   }
 });
 
+test('updated conversational guidance is versioned and preserves consent and reversible ambiguity', async () => {
+  const { client, server } = await inMemory();
+  try {
+    const translate = await client.callTool({ name: 'load_skill', arguments: { id: 'traduzir-direcao', version: '0.2.0-prototype' } });
+    assert.match(translate.structuredContent.instructions, /fala ambígua pode atualizar até uma preferência antes confirmada/);
+    assert.match(translate.structuredContent.instructions, /informe o anterior e ofereça desfazer/);
+    const pilot = await client.callTool({ name: 'load_skill', arguments: { id: 'criar-piloto', version: '0.3.0-prototype' } });
+    assert.match(pilot.structuredContent.instructions, /sem repetir promessas de entrega/);
+    assert.match(pilot.structuredContent.instructions, /só busque novamente se a pessoa pedir ou se for necessário e autorizado/);
+    assert.match(pilot.structuredContent.instructions, /ideia visual concreta/);
+    assert.match(pilot.structuredContent.instructions, /não atrase uma peça já pedida/);
+    assert.match(pilot.structuredContent.instructions, /sem sugerir que ela deva sentir surpresa ou encantamento/);
+    assert.match(pilot.structuredContent.instructions, /Se a pessoa quiser parar ou ficar com uma versão anterior, respeite sua escolha/);
+    assert.match(pilot.structuredContent.instructions, /percepções a ouvir, não resultados que a peça possa garantir/);
+    assert.equal((await client.callTool({ name: 'load_skill', arguments: { id: 'criar-piloto', version: '0.2.0-prototype' } })).isError, true);
+    const outdated = await client.callTool({ name: 'load_skill', arguments: { id: 'traduzir-direcao', version: '0.1.0-prototype' } });
+    assert.equal(outdated.isError, true);
+  } finally { await client.close(); await server.close(); }
+});
+
 test('rejects unknown versions, paths and malformed arguments without revealing files', async () => {
   const { server, client } = await inMemory();
   try {
@@ -124,9 +146,42 @@ test('stdio child process negotiates MCP and exposes the same catalog to a harne
   const client = new Client({ name: 'stdio-test-harness', version: '1.0.0' });
   try {
     await client.connect(transport);
-    await checkCatalog(client);
+    await checkCatalog(client, true);
     assert.ok(transport.pid);
   } finally { await client.close(); rmSync(profileDir, { recursive: true, force: true }); }
+});
+
+test('stdio creates and edits a real local layered SVG and restores versions after restart', async () => {
+  const root = realpathSync(mkdtempSync(join(tmpdir(), 'compor-creative-stdio-')));
+  const profileDir = join(root, 'profile'), threadId = 'thread_test';
+  const images = join(root, 'generated_images', threadId);
+  mkdirSync(profileDir, { mode: 0o700 }); mkdirSync(images, { recursive: true, mode: 0o700 });
+  const path = join(images, 'base.png');
+  const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jRZkAAAAASUVORK5CYII=', 'base64');
+  writeFileSync(path, png);
+  const cwd = fileURLToPath(new URL('..', import.meta.url));
+  const connect = async () => {
+    const c = new Client({ name: 'creative-stdio-test', version: '1' });
+    await c.connect(new StdioClientTransport({ command: process.execPath, args: ['dist/stdio.js'], cwd, env: { CODEX_HOME: root, CODEX_THREAD_ID: threadId, COMPOR_PROFILE_DIR: profileDir }, stderr: 'pipe' }));
+    return c;
+  };
+  let client;
+  try {
+    client = await connect();
+    const created = await client.callTool({ name: 'creative_local_create_from_file', arguments: { local_png_path: path, confirm_local_image_use: true, layers: [{ id: 'title', text: 'Primeiro', x: 0, y: 0, font_size_px: 12, color_hex: '#123456', font_family: 'serif' }] } });
+    assert.notEqual(created.isError, true, JSON.stringify(created));
+    const first = created.structuredContent;
+    const changed = await client.callTool({ name: 'creative_local_edit_text', arguments: { piece_id: first.snapshot.piece_id, expected_version_id: first.snapshot.version_id, layer_id: 'title', text: 'Revisado' } });
+    assert.notEqual(changed.isError, true, JSON.stringify(changed));
+    assert.equal(changed.structuredContent.previous_text, 'Primeiro');
+    assert.match(readFileSync(changed.structuredContent.svg_path, 'utf8'), /Revisado/);
+    assert.match(readFileSync(first.svg_path, 'utf8'), /Primeiro/);
+    assert.deepEqual(readFileSync(path), png);
+    await client.close(); client = await connect();
+    const restored = await client.callTool({ name: 'creative_local_read', arguments: { piece_id: first.snapshot.piece_id } });
+    assert.equal(restored.structuredContent.snapshot.layers[0].text, 'Revisado');
+    assert.equal(restored.structuredContent.history.length, 2);
+  } finally { await client?.close(); rmSync(root, { recursive: true, force: true }); }
 });
 
 test('Agents SDK connects and calls MCP via Streamable HTTP in process without OpenAI or network', async () => {

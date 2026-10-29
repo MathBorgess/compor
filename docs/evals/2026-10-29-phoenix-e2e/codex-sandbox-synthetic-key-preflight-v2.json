@@ -1,0 +1,41 @@
+{
+  "status": "ok",
+  "checks": {
+    "control_env_exposed_by_sysctl": true,
+    "runtime_heap_not_in_sysctl": true,
+    "parent_env_excludes_secret": true,
+    "child_env_excludes_key_name": true,
+    "sandbox_pbpaste_blocked": true,
+    "sibling_task_for_pid_denied": true,
+    "host_responses_do_not_contain_secret": true,
+    "host_error_tested": true,
+    "host_has_tools": true,
+    "sandbox_sysctl_read_host_without_key": true
+  },
+  "bridge": {
+    "clipboard_blocked": true,
+    "process_environment_has_api_key": false
+  },
+  "state": {
+    "fake_found_in_mcp_output": false,
+    "tools_called": [
+      "list_skills"
+    ],
+    "bridge_error": null
+  },
+  "fake_in_codex_output": false,
+  "codex_exit_code": 0,
+  "events": [
+    {
+      "type": "turn.completed",
+      "usage": {
+        "input_tokens": 53091,
+        "cached_input_tokens": 25344,
+        "cache_write_input_tokens": 0,
+        "output_tokens": 80,
+        "reasoning_output_tokens": 0
+      }
+    }
+  ],
+  "limitations": "Finite synthetic probes do not prove every possible macOS escape or memory access route."
+}

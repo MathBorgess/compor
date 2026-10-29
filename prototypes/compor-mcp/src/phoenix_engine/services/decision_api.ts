@@ -6,16 +6,14 @@ import type { PhoenixHyperparams } from '../config/hyperparams.js';
 import {
   CANONICAL_BOARD_SLUGS,
   EXPLORATION_FEED_BOARDS,
-  inferCandidateSid,
+  inferEvidenceBasedSid,
+  UNKNOWN_SID_LEVELS,
   isExplorationFeedBoard,
   ROLE_RECOMMENDED_BOARDS,
   SID_TAXONOMY,
   type BoardSlug,
   type CompositionalRole,
-  type SidLevel1Format,
-  type SidLevel2Mechanic,
-  type SidLevel3Hierarchy,
-  type SidLevel4Aesthetic,
+  type EvidenceSid,
 } from '../domain/catalog.js';
 import {
   actionProbabilitiesSchema,
@@ -37,6 +35,8 @@ import {
   MEMORY_CONSOLIDATOR_SYSTEM_PROMPT,
   RANKER_CACHED_PREFIX_SYSTEM_PROMPT,
 } from '../prompts/decision_prompts.js';
+import { rankCandidateWithLogprobs, type LogprobEvaluation } from './logprob_ranker.js';
+import { scoreCandidatesWithDecisions, type DecisionScoreCandidate, type DecisionScoreBatch } from './decision_score_ranker.js';
 
 export type DecisionEngineSource =
   | 'openai_api'
@@ -51,6 +51,7 @@ export interface CandidateToRank {
   candidate_id: string;
   board: string;
   role?: CompositionalRole;
+  provenance_occurrences?: Array<{ board: string; role: CompositionalRole; source_id: string; origin_url: string | null; preview_url: string | null; metadata_sid: string[]; preview_sha256: string | null }>;
   metadata_sid: string[];
   visual_description: string;
   preview_url: string;
@@ -200,7 +201,7 @@ const ROLE_FRONTLOAD_DESCRIPTORS: Record<CompositionalRole, string> = {
 };
 
 export interface DistilledBriefingIntent {
-  inferred_sid: [SidLevel1Format, SidLevel2Mechanic, SidLevel3Hierarchy, SidLevel4Aesthetic];
+  inferred_sid: EvidenceSid;
   matched_catalog_keywords: string[];
   salient_terms: string[];
   dna_hint: string;
@@ -236,12 +237,13 @@ export function distillBriefingIntent(params: {
     c.toLowerCase(),
   );
 
-  const inferredSid = inferCandidateSid({
+  const inferredSid = inferEvidenceBasedSid({
     target_format: params.target_format,
-    board: '',
     description: `${rawBriefing} ${dnaRules.join(' ')}`,
-    index: 0,
   });
+  for (let i = 0; i < inferredSid.length; i++) {
+    if (negativeConstraints.includes(inferredSid[i]!)) inferredSid[i] = UNKNOWN_SID_LEVELS[i]! as never;
+  }
 
   const normalizedContext = `${rawBriefing} ${dnaRules.join(' ')}`
     .normalize('NFD')
@@ -258,7 +260,7 @@ export function distillBriefingIntent(params: {
       .replace(/[\u0300-\u036f]/g, '')
       .toLowerCase();
     if (
-      normalizedContext.includes(normKw) &&
+      new RegExp(`(^|[^a-z0-9])${normKw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}(?=$|[^a-z0-9])`).test(normalizedContext) &&
       !isBlockedByNegative(normKw) &&
       !matchedCatalogKeywords.includes(kw)
     ) {
@@ -383,7 +385,7 @@ export function projectRoleSyntheticQuery(params: {
     Math.max(80, params.maxLength ?? MAX_SYNTHETIC_QUERY_LENGTH),
   );
   const roleDesc = ROLE_FRONTLOAD_DESCRIPTORS[params.role];
-  const sidPrefix = params.distilled.inferred_sid.slice(0, 3).join(' ');
+  const sidPrefix = params.distilled.inferred_sid.slice(0, 3).filter(sid => !(UNKNOWN_SID_LEVELS as readonly string[]).includes(sid)).join(' ');
   const kwSnippet = params.distilled.matched_catalog_keywords.slice(0, 5).join(' ');
 
   // Front-loading semântico nos primeiros ~120 chars para máxima precisão no provider e na User Tower
@@ -610,6 +612,46 @@ export class PhoenixDecisionApiService {
     return new OpenAI({ apiKey: key });
   }
 
+  async rankCandidatesWithDecisions(params: {
+    briefing: string; profileContext: string; candidates: readonly DecisionScoreCandidate[];
+    consentModel: boolean; consentImages: boolean; cacheKey?: string; batchSize?: number;
+  }): Promise<DecisionScoreBatch> {
+    return scoreCandidatesWithDecisions({ ...params, client: this.getOpenAIClient() });
+  }
+
+  hasOpenAIClient(): boolean {
+    return Boolean(this.injectedOpenAI || this.resolveApiKey());
+  }
+
+  /** Explicit experimental alternative; it never invents the multi-action scores. */
+  async rankSingleCandidateLogprobs(params: {
+    user_id: string;
+    briefing: string;
+    user_taste: UserTasteProfile;
+    session_events_log: string;
+    user_tower_cosine_similarity: number;
+    candidate: CandidateToRank;
+    model: string;
+  }): Promise<LogprobEvaluation> {
+    return rankCandidateWithLogprobs({
+      client: this.getOpenAIClient(),
+      model: params.model,
+      cached_prefix: formatRankerCachedUserPrefix({
+        user_taste_json: JSON.stringify(params.user_taste, null, 2),
+        session_events_log: params.session_events_log,
+        user_briefing: params.briefing,
+      }),
+      candidate_suffix: formatRankerIsolatedCandidateSuffix({
+        candidate_id: params.candidate.candidate_id,
+        board: params.candidate.board,
+        metadata_sid: params.candidate.metadata_sid,
+        visual_description: params.candidate.visual_description,
+        user_tower_cosine_similarity: params.user_tower_cosine_similarity,
+      }),
+      prompt_cache_key: `phoenix_logprobs_${params.user_id}`,
+    });
+  }
+
   /**
    * Resolve qual backend de decisão será usado (OpenAI API, Subagente Luna no Codex ou Mock Determinístico)
    * conforme Q6/Q8/Q9.
@@ -798,7 +840,7 @@ export class PhoenixDecisionApiService {
                 schema: {
                   type: 'object',
                   additionalProperties: false,
-                  required: ['board_allocations', 'required_sid_tags', 'excluded_sid_tags'],
+                  required: ['board_allocations', 'required_sid_tags', 'excluded_sid_tags', 'piece_constraints'],
                   properties: {
                     board_allocations: {
                       type: 'array',
@@ -828,6 +870,7 @@ export class PhoenixDecisionApiService {
                     },
                     required_sid_tags: { type: 'array', items: { type: 'string' } },
                     excluded_sid_tags: { type: 'array', items: { type: 'string' } },
+                    piece_constraints: { type:'array', items:{ type:'object', additionalProperties:false, required:['interpretation','evidence_quote'], properties:{ interpretation:{type:'string'}, evidence_quote:{type:['string','null']} } } },
                   },
                 },
               },
@@ -848,7 +891,7 @@ export class PhoenixDecisionApiService {
         }
       }
     } else if (params.source === 'codex_luna_subagent') {
-      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}\n\nResponda APENAS JSON válido com exatamente as chaves board_allocations, required_sid_tags e excluded_sid_tags. Cada item de board_allocations deve conter exatamente board, role, weight, synthetic_query e rationale; rationale é uma breve justificativa obrigatória. Use de 2 a 4 itens, weight numérico entre 0 e 1, respeitando a cota máxima combinada de exploração (${this.hp.exploration_feed_quota.toFixed(2)}) em até ${this.hp.max_exploration_boards} board /feed, e apenas os boards citados nas regras. As duas listas de tags podem ser vazias.`;
+      const combinedPrompt = `${systemPrompt}\n\n${userPrompt}\n\nResponda APENAS JSON válido com exatamente as chaves board_allocations, required_sid_tags, excluded_sid_tags e piece_constraints. Cada item de board_allocations deve conter exatamente board, role, weight, synthetic_query e rationale; rationale é uma breve justificativa obrigatória. Cada item de piece_constraints deve conter interpretation e evidence_quote (trecho literal ou null). Use de 2 a 4 itens, weight numérico entre 0 e 1, respeitando a cota máxima combinada de exploração (${this.hp.exploration_feed_quota.toFixed(2)}) em até ${this.hp.max_exploration_boards} board /feed, e apenas os boards citados nas regras. As listas podem ser vazias.`;
       const rawJson = await this.subagentRunner(combinedPrompt, 'phoenix_board_router_decision');
       if (rawJson) {
         try {
@@ -882,6 +925,7 @@ export class PhoenixDecisionApiService {
     return {
       ...decision,
       excluded_sid_tags: mergedExclusions,
+      router_excluded_sid_tags: decision.excluded_sid_tags,
     };
   }
 
@@ -922,7 +966,7 @@ export class PhoenixDecisionApiService {
     const isAd =
       distilled.inferred_sid[0] === 'ad_conversion_1:1' ||
       distilled.inferred_sid[0] === 'ad_performance_4:5' ||
-      ctx.includes('ad') ||
+      /(?:^|[^a-z0-9])ads?(?=$|[^a-z0-9])/.test(ctx) ||
       ctx.includes('anuncio') ||
       ctx.includes('conversao') ||
       ctx.includes('oferta');
@@ -1032,7 +1076,7 @@ export class PhoenixDecisionApiService {
     const requiredSids: string[] = [
       distilled.inferred_sid[0],
       distilled.inferred_sid[1],
-    ];
+    ].filter(sid => !(UNKNOWN_SID_LEVELS as readonly string[]).includes(sid));
 
     const excludedSids = [...params.user_taste.negative_constraints].slice(0, 20);
 
@@ -1042,6 +1086,7 @@ export class PhoenixDecisionApiService {
           board_allocations: allocations,
           required_sid_tags: requiredSids,
           excluded_sid_tags: excludedSids,
+          router_excluded_sid_tags: [],
         }),
       ),
     );
@@ -1156,7 +1201,7 @@ export class PhoenixDecisionApiService {
         }
       }
     } else if (params.source === 'codex_luna_subagent') {
-      const subagentPrompt = `${RANKER_CACHED_PREFIX_SYSTEM_PROMPT}\n\n${cachedUserPrefix}\n\n${isolatedCandidateSuffix}\n\nRetorne APENAS um JSON com as probabilidades calibradas (0.00 a 1.00): p_use_as_layout_grid, p_use_as_typography_hook, p_use_color_and_vibe, p_high_conversion_clarity, p_dwell_engagement, p_reject_too_generic, p_reject_style_mismatch, composition_guideline.`;
+      const subagentPrompt = `${RANKER_CACHED_PREFIX_SYSTEM_PROMPT}\n\n${cachedUserPrefix}\n\n${isolatedCandidateSuffix}\n\nRetorne APENAS um JSON com as estimativas não calibradas (0.00 a 1.00): p_use_as_layout_grid, p_use_as_typography_hook, p_use_color_and_vibe, p_high_conversion_clarity, p_dwell_engagement, p_reject_too_generic, p_reject_style_mismatch, composition_guideline.`;
       const rawJson = await this.subagentRunner(
         subagentPrompt,
         'phoenix_isolated_candidate_action_probs',

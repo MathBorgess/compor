@@ -1,0 +1,29 @@
+{
+  "exit_code": 0,
+  "model_requested": "gpt-6-luna",
+  "scope": "synthetic_brief_live_sources",
+  "client_auth": "ChatGPT",
+  "proxy_mcp_key_only": true,
+  "web_search_disabled": true,
+  "shell_tool_disabled": true,
+  "one_discovery_limit": true,
+  "calls": [],
+  "messages": [
+    "Vou localizar a ferramenta pelo catálogo disponível e fazer uma única chamada com os consentimentos e parâmetros indicados.",
+    "Não consegui fazer a chamada: o ambiente desativou `functions.exec` (“code-mode host is disabled”), que seria necessário para localizar e invocar `compor.discover_visual_references`. Nenhuma ferramenta MCP foi chamada, então não há fontes ou atributos observáveis para relatar."
+  ],
+  "usage": [
+    {
+      "input_tokens": 35082,
+      "cached_input_tokens": 25728,
+      "cache_write_input_tokens": 0,
+      "output_tokens": 402,
+      "reasoning_output_tokens": 253
+    }
+  ],
+  "elapsed_ms": 12402,
+  "tool_observation": null,
+  "process_exit_success": true,
+  "test_status": "failed_no_mcp_tool_call",
+  "failure": "code_mode_host disabled; no discovery or Decision API request occurred"
+}

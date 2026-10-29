@@ -1,4 +1,5 @@
 import { randomBytes } from 'node:crypto';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import type { PhoenixHyperparams } from '../config/hyperparams.js';
 import { CANONICAL_BOARD_SLUGS } from '../domain/catalog.js';
 import type {
@@ -13,6 +14,11 @@ import {
   l2_normalize,
 } from '../math/formulas.js';
 import type { EmbeddingSpaceId } from './decision_api.js';
+import { canonicalReferenceOrigin } from './profile_ledger.js';
+
+function referenceKey(origin: string): string {
+  try { return canonicalReferenceOrigin(origin); } catch { return origin; }
+}
 
 export interface DiscoveredCandidateMemoryEntry {
   candidate_id: string;
@@ -42,6 +48,8 @@ export interface UserMemoryRecord {
   exposed_candidates: Set<string>;
   positive_candidates: Set<string>;
   rejected_origins: Set<string>;
+  session_rejected_origins: Set<string>;
+  profile_rejected_origins: Set<string>;
   event_signatures: Map<string, string>;
 }
 
@@ -61,6 +69,8 @@ export interface MemoryConsolidatorCallback {
 export class PhoenixMemoryStore {
   private readonly hp: PhoenixHyperparams;
   private readonly users = new Map<string, UserMemoryRecord>();
+  private readonly activeContexts = new Map<string, string>();
+  private readonly requestContext = new AsyncLocalStorage<{actor:string; context:string}>();
   private readonly nowFn: () => number;
 
   constructor(options: { hp: PhoenixHyperparams; nowFn?: () => number }) {
@@ -70,7 +80,10 @@ export class PhoenixMemoryStore {
 
   getOrCreateUser(userId: string): UserMemoryRecord {
     const cleanId = userId.trim() || 'default_user';
-    let existing = this.users.get(cleanId);
+    const local = this.requestContext.getStore();
+    const context = local?.actor === cleanId ? local.context : this.activeContexts.get(cleanId) ?? 'session';
+    const userKey = JSON.stringify([cleanId,context]);
+    let existing = this.users.get(userKey);
     if (!existing) {
       const bandit = new Map<string, { positive_actions: number; total_impressions: number }>();
       for (const slug of CANONICAL_BOARD_SLUGS) {
@@ -99,11 +112,62 @@ export class PhoenixMemoryStore {
         exposed_candidates: new Set(),
         positive_candidates: new Set(),
         rejected_origins: new Set(),
+        session_rejected_origins: new Set(),
+        profile_rejected_origins: new Set(),
         event_signatures: new Map(),
       };
-      this.users.set(cleanId, existing);
+      this.users.set(userKey, existing);
     }
     return existing;
+  }
+
+  /** Host-bound context only; snapshots and transient interactions never cross contexts. */
+  setReferenceContext(userId: string, context: string | null, profileRejectedOrigins?: readonly string[]): UserMemoryRecord {
+    const cleanId = userId.trim() || 'default_user';
+    if (context !== null && (!context.trim() || context.length > 400 || context.includes('\0'))) throw new Error('Invalid reference context');
+    const key = context === null ? 'session' : `campaign:${context}`;
+    this.activeContexts.set(cleanId,key);
+    const record = this.requestContext.run({actor:cleanId,context:key},()=>this.getOrCreateUser(cleanId));
+    if (profileRejectedOrigins !== undefined) {
+      record.profile_rejected_origins = new Set(profileRejectedOrigins.map(referenceKey));
+      record.rejected_origins = new Set([...record.session_rejected_origins,...record.profile_rejected_origins]);
+    }
+    return record;
+  }
+
+  /** Bind the entire asynchronous operation to its own actor and context. */
+  runWithReferenceContext<T>(userId: string, context: string | null, callback: () => T): T {
+    const actor = userId.trim() || 'default_user';
+    if (context !== null && (!context.trim() || context.length > 400 || context.includes('\0'))) throw new Error('Invalid reference context');
+    return this.requestContext.run({actor,context:context === null ? 'session' : `campaign:${context}`},callback);
+  }
+
+  /** Immediate rejection applies to the current context, independent of saved profile. */
+  rejectReference(userId: string, origin: string): void {
+    const record = this.getOrCreateUser(userId), key = referenceKey(origin);
+    record.session_rejected_origins.add(key);
+    record.rejected_origins.add(key);
+  }
+
+  /** Call only after explicit reconsideration; it affects this context and this origin. */
+  reconsiderReference(userId: string, origin: string): void {
+    const record = this.getOrCreateUser(userId), key = referenceKey(origin);
+    record.session_rejected_origins.delete(key);
+    record.profile_rejected_origins.delete(key);
+    record.rejected_origins.delete(key);
+  }
+
+  /** Revocation drops only profile-derived rejections, across this actor's contexts. */
+  clearProfileReferenceRejections(userId: string): void {
+    const actor = userId.trim() || 'default_user';
+    for (const [key,record] of this.users) {
+      const parsed = JSON.parse(key) as [string,string];
+      if (parsed[0] !== actor) continue;
+      record.profile_rejected_origins.clear();
+      record.rejected_origins = new Set(record.session_rejected_origins);
+      record.user_taste.visual_dna_rules = [];
+      record.long_term_vec = null;
+    }
   }
 
   registerDiscoveredCandidates(
@@ -318,7 +382,7 @@ export class PhoenixMemoryStore {
       record.neg_session_vecs.push(normVec);
       record.neg_session_texts.push(candidateText);
       const origin = record.discovered_candidates.get(params.candidate_id)?.origin_url;
-      if (origin) record.rejected_origins.add(origin);
+      if (origin) this.rejectReference(params.user_id,origin);
     }
 
     record.board_bandit.set(params.board, currentBoardStats);

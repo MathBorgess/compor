@@ -1,0 +1,73 @@
+{
+  "kind": "synthetic_local_preview",
+  "profile": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-profile-kUB8Qr",
+  "source": "image generation; not a photo of the person's work",
+  "piece_id": "piece_fb1017f94be34853ac5d499a95f04fc3",
+  "version_id": "v_ee6c2438c9e9401da49ea92c3da0c709",
+  "derived_from": {
+    "piece_id": "piece_cdcc2d0184fe45f09f87479bd042cdef",
+    "version_id": "v_0cb27500c40343ed9adee7b49c97653e",
+    "snapshot_sha256": "eaca9a781c5d111b8fdf931f39befe833ccb6a291e3a5aed2566dbd28caba1aa",
+    "base_sha256": "490993071aba24c187e4127e9b7f55d10adff0af9fbb0787c2437b8fea9aaaab"
+  },
+  "base_sha256": "490993071aba24c187e4127e9b7f55d10adff0af9fbb0787c2437b8fea9aaaab",
+  "svg_path": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-profile-kUB8Qr/owner_a3f79a46a13bbcc9d7e607fc019f8574/piece_fb1017f94be34853ac5d499a95f04fc3/preview_v_ee6c2438c9e9401da49ea92c3da0c709.svg",
+  "preview": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-segunda-corrigida.png",
+  "preview_360": "/Users/matheusborges/github/compor/docs/evals/2026-10-29-phoenix-e2e/artifacts/fotografia-segunda-corrigida-360.png",
+  "caption": {
+    "text": "Estou imaginando um curso de fotografia de produtos para pequenos negócios. Como você costuma mostrar o que faz?",
+    "origin": "agent_proposal"
+  },
+  "layers": [
+    {
+      "id": "title_1",
+      "text": "Seu produto,",
+      "x": 0.085,
+      "y": 0.05,
+      "font_size_px": 90,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "title_2",
+      "text": "outra luz",
+      "x": 0.085,
+      "y": 0.12,
+      "font_size_px": 90,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "support_1",
+      "text": "Estou imaginando um curso",
+      "x": 0.085,
+      "y": 0.2,
+      "font_size_px": 43,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_2",
+      "text": "de fotografia de produtos",
+      "x": 0.085,
+      "y": 0.233,
+      "font_size_px": 43,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_3",
+      "text": "para pequenos negócios.",
+      "x": 0.085,
+      "y": 0.266,
+      "font_size_px": 43,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    }
+  ]
+}

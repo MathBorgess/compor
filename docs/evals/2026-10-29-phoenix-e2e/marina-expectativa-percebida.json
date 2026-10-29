@@ -1,0 +1,26 @@
+{
+  "seq": 12,
+  "tool": "phoenix_profile_signal",
+  "elapsed_ms": 17,
+  "isError": false,
+  "api_metrics": [],
+  "data": {
+    "event": {
+      "id": "marina-v3-expectation",
+      "kind": "comment",
+      "version_id": "v3b",
+      "scope": {
+        "type": "campaign",
+        "id": "simulada-marina-ceramica"
+      },
+      "source": "conversa",
+      "person_statement": "Para visibilidade, minha impressão é 4 de 5. Para ajudar a vender, seria 2 de 5. São palpites meus sobre esta peça; não testei com público e não sei o alcance nem o efeito nas vendas.",
+      "agent_interpretation": "Expectativas declaradas pela persona simulada, não evidências de alcance nem venda.",
+      "timestamp": "2026-10-29T15:41:06.855Z"
+    },
+    "change": null,
+    "duplicate": false,
+    "markdown_path": "local-simulated-profile.md",
+    "message": "Registrei o sinal; nenhuma preferência foi alterada."
+  }
+}

@@ -1,0 +1,581 @@
+{
+  "seq": 1,
+  "tool": "discover_visual_references",
+  "elapsed_ms": 21676,
+  "isError": false,
+  "api_metrics": [
+    {
+      "kind": "router_responses",
+      "model": "gpt-6-luna",
+      "latency_ms": 13313,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 1577,
+        "input_tokens_details": {
+          "cache_write_tokens": 1574,
+          "cached_tokens": 0
+        },
+        "output_tokens": 1078,
+        "output_tokens_details": {
+          "reasoning_tokens": 587
+        },
+        "total_tokens": 2655
+      }
+    },
+    {
+      "kind": "embeddings",
+      "model": "text-embedding-3-small",
+      "latency_ms": 1004,
+      "status": "ok",
+      "usage": {
+        "prompt_tokens": 890,
+        "total_tokens": 890
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 1164,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 3533,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 3533
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 322,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 641,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 641
+      }
+    }
+  ],
+  "data": {
+    "status": "ok",
+    "client_mode": "web",
+    "user_id": "simulation_e2e_20261029",
+    "session_token": "phx_sess_bfa56f5b5956",
+    "target_format": "instagram_post",
+    "briefing": "Tenho uma ideia de curso de fotografia de produtos para quem tem um pequeno negócio. Quero um post para apresentar essa ideia; ainda não defini preço, data ou onde as pessoas vão se inscrever.",
+    "decision_engine_source": "openai_api",
+    "prompt_cache_key": "phoenix_ranker_simulation_e2e_20261029",
+    "candidate_origin": "provider",
+    "can_proceed_without_references": true,
+    "provider_diagnostics": [
+      "9 referência(s) não exibida(s): restrições visuais não puderam ser verificadas pelos metadados."
+    ],
+    "embedding_space": "openai_text_embedding_3_small",
+    "ranker_mode": "decision_score",
+    "ranker_abstentions": [],
+    "ranker_evaluations": [],
+    "decision_score_batch": {
+      "requested": 9,
+      "scored": 9,
+      "model": "gpt-6-luna",
+      "effective_models": [
+        "gpt-6-luna"
+      ],
+      "probability_semantics": "decision_level_probabilities_not_token_logprobs",
+      "candidates": [
+        {
+          "candidate_id": "phx_d8ea6e0b_08",
+          "status": "scored",
+          "reason": "ok",
+          "score": -7.6499999999999995,
+          "level_score": 0.99,
+          "confidence": 0.51,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.25,
+              "log_probability": -1.3862943611198906
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.52,
+              "log_probability": -0.6539264674066639
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.22,
+              "log_probability": -1.5141277326297755
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_03",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.049999999999999,
+          "level_score": 1.13,
+          "confidence": 0.47,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.2,
+              "log_probability": -1.6094379124341003
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.49,
+              "log_probability": -0.7133498878774648
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.29,
+              "log_probability": -1.2378743560016174
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_09",
+          "status": "scored",
+          "reason": "ok",
+          "score": -11.299999999999999,
+          "level_score": 0.82,
+          "confidence": 0.46,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.36,
+              "log_probability": -1.0216512475319814
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.48,
+              "log_probability": -0.7339691750802004
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.14,
+              "log_probability": -1.9661128563728327
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_07",
+          "status": "scored",
+          "reason": "ok",
+          "score": -12.05,
+          "level_score": 0.75,
+          "confidence": 0.59,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.33,
+              "log_probability": -1.1086626245216111
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.06,
+              "log_probability": -2.8134107167600364
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_01",
+          "status": "scored",
+          "reason": "ok",
+          "score": -12.800000000000002,
+          "level_score": 0.74,
+          "confidence": 0.48,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.39,
+              "log_probability": -0.9416085398584448
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.49,
+              "log_probability": -0.7133498878774648
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.11,
+              "log_probability": -2.2072749131897207
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_02",
+          "status": "scored",
+          "reason": "ok",
+          "score": -13.45,
+          "level_score": 0.71,
+          "confidence": 0.47,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.41,
+              "log_probability": -0.8915981192837836
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.48,
+              "log_probability": -0.7339691750802004
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.1,
+              "log_probability": -2.3025850929940455
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_05",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.1,
+          "level_score": 1.12,
+          "confidence": 0.5,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.19,
+              "log_probability": -1.6607312068216509
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.51,
+              "log_probability": -0.6733445532637656
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.29,
+              "log_probability": -1.2378743560016174
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_06",
+          "status": "scored",
+          "reason": "ok",
+          "score": -2.3999999999999995,
+          "level_score": 1.24,
+          "confidence": 0.56,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.1,
+              "log_probability": -2.3025850929940455
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.57,
+              "log_probability": -0.5621189181535413
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.32,
+              "log_probability": -1.1394342831883648
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_d8ea6e0b_04",
+          "status": "scored",
+          "reason": "ok",
+          "score": -4.199999999999999,
+          "level_score": 1.16,
+          "confidence": 0.52,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.16,
+              "log_probability": -1.8325814637483102
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.55,
+              "log_probability": -0.5978370007556204
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.26,
+              "log_probability": -1.3470736479666092
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        }
+      ],
+      "requests": [
+        {
+          "start_index": 0,
+          "count": 8,
+          "model": "gpt-6-luna",
+          "latency_ms": 1165,
+          "status": "ok",
+          "input_tokens": 3533,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "start_index": 8,
+          "count": 1,
+          "model": "gpt-6-luna",
+          "latency_ms": 322,
+          "status": "ok",
+          "input_tokens": 641,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    "board_allocations": [
+      {
+        "board": "behance/photography",
+        "role": "hook_cover",
+        "weight": 0.4,
+        "synthetic_query": "Instagram portrait post introducing a product-photography course for small-business owners; create a compelling hero still life of a small handmade product on a clean tabletop, with camera-facing light that reveals material texture, soft directional side light and restrained shadows. Use a tight crop, clear focal point, warm neutral palette, and generous negative space for a short headline. Keep the product image authentic and attainable rather than luxury-editorial; avoid implying a specific product, instructor, price, date, or registration method.",
+        "rationale": "Provides the photography-led key visual and makes the course idea immediately legible without inventing offer details."
+      },
+      {
+        "board": "latermedia/instagram-post-design",
+        "role": "structural_grid",
+        "weight": 0.35,
+        "synthetic_query": "Single Instagram feed post, 4:5 portrait composition, with a clear typographic hierarchy: concise course-introduction headline, one supporting line explaining product photography for small businesses, and a small informational label if needed. Apply a disciplined modular grid, consistent margins, strong contrast, and ample whitespace; reserve a stable text zone beside or above the product image. Keep copy informational and avoid price, dates, signup instructions, or urgency claims.",
+        "rationale": "Guides platform-appropriate hierarchy and readable post structure while respecting the missing logistics."
+      },
+      {
+        "board": "kittldesign/social-media-designs",
+        "role": "ui_component",
+        "weight": 0.25,
+        "synthetic_query": "Refine the Instagram announcement as a polished social graphic with a restrained card or label treatment, compact supporting text, and a cohesive type system. Use one expressive sans-serif headline paired with a highly legible sans-serif body, aligned to a simple grid; maintain mobile-size readability and let the product photograph remain dominant. Do not add fake buttons, URLs, price badges, dates, or calls to register.",
+        "rationale": "Adds a practical social-template treatment for clear, mobile-readable supporting information without fabricating a conversion path."
+      }
+    ],
+    "required_sid_tags": [
+      "instagram_post",
+      "product_photography",
+      "small_business",
+      "course_announcement",
+      "clear_mobile_readability",
+      "product_hero_image",
+      "editorial_hierarchy"
+    ],
+    "excluded_sid_tags": [
+      "price",
+      "date",
+      "signup_link",
+      "registration_method",
+      "fabricated_offer",
+      "fake_cta",
+      "urgency_claim"
+    ],
+    "board_affinities": [
+      {
+        "board": "behance/advertising",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/ads-designs",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "creativemarket/social-media-templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/branding-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/packaging-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "thedieline/promotional-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "99designs/packaging-label-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "creativemarket/magazine-templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/poster-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      }
+    ],
+    "candidates": [],
+    "telemetry": {
+      "total_candidates_evaluated": 9,
+      "total_candidates_retrieved": 9,
+      "total_candidate_occurrences": 9,
+      "total_candidates_filtered": 9,
+      "total_candidates_scored": 9,
+      "exploration_quota_allocated": 0,
+      "user_tower_dimension": 32,
+      "positive_session_events": 0,
+      "negative_session_events": 0,
+      "board_html_path": null
+    }
+  },
+  "previews": []
+}

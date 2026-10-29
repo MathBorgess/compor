@@ -1,0 +1,73 @@
+{
+  "format": "compor-local-creative-v1",
+  "piece_id": "piece_cdcc2d0184fe45f09f87479bd042cdef",
+  "version_id": "v_0cb27500c40343ed9adee7b49c97653e",
+  "parent_version_id": null,
+  "revision": 1,
+  "created_at": "2026-10-29T16:47:43.267Z",
+  "width": 1122,
+  "height": 1402,
+  "base_sha256": "490993071aba24c187e4127e9b7f55d10adff0af9fbb0787c2437b8fea9aaaab",
+  "layers": [
+    {
+      "id": "title_1",
+      "text": "Seu produto,",
+      "x": 0.085,
+      "y": 0.07,
+      "font_size_px": 90,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "title_2",
+      "text": "outra luz",
+      "x": 0.085,
+      "y": 0.145,
+      "font_size_px": 90,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "bold"
+    },
+    {
+      "id": "support_1",
+      "text": "Estou imaginando um curso",
+      "x": 0.085,
+      "y": 0.245,
+      "font_size_px": 46,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_2",
+      "text": "de fotografia de produtos",
+      "x": 0.085,
+      "y": 0.285,
+      "font_size_px": 46,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    },
+    {
+      "id": "support_3",
+      "text": "para pequenos negócios.",
+      "x": 0.085,
+      "y": 0.325,
+      "font_size_px": 46,
+      "color_hex": "#fff8eb",
+      "font_family": "serif",
+      "font_weight": "normal"
+    }
+  ],
+  "derived_from": {
+    "piece_id": "piece_baba3828290f48f7a24c8081c078d79c",
+    "version_id": "v_ef9eb85f576943c5b2b48d95184d0101",
+    "snapshot_sha256": "703b2bdc1b4cc952ea5fe677efcb9224b0f4126bad83ba0188eaccc1818fd990",
+    "base_sha256": "9dcf750e6c216c973a3433909520a8b4884026a44b2eda2d7b0aabaa28d4646a"
+  },
+  "caption": {
+    "text": "Estou imaginando um curso de fotografia de produtos para pequenos negócios. Como você costuma mostrar o que faz?",
+    "origin": "agent_proposal"
+  }
+}

@@ -1,0 +1,1087 @@
+{
+  "seq": 1,
+  "tool": "discover_visual_references",
+  "elapsed_ms": 19501,
+  "isError": false,
+  "api_metrics": [
+    {
+      "kind": "router_responses",
+      "model": "gpt-6-luna",
+      "latency_ms": 12023,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 1788,
+        "input_tokens_details": {
+          "cache_write_tokens": 1785,
+          "cached_tokens": 0
+        },
+        "output_tokens": 884,
+        "output_tokens_details": {
+          "reasoning_tokens": 407
+        },
+        "total_tokens": 2672
+      }
+    },
+    {
+      "kind": "embeddings",
+      "model": "text-embedding-3-small",
+      "latency_ms": 984,
+      "status": "ok",
+      "usage": {
+        "prompt_tokens": 873,
+        "total_tokens": 873
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 936,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 3362,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 3362
+      }
+    },
+    {
+      "kind": "decision",
+      "model": "gpt-6-luna",
+      "latency_ms": 214,
+      "status": "ok",
+      "usage": {
+        "input_tokens": 532,
+        "input_tokens_details": {
+          "cached_tokens": 0,
+          "cache_write_tokens": 0
+        },
+        "output_tokens": 0,
+        "output_tokens_details": {
+          "reasoning_tokens": 0
+        },
+        "total_tokens": 532
+      }
+    }
+  ],
+  "data": {
+    "status": "ok",
+    "client_mode": "web",
+    "user_id": "simulation_e2e_20261029",
+    "session_token": "phx_sess_fe61f562b6ad",
+    "target_format": "instagram_post",
+    "briefing": "Tenho uma ideia de curso de fotografia de produtos para quem tem um pequeno negócio. Quero um post para apresentar essa ideia; ainda não defini preço, data ou onde as pessoas vão se inscrever.",
+    "decision_engine_source": "openai_api",
+    "prompt_cache_key": "phoenix_ranker_simulation_e2e_20261029",
+    "candidate_origin": "provider",
+    "can_proceed_without_references": true,
+    "provider_diagnostics": [],
+    "embedding_space": "openai_text_embedding_3_small",
+    "ranker_mode": "decision_score",
+    "ranker_abstentions": [],
+    "ranker_evaluations": [],
+    "decision_score_batch": {
+      "requested": 9,
+      "scored": 9,
+      "model": "gpt-6-luna",
+      "effective_models": [
+        "gpt-6-luna"
+      ],
+      "probability_semantics": "decision_level_probabilities_not_token_logprobs",
+      "candidates": [
+        {
+          "candidate_id": "phx_eb420a45_03",
+          "status": "scored",
+          "reason": "ok",
+          "score": -10.350000000000001,
+          "level_score": 0.87,
+          "confidence": 0.45,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.34,
+              "log_probability": -1.0788096613719298
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.47,
+              "log_probability": -0.7550225842780328
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.17,
+              "log_probability": -1.7719568419318752
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_08",
+          "status": "scored",
+          "reason": "ok",
+          "score": -7.55,
+          "level_score": 0.93,
+          "confidence": 0.77,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.15,
+              "log_probability": -1.8971199848858813
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.77,
+              "log_probability": -0.2613647641344075
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.08,
+              "log_probability": -2.5257286443082556
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_06",
+          "status": "scored",
+          "reason": "ok",
+          "score": -0.9499999999999993,
+          "level_score": 1.31,
+          "confidence": 0.57,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.06,
+              "log_probability": -2.8134107167600364
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.58,
+              "log_probability": -0.544727175441672
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.35,
+              "log_probability": -1.0498221244986778
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_09",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.6,
+          "level_score": 1.08,
+          "confidence": 0.56,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.18,
+              "log_probability": -1.7147984280919268
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.57,
+              "log_probability": -0.5621189181535413
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.24,
+              "log_probability": -1.4271163556401458
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_07",
+          "status": "scored",
+          "reason": "ok",
+          "score": -18.1,
+          "level_score": 0.5,
+          "confidence": 0.5,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.56,
+              "log_probability": -0.579818495252942
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.39,
+              "log_probability": -0.9416085398584448
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.04,
+              "log_probability": -3.2188758248682006
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_04",
+          "status": "scored",
+          "reason": "ok",
+          "score": 1.7999999999999998,
+          "level_score": 1.5,
+          "confidence": 0.38,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.07,
+              "log_probability": -2.659260036932778
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.42,
+              "log_probability": -0.8675005677047232
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.45,
+              "log_probability": -0.7985076962177716
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.06,
+              "log_probability": -2.8134107167600364
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_02",
+          "status": "scored",
+          "reason": "ok",
+          "score": -11.25,
+          "level_score": 0.79,
+          "confidence": 0.59,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.31,
+              "log_probability": -1.171182981502945
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.6,
+              "log_probability": -0.5108256237659907
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.08,
+              "log_probability": -2.5257286443082556
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_01",
+          "status": "scored",
+          "reason": "ok",
+          "score": -17.05,
+          "level_score": 0.53,
+          "confidence": 0.47,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.5,
+              "log_probability": -0.6931471805599453
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.47,
+              "log_probability": -0.7550225842780328
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.03,
+              "log_probability": -3.506557897319982
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        {
+          "candidate_id": "phx_eb420a45_05",
+          "status": "scored",
+          "reason": "ok",
+          "score": 0.9500000000000002,
+          "level_score": 1.43,
+          "confidence": 0.47,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.05,
+              "log_probability": -2.995732273553991
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.51,
+              "log_probability": -0.6733445532637656
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.4,
+              "log_probability": -0.916290731874155
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.04,
+              "log_probability": -3.2188758248682006
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        }
+      ],
+      "requests": [
+        {
+          "start_index": 0,
+          "count": 8,
+          "model": "gpt-6-luna",
+          "latency_ms": 937,
+          "status": "ok",
+          "input_tokens": 3362,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        },
+        {
+          "start_index": 8,
+          "count": 1,
+          "model": "gpt-6-luna",
+          "latency_ms": 214,
+          "status": "ok",
+          "input_tokens": 532,
+          "output_tokens": 0,
+          "cached_input_tokens": 0,
+          "cache_write_tokens": 0,
+          "unknown_answer_count": 0
+        }
+      ]
+    },
+    "board_allocations": [
+      {
+        "board": "behance/photography",
+        "role": "hook_cover",
+        "weight": 0.38,
+        "synthetic_query": "Post vertical 4:5 para Instagram apresentando uma ideia de curso de fotografia de produtos para pequenos negócios; key visual com um produto cotidiano em destaque, enquadramento próximo e foco nítido, iluminação de estúdio suave e controlada com sombras naturais. Composição limpa, fundo discreto e espaço negativo para título curto; hierarquia tipográfica editorial forte, legível em tela pequena, sem textos promocionais inventados.",
+        "rationale": "Referências de fotografia podem orientar o impacto visual e a iluminação do tema central."
+      },
+      {
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "weight": 0.34,
+        "synthetic_query": "Layout de post 4:5 para Instagram com grid modular simples, margens generosas e hierarquia clara entre título de apresentação, explicação breve da ideia e elementos visuais de apoio sobre fotografia de produtos para pequenos negócios. Ritmo equilibrado entre imagem e texto, alinhamentos consistentes, tipografia sans-serif altamente legível e contraste suficiente para leitura mobile; sem preço, data ou instruções de inscrição inventados.",
+        "rationale": "Templates sociais oferecem referências para organizar a mensagem em um post único e legível."
+      },
+      {
+        "board": "latermedia/instagram-post-design",
+        "role": "ui_component",
+        "weight": 0.28,
+        "synthetic_query": "Post 4:5 de Instagram com composição mobile-first, componentes visuais discretos em blocos ou cartões para separar título, breve contexto e detalhes da ideia do curso. Use um grid consistente, espaçamento claro, imagem de produto bem iluminada como apoio e tipografia de interface legível; manter aparência acolhedora e informativa, sem simular formulário, botão de inscrição ou oferta com dados não fornecidos.",
+        "rationale": "Referências específicas de posts do Instagram ajudam a adaptar a hierarquia e os componentes ao formato."
+      }
+    ],
+    "required_sid_tags": [],
+    "excluded_sid_tags": [],
+    "piece_constraints": [
+      {
+        "interpretation": "Não inventar nem incluir preço, data ou local/plataforma de inscrição enquanto esses dados não forem definidos.",
+        "evidence_quote": "ainda não defini preço, data ou onde as pessoas vão se inscrever.",
+        "scope": "piece",
+        "source": "router_interpretation"
+      }
+    ],
+    "reference_exclusions": [],
+    "board_affinities": [
+      {
+        "board": "behance/advertising",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/ads-designs",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/branding-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/packaging-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "thedieline/promotional-packaging",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "99designs/packaging-label-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "behance/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/typography",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "creativemarket/magazine-templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "weandthecolor/templates",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/poster-design",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      },
+      {
+        "board": "kittldesign/social-media-designs",
+        "positive_actions": 0,
+        "total_impressions": 0,
+        "affinity_score": 0.5
+      }
+    ],
+    "candidates": [
+      {
+        "candidate_id": "phx_eb420a45_04",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "provenance_occurrences": [
+          {
+            "board": "creativemarket/social-media-templates",
+            "role": "structural_grid",
+            "source_id": "pinterest_curated_design",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyJpYhA1bIsB2OSaiPidxzxUOFd4totTqEyVPykFDZFLO-S/",
+            "preview_url": "https://i.pinimg.com/236x/3b/b5/ec/3bb5ec41d414b44815396a2dd07f6b47.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "792d2f4c1a177c9ea98501c54c905ba7b88aea0a741cb9e5700d640fb7988941"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "FOLD | Instagram Post & Story (III) by Pixel Grid on @creativemarket — FOLD | Instagram Post & Story (III) by Pixel Grid on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/3b/b5/ec/3bb5ec41d414b44815396a2dd07f6b47.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyJpYhA1bIsB2OSaiPidxzxUOFd4totTqEyVPykFDZFLO-S/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_04",
+          "status": "scored",
+          "reason": "ok",
+          "score": 1.7999999999999998,
+          "level_score": 1.5,
+          "confidence": 0.38,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.07,
+              "log_probability": -2.659260036932778
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.42,
+              "log_probability": -0.8675005677047232
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.45,
+              "log_probability": -0.7985076962177716
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.06,
+              "log_probability": -2.8134107167600364
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": 2.0525,
+        "diversity_multiplier": 1,
+        "final_score": 2.0525,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5049
+      },
+      {
+        "candidate_id": "phx_eb420a45_05",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "provenance_occurrences": [
+          {
+            "board": "creativemarket/social-media-templates",
+            "role": "structural_grid",
+            "source_id": "pinterest_curated_design",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxJxe9F2x_FsAEtdnWZ8TEGQQ1d9NUy2euy3ie-hhYrYgBf/",
+            "preview_url": "https://i.pinimg.com/236x/19/ce/df/19cedfc6709adbf11c54718cd2164b55.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "4d627f444004c89b20c50f2d66abcda6408d4aea09472f5e933205047cee4890"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "Foam – Instagram Stories Templates by Twelve Four Studio on @creativemarket — Foam – Instagram Stories Templates by Twelve Four Studio on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/19/ce/df/19cedfc6709adbf11c54718cd2164b55.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxJxe9F2x_FsAEtdnWZ8TEGQQ1d9NUy2euy3ie-hhYrYgBf/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_05",
+          "status": "scored",
+          "reason": "ok",
+          "score": 0.9500000000000002,
+          "level_score": 1.43,
+          "confidence": 0.47,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.05,
+              "log_probability": -2.995732273553991
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.51,
+              "log_probability": -0.6733445532637656
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.4,
+              "log_probability": -0.916290731874155
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.04,
+              "log_probability": -3.2188758248682006
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": 1.1611,
+        "diversity_multiplier": 1,
+        "final_score": 1.1611,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.4221
+      },
+      {
+        "candidate_id": "phx_eb420a45_06",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "creativemarket/social-media-templates",
+        "role": "structural_grid",
+        "provenance_occurrences": [
+          {
+            "board": "creativemarket/social-media-templates",
+            "role": "structural_grid",
+            "source_id": "pinterest_curated_design",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwkUjgXi-t1Xnm5HIrhgEKo55-BFU2-mpU0qJgv1DIS-L_Z/",
+            "preview_url": "https://i.pinimg.com/236x/09/66/2d/09662de1f7667dbac1daf509b304e98c.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "018826dfc8d9bcddb0f286b3f94c73a9ce1bb2e0868a7ee7b68e4db55eaf3397"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "Wellness Minimal Instagram Templates by Instprofi | Studio Estimo on @creativema — Wellness Minimal Instagram Templates by Instprofi | Studio Estimo on Creative Market",
+        "preview_url": "https://i.pinimg.com/236x/09/66/2d/09662de1f7667dbac1daf509b304e98c.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwkUjgXi-t1Xnm5HIrhgEKo55-BFU2-mpU0qJgv1DIS-L_Z/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_06",
+          "status": "scored",
+          "reason": "ok",
+          "score": -0.9499999999999993,
+          "level_score": 1.31,
+          "confidence": 0.57,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.06,
+              "log_probability": -2.8134107167600364
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.58,
+              "log_probability": -0.544727175441672
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.35,
+              "log_probability": -1.0498221244986778
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -0.6772,
+        "diversity_multiplier": 1,
+        "final_score": -0.6772,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5455
+      },
+      {
+        "candidate_id": "phx_eb420a45_09",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "latermedia/instagram-post-design",
+        "role": "ui_component",
+        "provenance_occurrences": [
+          {
+            "board": "latermedia/instagram-post-design",
+            "role": "ui_component",
+            "source_id": "pinterest_curated_design",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwD9Eo8sQ2bOiAm-QW7YHEcDLVqUVDXZUJmJvOnznqTyprU/",
+            "preview_url": "https://i.pinimg.com/236x/6c/bb/8b/6cbb8bb84653b6a93d78e9cadca8dca2.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "75d3396b9c04fc522c897f1bfe500fdc169496f0de6406f7307419c2f0b6169b"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "We’re so excited to introduce ! There’s a lot that goes into building your brand — We’re so excited to introduce ! There’s a lot that goes into building your brand on Instagram in 2019 – trends move fast, new tools and features are constantly being released, the Instagram algorithm",
+        "preview_url": "https://i.pinimg.com/236x/6c/bb/8b/6cbb8bb84653b6a93d78e9cadca8dca2.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwD9Eo8sQ2bOiAm-QW7YHEcDLVqUVDXZUJmJvOnznqTyprU/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_09",
+          "status": "scored",
+          "reason": "ok",
+          "score": -5.6,
+          "level_score": 1.08,
+          "confidence": 0.56,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.18,
+              "log_probability": -1.7147984280919268
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.57,
+              "log_probability": -0.5621189181535413
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.24,
+              "log_probability": -1.4271163556401458
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.01,
+              "log_probability": -4.605170185988091
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -5.3364,
+        "diversity_multiplier": 1,
+        "final_score": -5.3364,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5271
+      },
+      {
+        "candidate_id": "phx_eb420a45_08",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_design",
+        "board": "latermedia/instagram-post-design",
+        "role": "ui_component",
+        "provenance_occurrences": [
+          {
+            "board": "latermedia/instagram-post-design",
+            "role": "ui_component",
+            "source_id": "pinterest_curated_design",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwsBO5VxhyqKC_71FuOMGlGqmDga9MKrFl3V6DCnwACbFZS/",
+            "preview_url": "https://i.pinimg.com/236x/a7/a6/92/a7a692ffe7121756f10c3105ac58b700.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "95b926de24101ee9a97609d8b3ff32d7d818a3cf6526d05736eecc37a2fd50a8"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "Learn how to use carousel posts to boost your engagement, reach new audiences, a — Learn how to use carousel posts to boost your engagement, reach new audiences, and even drive sales in this blog post. Instagram carousel posts are one of the most versatile tools you can use to achie",
+        "preview_url": "https://i.pinimg.com/236x/a7/a6/92/a7a692ffe7121756f10c3105ac58b700.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwsBO5VxhyqKC_71FuOMGlGqmDga9MKrFl3V6DCnwACbFZS/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_08",
+          "status": "scored",
+          "reason": "ok",
+          "score": -7.55,
+          "level_score": 0.93,
+          "confidence": 0.77,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.15,
+              "log_probability": -1.8971199848858813
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.77,
+              "log_probability": -0.2613647641344075
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.08,
+              "log_probability": -2.5257286443082556
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0,
+              "log_probability": null
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -7.2722,
+        "diversity_multiplier": 1,
+        "final_score": -7.2722,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.5555
+      },
+      {
+        "candidate_id": "phx_eb420a45_03",
+        "origin_kind": "provider",
+        "source_id": "pinterest_curated_photography",
+        "board": "behance/photography",
+        "role": "hook_cover",
+        "provenance_occurrences": [
+          {
+            "board": "behance/photography",
+            "role": "hook_cover",
+            "source_id": "pinterest_curated_photography",
+            "origin_url": "https://www.pinterest.com/pin/e1_AfqPShx7ej1n1ZGsyg43793TTSwWV6hKLACu-BD10sDl0SsCQ8g/",
+            "preview_url": "https://i.pinimg.com/236x/33/42/2f/33422f3dbdba09711f4ca36a4bc14304.jpg",
+            "metadata_sid": [
+              "sid_unknown_format",
+              "sid_unknown_mechanic",
+              "sid_unknown_hierarchy",
+              "sid_unknown_aesthetic"
+            ],
+            "preview_sha256": "07a95bc02ed1f89ebc411bc62a27100d692ec428a416d246f7440674d4e841bc"
+          }
+        ],
+        "metadata_sid": [
+          "sid_unknown_format",
+          "sid_unknown_mechanic",
+          "sid_unknown_hierarchy",
+          "sid_unknown_aesthetic"
+        ],
+        "visual_description": "A new perspective on Iceland’s South Coast. 🌊 In MINERAL FLOW, Jan Erik Waider — A new perspective on Iceland’s South Coast. 🌊 In MINERAL FLOW, Jan Erik Waider follows Iceland’s glacial rivers from above, capturing the patterns shaped by water, sediment and volcanic terrain. Expl",
+        "preview_url": "https://i.pinimg.com/236x/33/42/2f/33422f3dbdba09711f4ca36a4bc14304.jpg",
+        "origin_url": "https://www.pinterest.com/pin/e1_AfqPShx7ej1n1ZGsyg43793TTSwWV6hKLACu-BD10sDl0SsCQ8g/",
+        "staging_path": "não preparada (prévia disponível na conversa, quando fornecida)",
+        "action_probs": null,
+        "decision_evaluation": {
+          "candidate_id": "phx_eb420a45_03",
+          "status": "scored",
+          "reason": "ok",
+          "score": -10.350000000000001,
+          "level_score": 0.87,
+          "confidence": 0.45,
+          "level_probabilities": [
+            {
+              "label": "incompatível",
+              "level": 0,
+              "probability": 0.34,
+              "log_probability": -1.0788096613719298
+            },
+            {
+              "label": "limitada",
+              "level": 1,
+              "probability": 0.47,
+              "log_probability": -0.7550225842780328
+            },
+            {
+              "label": "útil",
+              "level": 2,
+              "probability": 0.17,
+              "log_probability": -1.7719568419318752
+            },
+            {
+              "label": "muito útil",
+              "level": 3,
+              "probability": 0.02,
+              "log_probability": -3.912023005428146
+            }
+          ],
+          "evidence": "image_and_metadata",
+          "image_note": "sent"
+        },
+        "raw_score": -10.0645,
+        "diversity_multiplier": 1,
+        "final_score": -10.0645,
+        "composition_guideline": "Pontuação experimental da Decision API; distribuição por níveis não é logprob de token nem prova de preferência.",
+        "user_tower_cosine_similarity": 0.571
+      }
+    ],
+    "telemetry": {
+      "total_candidates_evaluated": 9,
+      "total_candidates_retrieved": 9,
+      "total_candidate_occurrences": 9,
+      "total_candidates_filtered": 0,
+      "total_candidates_scored": 9,
+      "exploration_quota_allocated": 0,
+      "user_tower_dimension": 32,
+      "positive_session_events": 0,
+      "negative_session_events": 0,
+      "board_html_path": null
+    }
+  },
+  "previews": [
+    {
+      "id": "phx_eb420a45_03",
+      "source": "pinterest_curated_photography",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShx7ej1n1ZGsyg43793TTSwWV6hKLACu-BD10sDl0SsCQ8g/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_03.webp",
+      "caption": "A new perspective on Iceland’s South Coast. 🌊 In MINERAL FLOW, Jan Erik Waider"
+    },
+    {
+      "id": "phx_eb420a45_08",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwsBO5VxhyqKC_71FuOMGlGqmDga9MKrFl3V6DCnwACbFZS/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_08.webp",
+      "caption": "Learn how to use carousel posts to boost your engagement, reach new audiences, a"
+    },
+    {
+      "id": "phx_eb420a45_06",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwkUjgXi-t1Xnm5HIrhgEKo55-BFU2-mpU0qJgv1DIS-L_Z/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_06.webp",
+      "caption": "Wellness Minimal Instagram Templates by Instprofi | Studio Estimo on @creativema"
+    },
+    {
+      "id": "phx_eb420a45_09",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwD9Eo8sQ2bOiAm-QW7YHEcDLVqUVDXZUJmJvOnznqTyprU/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_09.webp",
+      "caption": "We’re so excited to introduce ! There’s a lot that goes into building your brand"
+    },
+    {
+      "id": "phx_eb420a45_07",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShwwxv_UOrujaoj5fJFSUr4hJUQcZypkLwv3t1l0zDktIxex/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_07.webp",
+      "caption": "Our favourite photos from Instagram for search and repost (a new feature on Late"
+    },
+    {
+      "id": "phx_eb420a45_04",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyJpYhA1bIsB2OSaiPidxzxUOFd4totTqEyVPykFDZFLO-S/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_04.webp",
+      "caption": "FOLD | Instagram Post & Story (III) by Pixel Grid on @creativemarket"
+    },
+    {
+      "id": "phx_eb420a45_02",
+      "source": "pinterest_curated_photography",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyG-Rp_Xh9iFQ0LbzyfTr59049GLYww59apXlvuRxGnX7Q/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_02.webp",
+      "caption": "Tom Leighton photographs the world's forms, natural and built, then takes them a"
+    },
+    {
+      "id": "phx_eb420a45_01",
+      "source": "pinterest_curated_photography",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShyXTI2Kctn8KNPycGPGXtiTKsw8MkjbBareAPLR0yUyQYE/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_01.webp",
+      "caption": "In Vienna Symphonies, Thomas de Franzoni composes the city in black and white, l"
+    },
+    {
+      "id": "phx_eb420a45_05",
+      "source": "pinterest_curated_design",
+      "origin_url": "https://www.pinterest.com/pin/e1_AfqPShxJxe9F2x_FsAEtdnWZ8TEGQQ1d9NUy2euy3ie-hhYrYgBf/",
+      "preview": "/var/folders/c6/6xxjr4gn7f9fvxxjmt2xl3mw0000gn/T/compor-decision-mcp-Z93RxO/phx_eb420a45_05.webp",
+      "caption": "Foam – Instagram Stories Templates by Twelve Four Studio on @creativemarket"
+    }
+  ]
+}

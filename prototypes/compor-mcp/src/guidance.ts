@@ -89,7 +89,7 @@ const focusedFields = {
   z_index: { description: 'Inteiro único em toda a peça, inclusive camadas do mesmo tipo. Para novos planos use 0,1,2... na ordem de pintura, nunca um índice por categoria. Na revisão preserve a ordem fora do escopo autorizado.' },
 } satisfies Record<string, Help>;
 
-export const focusedPilotVersion = '0.1.0-prototype-e2';
+export const focusedPilotVersion = '0.3.0-prototype-e2';
 export const focusedPilotAppendix = `
 ## Composição e revisão — candidato E2
 

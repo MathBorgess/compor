@@ -1,0 +1,13 @@
+{
+  "versao": "peca-v6",
+  "base": "base-alternativa-grafica.png",
+  "base_sha256": "d70898c96fed57a5fbad62093191594bc0c0ba680114c2cb0a9610f7a31a7508",
+  "titulo_linhas": [
+    "O dinheiro do",
+    "seu trabalho, mais",
+    "claro no dia a dia"
+  ],
+  "subtitulo": "Uma ideia de curso sobre suas contas",
+  "rotulo_trabalho": "Contas do trabalho",
+  "rotulo_pessoal": "Contas pessoais"
+}
