@@ -1,6 +1,7 @@
 ---
 import "../styles/global.css";
 import { HERO_TITLE, SITE_NAME, SITE_URL } from "../data/site";
+import { CF_WEB_ANALYTICS_TOKEN } from "../data/web-analytics";
 
 interface Props {
   title: string;
@@ -49,15 +50,20 @@ const json = jsonLd ? JSON.stringify(jsonLd).replace(/</g, "\\u003c") : "";
         </>
       )
     }
-    <!--
-      TODO(analytics): PostHog — decisão pendente (PostHog ou Vercel Analytics).
-      Não carregar SDK e não definir chave.
-      Eventos já nomeados no código: landing_viewed, cta_clicked (position), waitlist_submitted.
-    -->
     {json && <script type="application/ld+json" is:inline set:html={json} />}
   </head>
   <body data-page={page}>
     <a class="skip" href="#conteudo">Ir para o conteúdo</a>
     <slot />
+    {
+      CF_WEB_ANALYTICS_TOKEN && (
+        <script
+          is:inline
+          type="module"
+          src="https://static.cloudflareinsights.com/beacon.min.js"
+          data-cf-beacon={JSON.stringify({ token: CF_WEB_ANALYTICS_TOKEN })}
+        />
+      )
+    }
   </body>
 </html>

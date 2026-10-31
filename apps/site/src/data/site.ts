@@ -84,7 +84,7 @@ export const CTA_DESTINATION = "waitlist" as "waitlist" | "contact";
  * ou, no futuro, a URL do endpoint. Veja .env.example.
  */
 export const WAITLIST_SUBMIT_TARGET =
-  import.meta.env.PUBLIC_WAITLIST_SUBMIT_TARGET || "mailto:ola@mathai.com.br";
+  import.meta.env.PUBLIC_WAITLIST_SUBMIT_TARGET || "mailto:we@mathai.com.br";
 
 export function ctaHref(): string {
   if (CTA_DESTINATION === "contact") return WAITLIST_SUBMIT_TARGET;

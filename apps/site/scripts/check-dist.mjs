@@ -47,9 +47,7 @@ const required = [
   "SoftwareApplication",
   "Organization",
   "og:image",
-  "landing_viewed",
-  "cta_clicked",
-  "waitlist_submitted",
+  "mailto:we@mathai.com.br",
 ];
 
 for (const snippet of required) {
@@ -74,7 +72,8 @@ const forbidden = [
   /#7c3aed/i,
   /#8b5cf6/i,
   /phc_[a-z0-9]+/i,
-  /posthog\.init/i,
+  /posthog/i,
+  /ola@/i,
 ];
 
 for (const pattern of forbidden) {
@@ -109,13 +108,15 @@ else {
   if (!headers.includes(`'sha256-${hash}'`)) fail("CSP hash does not match JSON-LD");
 }
 
-const analytics = readFileSync("src/scripts/analytics.ts", "utf8");
-if (!analytics.includes("TODO(analytics)")) fail("Analytics placeholder comment missing");
-if (!analytics.includes("landing_viewed") || !analytics.includes("waitlist_submitted")) {
-  fail("Analytics event names missing from the placeholder");
-}
-if (/phc_/.test(analytics) || analytics.includes("posthog.init(")) {
-  fail("Analytics placeholder must not contain a key or SDK init");
+const token = (process.env.CF_WEB_ANALYTICS_TOKEN ?? "").trim();
+const beacon = "https://static.cloudflareinsights.com/beacon.min.js";
+if (token) {
+  if (!html.includes(beacon)) fail("CF_WEB_ANALYTICS_TOKEN is set but the beacon is missing");
+  if (!html.includes(token)) fail("Beacon markup is missing the build-time token");
+  if (!headers.includes(beacon)) fail("CSP is missing the Web Analytics script");
+  if (!headers.includes("cloudflareinsights.com")) fail("CSP is missing the Web Analytics connect host");
+} else if (html.includes("cloudflareinsights.com") || headers.includes("cloudflareinsights.com")) {
+  fail("Web Analytics beacon rendered without CF_WEB_ANALYTICS_TOKEN");
 }
 
 const site = readFileSync("src/data/site.ts", "utf8");

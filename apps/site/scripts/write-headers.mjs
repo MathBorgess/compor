@@ -12,9 +12,12 @@ function walk(dir, files = []) {
 }
 
 const hashes = new Set();
+let beacon = false;
 
 for (const file of walk("dist")) {
   const html = readFileSync(file, "utf8");
+  if (html.includes("https://static.cloudflareinsights.com/beacon.min.js")) beacon = true;
+
   const jsonLd = /<script type="application\/ld\+json">([\s\S]*?)<\/script>/g;
   for (const match of html.matchAll(jsonLd)) {
     const hash = createHash("sha256").update(match[1], "utf8").digest("base64");
@@ -30,14 +33,20 @@ for (const file of walk("dist")) {
   }
 }
 
-const scriptSrc = ["'self'", ...hashes].join(" ");
+const scriptSrc = ["'self'", ...hashes];
+const connectSrc = ["'self'"];
+if (beacon) {
+  scriptSrc.push("https://static.cloudflareinsights.com/beacon.min.js");
+  connectSrc.push("cloudflareinsights.com");
+}
+
 const csp = [
   "default-src 'self'",
-  `script-src ${scriptSrc}`,
+  `script-src ${scriptSrc.join(" ")}`,
   "style-src 'self'",
   "font-src 'self'",
   "img-src 'self'",
-  "connect-src 'self'",
+  `connect-src ${connectSrc.join(" ")}`,
   "object-src 'none'",
   "base-uri 'self'",
   "form-action 'self' mailto:",

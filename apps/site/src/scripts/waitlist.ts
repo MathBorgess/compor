@@ -1,5 +1,4 @@
 import { WAITLIST_SUBMIT_TARGET } from "../data/site";
-import { track } from "./analytics";
 
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
@@ -67,9 +66,6 @@ export function setupWaitlist(): void {
       firstInvalid?.focus();
       return;
     }
-
-    track({ name: "cta_clicked", position: "final" });
-    track({ name: "waitlist_submitted" });
 
     if (!WAITLIST_SUBMIT_TARGET.startsWith("mailto:")) {
       if (status) {

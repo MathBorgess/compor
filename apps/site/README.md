@@ -62,16 +62,16 @@ O texto do botão é "Criar meu post". O destino está numa constante só, `CTA_
 
 TODO(owner): a escolha entre lista e contato direto ainda está pendente.
 
-TODO(waitlist): não há backend. O alvo padrão é `mailto:ola@mathai.com.br`, que precisa ser confirmado antes de publicar. Para trocar sem editar código, defina `PUBLIC_WAITLIST_SUBMIT_TARGET` (veja `.env.example`). Um `mailto:` abre o programa de e-mail com nome, e-mail e o que a pessoa vende. Outro valor vira o `action` do formulário. Se o endpoint for de outra origem, inclua essa origem em `form-action` dentro de `scripts/write-headers.mjs`.
+TODO(waitlist): não há backend. O alvo padrão é `mailto:we@mathai.com.br`. Para trocar sem editar código, defina `PUBLIC_WAITLIST_SUBMIT_TARGET` (veja `.env.example`). Um `mailto:` abre o programa de e-mail com nome, e-mail e o que a pessoa vende. Outro valor vira o `action` do formulário. Se o endpoint for de outra origem, inclua essa origem em `form-action` dentro de `scripts/write-headers.mjs`.
 
 A página diz que nada é gravado nela.
 
 ## Analytics
 
-TODO(analytics): a escolha entre PostHog e Vercel Analytics está pendente. Não há SDK nem chave. O placeholder está em `src/scripts/analytics.ts` e num comentário do layout. Os eventos já são chamados na página e ficam só na memória do navegador:
+Cloudflare Web Analytics, sem dependência nova. O beacon `https://static.cloudflareinsights.com/beacon.min.js` só entra no HTML quando `CF_WEB_ANALYTICS_TOKEN` está definido na build. Vazio, o script não é renderizado.
 
-- `landing_viewed`
-- `cta_clicked` com `position` `header`, `hero` ou `final`
-- `waitlist_submitted`
+```sh
+CF_WEB_ANALYTICS_TOKEN=seu-token npm run build
+```
 
-Não enviar nome, e-mail ou oferta quando a ferramenta for ligada.
+Com o token, a build também libera na CSP o script e o envio para `cloudflareinsights.com`. Sem o token, esses hosts ficam de fora.
