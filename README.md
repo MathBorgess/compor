@@ -6,6 +6,10 @@ Compor é uma proposta de espaço no navegador para explorar referências e alte
 
 **Estado em 23/10/2026:** pesquisa e documentação, sem aplicativo implementado. A reestruturação combina 67 relatos públicos, dez e-mails enviados e debate de sete subagentes em duas rodadas. Há uma devolução e nenhuma resposta humana na checagem de 09:08. O desenho é candidato; necessidade, benefício, pagamento e market fit continuam sem validação direta.
 
+## Site público
+
+A landing está em [`apps/site`](apps/site/README.md): Astro estático, pronto para Cloudflare Workers no domínio `compor.mathai.com.br`. O diretório [`apps/web`](apps/web/README.md) fica reservado para o futuro aplicativo Demo em Next.js na Vercel. Essa página não substitui o protótipo em `prototypes/compor-mcp`.
+
 ## Documentos para começar
 
 - [Briefing de design e tese de mercado](docs/briefing-design-e-mercado-2026-10-23.md): leitura de 4–5 minutos para designer e investidor; [Google Docs](https://docs.google.com/document/d/1PqE-ZhGSMkk8J1vV82XC14DMI0ySiayihEVMb2AvH8E).

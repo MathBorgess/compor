@@ -1,0 +1,50 @@
+---
+import { CAPTION_STEP, EXAMPLE, exampleCaption } from "../data/site";
+---
+
+<figure class="specimen">
+  <p class="visually-hidden">
+    A ilustração deste exemplo permanece. O preço e a data mudam na camada de texto.
+  </p>
+  <div class="poster">
+    <p class="stamp">{EXAMPLE.stamp}</p>
+    <div class="poster-art" data-static-art>
+      <svg class="art-svg" viewBox="0 0 1080 900" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+        <rect width="1080" height="900" fill="#123EAB"></rect>
+        <circle cx="980" cy="80" r="320" fill="#F4F0E5"></circle>
+        <rect x="780" y="120" width="200" height="16" fill="#2C2D2F"></rect>
+        <rect x="780" y="154" width="130" height="16" fill="#2C2D2F"></rect>
+        <circle cx="900" cy="700" r="70" fill="none" stroke="#F4F0E5" stroke-width="16"></circle>
+      </svg>
+      <div class="art-copy">
+        <p class="art-kicker">{EXAMPLE.kicker}</p>
+        <p class="art-title">{EXAMPLE.course}</p>
+        <p class="art-detail">{EXAMPLE.detail}</p>
+      </div>
+    </div>
+    <div class="text-layer">
+      <p class="layer-label">
+        Camada de texto
+        <span data-layer-state aria-hidden="true"></span>
+      </p>
+      <div class="field" data-field="date">
+        <span class="key">Data</span>
+        <span class="value" data-value="date">{EXAMPLE.date}</span>
+      </div>
+      <div class="field" data-field="price">
+        <span class="key">Preço</span>
+        <span class="value" data-value="price">{EXAMPLE.price}</span>
+      </div>
+    </div>
+  </div>
+  <figcaption class="legend">
+    <p class="legend-label">Legenda</p>
+    <p id="caption-text" class="caption" set:text={exampleCaption(EXAMPLE.date, EXAMPLE.price)} />
+    <p id="caption-note" class="note">{EXAMPLE.note}</p>
+    <button type="button" class="button" id="copy-caption">{CAPTION_STEP.title}</button>
+    <p id="copy-status" class="status" role="status"></p>
+    <button type="button" class="ghost" id="pause-animation" hidden aria-pressed="false">
+      Pausar animação
+    </button>
+  </figcaption>
+</figure>

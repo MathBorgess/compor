@@ -1,0 +1,29 @@
+---
+import { CTA_LABEL, ctaHref } from "../data/site";
+
+interface Props {
+  home?: boolean;
+}
+
+const { home = false } = Astro.props;
+const href = ctaHref();
+---
+
+<header class="header">
+  <div class="wrap header-inner">
+    <a class="logo" href="/" aria-current={home ? "page" : undefined}>
+      <svg viewBox="0 0 32 32" aria-hidden="true">
+        <rect width="32" height="32" fill="#F4F0E5"></rect>
+        <rect x="3" y="8" width="14" height="20" fill="#123EAB"></rect>
+        <rect x="13" y="3" width="16" height="13" fill="#2C2D2F"></rect>
+      </svg>
+      Compor
+    </a>
+    <nav class="nav" aria-label="Principal">
+      <a href="/#como-funciona">Como funciona</a>
+      <a href="/#para-quem">Para quem é</a>
+      <a href="/#perguntas">Perguntas</a>
+      <a class="button" href={href} data-cta-position="header">{CTA_LABEL}</a>
+    </nav>
+  </div>
+</header>
