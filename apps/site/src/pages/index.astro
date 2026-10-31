@@ -1,0 +1,151 @@
+---
+import ExamplePost from "../components/ExamplePost.astro";
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import {
+  AUDIENCE,
+  CAPTION_STEP,
+  CTA_LABEL,
+  DOWNLOAD_STEP,
+  FAQ,
+  FINAL_CTA,
+  GENERIC_GENERATOR,
+  HERO_SUBTITLE,
+  HERO_TITLE,
+  PAGE_TITLE,
+  STEPS,
+  WAITLIST_SUBMIT_TARGET,
+  ctaHref,
+  jsonLd,
+} from "../data/site";
+
+const cta = ctaHref();
+const mailto = WAITLIST_SUBMIT_TARGET.startsWith("mailto:");
+---
+
+<BaseLayout title={PAGE_TITLE} description={HERO_SUBTITLE} jsonLd={jsonLd()} page="landing">
+  <Header home />
+  <main id="conteudo">
+    <section class="hero" aria-labelledby="hero-title">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <h1 id="hero-title">{HERO_TITLE}</h1>
+          <p class="lede">{HERO_SUBTITLE}</p>
+          <a class="button" href={cta}>{CTA_LABEL}</a>
+        </div>
+        <ExamplePost />
+      </div>
+    </section>
+
+    <section class="section" id="como-funciona" aria-labelledby="como-titulo">
+      <div class="wrap">
+        <h2 id="como-titulo">Como funciona</h2>
+        <ol class="steps">
+          {
+            STEPS.map((step, index) => (
+              <li>
+                <p class="step-index" aria-hidden="true">
+                  {String(index + 1).padStart(2, "0")}
+                </p>
+                <h3>{step.title}</h3>
+                <p>{step.body}</p>
+              </li>
+            ))
+          }
+          <li class="step-pair">
+            <p class="step-index" aria-hidden="true">04</p>
+            <div class="pair">
+              <div>
+                <h3>{DOWNLOAD_STEP.title}</h3>
+                <p>{DOWNLOAD_STEP.body}</p>
+              </div>
+              <div>
+                <h3>{CAPTION_STEP.title}</h3>
+                <p>{CAPTION_STEP.body}</p>
+              </div>
+            </div>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section statement" id="gerador" aria-labelledby="gerador-titulo">
+      <div class="wrap">
+        <h2 id="gerador-titulo">Por que não um gerador genérico</h2>
+        <p>{GENERIC_GENERATOR}</p>
+      </div>
+    </section>
+
+    <section class="section statement" id="para-quem" aria-labelledby="para-quem-titulo">
+      <div class="wrap">
+        <h2 id="para-quem-titulo">Para quem é</h2>
+        <p>{AUDIENCE}</p>
+      </div>
+    </section>
+
+    <section class="section" id="perguntas" aria-labelledby="perguntas-titulo">
+      <div class="wrap">
+        <h2 id="perguntas-titulo">Perguntas</h2>
+        <div class="faq">
+          {
+            FAQ.map((item) => (
+              <details>
+                <summary>{item.question}</summary>
+                <p>{item.answer}</p>
+              </details>
+            ))
+          }
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="lista" tabindex="-1" aria-labelledby="lista-titulo">
+      <div class="wrap">
+        <h2 id="lista-titulo">{FINAL_CTA}</h2>
+        <form
+          id="waitlist-form"
+          class="waitlist"
+          action={WAITLIST_SUBMIT_TARGET}
+          method="post"
+          enctype={mailto ? "text/plain" : "application/x-www-form-urlencoded"}
+          aria-labelledby="lista-titulo"
+          novalidate
+        >
+          <p class="form-note">Nada é gravado nesta página.</p>
+          <div class="field-block">
+            <label for="nome">Nome</label>
+            <input id="nome" name="nome" type="text" autocomplete="name" maxlength="120" required />
+            <p class="field-error" id="nome-error" hidden></p>
+          </div>
+          <div class="field-block">
+            <label for="email">E-mail</label>
+            <input
+              id="email"
+              name="email"
+              type="email"
+              autocomplete="email"
+              inputmode="email"
+              maxlength="200"
+              required
+              spellcheck="false"
+            />
+            <p class="field-error" id="email-error" hidden></p>
+          </div>
+          <div class="field-block">
+            <label for="oferta">O que você vende</label>
+            <input id="oferta" name="oferta" type="text" maxlength="160" required />
+            <p class="field-error" id="oferta-error" hidden></p>
+          </div>
+          <button class="button" type="submit">{CTA_LABEL}</button>
+          <p id="waitlist-status" class="status" role="status" tabindex="-1"></p>
+        </form>
+      </div>
+    </section>
+  </main>
+  <Footer />
+  <script>
+    import { start } from "../scripts/main";
+    start();
+  </script>
+</BaseLayout>

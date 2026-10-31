@@ -1,0 +1,23 @@
+---
+import Footer from "../components/Footer.astro";
+import Header from "../components/Header.astro";
+import BaseLayout from "../layouts/BaseLayout.astro";
+import { CTA_LABEL, ctaHref } from "../data/site";
+---
+
+<BaseLayout
+  title="Página não encontrada — Compor"
+  description="Esse endereço não leva a uma página do Compor."
+  noindex
+>
+  <Header />
+  <main id="conteudo" class="missing">
+    <div class="wrap">
+      <h1>Essa página não existe.</h1>
+      <p>O endereço não leva a uma página do Compor.</p>
+      <p><a class="button" href={ctaHref()}>{CTA_LABEL}</a></p>
+      <p><a class="back" href="/">Voltar ao início</a></p>
+    </div>
+  </main>
+  <Footer />
+</BaseLayout>
