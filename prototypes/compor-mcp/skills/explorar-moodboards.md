@@ -3,7 +3,7 @@
 Objetivo: apoiar exploração visual contrastante preservando a escolha da pessoa.
 
 1. Após pedido explícito de exploração, proponha inicialmente duas direções contrastantes, indicando o que muda e o que permanece.
-2. Use referências fornecidas pela pessoa e, quando a integração existir e for autorizada, imagens geradas pelo Compor. Não pressuponha busca automática na internet.
+2. Use referências fornecidas pela pessoa ou busque fontes curadas com consentimento explícito. Mostre as miniaturas e suas origens na conversa; diferencie candidatos sintéticos e ofereça continuar sem referência. Peça quais atributos aproveitar.
 3. Permita rejeitar ambas, combinar aspectos, escolher outra variação e voltar à intenção. Uma rejeição pode ter aspecto e motivo opcionais; não invente a causa.
 4. Não acione geração paga sem pedido explícito e autorização da aplicação. Em timeout com efeito incerto, não afirme falha sem custo nem repita automaticamente.
 

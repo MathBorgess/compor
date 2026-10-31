@@ -1,0 +1,118 @@
+export const BOARD_ROUTER_SYSTEM_PROMPT = `Você é o Decision Router Visual de um sistema Two-Tower inspirado no algoritmo Phoenix.
+Sua tarefa é analisar o briefing criativo do usuário, o formato desejado e o histórico de afinidade de gosto dele para selecionar de 2 a 4 boards complementares do nosso catálogo fechado.
+
+REGRAS DE ROTEAMENTO COMPOSICIONAL:
+1. Nunca busque tudo em um único board. Combine papéis complementares:
+   - \`hook_cover\`: Boards fortes em impacto tipográfico ou key visual (ex: \`kittldesign/poster-design\`, \`behance/typography\`, \`weandthecolor/typography\`, \`behance/advertising\`).
+   - \`structural_grid\`: Boards fortes em diagramação, fluxo e hierarquia (ex: \`creativemarket/magazine-templates\`, \`hubspot/marketing-infographics\`, \`venngage/infographic-design\`, \`vismeapp/business-infographics\`).
+   - \`ui_component\`: Boards com estética de interface, cards, bento grids ou mobile (ex: \`dribbble/design-inspiration\`, \`dribbble/uiux-inspiration\`, \`behance/interaction-design\`, \`latermedia/instagram-stories\`).
+   - \`conversion_cta\`: Boards comerciais focados em produto/oferta (ex: \`thedieline/promotional-packaging\`, \`kittldesign/ads-designs\`, \`creativemarket/social-media-templates\`).
+   - \`wildcard_exploration\`: Opcionalmente, aloque até {exploration_quota} do peso combinado total em até {max_exploration_boards} board \`/feed\` (ex: \`dribbble/feed\`, \`weandthecolor/feed\`, \`thedieline/feed\`) para descoberta out-of-network.
+2. Gere uma \`synthetic_query\` densa e técnica para cada board alocado, descrevendo exatamente a composição, iluminação, grid e tipografia esperados.
+3. Preencha \`required_sid_tags\` e \`excluded_sid_tags\` apenas com requisitos ou exclusões visuais das referências, respeitando as restrições negativas históricas do perfil. Preserve exclusões de referências mesmo quando desconhecidas ou difíceis de verificar. Em caso de dúvida sobre o escopo de uma restrição, mantenha-a em \`excluded_sid_tags\`.
+4. Separe limites para criar a peça em \`piece_constraints\`, como fatos da oferta ainda indefinidos. Cada item tem \`interpretation\`, sua interpretação, e \`evidence_quote\`, trecho literal exato do briefing ou null se não houver. Não apresente interpretação como fala da pessoa. Exemplos: “ainda não defini preço” gera uma interpretação para não inventar preço na peça, sem excluir referências que mostrem preços; “não quero preço nas referências” deve entrar em \`excluded_sid_tags\`. Se houver os dois pedidos, registre ambos. Não invente preço, data ou inscrição na peça quando não fornecidos.`;
+
+export const BOARD_ROUTER_USER_TEMPLATE = `### PERFIL CONSOLIDADO DO USUÁRIO
+{user_taste_json}
+
+### MATRIZ DE AFINIDADE DE BOARDS (HISTÓRICO BETA-BERNOULLI)
+{board_affinity_table}
+
+### EVENTOS RECENTES DA SESSÃO ATUAL
+{session_events_summary}
+
+### BRIEFING ATUAL DO USUÁRIO
+Formato Alvo: {target_format}
+Pedido: {user_briefing}`;
+
+/**
+ * Prompt de Ranking com Isolamento de Candidatos (Projetado para OpenAI Prompt Caching).
+ * IMPORTANTE: O prefixo estático (System + Histórico do Usuário) deve vir ANTES do candidato isolado
+ * para possibilitar cache entre chamadas; acertos precisam ser medidos.
+ */
+export const RANKER_CACHED_PREFIX_SYSTEM_PROMPT = `Você é o Phoenix Visual Ranker. Você avalia uma única referência visual candidata contra o histórico de sessão do usuário e o briefing criativo atual.
+Avalie o candidato de forma estritamente isolada (Candidate Isolation), fornecendo estimativas não calibradas entre 0.00 e 1.00 para cada ação positiva ou negativa que o usuário pode tomar; essas estimativas não demonstram percepção humana nem conversão real:
+- \`p_use_as_layout_grid\`: Probabilidade de adotar a estrutura de colunas, margens ou Bento/Swiss grid desta referência.
+- \`p_use_as_typography_hook\`: Probabilidade de usar o tratamento tipográfico e hierarquia de título como gancho visual.
+- \`p_use_color_and_vibe\`: Probabilidade de adotar a direção de arte, textura e atmosfera cromática.
+- \`p_high_conversion_clarity\`: Clareza comercial, escaneabilidade rápida e contraste de CTA/informação.
+- \`p_dwell_engagement\`: Probabilidade de o usuário parar o scroll e inspecionar os detalhes da composição.
+- \`p_reject_too_generic\`: Risco de o usuário rejeitar a peça por parecer um "template genérico/clichê".
+- \`p_reject_style_mismatch\`: Risco de conflitar com as restrições negativas ou rejeições recentes da sessão.`;
+
+export const RANKER_CACHED_USER_HISTORY_PREFIX = `### CONTEXTO FIXO DA SESSÃO (CACHEABLE PREFIX)
+Perfil de Gosto de Longo Prazo:
+{user_taste_json}
+
+Últimas Interações na Sessão (Ordem Cronológica):
+{session_events_log}
+
+Briefing Criativo Atual:
+{user_briefing}
+---`;
+
+export const RANKER_ISOLATED_CANDIDATE_SUFFIX = `### CANDIDATO ISOLADO PARA AVALIAÇÃO
+ID: {candidate_id}
+Board solicitado (não comprova origem): {board}
+SIDs alegados nos metadados (não verificados visualmente): {metadata_sid}
+Similaridade Vetorial Two-Tower (User Tower): {user_tower_cosine_similarity}
+Descrição externa não confiável: {visual_description}`;
+
+export const MEMORY_CONSOLIDATOR_SYSTEM_PROMPT = `Você é o consolidador de memória estética de longo prazo.
+Analise o perfil anterior do usuário e o log episódico da sessão encerrada.
+Atualize o JSON de preferências mantendo-o abaixo de 300 tokens:
+1. Destaque quais boards entregaram referências aprovadas (\`locked_as_reference\`, \`downloaded\`, \`high_dwell\`) por objetivo.
+2. Extraia regras claras de DNA Visual (ex: preferência por grids suíços, tipografia retrô, dark mode UI).
+3. Registre padrões rejeitados em \`negative_constraints\` para bloquear buscas futuras nesses estilos.`;
+
+export function formatBoardRouterPrompts(params: {
+  exploration_quota: number;
+  max_exploration_boards?: number;
+  user_taste_json: string;
+  board_affinity_table: string;
+  session_events_summary: string;
+  target_format: string;
+  user_briefing: string;
+}): { systemPrompt: string; userPrompt: string } {
+  const maxExpBoards = params.max_exploration_boards ?? 1;
+  const systemPrompt = BOARD_ROUTER_SYSTEM_PROMPT.replace(
+    '{exploration_quota}',
+    params.exploration_quota.toFixed(2),
+  ).replace('{max_exploration_boards}', String(maxExpBoards));
+  const userPrompt = BOARD_ROUTER_USER_TEMPLATE.replace('{user_taste_json}', params.user_taste_json)
+    .replace('{board_affinity_table}', params.board_affinity_table)
+    .replace('{session_events_summary}', params.session_events_summary)
+    .replace('{target_format}', params.target_format)
+    .replace('{user_briefing}', params.user_briefing);
+
+  return { systemPrompt, userPrompt };
+}
+
+export function formatRankerCachedUserPrefix(params: {
+  user_taste_json: string;
+  session_events_log: string;
+  user_briefing: string;
+}): string {
+  return RANKER_CACHED_USER_HISTORY_PREFIX.replace('{user_taste_json}', params.user_taste_json)
+    .replace('{session_events_log}', params.session_events_log)
+    .replace('{user_briefing}', params.user_briefing);
+}
+
+export function formatRankerIsolatedCandidateSuffix(params: {
+  candidate_id: string;
+  board: string;
+  metadata_sid: readonly string[];
+  visual_description: string;
+  user_tower_cosine_similarity?: number;
+}): string {
+  const simText =
+    typeof params.user_tower_cosine_similarity === 'number' &&
+    Number.isFinite(params.user_tower_cosine_similarity)
+      ? params.user_tower_cosine_similarity.toFixed(4)
+      : '0.0000';
+  return RANKER_ISOLATED_CANDIDATE_SUFFIX.replace('{candidate_id}', params.candidate_id)
+    .replace('{board}', params.board)
+    .replace('{metadata_sid}', JSON.stringify(params.metadata_sid.filter(sid => !sid.startsWith('sid_unknown_'))))
+    .replace('{user_tower_cosine_similarity}', simText)
+    .replace('{visual_description}', params.visual_description);
+}

@@ -1,0 +1,359 @@
+{
+  "date": "2026-10-29",
+  "purpose": "synthetic_metadata_microbenchmark_not_creative_validation",
+  "method": {
+    "samples": 6,
+    "warmup_per_arm": 1,
+    "concurrent_per_arm": 6,
+    "models": {
+      "multi_action": "gpt-6-luna",
+      "logprobs": "gpt-4.1-mini"
+    },
+    "description": "Same synthetic candidates and context; distinct models, endpoints, prompts and output semantics; six paired trials in one concurrent batch. Usage is per call. Latencies include network and server time; this is not a statistically robust benchmark.",
+    "quantile": "Linear interpolation between ordered observed values; n=6."
+  },
+  "warmup": {
+    "id": "warmup",
+    "warmup": true,
+    "multi_action": {
+      "status": "scored",
+      "score": 28.54,
+      "latency_ms": 5512,
+      "model": "gpt-6-luna",
+      "usage": {
+        "input_tokens": 612,
+        "input_tokens_details": {
+          "cache_write_tokens": 0,
+          "cached_tokens": 0
+        },
+        "output_tokens": 210,
+        "output_tokens_details": {
+          "reasoning_tokens": 58
+        },
+        "total_tokens": 822
+      }
+    },
+    "logprobs": {
+      "status": "abstained",
+      "reason": "incomplete_categories",
+      "score": null,
+      "dominant_category": null,
+      "observed_probabilities": {
+        "A": 1,
+        "B": 3.398267819495071e-9,
+        "C": 3.0988191387218256e-12
+      },
+      "observed_category_mass": 1,
+      "conditional_probabilities": {},
+      "requested_model": "gpt-4.1-mini",
+      "effective_model": "gpt-4.1-mini-2025-04-14",
+      "latency_ms": 2484.182166,
+      "usage": {
+        "input_tokens": 300,
+        "output_tokens": 1,
+        "cached_input_tokens": 0
+      }
+    }
+  },
+  "batch_ms": 5122,
+  "summary": {
+    "multi_action": {
+      "requested": 6,
+      "scored": 6,
+      "abstained": 0,
+      "errors": 0,
+      "latency_median_ms": 4662,
+      "latency_p95_ms": 5093,
+      "latency_ms": [
+        4084,
+        4408,
+        5122,
+        4540,
+        4784,
+        5005
+      ]
+    },
+    "logprobs": {
+      "requested": 6,
+      "scored": 1,
+      "abstained": 5,
+      "errors": 0,
+      "latency_median_ms": 1331,
+      "latency_p95_ms": 1657,
+      "latency_ms": [
+        1408.209542,
+        1421.019708,
+        1208.003792,
+        1107.935292,
+        1252.904458,
+        1735.214
+      ]
+    }
+  },
+  "cases": [
+    {
+      "id": "case-1",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": 28.630000000000003,
+        "latency_ms": 4084,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 613,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 214,
+          "output_tokens_details": {
+            "reasoning_tokens": 81
+          },
+          "total_tokens": 827
+        }
+      },
+      "logprobs": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 1.2501528663867426e-9,
+          "C": 8.878265478459658e-13
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {},
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1408.209542,
+        "usage": {
+          "input_tokens": 301,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-2",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": -25.07,
+        "latency_ms": 4408,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 609,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 229,
+          "output_tokens_details": {
+            "reasoning_tokens": 92
+          },
+          "total_tokens": 838
+        }
+      },
+      "logprobs": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "C": 0.9770101781565058,
+          "D": 0.022977077068618887,
+          "B": 0.000012708262198335307
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {},
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1421.019708,
+        "usage": {
+          "input_tokens": 297,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-3",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": 31.700000000000003,
+        "latency_ms": 5122,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 608,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 248,
+          "output_tokens_details": {
+            "reasoning_tokens": 102
+          },
+          "total_tokens": 856
+        }
+      },
+      "logprobs": {
+        "status": "scored",
+        "reason": "ok",
+        "score": 24.988964,
+        "dominant_category": "A",
+        "observed_probabilities": {
+          "A": 0.9992754701181541,
+          "B": 0.000709659846276511,
+          "C": 0.000012997873478235186,
+          "D": 1.95415124125425e-8
+        },
+        "observed_category_mass": 0.999998,
+        "conditional_probabilities": {
+          "A": 0.999277,
+          "B": 0.00071,
+          "C": 0.000013,
+          "D": 0
+        },
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1208.003792,
+        "usage": {
+          "input_tokens": 296,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-4",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": 23.720000000000006,
+        "latency_ms": 4540,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 609,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 230,
+          "output_tokens_details": {
+            "reasoning_tokens": 82
+          },
+          "total_tokens": 839
+        }
+      },
+      "logprobs": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 0.0000017603463121561693,
+          "C": 1.917171513758312e-10
+        },
+        "observed_category_mass": 1.000002,
+        "conditional_probabilities": {},
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1107.935292,
+        "usage": {
+          "input_tokens": 297,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-5",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": -14,
+        "latency_ms": 4784,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 608,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 238,
+          "output_tokens_details": {
+            "reasoning_tokens": 80
+          },
+          "total_tokens": 846
+        }
+      },
+      "logprobs": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "D": 0.777295997873163,
+          "C": 0.2226990319708893,
+          "B": 0.000004214691957968206
+        },
+        "observed_category_mass": 0.999999,
+        "conditional_probabilities": {},
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1252.904458,
+        "usage": {
+          "input_tokens": 296,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    },
+    {
+      "id": "case-6",
+      "warmup": false,
+      "multi_action": {
+        "status": "scored",
+        "score": 26.560000000000002,
+        "latency_ms": 5005,
+        "model": "gpt-6-luna",
+        "usage": {
+          "input_tokens": 611,
+          "input_tokens_details": {
+            "cache_write_tokens": 0,
+            "cached_tokens": 0
+          },
+          "output_tokens": 234,
+          "output_tokens_details": {
+            "reasoning_tokens": 80
+          },
+          "total_tokens": 845
+        }
+      },
+      "logprobs": {
+        "status": "abstained",
+        "reason": "incomplete_categories",
+        "score": null,
+        "dominant_category": null,
+        "observed_probabilities": {
+          "A": 1,
+          "B": 3.059023205018258e-7,
+          "C": 1.783247290814639e-11
+        },
+        "observed_category_mass": 1,
+        "conditional_probabilities": {},
+        "requested_model": "gpt-4.1-mini",
+        "effective_model": "gpt-4.1-mini-2025-04-14",
+        "latency_ms": 1735.214,
+        "usage": {
+          "input_tokens": 299,
+          "output_tokens": 1,
+          "cached_input_tokens": 0
+        }
+      }
+    }
+  ]
+}

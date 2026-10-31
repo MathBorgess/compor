@@ -15,7 +15,6 @@ import {
   type EphemeralReferenceStore,
   type ReferenceAttribute,
 } from '../staging/ephemeral_store.js';
-import { writePreviewBoard } from '../staging/preview_board.js';
 
 export const referenceAttributeSchema = z.enum([
   'typography',
@@ -164,15 +163,6 @@ export async function executeSearchCuratedReferences(
 
   const registered = deps.store.registerSearchCandidates(sessionId, sanitizedItems);
 
-  const boardHtmlPath = await writePreviewBoard({
-    session_id: sessionId,
-    briefing_summary: input.briefing_summary,
-    target_format: input.target_format,
-    aspect_focus: input.aspect_focus,
-    candidates: registered,
-    staging_root: deps.store.getStagingRoot(),
-  });
-
   const candidatesOutput = registered.map((item) => ({
     ref_id: item.ref_id,
     aliases: item.aliases,
@@ -195,7 +185,7 @@ export async function executeSearchCuratedReferences(
     target_format: input.target_format,
     aspect_focus: input.aspect_focus,
     can_proceed_without_references: true,
-    board_html_path: boardHtmlPath,
+    board_html_path: null,
     images_downloaded_to_disk: 0,
     headless_browser_used: false,
     ttl_seconds: 1800,
@@ -209,6 +199,7 @@ export async function executeSearchCuratedReferences(
 
   for (const item of registered) {
     if (item.thumbnail_base64 !== null && item.thumbnail_mime_type !== null) {
+      content.push({ type: 'text', text: `Prévia da referência ${item.ref_id} (fonte: ${item.source_id}).` });
       content.push({
         type: 'image',
         mimeType: item.thumbnail_mime_type,

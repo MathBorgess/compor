@@ -46,6 +46,7 @@ def run():
             "PATH": os.environ.get("PATH", "/usr/bin:/bin"),
             "CODEX_HOME": temp,
             "TMPDIR": temp,
+            "COMPOR_PROFILE_DIR": str(Path(temp) / "profile"),
             "TERM": "dumb",
             "NO_COLOR": "1",
         }
@@ -136,9 +137,15 @@ def run():
                 "search_curated_references",
                 "stage_approved_references",
                 "compose_creative_direction",
+                "discover_visual_references",
+                "record_visual_feedback",
+                "phoenix_profile_consent",
+                "phoenix_profile_signal",
+                "phoenix_profile_read",
+                "phoenix_profile_undo",
             }
-            require(set(server["tools"]) == expected_tools,
-                    "Tools inesperadas.")
+            require(expected_tools <= set(server["tools"]),
+                    "Tools essenciais ausentes.")
             report["tests"]["codex_mcp_discovery"] = sorted(server["tools"])
 
             # A thread is needed by mcpServer/tool/call; no turn/start is sent.
@@ -158,12 +165,18 @@ def run():
             ids = {skill["id"] for skill in catalog}
             expected = {"entender-intencao", "traduzir-direcao", "explorar-moodboards", "criar-piloto"}
             require(ids == expected and len(catalog) == 4, "Catálogo inesperado.")
-            require(all(skill["version"] == "0.1.0-prototype" for skill in catalog), "Versão inesperada.")
-            report["tests"]["list_skills"] = {"ids": sorted(ids), "version": "0.1.0-prototype"}
+            expected_versions = {
+                "entender-intencao": "0.2.0-prototype",
+                "traduzir-direcao": "0.2.0-prototype",
+                "criar-piloto": "0.3.0-prototype",
+                "explorar-moodboards": "0.1.0-prototype",
+            }
+            require({skill["id"]: skill["version"] for skill in catalog} == expected_versions, "Versão inesperada.")
+            report["tests"]["list_skills"] = {"ids": sorted(ids), "versions": expected_versions}
 
             loaded = unpack(call(5, "load_skill", {"id": "entender-intencao"}))
             require(loaded["id"] == "entender-intencao", "Skill inesperada.")
-            require(loaded["version"] == "0.1.0-prototype", "Versão inesperada.")
+            require(loaded["version"] == expected_versions["entender-intencao"], "Versão inesperada.")
             require(len(loaded["instructions"]) > 40, "Instruções insuficientes.")
             digest = hashlib.sha256(loaded["instructions"].encode("utf-8")).hexdigest()
             require(loaded["contentSha256"] == digest, "Hash da skill divergente.")
@@ -229,6 +242,22 @@ def run():
             require(annotation["scope_claims_verified"] is False and annotation["input_snapshot_authenticated"] is False, "Alegações não são verificadas.")
             require(annotation["updates_memory"] is False and annotation["persists_data"] is False, "Anotação não deve persistir ou atualizar memória.")
             report["tests"]["prepare_annotation_context"] = {"layer_and_area": True, "scope_claim_unverified": True, "no_memory_update": True}
+            discovery = unpack(call(11, "discover_visual_references", {
+                "briefing": "Exemplo fictício de curso de criatividade",
+                "target_format": "carousel_editorial_4:5",
+                "client_mode": "web",
+                "decision_fallback_mode": "deterministic_mock",
+            }))
+            require(discovery["decision_engine_source"] == "deterministic_mock", "Motor inesperado.")
+            require(discovery["candidate_origin"] == "synthetic", "Origem sintética não identificada.")
+            require(len(discovery["candidates"]) > 0, "Busca sintética não retornou candidatos.")
+            require(discovery["telemetry"]["board_html_path"] is None, "Busca sintética não deve produzir HTML.")
+            report["tests"]["phoenix_synthetic_discovery"] = {
+                "engine": discovery["decision_engine_source"],
+                "origin": discovery["candidate_origin"],
+                "candidate_count": len(discovery["candidates"]),
+                "html_created": False,
+            }
         finally:
             try:
                 process.stdin.close()

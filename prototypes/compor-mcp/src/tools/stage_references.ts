@@ -188,6 +188,7 @@ export async function executeStageApprovedReferences(
 
         origin_url: candidate.origin_url,
         source_id: candidate.source_id,
+        ...(candidate.provenance_occurrences ? { provenance_occurrences: structuredClone(candidate.provenance_occurrences) } : {}),
         selected_attributes: selection.selected_attributes,
         user_notes: userNotes,
         license_scope: 'inspiration_only',
