@@ -29,6 +29,14 @@ test('resultado desconhecido registra duração sem custo zero nem retry automá
   assert.throws(() => attempt.complete(), /already finished/);
 });
 
+test('estimativa Astra de contexto curto para no limite oficial de 272 mil tokens de entrada', () => {
+  const measure = inputTokens => createAttempt({ kind: 'agent', model: 'gpt-6-astra', clock: () => 0 }).complete({
+    inputTokens, cachedInputTokens: 0, outputTokens: 10, cacheWriteTokens: 0, context: 'short', serviceTier: 'standard',
+  });
+  assert.equal(measure(272000).estimatedCost.amountUsd, 2.7205);
+  assert.equal(measure(272001).estimatedCost, null);
+});
+
 test('uso e estimativa de imagem são separados dos de agente', () => {
   const attempt = createAttempt({ kind: 'image', model: 'gpt-image-2.5-flare', image: { size: '1024x1024', quality: 'auto' }, clock: () => 5 });
   const result = attempt.complete({ inputTextTokens: 100, inputImageTokens: 200, cachedInputTokens: 0, outputImageTokens: 275, serviceTier: 'standard' });

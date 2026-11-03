@@ -6,4 +6,6 @@ A estimativa somente é calculada quando a aplicação fornecer todos os dados q
 
 **Ainda não está integrado ao produto nem deve ser considerado observabilidade operacional.** Falta persistir a tentativa antes do envio, associá-la com autorização à pessoa/projeto/versão, normalizar e verificar uso real e tier, medir outros custos, reconciliar operações incertas e exibir resultados. O encerramento do processo perde tudo; após timeout, o chamador não deve tentar automaticamente outra operação paga, pois o resultado e o custo podem ser desconhecidos. Estes testes de biblioteca não provam medição nem recuperação ponta a ponta.
 
+O cálculo Astra só aceita até 272.000 tokens de entrada; acima desse limite, retorna custo desconhecido mesmo que o chamador marque contexto curto. A [documentação do modelo](https://developers.openai.com/api/docs/models/gpt-6-astra) informa preços maiores para prompts acima desse limiar. O cálculo não tenta inferir os limites de cada chamada em uma sessão agregada.
+
 `npm test` executa testes determinísticos sem rede.

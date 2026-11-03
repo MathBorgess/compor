@@ -16,7 +16,7 @@ export function createAttempt({ kind, model, image, clock = () => performance.no
     if (!Number.isFinite(endedAt) || endedAt < startedAt) throw new Error('invalid clock');
     let estimate = null;
     let safeUsage = null;
-    if (kind === 'agent' && usage && nonnegativeInteger(usage.inputTokens) && nonnegativeInteger(usage.cachedInputTokens) &&
+    if (kind === 'agent' && usage && nonnegativeInteger(usage.inputTokens) && usage.inputTokens <= 272_000 && nonnegativeInteger(usage.cachedInputTokens) &&
         usage.cachedInputTokens <= usage.inputTokens && nonnegativeInteger(usage.outputTokens) && usage.cacheWriteTokens === 0 && usage.context === 'short' && usage.serviceTier === 'standard') {
       safeUsage = { inputTokens: usage.inputTokens, cachedInputTokens: usage.cachedInputTokens, outputTokens: usage.outputTokens, cacheWriteTokens: 0, context: 'short', serviceTier: 'standard' };
       estimate = { amountUsd: ((usage.inputTokens - usage.cachedInputTokens) * 10 + usage.cachedInputTokens + usage.outputTokens * 50) / 1_000_000, pricingVersion, isFinalBill: false };
