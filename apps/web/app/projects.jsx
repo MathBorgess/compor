@@ -51,7 +51,7 @@ export default function Projects({ userId }) {
     {state === 'unavailable' && <p role="alert">{uncertain ? 'A criação pode ter acontecido. Atualize a lista antes de tentar novamente.' : 'Não foi possível carregar os projetos.'}</p>}
     {state === 'unavailable' && <button type="button" onClick={refresh}>Atualizar lista</button>}
     {(state === 'ready' || state === 'creating') && <>
-      {projects.length ? <ul>{projects.map(project => <li key={project.id}>{project.title} <button type="button" onClick={() => { setSelected(project.id); try { sessionStorage.setItem(`compor-selected-project:${userId}`, project.id); } catch { /* Selection remains in memory. */ } }}>Abrir {project.title}</button></li>)}</ul> : <p>Você ainda não tem projetos.</p>}
+      {projects.length ? <ul>{projects.map(project => <li key={project.id}><span>{project.title}</span> <button type="button" onClick={() => { setSelected(project.id); try { sessionStorage.setItem(`compor-selected-project:${userId}`, project.id); } catch { /* Selection remains in memory. */ } }}>Abrir {project.title}</button></li>)}</ul> : <p>Você ainda não tem projetos.</p>}
       {uncertain && <p role="alert">A criação anterior ainda pode aparecer mais tarde. <button type="button" onClick={() => setUncertain(false)}>Entendi, criar outro</button></p>}
       <form onSubmit={create}>
         <label htmlFor="project-name">Nome do projeto</label>
