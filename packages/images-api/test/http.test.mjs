@@ -13,7 +13,8 @@ test('uma pessoa autenticada solicita imagem base explicitamente e recebe PNG', 
     assert.equal(url, 'https://api.openai.com/v1/images/generations');
     assert.equal(options.headers.Authorization, `Bearer ${key}`);
     const payload = JSON.parse(options.body);
-    assert.equal(payload.model, 'gpt-image-1');
+    assert.equal(payload.model, 'gpt-image-2.5-flare');
+    assert.equal(payload.quality, 'auto');
     assert.match(payload.prompt, /sem texto/i);
     assert.equal(options.body.includes(key), false);
     return Response.json({ data: [{ b64_json: png }] });
