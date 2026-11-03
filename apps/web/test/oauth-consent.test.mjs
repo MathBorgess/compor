@@ -15,11 +15,12 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-keyout', key, '-out', cert, '-subj', '/CN=127.0.0.1', '-addext', 'subjectAltName=IP:127.0.0.1'], { stdio: 'ignore' });
   const actions = [];
   let hostile = false;
+  let reconnectionRedirect = null;
   const service = createHttpsServer({ key: await readFile(key), cert: await readFile(cert) }, async (req, res) => {
     res.setHeader('content-type', 'application/json');
     if (req.headers.authorization !== 'Bearer mock-access-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: 'alice', aud: 'authenticated' }));
-    if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') return res.end(JSON.stringify({ authorization_id: 'request-12345', user: { id: 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
+    if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
     if (req.url === '/auth/v1/oauth/authorizations/request-12345/consent' && req.method === 'POST') {
       let body = ''; for await (const chunk of req) body += chunk;
       actions.push(JSON.parse(body).action);
@@ -48,6 +49,15 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   assert.match(text, /Autorizar/);
   assert.match(text, /Negar/);
   assert.deepEqual(actions, []);
+  for (const destination of ['http://localhost:49273/callback?code=preconsented-secret&state=client-state', 'https://evil.test/callback?code=preconsented-secret']) {
+    reconnectionRedirect = destination;
+    const reconnect = await fetch(endpoint, { headers: { Cookie: cookie }, redirect: 'manual' });
+    assert.equal(reconnect.status, 400);
+    assert.equal(reconnect.headers.get('location'), null);
+    assert.doesNotMatch(await reconnect.text(), /preconsented-secret|evil\.test/);
+    assert.deepEqual(actions, [], 'reconexão sem destino verificável não deve aprovar nem negar');
+  }
+  reconnectionRedirect = null;
   const post = decision => fetch(`${origin}/oauth/decision`, { method: 'POST', redirect: 'manual', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `authorization_id=request-12345&decision=${decision}` });
   const approved = await post('approve');
   assert.equal(approved.status, 303);
