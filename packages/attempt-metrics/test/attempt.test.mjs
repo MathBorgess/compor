@@ -30,15 +30,15 @@ test('resultado desconhecido registra duração sem custo zero nem retry automá
 });
 
 test('uso e estimativa de imagem são separados dos de agente', () => {
-  const attempt = createAttempt({ kind: 'image', model: 'gpt-image-2.5-flare', image: { size: '1024x1024', quality: 'low' }, clock: () => 5 });
+  const attempt = createAttempt({ kind: 'image', model: 'gpt-image-2.5-flare', image: { size: '1024x1024', quality: 'auto' }, clock: () => 5 });
   const result = attempt.complete({ inputTextTokens: 100, inputImageTokens: 200, cachedInputTokens: 0, outputImageTokens: 275, serviceTier: 'standard' });
   assert.equal(result.kind, 'image');
-  assert.deepEqual(result.image, { size: '1024x1024', quality: 'low' });
+  assert.deepEqual(result.image, { size: '1024x1024', quality: 'auto' });
   assert.deepEqual(result.estimatedCost, { amountUsd: 0.01035, pricingVersion: 'openai-public-2026-11-03', isFinalBill: false });
   assert.deepEqual(result.usage, { inputTextTokens: 100, inputImageTokens: 200, cachedInputTokens: 0, outputImageTokens: 275, serviceTier: 'standard' });
 });
 
-test('estimativa reproduz a prova sintética já registrada, sem chamada paga', () => {
+test('estimativa calcula o preço de uma imagem com uso conhecido, sem chamada paga', () => {
   const attempt = createAttempt({ kind: 'image', model: 'gpt-image-2.5-flare', image: { size: '1024x1024', quality: 'low' }, clock: () => 0 });
   assert.equal(attempt.complete({ inputTextTokens: 16, inputImageTokens: 0, cachedInputTokens: 0, outputImageTokens: 196, serviceTier: 'standard' }).estimatedCost.amountUsd, 0.00596);
 });

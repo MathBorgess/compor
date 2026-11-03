@@ -5,10 +5,10 @@ const nonnegativeInteger = value => Number.isSafeInteger(value) && value >= 0 &&
 
 export function createAttempt({ kind, model, image, clock = () => performance.now() }) {
   if (!((kind === 'agent' && model === 'gpt-6-astra') || (kind === 'image' && model === 'gpt-image-2.5-flare')) || typeof clock !== 'function') throw new TypeError('invalid attempt configuration');
-  if (kind === 'image' && (image?.size !== '1024x1024' || image?.quality !== 'low')) throw new TypeError('invalid image configuration');
+  if (kind === 'image' && (image?.size !== '1024x1024' || !['auto', 'low'].includes(image?.quality))) throw new TypeError('invalid image configuration');
   const startedAt = clock();
   if (!Number.isFinite(startedAt)) throw new TypeError('invalid clock');
-  let record = { id: randomUUID(), kind, model, ...(kind === 'image' ? { image: { size: '1024x1024', quality: 'low' } } : {}), state: 'started', durationMs: null, usage: null, estimatedCost: null, infrastructureCost: null };
+  let record = { id: randomUUID(), kind, model, ...(kind === 'image' ? { image: { size: '1024x1024', quality: image.quality } } : {}), state: 'started', durationMs: null, usage: null, estimatedCost: null, infrastructureCost: null };
   function snapshot() { return structuredClone(record); }
   function complete(usage) {
     if (record.state !== 'started') throw new Error('attempt already finished');
