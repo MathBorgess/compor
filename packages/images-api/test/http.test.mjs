@@ -68,3 +68,24 @@ test('resposta excessiva do provedor é tratada como resultado desconhecido sem 
   assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
   assert.equal(calls, 1);
 });
+
+test('imagem PNG com vários megabytes é aceita dentro do limite documentado', async () => {
+  const image = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.alloc(4 * 1024 * 1024)]).toString('base64');
+  const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => Response.json({ data: [{ b64_json: image }] }) });
+  const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).imageBase64, image);
+});
+
+test('credencial recusada e imagem inválida não expõem respostas do provedor', async () => {
+  for (const status of [401, 403]) {
+    const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => new Response(key, { status }) });
+    const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+    assert.equal(response.status, status);
+    assert.deepEqual(await response.json(), { error: 'openai_credentials_rejected' });
+  }
+  const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => Response.json({ data: [{ b64_json: 'not-an-image' }] }) });
+  const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
+});

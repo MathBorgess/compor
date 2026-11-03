@@ -48,7 +48,9 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
       if (!response.ok) return json({ error: 'generation_result_unknown', retryAutomatically: false }, 502);
       const result = JSON.parse(await limitedText(response.body, MAX_RESPONSE));
       const image = result?.data?.[0]?.b64_json;
-      if (typeof image !== 'string' || !/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/.test(image) ||
+      if (typeof image !== 'string' || image.length % 4 !== 0 || /[^A-Za-z0-9+/=]/.test(image)) throw new Error('invalid image');
+      const pad = image.indexOf('=');
+      if ((pad !== -1 && (pad < image.length - 2 || !/^={1,2}$/.test(image.slice(pad)))) ||
           !Buffer.from(image, 'base64').subarray(0, 8).equals(pngSignature)) throw new Error('invalid image');
       const fields = ['input_tokens', 'output_tokens', 'total_tokens'];
       const usage = result?.usage && fields.every(field => Number.isSafeInteger(result.usage[field]) && result.usage[field] >= 0)
