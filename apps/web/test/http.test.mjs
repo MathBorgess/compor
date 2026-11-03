@@ -46,10 +46,27 @@ test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está cone
   assert.doesNotMatch(html, /Projeto salvo/);
   const login = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', redirect: 'manual' });
   assert.equal(login.status, 503, 'login sem Supabase configurado deve falhar de forma explícita');
+  assert.equal((await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource/api/mcp`)).status, 503);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/oauth/consent?authorization_id=example-id`)).status, 503);
 });
 
 test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
-  const { port } = await startServer(t, { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: 'https://app.compor.test' });
+  const { port } = await startServer(t, { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: 'https://app.compor.test', MCP_OAUTH_ENABLED: 'true' });
+  const meta = await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource/api/mcp`, { headers: { host: 'malicious.test' } });
+  assert.equal(meta.status, 200);
+  assert.deepEqual(await meta.json(), { resource: 'https://app.compor.test/api/mcp', authorization_servers: ['https://example.supabase.co/auth/v1'], bearer_methods_supported: ['header'] });
+  const challenge = await fetch(`http://127.0.0.1:${port}/api/mcp`);
+  assert.equal(challenge.status, 401);
+  assert.equal(challenge.headers.get('www-authenticate'), 'Bearer resource_metadata="https://app.compor.test/.well-known/oauth-protected-resource/api/mcp"');
+  const deniedOrigin = await fetch(`http://127.0.0.1:${port}/oauth/decision`, { method: 'POST', headers: { Origin: 'https://evil.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=example-id&decision=approve' });
+  assert.equal(deniedOrigin.status, 403);
+  const unauthenticated = await fetch(`http://127.0.0.1:${port}/oauth/decision`, { method: 'POST', headers: { Origin: 'https://app.compor.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=example-id&decision=approve' });
+  assert.equal(unauthenticated.status, 401);
+  const consent = await fetch(`http://127.0.0.1:${port}/oauth/consent?authorization_id=example-id`);
+  assert.match(await consent.text(), /Entrar com Google/);
+  const begin = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', headers: { Origin: 'https://app.compor.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=example-id', redirect: 'manual' });
+  assert.equal(begin.status, 303);
+  assert.match(begin.headers.get('set-cookie'), /compor-oauth-pending=example-id/);
   const endpoint = `http://127.0.0.1:${port}/auth/sign-in`;
   const bad = await fetch(endpoint, { method: 'POST', headers: { Origin: 'https://evil.test' }, redirect: 'manual' });
   assert.equal(bad.status, 403);

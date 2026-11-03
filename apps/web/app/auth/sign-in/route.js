@@ -1,4 +1,6 @@
 import { authClient, authConfig } from '../../../lib/supabase';
+import { validAuthorizationId } from '../../../lib/oauth';
+import { cookies } from 'next/headers';
 
 const noStore = { 'Cache-Control': 'no-store' };
 export async function POST(request) {
@@ -6,6 +8,13 @@ export async function POST(request) {
   if (!config) return new Response('Login temporariamente indisponível.', { status: 503, headers: noStore });
   if (request.headers.get('origin') !== config.app) return new Response('Origem inválida.', { status: 403, headers: noStore });
   try {
+    const form = request.headers.get('content-type') ? await request.formData() : new FormData();
+    const id = form.get('authorization_id');
+    const jar = await cookies();
+    if (id !== null) {
+      if (process.env.MCP_OAUTH_ENABLED !== 'true' || !validAuthorizationId(id)) return new Response('Solicitação inválida.', { status: 400, headers: noStore });
+      jar.set('compor-oauth-pending', id, { httpOnly: true, secure: config.app.startsWith('https://'), sameSite: 'lax', path: '/', maxAge: 600 });
+    } else jar.delete('compor-oauth-pending');
     const client = await authClient(config);
     const { data, error } = await client.auth.signInWithOAuth({ provider: 'google', options: { redirectTo: `${config.app}/auth/callback`, skipBrowserRedirect: true } });
     if (error || new URL(data.url).origin !== config.service) throw new Error('Login indisponível');
