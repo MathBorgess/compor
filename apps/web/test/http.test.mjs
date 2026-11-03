@@ -48,6 +48,8 @@ test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está cone
   assert.equal(login.status, 503, 'login sem Supabase configurado deve falhar de forma explícita');
   assert.equal((await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource/api/mcp`)).status, 503);
   assert.equal((await fetch(`http://127.0.0.1:${port}/oauth/consent?authorization_id=example-id`)).status, 503);
+  const agent = await fetch(`http://127.0.0.1:${port}/api/agent`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  assert.equal(agent.status, 503, 'geração permanece indisponível sem autorização e registro duráveis');
 });
 
 test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
@@ -67,6 +69,9 @@ test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
   const begin = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', headers: { Origin: 'https://app.compor.test', 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=example-id', redirect: 'manual' });
   assert.equal(begin.status, 303);
   assert.match(begin.headers.get('set-cookie'), /compor-oauth-pending=example-id/);
+  const agent = await fetch(`http://127.0.0.1:${port}/api/agent`, { method: 'POST', headers: { Origin: 'https://app.compor.test', 'content-type': 'application/json' }, body: JSON.stringify({ apiKey: 'sk-test-secret', objective: 'teste' }) });
+  assert.equal(agent.status, 503, 'mesmo configurada, geração fica bloqueada sem registro durável');
+  assert.doesNotMatch(await agent.text(), /sk-test-secret/);
   const endpoint = `http://127.0.0.1:${port}/auth/sign-in`;
   const bad = await fetch(endpoint, { method: 'POST', headers: { Origin: 'https://evil.test' }, redirect: 'manual' });
   assert.equal(bad.status, 403);
