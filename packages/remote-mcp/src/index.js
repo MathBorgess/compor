@@ -77,8 +77,66 @@ export function createSupabaseProjectStore({ url, anonKey, fetchImpl = fetch }) 
   };
 }
 
+const pieceContentSchema = z.strictObject({
+  headline: z.string().max(500), price: z.string().max(100), date: z.string().max(100),
+  caption: z.string().max(4000), captionOrigin: z.enum(['user', 'agent']),
+});
+const uuid = z.string().uuid();
+const pieceVersionSchema = z.strictObject({
+  project_id: uuid, piece_id: uuid, version: z.number().int().positive(),
+  content: pieceContentSchema, created_at: z.string(),
+});
+
+/** Calls a transactional RPC and reads with both owner filtering and RLS. */
+export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
+  const base = new URL(url);
+  if (base.protocol !== 'https:' || base.username || base.password || base.search || base.hash || base.pathname !== '/' || !anonKey?.trim()) {
+    throw new Error('Configuração de armazenamento inválida.');
+  }
+  async function query(endpoint, context, body) {
+    const response = await fetchImpl(endpoint, {
+      method: body === undefined ? 'GET' : 'POST',
+      headers: { apikey: anonKey, authorization: `Bearer ${context.token}`, 'content-type': 'application/json' },
+      ...(body === undefined ? {} : { body: JSON.stringify(body) }), redirect: 'error', signal: AbortSignal.timeout(5000),
+    });
+    if (!response.ok) throw new Error('Serviço de peças indisponível.');
+    return response.json();
+  }
+  return {
+    async save(context, { projectId, pieceId, expectedVersion, content }) {
+      const result = await query(new URL('/rest/v1/rpc/save_piece_version', base), context, {
+        p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_content: content,
+      });
+      if (result?.status === 'not_found') return { status: 'not_found' };
+      if (result?.status === 'conflict' && Number.isSafeInteger(result.currentVersion) && result.currentVersion >= 0) {
+        return { status: 'conflict', currentVersion: result.currentVersion };
+      }
+      const version = pieceVersionSchema.parse(result?.version);
+      if (result.status !== 'saved' || version.project_id !== projectId || version.piece_id !== pieceId || version.version !== expectedVersion + 1) {
+        throw new Error('Resposta inválida do serviço de peças.');
+      }
+      return { status: 'saved', version };
+    },
+    async list(context, { projectId, pieceId }) {
+      const endpoint = new URL('/rest/v1/piece_versions', base);
+      endpoint.searchParams.set('select', 'project_id,piece_id,version,content,created_at,projects!inner(owner_id)');
+      endpoint.searchParams.set('project_id', `eq.${projectId}`);
+      endpoint.searchParams.set('piece_id', `eq.${pieceId}`);
+      endpoint.searchParams.set('projects.owner_id', `eq.${context.actor.userId}`);
+      endpoint.searchParams.set('order', 'version.asc');
+      const rows = await query(endpoint, context);
+      if (!Array.isArray(rows)) throw new Error('Resposta inválida do serviço de peças.');
+      return rows.map(({ projects, ...row }) => {
+        const version = pieceVersionSchema.parse(row);
+        if (projects?.owner_id !== context.actor.userId || version.project_id !== projectId || version.piece_id !== pieceId) throw new Error('Resposta inválida do serviço de peças.');
+        return version;
+      });
+    },
+  };
+}
+
 /** Stateless HTTP boundary. `authenticate` is a trusted server-side adapter, never tool input. */
-export function createRemoteMcpHandler({ authenticate, projectStore } = {}) {
+export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore } = {}) {
   return async function handle(request) {
     const header = request.headers.get('authorization') ?? '';
     const match = /^Bearer ([^\s]{1,8192})$/i.exec(header);
@@ -126,6 +184,31 @@ export function createRemoteMcpHandler({ authenticate, projectStore } = {}) {
       }, async () => {
         try {
           const result = { projects: await projectStore.list(context) };
+          return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+        } catch { return error(); }
+      });
+    }
+
+    if (pieceStore) {
+      const context = { actor, token: match[1] };
+      const error = () => ({ isError: true, content: [{ type: 'text', text: 'Não foi possível acessar as versões da peça.' }] });
+      server.registerTool('save_piece_version', {
+        description: 'Salva versão imutável da peça, somente se a versão esperada corresponder à atual.',
+        inputSchema: { projectId: uuid, pieceId: uuid, expectedVersion: z.number().int().min(0).max(2147483646), content: pieceContentSchema },
+        annotations: { destructiveHint: false, openWorldHint: false },
+      }, async args => {
+        try {
+          const result = await pieceStore.save(context, args);
+          return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+        } catch { return error(); }
+      });
+      server.registerTool('list_piece_versions', {
+        description: 'Lista versões de uma peça de um projeto da conta autenticada.',
+        inputSchema: { projectId: uuid, pieceId: uuid },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      }, async args => {
+        try {
+          const result = { versions: await pieceStore.list(context, args) };
           return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
         } catch { return error(); }
       });
