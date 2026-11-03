@@ -6,10 +6,12 @@ export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState('checking');
   const draftKey = useRef(null);
+  const memoryDrafts = useRef(new Map());
+  const activeIdentity = useRef(null);
   const [loginError, setLoginError] = useState(false);
   useEffect(() => {
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
-    if (!loginAvailable) { setAuthState('unavailable'); return; }
+    if (!loginAvailable) { activeIdentity.current = 'offline'; setAuthState('offline'); return; }
     let controller;
     let generation = 0;
     const checkSession = () => {
@@ -17,6 +19,7 @@ export default function Workspace({ loginAvailable }) {
       controller?.abort();
       controller = new AbortController();
       draftKey.current = null;
+      activeIdentity.current = null;
       setObjective('');
       setAuthState('checking');
       fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
@@ -24,6 +27,8 @@ export default function Workspace({ loginAvailable }) {
       .then(data => {
         if (currentGeneration !== generation) return;
         if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
+          const identity = `user:${data.userId}`;
+          activeIdentity.current = identity;
           try {
             const key = `compor-objective:user:${data.userId}`;
             const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
@@ -34,16 +39,17 @@ export default function Workspace({ loginAvailable }) {
             sessionStorage.setItem('compor-has-authenticated', '1');
             sessionStorage.removeItem('compor-claim-pending');
             draftKey.current = key;
-            setObjective(existing ?? guest ?? '');
-          } catch { draftKey.current = null; setObjective(''); }
+            setObjective(memoryDrafts.current.get(identity) ?? existing ?? guest ?? '');
+          } catch { draftKey.current = null; setObjective(memoryDrafts.current.get(identity) ?? ''); }
           setAuthState('connected');
         } else if (data.state === 'signed-out') {
           try {
             sessionStorage.removeItem('compor-claim-pending');
             const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
             draftKey.current = seenAccount ? null : 'compor-objective:guest';
-            setObjective(draftKey.current ? sessionStorage.getItem(draftKey.current) || '' : '');
-          } catch { draftKey.current = null; setObjective(''); }
+            activeIdentity.current = seenAccount ? 'signed-out' : 'guest';
+            setObjective(memoryDrafts.current.get(activeIdentity.current) ?? (draftKey.current ? sessionStorage.getItem(draftKey.current) || '' : ''));
+          } catch { draftKey.current = null; activeIdentity.current = 'signed-out'; setObjective(memoryDrafts.current.get('signed-out') ?? ''); }
           setAuthState('signed-out');
         } else { draftKey.current = null; setObjective(''); setAuthState('unavailable'); }
       })
@@ -91,6 +97,7 @@ export default function Workspace({ loginAvailable }) {
             disabled={authState === 'checking' || authState === 'unavailable'}
             onChange={(event) => {
               setObjective(event.target.value);
+              if (activeIdentity.current) memoryDrafts.current.set(activeIdentity.current, event.target.value);
               try { if (draftKey.current) sessionStorage.setItem(draftKey.current, event.target.value); } catch { /* Keep editing in memory. */ }
             }}
             rows={6}
@@ -106,7 +113,7 @@ export default function Workspace({ loginAvailable }) {
             try { if (draftKey.current === 'compor-objective:guest') sessionStorage.setItem('compor-claim-pending', '1'); } catch { /* Login remains available. */ }
           }}>
             <button type="submit" disabled={!loginAvailable || authState === 'unavailable' || authState === 'checking'}>Entrar com Google</button>
-            {authState === 'unavailable' && <p className="hint">Login temporariamente indisponível.</p>}
+            {(authState === 'unavailable' || authState === 'offline') && <p className="hint">Login temporariamente indisponível.</p>}
             {loginError && <p className="hint" role="alert">Não foi possível concluir o login. Tente novamente.</p>}
           </form>}
         </section>

@@ -59,6 +59,10 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.reload();
   await page.waitForFunction(() => !document.querySelector('#objective')?.disabled);
   assert.equal(await objective.inputValue(), '');
+  await objective.fill('digitado deslogado');
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Ainda não conectado' && !document.querySelector('#objective')?.disabled);
+  assert.equal(await objective.inputValue(), 'digitado deslogado');
   state = { state: 'unavailable' };
   await page.reload();
   await page.waitForFunction(() => document.body.textContent.includes('Login temporariamente indisponível.'));
@@ -113,6 +117,12 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.evaluate(() => sessionStorage.removeItem('simulate-storage-failure'));
   await page.reload();
   await page.waitForFunction(() => document.querySelector('#objective')?.value === 'não perder');
+  await page.evaluate(() => sessionStorage.setItem('simulate-storage-failure', '1'));
+  await objective.fill('edição apenas em memória');
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
+  assert.equal(await objective.inputValue(), 'edição apenas em memória');
+  await page.evaluate(() => sessionStorage.removeItem('simulate-storage-failure'));
   await page.evaluate(() => sessionStorage.clear());
   state = { state: 'signed-out' };
   await page.reload();
@@ -121,4 +131,30 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.getByRole('button', { name: 'Entrar com Google' }).click();
   await page.waitForFunction(() => document.querySelector('#objective')?.value === 'versão já existente');
   assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-objective:guest')), 'rascunho sem conta');
+});
+
+test('sem Supabase configurado é possível rascunhar em memória', { skip: !existsSync(browserPath) }, async t => {
+  const socket = createServer();
+  await new Promise((resolve, reject) => socket.listen(0, '127.0.0.1', resolve).on('error', reject));
+  const port = socket.address().port;
+  await new Promise(resolve => socket.close(resolve));
+  const origin = `http://127.0.0.1:${port}`;
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: 'ignore', env: { ...process.env, SUPABASE_URL: '', SUPABASE_PUBLISHABLE_KEY: '', APP_ORIGIN: '' } });
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
+  const deadline = Date.now() + 30000;
+  while (true) {
+    try { if ((await fetch(origin)).ok) break; } catch {}
+    if (Date.now() > deadline || child.exitCode !== null) throw new Error('aplicação indisponível');
+    await new Promise(resolve => setTimeout(resolve, 200));
+  }
+  const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.goto(origin);
+  const objective = page.locator('#objective');
+  await objective.fill('rascunho antes da configuração');
+  assert.equal(await page.getByRole('button', { name: 'Entrar com Google' }).isDisabled(), true);
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  assert.equal(await objective.inputValue(), 'rascunho antes da configuração');
+  assert.equal(await page.evaluate(() => sessionStorage.length), 0);
 });

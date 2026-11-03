@@ -4,6 +4,8 @@ Primeiro corte local do aplicativo web do Compor em Next.js. A pessoa pode escre
 
 O rascunho autenticado é vinculado à conta e não é carregado enquanto a sessão é verificada ou está indisponível. Um rascunho iniciado antes do primeiro login pode acompanhar esse login; depois de uma conta ter entrado, texto digitado sem autenticação fica somente em memória. Rascunhos anteriores sem identidade não são atribuídos automaticamente a uma conta. O armazenamento da aba não é uma cópia persistente no Supabase.
 
+Caso o Supabase ainda não esteja configurado, é possível escrever em memória, sem login e sem persistência: atualizar ou fechar a página perde esse rascunho. Uma edição mantida apenas em memória sobrevive à rechecagem da mesma sessão, mas não a uma navegação ou recarga.
+
 ```sh
 npm ci
 npm run dev
