@@ -23,7 +23,7 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
     if (req.url === '/auth/v1/oauth/authorizations/request-12345/consent' && req.method === 'POST') {
       let body = ''; for await (const chunk of req) body += chunk;
       actions.push(JSON.parse(body).action);
-      return res.end(JSON.stringify({ redirect_url: hostile ? 'https://evil.test/callback?code=secret' : 'http://localhost:4545/callback?code=mock-code&state=mock-state' }));
+      return res.end(JSON.stringify({ redirect_url: hostile === 'userinfo' ? 'http://attacker@localhost:4545/callback?code=secret' : hostile ? 'https://evil.test/callback?code=secret' : 'http://localhost:4545/callback?code=mock-code&state=mock-state' }));
     }
     res.statusCode = 404; res.end('{}');
   });
@@ -60,4 +60,8 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   assert.equal(bad.status, 502);
   assert.equal(bad.headers.get('location'), null);
   assert.doesNotMatch(await bad.text(), /secret/);
+  hostile = 'userinfo';
+  const userinfo = await post('approve');
+  assert.equal(userinfo.status, 502);
+  assert.equal(userinfo.headers.get('location'), null);
 });
