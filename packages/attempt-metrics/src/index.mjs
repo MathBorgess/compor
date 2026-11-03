@@ -16,14 +16,32 @@ export function createAttempt({ kind, model, image, clock = () => performance.no
     if (!Number.isFinite(endedAt) || endedAt < startedAt) throw new Error('invalid clock');
     let estimate = null;
     let safeUsage = null;
-    if (kind === 'agent' && usage && nonnegativeInteger(usage.inputTokens) && usage.inputTokens <= 272_000 && nonnegativeInteger(usage.cachedInputTokens) &&
-        usage.cachedInputTokens <= usage.inputTokens && nonnegativeInteger(usage.outputTokens) && usage.cacheWriteTokens === 0 && usage.context === 'short' && usage.serviceTier === 'standard') {
-      safeUsage = { inputTokens: usage.inputTokens, cachedInputTokens: usage.cachedInputTokens, outputTokens: usage.outputTokens, cacheWriteTokens: 0, context: 'short', serviceTier: 'standard' };
-      estimate = { amountUsd: ((usage.inputTokens - usage.cachedInputTokens) * 10 + usage.cachedInputTokens + usage.outputTokens * 50) / 1_000_000, pricingVersion, isFinalBill: false };
+    if (kind === 'agent' && usage && typeof usage === 'object') {
+      const inputTokens = nonnegativeInteger(usage.inputTokens) ? usage.inputTokens : null;
+      const outputTokens = nonnegativeInteger(usage.outputTokens) ? usage.outputTokens : null;
+      const cachedInputTokens = nonnegativeInteger(usage.cachedInputTokens) && (inputTokens === null || usage.cachedInputTokens <= inputTokens) ? usage.cachedInputTokens : null;
+      const cacheWriteTokens = nonnegativeInteger(usage.cacheWriteTokens) ? usage.cacheWriteTokens : null;
+      const context = ['short', 'long'].includes(usage.context) ? usage.context : null;
+      const serviceTier = ['standard', 'flex', 'batch', 'fast', 'ultrafast'].includes(usage.serviceTier) ? usage.serviceTier : null;
+      if ([inputTokens, outputTokens, cachedInputTokens, cacheWriteTokens].some(value => value !== null)) {
+        safeUsage = { inputTokens, cachedInputTokens, outputTokens, cacheWriteTokens, context, serviceTier };
+      }
+      if (inputTokens !== null && inputTokens <= 272_000 && cachedInputTokens !== null && outputTokens !== null && cacheWriteTokens === 0 && context === 'short' && serviceTier === 'standard') {
+        estimate = { amountUsd: ((inputTokens - cachedInputTokens) * 10 + cachedInputTokens + outputTokens * 50) / 1_000_000, pricingVersion, isFinalBill: false };
+      }
     }
-    if (kind === 'image' && usage && nonnegativeInteger(usage.inputTextTokens) && nonnegativeInteger(usage.inputImageTokens) && usage.cachedInputTokens === 0 && nonnegativeInteger(usage.outputImageTokens) && usage.serviceTier === 'standard') {
-      safeUsage = { inputTextTokens: usage.inputTextTokens, inputImageTokens: usage.inputImageTokens, cachedInputTokens: 0, outputImageTokens: usage.outputImageTokens, serviceTier: 'standard' };
-      estimate = { amountUsd: (usage.inputTextTokens * 5 + usage.inputImageTokens * 8 + usage.outputImageTokens * 30) / 1_000_000, pricingVersion, isFinalBill: false };
+    if (kind === 'image' && usage && typeof usage === 'object') {
+      const inputTextTokens = nonnegativeInteger(usage.inputTextTokens) ? usage.inputTextTokens : null;
+      const inputImageTokens = nonnegativeInteger(usage.inputImageTokens) ? usage.inputImageTokens : null;
+      const cachedInputTokens = nonnegativeInteger(usage.cachedInputTokens) && (inputTextTokens === null || inputImageTokens === null || usage.cachedInputTokens <= inputTextTokens + inputImageTokens) ? usage.cachedInputTokens : null;
+      const outputImageTokens = nonnegativeInteger(usage.outputImageTokens) ? usage.outputImageTokens : null;
+      const serviceTier = ['standard', 'batch'].includes(usage.serviceTier) ? usage.serviceTier : null;
+      if ([inputTextTokens, inputImageTokens, cachedInputTokens, outputImageTokens].some(value => value !== null)) {
+        safeUsage = { inputTextTokens, inputImageTokens, cachedInputTokens, outputImageTokens, serviceTier };
+      }
+      if (inputTextTokens !== null && inputImageTokens !== null && cachedInputTokens === 0 && outputImageTokens !== null && serviceTier === 'standard') {
+        estimate = { amountUsd: (inputTextTokens * 5 + inputImageTokens * 8 + outputImageTokens * 30) / 1_000_000, pricingVersion, isFinalBill: false };
+      }
     }
     record = { ...record, state: 'completed', durationMs: endedAt - startedAt, usage: safeUsage, estimatedCost: estimate };
     return snapshot();

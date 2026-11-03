@@ -34,7 +34,9 @@ test('estimativa Astra de contexto curto para no limite oficial de 272 mil token
     inputTokens, cachedInputTokens: 0, outputTokens: 10, cacheWriteTokens: 0, context: 'short', serviceTier: 'standard',
   });
   assert.equal(measure(272000).estimatedCost.amountUsd, 2.7205);
-  assert.equal(measure(272001).estimatedCost, null);
+  const long = measure(272001);
+  assert.equal(long.estimatedCost, null);
+  assert.equal(long.usage.inputTokens, 272001);
 });
 
 test('uso e estimativa de imagem são separados dos de agente', () => {
@@ -51,14 +53,22 @@ test('estimativa calcula o preço de uma imagem com uso conhecido, sem chamada p
   assert.equal(attempt.complete({ inputTextTokens: 16, inputImageTokens: 0, cachedInputTokens: 0, outputImageTokens: 196, serviceTier: 'standard' }).estimatedCost.amountUsd, 0.00596);
 });
 
-test('uso incompleto permanece desconhecido e conteúdo adicional não é armazenado', () => {
+test('uso parcial é preservado sem conteúdo adicional e custo permanece desconhecido', () => {
   const attempt = createAttempt({ kind: 'agent', model: 'gpt-6-astra', clock: () => 0, apiKey: 'sk-secret', prompt: 'conteúdo confidencial' });
   const result = attempt.complete({ inputTokens: 100, outputTokens: 10, prompt: 'conteúdo confidencial', apiKey: 'sk-secret' });
   assert.equal(result.state, 'completed');
-  assert.equal(result.usage, null);
+  assert.deepEqual(result.usage, { inputTokens: 100, cachedInputTokens: null, outputTokens: 10, cacheWriteTokens: null, context: null, serviceTier: null });
   assert.equal(result.estimatedCost, null);
   assert.equal(result.infrastructureCost, null);
   assert.doesNotMatch(JSON.stringify(result), /sk-secret|conteúdo confidencial/);
+});
+
+test('preserva contagens válidas de imagem mesmo sem dados suficientes para preço', () => {
+  const attempt = createAttempt({ kind: 'image', model: 'gpt-image-2.5-flare', image: { size: '1024x1024', quality: 'auto' }, clock: () => 0 });
+  const result = attempt.complete({ inputTextTokens: 16, outputImageTokens: 196, prompt: 'texto privado', serviceTier: 'not-a-tier' });
+  assert.deepEqual(result.usage, { inputTextTokens: 16, inputImageTokens: null, cachedInputTokens: null, outputImageTokens: 196, serviceTier: null });
+  assert.equal(result.estimatedCost, null);
+  assert.doesNotMatch(JSON.stringify(result), /texto privado|not-a-tier/);
 });
 
 test('observações não podem ser alteradas pelo chamador nem finalizadas duas vezes', () => {
