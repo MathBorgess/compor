@@ -6,9 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test --test-concurrency=1 test/*.test.mjs"
   },
   "dependencies": {
+    "@compor/remote-mcp": "file:../../packages/remote-mcp",
     "next": "16.4.4",
     "react": "19.3.1",
     "react-dom": "19.3.1"
