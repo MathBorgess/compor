@@ -69,6 +69,9 @@ test('rota MCP configurada consulta autenticação e projetos usando a credencia
   const client = new Client({ name: 'teste', version: '1.0' });
   await client.connect(new StreamableHTTPClientTransport(endpoint, { requestInit: { headers: { Authorization: 'Bearer fake-user-token' } } }));
   try {
+    const names = (await client.listTools()).tools.map(tool => tool.name);
+    assert.ok(names.includes('save_piece_version'));
+    assert.ok(names.includes('list_piece_versions'));
     const result = await client.callTool({ name: 'list_projects', arguments: {} });
     assert.deepEqual(result.structuredContent.projects, [{ id: 'p1', title: 'Oficina', created_at: '2026-11-03T00:00:00Z' }]);
   } finally { await client.close(); }

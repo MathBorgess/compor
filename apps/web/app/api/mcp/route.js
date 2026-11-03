@@ -1,4 +1,4 @@
-import { createRemoteMcpHandler, createSupabaseAuthenticator, createSupabaseProjectStore } from '@compor/remote-mcp';
+import { createRemoteMcpHandler, createSupabaseAuthenticator, createSupabaseProjectStore, createSupabasePieceStore } from '@compor/remote-mcp';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -21,6 +21,7 @@ async function handle(request) {
       return await createRemoteMcpHandler({
         authenticate: createSupabaseAuthenticator({ url, anonKey }),
         projectStore: createSupabaseProjectStore({ url, anonKey }),
+        pieceStore: createSupabasePieceStore({ url, anonKey }),
       })(request);
     } catch {
       // Do not expose environment values or service errors to clients.
