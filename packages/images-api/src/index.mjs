@@ -41,7 +41,7 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
     try {
       const response = await fetchApi(endpoint, {
         method: 'POST', headers: { Authorization: `Bearer ${body.apiKey}`, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ model: 'gpt-image-1', prompt: `Crie a imagem base sem texto, letras ou números. ${body.prompt}`, size: '1024x1024', quality: 'low', output_format: 'png', n: 1 }),
+        body: JSON.stringify({ model: 'gpt-image-2.5-flare', prompt: `Crie a imagem base sem texto, letras ou números. ${body.prompt}`, size: '1024x1024', quality: 'low', output_format: 'png', n: 1 }),
         signal: AbortSignal.timeout(120_000),
       });
       if (response.status === 401 || response.status === 403) return json({ error: 'openai_credentials_rejected' }, response.status);
