@@ -6,4 +6,6 @@ A chave da pessoa é recebida no corpo, mantida em memória durante a requisiç�
 
 Uma chamada por turno usa Agents API com `environment=none`; ela não configura ferramentas, MCP, imagens, execução em segundo plano, recuperação de desconexões, persistência ou continuação. Ela espera o stream até um turno completo e limita o tamanho da resposta. Se houver desconexão ou timeout, uma sessão pode continuar no provedor: não repetir automaticamente sem reconciliação. O `sessionId` é provisório e não representa autorização de acesso. Uso aparece como `null` quando não medido; custos e latência ainda não estão instrumentados.
 
+Depois que uma requisição é enviada, os erros `upstream_error` e `incomplete_turn` podem representar um resultado desconhecido, com execução e cobrança no provedor, mesmo quando o cliente recebe HTTP 502. O chamador não deve tentar novamente automaticamente: antes da exposição pública é necessário implementar persistência e reconciliação que permitam recuperar e identificar a tentativa sem duplicá-la.
+
 `npm test` executa testes determinísticos no handler, com provedor simulado. Isso não prova Google OAuth, Supabase/RLS, MCP, imagem, Codex, privacidade dos componentes externos ou a integração real deste handler.

@@ -76,3 +76,33 @@ test('a disconnected stream is not mistaken for a completed turn', async () => {
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: 'incomplete_turn' });
 });
+
+test('redacts the credential if a provider result repeats it', async () => {
+  const key = 'sk-test-secret-123456789012345';
+  const events = [
+    { type: 'agent.session.created', session: { id: 'sess_123' } },
+    { type: 'agent.session.turn.output_text.done', text: `never disclose ${key}` },
+    { type: 'agent.session.turn.completed' },
+  ].map(event => `data: ${JSON.stringify(event)}\n\n`).join('');
+  const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async () => new Response(events, { status: 201 }) });
+  const response = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: key, objective: 'Teste' }) }));
+  const text = await response.text();
+  assert.equal(response.status, 200);
+  assert.equal(text.includes(key), false);
+  assert.equal(JSON.parse(text).text, 'never disclose [redacted]');
+});
+
+test('rejects an oversized request without calling the provider', async () => {
+  let called = false;
+  const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async () => { called = true; } });
+  const response = await handler(new Request('http://localhost/agent', { method: 'POST', body: 'x'.repeat(17 * 1024) }));
+  assert.equal(response.status, 400);
+  assert.equal(called, false);
+});
+
+test('a provider stream exceeding the limit is rejected without returning its content', async () => {
+  const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async () => new Response('x'.repeat(1024 * 1024 + 1), { status: 201 }) });
+  const response = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: 'sk-test-secret-123456789012345', objective: 'Teste' }) }));
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: 'upstream_error' });
+});
