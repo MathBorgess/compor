@@ -46,10 +46,15 @@ test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está cone
   assert.doesNotMatch(html, /Projeto salvo/);
   const login = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', redirect: 'manual' });
   assert.equal(login.status, 503, 'login sem Supabase configurado deve falhar de forma explícita');
+  const agent = await fetch(`http://127.0.0.1:${port}/api/agent`, { method: 'POST', headers: { 'content-type': 'application/json' }, body: '{}' });
+  assert.equal(agent.status, 503, 'geração permanece indisponível sem autorização e registro duráveis');
 });
 
 test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
   const { port } = await startServer(t, { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: 'https://app.compor.test' });
+  const agent = await fetch(`http://127.0.0.1:${port}/api/agent`, { method: 'POST', headers: { Origin: 'https://app.compor.test', 'content-type': 'application/json' }, body: JSON.stringify({ apiKey: 'sk-test-secret', objective: 'teste' }) });
+  assert.equal(agent.status, 503, 'mesmo configurada, geração fica bloqueada sem registro durável');
+  assert.doesNotMatch(await agent.text(), /sk-test-secret/);
   const endpoint = `http://127.0.0.1:${port}/auth/sign-in`;
   const bad = await fetch(endpoint, { method: 'POST', headers: { Origin: 'https://evil.test' }, redirect: 'manual' });
   assert.equal(bad.status, 403);
