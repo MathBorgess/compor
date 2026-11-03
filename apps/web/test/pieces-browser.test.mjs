@@ -40,6 +40,7 @@ test('pessoa edita peça e conflito preserva rascunho', { skip: !existsSync(brow
   await page.getByLabel('Legenda').fill('Uma legenda editável');
   await page.getByRole('button', { name: 'Salvar versão' }).click();
   await page.getByText(/outra versão/).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Usar versão atual como base' }).count(), 0);
   assert.equal(await page.getByLabel('Título da peça').inputValue(), 'Convite');
   assert.equal(await page.getByLabel('Legenda').inputValue(), 'Uma legenda editável');
   await page.getByRole('button', { name: 'Atualizar versões' }).click();
@@ -55,4 +56,19 @@ test('pessoa edita peça e conflito preserva rascunho', { skip: !existsSync(brow
   await page.getByLabel('Legenda').waitFor();
   assert.equal(await page.getByLabel('Legenda').inputValue(), 'Uma legenda editável');
   assert.equal(attempts, 2);
+  await page.getByRole('button', { name: 'Salvar versão' }).click();
+  await page.getByText(/outra versão/).waitFor();
+  assert.equal(await page.getByRole('button', { name: 'Usar versão atual como base' }).count(), 0, 'versão lida antes do conflito não é base atual');
+  await page.evaluate(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key, value) {
+      if (key.startsWith('compor-piece-draft:')) throw new Error('storage unavailable');
+      return original.call(this, key, value);
+    };
+  });
+  await page.getByLabel('Legenda').fill('somente na memória');
+  await page.getByText(/Rascunho somente em memória/).waitFor();
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.getByText(/Rascunho somente em memória/).waitFor();
+  assert.equal(await page.getByLabel('Legenda').inputValue(), 'somente na memória');
 });

@@ -11,10 +11,11 @@ export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }) {
       endpoint.searchParams.set('projects.owner_id', `eq.${context.actor.userId}`);
       endpoint.searchParams.set('order', 'created_at.asc');
       endpoint.searchParams.set('limit', '1001');
-      const response = await fetchImpl(endpoint, { headers: { apikey: anonKey, authorization: `Bearer ${context.token}` }, redirect: 'error', signal: AbortSignal.timeout(5000) });
+      const response = await fetchImpl(endpoint, { headers: { apikey: anonKey, authorization: `Bearer ${context.token}`, prefer: 'count=exact' }, redirect: 'error', signal: AbortSignal.timeout(5000) });
       if (!response.ok) throw new Error('unavailable');
       const rows = await response.json();
-      if (!Array.isArray(rows) || rows.length > 1000) throw new Error('invalid response');
+      const total = /\/(\d+)$/.exec(response.headers.get('content-range') ?? '');
+      if (!Array.isArray(rows) || !total || Number(total[1]) !== rows.length || rows.length > 1000) throw new Error('invalid or incomplete response');
       return rows.map(row => {
         const value = row?.content;
         if (row?.project_id !== projectId || row?.projects?.owner_id !== context.actor.userId || !uuid(row?.piece_id) || !Number.isSafeInteger(row?.version) || row.version < 1 || typeof row.created_at !== 'string' || !value || Object.keys(value).length !== 5 || !['headline', 'price', 'date', 'caption'].every(k => typeof value[k] === 'string') || !['user', 'agent'].includes(value.captionOrigin)) throw new Error('invalid response');

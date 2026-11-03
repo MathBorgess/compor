@@ -29,12 +29,17 @@ test('lista versões do projeto com o token da pessoa e rejeita proprietário di
   const { createProjectPieceStore } = await import('../lib/piece-store.mjs');
   let upstream;
   const row = { project_id: projectId, piece_id: pieceId, version: 1, content, created_at: '2026-11-03T00:00:00Z', projects: { owner_id: userId } };
-  const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => { upstream = { url, options }; return Response.json([row]); } });
+  let range = '0-0/1';
+  const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => { upstream = { url, options }; return Response.json([row], { headers: { 'content-range': range } }); } });
   const routes = createPieceRoutes({ resolveActor: async () => actor, ownsProject: async () => true, pieceStore: store });
   const response = await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).versions, [{ project_id: projectId, piece_id: pieceId, version: 1, content, created_at: row.created_at }]);
   assert.equal(upstream.options.headers.authorization, 'Bearer fake-user-token');
+  assert.equal(upstream.options.headers.prefer, 'count=exact');
+  range = '0-0/2';
+  assert.equal((await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`))).status, 503, 'lista truncada não pode parecer completa');
+  range = '0-0/1';
   row.projects.owner_id = 'outra-pessoa';
   const denied = await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
   assert.equal(denied.status, 503);
