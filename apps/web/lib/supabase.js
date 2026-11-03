@@ -25,6 +25,7 @@ export function authConfig() {
 export async function authClient(config) {
   const jar = await cookies();
   return createServerClient(config.service, config.key, {
+    cookieOptions: { httpOnly: true, secure: config.app.startsWith('https://'), sameSite: 'lax', path: '/' },
     cookies: {
       getAll: () => jar.getAll(),
       setAll: (items) => items.forEach(({ name, value, options }) => jar.set(name, value, options)),

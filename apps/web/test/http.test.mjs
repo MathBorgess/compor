@@ -61,6 +61,9 @@ test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
   assert.equal(destination.searchParams.get('provider'), 'google');
   assert.equal(destination.searchParams.get('redirect_to'), 'https://app.compor.test/auth/callback');
   assert.match(good.headers.get('set-cookie'), /code-verifier/);
+  assert.match(good.headers.get('set-cookie'), /HttpOnly/i);
+  assert.match(good.headers.get('set-cookie'), /Secure/i);
+  assert.match(good.headers.get('set-cookie'), /SameSite=Lax/i);
   const callback = await fetch(`http://127.0.0.1:${port}/auth/callback?next=https://evil.test`, { redirect: 'manual' });
   assert.equal(callback.status, 303);
   assert.equal(callback.headers.get('location'), '/?login=erro');
