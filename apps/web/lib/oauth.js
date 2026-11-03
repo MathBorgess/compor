@@ -7,7 +7,8 @@ export function validAuthorizationId(value) {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{8,256}$/.test(value);
 }
 // The URL is accepted only from the authenticated Supabase authorization response.
-// Supabase validates the registered client redirect URI and PKCE before issuing it.
+// Supabase validates the registered redirect and binds the code to the PKCE challenge;
+// verification of the client's verifier happens during the token exchange.
 export function validProviderRedirect(destination) {
   try {
     if (typeof destination !== 'string' || destination.length > 8192) return false;
