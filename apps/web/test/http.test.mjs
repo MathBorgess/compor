@@ -36,7 +36,7 @@ async function startServer(t, env = {}) {
 }
 
 test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está conectado", async (t) => {
-  const { port, response } = await startServer(t, { SUPABASE_URL: '', SUPABASE_ANON_KEY: '', APP_ORIGIN: '' });
+  const { port, response } = await startServer(t, { SUPABASE_URL: '', SUPABASE_PUBLISHABLE_KEY: '', APP_ORIGIN: '' });
   assert.equal(response.status, 200);
   const html = await response.text();
   assert.match(html, /Seu objetivo/);
@@ -49,7 +49,7 @@ test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está cone
 });
 
 test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
-  const { port } = await startServer(t, { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_ANON_KEY: 'public-test-key', APP_ORIGIN: 'https://app.compor.test' });
+  const { port } = await startServer(t, { SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: 'https://app.compor.test' });
   const endpoint = `http://127.0.0.1:${port}/auth/sign-in`;
   const bad = await fetch(endpoint, { method: 'POST', headers: { Origin: 'https://evil.test' }, redirect: 'manual' });
   assert.equal(bad.status, 403);

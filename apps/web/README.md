@@ -7,8 +7,10 @@ npm ci
 npm run dev
 ```
 
-O login Google usa Supabase Auth com PKCE. Configure `SUPABASE_URL` (origem HTTPS do projeto), `SUPABASE_ANON_KEY` (somente chave pública anon/publishable) e `APP_ORIGIN` (origem fixa do app; HTTPS, ou HTTP apenas em localhost) no ambiente do servidor. Cadastre exatamente `${APP_ORIGIN}/auth/callback` nas URLs de redirecionamento do Supabase e configure o provedor Google no projeto. Não use chave administrativa. Sem configuração, o login fica indisponível. O aplicativo não confia em parâmetros para decidir o destino após o callback; usa apenas `/`.
+O login Google usa Supabase Auth com PKCE. Configure `SUPABASE_URL` (origem HTTPS do projeto), `SUPABASE_PUBLISHABLE_KEY` (somente chave pública anon/publishable) e `APP_ORIGIN` (origem fixa do app; HTTPS, ou HTTP apenas em localhost) no ambiente do servidor. Cadastre exatamente `${APP_ORIGIN}/auth/callback` nas URLs de redirecionamento do Supabase e configure o provedor Google no projeto. Não use chave administrativa. Sem configuração, o login fica indisponível. O aplicativo não confia em parâmetros para decidir o destino após o callback; usa apenas `/`.
 
-`npm test` verifica o comportamento inicial e fronteiras HTTP sem serviços externos; `npm run build` verifica o build de produção. O fluxo OAuth/Google, cookies e recuperação de sessão não foram provados com serviços reais. Este corte não implementa persistência dos projetos, Agents API, MCP remoto ou geração de imagem e não demonstra a jornada completa.
+A rota `/api/mcp` usa `SUPABASE_URL` e `SUPABASE_PUBLISHABLE_KEY` no servidor. A chave deve ser publicável (`sb_publishable_…`) ou uma chave legada com papel `anon`; chaves secretas/service-role não são aceitas. Sem configuração válida, a rota responde 401 para acesso sem credencial e 503 para acesso autenticado. A migração de projetos e as políticas RLS ainda exigem revisão e teste em Supabase isolado. **Não exponha a rota em produção**: ainda faltam OAuth/discovery, Storage e verificações reais com Supabase, Codex e Agents API.
+
+`npm test` verifica o comportamento inicial e fronteiras HTTP sem serviços externos; o teste da rota MCP usa HTTPS simulado e requer `openssl`. `npm run build` verifica o build de produção. O fluxo OAuth/Google, cookies e recuperação de sessão não foram provados com serviços reais. Este corte não implementa persistência dos projetos pela interface ou geração de imagem e não demonstra a jornada completa.
 
 A landing pública permanece em [`apps/site`](../site/README.md); o protótipo MCP continua separado em `prototypes/compor-mcp`.
