@@ -11,7 +11,9 @@ export default function Workspace({ loginAvailable }) {
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
     if (!loginAvailable) { setAuthState('unavailable'); return; }
     let controller;
+    let generation = 0;
     const checkSession = () => {
+      const currentGeneration = ++generation;
       controller?.abort();
       controller = new AbortController();
       draftKey.current = null;
@@ -20,6 +22,7 @@ export default function Workspace({ loginAvailable }) {
       fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
       .then(response => response.ok ? response.json() : { state: 'unavailable' })
       .then(data => {
+        if (currentGeneration !== generation) return;
         if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
           try {
             const key = `compor-objective:user:${data.userId}`;
@@ -27,9 +30,8 @@ export default function Workspace({ loginAvailable }) {
             const claim = !seenAccount && sessionStorage.getItem('compor-claim-pending') === '1';
             const existing = sessionStorage.getItem(key);
             const guest = claim ? sessionStorage.getItem('compor-objective:guest') : null;
-            sessionStorage.setItem('compor-has-authenticated', '1');
             if (claim && existing === null && guest !== null) sessionStorage.setItem(key, guest);
-            sessionStorage.removeItem('compor-objective:guest');
+            sessionStorage.setItem('compor-has-authenticated', '1');
             sessionStorage.removeItem('compor-claim-pending');
             draftKey.current = key;
             setObjective(existing ?? guest ?? '');
@@ -45,13 +47,14 @@ export default function Workspace({ loginAvailable }) {
           setAuthState('signed-out');
         } else { draftKey.current = null; setObjective(''); setAuthState('unavailable'); }
       })
-      .catch(error => { if (error.name !== 'AbortError') setAuthState('unavailable'); });
+      .catch(error => { if (currentGeneration === generation && error.name !== 'AbortError') setAuthState('unavailable'); });
     };
     const checkVisible = () => { if (document.visibilityState === 'visible') checkSession(); };
     checkSession();
     window.addEventListener('focus', checkSession);
     document.addEventListener('visibilitychange', checkVisible);
     return () => {
+      generation++;
       controller?.abort();
       window.removeEventListener('focus', checkSession);
       document.removeEventListener('visibilitychange', checkVisible);

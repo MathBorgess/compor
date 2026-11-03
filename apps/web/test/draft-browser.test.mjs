@@ -43,6 +43,7 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.waitForURL(`${origin}/`);
   await assert.doesNotReject(() => objective.waitFor({ state: 'visible' }));
   await page.waitForFunction(() => document.querySelector('#objective')?.value === 'rascunho inicial');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-objective:guest')), 'rascunho inicial', 'origem do rascunho deve ser preservada');
   state = { state: 'connected', userId: 'bob' };
   let releaseSession;
   waitForSession = new Promise(resolve => { releaseSession = resolve; });
@@ -71,4 +72,53 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.reload();
   await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
   assert.equal(await objective.inputValue(), 'de Bob');
+  await page.evaluate(() => {
+    const originalFetch = window.fetch;
+    window.delayNextSession = true;
+    window.fetch = async (...args) => {
+      const response = await originalFetch(...args);
+      if (String(args[0]) === '/auth/session' && window.delayNextSession) {
+        window.delayNextSession = false;
+        await new Promise(resolve => { window.releaseOldSession = resolve; });
+      }
+      return response;
+    };
+  });
+  state = { state: 'connected', userId: 'alice' };
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(() => typeof window.releaseOldSession === 'function');
+  state = { state: 'connected', userId: 'bob' };
+  await page.evaluate(() => window.dispatchEvent(new Event('focus')));
+  await page.waitForFunction(() => document.querySelector('#objective')?.value === 'de Bob');
+  await page.evaluate(() => window.releaseOldSession());
+  await page.waitForTimeout(100);
+  assert.equal(await objective.inputValue(), 'de Bob', 'resposta antiga não pode substituir a sessão atual');
+  await page.addInitScript(() => {
+    const original = Storage.prototype.setItem;
+    Storage.prototype.setItem = function(key, value) {
+      if (key === 'compor-objective:user:alice' && this.getItem('simulate-storage-failure') === '1') throw new Error('storage indisponível');
+      return original.call(this, key, value);
+    };
+  });
+  await page.evaluate(() => sessionStorage.clear());
+  state = { state: 'signed-out' };
+  await page.reload();
+  await objective.fill('não perder');
+  await page.evaluate(() => sessionStorage.setItem('simulate-storage-failure', '1'));
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
+  assert.equal(await objective.inputValue(), '');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-objective:guest')), 'não perder');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-has-authenticated')), null);
+  await page.evaluate(() => sessionStorage.removeItem('simulate-storage-failure'));
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('#objective')?.value === 'não perder');
+  await page.evaluate(() => sessionStorage.clear());
+  state = { state: 'signed-out' };
+  await page.reload();
+  await objective.fill('rascunho sem conta');
+  await page.evaluate(() => sessionStorage.setItem('compor-objective:user:alice', 'versão já existente'));
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await page.waitForFunction(() => document.querySelector('#objective')?.value === 'versão já existente');
+  assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-objective:guest')), 'rascunho sem conta');
 });
