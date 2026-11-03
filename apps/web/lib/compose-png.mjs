@@ -2,6 +2,28 @@ const MAX_INPUT_BYTES = 8 * 1024 * 1024;
 const MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 const MAX_DIMENSION = 2048;
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
+const ALLOWED_CHUNKS = new Set(['IHDR', 'PLTE', 'IDAT', 'IEND', 'tRNS', 'gAMA', 'sRGB', 'pHYs', 'cHRM', 'sBIT']);
+
+function validateChunks(bytes) {
+  const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
+  let position = 8, count = 0, hasData = false;
+  while (position + 12 <= bytes.length && ++count <= 4096) {
+    const length = view.getUint32(position);
+    if (length > bytes.length - position - 12) throw new Error('PNG inválido.');
+    const type = String.fromCharCode(...bytes.subarray(position + 4, position + 8));
+    if (!ALLOWED_CHUNKS.has(type) || (type === 'IHDR' && (position !== 8 || length !== 13))) throw new Error('PNG com metadados não suportados.');
+    const exact = { gAMA: 4, sRGB: 1, pHYs: 9, cHRM: 32 };
+    if ((type in exact && length !== exact[type]) || (type === 'PLTE' && (length < 3 || length > 768 || length % 3 !== 0)) ||
+        (type === 'tRNS' && length > 256) || (type === 'sBIT' && (length < 1 || length > 4))) throw new Error('PNG inválido.');
+    if (type === 'IDAT') hasData = true;
+    position += length + 12;
+    if (type === 'IEND') {
+      if (length !== 0 || !hasData || position !== bytes.length) throw new Error('PNG inválido.');
+      return;
+    }
+  }
+  throw new Error('PNG inválido.');
+}
 
 function validateText(value, maxLength) {
   if (typeof value !== 'string' || [...value].length > maxLength || /[\u0000-\u001f\u007f-\u009f]/u.test(value)) throw new Error('Texto inválido.');
@@ -17,6 +39,7 @@ export async function composePng({ base, headline, price, date }) {
   const header = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
   const width = header.getUint32(16), height = header.getUint32(20);
   if (width < 64 || height < 64 || width > MAX_DIMENSION || height > MAX_DIMENSION) throw new Error('Dimensões da imagem fora do limite.');
+  validateChunks(new Uint8Array(await base.arrayBuffer()));
   let image;
   try { image = await createImageBitmap(base); } catch { throw new Error('PNG inválido.'); }
   try {

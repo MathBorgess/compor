@@ -48,6 +48,9 @@ test('recusa entrada inválida ou excessiva antes da decodificação, sem chamad
     new DataView(bytes.buffer).setUint32(16, 50000);
     const unsafeSize = new Blob([bytes], { type: 'image/png' });
     const oversized = new Blob([new Uint8Array(8 * 1024 * 1024 + 1)], { type: 'image/png' });
+    const original = new Uint8Array(await valid.arrayBuffer());
+    const compressedTextChunk = new Uint8Array([0,0,0,1, 122,84,88,116, 0, 0,0,0,0]);
+    const compressedMetadata = new Blob([original.slice(0, 33), compressedTextChunk, original.slice(33)], { type: 'image/png' });
     const originalDecoder = window.createImageBitmap;
     let decodes = 0, network = 0;
     window.createImageBitmap = (...args) => { decodes++; return originalDecoder(...args); };
@@ -57,9 +60,10 @@ test('recusa entrada inválida ou excessiva antes da decodificação, sem chamad
     const huge = await rejects({ base: oversized, ...fields });
     const dimensions = await rejects({ base: unsafeSize, ...fields });
     const control = await rejects({ base: valid, ...fields, headline: 'texto\nextra' });
+    const ancillary = await rejects({ base: compressedMetadata, ...fields });
     const beforeValidDecode = decodes;
     const cannotFit = await rejects({ base: valid, ...fields, headline: 'W'.repeat(180) });
-    return { malformed, huge, dimensions, control, beforeValidDecode, cannotFit, network };
+    return { malformed, huge, dimensions, control, ancillary, beforeValidDecode, cannotFit, network };
   }, source);
-  assert.deepEqual(result, { malformed: true, huge: true, dimensions: true, control: true, beforeValidDecode: 0, cannotFit: true, network: 0 });
+  assert.deepEqual(result, { malformed: true, huge: true, dimensions: true, control: true, ancillary: true, beforeValidDecode: 0, cannotFit: true, network: 0 });
 });
