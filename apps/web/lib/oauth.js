@@ -6,6 +6,18 @@ export function oauthConfig() {
 export function validAuthorizationId(value) {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{8,256}$/.test(value);
 }
+// The URL is accepted only from the authenticated Supabase authorization response.
+// Supabase validates the registered client redirect URI and PKCE before issuing it.
+export function validProviderRedirect(destination) {
+  try {
+    if (typeof destination !== 'string' || destination.length > 8192) return false;
+    const target = new URL(destination);
+    if (target.username || target.password || target.hash || !['https:', 'http:'].includes(target.protocol)) return false;
+    if (target.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(target.hostname)) return false;
+    if (target.searchParams.getAll('code').length !== 1 || !target.searchParams.get('code') || target.searchParams.has('error') || target.searchParams.getAll('state').length > 1) return false;
+    return true;
+  } catch { return false; }
+}
 export function sameRedirect(registered, destination) {
   try {
     const expected = new URL(registered);

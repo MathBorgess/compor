@@ -49,13 +49,22 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   assert.match(text, /Autorizar/);
   assert.match(text, /Negar/);
   assert.deepEqual(actions, []);
-  for (const destination of ['http://localhost:49273/callback?code=preconsented-secret&state=client-state', 'https://evil.test/callback?code=preconsented-secret']) {
+  for (const destination of ['http://localhost:49273/callback?code=preconsented-secret&state=client-state', 'http://127.0.0.1:56411/callback?code=preconsented-secret&state=client-state', 'https://client.example/callback?code=preconsented-secret&state=client-state']) {
+    reconnectionRedirect = destination;
+    const reconnect = await fetch(`${endpoint}&redirect_url=${encodeURIComponent('https://evil.test/steal')}`, { headers: { Cookie: cookie }, redirect: 'manual' });
+    assert.equal(reconnect.status, 303);
+    assert.equal(reconnect.headers.get('location'), destination);
+    assert.equal(reconnect.headers.get('cache-control'), 'no-store');
+    assert.equal(reconnect.headers.get('referrer-policy'), 'no-referrer');
+    assert.deepEqual(actions, [], 'reconexão não cria um novo consentimento');
+  }
+  for (const destination of ['http://evil.test/callback?code=secret', 'http://attacker@localhost:4545/callback?code=secret', 'javascript:alert(1)', 'https://client.example/callback?code=secret#fragment', 'http://localhost:4545/callback?code=one&code=two']) {
     reconnectionRedirect = destination;
     const reconnect = await fetch(endpoint, { headers: { Cookie: cookie }, redirect: 'manual' });
     assert.equal(reconnect.status, 400);
     assert.equal(reconnect.headers.get('location'), null);
-    assert.doesNotMatch(await reconnect.text(), /preconsented-secret|evil\.test/);
-    assert.deepEqual(actions, [], 'reconexão sem destino verificável não deve aprovar nem negar');
+    assert.doesNotMatch(await reconnect.text(), /secret|evil\.test/);
+    assert.deepEqual(actions, [], 'resposta insegura não deve aprovar nem negar');
   }
   reconnectionRedirect = null;
   const post = decision => fetch(`${origin}/oauth/decision`, { method: 'POST', redirect: 'manual', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: `authorization_id=request-12345&decision=${decision}` });
