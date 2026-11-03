@@ -44,6 +44,7 @@ test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está cone
   assert.match(html, /<textarea[^>]*id="objective"/);
   assert.match(html, /<button[^>]*disabled[^>]*>Continuar<\/button>/);
   assert.doesNotMatch(html, /Projeto salvo/);
+  assert.equal((await fetch(`http://127.0.0.1:${port}/api/projects`)).status, 503, 'projetos indisponíveis sem Supabase');
   const login = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', redirect: 'manual' });
   assert.equal(login.status, 503, 'login sem Supabase configurado deve falhar de forma explícita');
   assert.equal((await fetch(`http://127.0.0.1:${port}/.well-known/oauth-protected-resource/api/mcp`)).status, 503);

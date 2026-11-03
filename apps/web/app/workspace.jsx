@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import Projects from './projects';
 
 export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
@@ -157,6 +158,7 @@ export default function Workspace({ loginAvailable }) {
           {storageError && <p className="hint" role="alert">Não foi possível preservar seu rascunho. Copie o texto antes de continuar.</p>}
         </section>
       </div>
+      {authState === 'connected' && <Projects />}
       <footer>Você no controle de cada escolha.</footer>
     </main>
   );
