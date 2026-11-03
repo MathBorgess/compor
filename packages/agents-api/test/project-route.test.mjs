@@ -3,8 +3,9 @@ import assert from 'node:assert/strict';
 import { createProjectAgentHandler } from '../src/project-route.mjs';
 
 const project = '0a3be452-5152-41d1-a3e8-fc2be56d67e1';
+const attempt = '82b7e98a-8145-4020-882a-f6c7f61debe2';
 const key = 'sk-test-secret-123456789012345';
-const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, ...headers }, body: JSON.stringify(body) });
+const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, 'x-compor-attempt-id': attempt, ...headers }, body: JSON.stringify(body) });
 
 test('criador autenticado inicia tentativa antes da geração para seu projeto', async () => {
   const steps = [];
@@ -12,7 +13,7 @@ test('criador autenticado inicia tentativa antes da geração para seu projeto',
     appOrigin: 'https://compor.test',
     resolveActor: async () => ({ userId: 'alice', token: 'fake-session-token' }),
     ownsProject: async ({ actor, projectId }) => { assert.equal(actor.userId, 'alice'); assert.equal(projectId, project); return true; },
-    attempts: { start: async args => { assert.doesNotMatch(JSON.stringify(args), /sk-test-secret|Oficina/); steps.push('start'); return 'attempt-1'; }, finish: async ({ state }) => { steps.push(state); } },
+    attempts: { start: async args => { assert.doesNotMatch(JSON.stringify(args), /sk-test-secret|Oficina/); steps.push('start'); return { id: attempt, state: 'started', isNew: true }; }, finish: async ({ state }) => { steps.push(state); } },
     fetch: async (_url, options) => { steps.push('provider'); assert.equal(options.headers.Authorization, `Bearer ${key}`); return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }); },
   });
   const response = await handler(request());
@@ -24,7 +25,7 @@ test('criador autenticado inicia tentativa antes da geração para seu projeto',
 test('não chama o provedor sem origem, usuário, projeto autorizado ou registro durável', async () => {
   let calls = 0;
   const base = { appOrigin: 'https://compor.test', resolveActor: async () => ({ userId: 'alice', token: 'fake-token' }), ownsProject: async () => true,
-    attempts: { start: async () => 'attempt-1', finish: async () => {} }, fetch: async () => { calls++; throw new Error('not expected'); } };
+    attempts: { start: async () => ({ id: attempt, state: 'started', isNew: true }), finish: async () => {} }, fetch: async () => { calls++; throw new Error('not expected'); } };
   assert.equal((await createProjectAgentHandler(base)(request({ origin: 'https://evil.test' }))).status, 403);
   assert.equal((await createProjectAgentHandler({ ...base, resolveActor: async () => null })(request())).status, 401);
   assert.equal((await createProjectAgentHandler({ ...base, ownsProject: async () => false })(request())).status, 403);
@@ -37,7 +38,7 @@ test('desconexão gera resultado desconhecido e jamais repete chamada automatica
   let calls = 0;
   const states = [];
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId: 'alice', token: 'fake-token' }), ownsProject: async () => true,
-    attempts: { start: async () => 'attempt-1', finish: async ({ state }) => states.push(state) }, fetch: async () => { calls++; throw Error(key); } });
+    attempts: { start: async () => ({ id: attempt, state: 'started', isNew: true }), finish: async ({ state }) => states.push(state) }, fetch: async () => { calls++; throw Error(key); } });
   const response = await handler(request());
   const result = await response.text();
   assert.equal(response.status, 502);
@@ -49,8 +50,18 @@ test('desconexão gera resultado desconhecido e jamais repete chamada automatica
 
 test('falha ao registrar o desfecho não apresenta resultado como conclusão', async () => {
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId: 'alice', token: 'fake-token' }), ownsProject: async () => true,
-    attempts: { start: async () => 'attempt-1', finish: async () => { throw Error(); } }, fetch: async () => new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }) });
+    attempts: { start: async () => ({ id: attempt, state: 'started', isNew: true }), finish: async () => { throw Error(); } }, fetch: async () => new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }) });
   const response = await handler(request());
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: 'result_unknown', retryAutomatically: false });
+});
+
+test('repetir uma tentativa existente nunca executa outra chamada paga', async () => {
+  let calls = 0;
+  const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId: 'alice', token: 'fake-token' }), ownsProject: async () => true,
+    attempts: { start: async () => ({ id: attempt, state: 'unknown', isNew: false }), finish: async () => { throw Error(); } }, fetch: async () => { calls++; throw Error(); } });
+  const response = await handler(request());
+  assert.equal(response.status, 409);
+  assert.deepEqual(await response.json(), { error: 'attempt_exists', state: 'unknown', retryAutomatically: false });
+  assert.equal(calls, 0);
 });
