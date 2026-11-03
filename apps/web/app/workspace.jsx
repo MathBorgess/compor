@@ -6,6 +6,7 @@ import Projects from './projects';
 export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState('checking');
+  const [authenticatedUser, setAuthenticatedUser] = useState(null);
   const draftKey = useRef(null);
   const memoryDrafts = useRef(new Map());
   const activeIdentity = useRef(null);
@@ -33,6 +34,7 @@ export default function Workspace({ loginAvailable }) {
       .then(data => {
         if (currentGeneration !== generation) return;
         if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
+          setAuthenticatedUser(data.userId);
           const identity = `user:${data.userId}`;
           activeIdentity.current = identity;
           try {
@@ -158,7 +160,7 @@ export default function Workspace({ loginAvailable }) {
           {storageError && <p className="hint" role="alert">Não foi possível preservar seu rascunho. Copie o texto antes de continuar.</p>}
         </section>
       </div>
-      {authState === 'connected' && <Projects />}
+      {authState === 'connected' && <Projects key={authenticatedUser} userId={authenticatedUser} />}
       <footer>Você no controle de cada escolha.</footer>
     </main>
   );

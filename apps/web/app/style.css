@@ -84,6 +84,10 @@ textarea:focus-visible { outline: 3px solid #c9bcf2; outline-offset: 2px; }
 .login { margin-top: 18px; }
 .login button { border: 1px solid var(--accent); border-radius: 9px; padding: 11px 17px; background: white; color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; }
 .login button:disabled { opacity: .55; cursor: not-allowed; }
+.pieces { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
+.piece-editor { display: grid; gap: 12px; margin-top: 16px; }
+.piece-editor label { display: grid; gap: 6px; }
+.piece-editor input { width: 100%; border: 1px solid #cbd6da; border-radius: 10px; padding: 12px; font: inherit; }
 .projects { margin: 0 7% 24px; }
 .projects form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .projects input { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 6px; }
