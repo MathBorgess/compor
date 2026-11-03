@@ -1,21 +1,61 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState('checking');
+  const draftKey = useRef(null);
   const [loginError, setLoginError] = useState(false);
   useEffect(() => {
-    try { setObjective(sessionStorage.getItem('compor-objective') || ''); } catch { /* Storage may be unavailable. */ }
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
     if (!loginAvailable) { setAuthState('unavailable'); return; }
-    const controller = new AbortController();
-    fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
+    let controller;
+    const checkSession = () => {
+      controller?.abort();
+      controller = new AbortController();
+      draftKey.current = null;
+      setObjective('');
+      setAuthState('checking');
+      fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
       .then(response => response.ok ? response.json() : { state: 'unavailable' })
-      .then(data => setAuthState(data.state))
+      .then(data => {
+        if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
+          try {
+            const key = `compor-objective:user:${data.userId}`;
+            const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
+            const claim = !seenAccount && sessionStorage.getItem('compor-claim-pending') === '1';
+            const existing = sessionStorage.getItem(key);
+            const guest = claim ? sessionStorage.getItem('compor-objective:guest') : null;
+            sessionStorage.setItem('compor-has-authenticated', '1');
+            if (claim && existing === null && guest !== null) sessionStorage.setItem(key, guest);
+            sessionStorage.removeItem('compor-objective:guest');
+            sessionStorage.removeItem('compor-claim-pending');
+            draftKey.current = key;
+            setObjective(existing ?? guest ?? '');
+          } catch { draftKey.current = null; setObjective(''); }
+          setAuthState('connected');
+        } else if (data.state === 'signed-out') {
+          try {
+            sessionStorage.removeItem('compor-claim-pending');
+            const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
+            draftKey.current = seenAccount ? null : 'compor-objective:guest';
+            setObjective(draftKey.current ? sessionStorage.getItem(draftKey.current) || '' : '');
+          } catch { draftKey.current = null; setObjective(''); }
+          setAuthState('signed-out');
+        } else { draftKey.current = null; setObjective(''); setAuthState('unavailable'); }
+      })
       .catch(error => { if (error.name !== 'AbortError') setAuthState('unavailable'); });
-    return () => controller.abort();
+    };
+    const checkVisible = () => { if (document.visibilityState === 'visible') checkSession(); };
+    checkSession();
+    window.addEventListener('focus', checkSession);
+    document.addEventListener('visibilitychange', checkVisible);
+    return () => {
+      controller?.abort();
+      window.removeEventListener('focus', checkSession);
+      document.removeEventListener('visibilitychange', checkVisible);
+    };
   }, [loginAvailable]);
 
   return (
@@ -45,9 +85,10 @@ export default function Workspace({ loginAvailable }) {
             name="objective"
             placeholder="Uma aula, um produto, uma ideia..."
             value={objective}
+            disabled={authState === 'checking' || authState === 'unavailable'}
             onChange={(event) => {
               setObjective(event.target.value);
-              try { sessionStorage.setItem('compor-objective', event.target.value); } catch { /* Keep editing in memory. */ }
+              try { if (draftKey.current) sessionStorage.setItem(draftKey.current, event.target.value); } catch { /* Keep editing in memory. */ }
             }}
             rows={6}
           />
@@ -58,7 +99,9 @@ export default function Workspace({ loginAvailable }) {
             <button type="button" disabled>Continuar</button>
             <span>Conexão necessária para continuar</span>
           </div>
-          {authState !== 'connected' && <form action="/auth/sign-in" method="post" className="login">
+          {authState !== 'connected' && <form action="/auth/sign-in" method="post" className="login" onSubmit={() => {
+            try { if (draftKey.current === 'compor-objective:guest') sessionStorage.setItem('compor-claim-pending', '1'); } catch { /* Login remains available. */ }
+          }}>
             <button type="submit" disabled={!loginAvailable || authState === 'unavailable' || authState === 'checking'}>Entrar com Google</button>
             {authState === 'unavailable' && <p className="hint">Login temporariamente indisponível.</p>}
             {loginError && <p className="hint" role="alert">Não foi possível concluir o login. Tente novamente.</p>}
