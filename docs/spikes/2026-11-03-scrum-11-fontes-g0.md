@@ -20,7 +20,7 @@ Também é necessário verificar o acordo aplicável à conta, preços, quotas e
 
 ## Prova ainda necessária
 
-1. Com Matheus, identificar conta e chave permitidas, verificar permissões e acordar limite de gasto para um ensaio sintético; não registrar credenciais.
+1. Matheus autorizou até US$ 5 no total para provas reais da Agents API e geração de imagem. Identificar a chave autorizada e verificar as permissões antes do ensaio; não registrar credenciais nem tratar essa autorização como liberação de deploy ou de gasto ilimitado.
 2. Executar uma chamada sintética autorizada da rota Agents API e, separadamente, a geração de imagem necessária; registrar apenas ambiente, versões, autorização, resultados e uso/custo disponíveis, sem dados reais ou segredos.
 3. Demonstrar a conexão Codex Desktop ao MCP do Compor, uso de imagem sem a chave da sessão web e persistência autorizada do artefato; documentar falhas em vez de inferir equivalência a partir de documentação genérica.
 4. Confirmar condições para a oferta específica e resolver a dúvida de BYOK com fonte ou orientação aplicável. Só então avaliar os critérios de SCRUM-11; simulações e testes locais não encerram G0.
