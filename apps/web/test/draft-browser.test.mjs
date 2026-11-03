@@ -26,6 +26,7 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   t.after(() => browser.close());
   const page = await browser.newPage();
   let state = { state: 'signed-out' };
+  let loginUser = 'alice';
   let waitForSession = null;
   await page.route('**/auth/session', async route => {
     if (waitForSession) await waitForSession;
@@ -33,7 +34,7 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
     await route.fulfill({ json: state });
   });
   await page.route('**/auth/sign-in', async route => {
-    state = { state: 'connected', userId: 'alice' };
+    state = { state: 'connected', userId: loginUser };
     await route.fulfill({ status: 303, headers: { location: '/' }, body: '' });
   });
   await page.goto(origin);
@@ -100,7 +101,7 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.addInitScript(() => {
     const original = Storage.prototype.setItem;
     Storage.prototype.setItem = function(key, value) {
-      if (key === 'compor-objective:user:alice' && this.getItem('simulate-storage-failure') === '1') throw new Error('storage indisponível');
+      if ((key === 'compor-objective:user:alice' && this.getItem('simulate-storage-failure') === '1') || (key === 'compor-objective:anonymous' && this.getItem('simulate-storage-failure') === '2')) throw new Error('storage indisponível');
       return original.call(this, key, value);
     };
   });
@@ -131,6 +132,30 @@ test('rascunhos pertencem à conta, aguardam sessão e sobrevivem a falhas', { s
   await page.getByRole('button', { name: 'Entrar com Google' }).click();
   await page.waitForFunction(() => document.querySelector('#objective')?.value === 'versão já existente');
   assert.equal(await page.evaluate(() => sessionStorage.getItem('compor-objective:guest')), 'rascunho sem conta');
+  state = { state: 'signed-out' };
+  await page.reload();
+  await objective.fill('escrito depois de sair');
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
+  await page.getByRole('button', { name: 'Recuperar rascunho anterior' }).click({ timeout: 3000 });
+  assert.equal(await objective.inputValue(), 'escrito depois de sair');
+  state = { state: 'signed-out' };
+  await page.reload();
+  await objective.fill('rascunho da próxima entrada');
+  loginUser = 'bob';
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await page.waitForFunction(() => document.querySelector('#objective')?.value === 'rascunho da próxima entrada');
+  state = { state: 'connected', userId: 'alice' };
+  await page.reload();
+  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
+  assert.equal(await objective.inputValue(), 'escrito depois de sair');
+  state = { state: 'signed-out' };
+  await page.reload();
+  await page.evaluate(() => sessionStorage.setItem('simulate-storage-failure', '2'));
+  await objective.fill('não navegue sem salvar');
+  await page.getByRole('button', { name: 'Entrar com Google' }).click();
+  await page.getByText('Não foi possível preservar seu rascunho. Copie o texto antes de continuar.').waitFor();
+  assert.equal(await objective.inputValue(), 'não navegue sem salvar');
 });
 
 test('sem Supabase configurado é possível rascunhar em memória', { skip: !existsSync(browserPath) }, async t => {

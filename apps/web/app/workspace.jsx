@@ -8,7 +8,10 @@ export default function Workspace({ loginAvailable }) {
   const draftKey = useRef(null);
   const memoryDrafts = useRef(new Map());
   const activeIdentity = useRef(null);
+  const pendingKey = useRef(null);
   const [loginError, setLoginError] = useState(false);
+  const [storageError, setStorageError] = useState(false);
+  const [hasPendingDraft, setHasPendingDraft] = useState(false);
   useEffect(() => {
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
     if (!loginAvailable) { activeIdentity.current = 'offline'; setAuthState('offline'); return; }
@@ -20,6 +23,8 @@ export default function Workspace({ loginAvailable }) {
       controller = new AbortController();
       draftKey.current = null;
       activeIdentity.current = null;
+      pendingKey.current = null;
+      setHasPendingDraft(false);
       setObjective('');
       setAuthState('checking');
       fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
@@ -32,13 +37,24 @@ export default function Workspace({ loginAvailable }) {
           try {
             const key = `compor-objective:user:${data.userId}`;
             const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
-            const claim = !seenAccount && sessionStorage.getItem('compor-claim-pending') === '1';
+            const claimSource = sessionStorage.getItem('compor-claim-pending');
+            const claim = claimSource === 'anonymous' || (claimSource === 'guest' && !seenAccount);
+            const sourceKey = claim ? `compor-objective:${claimSource}` : null;
             const existing = sessionStorage.getItem(key);
-            const guest = claim ? sessionStorage.getItem('compor-objective:guest') : null;
+            const guest = sourceKey ? sessionStorage.getItem(sourceKey) : null;
             if (claim && existing === null && guest !== null) sessionStorage.setItem(key, guest);
+            const pending = `compor-objective:pending:${data.userId}`;
+            if (claim && existing !== null && guest !== null && existing !== guest) {
+              const previous = sessionStorage.getItem(pending);
+              if (previous !== null && previous !== guest) sessionStorage.setItem(`${pending}:archive:${crypto.randomUUID()}`, previous);
+              sessionStorage.setItem(pending, guest);
+            }
             sessionStorage.setItem('compor-has-authenticated', '1');
+            if (claimSource === 'anonymous' && claim) sessionStorage.removeItem(sourceKey);
             sessionStorage.removeItem('compor-claim-pending');
             draftKey.current = key;
+            pendingKey.current = pending;
+            setHasPendingDraft(sessionStorage.getItem(pending) !== null);
             setObjective(memoryDrafts.current.get(identity) ?? existing ?? guest ?? '');
           } catch { draftKey.current = null; setObjective(memoryDrafts.current.get(identity) ?? ''); }
           setAuthState('connected');
@@ -46,7 +62,7 @@ export default function Workspace({ loginAvailable }) {
           try {
             sessionStorage.removeItem('compor-claim-pending');
             const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
-            draftKey.current = seenAccount ? null : 'compor-objective:guest';
+            draftKey.current = seenAccount ? 'compor-objective:anonymous' : 'compor-objective:guest';
             activeIdentity.current = seenAccount ? 'signed-out' : 'guest';
             setObjective(memoryDrafts.current.get(activeIdentity.current) ?? (draftKey.current ? sessionStorage.getItem(draftKey.current) || '' : ''));
           } catch { draftKey.current = null; activeIdentity.current = 'signed-out'; setObjective(memoryDrafts.current.get('signed-out') ?? ''); }
@@ -98,7 +114,7 @@ export default function Workspace({ loginAvailable }) {
             onChange={(event) => {
               setObjective(event.target.value);
               if (activeIdentity.current) memoryDrafts.current.set(activeIdentity.current, event.target.value);
-              try { if (draftKey.current) sessionStorage.setItem(draftKey.current, event.target.value); } catch { /* Keep editing in memory. */ }
+              try { if (draftKey.current) sessionStorage.setItem(draftKey.current, event.target.value); setStorageError(false); } catch { /* Keep editing in memory. */ }
             }}
             rows={6}
           />
@@ -109,13 +125,36 @@ export default function Workspace({ loginAvailable }) {
             <button type="button" disabled>Continuar</button>
             <span>Conexão necessária para continuar</span>
           </div>
-          {authState !== 'connected' && <form action="/auth/sign-in" method="post" className="login" onSubmit={() => {
-            try { if (draftKey.current === 'compor-objective:guest') sessionStorage.setItem('compor-claim-pending', '1'); } catch { /* Login remains available. */ }
+          {authState === 'connected' && hasPendingDraft && <div className="login">
+            <button type="button" onClick={() => {
+              try {
+                const pending = sessionStorage.getItem(pendingKey.current);
+                if (pending === null || !draftKey.current) return;
+                if (objective && objective !== pending) sessionStorage.setItem(`${draftKey.current}:archive:${crypto.randomUUID()}`, objective);
+                sessionStorage.setItem(draftKey.current, pending);
+                sessionStorage.removeItem(pendingKey.current);
+                memoryDrafts.current.set(activeIdentity.current, pending);
+                setObjective(pending);
+                setHasPendingDraft(false);
+                setStorageError(false);
+              } catch { setStorageError(true); }
+            }}>Recuperar rascunho anterior</button>
+          </div>}
+          {authState !== 'connected' && <form action="/auth/sign-in" method="post" className="login" onSubmit={(event) => {
+            try {
+              if (draftKey.current) {
+                sessionStorage.setItem(draftKey.current, objective);
+                sessionStorage.setItem('compor-claim-pending', draftKey.current === 'compor-objective:guest' ? 'guest' : 'anonymous');
+              } else if (objective) throw new Error('storage indisponível');
+            } catch {
+              if (objective) { event.preventDefault(); setStorageError(true); }
+            }
           }}>
             <button type="submit" disabled={!loginAvailable || authState === 'unavailable' || authState === 'checking'}>Entrar com Google</button>
             {(authState === 'unavailable' || authState === 'offline') && <p className="hint">Login temporariamente indisponível.</p>}
             {loginError && <p className="hint" role="alert">Não foi possível concluir o login. Tente novamente.</p>}
           </form>}
+          {storageError && <p className="hint" role="alert">Não foi possível preservar seu rascunho. Copie o texto antes de continuar.</p>}
         </section>
       </div>
       <footer>Você no controle de cada escolha.</footer>
