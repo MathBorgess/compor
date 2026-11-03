@@ -2,6 +2,8 @@
 
 Primeiro corte local do aplicativo web do Compor em Next.js. A pessoa pode escrever o objetivo; o rascunho permanece nesta aba quando o armazenamento de sessão está disponível, mas não é salvo no projeto. A continuação fica indisponível até as integrações existirem.
 
+Quando autenticada, a pessoa pode listar e criar projetos. A rota valida a sessão e usa o token dela com as políticas RLS do Supabase; a criação exige origem do aplicativo. Se a resposta da criação se perder, a interface informa que o projeto pode ter sido criado e exige confirmação antes de uma nova tentativa. Login, migração e isolamento RLS ainda precisam de prova com Supabase real isolado; o teste usa serviços simulados e não comprova implantação nem segurança em produção.
+
 O rascunho autenticado é vinculado à conta e não é carregado enquanto a sessão é verificada ou está indisponível. O rascunho escrito sem autenticação é associado apenas ao login iniciado nessa aba; quando já existe rascunho da conta, o aplicativo oferece recuperar o outro, preservando a versão anterior na aba. Se o armazenamento falhar, o login é interrompido para que a pessoa copie o texto. Rascunhos legados sem identidade não são atribuídos automaticamente a uma conta. O armazenamento da aba não é uma cópia persistente no Supabase.
 
 Caso o Supabase ainda não esteja configurado, é possível escrever em memória, sem login e sem persistência: atualizar ou fechar a página perde esse rascunho. Uma edição mantida apenas em memória sobrevive à rechecagem da mesma sessão, mas não a uma navegação ou recarga.
