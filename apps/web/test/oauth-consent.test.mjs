@@ -17,6 +17,7 @@ async function exerciseConsent(t, runBrowser) {
   const key = join(dir, 'key.pem'), cert = join(dir, 'cert.pem');
   execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-keyout', key, '-out', cert, '-subj', '/CN=127.0.0.1', '-addext', 'subjectAltName=IP:127.0.0.1'], { stdio: 'ignore' });
   const actions = [];
+  const events = [];
   let hostile = false;
   let reconnectionRedirect = null;
   let detailsMode = 'normal';
@@ -45,7 +46,9 @@ async function exerciseConsent(t, runBrowser) {
   const probe = createServer(); await new Promise(resolve => probe.listen(0, '127.0.0.1', resolve));
   const port = probe.address().port; await new Promise(resolve => probe.close(resolve));
   const origin = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { env: { ...process.env, SUPABASE_URL: `https://127.0.0.1:${service.address().port}`, SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake', APP_ORIGIN: origin, MCP_OAUTH_ENABLED: 'true', NODE_EXTRA_CA_CERTS: cert }, stdio: 'ignore' });
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { env: { ...process.env, SUPABASE_URL: `https://127.0.0.1:${service.address().port}`, SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fake', APP_ORIGIN: origin, MCP_OAUTH_ENABLED: 'true', NODE_EXTRA_CA_CERTS: cert }, stdio: ['ignore','pipe','ignore'] });
+  let buffer = '';
+  child.stdout.on('data', chunk => { buffer += chunk.toString(); const lines = buffer.split('\n'); buffer = lines.pop(); for (const line of lines) if (line.startsWith('COMPOR_OAUTH_EVENT ')) events.push(line); });
   t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
   const endpoint = `${origin}/oauth/consent?authorization_id=request-12345`;
   const deadline = Date.now() + 30000;
@@ -143,6 +146,15 @@ async function exerciseConsent(t, runBrowser) {
   const userinfo = await post('approve');
   assert.equal(userinfo.status, 502);
   assert.equal(userinfo.headers.get('location'), null);
+  const eventDeadline = Date.now() + 2000;
+  while (events.length < 4 && Date.now() < eventDeadline) await new Promise(resolve => setTimeout(resolve, 25));
+  assert.ok(events.includes('COMPOR_OAUTH_EVENT response_prepared_303'));
+  assert.ok(events.includes('COMPOR_OAUTH_EVENT redirect_validated'));
+  assert.ok(events.includes('COMPOR_OAUTH_EVENT redirect_rejected_origin'));
+  assert.ok(events.includes('COMPOR_OAUTH_EVENT redirect_rejected_userinfo'));
+  assert.ok(events.includes('COMPOR_OAUTH_EVENT response_prepared_502'));
+  assert.ok(events.every(event => /^COMPOR_OAUTH_EVENT (?:provider_result_received|redirect_validated|redirect_rejected_(?:origin|userinfo)|response_prepared_(?:303|502))$/.test(event)));
+  assert.ok(events.every(event => !/secret|mock-code|request-12345|alice|localhost/i.test(event)));
 }
 
 test('consentimento explicita cliente e exige decisão da conta autenticada', t => exerciseConsent(t, false));

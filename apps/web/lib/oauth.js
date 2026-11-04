@@ -19,15 +19,19 @@ export function validProviderRedirect(destination) {
     return true;
   } catch { return false; }
 }
-export function sameRedirect(registered, destination) {
+export function redirectValidation(registered, destination) {
   try {
     const expected = new URL(registered);
     const target = new URL(destination);
-    if (!['https:', 'http:'].includes(expected.protocol) || expected.username || expected.password || target.username || target.password || expected.hash || target.hash || expected.origin !== target.origin || expected.pathname !== target.pathname) return false;
-    if (expected.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(expected.hostname)) return false;
-    for (const [key, value] of expected.searchParams) if (target.searchParams.get(key) !== value) return false;
-    return true;
-  } catch { return false; }
+    if (!['https:', 'http:'].includes(expected.protocol)) return 'scheme';
+    if (expected.username || expected.password || target.username || target.password) return 'userinfo';
+    if (expected.hash || target.hash) return 'fragment';
+    if (expected.origin !== target.origin) return 'origin';
+    if (expected.pathname !== target.pathname) return 'path';
+    if (expected.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(expected.hostname)) return 'insecure_host';
+    for (const [key, value] of expected.searchParams) if (target.searchParams.get(key) !== value) return 'query';
+    return 'valid';
+  } catch { return 'invalid_url'; }
 }
 export function safeText(value) {
   return String(value ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
