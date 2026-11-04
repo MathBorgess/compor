@@ -10,7 +10,7 @@ const action={ type:'function_call', name:'generate_image', turn_id:'turn_123', 
 const encode = new TextEncoder();
 
 test('ação pendente é verificada no provedor, vinculada cedo e espera consentimento sem encerrar tentativa', async () => {
-  let now = 1000000, cancelled = false; const calls = [], finished = [];
+  let now = 1000000, cancelled = false, agentSignal; const calls = [], finished = [];
   const bindings = createSessionBindings({ secret:Buffer.alloc(32,42), now:()=>now });
   const handler = createProjectAgentHandler({ appOrigin:'https://compor.test', resolveActor:async()=>({ userId, token:'fake-user-token' }), ownsProject:async()=>true, bindings,
     attempts:{ start:async()=>({ id:attemptId,state:'started',isNew:true }), finish:async ({state})=>finished.push(state) },
@@ -18,8 +18,10 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
       calls.push({ url:String(url), method:options.method, auth:options.headers.Authorization });
       if (options.method === 'POST') {
         const sent=JSON.parse(options.body); assert.ok(sent.agent.tools.some(tool=>tool.name==='generate_image')); assert.doesNotMatch(options.body,/sk-test-secret/);
-        return new Response(new ReadableStream({ start(controller) { controller.enqueue(encode.encode('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\n')); controller.enqueue(encode.encode('data: {"type":"agent.session.requires_action","session":{"id":"sess_actual"}}\n\n')); }, cancel() { cancelled=true; } }), { status:201 });
+        agentSignal = options.signal;
+        return new Response(new ReadableStream({ start(controller) { controller.enqueue(encode.encode('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\n')); controller.enqueue(encode.encode('data: {"type":"agent.session.requires_action","session":{"id":"sess_actual"}}\n\n')); }, cancel() { cancelled=true; return new Promise(() => {}); } }), { status:201 });
       }
+      assert.equal(agentSignal.aborted, true);
       return Response.json({ id:'sess_actual', status:'requires_action', required_actions:[{ ...action, arguments: JSON.stringify(action.arguments) }] });
     },
   });

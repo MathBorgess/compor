@@ -20,7 +20,8 @@ async function limitedText(stream, limit) {
       chunks.push(value);
     }
   } finally {
-    await reader.cancel().catch(() => {});
+    try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Cleanup is best-effort. */ }
+    try { reader.releaseLock(); } catch { /* No pending reads should remain. */ }
   }
   return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
 }
@@ -64,7 +65,11 @@ async function readAgentEvents(stream, stopForAction) {
     }
     if (buffer.trim() && processBlock(buffer)) return { action: true, sessionId };
     return { action: false, sessionId, completed, output: [...parts.values()].join('') };
-  } finally { await reader.cancel().catch(() => {}); }
+  } finally {
+    // Some transports never settle cancel(); initiate it without blocking the action.
+    try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Cleanup is best-effort. */ }
+    try { reader.releaseLock(); } catch { /* No pending reads should remain. */ }
+  }
 }
 
 export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false } = {}) {
@@ -86,17 +91,20 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
     }
     const key = body.apiKey;
     try {
+      const agentAbort = new AbortController();
       const response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...(enableImageTool ? { tools: [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
-        signal: AbortSignal.timeout(90_000),
+        signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
       });
-      if (response.status === 401 || response.status === 403) return json({ error: 'openai_credentials_rejected' }, response.status);
-      if (response.status === 429) return json({ error: 'openai_quota_or_rate_limit' }, 429);
-      if (!response.ok) return json({ error: 'upstream_error' }, 502);
-      const observed = await readAgentEvents(response.body, enableImageTool);
+      if (response.status === 401 || response.status === 403) { agentAbort.abort(); return json({ error: 'openai_credentials_rejected' }, response.status); }
+      if (response.status === 429) { agentAbort.abort(); return json({ error: 'openai_quota_or_rate_limit' }, 429); }
+      if (!response.ok) { agentAbort.abort(); return json({ error: 'upstream_error' }, 502); }
+      let observed;
+      try { observed = await readAgentEvents(response.body, enableImageTool); }
+      finally { agentAbort.abort(); }
       if (observed.action) {
         const lookup = await fetchApi(`${endpoint}/${encodeURIComponent(observed.sessionId)}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1' }, redirect: 'error', signal: AbortSignal.timeout(10_000) });
         if (!lookup.ok) throw new Error('session unavailable');
