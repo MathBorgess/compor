@@ -6,6 +6,16 @@ export function oauthConfig() {
 export function validAuthorizationId(value) {
   return typeof value === 'string' && /^[A-Za-z0-9_-]{8,256}$/.test(value);
 }
+export function registeredRedirectOrigin(value) {
+  try {
+    if (typeof value !== 'string' || value.length > 8192) return null;
+    const target = new URL(value);
+    if (!['https:', 'http:'].includes(target.protocol) || target.username || target.password || target.hash) return null;
+    if (target.protocol === 'http:' && !['localhost', '127.0.0.1', '[::1]'].includes(target.hostname)) return null;
+    if (!/^https?:\/\/(?:[a-z0-9.-]+|\[[0-9a-f:.]+\])(?::[0-9]{1,5})?$/i.test(target.origin)) return null;
+    return target.origin;
+  } catch { return null; }
+}
 // The URL is accepted only from the authenticated Supabase authorization response.
 // Supabase validates the registered redirect and binds the code to the PKCE challenge;
 // verification of the client's verifier happens during the token exchange.

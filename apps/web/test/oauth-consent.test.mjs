@@ -20,6 +20,7 @@ async function exerciseConsent(t, runBrowser) {
   const events = [];
   let hostile = false;
   let reconnectionRedirect = null;
+  let registeredRedirect = 'http://localhost:4545/callback';
   let detailsMode = 'normal';
   const service = createHttpsServer({ key: await readFile(key), cert: await readFile(cert) }, async (req, res) => {
     res.setHeader('content-type', 'application/json');
@@ -32,7 +33,7 @@ async function exerciseConsent(t, runBrowser) {
       if (detailsMode === 'not_pending') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'authorization request cannot be processed'})); }
       if (detailsMode === 'provider_origin') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'unauthorized request origin'})); }
       if (detailsMode === 'service') { res.statusCode = 503; return res.end(JSON.stringify({message:'synthetic sensitive error'})); }
-      return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: detailsMode === 'mismatch' ? 'bob' : 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
+      return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: detailsMode === 'mismatch' ? 'bob' : 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: registeredRedirect, scope: 'openid email' }));
     }
     if (req.url === '/auth/v1/oauth/authorizations/request-12345/consent' && req.method === 'POST') {
       let body = ''; for await (const chunk of req) body += chunk;
@@ -63,6 +64,7 @@ async function exerciseConsent(t, runBrowser) {
   assert.match(text, /openid email/);
   assert.match(text, /Autorizar/);
   assert.match(text, /Negar/);
+  assert.match(page.headers.get('content-security-policy'), /form-action 'self' http:\/\/localhost:4545;/);
   assert.deepEqual(actions, []);
   if (runBrowser) {
   const browser = await chromium.launch({ executablePath: browserPath, headless: true });
@@ -70,7 +72,9 @@ async function exerciseConsent(t, runBrowser) {
   const context = await browser.newContext();
   await context.addCookies([{ name: 'sb-127-auth-token', value: cookie.split('=')[1], url: origin }]);
   const browserPage = await context.newPage();
-  await context.route('http://localhost:4545/**', route => route.fulfill({ status: 200, body: 'callback' }));
+  let callbackReached;
+  const callback = new Promise(resolve => { callbackReached = resolve; });
+  await context.route('http://localhost:4545/**', route => { callbackReached(); return route.fulfill({ status: 200, body: 'callback' }); });
   await browserPage.goto(endpoint);
   const [decisionRequest] = await Promise.all([
     browserPage.waitForRequest(request => request.url() === `${origin}/oauth/decision`, { timeout: 5000 }),
@@ -82,8 +86,24 @@ async function exerciseConsent(t, runBrowser) {
   const decisionDeadline = Date.now() + 5000;
   while (!actions.length && Date.now() < decisionDeadline) await new Promise(resolve => setTimeout(resolve, 25));
   assert.deepEqual(actions, ['approve']);
+  await Promise.race([callback, new Promise((_, reject) => setTimeout(() => reject(Error('callback não alcançado')), 3000))]);
   return;
   }
+  for (const unsafe of ['http://evil.example/callback', 'http://attacker@localhost:4545/callback', 'javascript:alert(1)', 'https://example.com/callback#fragment', 'https://example.com;script-src/callback']) {
+    registeredRedirect = unsafe;
+    const invalid = await fetch(endpoint, { headers: { Cookie: cookie } });
+    assert.equal(invalid.status, 400);
+    assert.doesNotMatch(await invalid.text(), /evil\.example|attacker|javascript/);
+    assert.deepEqual(actions, []);
+  }
+  for (const [registered, allowedOrigin] of [['http://127.0.0.1:56521/callback', 'http://127.0.0.1:56521'], ['http://[::1]:56521/callback', 'http://[::1]:56521'], ['https://client.example/callback', 'https://client.example']]) {
+    registeredRedirect = registered;
+    const valid = await fetch(endpoint, { headers: { Cookie: cookie } });
+    assert.equal(valid.status, 200);
+    assert.ok(valid.headers.get('content-security-policy').includes(`form-action 'self' ${allowedOrigin};`));
+    assert.deepEqual(actions, []);
+  }
+  registeredRedirect = 'http://localhost:4545/callback';
   for (const rejectedOrigin of ['null', 'https://attacker.example']) {
     const rejected = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: rejectedOrigin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
     assert.equal(rejected.status, 403);
