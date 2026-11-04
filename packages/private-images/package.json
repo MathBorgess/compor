@@ -1,1 +1,1 @@
-{"name":"@compor/private-images","version":"0.1.0","private":true,"type":"module","exports":"./src/index.mjs","engines":{"node":">=20"},"scripts":{"test":"node --test test/*.test.mjs"},"devDependencies":{"@electric-sql/pglite":"0.5.15"}}
+{"name":"@compor/private-images","version":"0.1.0","private":true,"type":"module","exports":{".":"./src/index.mjs","./listing":"./src/listing.mjs"},"engines":{"node":">=20"},"scripts":{"test":"node --test test/*.test.mjs"},"devDependencies":{"@electric-sql/pglite":"0.5.15"}}
