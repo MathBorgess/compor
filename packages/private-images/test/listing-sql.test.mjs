@@ -22,7 +22,7 @@ test('listagem invocadora respeita RLS mesmo sob política ampla e percorre toda
  await db.exec(await readFile(new URL('../../../supabase/migrations/20261103000003_private_project_images.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../../../supabase/migrations/20261103000010_list_piece_image_assets.sql',import.meta.url),'utf8'));
  await db.query('insert into public.projects values($1,$2)',[project,user]);
- await db.query('insert into public.piece_versions values($1,$2,1),($1,$2,2)',[project,piece]);
+ await db.query('insert into public.piece_versions values($1,$2,1),($1,$2,2),($1,$2,3)',[project,piece]);
  const assets=Array.from({length:53},(_,i)=>`44444444-4444-4444-8444-${String(i+1).padStart(12,'0')}`);
  for(const id of assets)await db.query('insert into storage.objects values($1,$2)',['compor-project-images',`${user}/${project}/${piece}/1/${id}.png`]);
  await db.query('insert into storage.objects values($1,$2)',['compor-project-images',`${user}/${project}/${piece}/2/55555555-5555-4555-8555-555555555555.png`]);
@@ -33,8 +33,11 @@ test('listagem invocadora respeita RLS mesmo sob política ampla e percorre toda
  const second=(await db.query(query,[project,piece,1,first.nextCursor])).rows[0].page;
  assert.deepEqual(second.assets,assets.slice(50));assert.equal(second.nextCursor,null);
  const wrongVersion=(await db.query(query,[project,piece,2,null])).rows[0].page;assert.equal(wrongVersion.assets.length,1);
+ const ownEmpty=(await db.query(query,[project,piece,3,null])).rows[0].page;assert.deepEqual(ownEmpty,{assets:[],nextCursor:null});
+ const missing=(await db.query(query,[project,piece,4,null])).rows[0].page;assert.deepEqual(missing,{error:'not_found'});
  await db.exec(`select set_config('request.jwt.claim.sub','${other}',false)`);
- const denied=(await db.query(query,[project,piece,1,null])).rows[0].page;assert.deepEqual(denied,{assets:[],nextCursor:null});
+ const denied=(await db.query(query,[project,piece,1,null])).rows[0].page;assert.deepEqual(denied,missing);
+ const deniedEmpty=(await db.query(query,[project,piece,3,null])).rows[0].page;assert.deepEqual(deniedEmpty,missing);
  await db.exec('reset role;set role anon');
  await assert.rejects(()=>db.query(query,[project,piece,1,null]));
 });

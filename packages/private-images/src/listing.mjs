@@ -25,6 +25,7 @@ export function createPrivateImageListingHandler({supabaseUrl,publishableKey,aut
   try {
    const result=await fetchApi(new URL('/rest/v1/rpc/list_piece_image_assets',base),{method:'POST',headers:{apikey:publishableKey,authorization:`Bearer ${actor.token}`,'content-type':'application/json'},body:JSON.stringify({p_project_id:project.toLowerCase(),p_piece_id:piece.toLowerCase(),p_version:Number(version),p_after:after?.toLowerCase()??null}),redirect:'error',signal:AbortSignal.timeout(5000)});
    if(!result.ok)throw Error('unavailable');const page=await boundedJson(result.body);
+   if(page && Object.keys(page).length===1 && page.error==='not_found')return reply({error:'not_found'},404);
    if(!page||!Array.isArray(page.assets)||page.assets.length>50||!page.assets.every(item=>uuid(item)&&item===item.toLowerCase())||page.assets.some((item,i)=>i>0&&item<=page.assets[i-1])||(after&&page.assets.some(item=>item<=after.toLowerCase()))||!(page.nextCursor===null||(page.assets.length===50&&page.nextCursor===page.assets[49])))throw Error('invalid page');
    return reply({assets:page.assets.map(assetId=>({assetId,origin:'unknown'})),nextCursor:page.nextCursor},200);
   }catch{return reply({error:'unavailable'},503);}

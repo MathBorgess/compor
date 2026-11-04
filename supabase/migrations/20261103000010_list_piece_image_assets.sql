@@ -7,6 +7,11 @@ begin
  if v_owner is null or p_project_id is null or p_piece_id is null or p_version is null or p_version<1 then
    raise exception 'images unavailable' using errcode='42501';
  end if;
+ -- Verify authorization even when the Storage prefix contains no objects.
+ if not exists(select 1 from public.projects p join public.piece_versions v on v.project_id=p.id
+   where p.id=p_project_id and p.owner_id=v_owner and v.piece_id=p_piece_id and v.version=p_version) then
+   return jsonb_build_object('error','not_found');
+ end if;
  v_prefix:=v_owner::text||'/'||p_project_id::text||'/'||p_piece_id::text||'/'||p_version::text||'/';
  select coalesce(array_agg(page.asset_id order by page.asset_id),array[]::uuid[]) into v_ids from (
    select q.asset_id from (

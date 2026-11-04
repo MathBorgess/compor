@@ -26,7 +26,8 @@ test('rota lista referências sem storage local e respeita token da conta',async
   if(req.url==='/auth/v1/user')return res.end(JSON.stringify({id:auth==='Bearer mock-owner'?owner:other,aud:'authenticated'}));
   if(req.url==='/rest/v1/rpc/list_piece_image_assets'){
    let body='';for await(const part of req)body+=part;const input=JSON.parse(body);assert.equal(input.p_project_id,project);assert.equal(input.p_piece_id,piece);assert.equal(input.p_version,1);
-   const items=auth==='Bearer mock-owner'?assets.filter(id=>!input.p_after||id>input.p_after):[];
+   if(auth!=='Bearer mock-owner')return res.end(JSON.stringify({error:'not_found'}));
+   const items=assets.filter(id=>!input.p_after||id>input.p_after);
    return res.end(JSON.stringify({assets:items.slice(0,50),nextCursor:items.length>50?items[49]:null}));
   }
   res.statusCode=404;res.end();
@@ -41,5 +42,5 @@ test('rota lista referências sem storage local e respeita token da conta',async
  assert.equal((await fetch(endpoint)).status,401);
  const headers={cookie:cookie(owner,'mock-owner')};const first=await (await fetch(endpoint,{headers})).json();assert.equal(first.assets.length,50);assert.equal(first.nextCursor,assets[49]);assert.equal(first.assets[0].origin,'unknown');
  const second=await (await fetch(`${endpoint}&after=${first.nextCursor}`,{headers})).json();assert.deepEqual(second,{assets:[{assetId:assets[50],origin:'unknown'}],nextCursor:null});
- const denied=await (await fetch(endpoint,{headers:{cookie:cookie(other,'mock-other')}})).json();assert.deepEqual(denied,{assets:[],nextCursor:null});
+ const deniedResponse=await fetch(endpoint,{headers:{cookie:cookie(other,'mock-other')}});assert.equal(deniedResponse.status,404);assert.deepEqual(await deniedResponse.json(),{error:'not_found'});
 });

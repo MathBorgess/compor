@@ -25,3 +25,8 @@ test('rejeita acesso anônimo, parâmetros inválidos e resultado malformado sem
  assert.equal(calls,0);
  const response=await make(async()=>actor)(new Request(url));assert.equal(response.status,503);assert.doesNotMatch(await response.text(),/synthetic-user-token/);
 });
+
+test('projeto ou versão inacessível é indistinguível de inexistente',async()=>{
+ const handler=createPrivateImageListingHandler({supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:async()=>actor,fetch:async()=>Response.json({error:'not_found'})});
+ const response=await handler(new Request(url));assert.equal(response.status,404);assert.deepEqual(await response.json(),{error:'not_found'});
+});
