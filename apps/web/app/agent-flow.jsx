@@ -9,7 +9,7 @@ function recordFor(key) {
   if (!flows.has(key)) flows.set(key, { value: { state: 'idle', history: [] }, listeners: new Set(), loaded: false });
   return flows.get(key);
 }
-function update(record, value) { record.value = {...value,history:value.history ?? record.value.history ?? []}; for (const listener of record.listeners) listener(record.value); }
+function update(record, value) { record.value = {...value,history:value.history ?? record.value.history ?? [],selectedAsset:value.selectedAsset === undefined ? record.value.selectedAsset ?? null : value.selectedAsset}; for (const listener of record.listeners) listener(record.value); }
 
 export default function AgentFlow({ userId, projectId, pieceId, version, canStart, objective, hasApiKey, getApiKey, onUseImage }) {
   const key = `compor-agent-attempt:${userId}:${projectId}:${pieceId}:${version}`;
@@ -21,7 +21,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
   const [previewBlob, setPreviewBlob] = useState(null);
   const [previewError, setPreviewError] = useState(false);
   const [previewTry, setPreviewTry] = useState(0);
-  const [selectedAsset, setSelectedAsset] = useState(null);
+  const selectedAsset = flow.selectedAsset;
   function readHistory() {
     const raw = sessionStorage.getItem(historyKey);
     if (raw === null) return [];
@@ -86,14 +86,14 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     const value = {state,assetId:uuid(assetId) ? assetId : null};
     try { sessionStorage.setItem(key, JSON.stringify(value)); }
     catch { value.storageWarning = true; }
-    update(record,value);
+    update(record,{...value,...(value.assetId ? {selectedAsset:null} : {})});
     if (uuid(value.assetId) && !preserveAsset(value.assetId)) update(record,{...record.value,storageWarning:true});
   }
   async function start() {
     if (!initialized || record.value.state !== 'idle' || !canStart || !hasApiKey || !objective?.trim() || typeof getApiKey !== 'function') return;
     const apiKey = getApiKey(); if (!apiKey) return;
     try { sessionStorage.setItem(key, 'pending'); } catch { update(record,{state:'storage_unavailable'}); return; }
-    update(record, {state:'starting'});
+    update(record, {state:'starting',selectedAsset:null});
     try {
       const response = await fetch('/api/agent', {method:'POST',headers:{'content-type':'application/json','x-compor-project-id':projectId,'x-compor-attempt-id':crypto.randomUUID()},body:JSON.stringify({apiKey,objective})});
       const data = await response.json();
@@ -110,7 +110,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     const current = record.value;
     if (current.state !== 'consent' || !canStart || !hasApiKey || typeof getApiKey !== 'function') return;
     const apiKey = getApiKey(); if (!apiKey) return;
-    setSelectedAsset(null); update(record,{state:'confirming'});
+    update(record,{state:'confirming',selectedAsset:null});
     try {
       const response = await fetch('/api/agent/image',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,pieceId,version,attemptId:current.attemptId,actionBinding:current.actionBinding,explicitApproval:true})});
       const data = await response.json();
@@ -129,7 +129,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'confirming' && <p role="status">Gerando imagem…</p>}
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
     {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
-    {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => setSelectedAsset(assetId)}>Ver imagem anterior {index + 1}</button>)}</div>}
+    {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => update(record,{...record.value,selectedAsset:assetId})}>Ver imagem anterior {index + 1}</button>)}</div>}
     {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p><button type="button" disabled={!previewBlob || typeof onUseImage !== 'function'} onClick={() => onUseImage(previewBlob)}>Usar imagem na composição</button></>}
     {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
     {flow.storageWarning && <p role="alert">Não foi possível preservar a referência da imagem nesta aba. Ela pode não aparecer após recarregar.</p>}
