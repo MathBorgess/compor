@@ -7,3 +7,12 @@ export function agentSigningKey(env=process.env) {
   return key;
  } catch {return null;}
 }
+
+// Configure only on the server. The API specifies the limit in USD cents.
+export function agentSessionSpendLimit(env=process.env) {
+ const value=env.COMPOR_AGENT_SESSION_SPEND_CENTS;
+ if(value===undefined)return 25;
+ if(typeof value!=='string'||!/^[1-9][0-9]{0,2}$/.test(value))return null;
+ const cents=Number(value);
+ return cents<=500?cents:null;
+}

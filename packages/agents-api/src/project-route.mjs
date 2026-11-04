@@ -4,7 +4,8 @@ const projectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const response = (body, status) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
 /** Server-side seam; do not connect until the attempt store is durable and authorized. */
-export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, usage, withMcp, fetch } = {}) {
+export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, usage, withMcp, fetch, spendLimitCents = 25 } = {}) {
+  if (!Number.isInteger(spendLimitCents) || spendLimitCents < 1 || spendLimitCents > 500) throw new TypeError('invalid session spend limit');
   return async request => {
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405);
     if (typeof appOrigin !== 'string' || typeof resolveActor !== 'function' || typeof ownsProject !== 'function' ||
@@ -35,7 +36,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     const run = async mcpTool => {
       if (invoked) throw Error('duplicate invocation');
       invoked = true;
-      result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true, mcpTool })(request);
+      result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true, mcpTool, spendLimitCents })(request);
     };
     try {
       if (withMcp === undefined) await run();
