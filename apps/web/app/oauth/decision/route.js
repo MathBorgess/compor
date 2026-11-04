@@ -4,6 +4,8 @@ const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer',
 function detailsFailure(error) {
   if (error?.name === 'AuthSessionMissingError') return 'AUTHORIZATION_SESSION_MISSING';
   if (error?.status === 404) return 'AUTHORIZATION_NOT_FOUND';
+  if (error?.status === 400 && error?.code === 'validation_failed' && error?.message === 'authorization request cannot be processed') return 'AUTHORIZATION_NOT_PENDING';
+  if (error?.status === 400 && error?.code === 'validation_failed' && error?.message === 'unauthorized request origin') return 'AUTHORIZATION_PROVIDER_ORIGIN';
   if (error?.status === 400) return 'AUTHORIZATION_REJECTED';
   if (error?.status === 401 || error?.status === 403) return 'AUTHORIZATION_SESSION_REJECTED';
   if (error?.status === 429) return 'AUTHORIZATION_RATE_LIMITED';

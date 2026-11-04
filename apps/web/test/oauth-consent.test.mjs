@@ -22,11 +22,14 @@ async function exerciseConsent(t, runBrowser) {
   let detailsMode = 'normal';
   const service = createHttpsServer({ key: await readFile(key), cert: await readFile(cert) }, async (req, res) => {
     res.setHeader('content-type', 'application/json');
+    res.setHeader('x-supabase-api-version', '2024-01-01');
     if (req.headers.authorization !== 'Bearer mock-access-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: 'alice', aud: 'authenticated' }));
     if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') {
       if (detailsMode === 'unavailable') { res.statusCode = 404; return res.end(JSON.stringify({code:'oauth_authorization_not_found',message:'synthetic sensitive error'})); }
       if (detailsMode === 'processed') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'synthetic sensitive error'})); }
+      if (detailsMode === 'not_pending') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'authorization request cannot be processed'})); }
+      if (detailsMode === 'provider_origin') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'unauthorized request origin'})); }
       if (detailsMode === 'service') { res.statusCode = 503; return res.end(JSON.stringify({message:'synthetic sensitive error'})); }
       return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: detailsMode === 'mismatch' ? 'bob' : 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
     }
@@ -92,7 +95,7 @@ async function exerciseConsent(t, runBrowser) {
   const missingText = await unavailableDetails.text();
   assert.match(missingText, /AUTHORIZATION_NOT_FOUND/);
   assert.doesNotMatch(missingText, /synthetic sensitive error|request-12345/);
-  for (const [mode, expected] of [['processed','AUTHORIZATION_REJECTED'], ['service','AUTHORIZATION_SERVICE_UNAVAILABLE']]) {
+  for (const [mode, expected] of [['processed','AUTHORIZATION_REJECTED'], ['not_pending','AUTHORIZATION_NOT_PENDING'], ['provider_origin','AUTHORIZATION_PROVIDER_ORIGIN'], ['service','AUTHORIZATION_SERVICE_UNAVAILABLE']]) {
     detailsMode = mode;
     const failed = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
     assert.equal(failed.status, 400);
