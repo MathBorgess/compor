@@ -52,3 +52,8 @@ test('asset já salvo permanece recuperável se envio do evento lançar erro',as
  const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'completed',executionId,toolResult:{output:JSON.stringify({assetId})}}),send:async()=>{throw Error(apiKey);}});
  const response=await handler(request());assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});
 });
+test('imagem confirmada no Storage permanece recuperável se registro final ficar incerto',async()=>{
+ let sends=0;
+ const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'unknown',retryAutomatically:false,assetId}),send:async()=>{sends++;}});
+ const response=await handler(request());assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.equal(sends,0);
+});

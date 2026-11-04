@@ -51,6 +51,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       execution = await reservations.claimExecution({actor,reservationId:reservation.id});
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
+    let storedAssetId;
     try {
       const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,authorizeGeneration:true})}));
       if (!image.ok) throw new Error('generation uncertain');
@@ -62,11 +63,12 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (!stored.ok) throw new Error('storage uncertain');
       const confirmation = await stored.json();
       if (confirmation?.status !== 'stored' || confirmation.assetId !== execution.assetId) throw new Error('storage uncertain');
+      storedAssetId = execution.assetId;
       await reservations.completeExecution({actor,executionId:execution.id});
       return {status:'completed',executionId:execution.id,toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
       try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }
-      return unknown();
+      return {...unknown(),...(storedAssetId ? {assetId:storedAssetId} : {})};
     }
   };
 }
