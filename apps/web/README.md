@@ -1,5 +1,7 @@
 # apps/web
 
+Para a configuração e evidências mais recentes de identidade, RLS e proteção de dados, consulte [Isolamento e proteção de dados — marco 0](../../docs/compor/isolamento-e-protecao-dados-marco0.md). Algumas seções abaixo descrevem o estado dos recortes quando foram escritos e ainda não refletem todas as provas reais posteriores.
+
 Primeiro corte local do aplicativo web do Compor em Next.js. A pessoa pode escrever o objetivo; o rascunho permanece nesta aba quando o armazenamento de sessão está disponível, mas não é salvo no projeto. A continuação fica indisponível até as integrações existirem.
 
 Após login, é possível inserir uma chave OpenAI somente em memória na aba. O campo não a salva em armazenamento web, cookies, URL ou atributo HTML e não a envia a serviços neste recorte; a chave é removida da referência e da propriedade do campo ao trocar de conta, desconectar ou sair da página, e pode ser removida manualmente. A revalidação da mesma conta preserva o campo; falha de sessão o limpa. A chave não é validada e a geração continua indisponível. Enquanto digitada, ela permanece acessível à propriedade do campo e à referência JavaScript: código no mesmo contexto pode lê-la. JavaScript não garante sobrescrita física imediata da memória; proteção contra extensões ou código malicioso no navegador não é demonstrada.
