@@ -53,8 +53,8 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
       if ((pad !== -1 && (pad < image.length - 2 || !/^={1,2}$/.test(image.slice(pad)))) ||
           !Buffer.from(image, 'base64').subarray(0, 8).equals(pngSignature)) throw new Error('invalid image');
       const fields = ['input_tokens', 'output_tokens', 'total_tokens'];
-      const usage = result?.usage && fields.every(field => Number.isSafeInteger(result.usage[field]) && result.usage[field] >= 0)
-        ? Object.fromEntries(fields.map(field => [field, result.usage[field]])) : null;
+      const counts = Object.fromEntries(fields.map(field => [field, Number.isSafeInteger(result?.usage?.[field]) && result.usage[field] >= 0 && result.usage[field] <= 100_000_000 ? result.usage[field] : null]));
+      const usage = fields.some(field => counts[field] !== null) ? counts : null;
       return json({ imageBase64: image, mediaType: 'image/png', usage }, 200);
     } catch {
       return json({ error: 'generation_result_unknown', retryAutomatically: false }, 502);

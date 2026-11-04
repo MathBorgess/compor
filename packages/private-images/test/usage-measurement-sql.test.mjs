@@ -1,0 +1,37 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const alice='11111111-1111-4111-8111-111111111111',bob='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',project='22222222-2222-4222-8222-222222222222',attempt='33333333-3333-4333-8333-333333333333';
+test('medição mantém isolamento e não permite reabrir nem inventar custo por escrita direta',async t=>{
+ const db=new PGlite();t.after(()=>db.close());
+ await db.exec(`create role authenticated;create role anon;create schema auth;create table auth.users(id uuid primary key);create schema storage;create table storage.objects(bucket_id text,name text);
+ create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;grant usage on schema auth,public to public;grant execute on function auth.uid() to public;`);
+ for(const file of ['00000_projects','00001_piece_versions','00002_agent_attempts','00004_image_tool_reservations','00005_image_consent_declarations','00006_image_tool_execution_claim','00007_image_tool_result_submission','00008_agent_attempt_state','00009_usage_measurements'])
+  await db.exec(await readFile(new URL(`../../../supabase/migrations/202611030${file}.sql`,import.meta.url),'utf8'));
+ await db.query('insert into auth.users(id) values($1),($2)',[alice,bob]);
+ await db.query('insert into public.projects(id,owner_id,title) values($1,$2,$3)',[project,alice,'Oficina']);
+ await db.query('insert into public.agent_attempts(id,owner_id,project_id,idempotency_key) values($1,$2,$3,$4)',[attempt,alice,project,'44444444-4444-4444-8444-444444444444']);
+ const piece='55555555-5555-4555-8555-555555555555',reservation='66666666-6666-4666-8666-666666666666',execution='77777777-7777-4777-8777-777777777777';
+ await db.query("insert into public.piece_versions(project_id,piece_id,version,content) values($1,$2,1,'{}')",[project,piece]);
+ await db.query("insert into public.image_tool_reservations(id,owner_id,project_id,piece_id,piece_version,agent_attempt_id,session_id,turn_id,call_id) values($1,$2,$3,$4,1,$5,'sess_a','turn_a','call_a')",[reservation,alice,project,piece,attempt]);
+ await db.query('insert into public.image_tool_executions(id,owner_id,reservation_id) values($1,$2,$3)',[execution,alice,reservation]);
+ await db.exec(`set role authenticated;select set_config('request.jwt.claim.sub','${alice}',false)`);
+ const start='select public.start_usage_measurement($1,$2,$3,$4)',finish='select public.finish_usage_measurement($1,$2,$3,$4,$5,$6,$7,$8)',args=[project,attempt,'agent',attempt];
+ assert.equal((await db.query(start,args)).rows[0].start_usage_measurement,true);
+ assert.equal((await db.query(start,args)).rows[0].start_usage_measurement,false);
+ assert.equal((await db.query(start,[project,attempt,'image',execution])).rows[0].start_usage_measurement,true);
+ assert.equal((await db.query(finish,[project,attempt,'image',execution,'completed',10,20,30])).rows[0].finish_usage_measurement,true);
+ await assert.rejects(()=>db.query("update public.usage_measurements set state='completed'"));
+ await assert.rejects(()=>db.query(start,[project,attempt,'image',attempt]));
+ await db.exec(`select set_config('request.jwt.claim.sub','${bob}',false)`);
+ assert.equal((await db.query('select * from public.usage_measurements')).rows.length,0);
+ assert.equal((await db.query(finish,[...args,'completed',1,2,3])).rows[0].finish_usage_measurement,false);
+ await db.exec(`select set_config('request.jwt.claim.sub','${alice}',false)`);
+ assert.equal((await db.query(finish,[...args,'unknown',null,null,null])).rows[0].finish_usage_measurement,true);
+ assert.equal((await db.query(finish,[...args,'completed',1,2,3])).rows[0].finish_usage_measurement,false);
+ const row=(await db.query("select state,input_tokens,estimated_cost_usd from public.usage_measurements where part='agent'")).rows[0];
+ assert.deepEqual(row,{state:'unknown',input_tokens:null,estimated_cost_usd:null});
+ const image=(await db.query("select input_tokens,output_tokens,total_tokens,estimated_cost_usd from public.usage_measurements where part='image'")).rows[0];
+ assert.deepEqual(image,{input_tokens:10,output_tokens:20,total_tokens:30,estimated_cost_usd:null});
+});

@@ -8,6 +8,12 @@ const key = 'sk-test-secret-123456789012345';
 const bindings = { issue: () => 'v1.test.signature', issueAction: () => 'v2.test.signature' };
 const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, 'x-compor-attempt-id': attempt, ...headers }, body: JSON.stringify(body) });
 
+test('não chama o agente pago quando não consegue reservar medição durável',async()=>{
+ let calls=0;
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},usage:{start:async()=>false,finish:async()=>{}},fetch:async()=>{calls++;throw Error();}});
+ assert.equal((await handler(request())).status,503);assert.equal(calls,0);
+});
+
 test('criador autenticado inicia tentativa antes da geração para seu projeto', async () => {
   const steps = [];
   const handler = createProjectAgentHandler({
