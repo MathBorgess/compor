@@ -11,13 +11,14 @@ function recordFor(key) {
 }
 function update(record, value) { record.value = {...value,history:value.history ?? record.value.history ?? [],selectedAsset:value.selectedAsset === undefined ? record.value.selectedAsset ?? null : value.selectedAsset}; for (const listener of record.listeners) listener(record.value); }
 
-export default function AgentFlow({ userId, projectId, pieceId, version, canStart, objective, hasApiKey, getApiKey }) {
+export default function AgentFlow({ userId, projectId, pieceId, version, canStart, objective, hasApiKey, getApiKey, onUseImage }) {
   const key = `compor-agent-attempt:${userId}:${projectId}:${pieceId}:${version}`;
   const historyKey = `${key}:assets`;
   const record = recordFor(key);
   const [flow, setFlow] = useState(record.value);
   const [initialized, setInitialized] = useState(record.loaded);
   const [preview, setPreview] = useState(null);
+  const [previewBlob, setPreviewBlob] = useState(null);
   const [previewError, setPreviewError] = useState(false);
   const [previewTry, setPreviewTry] = useState(0);
   const selectedAsset = flow.selectedAsset;
@@ -63,7 +64,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     return () => { record.listeners.delete(setFlow); };
   }, [key, record]);
   useEffect(() => {
-    setPreview(null); setPreviewError(false);
+    setPreview(null); setPreviewBlob(null); setPreviewError(false);
     const assetId = selectedAsset ?? (['accepted', 'unknown'].includes(flow.state) ? flow.assetId : null);
     if (!uuid(assetId)) return;
     const controller = new AbortController(); let url;
@@ -72,7 +73,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
       if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error();
       const blob = await response.blob(); if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error();
       if (controller.signal.aborted) return;
-      url = URL.createObjectURL(blob); setPreview(url);
+      url = URL.createObjectURL(blob); setPreview(url); setPreviewBlob(blob);
     }).catch(() => {if (!controller.signal.aborted) setPreviewError(true);});
     return () => {controller.abort(); if (url) URL.revokeObjectURL(url);};
   }, [flow.state, flow.assetId, selectedAsset, projectId, pieceId, version, previewTry]);
@@ -129,7 +130,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
     {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
     {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => update(record,{...record.value,selectedAsset:assetId})}>Ver imagem anterior {index + 1}</button>)}</div>}
-    {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p></>}
+    {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p><button type="button" disabled={!previewBlob || typeof onUseImage !== 'function'} onClick={() => onUseImage(previewBlob)}>Usar imagem na composição</button></>}
     {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
     {flow.storageWarning && <p role="alert">Não foi possível preservar a referência da imagem nesta aba. Ela pode não aparecer após recarregar.</p>}
     {flow.state === 'storage_unavailable' && <p role="alert">Não foi possível preservar o estado da tentativa nesta aba. Verifique o armazenamento antes de iniciar.</p>}
