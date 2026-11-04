@@ -6,24 +6,46 @@ import { useEffect, useState } from 'react';
 const flows = new Map();
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 function recordFor(key) {
-  if (!flows.has(key)) flows.set(key, { value: { state: 'idle' }, listeners: new Set(), loaded: false });
+  if (!flows.has(key)) flows.set(key, { value: { state: 'idle', history: [] }, listeners: new Set(), loaded: false });
   return flows.get(key);
 }
-function update(record, value) { record.value = value; for (const listener of record.listeners) listener(value); }
+function update(record, value) { record.value = {...value,history:value.history ?? record.value.history ?? []}; for (const listener of record.listeners) listener(record.value); }
 
 export default function AgentFlow({ userId, projectId, pieceId, version, canStart, objective, hasApiKey, getApiKey }) {
   const key = `compor-agent-attempt:${userId}:${projectId}:${pieceId}:${version}`;
+  const historyKey = `${key}:assets`;
   const record = recordFor(key);
   const [flow, setFlow] = useState(record.value);
   const [initialized, setInitialized] = useState(record.loaded);
   const [preview, setPreview] = useState(null);
   const [previewError, setPreviewError] = useState(false);
   const [previewTry, setPreviewTry] = useState(0);
+  const [selectedAsset, setSelectedAsset] = useState(null);
+  function readHistory() {
+    const raw = sessionStorage.getItem(historyKey);
+    if (raw === null) return [];
+    const list = JSON.parse(raw);
+    if (!Array.isArray(list) || !list.every(uuid)) throw Error('invalid image history');
+    return [...new Set(list)];
+  }
+  function preserveAsset(assetId) {
+    if (!uuid(assetId)) return true;
+    try {
+      const list = readHistory();
+      if (!list.includes(assetId)) { list.push(assetId); sessionStorage.setItem(historyKey, JSON.stringify(list)); }
+      update(record,{...record.value,history:list}); return true;
+    } catch {
+      const list = record.value.history.includes(assetId) ? record.value.history : [...record.value.history,assetId];
+      update(record,{...record.value,history:list,storageWarning:true}); return false;
+    }
+  }
   useEffect(() => {
     record.listeners.add(setFlow);
     if (!record.loaded) {
       record.loaded = true;
       try {
+        const history = readHistory();
+        update(record, {...record.value,history});
         const saved = sessionStorage.getItem(key);
         if (saved !== null && record.value.state === 'idle') {
           let restored = {state:'unknown'};
@@ -42,9 +64,10 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
   }, [key, record]);
   useEffect(() => {
     setPreview(null); setPreviewError(false);
-    if (!['accepted', 'unknown'].includes(flow.state) || !uuid(flow.assetId)) return;
+    const assetId = selectedAsset ?? (['accepted', 'unknown'].includes(flow.state) ? flow.assetId : null);
+    if (!uuid(assetId)) return;
     const controller = new AbortController(); let url;
-    const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId:flow.assetId});
+    const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId});
     fetch(`/api/images?${query}`, {cache:'no-store',signal:controller.signal}).then(async response => {
       if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error();
       const blob = await response.blob(); if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error();
@@ -52,16 +75,18 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
       url = URL.createObjectURL(blob); setPreview(url);
     }).catch(() => {if (!controller.signal.aborted) setPreviewError(true);});
     return () => {controller.abort(); if (url) URL.revokeObjectURL(url);};
-  }, [flow.state, flow.assetId, projectId, pieceId, version, previewTry]);
+  }, [flow.state, flow.assetId, selectedAsset, projectId, pieceId, version, previewTry]);
   function reset() {
+    if (!preserveAsset(record.value.assetId)) return;
     try { sessionStorage.removeItem(key); update(record, {state:'idle'}); }
-    catch { update(record, {state:'storage_unavailable'}); }
+    catch { update(record, {...record.value,storageWarning:true}); }
   }
   function saveOutcome(state, assetId) {
     const value = {state,assetId:uuid(assetId) ? assetId : null};
     try { sessionStorage.setItem(key, JSON.stringify(value)); }
     catch { value.storageWarning = true; }
     update(record,value);
+    if (uuid(value.assetId) && !preserveAsset(value.assetId)) update(record,{...record.value,storageWarning:true});
   }
   async function start() {
     if (!initialized || record.value.state !== 'idle' || !canStart || !hasApiKey || !objective?.trim() || typeof getApiKey !== 'function') return;
@@ -84,7 +109,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     const current = record.value;
     if (current.state !== 'consent' || !canStart || !hasApiKey || typeof getApiKey !== 'function') return;
     const apiKey = getApiKey(); if (!apiKey) return;
-    update(record,{state:'confirming'});
+    setSelectedAsset(null); update(record,{state:'confirming'});
     try {
       const response = await fetch('/api/agent/image',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,pieceId,version,attemptId:current.attemptId,actionBinding:current.actionBinding,explicitApproval:true})});
       const data = await response.json();
@@ -103,6 +128,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'confirming' && <p role="status">Gerando imagem…</p>}
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
     {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
+    {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => setSelectedAsset(assetId)}>Ver imagem anterior {index + 1}</button>)}</div>}
     {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p></>}
     {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
     {flow.storageWarning && <p role="alert">Não foi possível preservar a referência da imagem nesta aba. Ela pode não aparecer após recarregar.</p>}
