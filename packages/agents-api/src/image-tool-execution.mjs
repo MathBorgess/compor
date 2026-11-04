@@ -54,6 +54,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     } catch { return unknown(); }
     let measurementStarted=false, measurementFinished=false, usageRecorded=false;
     const measurement={actor,projectId,attemptId,part:'image',partId:execution.id};
+    let storedAssetId;
     try {
       if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
       const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,authorizeGeneration:true})}));
@@ -67,12 +68,13 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (!stored.ok) throw new Error('storage uncertain');
       const confirmation = await stored.json();
       if (confirmation?.status !== 'stored' || confirmation.assetId !== execution.assetId) throw new Error('storage uncertain');
+      storedAssetId = execution.assetId;
       await reservations.completeExecution({actor,executionId:execution.id});
       return {status:'completed',executionId:execution.id,...(usage?{usageRecorded}:{}),toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
       if (usage && measurementStarted && !measurementFinished) {try {await usage.finish({...measurement,state:'unknown',usage:null});} catch { /* started remains uncertain */ }}
       try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }
-      return unknown();
+      return {...unknown(),...(storedAssetId ? {assetId:storedAssetId} : {}),...(usage?{usageRecorded}:{})};
     }
   };
 }

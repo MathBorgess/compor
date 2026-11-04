@@ -1,11 +1,12 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import Compose from './compose';
+import AgentFlow from './agent-flow';
 
 const blank = () => ({ headline: '', price: '', date: '', caption: '', captionOrigin: 'user' });
 // This map survives component unmounts during session revalidation, not a page reload.
 const memoryDrafts = new Map();
-export default function Pieces({ projectId, userId }) {
+export default function Pieces({ projectId, userId, objective, hasApiKey, getApiKey }) {
   const storageKey = `compor-piece-draft:${userId}:${projectId}`;
   const [versions, setVersions] = useState([]);
   const [draft, setDraft] = useState(null);
@@ -102,6 +103,7 @@ export default function Pieces({ projectId, userId }) {
         <label>Data<input value={draft.content.date} maxLength={100} disabled={state === 'saving'} onChange={e => edit('date', e.target.value)} /></label>
         <label>Legenda<textarea value={draft.content.caption} maxLength={4000} disabled={state === 'saving'} onChange={e => edit('caption', e.target.value)} /></label>
         <button type="button" disabled={state === 'saving' || storageError || draft.conflict || draft.unknown} onClick={save}>Salvar versão</button>
+        <AgentFlow key={`${userId}:${projectId}:${draft.pieceId}:${draft.expectedVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={draft.expectedVersion} canStart={state === 'ready' && !draft.dirty && !draft.conflict && !draft.unknown && !storageError && draft.expectedVersion > 0} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} />
         <Compose key={`${userId}:${projectId}:${draft.pieceId}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} content={draft.content} />
       </div>}
       {storageError && <p role="alert">Rascunho somente em memória. Copie o texto: fechar ou recarregar a página pode apagá-lo.</p>}

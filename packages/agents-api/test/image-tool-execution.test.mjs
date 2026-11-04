@@ -99,3 +99,8 @@ test('aprovação assinada impede troca de peça ou versão e exige acesso atual
  allowed=false; assert.equal(await approve(input),null);
  for(const field of ['piece','version','revoked']) {const f=fixture({accessRevoked:field==='revoked'}); if(field==='piece') f.input.pieceId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'; if(field==='version') f.input.version=2; assert.equal((await f.fn(f.input)).status,'rejected'); assert.ok(!f.calls.includes('image')); assert.ok(!f.calls.includes('claim'));}
 });
+
+
+test('falha ao concluir após salvar preserva referência de imagem sem repetir geração',async()=>{
+ const f=fixture({completeFail:true});const result=await f.fn(f.input);assert.equal(result.status,'unknown');assert.equal(result.assetId,assetId);assert.equal(result.retryAutomatically,false);assert.ok(f.calls.includes('unknown'));await f.fn(f.input);assert.equal(f.calls.filter(x=>x==='image').length,1);
+});
