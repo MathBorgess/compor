@@ -11,7 +11,8 @@
     "./image-tool-reservation": "./src/image-tool-reservation.mjs",
     "./image-tool-execution": "./src/image-tool-execution.mjs",
     "./image-tool-result": "./src/image-tool-result.mjs",
-    "./usage-store": "./src/usage-store.mjs"
+    "./usage-store": "./src/usage-store.mjs",
+    "./telemetry": "./src/telemetry.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

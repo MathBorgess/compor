@@ -1,3 +1,4 @@
+import { recordAgentEvent, recordProviderStatus } from './telemetry.mjs';
 const MAX_REQUEST = 16 * 1024;
 const MAX_STREAM = 1024 * 1024;
 const endpoint = 'https://api.openai.com/v1/agents/sessions';
@@ -100,29 +101,37 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
     }
     let body;
     try { body = JSON.parse(await limitedText(request.body, MAX_REQUEST)); }
-    catch { return json({ error: 'invalid_request' }, 400); }
+    catch { recordAgentEvent('request_invalid'); return json({ error: 'invalid_request' }, 400); }
     if (!body || typeof body.apiKey !== 'string' || !/^sk-[^\s]{20,300}$/.test(body.apiKey) ||
         typeof body.objective !== 'string' || !body.objective.trim() || body.objective.length > 4000 || body.objective.includes(body.apiKey)) {
-      return json({ error: 'invalid_request' }, 400);
+      recordAgentEvent('request_invalid'); return json({ error: 'invalid_request' }, 400);
     }
     const key = body.apiKey;
     try {
       const agentAbort = new AbortController();
-      const response = await fetchApi(endpoint, {
+      recordAgentEvent('provider_create_dispatched');
+      let response;
+      try { response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
         body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela solicitar a geração de uma imagem, use a função generate_image com uma descrição apropriada; a geração depende de confirmação explícita. Não afirme ter gerado uma imagem antes do resultado da função.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, spend_control: { limit: spendLimitCents }, stream: true }),
         signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
-      });
+      }); } catch (error) { recordAgentEvent('provider_create_failed'); throw error; }
+      recordProviderStatus('provider_create_http',response.status);
       if (response.status === 401 || response.status === 403) { agentAbort.abort(); return json({ error: 'openai_credentials_rejected' }, response.status); }
       if (response.status === 429) { agentAbort.abort(); return json({ error: 'openai_quota_or_rate_limit' }, 429); }
       if (!response.ok) { agentAbort.abort(); return json({ error: 'upstream_error' }, 502); }
       let observed;
       try { observed = await readAgentEvents(response.body, enableImageTool); }
       finally { agentAbort.abort(); }
+      recordAgentEvent(observed.action ? 'stream_action' : observed.completed ? 'stream_completed' : 'stream_incomplete');
       if (enableImageTool && observed.sessionId) {
-        const lookup = await fetchApi(`${endpoint}/${encodeURIComponent(observed.sessionId)}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1' }, redirect: 'error', signal: AbortSignal.timeout(10_000) });
+        recordAgentEvent('provider_lookup_dispatched');
+        let lookup;
+        try { lookup = await fetchApi(`${endpoint}/${encodeURIComponent(observed.sessionId)}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1' }, redirect: 'error', signal: AbortSignal.timeout(10_000) }); }
+        catch (error) { recordAgentEvent('provider_lookup_failed'); throw error; }
+        recordProviderStatus('provider_lookup_http',lookup.status);
         if (!lookup.ok) throw new Error('session unavailable');
         const session = JSON.parse(await limitedText(lookup.body, 256 * 1024));
         if (session?.id !== observed.sessionId || !Array.isArray(session.required_actions)) throw new Error('invalid session');

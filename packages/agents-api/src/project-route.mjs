@@ -1,4 +1,5 @@
 import { createAgentHandler } from './index.mjs';
+import { recordAgentEvent } from './telemetry.mjs';
 
 const projectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const response = (body, status) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -10,27 +11,29 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405);
     if (typeof appOrigin !== 'string' || typeof resolveActor !== 'function' || typeof ownsProject !== 'function' ||
         typeof attempts?.start !== 'function' || typeof attempts?.finish !== 'function' || typeof bindings?.issue !== 'function' || typeof bindings?.issueAction !== 'function') return response({ error: 'unavailable' }, 503);
-    if (request.headers.get('origin') !== appOrigin) return response({ error: 'invalid_origin' }, 403);
-    if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) return response({ error: 'invalid_request' }, 400);
+    if (request.headers.get('origin') !== appOrigin) { recordAgentEvent('origin_denied'); return response({ error: 'invalid_origin' }, 403); }
+    if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) { recordAgentEvent('request_invalid'); return response({ error: 'invalid_request' }, 400); }
     const projectId = request.headers.get('x-compor-project-id');
     const idempotencyKey = request.headers.get('x-compor-attempt-id');
-    if (!projectIdPattern.test(projectId ?? '') || !projectIdPattern.test(idempotencyKey ?? '')) return response({ error: 'invalid_request' }, 400);
+    if (!projectIdPattern.test(projectId ?? '') || !projectIdPattern.test(idempotencyKey ?? '')) { recordAgentEvent('request_invalid'); return response({ error: 'invalid_request' }, 400); }
     let actor;
-    try { actor = await resolveActor(); } catch { return response({ error: 'unavailable' }, 503); }
-    if (!actor || typeof actor.userId !== 'string' || !actor.userId || typeof actor.token !== 'string' || !actor.token) return response({ error: 'unauthorized' }, 401);
-    try { if (!await ownsProject({ actor, projectId })) return response({ error: 'forbidden' }, 403); }
-    catch { return response({ error: 'unavailable' }, 503); }
+    try { actor = await resolveActor(); } catch { recordAgentEvent('actor_unavailable'); return response({ error: 'unavailable' }, 503); }
+    if (!actor || typeof actor.userId !== 'string' || !actor.userId || typeof actor.token !== 'string' || !actor.token) { recordAgentEvent('actor_unauthorized'); return response({ error: 'unauthorized' }, 401); }
+    try { if (!await ownsProject({ actor, projectId })) { recordAgentEvent('ownership_denied'); return response({ error: 'forbidden' }, 403); } }
+    catch { recordAgentEvent('ownership_unavailable'); return response({ error: 'unavailable' }, 503); }
     let attempt;
     try {
       attempt = await attempts.start({ actor, projectId, idempotencyKey });
       if (!attempt || typeof attempt.id !== 'string' || !['started', 'completed', 'unknown'].includes(attempt.state) || typeof attempt.isNew !== 'boolean' || (attempt.isNew && attempt.state !== 'started')) throw new Error('invalid attempt');
     }
-    catch { return response({ error: 'unavailable' }, 503); }
-    if (!attempt.isNew) return response({ error: 'attempt_exists', state: attempt.state, retryAutomatically: false }, 409);
+    catch { recordAgentEvent('attempt_reservation_failed'); return response({ error: 'unavailable' }, 503); }
+    if (!attempt.isNew) { recordAgentEvent('attempt_existing'); return response({ error: 'attempt_exists', state: attempt.state, retryAutomatically: false }, 409); }
+    recordAgentEvent('attempt_reserved');
     const measurement={actor,projectId,attemptId:attempt.id,part:'agent',partId:attempt.id};
     if (usage) {
       try {if (typeof usage.start!=='function' || typeof usage.finish!=='function' || await usage.start(measurement)!==true) throw Error('usage unavailable');}
-      catch {try {await attempts.finish({actor,projectId,attemptId:attempt.id,state:'unknown'});} catch {} return response({error:'unavailable'},503);}
+      catch {recordAgentEvent('usage_reservation_failed');try {await attempts.finish({actor,projectId,attemptId:attempt.id,state:'unknown'});} catch {} return response({error:'unavailable'},503);}
+      recordAgentEvent('usage_reserved');
     }
     let result, invoked = false;
     const run = async mcpTool => {
@@ -43,7 +46,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
       else if (typeof withMcp !== 'function') result = response({error:'unavailable'},503);
       else {
         const state = await withMcp({actor,projectId},run);
-        if (state?.status !== 'invoked' || !invoked || !result) result = invoked ? response({error:'result_unknown',retryAutomatically:false},502) : response({error:'unavailable'},503);
+        if (state?.status !== 'invoked' || !invoked || !result) { if(!invoked)recordAgentEvent('mcp_scope_failed'); result = invoked ? response({error:'result_unknown',retryAutomatically:false},502) : response({error:'unavailable'},503); }
       }
     } catch { result = invoked ? response({ error: 'result_unknown', retryAutomatically: false }, 502) : response({error:'unavailable'},503); }
     let usageRecorded=false;
