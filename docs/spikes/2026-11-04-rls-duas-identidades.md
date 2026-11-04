@@ -1,0 +1,17 @@
+# Ensaio RLS com duas identidades sintéticas
+
+**Preparado e testado localmente; não executado no Supabase.** Este é um ensaio do papel `authenticated` e das políticas de projeto, peça e tentativa após as migrações. Não testa login, validação de JWT, Storage, concorrência, Codex ou OpenAI. Uma claim local configurada via SQL não representa uma sessão real.
+
+O SQL só deve ser executado no projeto isolado `compor-marco0-test`, após confirmar a auditoria das migrações e sem DDL ou mudanças de permissões concorrentes. Ele usa a conexão administrativa para inserir **duas linhas sintéticas em `auth.users`** e fixtures sintéticas em `public.projects`, `public.piece_versions` e `public.agent_attempts`, todas dentro de uma transação revertida. UUIDs são gerados para a execução e nenhum objeto Storage é lido ou escrito. O ensaio testa visibilidade própria e cruzada nas três tabelas e que B consegue inserir tentativa no próprio projeto, mas não no projeto de A. Ao final confere por novas consultas que os UUIDs sintéticos desapareceram após `ROLLBACK`.
+
+Antes dos inserts, o script fixa `search_path`, limita os tempos e toma `SHARE ROW EXCLUSIVE` nas quatro tabelas; isso **pode bloquear temporariamente sign-ins e escritas** no projeto de teste. Recusa tabelas inesperadas, RLS desativado, triggers/regras não internos, descendentes herdados, colunas geradas ou tipos de coluna fora do catálogo e funções/operadores inesperados em defaults, constraints e policies. Essas guardas são conservadoras e podem recusar uma estrutura legítima; tampouco provam ausência de qualquer efeito externo sob uma configuração comprometida. A função gerenciada `auth.uid()` é explicitamente confiada. Não desative guardas para fazer o teste passar.
+
+Com a CA do projeto já conferida, a partir da raiz desta worktree:
+
+```sh
+sh supabase/tests/rls_two_identities_capture.sh /tmp/compor-rls-validation-20261103/supabase-ca.crt
+```
+
+O wrapper fixa host e banco, verifica o fingerprint da CA, força TLS `verify-full`, desliga GSS, remove variáveis PostgreSQL herdadas e pede a senha apenas no prompt do `psql`. Ele imprime o caminho de uma captura privada. O resultado exige `ROLLBACK`, as consultas pós-rollback e `RLS_SYNTHETIC_CHECKS_PASSED_AND_ROLLED_BACK`; código de saída zero isolado não basta. Uma falha aborta a conexão e a transação; preserve a captura parcial e confira o estado antes de repetir quando a conexão ou a confirmação falhar. Não envie senha, token ou cookies.
+
+Teste local: `node --test packages/private-images/test/rls-two-identities-rollback.test.mjs` usa `psql` real sobre PGlite isolado por socket Unix; verifica sucesso/rollback, recusa de policy permissiva de leitura/escrita e trigger inesperado, preservação de fixture anterior e parâmetros do wrapper. Se `psql` não estiver instalado, a prova com socket é explicitamente ignorada. Isso não reproduz permissões, extensões, triggers ou comportamento de rede do Supabase gerenciado.
