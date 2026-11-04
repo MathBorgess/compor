@@ -8,6 +8,17 @@ const key = 'sk-test-secret-123456789012345';
 const bindings = { issue: () => 'v1.test.signature', issueAction: () => 'v2.test.signature' };
 const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, 'x-compor-attempt-id': attempt, ...headers }, body: JSON.stringify(body) });
 
+test('MCP delegado exige medição durável antes do envio pago', async()=>{
+ const steps=[];
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,
+  attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>steps.push('attempt-finish')},
+  usage:{start:async()=>{steps.push('usage-start');return true;},finish:async()=>steps.push('usage-finish')},
+  withMcp:async(_context,submit)=>{steps.push('delegate');await submit({type:'mcp',transport:{authorization:'Bearer opaque'}});return {status:'invoked'};},
+  fetch:async()=>{steps.push('provider');return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n',{status:201});}
+ });
+ assert.equal((await handler(request())).status,200);assert.deepEqual(steps,['usage-start','delegate','provider','usage-finish','attempt-finish']);
+});
+
 test('conexão opcional envia apenas credencial MCP opaca à sessão e não retorna segredo', async () => {
  const token='user-session-secret',grant='opaque-delegated-token'; let sent;
  const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token}),ownsProject:async()=>true,
@@ -25,6 +36,12 @@ test('falha de concessão MCP não inicia agente pago', async()=>{
  let calls=0;
  const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'mock'}),ownsProject:async()=>true,
   attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},withMcp:async()=>({status:'unavailable'}),fetch:async()=>{calls++;throw Error();}});
+ assert.equal((await handler(request())).status,503);assert.equal(calls,0);
+});
+
+test('não chama o agente pago quando não consegue reservar medição durável',async()=>{
+ let calls=0;
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},usage:{start:async()=>false,finish:async()=>{}},fetch:async()=>{calls++;throw Error();}});
  assert.equal((await handler(request())).status,503);assert.equal(calls,0);
 });
 

@@ -4,7 +4,7 @@ const projectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const response = (body, status) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
 /** Server-side seam; do not connect until the attempt store is durable and authorized. */
-export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, withMcp, fetch } = {}) {
+export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, usage, withMcp, fetch } = {}) {
   return async request => {
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405);
     if (typeof appOrigin !== 'string' || typeof resolveActor !== 'function' || typeof ownsProject !== 'function' ||
@@ -26,6 +26,11 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     }
     catch { return response({ error: 'unavailable' }, 503); }
     if (!attempt.isNew) return response({ error: 'attempt_exists', state: attempt.state, retryAutomatically: false }, 409);
+    const measurement={actor,projectId,attemptId:attempt.id,part:'agent',partId:attempt.id};
+    if (usage) {
+      try {if (typeof usage.start!=='function' || typeof usage.finish!=='function' || await usage.start(measurement)!==true) throw Error('usage unavailable');}
+      catch {try {await attempts.finish({actor,projectId,attemptId:attempt.id,state:'unknown'});} catch {} return response({error:'unavailable'},503);}
+    }
     let result, invoked = false;
     const run = async mcpTool => {
       if (invoked) throw Error('duplicate invocation');
@@ -40,13 +45,18 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
         if (state?.status !== 'invoked' || !invoked || !result) result = invoked ? response({error:'result_unknown',retryAutomatically:false},502) : response({error:'unavailable'},503);
       }
     } catch { result = invoked ? response({ error: 'result_unknown', retryAutomatically: false }, 502) : response({error:'unavailable'},503); }
+    let usageRecorded=false;
+    if (usage && result.status !== 202) {
+      let counts=null; try {if(result.ok)counts=(await result.clone().json()).usage??null;} catch {}
+      try {await usage.finish({...measurement,state:result.ok?'completed':'unknown',usage:counts});usageRecorded=true;} catch { /* started remains uncertain */ }
+    }
     if (result.status === 202) {
       try {
         const data = await result.json();
         if (data.status !== 'consent_required') throw new Error('invalid action');
         const actionBinding = bindings.issueAction({ userId: actor.userId, projectId, attemptId: attempt.id, sessionId: data.sessionId, turnId: data.turnId, callId: data.callId, prompt: data.prompt });
         if (typeof actionBinding !== 'string' || !actionBinding) throw new Error('invalid action binding');
-        return response({ status: 'consent_required', prompt: data.prompt, attemptId: attempt.id, actionBinding }, 202);
+        return response({ status: 'consent_required', prompt: data.prompt, attemptId: attempt.id, actionBinding, ...(usage?{usageRecorded}:{}) }, 202);
       } catch { result = response({ error: 'result_unknown', retryAutomatically: false }, 502); }
     }
     if (result.ok) {
@@ -54,7 +64,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
         const data = await result.json();
         const sessionBinding = bindings.issue({ userId: actor.userId, projectId, attemptId: attempt.id, sessionId: data.sessionId });
         if (typeof sessionBinding !== 'string' || !sessionBinding) throw new Error('invalid binding');
-        result = response({ sessionId: data.sessionId, text: data.text, usage: data.usage, sessionBinding }, 200);
+        result = response({ sessionId: data.sessionId, text: data.text, usage: data.usage, sessionBinding, ...(usage?{usageRecorded}:{}) }, 200);
       } catch { result = response({ error: 'result_unknown', retryAutomatically: false }, 502); }
     }
     const state = result.ok ? 'completed' : 'unknown';

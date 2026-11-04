@@ -81,3 +81,22 @@ test('upload autorizado e textos editáveis geram e baixam PNG local sem rede ex
   assert.equal(pieceWrites, 0);
   assert.deepEqual(external, []);
 });
+
+test('imagem pertence à versão aberta e reutilização em outra versão é explícita', { skip: !existsSync(browserPath) }, async t => {
+ const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
+ const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
+ const deadline=Date.now()+30000;while(true){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>deadline)throw Error('app indisponível');await new Promise(r=>setTimeout(r,200));}
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(4000);
+ const project='11111111-1111-4111-8111-111111111111',piece='22222222-2222-4222-8222-222222222222';
+ const content=title=>({headline:title,price:'',date:'',caption:'',captionOrigin:'user'});let versions=[1,2].map(v=>({project_id:project,piece_id:piece,version:v,content:content(`Versão ${v}`)}));
+ await page.route('**/auth/session',r=>r.fulfill({json:{state:'connected',userId:'alice'}}));await page.route('**/api/projects',r=>r.fulfill({json:{projects:[{id:project,title:'Projeto'}]}}));
+ await page.route('**/api/pieces*',r=>{if(r.request().method()==='GET')return r.fulfill({json:{versions}});const input=r.request().postDataJSON();const item={project_id:project,piece_id:piece,version:3,content:input.content};versions.push(item);return r.fulfill({json:{status:'saved',version:item}});});
+ await page.goto(origin);await page.getByRole('button',{name:'Abrir Projeto'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 2'}).click();
+ const imageBytes=await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=128;c.height=128;return Array.from(new Uint8Array(await (await new Promise(r=>c.toBlob(r,'image/png'))).arrayBuffer()));});
+ await page.getByLabel('Imagem-base PNG').setInputFiles({name:'versao2.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByLabel('Tenho autorização para usar esta imagem').check();
+ await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();assert.equal(await page.getByText('Imagem carregada: versao2.png').count(),0);assert.equal(await page.getByLabel('Tenho autorização para usar esta imagem').isDisabled(),true);
+ await page.getByRole('button',{name:'Usar imagem da versão 2'}).click();await page.getByText('Imagem carregada: versao2.png').waitFor();assert.equal(await page.getByLabel('Tenho autorização para usar esta imagem').isChecked(),true);
+ assert.equal(await page.getByLabel('Título da peça').inputValue(),'Versão 1');
+ await page.getByRole('button',{name:'Salvar versão'}).click();await page.getByText('Versão salva.').waitFor();assert.equal(versions[2].content.headline,'Versão 1');assert.equal(await page.getByText('Imagem carregada: versao2.png').count(),0);
+ await page.getByRole('button',{name:'Abrir peça 1, versão 2'}).click();await page.getByText('Imagem carregada: versao2.png').waitFor();assert.equal(await page.getByLabel('Tenho autorização para usar esta imagem').isChecked(),true);
+});

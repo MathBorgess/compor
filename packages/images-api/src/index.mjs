@@ -53,8 +53,12 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
       if ((pad !== -1 && (pad < image.length - 2 || !/^={1,2}$/.test(image.slice(pad)))) ||
           !Buffer.from(image, 'base64').subarray(0, 8).equals(pngSignature)) throw new Error('invalid image');
       const fields = ['input_tokens', 'output_tokens', 'total_tokens'];
-      const usage = result?.usage && fields.every(field => Number.isSafeInteger(result.usage[field]) && result.usage[field] >= 0)
-        ? Object.fromEntries(fields.map(field => [field, result.usage[field]])) : null;
+      const safe = value => Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000 ? value : null;
+      const counts = Object.fromEntries(fields.map(field => [field, safe(result?.usage?.[field])]));
+      const inputDetails = Object.fromEntries(['text_tokens','image_tokens'].map(field=>[field,safe(result?.usage?.input_tokens_details?.[field])]));
+      const outputDetails = {image_tokens:safe(result?.usage?.output_tokens_details?.image_tokens)};
+      const hasInput=Object.values(inputDetails).some(value=>value!==null), hasOutput=outputDetails.image_tokens!==null;
+      const usage = fields.some(field => counts[field] !== null) || hasInput || hasOutput ? {...counts,...(hasInput?{input_tokens_details:inputDetails}:{}),...(hasOutput?{output_tokens_details:outputDetails}:{})} : null;
       return json({ imageBase64: image, mediaType: 'image/png', usage }, 200);
     } catch {
       return json({ error: 'generation_result_unknown', retryAutomatically: false }, 502);
