@@ -15,7 +15,7 @@ test('preflight local identifica metadados das medições em transação somente
   await db.exec(`create schema hostile;create function hostile.current_database() returns text language sql as $$select 'falso'::text$$;set search_path=hostile,pg_catalog,public`);
   const sql=(await readFile(new URL('../../../supabase/tests/preflight_readonly.sql',import.meta.url),'utf8'))
     .replace(/^\\set .*$/m,'')
-    .replace(/select exists \([\s\S]*?\) as migration_history_safe_to_read \\gset[\s\S]*?\\endif/, '');
+    .replace(/-- A history read is optional\.[\s\S]*?\\endif\s*rollback;/, 'rollback;');
   const rows=(await db.exec(sql)).flatMap(result=>result.rows??[]);
   assert.ok(rows.some(row=>row.read_only==='on'));
   assert.ok(rows.some(row=>row.database_name && row.database_name!=='falso'));
@@ -34,11 +34,15 @@ test('preflight local identifica metadados das medições em transação somente
 test('preflight somente consulta histórico quando a tabela atende às condições', async t => {
  const db=new PGlite();t.after(()=>db.close());
  const sql=await readFile(new URL('../../../supabase/tests/preflight_readonly.sql',import.meta.url),'utf8');
- const guard=sql.match(/select exists \([\s\S]*?\) as migration_history_safe_to_read \\gset/)[0].replace('\\gset',';');
+ const guards=[...sql.matchAll(/select exists \([\s\S]*?\) as migration_history_safe_to_read \\gset/g)].map(match=>match[0]);
+ assert.equal(guards.length,2);assert.equal(guards[0],guards[1]);
+ assert.match(sql,/lock table only supabase_migrations\.schema_migrations in access share mode;/);
+ const guard=guards[0].replace('\\gset',';');
  assert.equal((await db.query(guard)).rows[0].migration_history_safe_to_read,false);
- await db.exec(`create schema supabase_migrations; create table supabase_migrations.schema_migrations(version text); insert into supabase_migrations.schema_migrations values ('20261103000000'),('não registrar');`);
+ await db.exec(`create schema supabase_migrations; create table supabase_migrations.schema_migrations(version text); insert into supabase_migrations.schema_migrations values ('20261103000000'),('não registrar'); create table supabase_migrations.child_history() inherits (supabase_migrations.schema_migrations); insert into supabase_migrations.child_history values ('20261103000001');`);
  assert.equal((await db.query(guard)).rows[0].migration_history_safe_to_read,true);
- const rows=await db.query(`select version from supabase_migrations.schema_migrations where version ~ '^[0-9]{14}$' order by version`);
+ const historyQuery=sql.match(/select version from only supabase_migrations\.schema_migrations\s+where version ~ '\^\[0-9\]\{14\}\$' order by version;/)[0];
+ const rows=await db.query(historyQuery);
  assert.deepEqual(rows.rows,[{version:'20261103000000'}]);
  await db.exec('alter table supabase_migrations.schema_migrations enable row level security');
  assert.equal((await db.query(guard)).rows[0].migration_history_safe_to_read,false);

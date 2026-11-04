@@ -1,9 +1,10 @@
 -- Metadata inventory only. Review the target and this script before use.
 -- This script does not validate RLS behavior, emptiness, side effects or migrations.
 \set ON_ERROR_STOP on
-begin transaction read only;
+begin transaction isolation level read committed read only;
 set local search_path = pg_catalog;
 set local statement_timeout = '10s';
+set local lock_timeout = '5s';
 
 select current_database() as database_name, current_user as executing_role, session_user as login_role,
        current_setting('transaction_read_only') as read_only;
@@ -90,8 +91,26 @@ select exists (
     and pg_catalog.has_column_privilege(current_user,c.oid,a.attname,'SELECT')
 ) as migration_history_safe_to_read \gset
 \if :migration_history_safe_to_read
+-- Lock the checked relation against DDL requiring a stronger table lock, then
+-- re-check with a fresh READ COMMITTED snapshot. Namespace races remain possible.
+lock table only supabase_migrations.schema_migrations in access share mode;
+select exists (
+  select 1 from pg_catalog.pg_class c
+  join pg_catalog.pg_namespace n on n.oid=c.relnamespace
+  join pg_catalog.pg_attribute a on a.attrelid=c.oid and a.attname='version' and not a.attisdropped
+  join pg_catalog.pg_type t on t.oid=a.atttypid
+  join pg_catalog.pg_namespace tn on tn.oid=t.typnamespace
+  where n.nspname='supabase_migrations' and c.relname='schema_migrations'
+    and c.relkind='r' and not c.relrowsecurity
+    and tn.nspname='pg_catalog' and t.typname in ('text','varchar')
+    and not exists(select 1 from pg_catalog.pg_rewrite r where r.ev_class=c.oid)
+    and pg_catalog.has_schema_privilege(current_user,n.oid,'USAGE')
+    and pg_catalog.has_column_privilege(current_user,c.oid,a.attname,'SELECT')
+) as migration_history_safe_to_read \gset
+\endif
+\if :migration_history_safe_to_read
 select 'available' as migration_history_status;
-select version from supabase_migrations.schema_migrations
+select version from only supabase_migrations.schema_migrations
 where version ~ '^[0-9]{14}$' order by version;
 \else
 select 'absent_or_unverified' as migration_history_status;
