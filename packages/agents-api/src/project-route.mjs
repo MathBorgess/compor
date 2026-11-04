@@ -35,7 +35,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
         if (data.status !== 'consent_required') throw new Error('invalid action');
         const actionBinding = bindings.issueAction({ userId: actor.userId, projectId, attemptId: attempt.id, sessionId: data.sessionId, turnId: data.turnId, callId: data.callId, prompt: data.prompt });
         if (typeof actionBinding !== 'string' || !actionBinding) throw new Error('invalid action binding');
-        return response({ status: 'consent_required', prompt: data.prompt, actionBinding }, 202);
+        return response({ status: 'consent_required', prompt: data.prompt, attemptId: attempt.id, actionBinding }, 202);
       } catch { result = response({ error: 'result_unknown', retryAutomatically: false }, 502); }
     }
     if (result.ok) {

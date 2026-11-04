@@ -1,1 +1,18 @@
-{"name":"@compor/agents-api","version":"0.0.0","private":true,"type":"module","exports":{".":"./src/index.mjs","./project-route":"./src/project-route.mjs","./attempt-store":"./src/attempt-store.mjs"},"scripts":{"test":"node --test test/*.test.mjs"}}
+{
+  "name": "@compor/agents-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./project-route": "./src/project-route.mjs",
+    "./attempt-store": "./src/attempt-store.mjs",
+    "./session-binding": "./src/session-binding.mjs",
+    "./image-tool-reservation": "./src/image-tool-reservation.mjs",
+    "./image-tool-execution": "./src/image-tool-execution.mjs",
+    "./image-tool-result": "./src/image-tool-result.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}

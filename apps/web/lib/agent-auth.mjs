@@ -28,3 +28,14 @@ export async function ownsSupabaseProject({ config, actor, projectId, fetch: fet
   if (!rows.length) return false;
   return rows[0]?.id === projectId && rows[0]?.owner_id === actor.userId;
 }
+
+/** Recheck the exact version under the verified user's token on each sensitive operation. */
+export async function ownsSupabaseVersion({config,actor,projectId,pieceId,version,fetch:fetchApi=fetch}) {
+ if(!uuid.test(actor?.userId??'') || typeof actor?.token!=='string' || !/^[^\s]{1,8192}$/.test(actor.token) || !uuid.test(projectId??'') || !uuid.test(pieceId??'') || !Number.isSafeInteger(version) || version<1 || version>2147483647)return false;
+ const endpoint=new URL('/rest/v1/piece_versions',config.service);
+ for(const [name,value] of Object.entries({select:'project_id,piece_id,version,projects!inner(owner_id)',project_id:`eq.${projectId}`,piece_id:`eq.${pieceId}`,version:`eq.${version}`,'projects.owner_id':`eq.${actor.userId}`,limit:'1'}))endpoint.searchParams.set(name,value);
+ const result=await fetchApi(endpoint,{headers:{apikey:config.key,authorization:`Bearer ${actor.token}`},redirect:'error',signal:AbortSignal.timeout(5000)});
+ if(!result.ok)throw Error('version service unavailable');
+ const rows=await result.json();if(!Array.isArray(rows)||rows.length>1)throw Error('invalid version response');
+ return rows.length===1 && rows[0]?.project_id===projectId && rows[0]?.piece_id===pieceId && rows[0]?.version===version && rows[0]?.projects?.owner_id===actor.userId;
+}
