@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.js" } },
+  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.js" }, "./agent-scope": "./src/agent-scope.js" },
   "engines": { "node": ">=20" },
   "scripts": { "test": "node --test test/*.test.mjs" },
   "dependencies": {
