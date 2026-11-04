@@ -11,7 +11,7 @@ test('vínculo assinado vem da resposta OpenAI e pertence à conta, projeto e te
   const bindings = createSessionBindings({ secret: Buffer.alloc(32, 17), now: () => now });
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId, token: 'fake-user-token' }), ownsProject: async () => true,
     attempts: { start: async () => ({ id: attemptId, state: 'started', isNew: true }), finish: async () => {} }, bindings,
-    fetch: async (_url, options) => { assert.equal(options.headers.Authorization, `Bearer ${apiKey}`); if(options.method==='GET')return Response.json({id:'sess_from_openai',status:'idle',required_actions:[]}); return new Response('data: {"type":"agent.session.created","session":{"id":"sess_from_openai"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }); },
+    fetch: async (_url, options) => { assert.equal(options.headers.Authorization, `Bearer ${apiKey}`); if(options.method==='GET')return Response.json({id:'sess_from_openai',status:'idle',required_actions:[]}); return new Response('data: {"type":"agent.session.created","session":{"id":"sess_from_openai"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n', { status: 201 }); },
   });
   const response = await handler(req()); assert.equal(response.status, 200);
   const data = await response.json(); assert.equal(data.sessionId, 'sess_from_openai');
@@ -35,7 +35,7 @@ test('falha ao vincular não retorna resultado nem segredo e registra desfecho i
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId, token: 'fake-user-token' }), ownsProject: async () => true,
     attempts: { start: async () => ({ id: attemptId, state: 'started', isNew: true }), finish: async ({ state }) => states.push(state) },
     bindings: { issue: () => { throw new Error(apiKey); }, issueAction: () => { throw new Error(apiKey); } },
-    fetch: async (_url,options) => { if(options.method==='GET')return Response.json({id:'sess_from_openai',status:'idle',required_actions:[]}); paid++; return new Response('data: {"type":"agent.session.created","session":{"id":"sess_from_openai"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }); },
+    fetch: async (_url,options) => { if(options.method==='GET')return Response.json({id:'sess_from_openai',status:'idle',required_actions:[]}); paid++; return new Response('data: {"type":"agent.session.created","session":{"id":"sess_from_openai"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n', { status: 201 }); },
   });
   const response = await handler(req());
   assert.equal(response.status, 502); assert.deepEqual(await response.json(), { error: 'result_unknown', retryAutomatically: false });

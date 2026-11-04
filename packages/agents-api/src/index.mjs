@@ -1,6 +1,15 @@
 const MAX_REQUEST = 16 * 1024;
 const MAX_STREAM = 1024 * 1024;
 const endpoint = 'https://api.openai.com/v1/agents/sessions';
+function sanitizedUsage(usage) {
+  if (!usage || typeof usage !== 'object' || Array.isArray(usage)) return null;
+  const result = {};
+  for (const key of ['input_tokens', 'output_tokens', 'total_tokens']) {
+    const value = usage[key];
+    if (Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000) result[key] = value;
+  }
+  return Object.keys(result).length ? result : null;
+}
 
 function json(data, status) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -29,7 +38,7 @@ async function limitedText(stream, limit) {
 async function readAgentEvents(stream, stopForAction) {
   if (!stream) throw new Error('missing stream');
   const reader = stream.getReader(), decoder = new TextDecoder('utf-8', { fatal: true });
-  let buffer = '', size = 0, sessionId = null, completed = false;
+  let buffer = '', size = 0, sessionId = null, completed = false, rootTurnId = null;
   const parts = new Map();
   function processBlock(block) {
     const data = block.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
@@ -43,12 +52,17 @@ async function readAgentEvents(stream, stopForAction) {
       if (!sessionId || event.session?.id !== sessionId) throw new Error('invalid action event');
       return true;
     }
-    const part = JSON.stringify([event.item_id ?? '', event.output_index ?? 0, event.content_index ?? 0]);
-    if (event.type === 'agent.session.turn.output_text.delta' && typeof event.delta === 'string') parts.set(part, (parts.get(part) ?? '') + event.delta);
-    if (event.type === 'agent.session.turn.output_text.done' && typeof event.text === 'string') parts.set(part, event.text);
-    const mainTurn = !event.turn || event.turn.subagent_id == null;
-    if (event.type === 'agent.session.turn.completed' && mainTurn) completed = true;
-    if (((event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled') && mainTurn) || event.type === 'agent.session.failed') completed = false;
+    if (event.session_id != null && sessionId && event.session_id !== sessionId) throw new Error('invalid event session');
+    const turnId = typeof event.turn_id === 'string' ? event.turn_id : null;
+    const part = JSON.stringify([turnId, event.item_id ?? '', event.output_index ?? 0, event.content_index ?? 0]);
+    if (event.type === 'agent.session.turn.output_text.delta' && typeof event.delta === 'string') parts.set(part, {turnId, text:(parts.get(part)?.text ?? '') + event.delta});
+    if (event.type === 'agent.session.turn.output_text.done' && typeof event.text === 'string') parts.set(part, {turnId, text:event.text});
+    const root = event.turn && event.turn.subagent_id === null && typeof event.turn.id === 'string' && event.turn.id.length > 0 && event.turn.id.length <= 256;
+    if (event.type === 'agent.session.turn.completed' && root) {
+      if (rootTurnId && rootTurnId !== event.turn.id) throw new Error('multiple root turns');
+      rootTurnId = event.turn.id; completed = true;
+    }
+    if (((event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled') && root) || event.type === 'agent.session.failed') completed = false;
     return false;
   }
   try {
@@ -65,7 +79,7 @@ async function readAgentEvents(stream, stopForAction) {
       }
     }
     if (buffer.trim() && processBlock(buffer)) return { action: true, sessionId };
-    return { action: false, sessionId, completed, output: [...parts.values()].join('') };
+    return { action: false, sessionId, completed, output: [...parts.values()].filter(part => rootTurnId && part.turnId === rootTurnId).map(part => part.text).join('') };
   } finally {
     // Some transports never settle cancel(); initiate it without blocking the action.
     try { Promise.resolve(reader.cancel()).catch(() => {}); } catch { /* Cleanup is best-effort. */ }
@@ -115,7 +129,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
           if (!observed.completed || !observed.output) return json({ error: 'incomplete_turn' }, 502);
           const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');
           const text = observed.output.replaceAll(key, '[redacted]');
-          return json({ sessionId: observed.sessionId, text: delegated ? text.replaceAll(delegated, '[redacted]') : text, usage: null }, 200);
+          return json({ sessionId: observed.sessionId, text: delegated ? text.replaceAll(delegated, '[redacted]') : text, usage: sanitizedUsage(session.usage) }, 200);
         }
         if (session.status !== 'requires_action' || session.required_actions.length !== 1) throw new Error('invalid pending action');
         const action = session.required_actions[0];

@@ -57,23 +57,48 @@ test('reconcilia sessão após stream textual e recupera chamada de imagem não 
   const calls=[];
   const handler=createAgentHandler({ authenticate:async()=>({userId}),enableImageTool:true,fetch:async (_url,options)=>{
     calls.push(options.method);
-    if(options.method==='POST') {const sent=JSON.parse(options.body);assert.match(sent.agent.instructions,/generate_image/);return new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201});}
+    if(options.method==='POST') {const sent=JSON.parse(options.body);assert.match(sent.agent.instructions,/generate_image/);return new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201});}
     return Response.json({id:'sess_actual',status:'requires_action',required_actions:[action]});
   }});
   const result=await handler(request());assert.equal(result.status,202);assert.equal((await result.json()).status,'consent_required');assert.deepEqual(calls,['POST','GET']);
 });
 
 test('não devolve texto como concluído se sessão não puder ser reconciliada',async()=>{
-  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201}) : new Response('',{status:503})});
+  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201}) : new Response('',{status:503})});
   const result=await handler(request());assert.equal(result.status,502);
 });
 
 test('sessão ainda em andamento não é apresentada como texto final',async()=>{
-  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201}) : Response.json({id:'sess_actual',status:'in_progress',required_actions:[]})});
+  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201}) : Response.json({id:'sess_actual',status:'in_progress',required_actions:[]})});
   const result=await handler(request());assert.equal(result.status,502);
+});
+
+test('retorna somente texto do turno principal e usage sanitizado da sessão',async()=>{
+ const events=[
+  {type:'agent.session.created',session:{id:'sess_actual'}},
+  {type:'agent.session.turn.created',turn:{id:'turn_sub',subagent_id:'sub_1'}},
+  {type:'agent.session.turn.output_text.done',turn_id:'turn_sub',item_id:'msg_sub',text:'SUBAGENT_TEXT'},
+  {type:'agent.session.turn.completed',turn:{id:'turn_sub',subagent_id:'sub_1'}},
+  {type:'agent.session.turn.created',turn:{id:'turn_root',subagent_id:null}},
+  {type:'agent.session.turn.output_text.done',turn_id:'turn_root',item_id:'msg_root',text:'ROOT_TEXT'},
+  {type:'agent.session.turn.completed',turn:{id:'turn_root',subagent_id:null}},
+ ].map(event=>`data: ${JSON.stringify(event)}\n\n`).join('');
+ const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST'?new Response(events,{status:201}):Response.json({id:'sess_actual',status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:50,total_tokens:150,unsafe:'SECRET'}})});
+ const response=await handler(request());assert.equal(response.status,200);const result=await response.json();assert.equal(result.text,'ROOT_TEXT');assert.deepEqual(result.usage,{input_tokens:100,output_tokens:50,total_tokens:150});assert.doesNotMatch(JSON.stringify(result),/SUBAGENT_TEXT|SECRET/);
+});
+
+test('usage ausente ou inválido permanece desconhecido e texto sem vínculo não se mistura',async()=>{
+ const events=[{type:'agent.session.created',session:{id:'sess_actual'}},{type:'agent.session.turn.output_text.done',turn_id:null,item_id:'msg_1',text:'UNTAGGED'},{type:'agent.session.turn.output_text.done',turn_id:'turn_root',item_id:'msg_2',text:'ROOT'},{type:'agent.session.turn.completed',turn:{id:'turn_root',subagent_id:null}}].map(event=>`data: ${JSON.stringify(event)}\n\n`).join('');
+ const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST'?new Response(events,{status:201}):Response.json({id:'sess_actual',status:'idle',required_actions:[],usage:{input_tokens:-1,output_tokens:'42',total_tokens:1e12}})});
+ const response=await handler(request());assert.equal(response.status,200);const result=await response.json();assert.equal(result.text,'ROOT');assert.equal(result.usage,null);
 });
 
 test('conclusão de subagente não comprova término do turno principal',async()=>{
   const handler=createAgentHandler({authenticate:async()=>({userId}),fetch:async()=>new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Texto intermediário"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":"sub_123"}}\n\n',{status:201})});
   const result=await handler(request());assert.equal(result.status,502);
+});
+
+test('evento de conclusão sem identificação do turno não comprova conclusão',async()=>{
+ const handler=createAgentHandler({authenticate:async()=>({userId}),fetch:async()=>new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"texto"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n',{status:201})});
+ assert.equal((await handler(request())).status,502);
 });

@@ -9,8 +9,8 @@ test('an authenticated creator receives the completed creative response', async 
     upstream = { url, options };
     return new Response([
       'data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\n',
-      'data: {"type":"agent.session.turn.output_text.delta","delta":"Uma ideia"}\n\n',
-      'data: {"type":"agent.session.turn.completed"}\n\n',
+      'data: {"type":"agent.session.turn.output_text.delta","turn_id":"turn_root","delta":"Uma ideia"}\n\n',
+      'data: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',
       'data: {"type":"agent.session.idle"}\n\n',
     ].join(''), { status: 201 });
   }});
@@ -52,8 +52,8 @@ test('the session credential is never sent as part of the creative objective', a
 test('a completed text event works even when the provider sends no deltas', async () => {
   const events = [
     { type: 'agent.session.created', session: { id: 'sess_123' } },
-    { type: 'agent.session.turn.output_text.done', item_id: 'msg_1', output_index: 0, content_index: 0, text: 'Direção final' },
-    { type: 'agent.session.turn.completed' },
+    { type: 'agent.session.turn.output_text.done', turn_id: 'turn_root', item_id: 'msg_1', output_index: 0, content_index: 0, text: 'Direção final' },
+    { type: 'agent.session.turn.completed', turn: { id:'turn_root', subagent_id:null } },
   ].map(event => `data: ${JSON.stringify(event)}\n\n`).join('');
   const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async () => new Response(events, { status: 201 }) });
   const response = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: 'sk-test-secret-123456789012345', objective: 'Teste' }) }));
@@ -81,8 +81,8 @@ test('redacts the credential if a provider result repeats it', async () => {
   const key = 'sk-test-secret-123456789012345';
   const events = [
     { type: 'agent.session.created', session: { id: 'sess_123' } },
-    { type: 'agent.session.turn.output_text.done', text: `never disclose ${key}` },
-    { type: 'agent.session.turn.completed' },
+    { type: 'agent.session.turn.output_text.done', turn_id: 'turn_root', text: `never disclose ${key}` },
+    { type: 'agent.session.turn.completed', turn: { id:'turn_root', subagent_id:null } },
   ].map(event => `data: ${JSON.stringify(event)}\n\n`).join('');
   const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async () => new Response(events, { status: 201 }) });
   const response = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: key, objective: 'Teste' }) }));

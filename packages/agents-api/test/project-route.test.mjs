@@ -9,14 +9,14 @@ const bindings = { issue: () => 'v1.test.signature', issueAction: () => 'v2.test
 const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, 'x-compor-attempt-id': attempt, ...headers }, body: JSON.stringify(body) });
 
 test('MCP delegado exige medição durável antes do envio pago', async()=>{
- const steps=[];
+ const steps=[];let recordedUsage;
  const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,
   attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>steps.push('attempt-finish')},
-  usage:{start:async()=>{steps.push('usage-start');return true;},finish:async()=>steps.push('usage-finish')},
+  usage:{start:async()=>{steps.push('usage-start');return true;},finish:async({usage})=>{recordedUsage=usage;steps.push('usage-finish');}},
   withMcp:async(_context,submit)=>{steps.push('delegate');await submit({type:'mcp',transport:{authorization:'Bearer opaque'}});return {status:'invoked'};},
-  fetch:async(_url,options)=>{if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]});steps.push('provider');return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n',{status:201});}
+  fetch:async(_url,options)=>{if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:50,total_tokens:150}});steps.push('provider');return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201});}
  });
- assert.equal((await handler(request())).status,200);assert.deepEqual(steps,['usage-start','delegate','provider','usage-finish','attempt-finish']);
+ assert.equal((await handler(request())).status,200);assert.deepEqual(steps,['usage-start','delegate','provider','usage-finish','attempt-finish']);assert.deepEqual(recordedUsage,{input_tokens:100,output_tokens:50,total_tokens:150});
 });
 
 test('conexão opcional envia apenas credencial MCP opaca à sessão e não retorna segredo', async () => {
@@ -24,7 +24,7 @@ test('conexão opcional envia apenas credencial MCP opaca à sessão e não reto
  const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token}),ownsProject:async()=>true,
   attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},
   withMcp:async({actor,projectId},submit)=>{assert.equal(actor.token,token);assert.equal(projectId,project);await submit({type:'mcp',server_label:'compor',connection_origin:'service',transport:{type:'http',server_url:'https://compor.vercel.app/api/agent-mcp',authorization:`Bearer ${grant}`}});return {status:'invoked'};},
-  fetch:async(_url,options)=>{if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]});sent=JSON.parse(options.body);assert.doesNotMatch(options.body,new RegExp(token));return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia opaque-delegated-token"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n',{status:201});},
+  fetch:async(_url,options)=>{if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]});sent=JSON.parse(options.body);assert.doesNotMatch(options.body,new RegExp(token));return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia opaque-delegated-token"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201});},
  });
  const response=await handler(request());const body=await response.text();
  assert.equal(response.status,200);assert.doesNotMatch(body,/opaque-delegated-token|user-session-secret|sk-test-secret/);
@@ -53,7 +53,7 @@ test('criador autenticado inicia tentativa antes da geração para seu projeto',
     resolveActor: async () => ({ userId: 'alice', token: 'fake-session-token' }),
     ownsProject: async ({ actor, projectId }) => { assert.equal(actor.userId, 'alice'); assert.equal(projectId, project); return true; },
     attempts: { start: async args => { assert.doesNotMatch(JSON.stringify(args), /sk-test-secret|Oficina/); steps.push('start'); return { id: attempt, state: 'started', isNew: true }; }, finish: async ({ state }) => { steps.push(state); } },
-    fetch: async (_url, options) => { assert.equal(options.headers.Authorization, `Bearer ${key}`); if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]}); steps.push('provider'); return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }); },
+    fetch: async (_url, options) => { assert.equal(options.headers.Authorization, `Bearer ${key}`); if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]}); steps.push('provider'); return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n', { status: 201 }); },
   });
   const response = await handler(request());
   assert.equal(response.status, 200);
@@ -89,7 +89,7 @@ test('desconexão gera resultado desconhecido e jamais repete chamada automatica
 
 test('falha ao registrar o desfecho não apresenta resultado como conclusão', async () => {
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', bindings, resolveActor: async () => ({ userId: 'alice', token: 'fake-token' }), ownsProject: async () => true,
-    attempts: { start: async () => ({ id: attempt, state: 'started', isNew: true }), finish: async () => { throw Error(); } }, fetch: async () => new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }) });
+    attempts: { start: async () => ({ id: attempt, state: 'started', isNew: true }), finish: async () => { throw Error(); } }, fetch: async () => new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n', { status: 201 }) });
   const response = await handler(request());
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: 'result_unknown', retryAutomatically: false });
