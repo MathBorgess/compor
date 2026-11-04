@@ -34,7 +34,7 @@ test('falha ao vincular não retorna resultado nem segredo e registra desfecho i
   const states = []; let paid = 0;
   const handler = createProjectAgentHandler({ appOrigin: 'https://compor.test', resolveActor: async () => ({ userId, token: 'fake-user-token' }), ownsProject: async () => true,
     attempts: { start: async () => ({ id: attemptId, state: 'started', isNew: true }), finish: async ({ state }) => states.push(state) },
-    bindings: { issue: () => { throw new Error(apiKey); } },
+    bindings: { issue: () => { throw new Error(apiKey); }, issueAction: () => { throw new Error(apiKey); } },
     fetch: async () => { paid++; return new Response('data: {"type":"agent.session.created","session":{"id":"sess_from_openai"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed"}\n\n', { status: 201 }); },
   });
   const response = await handler(req());

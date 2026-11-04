@@ -5,7 +5,7 @@ import { createProjectAgentHandler } from '../src/project-route.mjs';
 const project = '0a3be452-5152-41d1-a3e8-fc2be56d67e1';
 const attempt = '82b7e98a-8145-4020-882a-f6c7f61debe2';
 const key = 'sk-test-secret-123456789012345';
-const bindings = { issue: () => 'v1.test.signature' };
+const bindings = { issue: () => 'v1.test.signature', issueAction: () => 'v2.test.signature' };
 const request = (headers = {}, body = { apiKey: key, objective: 'Oficina' }) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { 'content-type': 'application/json', origin: 'https://compor.test', 'x-compor-project-id': project, 'x-compor-attempt-id': attempt, ...headers }, body: JSON.stringify(body) });
 
 test('criador autenticado inicia tentativa antes da geração para seu projeto', async () => {

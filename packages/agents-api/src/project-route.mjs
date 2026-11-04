@@ -8,7 +8,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
   return async request => {
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405);
     if (typeof appOrigin !== 'string' || typeof resolveActor !== 'function' || typeof ownsProject !== 'function' ||
-        typeof attempts?.start !== 'function' || typeof attempts?.finish !== 'function' || typeof bindings?.issue !== 'function') return response({ error: 'unavailable' }, 503);
+        typeof attempts?.start !== 'function' || typeof attempts?.finish !== 'function' || typeof bindings?.issue !== 'function' || typeof bindings?.issueAction !== 'function') return response({ error: 'unavailable' }, 503);
     if (request.headers.get('origin') !== appOrigin) return response({ error: 'invalid_origin' }, 403);
     if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) return response({ error: 'invalid_request' }, 400);
     const projectId = request.headers.get('x-compor-project-id');
@@ -27,8 +27,17 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     catch { return response({ error: 'unavailable' }, 503); }
     if (!attempt.isNew) return response({ error: 'attempt_exists', state: attempt.state, retryAutomatically: false }, 409);
     let result;
-    try { result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch })(request); }
+    try { result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true })(request); }
     catch { result = response({ error: 'upstream_error' }, 502); }
+    if (result.status === 202) {
+      try {
+        const data = await result.json();
+        if (data.status !== 'consent_required') throw new Error('invalid action');
+        const actionBinding = bindings.issueAction({ userId: actor.userId, projectId, attemptId: attempt.id, sessionId: data.sessionId, turnId: data.turnId, callId: data.callId, prompt: data.prompt });
+        if (typeof actionBinding !== 'string' || !actionBinding) throw new Error('invalid action binding');
+        return response({ status: 'consent_required', prompt: data.prompt, actionBinding }, 202);
+      } catch { result = response({ error: 'result_unknown', retryAutomatically: false }, 502); }
+    }
     if (result.ok) {
       try {
         const data = await result.json();

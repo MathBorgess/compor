@@ -1,7 +1,8 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
+import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const sessionIdValid = value => typeof value === 'string' && /^sess_[A-Za-z0-9_-]{1,128}$/.test(value) && !/sk-/i.test(value);
+const callIdValid = (value, prefix) => typeof value === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(value) && !/sk-/i.test(value);
 const lifetime = 10 * 60 * 1000;
 
 /** Server-only HMAC proof. Not a user credential, durable storage or authorization by itself. */
@@ -32,5 +33,26 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       return { sessionId: claim.sessionId, userId, projectId, attemptId };
     } catch { return null; }
   }
-  return Object.freeze({ issue, verify });
+  function issueAction({ userId, projectId, attemptId, sessionId, turnId, callId, prompt }) {
+    const iat = now();
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !callIdValid(callId, 'call') || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || /sk-[^\s]+/i.test(prompt) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
+    const promptDigest = createHash('sha256').update(prompt, 'utf8').digest('hex');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, turnId, callId, promptDigest, iat, exp: iat + lifetime })).toString('base64url');
+    const signature = createHmac('sha256', signingKey).update(`v2.${payload}`).digest('base64url');
+    return `v2.${payload}.${signature}`;
+  }
+  function verifyAction({ token, userId, projectId, attemptId }) {
+    try {
+      if (typeof token !== 'string' || token.length > 2048 || ![userId, projectId, attemptId].every(uuid)) return null;
+      const parts = token.split('.');
+      if (parts.length !== 3 || parts[0] !== 'v2' || !/^[A-Za-z0-9_-]+$/.test(parts[1]) || !/^[A-Za-z0-9_-]+$/.test(parts[2])) return null;
+      const actual = Buffer.from(parts[2], 'base64url'), expected = createHmac('sha256', signingKey).update(`v2.${parts[1]}`).digest();
+      if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual, expected)) return null;
+      const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
+      const claim = JSON.parse(raw.toString('utf8')); const current = now();
+      if (!claim || Object.keys(claim).length !== 9 || claim.userId !== userId || claim.projectId !== projectId || claim.attemptId !== attemptId || !sessionIdValid(claim.sessionId) || !callIdValid(claim.turnId, 'turn') || !callIdValid(claim.callId, 'call') || !/^[0-9a-f]{64}$/.test(claim.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(claim.iat) || !Number.isSafeInteger(claim.exp) || claim.exp !== claim.iat + lifetime || claim.iat > current || current >= claim.exp) return null;
+      return { userId, projectId, attemptId, sessionId: claim.sessionId, turnId: claim.turnId, callId: claim.callId, promptDigest: claim.promptDigest };
+    } catch { return null; }
+  }
+  return Object.freeze({ issue, verify, issueAction, verifyAction });
 }

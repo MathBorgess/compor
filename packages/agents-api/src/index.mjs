@@ -25,7 +25,49 @@ async function limitedText(stream, limit) {
   return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
 }
 
-export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch } = {}) {
+async function readAgentEvents(stream, stopForAction) {
+  if (!stream) throw new Error('missing stream');
+  const reader = stream.getReader(), decoder = new TextDecoder('utf-8', { fatal: true });
+  let buffer = '', size = 0, sessionId = null, completed = false;
+  const parts = new Map();
+  function processBlock(block) {
+    const data = block.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
+    if (!data || data === '[DONE]') return false;
+    const event = JSON.parse(data);
+    if (event.type === 'agent.session.created') {
+      if (sessionId || typeof event.session?.id !== 'string' || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(event.session.id)) throw new Error('invalid session');
+      sessionId = event.session.id;
+    }
+    if (event.type === 'agent.session.requires_action' && stopForAction) {
+      if (!sessionId || event.session?.id !== sessionId) throw new Error('invalid action event');
+      return true;
+    }
+    const part = JSON.stringify([event.item_id ?? '', event.output_index ?? 0, event.content_index ?? 0]);
+    if (event.type === 'agent.session.turn.output_text.delta' && typeof event.delta === 'string') parts.set(part, (parts.get(part) ?? '') + event.delta);
+    if (event.type === 'agent.session.turn.output_text.done' && typeof event.text === 'string') parts.set(part, event.text);
+    if (event.type === 'agent.session.turn.completed') completed = true;
+    if (event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled' || event.type === 'agent.session.failed') completed = false;
+    return false;
+  }
+  try {
+    for (;;) {
+      const { value, done } = await reader.read();
+      if (done) { buffer += decoder.decode(); break; }
+      size += value.byteLength; if (size > MAX_STREAM) throw new Error('stream too large');
+      buffer += decoder.decode(value, { stream: true });
+      let boundary;
+      while ((boundary = /\r?\n\r?\n/.exec(buffer))) {
+        const block = buffer.slice(0, boundary.index);
+        buffer = buffer.slice(boundary.index + boundary[0].length);
+        if (processBlock(block)) return { action: true, sessionId };
+      }
+    }
+    if (buffer.trim() && processBlock(buffer)) return { action: true, sessionId };
+    return { action: false, sessionId, completed, output: [...parts.values()].join('') };
+  } finally { await reader.cancel().catch(() => {}); }
+}
+
+export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('authenticate is required');
   return async function handle(request) {
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -47,30 +89,27 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       const response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.' }, environment: { type: 'none' }, input: body.objective, stream: true }),
+        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...(enableImageTool ? { tools: [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
         signal: AbortSignal.timeout(90_000),
+        redirect: 'error',
       });
       if (response.status === 401 || response.status === 403) return json({ error: 'openai_credentials_rejected' }, response.status);
       if (response.status === 429) return json({ error: 'openai_quota_or_rate_limit' }, 429);
       if (!response.ok) return json({ error: 'upstream_error' }, 502);
-      const raw = await limitedText(response.body, MAX_STREAM);
-      let sessionId = null;
-      const parts = new Map();
-      let completed = false;
-      for (const block of raw.split(/\r?\n\r?\n/)) {
-        const data = block.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
-        if (!data || data === '[DONE]') continue;
-        const event = JSON.parse(data);
-        if (event.type === 'agent.session.created') sessionId = event.session?.id ?? null;
-        const part = JSON.stringify([event.item_id ?? '', event.output_index ?? 0, event.content_index ?? 0]);
-        if (event.type === 'agent.session.turn.output_text.delta' && typeof event.delta === 'string') parts.set(part, (parts.get(part) ?? '') + event.delta);
-        if (event.type === 'agent.session.turn.output_text.done' && typeof event.text === 'string') parts.set(part, event.text);
-        if (event.type === 'agent.session.turn.completed') completed = true;
-        if (event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled' || event.type === 'agent.session.failed') completed = false;
+      const observed = await readAgentEvents(response.body, enableImageTool);
+      if (observed.action) {
+        const lookup = await fetchApi(`${endpoint}/${encodeURIComponent(observed.sessionId)}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1' }, redirect: 'error', signal: AbortSignal.timeout(10_000) });
+        if (!lookup.ok) throw new Error('session unavailable');
+        const session = JSON.parse(await limitedText(lookup.body, 256 * 1024));
+        if (session?.id !== observed.sessionId || session.status !== 'requires_action' || !Array.isArray(session.required_actions) || session.required_actions.length !== 1) throw new Error('invalid pending action');
+        const action = session.required_actions[0];
+        let args = action?.arguments;
+        if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
+        if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
+        return json({ status: 'consent_required', sessionId: observed.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: args.prompt }, 202);
       }
-      const output = [...parts.values()].join('');
-      if (!completed || typeof sessionId !== 'string' || !/^sess_[a-zA-Z0-9_-]+$/.test(sessionId) || !output) return json({ error: 'incomplete_turn' }, 502);
-      return json({ sessionId, text: output.replaceAll(key, '[redacted]'), usage: null }, 200);
+      if (!observed.completed || !observed.sessionId || !observed.output) return json({ error: 'incomplete_turn' }, 502);
+      return json({ sessionId: observed.sessionId, text: observed.output.replaceAll(key, '[redacted]'), usage: null }, 200);
     } catch {
       return json({ error: 'upstream_error' }, 502);
     }
