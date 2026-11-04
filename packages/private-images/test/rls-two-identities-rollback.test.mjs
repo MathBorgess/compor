@@ -40,6 +40,18 @@ test('psql: duas identidades, rollback e recusas contra políticas/triggers inse
   assert.deepEqual(rows[0],{users:1,projects:1,pieces:0,attempts:0});
  };
  await preserved();
+ // Supabase Auth's known stored expression is allowed only with exact types.
+ await db.exec(`alter table auth.users add column email_confirmed_at timestamptz,
+  add column phone_confirmed_at timestamptz,
+  add column confirmed_at timestamptz generated always as (least(email_confirmed_at,phone_confirmed_at)) stored`);
+ assert.match((await call()).stdout,/RLS_SYNTHETIC_CHECKS_PASSED_AND_ROLLED_BACK/);await preserved();
+ await db.exec(`alter table auth.users drop column confirmed_at;
+  alter table auth.users add column confirmed_at timestamptz generated always as (greatest(email_confirmed_at,phone_confirmed_at)) stored`);
+ await assert.rejects(call(),e=>e.code!==0 && /unexpected table, RLS, trigger, rule, descendant or generated column/.test(e.stderr));
+ await db.exec('alter table auth.users drop column confirmed_at');await preserved();
+ await db.exec('alter table public.projects add column unexpected integer generated always as (1) stored');
+ await assert.rejects(call(),e=>e.code!==0 && /unexpected table, RLS, trigger, rule, descendant or generated column/.test(e.stderr));
+ await db.exec('alter table public.projects drop column unexpected');await preserved();
  await db.exec('create policy unexpected_read on public.projects for select to authenticated using(true)');
  await assert.rejects(call(),e=>e.code!==0 && /RLS check for synthetic identity A failed/.test(e.stdout));
  await db.exec('drop policy unexpected_read on public.projects');await preserved();

@@ -24,8 +24,19 @@ BEGIN
      OR EXISTS (SELECT 1 FROM pg_trigger WHERE tgrelid=ANY(affected) AND NOT tgisinternal)
      OR EXISTS (SELECT 1 FROM pg_rewrite WHERE ev_class=ANY(affected))
      OR EXISTS (SELECT 1 FROM pg_inherits WHERE inhparent=ANY(affected))
-     OR EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid=ANY(affected) AND attnum>0
-       AND NOT attisdropped AND attgenerated<>'') THEN
+     OR EXISTS (SELECT 1 FROM pg_attribute a WHERE a.attrelid=ANY(affected) AND a.attnum>0
+       AND NOT a.attisdropped AND a.attgenerated<>'' AND NOT (
+         -- Supabase Auth's managed generated column is accepted only when its
+         -- complete expression and input/output types match this known form.
+         a.attrelid='auth.users'::regclass AND a.attname='confirmed_at' AND a.attgenerated='s'
+         AND a.atttypid='pg_catalog.timestamptz'::regtype
+         AND EXISTS (SELECT 1 FROM pg_attrdef d WHERE d.adrelid=a.attrelid AND d.adnum=a.attnum
+           AND pg_get_expr(d.adbin,d.adrelid)='LEAST(email_confirmed_at, phone_confirmed_at)')
+         AND 2=(SELECT count(*) FROM pg_attribute input WHERE input.attrelid=a.attrelid
+           AND input.attname IN ('email_confirmed_at','phone_confirmed_at') AND input.attnum>0
+           AND NOT input.attisdropped AND input.attgenerated=''
+           AND input.atttypid='pg_catalog.timestamptz'::regtype)
+       )) THEN
     RAISE EXCEPTION 'unexpected table, RLS, trigger, rule, descendant or generated column';
   END IF;
   IF EXISTS (SELECT 1 FROM pg_attribute a JOIN pg_type t ON t.oid=a.atttypid
