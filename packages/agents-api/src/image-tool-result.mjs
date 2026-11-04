@@ -7,8 +7,9 @@ async function readLimited(stream,limit) {
   finally { try {Promise.resolve(reader.cancel()).catch(()=>{});} catch {} try {reader.releaseLock();} catch {} }
 }
 // Internal seam only. Authentication and CSRF protection belong to its caller.
-export function createImageToolResultSender({bindings,ownsVersion,reservations,fetch:fetchApi=globalThis.fetch,sendTimeoutMs=15000}={}) {
+export function createImageToolResultSender({bindings,ownsVersion,reservations,usage,fetch:fetchApi=globalThis.fetch,sendTimeoutMs=15000}={}) {
   if(typeof bindings?.verifyApprovedAction!=='function' || typeof ownsVersion!=='function' || typeof reservations?.claimResultSubmission!=='function' || typeof reservations?.finishResultSubmission!=='function' || typeof fetchApi!=='function' || !Number.isSafeInteger(sendTimeoutMs) || sendTimeoutMs<1 || sendTimeoutMs>15000) throw TypeError('invalid dependencies');
+  if(usage && (typeof usage.start!=='function' || typeof usage.finish!=='function')) throw TypeError('invalid usage store');
   return async ({actor,projectId,pieceId,version,attemptId,executionId,actionBinding,apiKey}={}) => {
     if(!uuid(actor?.userId) || typeof actor?.token!=='string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId,executionId].every(uuid) || !Number.isSafeInteger(version) || version<1 || version>2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey??'')) return {status:'rejected'};
     let action;
@@ -29,12 +30,16 @@ export function createImageToolResultSender({bindings,ownsVersion,reservations,f
     try {submission=await reservations.claimResultSubmission({actor,executionId,projectId,pieceId,version,attemptId,sessionId:action.sessionId,turnId:action.turnId,callId:action.callId});
       if(!uuid(submission?.id)||!uuid(submission?.assetId)||submission.isNew!==true||submission.state!=='sending')return unknown();
     } catch{return unknown();}
+    let measurementStarted=false,accepted=false;
+    const measurement={actor,projectId,attemptId,part:'agent_resume',partId:submission.id};
     try {
+      if(usage){if(await usage.start(measurement)!==true)throw Error('usage unavailable');measurementStarted=true;}
       const event={type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:submission.assetId})};
       const controller = new AbortController(); let response;
       try {
         response=await fetchApi(`${base}/events`,{method:'POST',headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1','Content-Type':'application/json'},body:JSON.stringify({events:[event]}),redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(sendTimeoutMs),controller.signal])});
         if(!response.ok)throw Error('uncertain');
+        accepted=true;
       } finally {
         // We need only acceptance headers, never an unbounded or indefinitely open body.
         try { if (response?.body) Promise.resolve(response.body.cancel()).catch(()=>{}); } catch {}
@@ -43,6 +48,7 @@ export function createImageToolResultSender({bindings,ownsVersion,reservations,f
       await reservations.finishResultSubmission({actor,submissionId:submission.id,state:'sent'});
       return {status:'accepted'};
     } catch {
+      if(usage && measurementStarted && !accepted)try {await usage.finish({...measurement,state:'unknown',usage:null});} catch {}
       try {await reservations.finishResultSubmission({actor,submissionId:submission.id,state:'unknown'});} catch { /* sending or sent remain non-repeatable */ }
       return unknown();
     }

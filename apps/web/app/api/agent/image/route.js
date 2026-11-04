@@ -24,6 +24,6 @@ export async function POST(request) {
  const authenticate=async()=>actor;
  const approve=createImageToolApproval({bindings,ownsVersion});
  const execute=createImageToolExecution({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key}),appOrigin:config.app,imageHandler:createImageHandler({authenticate}),imageStorageHandler:createPrivateImageHandler({appOrigin:config.app,supabaseUrl:config.service,publishableKey:config.key,authenticate})});
- const send=createImageToolResultSender({bindings,ownsVersion,reservations});
+ const send=createImageToolResultSender({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key})});
  return createAgentImageRoute({appOrigin:config.app,resolveActor,approve,execute,send})(request);
 }

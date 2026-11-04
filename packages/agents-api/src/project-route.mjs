@@ -35,7 +35,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     try { result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true })(request); }
     catch { result = response({ error: 'upstream_error' }, 502); }
     let usageRecorded=false;
-    if (usage) {
+    if (usage && result.status !== 202) {
       let counts=null; try {if(result.ok)counts=(await result.clone().json()).usage??null;} catch {}
       try {await usage.finish({...measurement,state:result.ok?'completed':'unknown',usage:counts});usageRecorded=true;} catch { /* started remains uncertain */ }
     }
