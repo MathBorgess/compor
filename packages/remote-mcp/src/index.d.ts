@@ -11,7 +11,9 @@ export function createSupabaseProjectStore(options: { url: string; anonKey: stri
 export interface PieceContent { headline: string; price: string; date: string; caption: string; captionOrigin: 'user' | 'agent' }
 export interface PieceVersion { project_id: string; piece_id: string; version: number; content: PieceContent; created_at: string }
 export interface PieceIdentity { projectId: string; pieceId: string }
+export interface PieceSummary { pieceId: string; latestVersion: number; headline: string; createdAt: string }
 export interface PieceStore {
+  listPieces?(context: ProjectContext, input: { projectId: string; after?: string }): Promise<{ pieces: PieceSummary[]; nextCursor: string | null }>;
   save(context: ProjectContext, input: PieceIdentity & { expectedVersion: number; content: PieceContent }): Promise<{ status: 'saved'; version: PieceVersion } | { status: 'conflict'; currentVersion: number } | { status: 'not_found' }>;
   list(context: ProjectContext, input: PieceIdentity): Promise<PieceVersion[]>;
 }

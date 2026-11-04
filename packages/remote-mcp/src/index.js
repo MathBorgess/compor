@@ -103,6 +103,35 @@ export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
     return response.json();
   }
   return {
+    async listPieces(context, { projectId, after }) {
+      const endpoint = new URL('/rest/v1/piece_versions', base);
+      endpoint.searchParams.set('select', 'project_id,piece_id,version,content,created_at,projects!inner(owner_id)');
+      endpoint.searchParams.set('project_id', `eq.${projectId}`);
+      endpoint.searchParams.set('projects.owner_id', `eq.${context.actor.userId}`);
+      if (after) endpoint.searchParams.set('piece_id', `gt.${after}`);
+      endpoint.searchParams.set('order', 'piece_id.asc,version.desc');
+      endpoint.searchParams.set('limit', '101');
+      const rows = await query(endpoint, context);
+      if (!Array.isArray(rows) || rows.length > 101) throw new Error('Resposta inválida do serviço de peças.');
+      const pieces = [];
+      let previousId = after ?? '';
+      let previousVersion = 0;
+      for (const { projects, ...row } of rows) {
+        const version = pieceVersionSchema.parse(row);
+        if (projects?.owner_id !== context.actor.userId || version.project_id !== projectId ||
+            version.piece_id < previousId || (version.piece_id === previousId && (!previousVersion || version.version >= previousVersion))) {
+          throw new Error('Resposta inválida do serviço de peças.');
+        }
+        if (version.piece_id !== previousId) pieces.push({ pieceId: version.piece_id, latestVersion: version.version, headline: version.content.headline, createdAt: version.created_at });
+        previousId = version.piece_id;
+        previousVersion = version.version;
+      }
+      const page = pieces.slice(0, 50);
+      // The server may enforce a row cap below the requested limit. Continue
+      // until an empty page instead of assuming a short response is complete.
+      const nextCursor = page.length ? page.at(-1).pieceId : null;
+      return { pieces: page, nextCursor };
+    },
     async save(context, { projectId, pieceId, expectedVersion, content }) {
       const result = await query(new URL('/rest/v1/rpc/save_piece_version', base), context, {
         p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_content: content,
@@ -192,6 +221,16 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore 
     if (pieceStore) {
       const context = { actor, token: match[1] };
       const error = () => ({ isError: true, content: [{ type: 'text', text: 'Não foi possível acessar as versões da peça.' }] });
+      if (typeof pieceStore.listPieces === 'function') server.registerTool('list_pieces', {
+        description: 'Lista peças de um projeto autorizado com a versão mais recente. Continue usando nextCursor até null; a paginação não é um snapshot.',
+        inputSchema: { projectId: uuid, after: uuid.optional() },
+        annotations: { readOnlyHint: true, destructiveHint: false, openWorldHint: false },
+      }, async ({ projectId, after }) => {
+        try {
+          const result = await pieceStore.listPieces(context, { projectId: projectId.toLowerCase(), after: after?.toLowerCase() });
+          return { content: [{ type: 'text', text: JSON.stringify(result) }], structuredContent: result };
+        } catch { return error(); }
+      });
       server.registerTool('save_piece_version', {
         description: 'Salva versão imutável da peça, somente se a versão esperada corresponder à atual.',
         inputSchema: { projectId: uuid, pieceId: uuid, expectedVersion: z.number().int().min(0).max(2147483646), content: pieceContentSchema },
