@@ -33,5 +33,12 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       const result = await rpc('mark_image_tool_call_unknown', input.actor, { p_project_id: input.projectId, p_session_id: input.sessionId, p_turn_id: input.turnId, p_call_id: input.callId });
       if (result !== true) throw new Error('reservation status unknown');
     },
+    async declareConsent({ actor, reservationId, confirmed }) {
+      if (!uuid.test(reservationId ?? '') || confirmed !== true) throw new Error('invalid declaration');
+      const rows = await rpc('declare_image_generation_consent', actor, { p_reservation_id: reservationId, p_confirmed: true });
+      const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+      if (!uuid.test(row?.declaration_id ?? '') || typeof row?.is_new !== 'boolean') throw new Error('reservation status unknown');
+      return { id: row.declaration_id, isNew: row.is_new };
+    },
   };
 }
