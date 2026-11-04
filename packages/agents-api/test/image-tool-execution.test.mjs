@@ -1,15 +1,17 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createHash } from 'node:crypto';
-import { createImageToolExecution } from '../src/image-tool-execution.mjs';
+import { createImageToolExecution, createImageToolApproval } from '../src/image-tool-execution.mjs';
 
 const userId = '11111111-1111-4111-8111-111111111111', projectId = '22222222-2222-4222-8222-222222222222', pieceId = '33333333-3333-4333-8333-333333333333', attemptId = '44444444-4444-4444-8444-444444444444', reservationId = '55555555-5555-4555-8555-555555555555', executionId = '66666666-6666-4666-8666-666666666666', assetId = '77777777-7777-4777-8777-777777777777';
 const key = 'sk-abcdefghijklmnopqrstuvwxyz123456', actor = { userId, token: 'private-user-token' }, prompt = 'imagem de teste';
 const claim = { userId, projectId, attemptId, sessionId:'sess_a', turnId:'turn_a', callId:'call_a', promptDigest:createHash('sha256').update(prompt).digest('hex') };
+const approvedClaim = {...claim,pieceId,version:1};
 function fixture(options = {}) {
   const calls = [], state = { claimed: false };
   const fn = createImageToolExecution({
-    bindings: { verifyAction: ({userId: u}) => u === userId ? claim : null },
+    bindings: { verifyApprovedAction: ({userId: u, pieceId: p, version: v}) => u === userId && p === pieceId && v === 1 ? approvedClaim : null },
+    ownsVersion: async () => !options.accessRevoked,
     fetch: async () => { calls.push('lookup'); return Response.json({ id:'sess_a', status:'requires_action', required_actions:[{ type:'function_call', name:'generate_image', turn_id:'turn_a', call_id:'call_a', arguments:{prompt:options.prompt ?? prompt} }] }); },
     reservations: {
       reserve: async () => { calls.push('reserve'); return {id:reservationId,state:'reserved'}; },
@@ -43,6 +45,9 @@ test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
  const {createSessionBindings}=await import('../src/session-binding.mjs');
  const bindings=createSessionBindings({secret:Buffer.alloc(32,4)});
  const signed=bindings.issueAction({...claim,prompt});
+ const approve=createImageToolApproval({bindings,ownsVersion:async()=>true});
+ const approved=await approve({actor,projectId,pieceId,version:1,attemptId,actionBinding:signed,explicitApproval:true});
+ assert.ok(approved);
  const png=Buffer.alloc(33); Buffer.from([137,80,78,71,13,10,26,10]).copy(png); png.writeUInt32BE(13,8); png.write('IHDR',12); png.writeUInt32BE(1,16); png.writeUInt32BE(1,20);
  let images=0, saved=false, claimed=false;
  const fakeFetch=async (target,init={})=>{
@@ -58,7 +63,24 @@ test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
    throw Error('unexpected');
  };
  const auth=async req=>req.headers.get('authorization')===`Bearer ${actor.token}`?actor:null;
- const execute=createImageToolExecution({bindings,reservations:createImageToolReservationStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:fakeFetch}),imageHandler:createImageHandler({authenticate:auth,fetch:fakeFetch}),imageStorageHandler:createPrivateImageHandler({appOrigin:'https://example.test',supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:auth,fetch:fakeFetch}),appOrigin:'https://example.test',fetch:fakeFetch});
- const result=await execute({actor,projectId,pieceId,version:1,attemptId,actionBinding:signed,apiKey:key,explicitApproval:true});
+ const execute=createImageToolExecution({bindings,ownsVersion:async()=>true,reservations:createImageToolReservationStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:fakeFetch}),imageHandler:createImageHandler({authenticate:auth,fetch:fakeFetch}),imageStorageHandler:createPrivateImageHandler({appOrigin:'https://example.test',supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:auth,fetch:fakeFetch}),appOrigin:'https://example.test',fetch:fakeFetch});
+ const result=await execute({actor,projectId,pieceId,version:1,attemptId,actionBinding:approved,apiKey:key,explicitApproval:true});
  assert.equal(result.status,'completed');assert.equal(images,1);assert.ok(saved);assert.ok(!JSON.stringify(result).includes(key));
+});
+
+
+test('aprovação assinada impede troca de peça ou versão e exige acesso atual',async()=>{
+ const {createSessionBindings}=await import('../src/session-binding.mjs');
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,5)});
+ const signed=bindings.issueAction({...claim,prompt});
+ let allowed=true;
+ const approve=createImageToolApproval({bindings,ownsVersion:async()=>allowed});
+ const input={actor,projectId,pieceId,version:1,attemptId,actionBinding:signed,explicitApproval:true};
+ assert.equal(await approve({...input,explicitApproval:false}),null);
+ const proof=await approve(input); assert.ok(proof);
+ assert.ok(bindings.verifyApprovedAction({token:proof,userId,projectId,attemptId,pieceId,version:1}));
+ assert.equal(bindings.verifyApprovedAction({token:proof,userId,projectId,attemptId,pieceId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa',version:1}),null);
+ assert.equal(bindings.verifyApprovedAction({token:proof,userId,projectId,attemptId,pieceId,version:2}),null);
+ allowed=false; assert.equal(await approve(input),null);
+ for(const field of ['piece','version','revoked']) {const f=fixture({accessRevoked:field==='revoked'}); if(field==='piece') f.input.pieceId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'; if(field==='version') f.input.version=2; assert.equal((await f.fn(f.input)).status,'rejected'); assert.ok(!f.calls.includes('image')); assert.ok(!f.calls.includes('claim'));}
 });

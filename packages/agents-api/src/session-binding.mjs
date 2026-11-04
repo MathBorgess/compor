@@ -54,5 +54,27 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       return { userId, projectId, attemptId, sessionId: claim.sessionId, turnId: claim.turnId, callId: claim.callId, promptDigest: claim.promptDigest };
     } catch { return null; }
   }
-  return Object.freeze({ issue, verify, issueAction, verifyAction });
+  // Only trusted server code may issue this proof after checking the actor's explicit
+  // confirmation and access to the selected version. This is not an identity credential.
+  function issueApprovedAction({ actionBinding, userId, projectId, attemptId, pieceId, version }) {
+    const action = verifyAction({ token: actionBinding, userId, projectId, attemptId });
+    const iat = now();
+    if (!action || !uuid(pieceId) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid approval context');
+    const payload = Buffer.from(JSON.stringify({ ...action, pieceId, version, iat, exp: iat + lifetime })).toString('base64url');
+    return `v3.${payload}.${createHmac('sha256', signingKey).update(`v3.${payload}`).digest('base64url')}`;
+  }
+  function verifyApprovedAction({ token, userId, projectId, attemptId, pieceId, version }) {
+    try {
+      if (typeof token !== 'string' || token.length > 2048 || ![userId,projectId,attemptId,pieceId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647) return null;
+      const parts = token.split('.');
+      if (parts.length !== 3 || parts[0] !== 'v3' || !/^[A-Za-z0-9_-]+$/.test(parts[1]) || !/^[A-Za-z0-9_-]+$/.test(parts[2])) return null;
+      const actual = Buffer.from(parts[2], 'base64url'), expected = createHmac('sha256', signingKey).update(`v3.${parts[1]}`).digest();
+      if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual,expected)) return null;
+      const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
+      const c = JSON.parse(raw.toString('utf8')), current = now();
+      if (!c || Object.keys(c).length !== 11 || c.userId !== userId || c.projectId !== projectId || c.attemptId !== attemptId || c.pieceId !== pieceId || c.version !== version || !sessionIdValid(c.sessionId) || !callIdValid(c.turnId,'turn') || !callIdValid(c.callId,'call') || !/^[0-9a-f]{64}$/.test(c.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(c.iat) || !Number.isSafeInteger(c.exp) || c.exp !== c.iat + lifetime || c.iat > current || current >= c.exp) return null;
+      return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,promptDigest:c.promptDigest };
+    } catch { return null; }
+  }
+  return Object.freeze({ issue, verify, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
 }

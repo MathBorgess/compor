@@ -13,13 +13,24 @@ async function boundedText(stream, limit) {
 
 // Internal only: actor must be authenticated by the caller; all adapters must be trusted.
 // This does not submit tool_result or expose an HTTP route.
-export function createImageToolExecution({ bindings, reservations, imageHandler, imageStorageHandler, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
-  if (typeof bindings?.verifyAction !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
+export function createImageToolApproval({ bindings, ownsVersion } = {}) {
+  if (typeof bindings?.issueApprovedAction !== 'function' || typeof ownsVersion !== 'function') throw new TypeError('invalid dependencies');
+  return async ({actor, projectId, pieceId, version, attemptId, actionBinding, explicitApproval} = {}) => {
+    if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || explicitApproval !== true) return null;
+    try {
+      if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return null;
+      return bindings.issueApprovedAction({actionBinding,userId:actor.userId,projectId,attemptId,pieceId,version});
+    } catch { return null; }
+  };
+}
+export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
+  if (typeof bindings?.verifyApprovedAction !== 'function' || typeof ownsVersion !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
   return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval } = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
-    try { action = bindings.verifyAction({token: actionBinding, userId: actor.userId, projectId, attemptId}); } catch { return {status:'rejected'}; }
-    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.callId ?? '') || !/^[0-9a-f]{64}$/.test(action.promptDigest ?? '')) return {status:'rejected'};
+    try { action = bindings.verifyApprovedAction({token: actionBinding, userId: actor.userId, projectId, attemptId, pieceId, version}); } catch { return {status:'rejected'}; }
+    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.callId ?? '') || !/^[0-9a-f]{64}$/.test(action.promptDigest ?? '')) return {status:'rejected'};
+    try { if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return {status:'rejected'}; } catch { return unknown(); }
     let prompt;
     try {
       const response = await fetchApi(`https://api.openai.com/v1/agents/sessions/${encodeURIComponent(action.sessionId)}`, {headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1'},redirect:'error',signal:AbortSignal.timeout(10000)});
