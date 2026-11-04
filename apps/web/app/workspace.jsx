@@ -7,6 +7,9 @@ export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState('checking');
   const [authenticatedUser, setAuthenticatedUser] = useState(null);
+  const [openAIKey, setOpenAIKey] = useState('');
+  const openAIKeyOwner = useRef(null);
+  const clearOpenAIKey = () => { openAIKeyOwner.current = null; setOpenAIKey(''); };
   const draftKey = useRef(null);
   const memoryDrafts = useRef(new Map());
   const activeIdentity = useRef(null);
@@ -15,8 +18,13 @@ export default function Workspace({ loginAvailable }) {
   const [storageError, setStorageError] = useState(false);
   const [hasPendingDraft, setHasPendingDraft] = useState(false);
   useEffect(() => {
+    const clearOnExit = () => clearOpenAIKey();
+    window.addEventListener('pagehide', clearOnExit);
+    return () => { window.removeEventListener('pagehide', clearOnExit); openAIKeyOwner.current = null; };
+  }, []);
+  useEffect(() => {
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
-    if (!loginAvailable) { activeIdentity.current = 'offline'; setAuthState('offline'); return; }
+    if (!loginAvailable) { clearOpenAIKey(); activeIdentity.current = 'offline'; setAuthState('offline'); return; }
     let controller;
     let generation = 0;
     const checkSession = () => {
@@ -34,6 +42,7 @@ export default function Workspace({ loginAvailable }) {
       .then(data => {
         if (currentGeneration !== generation) return;
         if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
+          if (openAIKeyOwner.current && openAIKeyOwner.current !== data.userId) clearOpenAIKey();
           setAuthenticatedUser(data.userId);
           const identity = `user:${data.userId}`;
           activeIdentity.current = identity;
@@ -62,6 +71,7 @@ export default function Workspace({ loginAvailable }) {
           } catch { draftKey.current = null; setObjective(memoryDrafts.current.get(identity) ?? ''); }
           setAuthState('connected');
         } else if (data.state === 'signed-out') {
+          clearOpenAIKey();
           try {
             sessionStorage.removeItem('compor-claim-pending');
             const seenAccount = sessionStorage.getItem('compor-has-authenticated') === '1';
@@ -70,9 +80,9 @@ export default function Workspace({ loginAvailable }) {
             setObjective(memoryDrafts.current.get(activeIdentity.current) ?? (draftKey.current ? sessionStorage.getItem(draftKey.current) || '' : ''));
           } catch { draftKey.current = null; activeIdentity.current = 'signed-out'; setObjective(memoryDrafts.current.get('signed-out') ?? ''); }
           setAuthState('signed-out');
-        } else { draftKey.current = null; setObjective(''); setAuthState('unavailable'); }
+        } else { clearOpenAIKey(); draftKey.current = null; setObjective(''); setAuthState('unavailable'); }
       })
-      .catch(error => { if (currentGeneration === generation && error.name !== 'AbortError') setAuthState('unavailable'); });
+      .catch(error => { if (currentGeneration === generation && error.name !== 'AbortError') { clearOpenAIKey(); setAuthState('unavailable'); } });
     };
     const checkVisible = () => { if (document.visibilityState === 'visible') checkSession(); };
     checkSession();
@@ -124,6 +134,12 @@ export default function Workspace({ loginAvailable }) {
           <p className="hint" role="status">
             O texto fica nesta aba enquanto você escreve. Ele ainda não é salvo.
           </p>
+          {authState === 'connected' && <div className="session-key">
+            <label htmlFor="openai-key">Chave OpenAI</label>
+            <input id="openai-key" type="password" autoComplete="off" spellCheck={false} maxLength={300} value={openAIKey} onChange={event => { openAIKeyOwner.current = authenticatedUser; setOpenAIKey(event.target.value); }} />
+            <p className="hint">A chave fica apenas na memória desta aba e será removida ao sair ou trocar de conta. A geração ainda não está disponível.</p>
+            <button type="button" disabled={!openAIKey} onClick={clearOpenAIKey}>Remover chave</button>
+          </div>}
           <div className="actions">
             <button type="button" disabled>Continuar</button>
             <span>Conexão necessária para continuar</span>

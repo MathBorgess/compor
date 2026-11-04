@@ -84,6 +84,9 @@ textarea:focus-visible { outline: 3px solid #c9bcf2; outline-offset: 2px; }
 .login { margin-top: 18px; }
 .login button { border: 1px solid var(--accent); border-radius: 9px; padding: 11px 17px; background: white; color: var(--accent); font: inherit; font-weight: 650; cursor: pointer; }
 .login button:disabled { opacity: .55; cursor: not-allowed; }
+.session-key { display: grid; gap: 8px; margin-top: 16px; }
+.session-key input { font: inherit; padding: 10px; border: 1px solid var(--line); border-radius: 8px; }
+.session-key button { justify-self: start; font: inherit; padding: 8px 12px; }
 .pieces { border-top: 1px solid var(--line); margin-top: 20px; padding-top: 20px; }
 .piece-editor { display: grid; gap: 12px; margin-top: 16px; }
 .piece-editor label { display: grid; gap: 6px; }
