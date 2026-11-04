@@ -13,6 +13,7 @@ test('provedor simulado usa envelope para acessar somente o projeto autorizado',
   attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},
   withMcp:({actor,projectId},submit)=>withAgentMcpTool({appOrigin:'https://compor.vercel.app',scope,token:actor.token,projectId},submit),
   fetch:async(_url,options)=>{
+   if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]});
    const sent=JSON.parse(options.body),tool=sent.agent.tools.find(value=>value.type==='mcp');assert.ok(tool);assert.doesNotMatch(options.body,/mock-private-session|sk-test-secret/);
    const call=async id=>{const req=new Request(tool.transport.server_url,{method:'POST',headers:{authorization:tool.transport.authorization,'content-type':'application/json',accept:'application/json, text/event-stream','mcp-protocol-version':'2025-06-18'},body:JSON.stringify({jsonrpc:'2.0',id:1,method:'tools/call',params:{name:'list_piece_versions',arguments:{projectId:id,pieceId:piece}}})});return (await scope.handle(req)).json();};
    assert.equal((await call(other)).result.isError,true);assert.equal(reads,0);assert.deepEqual((await call(project)).result.structuredContent,{versions:[]});assert.equal(reads,1);

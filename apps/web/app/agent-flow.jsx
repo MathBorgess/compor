@@ -124,7 +124,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {!canStart && <p>Salve a peça e termine as edições antes de iniciar.</p>}
     {flow.state === 'idle' && <button type="button" disabled={!initialized || !canStart || !hasApiKey || !objective?.trim()} onClick={start}>Iniciar direção criativa</button>}
     {flow.state === 'starting' && <p role="status">Preparando a direção…</p>}
-    {flow.state === 'text' && <><p>{flow.text}</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
+    {flow.state === 'text' && <><p>{flow.text}</p><p>Nenhuma imagem foi gerada nesta tentativa.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
     {flow.state === 'consent' && <><p>Imagem proposta para esta peça, versão {version}:</p><p>{flow.prompt}</p><button type="button" disabled={!canStart || !hasApiKey} onClick={confirm}>Confirmar geração de imagem</button></>}
     {flow.state === 'confirming' && <p role="status">Gerando imagem…</p>}
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}

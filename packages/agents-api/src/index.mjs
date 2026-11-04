@@ -46,8 +46,9 @@ async function readAgentEvents(stream, stopForAction) {
     const part = JSON.stringify([event.item_id ?? '', event.output_index ?? 0, event.content_index ?? 0]);
     if (event.type === 'agent.session.turn.output_text.delta' && typeof event.delta === 'string') parts.set(part, (parts.get(part) ?? '') + event.delta);
     if (event.type === 'agent.session.turn.output_text.done' && typeof event.text === 'string') parts.set(part, event.text);
-    if (event.type === 'agent.session.turn.completed') completed = true;
-    if (event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled' || event.type === 'agent.session.failed') completed = false;
+    const mainTurn = !event.turn || event.turn.subagent_id == null;
+    if (event.type === 'agent.session.turn.completed' && mainTurn) completed = true;
+    if (((event.type === 'agent.session.turn.failed' || event.type === 'agent.session.turn.cancelled') && mainTurn) || event.type === 'agent.session.failed') completed = false;
     return false;
   }
   try {
@@ -95,7 +96,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       const response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
+        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela solicitar a geração de uma imagem, use a função generate_image com uma descrição apropriada; a geração depende de confirmação explícita. Não afirme ter gerado uma imagem antes do resultado da função.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
         signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
       });
@@ -105,11 +106,18 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       let observed;
       try { observed = await readAgentEvents(response.body, enableImageTool); }
       finally { agentAbort.abort(); }
-      if (observed.action) {
+      if (enableImageTool && observed.sessionId) {
         const lookup = await fetchApi(`${endpoint}/${encodeURIComponent(observed.sessionId)}`, { method: 'GET', headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1' }, redirect: 'error', signal: AbortSignal.timeout(10_000) });
         if (!lookup.ok) throw new Error('session unavailable');
         const session = JSON.parse(await limitedText(lookup.body, 256 * 1024));
-        if (session?.id !== observed.sessionId || session.status !== 'requires_action' || !Array.isArray(session.required_actions) || session.required_actions.length !== 1) throw new Error('invalid pending action');
+        if (session?.id !== observed.sessionId || !Array.isArray(session.required_actions)) throw new Error('invalid session');
+        if (session.status === 'idle' && session.required_actions.length === 0 && !observed.action) {
+          if (!observed.completed || !observed.output) return json({ error: 'incomplete_turn' }, 502);
+          const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');
+          const text = observed.output.replaceAll(key, '[redacted]');
+          return json({ sessionId: observed.sessionId, text: delegated ? text.replaceAll(delegated, '[redacted]') : text, usage: null }, 200);
+        }
+        if (session.status !== 'requires_action' || session.required_actions.length !== 1) throw new Error('invalid pending action');
         const action = session.required_actions[0];
         let args = action?.arguments;
         if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }

@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSessionBindings } from '../src/session-binding.mjs';
 import { createProjectAgentHandler } from '../src/project-route.mjs';
+import { createAgentHandler } from '../src/index.mjs';
 import { createHash } from 'node:crypto';
 const userId='11111111-1111-4111-8111-111111111111', projectId='22222222-2222-4222-8222-222222222222', attemptId='33333333-3333-4333-8333-333333333333', idempotencyKey='44444444-4444-4444-8444-444444444444';
 const apiKey='sk-test-secret-123456789012345';
@@ -50,4 +51,29 @@ test('consulta pendente inconsistente termina incerta e não informa chave nem e
   });
   const response=await handler(request()); assert.equal(response.status,502); const body=await response.text();
   assert.doesNotMatch(body,/sk-test-secret|Foto sem texto/); assert.deepEqual(finished,['unknown']); assert.equal(count,2);
+});
+
+test('reconcilia sessão após stream textual e recupera chamada de imagem não observada', async () => {
+  const calls=[];
+  const handler=createAgentHandler({ authenticate:async()=>({userId}),enableImageTool:true,fetch:async (_url,options)=>{
+    calls.push(options.method);
+    if(options.method==='POST') {const sent=JSON.parse(options.body);assert.match(sent.agent.instructions,/generate_image/);return new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201});}
+    return Response.json({id:'sess_actual',status:'requires_action',required_actions:[action]});
+  }});
+  const result=await handler(request());assert.equal(result.status,202);assert.equal((await result.json()).status,'consent_required');assert.deepEqual(calls,['POST','GET']);
+});
+
+test('não devolve texto como concluído se sessão não puder ser reconciliada',async()=>{
+  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201}) : new Response('',{status:503})});
+  const result=await handler(request());assert.equal(result.status,502);
+});
+
+test('sessão ainda em andamento não é apresentada como texto final',async()=>{
+  const handler=createAgentHandler({authenticate:async()=>({userId}),enableImageTool:true,fetch:async(_url,options)=>options.method==='POST' ? new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Vou criar."}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":null}}\n\n',{status:201}) : Response.json({id:'sess_actual',status:'in_progress',required_actions:[]})});
+  const result=await handler(request());assert.equal(result.status,502);
+});
+
+test('conclusão de subagente não comprova término do turno principal',async()=>{
+  const handler=createAgentHandler({authenticate:async()=>({userId}),fetch:async()=>new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.turn.output_text.done","text":"Texto intermediário"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"subagent_id":"sub_123"}}\n\n',{status:201})});
+  const result=await handler(request());assert.equal(result.status,502);
 });
