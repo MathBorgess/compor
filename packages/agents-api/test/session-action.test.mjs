@@ -27,7 +27,7 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
   });
   const response = await Promise.race([handler(request()), new Promise((_,reject)=>setTimeout(()=>reject(new Error('leitura não foi incremental')),1500))]);
   assert.equal(response.status,202); const data=await response.json();
-  assert.equal(data.status,'consent_required'); assert.equal(data.prompt,'Foto sem texto');
+  assert.equal(data.status,'consent_required'); assert.equal(data.prompt,'Foto sem texto'); assert.equal(data.attemptId,attemptId);
   assert.deepEqual(finished, []); assert.equal(cancelled,true);
   assert.deepEqual(calls.map(call=>call.method),['POST','GET']); assert.ok(calls.every(call=>call.auth===`Bearer ${apiKey}`));
   assert.equal(calls[1].url,'https://api.openai.com/v1/agents/sessions/sess_actual');
