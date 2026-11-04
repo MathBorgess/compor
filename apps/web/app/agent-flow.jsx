@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
+import AssetRecovery from './asset-recovery';
 
 // State belongs to one account, project, piece and saved version. It survives a
 // session recheck, but secrets and prompts are never persisted by this module.
@@ -130,7 +131,8 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
     {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
     {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => update(record,{...record.value,selectedAsset:assetId})}>Ver imagem anterior {index + 1}</button>)}</div>}
-    {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p><button type="button" disabled={!previewBlob || typeof onUseImage !== 'function'} onClick={() => onUseImage(previewBlob)}>Usar imagem na composição</button></>}
+    <AssetRecovery key={key} userId={userId} projectId={projectId} pieceId={pieceId} version={version} onSelect={assetId=>update(record,{...record.value,selectedAsset:assetId})} />
+    {preview && <><img src={preview} alt="Imagem para revisão" /><p>A origem da imagem não foi comprovada e ela ainda não está aprovada.</p><button type="button" disabled={!previewBlob || typeof onUseImage !== 'function'} onClick={() => onUseImage(previewBlob)}>Usar imagem na composição</button></>}
     {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
     {flow.storageWarning && <p role="alert">Não foi possível preservar a referência da imagem nesta aba. Ela pode não aparecer após recarregar.</p>}
     {flow.state === 'storage_unavailable' && <p role="alert">Não foi possível preservar o estado da tentativa nesta aba. Verifique o armazenamento antes de iniciar.</p>}

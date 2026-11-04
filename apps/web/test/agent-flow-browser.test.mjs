@@ -28,36 +28,36 @@ test('pessoa revisa e confirma a imagem para uma versão salva', {skip:!existsSy
  await page.goto(origin);await page.getByLabel('O que você quer divulgar?').fill('Aula aberta');await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();
  await page.getByRole('button',{name:'Iniciar direção criativa'}).click();await page.getByText('Um jardim ao sol').waitFor();assert.equal(requests.length,1);
  assert.equal(requests[0].body.apiKey,secret);assert.equal(requests[0].body.objective,'Aula aberta');assert.equal(requests[0].headers['x-compor-project-id'],projectId);assert.match(requests[0].headers['x-compor-attempt-id'],/^[0-9a-f-]{36}$/);
- await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();
+ await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();
  assert.deepEqual(requests[1].body,{apiKey:secret,projectId,pieceId,version:1,attemptId,actionBinding:'signed-proof',explicitApproval:true});
  await page.getByRole('button',{name:'Usar imagem na composição'}).click();
- await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();
+ await page.getByText('Imagem carregada: imagem-recuperada.png').waitFor();
  assert.equal(await page.getByLabel('Tenho autorização para usar esta imagem').isChecked(),true);
  await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.getByRole('img',{name:'Prévia da peça'}).waitFor();
  const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Baixar PNG'}).click();const png=await readFile(await (await downloadPromise).path());assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);assert.match(await page.locator('body').innerText(),/download não representa aprovação/i);
  await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByText('Imagem carregada: manual.png').waitFor();
  await page.getByLabel('Tenho autorização para usar esta imagem').check();await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.getByRole('img',{name:'Prévia da peça'}).waitFor();
- await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();assert.equal(await page.getByRole('link',{name:'Baixar PNG'}).count(),0);
+ await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-recuperada.png').waitFor();assert.equal(await page.getByRole('link',{name:'Baixar PNG'}).count(),0);
  await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual-pendente.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByLabel('Tenho autorização para usar esta imagem').check();
  await page.evaluate(()=>{window.originalBitmap=window.createImageBitmap;window.decodeGate=new Promise(resolve=>{window.releaseDecode=resolve;});window.createImageBitmap=async(...args)=>{window.decodeWaiting=true;await window.decodeGate;return window.originalBitmap(...args);};});
  await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.waitForFunction(()=>window.decodeWaiting===true);
- await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();await page.evaluate(()=>window.releaseDecode());
+ await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-recuperada.png').waitFor();await page.evaluate(()=>window.releaseDecode());
  await page.getByRole('button',{name:'Gerar prévia PNG'}).waitFor({state:'visible'});await page.waitForFunction(()=>!document.querySelector('.compose button:disabled'));
  assert.equal(await page.getByRole('link',{name:'Baixar PNG'}).count(),0);await page.evaluate(()=>{window.createImageBitmap=window.originalBitmap;});
  await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByText('Imagem carregada: manual.png').waitFor();
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Imagem carregada: manual.png').waitFor();
 
  const stored=await page.evaluate(()=>JSON.stringify({session:sessionStorage,local:localStorage,cookies:document.cookie,html:document.documentElement.outerHTML}));assert.ok(!stored.includes(secret));assert.ok(!stored.includes('signed-proof'));assert.ok(!stored.includes('Um jardim ao sol'));
- await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(requests.length,2);
- await page.getByRole('button',{name:'Iniciar nova tentativa'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();
- await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(requests.length,2);
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();assert.equal(requests.length,2);
+ await page.getByRole('button',{name:'Iniciar nova tentativa'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();assert.equal(requests.length,2);
  await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Iniciar direção criativa'}).click();
  await page.evaluate(()=>{window.savedSetItem=Storage.prototype.setItem;Storage.prototype.setItem=function(key,value){if(key.startsWith('compor-agent-attempt:')&&key.endsWith(':assets'))throw Error('storage indisponível');return window.savedSetItem.call(this,key,value);};});
  const newImageRead=page.waitForResponse(result=>new URL(result.url()).pathname==='/api/images' && new URL(result.url()).searchParams.get('assetId')===assetId2);
  await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText('Gerando imagem…').waitFor();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();releaseSecond();await newImageRead;await page.getByText(/não foi possível preservar a referência da imagem/i).waitFor();
  await page.getByRole('button',{name:'Iniciar nova tentativa'}).click();await page.getByText(/evento foi aceito/i).waitFor();assert.equal(await page.getByRole('button',{name:'Ver imagem anterior 1'}).count(),1);
  await page.evaluate(()=>{Storage.prototype.setItem=window.savedSetItem;});await page.getByRole('button',{name:'Iniciar nova tentativa'}).click();
- await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).waitFor();await page.getByRole('button',{name:'Ver imagem anterior 2'}).click();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(requests.length,4);
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).waitFor();await page.getByRole('button',{name:'Ver imagem anterior 2'}).click();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();assert.equal(requests.length,4);
 
 });
 
@@ -80,6 +80,6 @@ test('resultado incerto é preservado ao revalidar sessão e não repete chamada
  await page.reload();await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();
  await page.getByRole('button',{name:'Iniciar direção criativa'}).click();await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();assert.equal(starts,1);assert.equal(images,1);
- await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(starts,1);assert.equal(images,1);
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();assert.equal(starts,1);assert.equal(images,1);
  const aliceReads=reads;currentUser='bob';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByLabel('Chave OpenAI').waitFor();await page.waitForFunction(()=>document.querySelector('#openai-key')?.value==='');await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();assert.equal(await page.getByText(/resultado da tentativa é desconhecido/i).count(),0);assert.equal(await page.getByRole('button',{name:'Ver imagem anterior 1'}).count(),0);assert.equal(starts,1);assert.equal(images,1);assert.equal(reads,aliceReads);
 });

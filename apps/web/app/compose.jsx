@@ -28,7 +28,7 @@ export default function Compose({ userId, projectId, pieceId, version, content, 
     const otherBytes = [...bases.entries()].reduce((sum, [entryKey, entry]) => sum + (entryKey === key ? 0 : entry.base.size), 0);
     if (blob.size > 8 * 1024 * 1024 || otherBytes + blob.size > 16 * 1024 * 1024) { setError('Limite de imagens na memória atingido. Remova uma imagem para continuar.'); onGeneratedUsed?.(generatedBase); return; }
     clearPreview();
-    const image = new File([blob], 'imagem-gerada.png', {type:'image/png'});
+    const image = new File([blob], 'imagem-recuperada.png', {type:'image/png'});
     bases.set(key, {base:image,authorized:true,generated:true,version});
     setBase(image); setAuthorized(true); setGenerated(true); setError(''); onGeneratedUsed?.(generatedBase);
   }, [generatedBase, key]);
@@ -88,7 +88,7 @@ export default function Compose({ userId, projectId, pieceId, version, content, 
     <input id="base-image" type="file" accept="image/png" onChange={selectFile} />
     {[...bases.entries()].filter(([otherKey, entry]) => otherKey.startsWith(prefix) && otherKey !== key && entry.authorized).map(([otherKey, entry]) => <button key={otherKey} type="button" onClick={() => reuse(entry)}>Usar imagem da versão {entry.version === 0 ? 'rascunho' : entry.version}</button>)}
     {base && <><p>Imagem carregada: {base.name}</p><button type="button" onClick={() => { clearPreview(); bases.delete(key); setBase(null); setAuthorized(false); setGenerated(false); setError(''); }}>Remover imagem</button></>}
-    <p>{generated ? 'Esta cópia fica na memória da aba; a imagem gerada está no armazenamento privado.' : 'A imagem fica apenas na memória desta aba e não é salva no projeto.'} A legenda continua separada e editável.</p>
+    <p>{generated ? 'Esta cópia fica na memória da aba; a imagem recuperada está no armazenamento privado.' : 'A imagem fica apenas na memória desta aba e não é salva no projeto.'} A legenda continua separada e editável.</p>
     <label className="compose-permission"><input type="checkbox" checked={authorized} disabled={!base} onChange={event => setPermission(event.target.checked)} />Tenho autorização para usar esta imagem</label>
     <button type="button" disabled={!base || !authorized || busy} onClick={generate}>{busy ? 'Gerando prévia…' : 'Gerar prévia PNG'}</button>
     {error && <p role="alert">{error}</p>}
