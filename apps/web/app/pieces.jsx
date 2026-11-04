@@ -66,7 +66,7 @@ export default function Pieces({ projectId, userId, objective, hasApiKey, getApi
       }
       if (!response.ok || data.status !== 'saved' || data.version?.piece_id !== draft.pieceId || data.version?.version !== draft.expectedVersion + 1) throw new Error();
       setVersions(existing => [...existing, data.version]);
-      saveDraft({ ...draft, expectedVersion: data.version.version, dirty: false });
+      saveDraft({ ...draft, expectedVersion: data.version.version, sourceVersion: data.version.version, dirty: false });
       setMessage('Versão salva.'); setState('ready');
     } catch {
       if (current !== sequence.current) return;
@@ -92,21 +92,22 @@ export default function Pieces({ projectId, userId, objective, hasApiKey, getApi
   }
   const latest = new Map();
   for (const version of versions) if (!latest.has(version.piece_id) || latest.get(version.piece_id).version < version.version) latest.set(version.piece_id, version);
+  const compositionVersion = Number.isInteger(draft?.sourceVersion) && draft.sourceVersion >= 0 ? draft.sourceVersion : 'não identificada';
   return <section className="pieces" aria-labelledby="pieces-title">
     <h3 id="pieces-title">Peças e versões</h3>
     {state === 'loading' && <p role="status">Carregando peças…</p>}
     {state === 'unavailable' && <p role="alert">Não foi possível carregar as peças.</p>}
     {(state === 'ready' || state === 'saving') && <>
-      <ul>{[...latest.values()].map((version, index) => <li key={version.piece_id}>Peça {index + 1} {versions.filter(item => item.piece_id === version.piece_id).sort((a, b) => b.version - a.version).map(item => <button key={item.version} type="button" disabled={!!draft?.dirty || state === 'saving'} onClick={() => { setMessage(''); saveDraft({ pieceId: item.piece_id, expectedVersion: version.version, content: item.content, dirty: item.version !== version.version }); }}>Abrir peça {index + 1}, versão {item.version}</button>)}</li>)}</ul>
-      <button type="button" disabled={!!draft?.dirty || state === 'saving'} onClick={() => { setMessage(''); saveDraft({ pieceId: crypto.randomUUID(), expectedVersion: 0, content: blank(), dirty: false }); }}>Nova peça</button>
+      <ul>{[...latest.values()].map((version, index) => <li key={version.piece_id}>Peça {index + 1} {versions.filter(item => item.piece_id === version.piece_id).sort((a, b) => b.version - a.version).map(item => <button key={item.version} type="button" disabled={!!draft?.dirty || state === 'saving'} onClick={() => { setMessage(''); saveDraft({ pieceId: item.piece_id, expectedVersion: version.version, sourceVersion: item.version, content: item.content, dirty: item.version !== version.version }); }}>Abrir peça {index + 1}, versão {item.version}</button>)}</li>)}</ul>
+      <button type="button" disabled={!!draft?.dirty || state === 'saving'} onClick={() => { setMessage(''); saveDraft({ pieceId: crypto.randomUUID(), expectedVersion: 0, sourceVersion: 0, content: blank(), dirty: false }); }}>Nova peça</button>
       {draft && <div className="piece-editor">
         <label>Título da peça<input value={draft.content.headline} maxLength={500} disabled={state === 'saving'} onChange={e => edit('headline', e.target.value)} /></label>
         <label>Preço<input value={draft.content.price} maxLength={100} disabled={state === 'saving'} onChange={e => edit('price', e.target.value)} /></label>
         <label>Data<input value={draft.content.date} maxLength={100} disabled={state === 'saving'} onChange={e => edit('date', e.target.value)} /></label>
         <label>Legenda<textarea value={draft.content.caption} maxLength={4000} disabled={state === 'saving'} onChange={e => edit('caption', e.target.value)} /></label>
         <button type="button" disabled={state === 'saving' || storageError || draft.conflict || draft.unknown} onClick={save}>Salvar versão</button>
-        <AgentFlow key={`${userId}:${projectId}:${draft.pieceId}:${draft.expectedVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={draft.expectedVersion} canStart={state === 'ready' && !draft.dirty && !draft.conflict && !draft.unknown && !storageError && draft.expectedVersion > 0} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} onUseImage={blob => {invalidateComposition.current?.();setGeneratedBase({pieceId:draft.pieceId,blob});}} />
-        <Compose key={`${userId}:${projectId}:${draft.pieceId}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} content={draft.content} generatedBase={generatedBase?.pieceId === draft.pieceId ? generatedBase : null} onGeneratedUsed={value => setGeneratedBase(current => current === value ? null : current)} invalidateComposition={invalidateComposition} />
+        <AgentFlow key={`agent:${userId}:${projectId}:${draft.pieceId}:${compositionVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={compositionVersion} canStart={state === 'ready' && !draft.dirty && !draft.conflict && !draft.unknown && !storageError && draft.expectedVersion > 0 && draft.sourceVersion === draft.expectedVersion} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} onUseImage={blob => {invalidateComposition.current?.();setGeneratedBase({pieceId:draft.pieceId,version:compositionVersion,blob});}} />
+        <Compose key={`compose:${userId}:${projectId}:${draft.pieceId}:${compositionVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={compositionVersion} content={draft.content} generatedBase={generatedBase?.pieceId === draft.pieceId && generatedBase?.version === compositionVersion ? generatedBase : null} onGeneratedUsed={value => setGeneratedBase(current => current === value ? null : current)} invalidateComposition={invalidateComposition} />
       </div>}
       {storageError && <p role="alert">Rascunho somente em memória. Copie o texto: fechar ou recarregar a página pode apagá-lo.</p>}
       {(draft?.conflict || draft?.unknown) && <div>
@@ -114,11 +115,11 @@ export default function Pieces({ projectId, userId, objective, hasApiKey, getApi
         <button type="button" onClick={refreshVersions}>Atualizar versões</button>
         {readyBaseVersion === 0 && draft.unknown && draft.expectedVersion === 0 && <>
           <p>Nenhuma versão foi encontrada. A gravação anterior ainda pode ser concluída; uma nova tentativa será verificada pela versão esperada.</p>
-          <button type="button" onClick={() => { refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: 0, conflict: false, unknown: false, dirty: true }); setMessage('Base vazia selecionada; revise seu rascunho antes de salvar.'); }}>Usar base vazia</button>
+          <button type="button" onClick={() => { refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: 0, sourceVersion: 0, conflict: false, unknown: false, dirty: true }); setMessage('Base vazia selecionada; revise seu rascunho antes de salvar.'); }}>Usar base vazia</button>
         </>}
         {readyBaseVersion !== null && latest.get(draft.pieceId)?.version === readyBaseVersion && <>
           <p>Versão {latest.get(draft.pieceId).version} salva: {latest.get(draft.pieceId).content.headline} — {latest.get(draft.pieceId).content.caption}</p>
-          <button type="button" onClick={() => { const current = latest.get(draft.pieceId); refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: current.version, conflict: false, unknown: false, dirty: true }); setMessage('Base atualizada; revise seu rascunho antes de salvar.'); }}>Usar versão atual como base</button>
+          <button type="button" onClick={() => { const current = latest.get(draft.pieceId); refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: current.version, sourceVersion: current.version, conflict: false, unknown: false, dirty: true }); setMessage('Base atualizada; revise seu rascunho antes de salvar.'); }}>Usar versão atual como base</button>
         </>}
       </div>}
       {message && <p role="status">{message}</p>}

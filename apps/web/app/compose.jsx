@@ -4,8 +4,9 @@ import { composePng } from '../lib/compose-png.mjs';
 
 // The base remains in this tab's memory across session revalidation, never in persistent storage.
 const bases = new Map();
-export default function Compose({ userId, projectId, pieceId, content, generatedBase, onGeneratedUsed, invalidateComposition }) {
-  const key = `${userId}:${projectId}:${pieceId}`;
+export default function Compose({ userId, projectId, pieceId, version, content, generatedBase, onGeneratedUsed, invalidateComposition }) {
+  const prefix = `${userId}:${projectId}:${pieceId}:`;
+  const key = `${prefix}${version}`;
   const [base, setBase] = useState(() => bases.get(key)?.base ?? null);
   const [authorized, setAuthorized] = useState(() => bases.get(key)?.authorized ?? false);
   const [generated, setGenerated] = useState(() => bases.get(key)?.generated ?? false);
@@ -28,7 +29,7 @@ export default function Compose({ userId, projectId, pieceId, content, generated
     if (blob.size > 8 * 1024 * 1024 || otherBytes + blob.size > 16 * 1024 * 1024) { setError('Limite de imagens na memória atingido. Remova uma imagem para continuar.'); onGeneratedUsed?.(generatedBase); return; }
     clearPreview();
     const image = new File([blob], 'imagem-gerada.png', {type:'image/png'});
-    bases.set(key, {base:image,authorized:true,generated:true});
+    bases.set(key, {base:image,authorized:true,generated:true,version});
     setBase(image); setAuthorized(true); setGenerated(true); setError(''); onGeneratedUsed?.(generatedBase);
   }, [generatedBase, key]);
   function clearPreview() {
@@ -55,12 +56,18 @@ export default function Compose({ userId, projectId, pieceId, content, generated
       return;
     }
     clearPreview(); setError(''); setAuthorized(false); setGenerated(false);
-    bases.set(key, { base: file, authorized: false });
+    bases.set(key, { base: file, authorized: false, version });
     setBase(file);
   }
   function setPermission(value) {
     clearPreview(); setAuthorized(value); setError('');
-    if (base) bases.set(key, { base, authorized: value, generated });
+    if (base) bases.set(key, { base, authorized: value, generated, version });
+  }
+  function reuse(entry) {
+    if (!entry?.base || !entry.authorized) return;
+    clearPreview(); setError('');
+    bases.set(key, { ...entry, version });
+    setBase(entry.base); setAuthorized(true); setGenerated(!!entry.generated);
   }
   async function generate() {
     if (!base || !authorized || busy) return;
@@ -79,6 +86,7 @@ export default function Compose({ userId, projectId, pieceId, content, generated
     <h4 id="compose-title">Prévia e download</h4>
     <label htmlFor="base-image">Imagem-base PNG</label>
     <input id="base-image" type="file" accept="image/png" onChange={selectFile} />
+    {[...bases.entries()].filter(([otherKey, entry]) => otherKey.startsWith(prefix) && otherKey !== key && entry.authorized).map(([otherKey, entry]) => <button key={otherKey} type="button" onClick={() => reuse(entry)}>Usar imagem da versão {entry.version === 0 ? 'rascunho' : entry.version}</button>)}
     {base && <><p>Imagem carregada: {base.name}</p><button type="button" onClick={() => { clearPreview(); bases.delete(key); setBase(null); setAuthorized(false); setGenerated(false); setError(''); }}>Remover imagem</button></>}
     <p>{generated ? 'Esta cópia fica na memória da aba; a imagem gerada está no armazenamento privado.' : 'A imagem fica apenas na memória desta aba e não é salva no projeto.'} A legenda continua separada e editável.</p>
     <label className="compose-permission"><input type="checkbox" checked={authorized} disabled={!base} onChange={event => setPermission(event.target.checked)} />Tenho autorização para usar esta imagem</label>
