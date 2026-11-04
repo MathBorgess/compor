@@ -4,7 +4,7 @@ import { composePng } from '../lib/compose-png.mjs';
 
 // The base remains in this tab's memory across session revalidation, never in persistent storage.
 const bases = new Map();
-export default function Compose({ userId, projectId, pieceId, content, generatedBase, onGeneratedUsed }) {
+export default function Compose({ userId, projectId, pieceId, content, generatedBase, onGeneratedUsed, invalidateComposition }) {
   const key = `${userId}:${projectId}:${pieceId}`;
   const [base, setBase] = useState(() => bases.get(key)?.base ?? null);
   const [authorized, setAuthorized] = useState(() => bases.get(key)?.authorized ?? false);
@@ -17,10 +17,16 @@ export default function Compose({ userId, projectId, pieceId, content, generated
   const mounted = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   useEffect(() => {
+    if (!invalidateComposition) return;
+    invalidateComposition.current = clearPreview;
+    return () => { if (invalidateComposition.current === clearPreview) invalidateComposition.current = null; };
+  }, [invalidateComposition, key]);
+  useEffect(() => {
     if (!generatedBase || !(generatedBase.blob instanceof Blob)) return;
     const blob = generatedBase.blob;
     const otherBytes = [...bases.entries()].reduce((sum, [entryKey, entry]) => sum + (entryKey === key ? 0 : entry.base.size), 0);
     if (blob.size > 8 * 1024 * 1024 || otherBytes + blob.size > 16 * 1024 * 1024) { setError('Limite de imagens na memória atingido. Remova uma imagem para continuar.'); onGeneratedUsed?.(generatedBase); return; }
+    clearPreview();
     const image = new File([blob], 'imagem-gerada.png', {type:'image/png'});
     bases.set(key, {base:image,authorized:true,generated:true});
     setBase(image); setAuthorized(true); setGenerated(true); setError(''); onGeneratedUsed?.(generatedBase);

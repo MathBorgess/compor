@@ -36,6 +36,15 @@ test('pessoa revisa e confirma a imagem para uma versão salva', {skip:!existsSy
  await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.getByRole('img',{name:'Prévia da peça'}).waitFor();
  const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Baixar PNG'}).click();const png=await readFile(await (await downloadPromise).path());assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);assert.match(await page.locator('body').innerText(),/download não representa aprovação/i);
  await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByText('Imagem carregada: manual.png').waitFor();
+ await page.getByLabel('Tenho autorização para usar esta imagem').check();await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.getByRole('img',{name:'Prévia da peça'}).waitFor();
+ await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();assert.equal(await page.getByRole('link',{name:'Baixar PNG'}).count(),0);
+ await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual-pendente.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByLabel('Tenho autorização para usar esta imagem').check();
+ await page.evaluate(()=>{window.originalBitmap=window.createImageBitmap;window.decodeGate=new Promise(resolve=>{window.releaseDecode=resolve;});window.createImageBitmap=async(...args)=>{window.decodeWaiting=true;await window.decodeGate;return window.originalBitmap(...args);};});
+ await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.waitForFunction(()=>window.decodeWaiting===true);
+ await page.getByRole('button',{name:'Usar imagem na composição'}).click();await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();await page.evaluate(()=>window.releaseDecode());
+ await page.getByRole('button',{name:'Gerar prévia PNG'}).waitFor({state:'visible'});await page.waitForFunction(()=>!document.querySelector('.compose button:disabled'));
+ assert.equal(await page.getByRole('link',{name:'Baixar PNG'}).count(),0);await page.evaluate(()=>{window.createImageBitmap=window.originalBitmap;});
+ await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByText('Imagem carregada: manual.png').waitFor();
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Imagem carregada: manual.png').waitFor();
 
  const stored=await page.evaluate(()=>JSON.stringify({session:sessionStorage,local:localStorage,cookies:document.cookie,html:document.documentElement.outerHTML}));assert.ok(!stored.includes(secret));assert.ok(!stored.includes('signed-proof'));assert.ok(!stored.includes('Um jardim ao sol'));
