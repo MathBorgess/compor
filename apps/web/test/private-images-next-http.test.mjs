@@ -7,6 +7,7 @@ import { createServer as httpsServer } from 'node:https';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { fetchPrivateImage } from '../lib/private-image-fetch.mjs';
 
 test('rota de imagens permanece fechada sem habilitação explícita', async t => {
   const probe=createServer();await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
@@ -26,12 +27,12 @@ test('rota privada recupera a imagem apenas para a conta proprietária, sem repe
   const dir=await mkdtemp(join(tmpdir(),'compor-image-route-')); t.after(()=>rm(dir,{recursive:true,force:true}));
   const key=join(dir,'key.pem'), cert=join(dir,'cert.pem');
   execFileSync('openssl',['req','-x509','-newkey','rsa:2048','-nodes','-days','1','-keyout',key,'-out',cert,'-subj','/CN=127.0.0.1','-addext','subjectAltName=IP:127.0.0.1'],{stdio:'ignore'});
-  let uploads=0, downloads=0;
+  let uploads=0, downloads=0, image=png;
   const service=httpsServer({key:await readFile(key),cert:await readFile(cert)},(req,res)=>{
     const token=req.headers.authorization;
     if(req.url==='/auth/v1/user'){res.setHeader('content-type','application/json');return res.end(JSON.stringify({id:token==='Bearer mock-owner'?user:other,aud:'authenticated'}));}
     if(req.url.startsWith('/rest/v1/piece_versions?')){res.setHeader('content-type','application/json');return res.end(JSON.stringify(token==='Bearer mock-owner'?[{project_id:project,piece_id:piece,version:1,projects:{owner_id:user}}]:[]));}
-    if(req.url.startsWith('/storage/v1/object/')){if(req.method==='POST'){uploads++; assert.equal(req.headers['x-upsert'],'false');res.statusCode=500;return res.end();}downloads++;res.setHeader('content-type','image/png');return res.end(png);}
+    if(req.url.startsWith('/storage/v1/object/')){if(req.method==='POST'){uploads++; assert.equal(req.headers['x-upsert'],'false');res.statusCode=500;return res.end();}downloads++;res.setHeader('content-type','image/png');return res.end(image);}
     res.statusCode=404;res.end();
   });
   await new Promise(resolve=>service.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>service.close(resolve)));
@@ -45,6 +46,9 @@ test('rota privada recupera a imagem apenas para a conta proprietária, sem repe
   assert.equal((await fetch(endpoint)).status,401);
   const denied=await fetch(endpoint,{headers:{cookie:cookie(other,'mock-other')}});assert.equal(denied.status,404);assert.equal(downloads,0);
   const good=await fetch(endpoint,{headers:{cookie:cookie(user,'mock-owner')}});assert.equal(good.status,200);assert.equal(good.headers.get('cache-control'),'no-store');assert.deepEqual(Buffer.from(await good.arrayBuffer()),png);
+  image=Buffer.concat([png,Buffer.alloc(5*1024*1024,7)]);const query=new URL(endpoint).searchParams;
+  const recovered=await fetchPrivateImage(query,{fetch:(url,options)=>fetch(new URL(url,origin),{...options,headers:{cookie:cookie(user,'mock-owner')}})});assert.deepEqual(Buffer.from(await recovered.arrayBuffer()),image);assert.equal(downloads,5);
+  let requests=0;await assert.rejects(fetchPrivateImage(query,{fetch:(url,options)=>fetch(new URL(url,origin),{...options,headers:{cookie:++requests<3?cookie(user,'mock-owner'):cookie(other,'mock-other')}})}));assert.equal(downloads,7);
   const badOrigin=await fetch(endpoint,{method:'POST',headers:{cookie:cookie(user,'mock-owner'),origin:'https://evil.example','content-type':'image/png'},body:png});assert.equal(badOrigin.status,403);assert.equal(uploads,0);
   const result=await fetch(endpoint,{method:'POST',headers:{cookie:cookie(user,'mock-owner'),origin,'content-type':'image/png'},body:png});assert.equal(result.status,502);assert.deepEqual(await result.json(),{error:'result_unknown',retryAutomatically:false});assert.equal(uploads,1);
 });

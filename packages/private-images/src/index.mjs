@@ -1,4 +1,8 @@
+import { createHash } from 'node:crypto';
+
 const MAX_BYTES = 8 * 1024 * 1024;
+const MAX_HTTP_BYTES = 4 * 1024 * 1024;
+const PART_BYTES = 2 * 1024 * 1024;
 const MAX_DIMENSION = 2048;
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const reply = (body, status) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -43,6 +47,8 @@ export function createPrivateImageHandler({ appOrigin, supabaseUrl, publishableK
     if (method === 'POST' && request.headers.get('content-type') !== 'image/png') return reply({ error: 'invalid_request' }, 400);
     const query = new URL(request.url).searchParams;
     const project = query.get('projectId'), piece = query.get('pieceId'), asset = query.get('assetId'), ver = query.get('version');
+    const part = query.get('part');
+    if (query.getAll('part').length > 1 || (part !== null && (method !== 'GET' || !/^[0-3]$/.test(part)))) return reply({ error: 'invalid_request' }, 400);
     if (!uuid(project) || !uuid(piece) || !uuid(asset) || !/^[1-9][0-9]{0,9}$/.test(ver ?? '') || Number(ver) > 2147483647) return reply({ error: 'invalid_request' }, 400);
     let actor;
     try { actor = await authenticate(request); } catch { return reply({ error: 'unavailable' }, 503); }
@@ -84,6 +90,15 @@ export function createPrivateImageHandler({ appOrigin, supabaseUrl, publishableK
       if (!result.ok || !/^image\/png(?:\s*;|$)/i.test(result.headers.get('content-type') ?? '')) return reply({ error: 'unavailable' }, 503);
       const image = await readBounded(result.body);
       if (!validPng(image)) return reply({ error: 'unavailable' }, 503);
+      if (part !== null) {
+        const index = Number(part), parts = Math.ceil(image.length / PART_BYTES);
+        if (index >= parts) return reply({ error: 'invalid_request' }, 400);
+        return new Response(image.subarray(index * PART_BYTES, Math.min((index + 1) * PART_BYTES, image.length)), { status: 200, headers: {
+          'content-type': 'application/octet-stream', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff',
+          'x-compor-part': String(index), 'x-compor-parts': String(parts), 'x-compor-size': String(image.length), 'x-compor-sha256': createHash('sha256').update(image).digest('hex'),
+        } });
+      }
+      if (image.length > MAX_HTTP_BYTES) return Response.json({ error: 'image_requires_parts' }, { status: 413, headers: { 'cache-control': 'no-store', 'x-compor-chunked': '1' } });
       return new Response(image, { status: 200, headers: { 'content-type': 'image/png', 'cache-control': 'no-store', 'x-content-type-options': 'nosniff' } });
     } catch {
       return method === 'POST' ? reply({ error: 'result_unknown', retryAutomatically: false }, 502) : reply({ error: 'unavailable' }, 503);

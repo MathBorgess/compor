@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useRef, useState } from 'react';
 import { composePng } from '../lib/compose-png.mjs';
+import { fetchPrivateImage } from '../lib/private-image-fetch.mjs';
 
 // The base remains in this tab's memory across session revalidation, never in persistent storage.
 const bases = new Map();
@@ -149,10 +150,7 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
     setReviewState('loading'); setAcknowledged(false); setReviewUrl(null);
     const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId:pendingAssetId});
     try {
-      const response = await fetch(`/api/images?${query}`, {cache:'no-store'});
-      if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error('unavailable');
-      const blob = await response.blob();
-      if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error('unavailable');
+      const blob = await fetchPrivateImage(query);
       if (!mounted.current || serial !== reviewSequence.current) return;
       setReviewUrl(URL.createObjectURL(blob)); setReviewState('found');
     } catch { if (mounted.current && serial === reviewSequence.current) setReviewState('unverified'); }

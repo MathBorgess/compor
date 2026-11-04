@@ -1,6 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import AssetRecovery from './asset-recovery';
+import {fetchPrivateImage} from '../lib/private-image-fetch.mjs';
 
 // State belongs to one account, project, piece and saved version. It survives a
 // session recheck, but secrets and prompts are never persisted by this module.
@@ -70,9 +71,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     if (!uuid(assetId)) return;
     const controller = new AbortController(); let url;
     const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId});
-    fetch(`/api/images?${query}`, {cache:'no-store',signal:controller.signal}).then(async response => {
-      if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error();
-      const blob = await response.blob(); if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error();
+    fetchPrivateImage(query, {signal:controller.signal}).then(blob => {
       if (controller.signal.aborted) return;
       url = URL.createObjectURL(blob); setPreview(url); setPreviewBlob(blob);
     }).catch(() => {if (!controller.signal.aborted) setPreviewError(true);});

@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { createPrivateImageHandler } from '../src/index.mjs';
 
 const user = '11111111-1111-4111-8111-111111111111';
@@ -86,4 +87,17 @@ test('resposta de Storage com MIME incorreto não é devolvida como imagem', asy
   const result = await handler(new Request(base));
   assert.equal(result.status, 503);
   assert.doesNotMatch(await result.text(), /user-token/);
+});
+
+test('PNG maior que limite Vercel é recuperado em partes com autorização por requisição', async () => {
+ const large=Buffer.concat([png,Buffer.alloc(5*1024*1024,7)]),digest=createHash('sha256').update(large).digest('hex');let authenticatedUser=user,checks=0,storage=0;
+ const handler=createPrivateImageHandler({appOrigin:'https://compor.example',supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:async()=>({userId:authenticatedUser,token:'user-token'}),fetch:async(url,init)=>{
+  if(url.pathname==='/rest/v1/piece_versions'){checks++;return Response.json([{project_id:project,piece_id:piece,version:1,projects:{owner_id:user}}]);}
+  storage++;assert.equal(init.headers.authorization,'Bearer user-token');return new Response(large,{headers:{'content-type':'image/png'}});
+ }});
+ const full=await handler(new Request(base));assert.equal(full.status,413);assert.equal(full.headers.get('x-compor-chunked'),'1');
+ const chunks=[];for(let i=0;i<3;i++){const url=new URL(base);url.searchParams.set('part',String(i));const r=await handler(new Request(url));assert.equal(r.status,200);assert.equal(r.headers.get('content-type'),'application/octet-stream');assert.equal(r.headers.get('cache-control'),'no-store');assert.equal(r.headers.get('x-compor-part'),String(i));assert.equal(r.headers.get('x-compor-parts'),'3');assert.equal(r.headers.get('x-compor-size'),String(large.length));assert.equal(r.headers.get('x-compor-sha256'),digest);const bytes=Buffer.from(await r.arrayBuffer());assert.ok(bytes.length<=2*1024*1024);chunks.push(bytes);}
+ assert.deepEqual(Buffer.concat(chunks),large);assert.equal(checks,4);assert.equal(storage,4);
+ authenticatedUser='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';const unauthorized=new URL(base);unauthorized.searchParams.set('part','0');assert.equal((await handler(new Request(unauthorized))).status,404);assert.equal(storage,4);
+ const invalid=new URL(base);invalid.searchParams.set('part','4');assert.equal((await handler(new Request(invalid))).status,400);assert.equal(storage,4);
 });
