@@ -30,6 +30,10 @@ def main():
     commit = sys.argv[1]
     if git('rev-parse', '--verify', f'{commit}^{{commit}}').decode().strip() != commit:
         raise ValueError('commit not found')
+    generator = git('show', f'{commit}:scripts/stage_vercel_web.py')
+    if generator != Path(__file__).resolve().read_bytes():
+        raise ValueError('generator differs from selected commit')
+    generator_sha256 = hashlib.sha256(generator).hexdigest()
     root = Path(git('rev-parse', '--show-toplevel').decode().strip()).resolve()
     output = Path(sys.argv[2])
     if not output.is_absolute() or output.exists():
@@ -89,7 +93,7 @@ def main():
     outputs = sorted(p for p in output.rglob('*') if p.is_file())
     listing = {str(p.relative_to(output)): hashlib.sha256(p.read_bytes()).hexdigest() for p in outputs}
     manifest_path = output / 'STAGE-MANIFEST.json'
-    manifest_path.write_text(json.dumps({'commit': commit, 'files': listing}, indent=2) + '\n')
+    manifest_path.write_text(json.dumps({'commit': commit, 'generator_sha256': generator_sha256, 'files': listing}, indent=2) + '\n')
     print(json.dumps({'commit': commit, 'output': str(output), 'files': len(listing),
                       'manifest_sha256': hashlib.sha256(manifest_path.read_bytes()).hexdigest()}))
 

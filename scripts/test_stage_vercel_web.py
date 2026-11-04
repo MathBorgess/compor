@@ -21,6 +21,9 @@ class StageTest(unittest.TestCase):
                 self.assertEqual(hashlib.sha256(raw).hexdigest(), result['manifest_sha256'])
                 manifest = json.loads(raw)
                 self.assertEqual(manifest['commit'], COMMIT)
+                generator = subprocess.check_output(['git', 'show', f'{COMMIT}:scripts/stage_vercel_web.py'], cwd=ROOT)
+                self.assertEqual(manifest['generator_sha256'], hashlib.sha256(generator).hexdigest())
+                self.assertEqual(generator, SCRIPT.read_bytes())
                 for name, digest in manifest['files'].items():
                     self.assertTrue(name.startswith('apps/web/'))
                     self.assertEqual(hashlib.sha256((path / name).read_bytes()).hexdigest(), digest)
@@ -40,6 +43,15 @@ class StageTest(unittest.TestCase):
             for output in [directory, 'relative-output']:
                 run = subprocess.run(['python3', str(SCRIPT), COMMIT, output], cwd=ROOT, capture_output=True, text=True)
                 self.assertNotEqual(run.returncode, 0)
+
+    def test_rejects_generator_modified_from_selected_commit(self):
+        with tempfile.TemporaryDirectory(prefix='compor-stage-test-') as directory:
+            altered = Path(directory) / 'altered.py'
+            altered.write_bytes(SCRIPT.read_bytes() + b'\n# uncommitted change\n')
+            output = Path(directory) / 'bundle'
+            run = subprocess.run(['python3', str(altered), COMMIT, str(output)], cwd=ROOT, capture_output=True, text=True)
+            self.assertNotEqual(run.returncode, 0)
+            self.assertFalse(output.exists())
 
 if __name__ == '__main__':
     unittest.main()
