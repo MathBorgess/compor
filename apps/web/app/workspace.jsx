@@ -1,15 +1,22 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import Projects from './projects';
 
 export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState('checking');
   const [authenticatedUser, setAuthenticatedUser] = useState(null);
-  const [openAIKey, setOpenAIKey] = useState('');
+  const openAIKey = useRef('');
+  const openAIKeyInput = useRef(null);
+  const [hasOpenAIKey, setHasOpenAIKey] = useState(false);
   const openAIKeyOwner = useRef(null);
-  const clearOpenAIKey = () => { openAIKeyOwner.current = null; setOpenAIKey(''); };
+  const clearOpenAIKey = () => {
+    openAIKey.current = '';
+    openAIKeyOwner.current = null;
+    if (openAIKeyInput.current) openAIKeyInput.current.value = '';
+    setHasOpenAIKey(false);
+  };
   const draftKey = useRef(null);
   const memoryDrafts = useRef(new Map());
   const activeIdentity = useRef(null);
@@ -17,10 +24,13 @@ export default function Workspace({ loginAvailable }) {
   const [loginError, setLoginError] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const [hasPendingDraft, setHasPendingDraft] = useState(false);
+  useLayoutEffect(() => {
+    if (authState === 'connected' && openAIKeyInput.current) openAIKeyInput.current.value = openAIKey.current;
+  }, [authState, authenticatedUser]);
   useEffect(() => {
     const clearOnExit = () => clearOpenAIKey();
     window.addEventListener('pagehide', clearOnExit);
-    return () => { window.removeEventListener('pagehide', clearOnExit); openAIKeyOwner.current = null; };
+    return () => { window.removeEventListener('pagehide', clearOnExit); openAIKey.current = ''; openAIKeyOwner.current = null; if (openAIKeyInput.current) openAIKeyInput.current.value = ''; };
   }, []);
   useEffect(() => {
     setLoginError(new URLSearchParams(window.location.search).get('login') === 'erro');
@@ -136,9 +146,9 @@ export default function Workspace({ loginAvailable }) {
           </p>
           {authState === 'connected' && <div className="session-key">
             <label htmlFor="openai-key">Chave OpenAI</label>
-            <input id="openai-key" type="password" autoComplete="off" spellCheck={false} maxLength={300} value={openAIKey} onChange={event => { openAIKeyOwner.current = authenticatedUser; setOpenAIKey(event.target.value); }} />
+            <input ref={openAIKeyInput} id="openai-key" type="password" autoComplete="off" spellCheck={false} maxLength={300} onChange={event => { openAIKey.current = event.target.value; openAIKeyOwner.current = authenticatedUser; setHasOpenAIKey(Boolean(event.target.value)); }} />
             <p className="hint">A chave fica apenas na memória desta aba e será removida ao sair ou trocar de conta. A geração ainda não está disponível.</p>
-            <button type="button" disabled={!openAIKey} onClick={clearOpenAIKey}>Remover chave</button>
+            <button type="button" disabled={!hasOpenAIKey} onClick={clearOpenAIKey}>Remover chave</button>
           </div>}
           <div className="actions">
             <button type="button" disabled>Continuar</button>
