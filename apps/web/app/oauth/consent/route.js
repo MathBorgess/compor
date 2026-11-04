@@ -1,7 +1,7 @@
 import { authClient } from '../../../lib/supabase';
 import { oauthConfig, safeText, validAuthorizationId, validProviderRedirect } from '../../../lib/oauth';
 
-const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'no-referrer', 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'", 'X-Content-Type-Options': 'nosniff' };
+const headers = { 'Cache-Control': 'no-store', 'Referrer-Policy': 'strict-origin', 'Content-Type': 'text/html; charset=utf-8', 'Content-Security-Policy': "default-src 'none'; style-src 'unsafe-inline'; form-action 'self'; base-uri 'none'; frame-ancestors 'none'", 'X-Content-Type-Options': 'nosniff' };
 const html = (body, status = 200) => new Response(`<!doctype html><html lang="pt-BR"><meta charset="utf-8"><title>Conectar ao Compor</title><main>${body}</main></html>`, { status, headers });
 export async function GET(request) {
   const config = oauthConfig();

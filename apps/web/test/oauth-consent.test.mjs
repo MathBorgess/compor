@@ -7,6 +7,7 @@ import { createServer as createHttpsServer } from 'node:https';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { chromium } from 'playwright-core';
 
 test('consentimento explicita cliente e exige decisão da conta autenticada', async t => {
   const dir = await mkdtemp(join(tmpdir(), 'compor-oauth-test-'));
@@ -49,6 +50,29 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   assert.match(text, /Autorizar/);
   assert.match(text, /Negar/);
   assert.deepEqual(actions, []);
+  const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+  t.after(() => browser.close());
+  const context = await browser.newContext();
+  await context.addCookies([{ name: 'sb-127-auth-token', value: cookie.split('=')[1], url: origin }]);
+  const browserPage = await context.newPage();
+  await context.route('http://localhost:4545/**', route => route.fulfill({ status: 200, body: 'callback' }));
+  await browserPage.goto(endpoint);
+  const [decisionRequest] = await Promise.all([
+    browserPage.waitForRequest(request => request.url() === `${origin}/oauth/decision`, { timeout: 5000 }),
+    browserPage.getByRole('button', { name: 'Autorizar' }).click({ noWaitAfter: true }),
+  ]);
+  const decisionHeaders = await decisionRequest.allHeaders();
+  assert.equal(decisionHeaders.origin, origin);
+  assert.equal(decisionHeaders.referer, `${origin}/`);
+  const decisionDeadline = Date.now() + 5000;
+  while (!actions.length && Date.now() < decisionDeadline) await new Promise(resolve => setTimeout(resolve, 25));
+  assert.deepEqual(actions, ['approve']);
+  actions.length = 0;
+  for (const rejectedOrigin of ['null', 'https://attacker.example']) {
+    const rejected = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: rejectedOrigin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
+    assert.equal(rejected.status, 403);
+    assert.deepEqual(actions, []);
+  }
   for (const destination of ['http://localhost:49273/callback?code=preconsented-secret&state=client-state', 'http://127.0.0.1:56411/callback?code=preconsented-secret&state=client-state', 'https://client.example/callback?code=preconsented-secret&state=client-state']) {
     reconnectionRedirect = destination;
     const reconnect = await fetch(`${endpoint}&redirect_url=${encodeURIComponent('https://evil.test/steal')}`, { headers: { Cookie: cookie }, redirect: 'manual' });
