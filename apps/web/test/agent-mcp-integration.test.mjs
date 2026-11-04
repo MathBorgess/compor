@@ -21,4 +21,3 @@ test('provedor simulado usa envelope para acessar somente o projeto autorizado',
  });
  const req=request({origin:'https://compor.vercel.app'});const response=await handler(req);assert.equal(response.status,200);assert.doesNotMatch(await response.text(),/mock-private-session|sk-test-secret/);
 });
-
