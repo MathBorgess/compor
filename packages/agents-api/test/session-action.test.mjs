@@ -65,6 +65,18 @@ test('timeout ao consultar sessão após ação mantém tentativa e custo descon
  assert.deepEqual(calls,['POST','GET']);assert.deepEqual(finished,['unknown']);assert.deepEqual(measurements,[{state:'unknown',usage:null}]);
 });
 
+test('timeout com falha de persistência não transforma started em sucesso nem repete envio', async () => {
+ let attemptState=null, measurementState=null;const calls=[], requested=[];
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',resolveActor:async()=>({userId,token:'fake-token'}),ownsProject:async()=>true,
+  bindings:createSessionBindings({secret:Buffer.alloc(32,42)}),
+  attempts:{start:async()=>{attemptState='started';return {id:attemptId,state:attemptState,isNew:true};},finish:async({state})=>{requested.push(['attempt',state]);throw Error('persistence unavailable');}},
+  usage:{start:async()=>{measurementState='started';return true;},finish:async({state})=>{requested.push(['measurement',state]);throw Error('persistence unavailable');}},
+  fetch:async(_url,options)=>{calls.push(options.method);if(options.method==='POST')return new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.requires_action","session":{"id":"sess_actual"}}\n\n',{status:201});throw new DOMException('simulated timeout','TimeoutError');},
+ });
+ const result=await handler(request());assert.equal(result.status,502);assert.deepEqual(await result.json(),{error:'result_unknown',retryAutomatically:false});
+ assert.deepEqual(calls,['POST','GET']);assert.deepEqual(requested,[['measurement','unknown'],['attempt','unknown']]);assert.equal(attemptState,'started');assert.equal(measurementState,'started');
+});
+
 test('reconcilia sessão após stream textual e recupera chamada de imagem não observada', async () => {
   const calls=[];
   const handler=createAgentHandler({ authenticate:async()=>({userId}),enableImageTool:true,fetch:async (_url,options)=>{
