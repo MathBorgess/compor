@@ -34,10 +34,14 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   assert.ok(results.every(result => result.rows[0].state === 'reserved'));
   await assert.rejects(() => db.query(reserve, [project, piece, 2, attempt, 'sess_123', 'turn_123', 'call_123']));
   await assert.rejects(() => db.query('update public.image_tool_reservations set state=\'unknown\''));
+  const otherCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_other'];
+  assert.equal((await db.query(reserve, otherCall)).rows[0].is_new, true);
   const unknown = await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_123']);
   assert.equal(unknown.rows[0].mark_image_tool_call_unknown, true);
   await db.query("select public.finish_agent_attempt($1,$2,'unknown')", [project, attempt]);
   await assert.rejects(() => db.query(reserve, [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_new']));
+  const reservedBeforeFinish = (await db.query(reserve, otherCall)).rows[0];
+  assert.equal(reservedBeforeFinish.is_new, false); assert.equal(reservedBeforeFinish.state, 'reserved');
   const duplicate = await db.query(reserve, args);
   assert.equal(duplicate.rows[0].is_new, false); assert.equal(duplicate.rows[0].state, 'unknown');
   await db.exec(`select set_config('request.jwt.claim.sub','${bob}',false)`);

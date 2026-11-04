@@ -34,10 +34,12 @@ begin
      pg_catalog.strpos(pg_catalog.lower(p_session_id || p_turn_id || p_call_id), 'sk-') > 0 then
     raise exception 'invalid request' using errcode = '22023';
   end if;
+  -- Serialize with updates that finish the parent attempt before checking its state.
   select a.state into v_attempt_state from public.projects p join public.piece_versions v on v.project_id = p.id
     join public.agent_attempts a on a.project_id = p.id
     where p.id = p_project_id and p.owner_id = v_owner and v.piece_id = p_piece_id and v.version = p_piece_version
-      and a.id = p_attempt_id and a.owner_id = v_owner;
+      and a.id = p_attempt_id and a.owner_id = v_owner
+    for update of a;
   if not found then raise exception 'reservation unavailable' using errcode = '42501'; end if;
   select r.id, r.state into v_id, v_state from public.image_tool_reservations r
     where r.owner_id = v_owner and r.project_id = p_project_id and r.piece_id = p_piece_id and r.piece_version = p_piece_version
