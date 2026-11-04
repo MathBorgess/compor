@@ -57,5 +57,16 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       const result = await rpc('complete_image_tool_execution', actor, { p_execution_id: executionId });
       if (result !== true) throw new Error('reservation status unknown');
     },
+    async claimResultSubmission(input) {
+      if (!validCall(input) || !uuid.test(input.executionId ?? '') || !uuid.test(input.pieceId ?? '') || !uuid.test(input.attemptId ?? '') || !Number.isInteger(input.version) || input.version < 1 || input.version > 2147483647) throw new Error('invalid submission');
+      const rows = await rpc('claim_image_tool_result_submission', input.actor, {p_execution_id:input.executionId,p_project_id:input.projectId,p_piece_id:input.pieceId,p_piece_version:input.version,p_attempt_id:input.attemptId,p_session_id:input.sessionId,p_turn_id:input.turnId,p_call_id:input.callId});
+      const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+      if (!uuid.test(row?.submission_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['sending','unknown','sent'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'sending')) throw new Error('submission status unknown');
+      return {id:row.submission_id,assetId:row.asset_id,state:row.state,isNew:row.is_new};
+    },
+    async finishResultSubmission({actor,submissionId,state}) {
+      if (!uuid.test(submissionId ?? '') || !['sent','unknown'].includes(state)) throw new Error('invalid submission');
+      if (await rpc('finish_image_tool_result_submission', actor, {p_submission_id:submissionId,p_state:state}) !== true) throw new Error('submission status unknown');
+    },
   };
 }

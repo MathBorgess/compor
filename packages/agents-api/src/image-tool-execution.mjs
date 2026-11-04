@@ -63,7 +63,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       const confirmation = await stored.json();
       if (confirmation?.status !== 'stored' || confirmation.assetId !== execution.assetId) throw new Error('storage uncertain');
       await reservations.completeExecution({actor,executionId:execution.id});
-      return {status:'completed',toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
+      return {status:'completed',executionId:execution.id,toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
       try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }
       return unknown();

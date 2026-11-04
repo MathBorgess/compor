@@ -17,7 +17,7 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth, public to public; grant execute on function auth.uid() to public;
   `);
-  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql', '20261103000006_image_tool_execution_claim.sql']) {
+  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql', '20261103000006_image_tool_execution_claim.sql', '20261103000007_image_tool_result_submission.sql']) {
     await db.exec(await readFile(new URL(`../../../supabase/migrations/${file}`, import.meta.url), 'utf8'));
   }
   await db.query('insert into auth.users (id) values ($1),($2)', [alice, bob]);
@@ -70,6 +70,18 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   assert.equal((await db.query('select public.complete_image_tool_execution($1)', [otherClaim.execution_id])).rows[0].complete_image_tool_execution, true);
   const completed = (await db.query(claim, [otherReservation.reservation_id])).rows[0];
   assert.equal(completed.state, 'completed'); assert.equal(completed.asset_id, otherClaim.asset_id); assert.equal(completed.is_new, false);
+  const submissionSql = 'select * from public.claim_image_tool_result_submission($1,$2,$3,$4,$5,$6,$7,$8)';
+  const submissionArgs = [otherClaim.execution_id, project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_other'];
+  await assert.rejects(() => db.query(submissionSql, [firstClaim.execution_id, ...submissionArgs.slice(1)]), 'resultado incerto não pode ser enviado');
+  await assert.rejects(() => db.query(submissionSql, [otherClaim.execution_id, project, piece, 2, attempt, 'sess_123', 'turn_123', 'call_other']), 'outra versão não pode ser usada');
+  const submissions = await Promise.all(Array.from({length:4}, () => db.query(submissionSql, submissionArgs)));
+  assert.equal(submissions.filter(r => r.rows[0].is_new).length, 1);
+  assert.ok(submissions.every(r => r.rows[0].asset_id === otherClaim.asset_id));
+  const submissionId = submissions[0].rows[0].submission_id;
+  await assert.rejects(() => db.query('update public.image_tool_result_submissions set state=\'sent\''));
+  assert.equal((await db.query('select public.finish_image_tool_result_submission($1,$2)', [submissionId,'unknown'])).rows[0].finish_image_tool_result_submission,true);
+  assert.equal((await db.query(submissionSql, submissionArgs)).rows[0].state,'unknown');
+  await assert.rejects(() => db.query('select public.finish_image_tool_result_submission($1,$2)', [submissionId,'sent']));
   const uncertainCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_uncertain'];
   const uncertainId = (await db.query(reserve, uncertainCall)).rows[0].reservation_id;
   await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_uncertain']);
@@ -87,6 +99,9 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   assert.equal((await db.query('select * from public.image_tool_reservations')).rows.length, 0);
   assert.equal((await db.query('select * from public.image_consent_declarations')).rows.length, 0);
   assert.equal((await db.query('select * from public.image_tool_executions')).rows.length, 0);
+  assert.equal((await db.query('select * from public.image_tool_result_submissions')).rows.length,0);
+  await assert.rejects(() => db.query(submissionSql, submissionArgs));
+  await assert.rejects(() => db.query('select public.finish_image_tool_result_submission($1,$2)', [submissionId,'sent']));
   await assert.rejects(() => db.query(claim, [reservationId]));
   await assert.rejects(() => db.query('select public.complete_image_tool_execution($1)', [otherClaim.execution_id]));
   await assert.rejects(() => db.query(declare, [reservationId, true]));
