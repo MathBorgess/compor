@@ -48,3 +48,7 @@ test('fluxo HTTP com adaptadores reais e serviços simulados exige prova e evita
  const second=await route(request({...body,actionBinding}));assert.equal(second.status,502);assert.equal(generationCount,1);assert.equal(postCount,1);
  const tampered=await route(request({...body,actionBinding,pieceId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}));assert.equal(tampered.status,403);assert.equal(generationCount,1);
 });
+test('asset já salvo permanece recuperável se envio do evento lançar erro',async()=>{
+ const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'completed',executionId,toolResult:{output:JSON.stringify({assetId})}}),send:async()=>{throw Error(apiKey);}});
+ const response=await handler(request());assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});
+});

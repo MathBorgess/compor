@@ -21,14 +21,16 @@ export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,se
   let proof;
   try {proof=await approve({...context,actionBinding:data.actionBinding,explicitApproval:true});} catch{return reply({error:'unavailable'},503);}
   if(!proof)return reply({error:'forbidden'},403);
+  let storedAssetId;
   try {
    const execution=await execute({...context,actionBinding:proof,apiKey:data.apiKey,explicitApproval:true});
    if(execution?.status!=='completed' || !uuid(execution.executionId))return reply({error:'result_unknown',retryAutomatically:false},502);
    const output=JSON.parse(execution.toolResult?.output ?? 'null');
    if(!uuid(output?.assetId))return reply({error:'result_unknown',retryAutomatically:false},502);
+   storedAssetId=output.assetId;
    const result=await send({...context,actionBinding:proof,executionId:execution.executionId,apiKey:data.apiKey});
    if(result?.status!=='accepted')return reply({error:'result_unknown',retryAutomatically:false,assetId:output.assetId},502);
    return reply({status:'accepted',assetId:output.assetId},202);
-  } catch{return reply({error:'result_unknown',retryAutomatically:false},502);}
+  } catch{return reply({error:'result_unknown',retryAutomatically:false,...(storedAssetId ? {assetId:storedAssetId} : {})},502);}
  };
 }
