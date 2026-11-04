@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
+import {readFile} from 'node:fs/promises';
 import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
@@ -19,8 +20,9 @@ test('pessoa revisa e confirma a imagem para uma versão salva', {skip:!existsSy
  await page.route('**/api/projects',r=>r.fulfill({json:{projects:[{id:projectId,title:'Oficina'}]}}));
  await page.route('**/api/pieces*',r=>r.fulfill({json:{versions:[{project_id:projectId,piece_id:pieceId,version:1,content:{headline:'Convite',price:'',date:'',caption:'Legenda',captionOrigin:'user'}}]}}));
  await page.route('**/api/agent',async r=>{requests.push({url:'/api/agent',body:r.request().postDataJSON(),headers:r.request().headers()});await r.fulfill({status:202,json:{status:'consent_required',prompt:'Um jardim ao sol',attemptId,actionBinding:'signed-proof'}});});
+ const imageBytes = await page.evaluate(async()=>{const canvas=document.createElement('canvas');canvas.width=256;canvas.height=256;const ctx=canvas.getContext('2d');ctx.fillStyle='#3977aa';ctx.fillRect(0,0,256,256);return Array.from(new Uint8Array(await (await new Promise(resolve=>canvas.toBlob(resolve,'image/png'))).arrayBuffer()));});
  await page.route('**/api/images**',async r=>{
-  if(r.request().method()==='GET') { const url=new URL(r.request().url()); assert.equal(url.searchParams.get('projectId'),projectId);assert.equal(url.searchParams.get('pieceId'),pieceId);assert.equal(url.searchParams.get('version'),'1');assert.ok([assetId,assetId2].includes(url.searchParams.get('assetId')));return r.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmTkAAAAASUVORK5CYII=','base64')}); }
+  if(r.request().method()==='GET') { const url=new URL(r.request().url()); assert.equal(url.searchParams.get('projectId'),projectId);assert.equal(url.searchParams.get('pieceId'),pieceId);assert.equal(url.searchParams.get('version'),'1');assert.ok([assetId,assetId2].includes(url.searchParams.get('assetId')));return r.fulfill({status:200,contentType:'image/png',body:Buffer.from(imageBytes)}); }
  });
  await page.route('**/api/agent/image',async r=>{requests.push({url:'/api/agent/image',body:r.request().postDataJSON()});await r.fulfill({status:202,json:{status:'accepted',assetId:requests.filter(item=>item.url==='/api/agent/image').length===1 ? assetId : assetId2}});});
  await page.goto(origin);await page.getByLabel('O que você quer divulgar?').fill('Aula aberta');await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();
@@ -28,6 +30,14 @@ test('pessoa revisa e confirma a imagem para uma versão salva', {skip:!existsSy
  assert.equal(requests[0].body.apiKey,secret);assert.equal(requests[0].body.objective,'Aula aberta');assert.equal(requests[0].headers['x-compor-project-id'],projectId);assert.match(requests[0].headers['x-compor-attempt-id'],/^[0-9a-f-]{36}$/);
  await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();
  assert.deepEqual(requests[1].body,{apiKey:secret,projectId,pieceId,version:1,attemptId,actionBinding:'signed-proof',explicitApproval:true});
+ await page.getByRole('button',{name:'Usar imagem na composição'}).click();
+ await page.getByText('Imagem carregada: imagem-gerada.png').waitFor();
+ assert.equal(await page.getByLabel('Tenho autorização para usar esta imagem').isChecked(),true);
+ await page.getByRole('button',{name:'Gerar prévia PNG'}).click();await page.getByRole('img',{name:'Prévia da peça'}).waitFor();
+ const downloadPromise=page.waitForEvent('download');await page.getByRole('link',{name:'Baixar PNG'}).click();const png=await readFile(await (await downloadPromise).path());assert.deepEqual([...png.subarray(0,8)],[137,80,78,71,13,10,26,10]);assert.match(await page.locator('body').innerText(),/download não representa aprovação/i);
+ await page.getByLabel('Imagem-base PNG').setInputFiles({name:'manual.png',mimeType:'image/png',buffer:Buffer.from(imageBytes)});await page.getByText('Imagem carregada: manual.png').waitFor();
+ await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Imagem carregada: manual.png').waitFor();
+
  const stored=await page.evaluate(()=>JSON.stringify({session:sessionStorage,local:localStorage,cookies:document.cookie,html:document.documentElement.outerHTML}));assert.ok(!stored.includes(secret));assert.ok(!stored.includes('signed-proof'));assert.ok(!stored.includes('Um jardim ao sol'));
  await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(requests.length,2);
  await page.getByRole('button',{name:'Iniciar nova tentativa'}).click();await page.getByRole('button',{name:'Ver imagem anterior 1'}).click();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();

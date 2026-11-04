@@ -13,6 +13,7 @@ export default function Pieces({ projectId, userId, objective, hasApiKey, getApi
   const [state, setState] = useState('loading');
   const [message, setMessage] = useState('');
   const [storageError, setStorageError] = useState(false);
+  const [generatedBase, setGeneratedBase] = useState(null);
   const [readyBaseVersion, setReadyBaseVersion] = useState(null);
   const sequence = useRef(0);
   const refreshSequence = useRef(0);
@@ -103,8 +104,8 @@ export default function Pieces({ projectId, userId, objective, hasApiKey, getApi
         <label>Data<input value={draft.content.date} maxLength={100} disabled={state === 'saving'} onChange={e => edit('date', e.target.value)} /></label>
         <label>Legenda<textarea value={draft.content.caption} maxLength={4000} disabled={state === 'saving'} onChange={e => edit('caption', e.target.value)} /></label>
         <button type="button" disabled={state === 'saving' || storageError || draft.conflict || draft.unknown} onClick={save}>Salvar versão</button>
-        <AgentFlow key={`${userId}:${projectId}:${draft.pieceId}:${draft.expectedVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={draft.expectedVersion} canStart={state === 'ready' && !draft.dirty && !draft.conflict && !draft.unknown && !storageError && draft.expectedVersion > 0} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} />
-        <Compose key={`${userId}:${projectId}:${draft.pieceId}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} content={draft.content} />
+        <AgentFlow key={`${userId}:${projectId}:${draft.pieceId}:${draft.expectedVersion}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} version={draft.expectedVersion} canStart={state === 'ready' && !draft.dirty && !draft.conflict && !draft.unknown && !storageError && draft.expectedVersion > 0} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} onUseImage={blob => setGeneratedBase({pieceId:draft.pieceId,blob})} />
+        <Compose key={`${userId}:${projectId}:${draft.pieceId}`} userId={userId} projectId={projectId} pieceId={draft.pieceId} content={draft.content} generatedBase={generatedBase?.pieceId === draft.pieceId ? generatedBase : null} onGeneratedUsed={value => setGeneratedBase(current => current === value ? null : current)} />
       </div>}
       {storageError && <p role="alert">Rascunho somente em memória. Copie o texto: fechar ou recarregar a página pode apagá-lo.</p>}
       {(draft?.conflict || draft?.unknown) && <div>
