@@ -19,11 +19,15 @@ async function exerciseConsent(t, runBrowser) {
   const actions = [];
   let hostile = false;
   let reconnectionRedirect = null;
+  let detailsMode = 'normal';
   const service = createHttpsServer({ key: await readFile(key), cert: await readFile(cert) }, async (req, res) => {
     res.setHeader('content-type', 'application/json');
     if (req.headers.authorization !== 'Bearer mock-access-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: 'alice', aud: 'authenticated' }));
-    if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
+    if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') {
+      if (detailsMode === 'unavailable') { res.statusCode = 404; return res.end('{}'); }
+      return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: detailsMode === 'mismatch' ? 'bob' : 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
+    }
     if (req.url === '/auth/v1/oauth/authorizations/request-12345/consent' && req.method === 'POST') {
       let body = ''; for await (const chunk of req) body += chunk;
       actions.push(JSON.parse(body).action);
@@ -77,6 +81,19 @@ async function exerciseConsent(t, runBrowser) {
     assert.equal(rejected.status, 403);
     assert.deepEqual(actions, []);
   }
+  const invalidForm = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345' });
+  assert.equal(invalidForm.status, 400);
+  assert.match(await invalidForm.text(), /FORM_INVALID/);
+  detailsMode = 'unavailable';
+  const unavailableDetails = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
+  assert.equal(unavailableDetails.status, 400);
+  assert.match(await unavailableDetails.text(), /AUTHORIZATION_UNAVAILABLE/);
+  detailsMode = 'mismatch';
+  const wrongUser = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
+  assert.equal(wrongUser.status, 400);
+  assert.match(await wrongUser.text(), /AUTHORIZATION_MISMATCH/);
+  assert.deepEqual(actions, []);
+  detailsMode = 'normal';
   for (const destination of ['http://localhost:49273/callback?code=preconsented-secret&state=client-state', 'http://127.0.0.1:56411/callback?code=preconsented-secret&state=client-state', 'https://client.example/callback?code=preconsented-secret&state=client-state']) {
     reconnectionRedirect = destination;
     const reconnect = await fetch(`${endpoint}&redirect_url=${encodeURIComponent('https://evil.test/steal')}`, { headers: { Cookie: cookie }, redirect: 'manual' });
