@@ -88,6 +88,11 @@ textarea:focus-visible { outline: 3px solid #c9bcf2; outline-offset: 2px; }
 .piece-editor { display: grid; gap: 12px; margin-top: 16px; }
 .piece-editor label { display: grid; gap: 6px; }
 .piece-editor input { width: 100%; border: 1px solid #cbd6da; border-radius: 10px; padding: 12px; font: inherit; }
+.compose { border-top: 1px solid var(--line); margin-top: 12px; padding-top: 16px; display: grid; gap: 10px; }
+.compose h4, .compose p { margin: 0; }
+.compose .compose-permission { display: flex; align-items: center; gap: 8px; }
+.compose .compose-permission input { width: auto; }
+.compose-preview { display: block; max-width: 100%; height: auto; margin-top: 8px; }
 .projects { margin: 0 7% 24px; }
 .projects form { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; }
 .projects input { font: inherit; padding: 8px; border: 1px solid var(--line); border-radius: 6px; }
