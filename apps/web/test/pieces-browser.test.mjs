@@ -72,3 +72,57 @@ test('pessoa edita peça e conflito preserva rascunho', { skip: !existsSync(brow
   await page.getByText(/Rascunho somente em memória/).waitFor();
   assert.equal(await page.getByLabel('Legenda').inputValue(), 'somente na memória');
 });
+
+test('primeiro salvamento incerto pode ser retomado após consulta vazia explícita', { skip: !existsSync(browserPath) }, async t => {
+  const socket = createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
+  const port = socket.address().port; await new Promise(resolve => socket.close(resolve));
+  const origin = `http://127.0.0.1:${port}`;
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: 'ignore', env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin } });
+  t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
+  const deadline = Date.now() + 30000;
+  while (true) { try { if ((await fetch(origin)).ok) break; } catch {} if (Date.now() > deadline) throw new Error('aplicação indisponível'); await new Promise(resolve => setTimeout(resolve, 200)); }
+  const browser = await chromium.launch({ executablePath: browserPath, headless: true }); t.after(() => browser.close());
+  const page = await browser.newPage();
+  await page.route('**/auth/session', route => route.fulfill({ json: { state: 'connected', userId: 'alice' } }));
+  const projectId = '11111111-1111-4111-8111-111111111111';
+  await page.route('**/api/projects', route => route.fulfill({ json: { projects: [{ id: projectId, title: 'Oficina', created_at: '2026-11-03T00:00:00Z' }] } }));
+  let writes = 0, delayed, release, pendingPieceId, delayRefresh = false;
+  const waitForRelease = new Promise(resolve => { release = resolve; });
+  await page.route('**/api/pieces*', async route => {
+    if (route.request().method() === 'GET') {
+      if (delayRefresh && !delayed) { delayed = true; await waitForRelease; return route.fulfill({ json: { versions: [{ project_id: projectId, piece_id: pendingPieceId, version: 1, content: { headline: 'Antiga', price: '', date: '', caption: 'Anterior', captionOrigin: 'user' }, created_at: '2026-11-03T00:00:00Z' }] } }); }
+      return route.fulfill({ json: { versions: [] } });
+    }
+    writes++;
+    const input = route.request().postDataJSON();
+    pendingPieceId = input.pieceId;
+    assert.equal(input.expectedVersion, 0);
+    if (writes === 1) return route.fulfill({ status: 502, json: { error: 'result_unknown', retryAutomatically: false } });
+    return route.fulfill({ json: { status: 'saved', version: { project_id: input.projectId, piece_id: input.pieceId, version: 1, content: input.content, created_at: '2026-11-03T00:00:00Z' } } });
+  });
+  await page.goto(origin);
+  await page.getByRole('button', { name: 'Abrir Oficina' }).click();
+  await page.getByRole('button', { name: 'Nova peça' }).click();
+  await page.getByLabel('Título da peça').fill('Não perder');
+  await page.getByLabel('Legenda').fill('Texto a preservar');
+  await page.getByRole('button', { name: 'Salvar versão' }).click();
+  await page.getByText(/resultado pode ser desconhecido/i).waitFor();
+  delayRefresh = true;
+  assert.equal(await page.getByRole('button', { name: 'Usar base vazia' }).count(), 0);
+  await page.getByRole('button', { name: 'Atualizar versões' }).click();
+  const waitDeadline = Date.now() + 5000;
+  while (!delayed && Date.now() < waitDeadline) await new Promise(resolve => setTimeout(resolve, 20));
+  assert.equal(delayed, true);
+  await page.getByRole('button', { name: 'Atualizar versões' }).click();
+  await page.getByRole('button', { name: 'Usar base vazia' }).waitFor({ timeout: 3000 });
+  release();
+  await page.waitForTimeout(100);
+  assert.equal(await page.getByRole('button', { name: 'Usar base vazia' }).count(), 1);
+  assert.equal(writes, 1);
+  await page.getByRole('button', { name: 'Usar base vazia' }).click();
+  assert.equal(await page.getByLabel('Legenda').inputValue(), 'Texto a preservar');
+  assert.equal(writes, 1);
+  await page.getByRole('button', { name: 'Salvar versão' }).click();
+  await page.getByText('Versão salva.').waitFor();
+  assert.equal(writes, 2);
+});

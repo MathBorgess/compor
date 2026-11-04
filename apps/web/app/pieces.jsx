@@ -83,7 +83,7 @@ export default function Pieces({ projectId, userId }) {
       if (currentRefresh !== refreshSequence.current) return;
       setVersions(data.versions);
       const current = data.versions.filter(item => item.piece_id === draft?.pieceId).reduce((max, item) => Math.max(max, item.version), 0);
-      setReadyBaseVersion(current || null);
+      setReadyBaseVersion(current);
     } catch { if (currentRefresh === refreshSequence.current) setMessage('Não foi possível consultar as versões. Seu rascunho permanece nesta aba.'); }
   }
   const latest = new Map();
@@ -106,9 +106,13 @@ export default function Pieces({ projectId, userId }) {
       {(draft?.conflict || draft?.unknown) && <div>
         <p>Seu rascunho está preservado. Confira a versão salva antes de escolher uma nova base.</p>
         <button type="button" onClick={refreshVersions}>Atualizar versões</button>
+        {readyBaseVersion === 0 && draft.unknown && draft.expectedVersion === 0 && <>
+          <p>Nenhuma versão foi encontrada. A gravação anterior ainda pode ser concluída; uma nova tentativa será verificada pela versão esperada.</p>
+          <button type="button" onClick={() => { refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: 0, conflict: false, unknown: false, dirty: true }); setMessage('Base vazia selecionada; revise seu rascunho antes de salvar.'); }}>Usar base vazia</button>
+        </>}
         {readyBaseVersion !== null && latest.get(draft.pieceId)?.version === readyBaseVersion && <>
           <p>Versão {latest.get(draft.pieceId).version} salva: {latest.get(draft.pieceId).content.headline} — {latest.get(draft.pieceId).content.caption}</p>
-          <button type="button" onClick={() => { const current = latest.get(draft.pieceId); saveDraft({ ...draft, expectedVersion: current.version, conflict: false, unknown: false, dirty: true }); setMessage('Base atualizada; revise seu rascunho antes de salvar.'); }}>Usar versão atual como base</button>
+          <button type="button" onClick={() => { const current = latest.get(draft.pieceId); refreshSequence.current++; setReadyBaseVersion(null); saveDraft({ ...draft, expectedVersion: current.version, conflict: false, unknown: false, dirty: true }); setMessage('Base atualizada; revise seu rascunho antes de salvar.'); }}>Usar versão atual como base</button>
         </>}
       </div>}
       {message && <p role="status">{message}</p>}
