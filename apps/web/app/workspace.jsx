@@ -147,7 +147,7 @@ export default function Workspace({ loginAvailable }) {
           {authState === 'connected' && <div className="session-key">
             <label htmlFor="openai-key">Chave OpenAI</label>
             <input ref={openAIKeyInput} id="openai-key" type="password" autoComplete="off" spellCheck={false} maxLength={300} onChange={event => { openAIKey.current = event.target.value; openAIKeyOwner.current = authenticatedUser; setHasOpenAIKey(Boolean(event.target.value)); }} />
-            <p className="hint">A chave fica apenas na memória desta aba e será removida ao sair ou trocar de conta. A geração ainda não está disponível.</p>
+            <p className="hint">A chave fica apenas na memória desta aba e será removida ao sair ou trocar de conta. A geração ainda não está disponível até selecionar uma peça salva.</p>
             <button type="button" disabled={!hasOpenAIKey} onClick={clearOpenAIKey}>Remover chave</button>
           </div>}
           <div className="actions">
@@ -186,7 +186,7 @@ export default function Workspace({ loginAvailable }) {
           {storageError && <p className="hint" role="alert">Não foi possível preservar seu rascunho. Copie o texto antes de continuar.</p>}
         </section>
       </div>
-      {authState === 'connected' && <Projects key={authenticatedUser} userId={authenticatedUser} />}
+      {authState === 'connected' && <Projects key={authenticatedUser} userId={authenticatedUser} objective={objective} hasApiKey={hasOpenAIKey} getApiKey={() => openAIKeyOwner.current === authenticatedUser ? openAIKey.current : ''} />}
       <footer>Você no controle de cada escolha.</footer>
     </main>
   );
