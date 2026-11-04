@@ -3,6 +3,7 @@ const MAX_OUTPUT_BYTES = 16 * 1024 * 1024;
 const MAX_DIMENSION = 2048;
 const PNG_SIGNATURE = [137, 80, 78, 71, 13, 10, 26, 10];
 const ALLOWED_CHUNKS = new Set(['IHDR', 'PLTE', 'IDAT', 'IEND', 'tRNS', 'gAMA', 'sRGB', 'pHYs', 'cHRM', 'sBIT']);
+let composing = false;
 
 function validateChunks(bytes) {
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
@@ -32,6 +33,13 @@ function validateText(value, maxLength) {
 
 /** Browser-only composition. Input data and editable fields are never mutated or stored. */
 export async function composePng({ base, headline, price, date }) {
+  if (composing) throw new Error('Aguarde a composição anterior terminar.');
+  composing = true;
+  try { return await composePngOnce({ base, headline, price, date }); }
+  finally { composing = false; }
+}
+
+async function composePngOnce({ base, headline, price, date }) {
   const labels = [validateText(headline, 180), validateText(price, 50), validateText(date, 50)];
   if (!(base instanceof Blob) || base.size < 24 || base.size > MAX_INPUT_BYTES) throw new Error('Imagem inválida ou muito grande.');
   const bytes = new Uint8Array(await base.slice(0, 24).arrayBuffer());
