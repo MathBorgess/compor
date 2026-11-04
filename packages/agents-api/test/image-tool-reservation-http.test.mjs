@@ -31,3 +31,15 @@ test('marca resultado incerto com metadados limitados e não recebe corpo do pro
   assert.doesNotMatch(captured.init.body, /sk-secret|prompt privado|fake-user-token/);
   assert.deepEqual(JSON.parse(captured.init.body), { p_project_id: projectId, p_session_id: 'sess_123', p_turn_id: 'turn_123', p_call_id: 'call_123' });
 });
+
+test('declaração de consentimento usa apenas confirmação explícita e não serializa chave ou prompt', async () => {
+  let captured, count = 0;
+  const store = createImageToolReservationStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetch: async (url, init) => { count++; captured = { url, init }; return Response.json([{ declaration_id: reservationId, is_new: true }]); } });
+  await assert.rejects(store.declareConsent({ actor, reservationId, confirmed: false }));
+  assert.equal(count, 0);
+  assert.deepEqual(await store.declareConsent({ actor, reservationId, confirmed: true, apiKey: 'sk-never-save', prompt: 'privado' }), { id: reservationId, isNew: true });
+  assert.equal(captured.url.pathname, '/rest/v1/rpc/declare_image_generation_consent');
+  assert.equal(captured.init.headers.authorization, 'Bearer fake-user-token');
+  assert.deepEqual(JSON.parse(captured.init.body), { p_reservation_id: reservationId, p_confirmed: true });
+  assert.doesNotMatch(captured.init.body, /sk-|privado|fake-user-token/);
+});

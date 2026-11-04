@@ -16,7 +16,7 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth, public to public; grant execute on function auth.uid() to public;
   `);
-  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql']) {
+  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql']) {
     await db.exec(await readFile(new URL(`../../../supabase/migrations/${file}`, import.meta.url), 'utf8'));
   }
   await db.query('insert into auth.users (id) values ($1),($2)', [alice, bob]);
@@ -32,10 +32,23 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   const results = await Promise.all(Array.from({ length: 5 }, () => db.query(reserve, args)));
   assert.equal(results.filter(result => result.rows[0].is_new).length, 1);
   assert.ok(results.every(result => result.rows[0].state === 'reserved'));
+  const reservationId = results[0].rows[0].reservation_id;
+  const declare = 'select * from public.declare_image_generation_consent($1,$2)';
+  await assert.rejects(() => db.query(declare, [reservationId, false]));
+  assert.equal((await db.query('select * from public.image_consent_declarations')).rows.length, 0);
+  const declarations = await Promise.all(Array.from({ length: 3 }, () => db.query(declare, [reservationId, true])));
+  assert.equal(declarations.filter(result => result.rows[0].is_new).length, 1);
+  assert.ok(declarations.every(result => result.rows[0].declaration_id === declarations[0].rows[0].declaration_id));
+  await assert.rejects(() => db.query('update public.image_consent_declarations set owner_id=$1', [bob]));
+  await assert.rejects(() => db.query('delete from public.image_consent_declarations'));
   await assert.rejects(() => db.query(reserve, [project, piece, 2, attempt, 'sess_123', 'turn_123', 'call_123']));
   await assert.rejects(() => db.query('update public.image_tool_reservations set state=\'unknown\''));
   const otherCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_other'];
   assert.equal((await db.query(reserve, otherCall)).rows[0].is_new, true);
+  const uncertainCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_uncertain'];
+  const uncertainId = (await db.query(reserve, uncertainCall)).rows[0].reservation_id;
+  await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_uncertain']);
+  await assert.rejects(() => db.query(declare, [uncertainId, true]), 'não cria nova declaração para operação incerta');
   const unknown = await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_123']);
   assert.equal(unknown.rows[0].mark_image_tool_call_unknown, true);
   await db.query("select public.finish_agent_attempt($1,$2,'unknown')", [project, attempt]);
@@ -44,8 +57,11 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   assert.equal(reservedBeforeFinish.is_new, false); assert.equal(reservedBeforeFinish.state, 'reserved');
   const duplicate = await db.query(reserve, args);
   assert.equal(duplicate.rows[0].is_new, false); assert.equal(duplicate.rows[0].state, 'unknown');
+  assert.equal((await db.query(declare, [reservationId, true])).rows[0].is_new, false, 'declaração anterior sobrevive à falha');
   await db.exec(`select set_config('request.jwt.claim.sub','${bob}',false)`);
   assert.equal((await db.query('select * from public.image_tool_reservations')).rows.length, 0);
+  assert.equal((await db.query('select * from public.image_consent_declarations')).rows.length, 0);
+  await assert.rejects(() => db.query(declare, [reservationId, true]));
   await assert.rejects(() => db.query(reserve, args));
   await assert.rejects(() => db.query(reserve, [otherProject, otherPiece, 1, otherAttempt, 'sess_123', 'turn_123', 'call_123']));
   await assert.rejects(() => db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_123']));
