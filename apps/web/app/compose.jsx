@@ -15,8 +15,12 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
   const [error, setError] = useState('');
   const [uploadState, setUploadState] = useState('loading');
   const [pendingAssetId, setPendingAssetId] = useState(null);
+  const [reviewState, setReviewState] = useState('idle');
+  const [reviewUrl, setReviewUrl] = useState(null);
+  const [acknowledged, setAcknowledged] = useState(false);
   const uploadLock = useRef(false);
   const imageRevision = useRef(0);
+  const reviewSequence = useRef(0);
   const uploadKey = `compor-image-upload:${userId}:${projectId}:${pieceId}:${version}`;
   const previewUrl = useRef(null);
   const generation = useRef(0);
@@ -31,6 +35,11 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
       setPendingAssetId(assetId); setUploadState('unknown');
     } catch { setUploadState('unavailable'); }
   }, [uploadKey]);
+  useEffect(() => {
+    reviewSequence.current++; setReviewState('idle'); setAcknowledged(false); setReviewUrl(null);
+    return () => { reviewSequence.current++; };
+  }, [pendingAssetId]);
+  useEffect(() => () => { if (reviewUrl) URL.revokeObjectURL(reviewUrl); }, [reviewUrl]);
   useEffect(() => {
     if (!invalidateComposition) return;
     invalidateComposition.current = clearPreview;
@@ -116,16 +125,44 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
       const response = await fetch(`/api/images?${query}`, {method:'POST',headers:{'content-type':'image/png'},body:base,cache:'no-store'});
       const result = await response.json().catch(() => null);
       if (response.status === 201 && result?.status === 'stored' && result?.assetId === assetId) {
-        try { sessionStorage.removeItem(uploadKey); } catch { if (mounted.current) setUploadState('unknown'); return; }
+        try { if (!clearMarker(assetId)) { if (mounted.current) setUploadState('unavailable'); return; } } catch { if (mounted.current) setUploadState('unknown'); return; }
         if (mounted.current) setPendingAssetId(null);
         if (mounted.current) setUploadState(imageRevision.current === requestedRevision ? 'saved' : 'saved_previous');
       } else if ([400,401,403,404,413].includes(response.status)) {
-        try { sessionStorage.removeItem(uploadKey); } catch { if (mounted.current) setUploadState('unknown'); return; }
+        try { if (!clearMarker(assetId)) { if (mounted.current) setUploadState('unavailable'); return; } } catch { if (mounted.current) setUploadState('unknown'); return; }
         if (mounted.current) setPendingAssetId(null);
         if (mounted.current) setUploadState('error');
       } else if (mounted.current) setUploadState('unknown');
     } catch { if (mounted.current) setUploadState('unknown'); }
     finally { uploadLock.current = false; }
+  }
+  function clearMarker(assetId) {
+    const raw = sessionStorage.getItem(uploadKey);
+    if (raw === null || JSON.parse(raw)?.assetId !== assetId) return false;
+    sessionStorage.removeItem(uploadKey);
+    if (sessionStorage.getItem(uploadKey) !== null) throw Error('storage unavailable');
+    return true;
+  }
+  async function reviewUpload() {
+    if (uploadState !== 'unknown' || !pendingAssetId || reviewState === 'loading') return;
+    const serial = ++reviewSequence.current;
+    setReviewState('loading'); setAcknowledged(false); setReviewUrl(null);
+    const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId:pendingAssetId});
+    try {
+      const response = await fetch(`/api/images?${query}`, {cache:'no-store'});
+      if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error('unavailable');
+      const blob = await response.blob();
+      if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error('unavailable');
+      if (!mounted.current || serial !== reviewSequence.current) return;
+      setReviewUrl(URL.createObjectURL(blob)); setReviewState('found');
+    } catch { if (mounted.current && serial === reviewSequence.current) setReviewState('unverified'); }
+  }
+  function releaseUpload() {
+    if (uploadState !== 'unknown' || !pendingAssetId || !acknowledged || !['found','unverified'].includes(reviewState)) return;
+    try {
+      if (!clearMarker(pendingAssetId)) { setUploadState('unavailable'); return; }
+      setPendingAssetId(null); setUploadState('idle');
+    } catch { setUploadState('unavailable'); }
   }
   return <section className="compose" aria-labelledby="compose-title">
     <h4 id="compose-title">Prévia e download</h4>
@@ -143,7 +180,12 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
     {uploadState === 'too_large' && <p role="alert">Para salvar no projeto, a imagem deve ter no máximo 4 MiB.</p>}
     {uploadState === 'error' && <p role="alert">Não foi possível salvar a imagem. Verifique o PNG e a sessão.</p>}
     {uploadState === 'unavailable' && <p role="alert">Não foi possível preservar a referência do envio nesta aba. O upload está indisponível para evitar uma repetição incerta.</p>}
-    {uploadState === 'unknown' && <p role="alert">O resultado do envio é desconhecido. Referência: {pendingAssetId}. Atualize a lista de imagens para verificar antes de tentar novamente.</p>}
+    {uploadState === 'unknown' && <div><p role="alert">O resultado do envio é desconhecido. Referência: {pendingAssetId}.</p>
+      <button type="button" disabled={reviewState === 'loading'} onClick={reviewUpload}>Consultar imagem enviada</button>
+      {reviewState === 'found' && <><p>A referência existe. Confira a imagem; isso não comprova sua origem ou integridade.</p><img className="compose-preview" src={reviewUrl} alt="Imagem encontrada na referência" /></>}
+      {reviewState === 'unverified' && <p>Não foi possível confirmar a imagem. O envio anterior ainda pode ser concluído.</p>}
+      {['found','unverified'].includes(reviewState) && <><label><input type="checkbox" checked={acknowledged} onChange={event => setAcknowledged(event.target.checked)} />Entendo que o envio anterior pode ter sido concluído e um novo envio pode criar uma cópia.</label><button type="button" disabled={!acknowledged} onClick={releaseUpload}>Liberar novo envio</button></>}
+    </div>}
     <button type="button" disabled={!base || !authorized || busy} onClick={generate}>{busy ? 'Gerando prévia…' : 'Gerar prévia PNG'}</button>
     {error && <p role="alert">{error}</p>}
     {preview && <div><img className="compose-preview" src={preview} alt="Prévia da peça" /><p><a href={preview} download="compor-peca.png">Baixar PNG</a></p></div>}
