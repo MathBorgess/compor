@@ -14,7 +14,7 @@ export const dynamic = 'force-dynamic';
 export const maxDuration = 300;
 export async function POST(request) {
  const config=authConfig(),signingKey=agentSigningKey();
- if(!config || !signingKey)return Response.json({error:'unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
+ if(!config || !signingKey || process.env.COMPOR_PRIVATE_IMAGES_ENABLED !== 'true')return Response.json({error:'unavailable'},{status:503,headers:{'Cache-Control':'no-store'}});
  const bindings=createSessionBindings({secret:signingKey});
  const reservations=createImageToolReservationStore({url:config.service,anonKey:config.key});
  const ownsVersion=args=>ownsSupabaseVersion({...args,config});

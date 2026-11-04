@@ -10,11 +10,13 @@ import { join } from 'node:path';
 
 test('rota de imagens permanece fechada sem habilitação explícita', async t => {
   const probe=createServer();await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));
-  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',APP_ORIGIN:`http://127.0.0.1:${port}`,COMPOR_PRIVATE_IMAGES_ENABLED:''}});
+  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_fake',APP_ORIGIN:`http://127.0.0.1:${port}`,COMPOR_PRIVATE_IMAGES_ENABLED:'',COMPOR_AGENT_ENABLED:'true',COMPOR_AGENT_HMAC_SECRET:Buffer.alloc(32,8).toString('base64url')}});
   t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
   const deadline=Date.now()+30000; let response;
   while(true){try{response=await fetch(`http://127.0.0.1:${port}/api/images`);break;}catch{}if(Date.now()>deadline)throw Error('aplicação indisponível');await new Promise(resolve=>setTimeout(resolve,200));}
   assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:'unavailable'});assert.equal(response.headers.get('cache-control'),'no-store');
+  const generated=await fetch(`http://127.0.0.1:${port}/api/agent/image`,{method:'POST',headers:{origin:`http://127.0.0.1:${port}`,'content-type':'application/json'},body:'{}'});
+  assert.equal(generated.status,503);assert.deepEqual(await generated.json(),{error:'unavailable'});
 });
 
 test('rota privada recupera a imagem apenas para a conta proprietária, sem repetir upload incerto', async t => {
