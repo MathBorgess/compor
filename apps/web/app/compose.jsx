@@ -13,12 +13,24 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
   const [preview, setPreview] = useState(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  const [uploadState, setUploadState] = useState('idle');
+  const [uploadState, setUploadState] = useState('loading');
+  const [pendingAssetId, setPendingAssetId] = useState(null);
   const uploadLock = useRef(false);
+  const imageRevision = useRef(0);
+  const uploadKey = `compor-image-upload:${userId}:${projectId}:${pieceId}:${version}`;
   const previewUrl = useRef(null);
   const generation = useRef(0);
   const mounted = useRef(false);
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
+  useEffect(() => {
+    try {
+      const saved = sessionStorage.getItem(uploadKey);
+      if (saved === null) { setUploadState('idle'); setPendingAssetId(null); return; }
+      const { assetId } = JSON.parse(saved);
+      if (typeof assetId !== 'string' || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(assetId)) throw Error('invalid marker');
+      setPendingAssetId(assetId); setUploadState('unknown');
+    } catch { setUploadState('unavailable'); }
+  }, [uploadKey]);
   useEffect(() => {
     if (!invalidateComposition) return;
     invalidateComposition.current = clearPreview;
@@ -29,10 +41,11 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
     const blob = generatedBase.blob;
     const otherBytes = [...bases.entries()].reduce((sum, [entryKey, entry]) => sum + (entryKey === key ? 0 : entry.base.size), 0);
     if (blob.size > 8 * 1024 * 1024 || otherBytes + blob.size > 16 * 1024 * 1024) { setError('Limite de imagens na memória atingido. Remova uma imagem para continuar.'); onGeneratedUsed?.(generatedBase); return; }
+    imageRevision.current++;
     clearPreview();
     const image = new File([blob], 'imagem-recuperada.png', {type:'image/png'});
     bases.set(key, {base:image,authorized:true,generated:true,version});
-    setBase(image); setAuthorized(true); setGenerated(true); setError(''); setUploadState(current => current === 'unknown' || current === 'pending' ? current : 'idle'); onGeneratedUsed?.(generatedBase);
+    setBase(image); setAuthorized(true); setGenerated(true); setError(''); setUploadState(current => ['unknown','pending','unavailable','loading'].includes(current) ? current : 'idle'); onGeneratedUsed?.(generatedBase);
   }, [generatedBase, key]);
   function clearPreview() {
     generation.current++;
@@ -57,17 +70,20 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
       setError(file.size > 8 * 1024 * 1024 ? 'A imagem deve ter no máximo 8 MiB.' : 'Limite de imagens na memória atingido. Remova uma imagem para continuar.');
       return;
     }
-    clearPreview(); setError(''); setAuthorized(false); setGenerated(false); setUploadState(current => current === 'unknown' || current === 'pending' ? current : 'idle');
+    imageRevision.current++;
+    clearPreview(); setError(''); setAuthorized(false); setGenerated(false); setUploadState(current => ['unknown','pending','unavailable','loading'].includes(current) ? current : 'idle');
     bases.set(key, { base: file, authorized: false, version });
     setBase(file);
   }
   function setPermission(value) {
-    clearPreview(); setAuthorized(value); setError(''); setUploadState(current => current === 'unknown' || current === 'pending' ? current : 'idle');
+    imageRevision.current++;
+    clearPreview(); setAuthorized(value); setError(''); setUploadState(current => ['unknown','pending','unavailable','loading'].includes(current) ? current : 'idle');
     if (base) bases.set(key, { base, authorized: value, generated, version });
   }
   function reuse(entry) {
     if (!entry?.base || !entry.authorized) return;
-    clearPreview(); setError(''); setUploadState(current => current === 'unknown' || current === 'pending' ? current : 'idle');
+    imageRevision.current++;
+    clearPreview(); setError(''); setUploadState(current => ['unknown','pending','unavailable','loading'].includes(current) ? current : 'idle');
     bases.set(key, { ...entry, version });
     setBase(entry.base); setAuthorized(true); setGenerated(!!entry.generated);
   }
@@ -85,17 +101,27 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
     } finally { if (mounted.current) setBusy(false); }
   }
   async function saveImage() {
-    if (!base || !authorized || !canSaveImage || uploadLock.current || uploadState === 'unknown') return;
+    if (!base || !authorized || !canSaveImage || uploadLock.current || ['unknown','pending','unavailable','loading'].includes(uploadState)) return;
     if (base.size > 4 * 1024 * 1024) { setUploadState('too_large'); return; }
-    uploadLock.current = true; setUploadState('pending');
     const assetId = crypto.randomUUID();
+    const marker = JSON.stringify({assetId});
+    try {
+      sessionStorage.setItem(uploadKey, marker);
+      if (sessionStorage.getItem(uploadKey) !== marker) throw Error('storage unavailable');
+    } catch { setUploadState('unavailable'); return; }
+    uploadLock.current = true; setUploadState('pending'); setPendingAssetId(assetId);
+    const requestedRevision = imageRevision.current;
     const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId});
     try {
       const response = await fetch(`/api/images?${query}`, {method:'POST',headers:{'content-type':'image/png'},body:base,cache:'no-store'});
       const result = await response.json().catch(() => null);
       if (response.status === 201 && result?.status === 'stored' && result?.assetId === assetId) {
-        if (mounted.current) setUploadState('saved');
+        try { sessionStorage.removeItem(uploadKey); } catch { if (mounted.current) setUploadState('unknown'); return; }
+        if (mounted.current) setPendingAssetId(null);
+        if (mounted.current) setUploadState(imageRevision.current === requestedRevision ? 'saved' : 'saved_previous');
       } else if ([400,401,403,404,413].includes(response.status)) {
+        try { sessionStorage.removeItem(uploadKey); } catch { if (mounted.current) setUploadState('unknown'); return; }
+        if (mounted.current) setPendingAssetId(null);
         if (mounted.current) setUploadState('error');
       } else if (mounted.current) setUploadState('unknown');
     } catch { if (mounted.current) setUploadState('unknown'); }
@@ -106,16 +132,18 @@ export default function Compose({ userId, projectId, pieceId, version, canSaveIm
     <label htmlFor="base-image">Imagem-base PNG</label>
     <input id="base-image" type="file" accept="image/png" onChange={selectFile} />
     {[...bases.entries()].filter(([otherKey, entry]) => otherKey.startsWith(prefix) && otherKey !== key && entry.authorized).map(([otherKey, entry]) => <button key={otherKey} type="button" onClick={() => reuse(entry)}>Usar imagem da versão {entry.version === 0 ? 'rascunho' : entry.version}</button>)}
-    {base && <><p>Imagem carregada: {base.name}</p><button type="button" onClick={() => { clearPreview(); bases.delete(key); setBase(null); setAuthorized(false); setGenerated(false); setError(''); setUploadState(current => current === 'unknown' || current === 'pending' ? current : 'idle'); }}>Remover imagem</button></>}
+    {base && <><p>Imagem carregada: {base.name}</p><button type="button" onClick={() => { imageRevision.current++; clearPreview(); bases.delete(key); setBase(null); setAuthorized(false); setGenerated(false); setError(''); setUploadState(current => ['unknown','pending','unavailable','loading'].includes(current) ? current : 'idle'); }}>Remover imagem</button></>}
     <p>{generated ? 'Esta cópia fica na memória da aba; a imagem recuperada está no armazenamento privado.' : 'A imagem selecionada fica na memória desta aba até ser salva explicitamente no projeto.'} A legenda continua separada e editável.</p>
     <label className="compose-permission"><input type="checkbox" checked={authorized} disabled={!base} onChange={event => setPermission(event.target.checked)} />Tenho autorização para usar esta imagem</label>
-    <button type="button" disabled={!base || !authorized || !canSaveImage || uploadState === 'pending' || uploadState === 'unknown'} onClick={saveImage}>Salvar imagem no projeto</button>
+    <button type="button" disabled={!base || !authorized || !canSaveImage || ['unknown','pending','unavailable','loading'].includes(uploadState)} onClick={saveImage}>Salvar imagem no projeto</button>
     {!canSaveImage && <p>Salve a peça antes de guardar a imagem no projeto.</p>}
     {uploadState === 'pending' && <p role="status">Enviando imagem…</p>}
     {uploadState === 'saved' && <p role="status">Imagem salva na versão {version}. Atualize a lista de imagens para recuperá-la.</p>}
+    {uploadState === 'saved_previous' && <p role="status">A imagem enviada antes da troca foi salva na versão {version}. A seleção atual ainda não foi salva por este envio.</p>}
     {uploadState === 'too_large' && <p role="alert">Para salvar no projeto, a imagem deve ter no máximo 4 MiB.</p>}
     {uploadState === 'error' && <p role="alert">Não foi possível salvar a imagem. Verifique o PNG e a sessão.</p>}
-    {uploadState === 'unknown' && <p role="alert">O resultado do envio é desconhecido. Atualize a lista de imagens para verificar antes de tentar novamente.</p>}
+    {uploadState === 'unavailable' && <p role="alert">Não foi possível preservar a referência do envio nesta aba. O upload está indisponível para evitar uma repetição incerta.</p>}
+    {uploadState === 'unknown' && <p role="alert">O resultado do envio é desconhecido. Referência: {pendingAssetId}. Atualize a lista de imagens para verificar antes de tentar novamente.</p>}
     <button type="button" disabled={!base || !authorized || busy} onClick={generate}>{busy ? 'Gerando prévia…' : 'Gerar prévia PNG'}</button>
     {error && <p role="alert">{error}</p>}
     {preview && <div><img className="compose-preview" src={preview} alt="Prévia da peça" /><p><a href={preview} download="compor-peca.png">Baixar PNG</a></p></div>}
