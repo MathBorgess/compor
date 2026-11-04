@@ -13,6 +13,8 @@ export default function Compose({ userId, projectId, pieceId, content }) {
   const [error, setError] = useState('');
   const previewUrl = useRef(null);
   const generation = useRef(0);
+  const mounted = useRef(false);
+  useEffect(() => { mounted.current = true; return () => { mounted.current = false; }; }, []);
   function clearPreview() {
     generation.current++;
     if (previewUrl.current) URL.revokeObjectURL(previewUrl.current);
@@ -53,12 +55,10 @@ export default function Compose({ userId, projectId, pieceId, content }) {
       if (current !== generation.current) return;
       const url = URL.createObjectURL(png);
       previewUrl.current = url; setPreview(url);
-    } catch {
-      if (current === generation.current) setError('Não foi possível compor a imagem. Verifique o PNG e o tamanho dos textos.');
-    } finally { if (current === generation.current) setBusy(false); }
+    } catch (cause) {
+      if (current === generation.current) setError(cause?.message === 'Aguarde a composição anterior terminar.' ? cause.message : 'Não foi possível compor a imagem. Verifique o PNG e o tamanho dos textos.');
+    } finally { if (mounted.current) setBusy(false); }
   }
-  // When an input changes while composition is running, allow another attempt.
-  useEffect(() => { setBusy(false); }, [base, authorized, content.headline, content.price, content.date]);
   return <section className="compose" aria-labelledby="compose-title">
     <h4 id="compose-title">Prévia e download</h4>
     <label htmlFor="base-image">Imagem-base PNG</label>

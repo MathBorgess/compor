@@ -6,4 +6,6 @@ A base é limitada a 8 MiB e 64–2048 pixels em cada dimensão; saída a 16 MiB
 
 O teste `test/composition-browser.test.mjs` usa PNG sintético e Chrome local. Exercita alterações dos três campos, saída PNG e limites sem chamadas externas. Sem navegador compatível, o teste é ignorado e a composição não está comprovada naquele ambiente.
 
+Para limitar memória, uma única composição pode decodificar e rasterizar por vez na aba. Se outra for pedida enquanto a primeira está em curso, ela é recusada; a pessoa pode tentar novamente quando a primeira terminar. Isso reduz concorrência, mas não garante imunidade contra falhas do decodificador.
+
 O editor permite selecionar um PNG local, confirmar autorização de uso e gerar prévia/download no navegador com os campos atuais da peça. A imagem-base permanece somente em memória durante a vida da aba e não é salva na versão nem enviada ao servidor; o download não é aceite. Mudar os campos invalida a prévia. A legenda continua separada. Ainda faltam preservação da imagem de origem vinculada à versão, Supabase Storage privado e testes reais de autorização e isolamento. Não usar uma URL externa arbitrária. Testar o fluxo completo em navegadores e infraestrutura apropriados antes de disponibilizar a funcionalidade.

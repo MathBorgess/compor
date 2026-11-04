@@ -67,3 +67,29 @@ test('recusa entrada inválida ou excessiva antes da decodificação, sem chamad
   }, source);
   assert.deepEqual(result, { malformed: true, huge: true, dimensions: true, control: true, ancillary: true, beforeValidDecode: 0, cannotFit: true, network: 0 });
 });
+
+test('não executa duas decodificações ao mesmo tempo na mesma aba', { skip: !existsSync(browserPath) }, async t => {
+  const source = await readFile(new URL('../lib/compose-png.mjs', import.meta.url), 'utf8');
+  const browser = await chromium.launch({ executablePath: browserPath, headless: true });
+  t.after(() => browser.close());
+  const page = await browser.newPage();
+  const result = await page.evaluate(async source => {
+    const { composePng } = await import(`data:text/javascript,${encodeURIComponent(source)}`);
+    const canvas = document.createElement('canvas'); canvas.width = 64; canvas.height = 64;
+    const base = await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    const fields = { base, headline: 'Oficina', price: '', date: '' };
+    const original = window.createImageBitmap;
+    let unblock; let started;
+    const wait = new Promise(resolve => { unblock = resolve; });
+    const decoding = new Promise(resolve => { started = resolve; });
+    let decodes = 0;
+    window.createImageBitmap = async (...args) => { decodes++; started(); await wait; return original(...args); };
+    const first = composePng(fields);
+    await decoding;
+    const second = composePng(fields).then(() => false, () => true);
+    const refused = await Promise.race([second, new Promise(resolve => setTimeout(() => resolve(false), 200))]);
+    unblock(); await Promise.allSettled([first, second]);
+    return { refused, decodes };
+  }, source);
+  assert.deepEqual(result, { refused: true, decodes: 1 });
+});
