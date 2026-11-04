@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import Pieces from './pieces';
 
-export default function Projects({ userId }) {
+export default function Projects({ userId, objective, hasApiKey, getApiKey }) {
   const [projects, setProjects] = useState([]);
   const [state, setState] = useState('loading');
   const [title, setTitle] = useState('');
@@ -59,6 +59,6 @@ export default function Projects({ userId }) {
         <button type="submit" disabled={state === 'creating' || uncertain || !title.trim()}>{state === 'creating' ? 'Criando…' : 'Criar projeto'}</button>
       </form>
     </>}
-    {selected && <Pieces key={`${userId}:${selected}`} projectId={selected} userId={userId} />}
+    {selected && <Pieces key={`${userId}:${selected}`} projectId={selected} userId={userId} objective={objective} hasApiKey={hasApiKey} getApiKey={getApiKey} />}
   </section>;
 }

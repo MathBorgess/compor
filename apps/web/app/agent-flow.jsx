@@ -1,0 +1,94 @@
+'use client';
+import { useEffect, useState } from 'react';
+
+// State belongs to one account, project, piece and saved version. It survives a
+// session recheck, but secrets and prompts are never persisted by this module.
+const flows = new Map();
+const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
+function recordFor(key) {
+  if (!flows.has(key)) flows.set(key, { value: { state: 'idle' }, listeners: new Set(), loaded: false });
+  return flows.get(key);
+}
+function update(record, value) { record.value = value; for (const listener of record.listeners) listener(value); }
+
+export default function AgentFlow({ userId, projectId, pieceId, version, canStart, objective, hasApiKey, getApiKey }) {
+  const key = `compor-agent-attempt:${userId}:${projectId}:${pieceId}:${version}`;
+  const record = recordFor(key);
+  const [flow, setFlow] = useState(record.value);
+  const [initialized, setInitialized] = useState(record.loaded);
+  const [preview, setPreview] = useState(null);
+  const [previewError, setPreviewError] = useState(false);
+  const [previewTry, setPreviewTry] = useState(0);
+  useEffect(() => {
+    record.listeners.add(setFlow);
+    if (!record.loaded) {
+      record.loaded = true;
+      try { if (sessionStorage.getItem(key) === 'pending' && record.value.state === 'idle') update(record, {state:'unknown'}); }
+      catch { update(record, {state:'storage_unavailable'}); }
+    }
+    setFlow(record.value);
+    setInitialized(true);
+    return () => { record.listeners.delete(setFlow); };
+  }, [key, record]);
+  useEffect(() => {
+    setPreview(null); setPreviewError(false);
+    if (!['accepted', 'unknown'].includes(flow.state) || !uuid(flow.assetId)) return;
+    const controller = new AbortController(); let url;
+    const query = new URLSearchParams({projectId,pieceId,version:String(version),assetId:flow.assetId});
+    fetch(`/api/images?${query}`, {cache:'no-store',signal:controller.signal}).then(async response => {
+      if (!response.ok || !/^image\/png(?:\s*;|$)/i.test(response.headers.get('content-type') ?? '')) throw Error();
+      const blob = await response.blob(); if (!blob.size || blob.size > 8 * 1024 * 1024) throw Error();
+      if (controller.signal.aborted) return;
+      url = URL.createObjectURL(blob); setPreview(url);
+    }).catch(() => {if (!controller.signal.aborted) setPreviewError(true);});
+    return () => {controller.abort(); if (url) URL.revokeObjectURL(url);};
+  }, [flow.state, flow.assetId, projectId, pieceId, version, previewTry]);
+  function reset() {
+    try { sessionStorage.removeItem(key); update(record, {state:'idle'}); }
+    catch { update(record, {state:'storage_unavailable'}); }
+  }
+  async function start() {
+    if (!initialized || record.value.state !== 'idle' || !canStart || !hasApiKey || !objective?.trim() || typeof getApiKey !== 'function') return;
+    const apiKey = getApiKey(); if (!apiKey) return;
+    try { sessionStorage.setItem(key, 'pending'); } catch { update(record,{state:'storage_unavailable'}); return; }
+    update(record, {state:'starting'});
+    try {
+      const response = await fetch('/api/agent', {method:'POST',headers:{'content-type':'application/json','x-compor-project-id':projectId,'x-compor-attempt-id':crypto.randomUUID()},body:JSON.stringify({apiKey,objective})});
+      const data = await response.json();
+      if (response.status === 202 && data?.status === 'consent_required' && typeof data.prompt === 'string' && data.prompt.length <= 4000 && !data.prompt.includes(apiKey) && uuid(data.attemptId) && typeof data.actionBinding === 'string' && data.actionBinding.length > 0 && data.actionBinding.length <= 2048 && !data.actionBinding.includes(apiKey)) {
+        update(record, {state:'consent', prompt:data.prompt, attemptId:data.attemptId, actionBinding:data.actionBinding}); return;
+      }
+      if (response.ok && response.status !== 202 && typeof data?.text === 'string' && !data.text.includes(apiKey)) {
+        update(record,{state:'text',text:data.text}); return;
+      }
+      throw Error();
+    } catch { update(record,{state:'unknown'}); }
+  }
+  async function confirm() {
+    const current = record.value;
+    if (current.state !== 'consent' || !canStart || !hasApiKey || typeof getApiKey !== 'function') return;
+    const apiKey = getApiKey(); if (!apiKey) return;
+    update(record,{state:'confirming'});
+    try {
+      const response = await fetch('/api/agent/image',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,pieceId,version,attemptId:current.attemptId,actionBinding:current.actionBinding,explicitApproval:true})});
+      const data = await response.json();
+      if (response.ok && data?.status === 'accepted') {update(record,{state:'accepted',assetId:uuid(data.assetId) ? data.assetId : null}); return;}
+      if (uuid(data?.assetId)) {update(record,{state:'unknown',assetId:data.assetId}); return;}
+      throw Error();
+    } catch { update(record,{state:'unknown'}); }
+  }
+  return <section aria-label="Direção criativa">
+    <h4>Direção criativa</h4>
+    {!canStart && <p>Salve a peça e termine as edições antes de iniciar.</p>}
+    {flow.state === 'idle' && <button type="button" disabled={!initialized || !canStart || !hasApiKey || !objective?.trim()} onClick={start}>Iniciar direção criativa</button>}
+    {flow.state === 'starting' && <p role="status">Preparando a direção…</p>}
+    {flow.state === 'text' && <><p>{flow.text}</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
+    {flow.state === 'consent' && <><p>Imagem proposta para esta peça, versão {version}:</p><p>{flow.prompt}</p><button type="button" disabled={!canStart || !hasApiKey} onClick={confirm}>Confirmar geração de imagem</button></>}
+    {flow.state === 'confirming' && <p role="status">Gerando imagem…</p>}
+    {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
+    {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
+    {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p></>}
+    {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
+    {flow.state === 'storage_unavailable' && <p role="alert">Não foi possível preservar o estado da tentativa nesta aba. Verifique o armazenamento antes de iniciar.</p>}
+  </section>;
+}
