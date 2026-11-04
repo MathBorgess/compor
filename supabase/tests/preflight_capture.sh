@@ -35,7 +35,7 @@ umask 077
 capture_dir=$(mktemp -d "${TMPDIR:-/tmp}/compor-preflight.XXXXXXXX") || exit 1
 output=$capture_dir/preflight.txt
 # -W forces an interactive password prompt; inherited PG* settings are removed.
-if env -i PATH="$PATH" PGSSLMODE=verify-full PGSSLROOTCERT="$COMPOR_CA_CERT" \
+if env -i PATH="$PATH" PGSSLMODE=verify-full PGGSSENCMODE=disable PGSSLROOTCERT="$COMPOR_CA_CERT" \
   psql -X -W -v ON_ERROR_STOP=1 -h "$COMPOR_DB_HOST" -p "$COMPOR_DB_PORT" \
   -U "$COMPOR_DB_USER" -d "$COMPOR_DB_NAME" -f "$script_dir/preflight_readonly.sql" -o "$output"; then
   printf '%s\n' "$output"
