@@ -53,6 +53,18 @@ test('consulta pendente inconsistente termina incerta e não informa chave nem e
   assert.doesNotMatch(body,/sk-test-secret|Foto sem texto/); assert.deepEqual(finished,['unknown']); assert.equal(count,2);
 });
 
+test('timeout ao consultar sessão após ação mantém tentativa e custo desconhecidos, sem repetir envio', async () => {
+ const finished=[], measurements=[], calls=[];
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',resolveActor:async()=>({userId,token:'fake-token'}),ownsProject:async()=>true,
+  bindings:createSessionBindings({secret:Buffer.alloc(32,42)}),
+  attempts:{start:async()=>({id:attemptId,state:'started',isNew:true}),finish:async({state})=>finished.push(state)},
+  usage:{start:async()=>true,finish:async({state,usage})=>measurements.push({state,usage})},
+  fetch:async(_url,options)=>{calls.push(options.method);if(options.method==='POST')return new Response('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\ndata: {"type":"agent.session.requires_action","session":{"id":"sess_actual"}}\n\n',{status:201});assert.ok(options.signal instanceof AbortSignal);throw new DOMException('simulated timeout','TimeoutError');},
+ });
+ const result=await handler(request());assert.equal(result.status,502);assert.deepEqual(await result.json(),{error:'result_unknown',retryAutomatically:false});
+ assert.deepEqual(calls,['POST','GET']);assert.deepEqual(finished,['unknown']);assert.deepEqual(measurements,[{state:'unknown',usage:null}]);
+});
+
 test('reconcilia sessão após stream textual e recupera chamada de imagem não observada', async () => {
   const calls=[];
   const handler=createAgentHandler({ authenticate:async()=>({userId}),enableImageTool:true,fetch:async (_url,options)=>{
