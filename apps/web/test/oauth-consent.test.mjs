@@ -25,7 +25,9 @@ async function exerciseConsent(t, runBrowser) {
     if (req.headers.authorization !== 'Bearer mock-access-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: 'alice', aud: 'authenticated' }));
     if (req.url === '/auth/v1/oauth/authorizations/request-12345' && req.method === 'GET') {
-      if (detailsMode === 'unavailable') { res.statusCode = 404; return res.end('{}'); }
+      if (detailsMode === 'unavailable') { res.statusCode = 404; return res.end(JSON.stringify({code:'oauth_authorization_not_found',message:'synthetic sensitive error'})); }
+      if (detailsMode === 'processed') { res.statusCode = 400; return res.end(JSON.stringify({code:'validation_failed',message:'synthetic sensitive error'})); }
+      if (detailsMode === 'service') { res.statusCode = 503; return res.end(JSON.stringify({message:'synthetic sensitive error'})); }
       return res.end(JSON.stringify(reconnectionRedirect ? { redirect_url: reconnectionRedirect } : { authorization_id: 'request-12345', user: { id: detailsMode === 'mismatch' ? 'bob' : 'alice', email: 'a@example.test' }, client: { name: '<script>hostile</script>' }, redirect_uri: 'http://localhost:4545/callback', scope: 'openid email' }));
     }
     if (req.url === '/auth/v1/oauth/authorizations/request-12345/consent' && req.method === 'POST') {
@@ -87,7 +89,17 @@ async function exerciseConsent(t, runBrowser) {
   detailsMode = 'unavailable';
   const unavailableDetails = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
   assert.equal(unavailableDetails.status, 400);
-  assert.match(await unavailableDetails.text(), /AUTHORIZATION_UNAVAILABLE/);
+  const missingText = await unavailableDetails.text();
+  assert.match(missingText, /AUTHORIZATION_NOT_FOUND/);
+  assert.doesNotMatch(missingText, /synthetic sensitive error|request-12345/);
+  for (const [mode, expected] of [['processed','AUTHORIZATION_REJECTED'], ['service','AUTHORIZATION_SERVICE_UNAVAILABLE']]) {
+    detailsMode = mode;
+    const failed = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
+    assert.equal(failed.status, 400);
+    const errorText = await failed.text();
+    assert.match(errorText, new RegExp(expected));
+    assert.doesNotMatch(errorText, /synthetic sensitive error|request-12345/);
+  }
   detailsMode = 'mismatch';
   const wrongUser = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
   assert.equal(wrongUser.status, 400);
