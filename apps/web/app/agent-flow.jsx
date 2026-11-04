@@ -23,7 +23,17 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     record.listeners.add(setFlow);
     if (!record.loaded) {
       record.loaded = true;
-      try { if (sessionStorage.getItem(key) === 'pending' && record.value.state === 'idle') update(record, {state:'unknown'}); }
+      try {
+        const saved = sessionStorage.getItem(key);
+        if (saved !== null && record.value.state === 'idle') {
+          let restored = {state:'unknown'};
+          try {
+            const parsed = JSON.parse(saved);
+            if (['accepted','unknown'].includes(parsed?.state)) restored = {state:parsed.state,assetId:uuid(parsed.assetId) ? parsed.assetId : null};
+          } catch { /* Older pending markers remain unknown. */ }
+          update(record, restored);
+        }
+      }
       catch { update(record, {state:'storage_unavailable'}); }
     }
     setFlow(record.value);
@@ -46,6 +56,12 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
   function reset() {
     try { sessionStorage.removeItem(key); update(record, {state:'idle'}); }
     catch { update(record, {state:'storage_unavailable'}); }
+  }
+  function saveOutcome(state, assetId) {
+    const value = {state,assetId:uuid(assetId) ? assetId : null};
+    try { sessionStorage.setItem(key, JSON.stringify(value)); }
+    catch { value.storageWarning = true; }
+    update(record,value);
   }
   async function start() {
     if (!initialized || record.value.state !== 'idle' || !canStart || !hasApiKey || !objective?.trim() || typeof getApiKey !== 'function') return;
@@ -72,8 +88,8 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     try {
       const response = await fetch('/api/agent/image',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,pieceId,version,attemptId:current.attemptId,actionBinding:current.actionBinding,explicitApproval:true})});
       const data = await response.json();
-      if (response.ok && data?.status === 'accepted') {update(record,{state:'accepted',assetId:uuid(data.assetId) ? data.assetId : null}); return;}
-      if (uuid(data?.assetId)) {update(record,{state:'unknown',assetId:data.assetId}); return;}
+      if (response.ok && data?.status === 'accepted') {saveOutcome('accepted',data.assetId); return;}
+      if (uuid(data?.assetId)) {saveOutcome('unknown',data.assetId); return;}
       throw Error();
     } catch { update(record,{state:'unknown'}); }
   }
@@ -89,6 +105,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
     {preview && <><img src={preview} alt="Imagem gerada para revisão" /><p>A imagem é uma proposta para revisão e ainda não está aprovada.</p></>}
     {previewError && <p role="alert">Não foi possível carregar a imagem. <button type="button" onClick={() => setPreviewTry(n => n + 1)}>Tentar carregar novamente</button></p>}
+    {flow.storageWarning && <p role="alert">Não foi possível preservar a referência da imagem nesta aba. Ela pode não aparecer após recarregar.</p>}
     {flow.state === 'storage_unavailable' && <p role="alert">Não foi possível preservar o estado da tentativa nesta aba. Verifique o armazenamento antes de iniciar.</p>}
   </section>;
 }

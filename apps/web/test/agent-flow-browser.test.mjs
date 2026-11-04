@@ -28,19 +28,21 @@ test('pessoa revisa e confirma a imagem para uma versão salva', {skip:!existsSy
  assert.equal(requests[0].body.apiKey,secret);assert.equal(requests[0].body.objective,'Aula aberta');assert.equal(requests[0].headers['x-compor-project-id'],projectId);assert.match(requests[0].headers['x-compor-attempt-id'],/^[0-9a-f-]{36}$/);
  await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();
  assert.deepEqual(requests[1].body,{apiKey:secret,projectId,pieceId,version:1,attemptId,actionBinding:'signed-proof',explicitApproval:true});
- const stored=await page.evaluate(()=>JSON.stringify({session:sessionStorage,local:localStorage,cookies:document.cookie,html:document.documentElement.outerHTML}));assert.ok(!stored.includes(secret));
+ const stored=await page.evaluate(()=>JSON.stringify({session:sessionStorage,local:localStorage,cookies:document.cookie,html:document.documentElement.outerHTML}));assert.ok(!stored.includes(secret));assert.ok(!stored.includes('signed-proof'));assert.ok(!stored.includes('Um jardim ao sol'));
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/evento foi aceito/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(requests.length,2);
 });
 
 test('resultado incerto é preservado ao revalidar sessão e não repete chamadas', {skip:!existsSync(browserPath)}, async t=>{
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const deadline=Date.now()+30000;while(true){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>deadline)throw Error('app indisponível');await new Promise(r=>setTimeout(r,200));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(3000);let starts=0,images=0,currentUser='alice';
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(3000);let starts=0,images=0,reads=0,currentUser='alice';
  await page.route('**/auth/session',r=>r.fulfill({json:{state:'connected',userId:currentUser}}));
  await page.route('**/api/projects',r=>r.fulfill({json:{projects:[{id:projectId,title:'Oficina'}]}}));
  await page.route('**/api/pieces*',r=>r.fulfill({json:{versions:[{project_id:projectId,piece_id:pieceId,version:1,content:{headline:'Convite',price:'',date:'',caption:'Legenda',captionOrigin:'user'}}]}}));
  await page.route('**/api/agent',async r=>{starts++;await r.fulfill({status:202,json:{status:'consent_required',prompt:'Uma paisagem',attemptId,actionBinding:'signed-proof'}});});
- await page.route('**/api/agent/image',async r=>{images++;await r.fulfill({status:502,json:{error:'result_unknown',retryAutomatically:false}});});
+ await page.route('**/api/agent/image',async r=>{images++;await r.fulfill({status:502,json:{error:'result_unknown',retryAutomatically:false,assetId}});});
+ await page.route('**/api/images**',async r=>{reads++;assert.equal(currentUser,'alice');return r.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmTkAAAAASUVORK5CYII=','base64')});});
  await page.goto(origin);await page.getByLabel('O que você quer divulgar?').fill('Aula');await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();
  await page.getByLabel('Legenda').fill('Mudança ainda não salva');assert.equal(await page.getByRole('button',{name:'Iniciar direção criativa'}).isDisabled(),true);await page.getByLabel('Legenda').fill('Legenda');
  // Reopening after clearing the dirty draft makes the saved version explicit.
@@ -49,6 +51,6 @@ test('resultado incerto é preservado ao revalidar sessão e não repete chamada
  await page.reload();await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();
  await page.getByRole('button',{name:'Iniciar direção criativa'}).click();await page.getByRole('button',{name:'Confirmar geração de imagem'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();assert.equal(starts,1);assert.equal(images,1);
- await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();assert.equal(starts,1);assert.equal(images,1);
- currentUser='bob';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByLabel('Chave OpenAI').waitFor();await page.waitForFunction(()=>document.querySelector('#openai-key')?.value==='');await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();assert.equal(await page.getByText(/resultado da tentativa é desconhecido/i).count(),0);assert.equal(starts,1);assert.equal(images,1);
+ await page.reload();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();await page.getByRole('img',{name:'Imagem gerada para revisão'}).waitFor();assert.equal(starts,1);assert.equal(images,1);
+ const aliceReads=reads;currentUser='bob';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByLabel('Chave OpenAI').waitFor();await page.waitForFunction(()=>document.querySelector('#openai-key')?.value==='');await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();assert.equal(await page.getByText(/resultado da tentativa é desconhecido/i).count(),0);assert.equal(starts,1);assert.equal(images,1);assert.equal(reads,aliceReads);
 });
