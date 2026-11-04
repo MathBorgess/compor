@@ -26,3 +26,16 @@ test('recupera páginas de uma versão em nova sessão sem misturar contas', {sk
  const waitForAlice=Date.now()+4000;while(!enteredAlice && Date.now()<waitForAlice)await new Promise(resolve=>setTimeout(resolve,10));assert.equal(enteredAlice,true);user='bob';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Abrir Projeto'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();releaseAlice();await page.getByRole('button',{name:'Ver imagem recuperada 1'}).waitFor();await page.waitForTimeout(100);assert.equal(await page.getByRole('button',{name:'Ver imagem recuperada 50'}).count(),0);
 
 });
+
+test('consulta somente a versão aberta e descarta a prévia anterior', {skip:!existsSync(browserPath)},async t=>{
+ const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
+ const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
+ const deadline=Date.now()+30000;while(true){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>deadline)throw Error('app indisponível');await new Promise(r=>setTimeout(r,200));}
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(4000);const calls=[];
+ await page.route('**/auth/session',r=>r.fulfill({json:{state:'connected',userId:'alice'}}));await page.route('**/api/projects',r=>r.fulfill({json:{projects:[{id:project,title:'Projeto'}]}}));
+ const content={headline:'Título',price:'',date:'',caption:'',captionOrigin:'user'};await page.route('**/api/pieces*',r=>r.fulfill({json:{versions:[1,2].map(version=>({project_id:project,piece_id:piece,version,content}))}}));
+ await page.route('**/api/image-assets**',r=>{const version=new URL(r.request().url()).searchParams.get('version');calls.push(version);return r.fulfill({json:{assets:[{assetId:id(Number(version)),origin:'unknown'}],nextCursor:null}});});
+ await page.route('**/api/images?**',r=>r.fulfill({status:200,contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmTkAAAAASUVORK5CYII=','base64')}));
+ await page.goto(origin);await page.getByRole('button',{name:'Abrir Projeto'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 2'}).click();await page.getByRole('button',{name:'Ver imagem recuperada 1'}).click();await page.getByRole('img',{name:'Imagem para revisão'}).waitFor();
+ await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Ver imagem recuperada 1'}).waitFor();assert.equal(await page.getByRole('img',{name:'Imagem para revisão'}).count(),0);assert.deepEqual(calls.filter((value,index)=>index===0 || calls[index-1]!==value),['2','1']);
+});
