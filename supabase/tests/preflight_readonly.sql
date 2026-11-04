@@ -2,6 +2,7 @@
 -- This script does not validate RLS behavior, emptiness, side effects or migrations.
 \set ON_ERROR_STOP on
 begin transaction read only;
+set local search_path = pg_catalog;
 set local statement_timeout = '10s';
 
 select current_database() as database_name, current_user as executing_role, session_user as login_role,

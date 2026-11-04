@@ -2,28 +2,19 @@
 
 Em 04/11/2026, esta é uma preparação local. Nenhuma conexão, migração, escrita ou teste novo foi feito no Supabase por este recorte. O [relato anterior de ROLLBACK](2026-11-03-supabase-rls-validacao.md) aplica-se somente aos snapshots ali identificados; não prova as migrações posteriores ou serviços gerenciados.
 
-`supabase/tests/preflight_readonly.sql` consulta apenas catálogos e information_schema numa transação `READ ONLY`, com `statement_timeout`, terminada em `ROLLBACK`. Lista o contexto do papel, RLS, políticas, grants, nomes e metadados de funções, triggers, regras, event triggers e extensões. Inclui, se já existirem, `usage_measurements` e as RPCs de `00008` e `00009`; não aplica nem valida a presença delas. O campo `sets_search_path` apenas informa que há configuração, não se ela é segura. Não retorna corpos de funções, valores de configuração ou registros de usuários, projetos, buckets ou arquivos. Sua sintaxe foi exercitada em PGlite local, não no Supabase; privilégios insuficientes ou diferenças de plataforma podem impedir o inventário. Saída contém metadados internos e deve permanecer privada. Inventário não prova que o banco está vazio, que toda regra é segura, que RLS funciona, ou que funções, extensões e triggers não tenham efeitos externos. A visibilidade de privilégios pelo information_schema também depende do papel usado.
+`supabase/tests/preflight_readonly.sql` consulta apenas catálogos e information_schema numa transação `READ ONLY`, com `search_path` limitado a `pg_catalog`, `statement_timeout` e `ROLLBACK`. Lista o contexto do papel, RLS, políticas, grants, nomes e metadados de funções, triggers, regras, event triggers e extensões. Inclui, se já existirem, `usage_measurements` e as RPCs de `00008` a `00010`; não aplica nem valida a presença delas. O campo `sets_search_path` apenas informa que há configuração, não se ela é segura. Não retorna corpos de funções, valores de configuração ou registros de usuários, projetos, buckets ou arquivos. Sua sintaxe foi exercitada em PGlite local, não no Supabase; privilégios insuficientes ou diferenças de plataforma podem impedir o inventário. Saída contém metadados internos e deve permanecer privada. Inventário não prova que o banco está vazio, que toda regra é segura, que RLS funciona, ou que funções, extensões e triggers não tenham efeitos externos. A visibilidade de privilégios pelo information_schema também depende do papel usado.
 
-Antes de qualquer conexão, confirmar no painel a organização, o projeto **isolado e descartável**, o host exato e o certificado CA oficial aplicável; nunca usar banco compartilhado ou de produção. O próprio operador pode fornecer host DNS, porta, banco e usuário sem colocar senha na linha de comando; configurar `PGSSLMODE=verify-full` e `PGSSLROOTCERT` para um arquivo CA confiável, usar `psql -X -W -v ON_ERROR_STOP=1 -f supabase/tests/preflight_readonly.sql` e digitar a senha no prompt. `verify-full` deve verificar nome do host e cadeia; não usar IP alternativo ou desabilitar TLS para contornar erro. Confirmar a identidade do destino antes de executar e não registrar credenciais ou o resultado em repositório. A saída é uma entrada para revisão, não autorização para aplicar SQL.
+Antes de qualquer conexão, confirmar no painel a organização, o projeto **isolado e descartável**, o host exato e o certificado CA oficial aplicável; nunca usar banco compartilhado ou de produção. O próprio operador pode fornecer host DNS, porta, banco e usuário sem colocar senha na linha de comando. O invólucro abaixo força `PGSSLMODE=verify-full`, usa `PGSSLROOTCERT` para uma CA confiável e solicita a senha via `psql -W`. `verify-full` deve verificar nome do host e cadeia; não usar IP alternativo ou desabilitar TLS para contornar erro. Confirmar a identidade do destino antes de executar e não registrar credenciais ou o resultado em repositório. A saída é uma entrada para revisão, não autorização para aplicar SQL.
 
-Para captura privada pelo operador, a partir da raiz do repositório, preencha somente os cinco valores **não secretos** abaixo no terminal. A senha é solicitada interativamente por `psql -W`; nunca a inclua em variável, URL, arquivo ou comando. `env -i` evita opções e credenciais PostgreSQL herdadas. A pasta temporária criada pertence ao usuário e o arquivo fica restrito por `umask`; mensagens de erro ficam no terminal.
+Para captura privada pelo operador, a partir da raiz do repositório, preencha somente os cinco valores **não secretos** abaixo no terminal. A senha é solicitada interativamente por `psql -W`; nunca a inclua em variável, URL, arquivo ou comando. O invólucro valida banco como identificador simples e recusa URI ou conninfo; valida host DNS, porta e usuário antes de iniciar `psql`, e `env -i` evita opções e credenciais PostgreSQL herdadas. A validação sintática não comprova que host ou certificado pertencem ao projeto correto: o operador deve verificá-los no painel. A pasta temporária criada pertence ao usuário e o arquivo fica restrito por `umask`; mensagens de erro ficam no terminal.
 
 ```sh
-COMPOR_DB_HOST='host-do-projeto-isolado'
-COMPOR_DB_PORT='5432'
-COMPOR_DB_USER='usuario-do-banco'
-COMPOR_DB_NAME='nome-do-banco'
-COMPOR_CA_CERT='/caminho/absoluto/ca-oficial.pem'
-umask 077
-COMPOR_CAPTURE_DIR="$(mktemp -d "${TMPDIR:-/tmp}/compor-preflight.XXXXXXXX")"
-if env -i PATH="$PATH" PGSSLMODE=verify-full PGSSLROOTCERT="$COMPOR_CA_CERT" \
-  psql -X -W -v ON_ERROR_STOP=1 -h "$COMPOR_DB_HOST" -p "$COMPOR_DB_PORT" \
-  -U "$COMPOR_DB_USER" -d "$COMPOR_DB_NAME" -f supabase/tests/preflight_readonly.sql \
-  -o "$COMPOR_CAPTURE_DIR/preflight.txt"; then
-  printf 'Captura concluída: %s\n' "$COMPOR_CAPTURE_DIR/preflight.txt"
-else
-  printf 'Falhou; captura parcial não é evidência: %s\n' "$COMPOR_CAPTURE_DIR/preflight.txt" >&2
-fi
+COMPOR_DB_HOST='host.do.projeto.isolado' \
+COMPOR_DB_PORT='5432' \
+COMPOR_DB_USER='usuario_do_banco' \
+COMPOR_DB_NAME='nome_do_banco' \
+COMPOR_CA_CERT='/caminho/absoluto/ca-oficial.pem' \
+  sh supabase/tests/preflight_capture.sh
 ```
 
 Revise a captura localmente antes de compartilhá-la: ela contém nomes internos e privilégios. O comando não coleta senha intencionalmente, porém não é uma garantia sobre dados inseridos fora dele, autenticação do sistema ou mensagens do ambiente. Não execute o preflight caso o destino ou o certificado não estejam confirmados.
@@ -42,6 +33,7 @@ Revise a captura localmente antes de compartilhá-la: ela contém nomes internos
 | 00007 | Claim do envio do resultado | Troca de contexto, duplicação e transição desconhecida; aceitação não prova conclusão do turno. |
 | 00008 | Revogação de UPDATE direto e transição terminal por RPC autenticada | Revisar a migração aditiva e isolamento; o titular ainda pode chamar a RPC para sua própria tentativa. |
 | 00009 | Medição sanitizada por tentativa e etapa, estimativa com dados suficientes | Conferir RLS/RPCs, isolamento, deduplicação e estados; transações concorrentes e intervalo entre commit e chamada continuam sem prova. O titular pode forjar seus próprios registros. |
+| 00010 | Listagem paginada de IDs de assets por projeto, peça e versão | Verificar propriedade e RLS com duas contas, cursor, caminhos canônicos e Storage real; o inventário não lê nem valida objetos. |
 
 Calcular `shasum -a 256 supabase/migrations/*.sql` e comparar os arquivos efetivamente revisados imediatamente antes de qualquer ensaio. Não editar migrações históricas já registradas; conferir estado e histórico do projeto para determinar o procedimento correto, sem reaplicar cegamente ou pressupor que a lista é inédita.
 
