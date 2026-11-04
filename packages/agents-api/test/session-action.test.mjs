@@ -10,10 +10,11 @@ const action={ type:'function_call', name:'generate_image', turn_id:'turn_123', 
 const encode = new TextEncoder();
 
 test('ação pendente é verificada no provedor, vinculada cedo e espera consentimento sem encerrar tentativa', async () => {
-  let now = 1000000, cancelled = false, agentSignal; const calls = [], finished = [];
+  let now = 1000000, cancelled = false, agentSignal; const calls = [], finished = [], measurements=[];
   const bindings = createSessionBindings({ secret:Buffer.alloc(32,42), now:()=>now });
   const handler = createProjectAgentHandler({ appOrigin:'https://compor.test', resolveActor:async()=>({ userId, token:'fake-user-token' }), ownsProject:async()=>true, bindings,
     attempts:{ start:async()=>({ id:attemptId,state:'started',isNew:true }), finish:async ({state})=>finished.push(state) },
+    usage:{start:async x=>{measurements.push({event:'start',part:x.part});return true;},finish:async x=>measurements.push({event:'finish',state:x.state})},
     fetch: async (url, options) => {
       calls.push({ url:String(url), method:options.method, auth:options.headers.Authorization });
       if (options.method === 'POST') {
@@ -28,7 +29,7 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
   const response = await Promise.race([handler(request()), new Promise((_,reject)=>setTimeout(()=>reject(new Error('leitura não foi incremental')),1500))]);
   assert.equal(response.status,202); const data=await response.json();
   assert.equal(data.status,'consent_required'); assert.equal(data.prompt,'Foto sem texto'); assert.equal(data.attemptId,attemptId);
-  assert.deepEqual(finished, []); assert.equal(cancelled,true);
+  assert.deepEqual(finished, []); assert.deepEqual(measurements,[{event:'start',part:'agent'}]); assert.equal(cancelled,true);
   assert.deepEqual(calls.map(call=>call.method),['POST','GET']); assert.ok(calls.every(call=>call.auth===`Bearer ${apiKey}`));
   assert.equal(calls[1].url,'https://api.openai.com/v1/agents/sessions/sess_actual');
   assert.doesNotMatch(JSON.stringify(data), /sk-test-secret|fake-user-token|sess_browser_forged|call_browser_forged/);

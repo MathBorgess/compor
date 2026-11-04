@@ -23,8 +23,9 @@ export function createImageToolApproval({ bindings, ownsVersion } = {}) {
     } catch { return null; }
   };
 }
-export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
+export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
   if (typeof bindings?.verifyApprovedAction !== 'function' || typeof ownsVersion !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
+  if (usage && (typeof usage.start !== 'function' || typeof usage.finish !== 'function')) throw new TypeError('invalid usage store');
   return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval } = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
@@ -51,11 +52,15 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       execution = await reservations.claimExecution({actor,reservationId:reservation.id});
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
+    let measurementStarted=false, measurementFinished=false, usageRecorded=false;
+    const measurement={actor,projectId,attemptId,part:'image',partId:execution.id};
     let storedAssetId;
     try {
+      if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
       const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,authorizeGeneration:true})}));
       if (!image.ok) throw new Error('generation uncertain');
       const result = await image.json();
+      if (usage) {measurementFinished=true; try {await usage.finish({...measurement,state:'completed',usage:result?.usage});usageRecorded=true;} catch { /* preserve image; measurement remains uncertain */ }}
       if (typeof result?.imageBase64 !== 'string' || result.imageBase64.length > 12 * 1024 * 1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.imageBase64)) throw new Error('invalid image');
       const url = new URL('/internal-storage',appOrigin);
       for (const [k,v] of Object.entries({projectId,pieceId,version:String(version),assetId:execution.assetId})) url.searchParams.set(k,v);
@@ -65,10 +70,11 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (confirmation?.status !== 'stored' || confirmation.assetId !== execution.assetId) throw new Error('storage uncertain');
       storedAssetId = execution.assetId;
       await reservations.completeExecution({actor,executionId:execution.id});
-      return {status:'completed',executionId:execution.id,toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
+      return {status:'completed',executionId:execution.id,...(usage?{usageRecorded}:{}),toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
+      if (usage && measurementStarted && !measurementFinished) {try {await usage.finish({...measurement,state:'unknown',usage:null});} catch { /* started remains uncertain */ }}
       try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }
-      return {...unknown(),...(storedAssetId ? {assetId:storedAssetId} : {})};
+      return {...unknown(),...(storedAssetId ? {assetId:storedAssetId} : {}),...(usage?{usageRecorded}:{})};
     }
   };
 }

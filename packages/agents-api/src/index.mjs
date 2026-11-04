@@ -72,7 +72,7 @@ async function readAgentEvents(stream, stopForAction) {
   }
 }
 
-export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false } = {}) {
+export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false, mcpTool } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('authenticate is required');
   return async function handle(request) {
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
@@ -95,7 +95,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       const response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...(enableImageTool ? { tools: [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
+        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
         signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
       });
@@ -113,11 +113,14 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
         const action = session.required_actions[0];
         let args = action?.arguments;
         if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
-        if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
+        const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');
+        if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
         return json({ status: 'consent_required', sessionId: observed.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: args.prompt }, 202);
       }
       if (!observed.completed || !observed.sessionId || !observed.output) return json({ error: 'incomplete_turn' }, 502);
-      return json({ sessionId: observed.sessionId, text: observed.output.replaceAll(key, '[redacted]'), usage: null }, 200);
+      const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');
+      const text = observed.output.replaceAll(key, '[redacted]');
+      return json({ sessionId: observed.sessionId, text: delegated ? text.replaceAll(delegated, '[redacted]') : text, usage: null }, 200);
     } catch {
       return json({ error: 'upstream_error' }, 502);
     }

@@ -20,8 +20,9 @@ function fixture(options = {}) {
       markExecutionUnknown: async () => {calls.push('unknown');},
       completeExecution: async () => {calls.push('complete'); if(options.completeFail) throw Error(key);},
     },
-    imageHandler: async req => { calls.push('image'); assert.equal((await req.json()).apiKey,key); if(options.imageFail) throw Error(key); return Response.json({imageBase64:Buffer.from('image').toString('base64')}); },
+    imageHandler: async req => { calls.push('image'); assert.equal((await req.json()).apiKey,key); if(options.imageFail) throw Error(key); return Response.json({imageBase64:Buffer.from('image').toString('base64'),usage:options.imageUsage??null}); },
     imageStorageHandler: async req => {calls.push('storage'); assert.equal(new URL(req.url).searchParams.get('assetId'),assetId); if(options.storageFail) throw Error(key); return Response.json({status:'stored',assetId},{status:201});},
+    usage: options.usage,
     appOrigin:'https://example.test',
   });
   const input = {actor,projectId,pieceId,version:1,attemptId,actionBinding:'signed',apiKey:key,explicitApproval:true};
@@ -30,6 +31,20 @@ function fixture(options = {}) {
 test('atendimento único vincula sessão, declaração e asset e devolve tool_result', async()=>{
  const {fn,input,calls}=fixture(); const result=await fn(input); assert.equal(result.status,'completed'); assert.equal(result.toolResult.success,true); assert.equal(JSON.parse(result.toolResult.output).assetId,assetId); assert.deepEqual(calls,['lookup','reserve','consent','claim','image','storage','complete']); assert.ok(!JSON.stringify(result).includes(key));
  const second=await fn(input); assert.equal(second.status,'unknown'); assert.equal(calls.filter(x=>x==='image').length,1);
+});
+
+test('instrumentação deve reservar medição antes de gerar imagem paga',async()=>{
+ let measurements=0;
+ const usage={start:async()=>{measurements++;return false;},finish:async()=>{}};
+ const f=fixture({usage});assert.equal((await f.fn(f.input)).status,'unknown');assert.equal(measurements,1);assert.ok(!f.calls.includes('image'));
+});
+
+test('medição registra contagens recebidas e preserva imagem se registro final falhar',async()=>{
+ const records=[];let fail=false;
+ const usage={start:async ctx=>{records.push({step:'start',ctx});return true;},finish:async ctx=>{records.push({step:'finish',ctx});if(fail)throw Error(key);}};
+ let f=fixture({usage,imageUsage:{input_tokens:10,output_tokens:20,total_tokens:30}}),result=await f.fn(f.input);
+ assert.equal(result.status,'completed');assert.equal(result.usageRecorded,true);assert.deepEqual(records[1].ctx.usage,{input_tokens:10,output_tokens:20,total_tokens:30});
+ fail=true;f=fixture({usage});result=await f.fn(f.input);assert.equal(result.status,'completed');assert.equal(result.usageRecorded,false);assert.ok(f.calls.includes('storage'));assert.doesNotMatch(JSON.stringify(result),/sk-/);
 });
 test('recusa outra conta, autorização ausente ou prompt alterado antes da geração',async()=>{
  for(const scenario of ['actor','approval','prompt']) { const f=fixture({prompt:scenario==='prompt'?'alterado':undefined}); if(scenario==='actor') f.input.actor={...actor,userId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}; if(scenario==='approval') f.input.explicitApproval=false; assert.notEqual((await f.fn(f.input)).status,'completed'); assert.ok(!f.calls.includes('image')); }

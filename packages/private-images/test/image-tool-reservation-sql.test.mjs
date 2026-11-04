@@ -17,7 +17,7 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth, public to public; grant execute on function auth.uid() to public;
   `);
-  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql', '20261103000006_image_tool_execution_claim.sql', '20261103000007_image_tool_result_submission.sql']) {
+  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql', '20261103000006_image_tool_execution_claim.sql', '20261103000007_image_tool_result_submission.sql', '20261103000008_agent_attempt_state.sql']) {
     await db.exec(await readFile(new URL(`../../../supabase/migrations/${file}`, import.meta.url), 'utf8'));
   }
   await db.query('insert into auth.users (id) values ($1),($2)', [alice, bob]);

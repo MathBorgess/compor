@@ -32,6 +32,19 @@ test('uso informado pelo provedor é retornado sem texto ou campos desconhecidos
   assert.deepEqual((await response.json()).usage, { input_tokens: 100, output_tokens: 200, total_tokens: 300 });
 });
 
+test('uso parcial preserva contagens válidas e marca os demais campos desconhecidos', async () => {
+  const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => Response.json({ data: [{ b64_json: png }], usage: { input_tokens: 100, output_tokens: -1, detail: key } }) });
+  const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+  assert.deepEqual((await response.json()).usage, { input_tokens: 100, output_tokens: null, total_tokens: null });
+});
+
+test('preserva detalhamento numérico de texto e imagem sem copiar conteúdo arbitrário', async () => {
+  const handler=createImageHandler({authenticate:async()=>({userId:'user-1'}),fetch:async()=>Response.json({data:[{b64_json:png}],usage:{input_tokens:16,output_tokens:196,total_tokens:212,input_tokens_details:{text_tokens:16,image_tokens:0,extra:key},output_tokens_details:{image_tokens:196,extra:key}}})});
+  const response=await handler(request({apiKey:key,prompt:'Teste',authorizeGeneration:true}));const usage=(await response.json()).usage;
+  assert.deepEqual(usage,{input_tokens:16,output_tokens:196,total_tokens:212,input_tokens_details:{text_tokens:16,image_tokens:0},output_tokens_details:{image_tokens:196}});
+  assert.doesNotMatch(JSON.stringify(usage),/sk-/);
+});
+
 test('não inicia uma operação paga sem identidade e autorização explícita', async () => {
   let calls = 0;
   const fetch = async () => { calls++; throw new Error('should not be called'); };
