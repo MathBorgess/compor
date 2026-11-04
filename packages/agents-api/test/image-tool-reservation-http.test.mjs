@@ -43,3 +43,27 @@ test('declaração de consentimento usa apenas confirmação explícita e não s
   assert.deepEqual(JSON.parse(captured.init.body), { p_reservation_id: reservationId, p_confirmed: true });
   assert.doesNotMatch(captured.init.body, /sk-|privado|fake-user-token/);
 });
+
+test('claim e resultado usam IDs estáveis sem prompt, chave ou repetição automática', async () => {
+  const executionId = '66666666-6666-4666-8666-666666666666', assetId = '77777777-7777-4777-8777-777777777777';
+  const sent = [];
+  const store = createImageToolReservationStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetch: async (url, init) => {
+    sent.push({ path: url.pathname, body: init.body, auth: init.headers.authorization });
+    if (url.pathname.endsWith('/claim_image_tool_execution')) return Response.json([{ execution_id: executionId, asset_id: assetId, state: 'running', is_new: sent.length === 1 }]);
+    return Response.json(true);
+  } });
+  const input = { actor, reservationId, apiKey: 'sk-never-send', prompt: 'texto privado' };
+  assert.deepEqual(await store.claimExecution(input), { id: executionId, assetId, state: 'running', isNew: true });
+  assert.deepEqual(await store.claimExecution(input), { id: executionId, assetId, state: 'running', isNew: false });
+  await store.markExecutionUnknown({ actor, executionId });
+  await store.completeExecution({ actor, executionId });
+  assert.ok(sent.every(item => item.auth === 'Bearer fake-user-token' && !/sk-|texto privado|fake-user-token/.test(item.body)));
+  assert.deepEqual(sent.map(item => JSON.parse(item.body)), [{ p_reservation_id: reservationId }, { p_reservation_id: reservationId }, { p_execution_id: executionId }, { p_execution_id: executionId }]);
+});
+
+test('desconexão na reserva do claim mantém resultado desconhecido sem repetição', async () => {
+  let count = 0;
+  const store = createImageToolReservationStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetch: async () => { count++; throw new Error('sk-private'); } });
+  await assert.rejects(store.claimExecution({ actor, reservationId }), error => error.message === 'reservation status unknown');
+  assert.equal(count, 1);
+});

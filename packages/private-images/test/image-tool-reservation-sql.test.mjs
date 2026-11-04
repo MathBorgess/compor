@@ -13,10 +13,11 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   await db.exec(`
     create role authenticated; create role anon;
     create schema auth; create table auth.users (id uuid primary key);
+    create schema storage; create table storage.objects (bucket_id text not null, name text not null, primary key (bucket_id, name));
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub', true), '')::uuid $$;
     grant usage on schema auth, public to public; grant execute on function auth.uid() to public;
   `);
-  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql']) {
+  for (const file of ['20261103000000_projects.sql', '20261103000001_piece_versions.sql', '20261103000002_agent_attempts.sql', '20261103000004_image_tool_reservations.sql', '20261103000005_image_consent_declarations.sql', '20261103000006_image_tool_execution_claim.sql']) {
     await db.exec(await readFile(new URL(`../../../supabase/migrations/${file}`, import.meta.url), 'utf8'));
   }
   await db.query('insert into auth.users (id) values ($1),($2)', [alice, bob]);
@@ -39,12 +40,36 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   const declarations = await Promise.all(Array.from({ length: 3 }, () => db.query(declare, [reservationId, true])));
   assert.equal(declarations.filter(result => result.rows[0].is_new).length, 1);
   assert.ok(declarations.every(result => result.rows[0].declaration_id === declarations[0].rows[0].declaration_id));
+  const claim = 'select * from public.claim_image_tool_execution($1)';
+  const claims = await Promise.all(Array.from({ length: 4 }, () => db.query(claim, [reservationId])));
+  assert.equal(claims.filter(result => result.rows[0].is_new).length, 1);
+  const firstClaim = claims[0].rows[0];
+  assert.ok(claims.every(result => result.rows[0].execution_id === firstClaim.execution_id && result.rows[0].asset_id === firstClaim.asset_id));
+  await assert.rejects(() => db.query('update public.image_tool_executions set state=\'completed\''));
+  await assert.rejects(() => db.query('select public.complete_image_tool_execution($1)', [firstClaim.execution_id]), 'sem objeto não conclui');
+  const marked = await db.query('select public.mark_image_tool_execution_unknown($1)', [firstClaim.execution_id]);
+  assert.equal(marked.rows[0].mark_image_tool_execution_unknown, true);
+  assert.equal((await db.query(claim, [reservationId])).rows[0].state, 'unknown');
+  assert.equal((await db.query(claim, [reservationId])).rows[0].is_new, false);
+  await db.exec('reset role');
+  await db.query('insert into storage.objects(bucket_id,name) values($1,$2)', ['compor-project-images', `${alice}/${project}/${piece}/1/${firstClaim.asset_id}.png`]);
+  await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${alice}',false)`);
+  await assert.rejects(() => db.query('select public.complete_image_tool_execution($1)', [firstClaim.execution_id]), 'objeto isolado não resolve resultado incerto');
   await assert.rejects(() => db.query('update public.image_consent_declarations set owner_id=$1', [bob]));
   await assert.rejects(() => db.query('delete from public.image_consent_declarations'));
   await assert.rejects(() => db.query(reserve, [project, piece, 2, attempt, 'sess_123', 'turn_123', 'call_123']));
   await assert.rejects(() => db.query('update public.image_tool_reservations set state=\'unknown\''));
   const otherCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_other'];
-  assert.equal((await db.query(reserve, otherCall)).rows[0].is_new, true);
+  const otherReservation = (await db.query(reserve, otherCall)).rows[0]; assert.equal(otherReservation.is_new, true);
+  await assert.rejects(() => db.query(claim, [otherReservation.reservation_id]), 'sem declaração não inicia');
+  await db.query(declare, [otherReservation.reservation_id, true]);
+  const otherClaim = (await db.query(claim, [otherReservation.reservation_id])).rows[0];
+  await db.exec('reset role');
+  await db.query('insert into storage.objects(bucket_id,name) values($1,$2)', ['compor-project-images', `${alice}/${project}/${piece}/1/${otherClaim.asset_id}.png`]);
+  await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${alice}',false)`);
+  assert.equal((await db.query('select public.complete_image_tool_execution($1)', [otherClaim.execution_id])).rows[0].complete_image_tool_execution, true);
+  const completed = (await db.query(claim, [otherReservation.reservation_id])).rows[0];
+  assert.equal(completed.state, 'completed'); assert.equal(completed.asset_id, otherClaim.asset_id); assert.equal(completed.is_new, false);
   const uncertainCall = [project, piece, 1, attempt, 'sess_123', 'turn_123', 'call_uncertain'];
   const uncertainId = (await db.query(reserve, uncertainCall)).rows[0].reservation_id;
   await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_uncertain']);
@@ -61,8 +86,17 @@ test('reserva isolada deduplica chamada e preserva estado desconhecido', async t
   await db.exec(`select set_config('request.jwt.claim.sub','${bob}',false)`);
   assert.equal((await db.query('select * from public.image_tool_reservations')).rows.length, 0);
   assert.equal((await db.query('select * from public.image_consent_declarations')).rows.length, 0);
+  assert.equal((await db.query('select * from public.image_tool_executions')).rows.length, 0);
+  await assert.rejects(() => db.query(claim, [reservationId]));
+  await assert.rejects(() => db.query('select public.complete_image_tool_execution($1)', [otherClaim.execution_id]));
   await assert.rejects(() => db.query(declare, [reservationId, true]));
   await assert.rejects(() => db.query(reserve, args));
   await assert.rejects(() => db.query(reserve, [otherProject, otherPiece, 1, otherAttempt, 'sess_123', 'turn_123', 'call_123']));
   await assert.rejects(() => db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, 'sess_123', 'turn_123', 'call_123']));
+  await db.exec('reset role');
+  await db.query('update public.projects set owner_id=$1 where id=$2', [bob, project]);
+  await db.exec(`set role authenticated; select set_config('request.jwt.claim.sub','${alice}',false)`);
+  assert.equal((await db.query('select * from public.image_tool_executions')).rows.length, 0);
+  await assert.rejects(() => db.query('select public.complete_image_tool_execution($1)', [otherClaim.execution_id]));
+  await assert.rejects(() => db.query('select public.mark_image_tool_execution_unknown($1)', [firstClaim.execution_id]));
 });

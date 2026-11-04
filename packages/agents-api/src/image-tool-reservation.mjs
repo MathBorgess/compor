@@ -40,5 +40,22 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!uuid.test(row?.declaration_id ?? '') || typeof row?.is_new !== 'boolean') throw new Error('reservation status unknown');
       return { id: row.declaration_id, isNew: row.is_new };
     },
+    async claimExecution({ actor, reservationId }) {
+      if (!uuid.test(reservationId ?? '')) throw new Error('invalid execution');
+      const rows = await rpc('claim_image_tool_execution', actor, { p_reservation_id: reservationId });
+      const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+      if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running', 'unknown', 'completed'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
+      return { id: row.execution_id, assetId: row.asset_id, state: row.state, isNew: row.is_new };
+    },
+    async markExecutionUnknown({ actor, executionId }) {
+      if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');
+      const result = await rpc('mark_image_tool_execution_unknown', actor, { p_execution_id: executionId });
+      if (result !== true) throw new Error('reservation status unknown');
+    },
+    async completeExecution({ actor, executionId }) {
+      if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');
+      const result = await rpc('complete_image_tool_execution', actor, { p_execution_id: executionId });
+      if (result !== true) throw new Error('reservation status unknown');
+    },
   };
 }
