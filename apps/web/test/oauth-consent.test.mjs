@@ -8,8 +8,10 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright-core';
+import { existsSync } from 'node:fs';
+const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-test('consentimento explicita cliente e exige decisão da conta autenticada', async t => {
+async function exerciseConsent(t, runBrowser) {
   const dir = await mkdtemp(join(tmpdir(), 'compor-oauth-test-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const key = join(dir, 'key.pem'), cert = join(dir, 'cert.pem');
@@ -50,7 +52,8 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   assert.match(text, /Autorizar/);
   assert.match(text, /Negar/);
   assert.deepEqual(actions, []);
-  const browser = await chromium.launch({ executablePath: '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome', headless: true });
+  if (runBrowser) {
+  const browser = await chromium.launch({ executablePath: browserPath, headless: true });
   t.after(() => browser.close());
   const context = await browser.newContext();
   await context.addCookies([{ name: 'sb-127-auth-token', value: cookie.split('=')[1], url: origin }]);
@@ -67,7 +70,8 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   const decisionDeadline = Date.now() + 5000;
   while (!actions.length && Date.now() < decisionDeadline) await new Promise(resolve => setTimeout(resolve, 25));
   assert.deepEqual(actions, ['approve']);
-  actions.length = 0;
+  return;
+  }
   for (const rejectedOrigin of ['null', 'https://attacker.example']) {
     const rejected = await fetch(`${origin}/oauth/decision`, { method: 'POST', headers: { Cookie: cookie, Origin: rejectedOrigin, 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'authorization_id=request-12345&decision=approve' });
     assert.equal(rejected.status, 403);
@@ -107,4 +111,7 @@ test('consentimento explicita cliente e exige decisão da conta autenticada', as
   const userinfo = await post('approve');
   assert.equal(userinfo.status, 502);
   assert.equal(userinfo.headers.get('location'), null);
-});
+}
+
+test('consentimento explicita cliente e exige decisão da conta autenticada', t => exerciseConsent(t, false));
+test('navegador envia a origem ao autorizar sem divulgar o identificador no Referer', { skip: !existsSync(browserPath) }, t => exerciseConsent(t, true));
