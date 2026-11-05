@@ -11,7 +11,12 @@ import subprocess
 import sys
 from pathlib import Path
 
-PACKAGES = ('agents-api', 'images-api', 'private-images', 'remote-mcp')
+PACKAGES = ('agents-api', 'agile-deliberation', 'images-api', 'private-images', 'remote-mcp')
+DEPENDENCIES = ('dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies')
+UPSTREAM_FILES = {
+    'third_party/google-research/agile_deliberation/LICENSE': 'apps/web/vendor/agile-deliberation/LICENSE',
+    'third_party/google-research/agile_deliberation/provenance.json': 'apps/web/vendor/agile-deliberation/UPSTREAM-PROVENANCE.json',
+}
 
 def git(*args):
     return subprocess.check_output(['git', *args])
@@ -23,6 +28,25 @@ def unique_object(pairs):
             raise ValueError('duplicate JSON key')
         result[key] = value
     return result
+
+def validate_vendor_dependencies(manifest):
+    for field in DEPENDENCIES:
+        for dependency, value in manifest.get(field, {}).items():
+            if not isinstance(value, str) or not value.startswith('file:'):
+                continue
+            name = dependency.removeprefix('@compor/')
+            if dependency != f'@compor/{name}' or name not in PACKAGES or value != f'file:../{name}':
+                raise ValueError('local dependency points outside the staged package graph')
+
+def validate_file_paths(value, allowed):
+    if isinstance(value, dict):
+        for item in value.values():
+            validate_file_paths(item, allowed)
+    elif isinstance(value, list):
+        for item in value:
+            validate_file_paths(item, allowed)
+    elif isinstance(value, str) and value.startswith('file:') and value not in allowed:
+        raise ValueError('bundle has a dependency outside the app root')
 
 def main():
     if len(sys.argv) != 3 or not re.fullmatch(r'[0-9a-f]{40}', sys.argv[1]):
@@ -42,9 +66,11 @@ def main():
     if resolved == root or root in resolved.parents or resolved in root.parents:
         raise ValueError('output must be outside the repository')
     specs = ['apps/web/app', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
-             'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc', 'apps/web/vercel.json']
+             'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc', 'apps/web/vercel.json',
+             'apps/web/tsconfig.json', 'apps/web/next-env.d.ts']
     for name in PACKAGES:
         specs += [f'packages/{name}/package.json', f'packages/{name}/src']
+    specs += list(UPSTREAM_FILES)
     tree = git('ls-tree', '-r', '-z', '--full-tree', commit, '--', *specs)
     entries = []
     for entry in tree.split(b'\0'):
@@ -57,7 +83,9 @@ def main():
             raise ValueError('unsupported tracked path or file mode')
         if any(ord(char) < 32 for char in path) or any(part.startswith('.env') for part in path.split('/')) or path.lower().endswith(('.pem', '.key', '.p12', '.pfx')):
             raise ValueError('sensitive or invalid tracked filename in bundle scope')
-        if path.startswith('apps/web/'):
+        if path in UPSTREAM_FILES:
+            destination = UPSTREAM_FILES[path]
+        elif path.startswith('apps/web/'):
             destination = path
         else:
             parts = path.split('/')
@@ -67,7 +95,7 @@ def main():
         entries.append((destination, oid))
     names = {name for name, _ in entries}
     required = {'apps/web/package.json', 'apps/web/package-lock.json', 'apps/web/next.config.mjs',
-                'apps/web/.npmrc', 'apps/web/vercel.json'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES}
+                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values())
     if not required.issubset(names) or not any(name.startswith('apps/web/app/') for name in names):
         raise ValueError('missing required source files')
     output.mkdir(mode=0o700)
@@ -78,6 +106,8 @@ def main():
     app = output / 'apps/web'
     manifest = json.loads((app / 'package.json').read_text(), object_pairs_hook=unique_object)
     lock = json.loads((app / 'package-lock.json').read_text(), object_pairs_hook=unique_object)
+    vendor_files = {f'file:vendor/{name}' for name in PACKAGES}
+    sibling_files = {f'file:../{name}' for name in PACKAGES}
     for name in PACKAGES:
         package = f'@compor/{name}'
         old, new = f'file:../../packages/{name}', f'file:vendor/{name}'
@@ -86,8 +116,19 @@ def main():
         manifest['dependencies'][package] = new
         lock['packages']['']['dependencies'][package] = new
         lock['packages'][f'node_modules/{package}']['resolved'] = new
-    if 'file:../../' in json.dumps(manifest) or 'file:../../' in json.dumps(lock):
-        raise ValueError('bundle has another dependency outside the app root')
+        vendor_path = app / f'vendor/{name}/package.json'
+        vendor = json.loads(vendor_path.read_text(), object_pairs_hook=unique_object)
+        if vendor.get('name') != package or vendor.get('version') != lock['packages'][f'node_modules/{package}'].get('version'):
+            raise ValueError('vendored package and lockfile identity differ')
+        validate_vendor_dependencies(vendor)
+        validate_file_paths(vendor, sibling_files)
+        for field in ('dependencies', 'optionalDependencies', 'peerDependencies'):
+            if field in vendor:
+                lock['packages'][f'node_modules/{package}'][field] = vendor[field]
+    validate_file_paths(manifest, vendor_files)
+    lock_paths = {'': vendor_files, **{f'node_modules/@compor/{name}': vendor_files | sibling_files for name in PACKAGES}}
+    for path, package_lock in lock['packages'].items():
+        validate_file_paths(package_lock, lock_paths.get(path, set()))
     for filename, value in [('package.json', manifest), ('package-lock.json', lock)]:
         (app / filename).write_text(json.dumps(value, ensure_ascii=False, indent=2) + '\n')
     outputs = sorted(p for p in output.rglob('*') if p.is_file())
