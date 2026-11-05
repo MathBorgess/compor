@@ -49,4 +49,4 @@ export function parseStudioAction(name,value) {
  if(!tool)throw Error('invalid_action');
  return parse(tool,value);
 }
-export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma proposta de imagem. A Images API só será acionada após a confirmação explícita da pessoa no aplicativo.',parameters:fields({prompt:string(4000)})}]);
+export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma proposta de imagem. A Images API só será acionada após a confirmação explícita da pessoa no aplicativo. O resultado generated_and_stored com assetId confirma geração e armazenamento na versão indicada; a aplicação no navegador é uma etapa separada.',parameters:fields({prompt:string(4000)})}]);

@@ -9,6 +9,8 @@ test('contexto permite descobrir revisão; mutações exigem revisão e campos p
  assert.throws(()=>parseStudioAction('compor_contexto',JSON.parse(JSON.stringify(scope).replace('}',',"__proto__":{}}'))));
  assert.throws(()=>parseStudioAction('compor_editar_briefing',{...scope,revision:1,field:'offer',value:'sk-do-not-transport'}));
  assert.equal(AGENT_STUDIO_TOOLS.filter(t=>t.name==='generate_image').length,1);
+ assert.match(AGENT_STUDIO_TOOLS.find(t=>t.name==='generate_image').description,/generated_and_stored com assetId confirma geração e armazenamento/);
+ assert.match(AGENT_STUDIO_TOOLS.find(t=>t.name==='generate_image').description,/aplicação no navegador é uma etapa separada/);
  assert.equal(AGENT_STUDIO_TOOLS.some(t=>t.name==='compor_propor_imagem'),false);
 });
 test('afirmações de persona preservam procedência e exigem HTTPS para fonte pública',()=>{

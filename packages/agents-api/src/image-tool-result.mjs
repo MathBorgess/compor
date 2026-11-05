@@ -40,7 +40,7 @@ export function createImageToolResultSender({bindings,ownsVersion,reservations,u
     const measurement={actor,projectId,attemptId,part:'agent_resume',partId:submission.id,model};
     try {
       if(usage){if(await usage.start(measurement)!==true)throw Error('usage unavailable');measurementStarted=true;}
-      const event={type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:submission.assetId})};
+      const event={type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({status:'generated_and_stored',assetId:submission.assetId,projectId,pieceId,version})};
       const controller = new AbortController(); let response;
       try {
         response=await fetchApi(`${base}/events`,{method:'POST',headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1','Content-Type':'application/json'},body:JSON.stringify({events:[event]}),redirect:'error',signal:AbortSignal.any([AbortSignal.timeout(sendTimeoutMs),controller.signal])});

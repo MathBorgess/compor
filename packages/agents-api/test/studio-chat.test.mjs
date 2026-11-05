@@ -39,6 +39,9 @@ test('submit cria uma sessão assíncrona e repetição consulta sem nova geraç
  const create=f.calls.find(c=>c.url?.endsWith('/sessions'));assert.equal(create.body.stream,false);assert.equal(create.body.environment.type,'none');assert.equal('spend_control'in create.body,false);assert.ok(create.body.agent.tools.some(t=>t.type==='web_search'));
  assert.equal(JSON.parse(create.body.input[0].content[0].text).projectId,projectId);
  assert.equal(create.body.agent.tools.some(tool=>tool.type==='mcp'),false,'chat não oferece gravação MCP que contorne a confirmação da interface');
+ assert.match(create.body.agent.instructions,/status generated_and_stored e assetId/);
+ assert.match(create.body.agent.instructions,/não diga que essa geração ainda aguarda confirmação/);
+ assert.match(create.body.agent.instructions,/não comprova a aplicação da imagem no navegador/);
  r=await f.chat(request(body));assert.equal((await r.json()).status,'running');assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  f.set({status:'idle',turnState:'completed'});r=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal((await r.json()).text,'Atualização concluída na aba.');
 });
