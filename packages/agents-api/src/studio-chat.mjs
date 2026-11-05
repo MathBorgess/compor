@@ -198,7 +198,13 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(body.previousAttemptKey){d.phase='prior_get';const prior=await store.get({...scope,requestId:body.previousAttemptKey});if(prior?.state==='completed'&&Date.parse(prior.expiresAt)>now()+10000){
     d.phase='prior_binding';const verified=proof(scope,prior);d.phase='prior_lookup';const session=await get(verified.sessionId,key);d.phase='prior_validate';
     if(session.id!==verified.sessionId||session.status!=='idle'||!Array.isArray(session.required_actions)||session.required_actions.length)throw Error('previous session active');
-    if(!identifier(prior.turnId,'turn'))throw Error('previous turn unknown');previous=prior;sessionId=verified.sessionId;priorTurnId=prior.turnId;expiresAt=prior.expiresAt;initialInput=count(session.usage?.input_tokens);initialOutput=count(session.usage?.output_tokens);
+    // A completed legacy Astra session remains historical. Only the provider's
+    // confirmed current model authorizes reuse for a new measured Terra turn.
+    // Missing/unrecognized models fail before dispatch rather than guessing.
+    if(!['gpt-6-astra',AGENT_MODEL].includes(session.agent?.model))throw Error('previous session model unverified');
+    if(session.agent.model===AGENT_MODEL){
+     if(!identifier(prior.turnId,'turn'))throw Error('previous turn unknown');previous=prior;sessionId=verified.sessionId;priorTurnId=prior.turnId;expiresAt=prior.expiresAt;initialInput=count(session.usage?.input_tokens);initialOutput=count(session.usage?.output_tokens);
+    }
    }}
    if(previous){
     d.phase='session_sign';

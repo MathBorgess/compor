@@ -3,13 +3,14 @@ import assert from 'node:assert/strict';
 import {createStudioChatHandlers} from '../src/studio-chat.mjs';
 import {createSessionBindings} from '../src/session-binding.mjs';
 import {createStudioBindings} from '../src/studio-chat-bindings.mjs';
+import {AGENT_MODEL} from '../src/agent-model.mjs';
 
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',requestId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',request2='55555555-5555-4555-8555-555555555555';
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
 const request=(body,origin=app)=>new Request(app+'/api/studio/chat',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 const body={apiKey,projectId,requestId,message:'Atualize a oferta para oficina fictícia',context:{revision:1,pieceId:null,brief:{offer:'Oficina'}},history:[]};
 function fixture(options={}){
- const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress';
+ const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL;
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
  const store={
   async reserve(c){if(records.has(c.requestId)){const t=records.get(c.requestId);return{status:t.inputDigest===c.inputDigest?'existing':'conflict',turn:t};}if([...records.values()].some(t=>!['completed','failed'].includes(t.state)))return{status:'busy'};const t={requestId:c.requestId,projectId,userId,attemptId:c.requestId===requestId?attemptId:request2,inputDigest:c.inputDigest,state:'starting',binding:null,turnId:null};records.set(c.requestId,t);return{status:'reserved',turn:t};},
@@ -22,14 +23,14 @@ function fixture(options={}){
  };
  const fetch=async(url,init={})=>{
   calls.push({url,method:init.method??'GET',body:init.body?JSON.parse(init.body):null,headers:init.headers});
-  if(url.endsWith('/sessions')&&init.method==='POST')return Response.json({id:'sess_one',status:'in_progress'},{status:201});
+  if(url.endsWith('/sessions')&&init.method==='POST')return Response.json({id:options.createdSessionId??'sess_one',status:'in_progress'},{status:201});
   if(url.endsWith('/events'))return new Response(null,{status:202});
   if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:turn,content:[{type:'output_text',text:'Atualização concluída na aba.'}]}]});
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
-  return Response.json({id:'sess_one',status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
+  return Response.json({id:'sess_one',agent:{model},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
- return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;}};
+ return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'model'))model=v.model;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{
  const f=fixture();let r=await f.chat(request(body));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
@@ -40,13 +41,42 @@ test('submit cria uma sessão assíncrona e repetição consulta sem nova geraç
  r=await f.chat(request(body));assert.equal((await r.json()).status,'running');assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  f.set({status:'idle',turnState:'completed'});r=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal((await r.json()).text,'Atualização concluída na aba.');
 });
-test('próxima mensagem reutiliza sessão ociosa e nunca direciona turno ativo',async()=>{
+test('próxima mensagem reutiliza sessão Terra ociosa e nunca direciona turno ativo',async()=>{
  const f=fixture();await f.chat(request(body));const busy=await f.chat(request({...body,requestId:request2}));assert.equal(busy.status,409);
  f.set({status:'idle',turnState:'completed'});await f.chat(request({op:'poll',apiKey,projectId,requestId}));
  const r=await f.chat(request({...body,requestId:request2,previousAttemptKey:requestId,message:'Agora atualize a data'}));assert.equal((await r.json()).sessionReused,true);
  const event=f.calls.find(c=>c.url?.endsWith('/events'));assert.equal(event.headers['Idempotency-Key'],request2);assert.equal(event.body.events[0].type,'agent.session.input.message');
  assert.equal(f.calls.filter(c=>c.url?.endsWith('/sessions')&&c.method==='POST').length,1);
  f.set({status:'idle',turnState:'completed',turn:'turn_two'});const done=await f.chat(request({op:'poll',apiKey,projectId,requestId:request2}));assert.equal((await done.json()).status,'completed');
+});
+
+function seedPrevious(f,model){
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,7)});
+ f.records.set(requestId,{requestId,projectId,userId,attemptId,inputDigest:'a'.repeat(64),state:'completed',turnId:'turn_one',binding:bindings.issueRecovery({userId,projectId,attemptId,sessionId:'sess_one'}),expiresAt:new Date(Date.now()+180000).toISOString(),initialInput:0,initialOutput:0});
+ f.set({status:'idle',turnState:'completed',model});
+ return structuredClone(f.records.get(requestId));
+}
+test('sessão Astra concluída abre Terra com histórico local sem alterar a tentativa antiga',async()=>{
+ const measurements=[],finished=[];
+ const f=fixture({createdSessionId:'sess_terra',usage:{async start(value){measurements.push(value);return true;},async finish(value){finished.push(value);}}});
+ const previous=seedPrevious(f,'gpt-6-astra'),history=[{role:'assistant',text:'Hipótese anterior: iniciantes.'}];
+ const result=await(await f.chat(request({...body,requestId:request2,previousAttemptKey:requestId,history}))).json();
+ assert.equal(result.status,'running');assert.equal(result.sessionReused,false);
+ const creates=f.calls.filter(call=>call.url?.endsWith('/sessions')&&call.method==='POST');assert.equal(creates.length,1);assert.equal(creates[0].body.agent.model,'gpt-6.1-terra');assert.deepEqual(JSON.parse(creates[0].body.input[0].content[0].text).localConversation,history);
+ assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0,'nenhum input é enviado à sessão Astra');
+ assert.deepEqual(f.records.get(requestId),previous);assert.equal(f.records.get(request2).priorTurnId,null);
+ assert.equal(measurements.length,1);assert.equal(measurements[0].attemptId,request2);assert.equal(measurements[0].model,'gpt-6.1-terra');assert.equal(finished.length,0);
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,7)});
+ assert.equal(bindings.verifyRecovery({token:f.records.get(request2).binding,userId,projectId,attemptId:request2}).sessionId,'sess_terra');
+});
+test('modelo anterior ausente, desconhecido ou sessão ativa falha antes de qualquer envio',async()=>{
+ for(const [model,status]of [[undefined,'idle'],[null,'idle'],['unrecognized-model','idle'],[{},'idle'],['gpt-6-astra','in_progress']]){
+  const f=fixture(),previous=seedPrevious(f,model);f.set({status});
+  const response=await f.chat(request({...body,requestId:request2,previousAttemptKey:requestId})),result=await response.json();
+  assert.equal(response.status,503);assert.equal(result.status,'failed');assert.equal(result.failurePhase,'before_submission');assert.equal(result.retryAutomatically,false);
+  assert.equal(f.calls.filter(call=>call.method==='POST').length,0);assert.deepEqual(f.records.get(requestId),previous);
+  assert.equal(f.records.get(request2).state,'failed');assert.doesNotMatch(JSON.stringify(result),/unrecognized-model|sk-synthetic/);
+ }
 });
 test('function pendente vira ação assinada e só um resultado é enviado',async()=>{
  const f=fixture();await f.chat(request(body));const args={projectId,requestId,revision:1,field:'offer',value:'Oficina fictícia'};
