@@ -10,6 +10,8 @@ A interface existente ainda não atende a esse novo recorte. Antes de implement�
 
 O Codex compartilha projetos, peças e versões com a web, mas não acessa a conversa da web no primeiro marco. O moodboard aceita referências PNG e JPEG enviadas pela pessoa.
 
+**Revisão de 05/11/2026:** rascunhos, referências e histórico da conversa ficam apenas no navegador do Compor no primeiro marco. Projetos e versões salvos permanecem no Supabase, assim como metadados técnicos mínimos de tentativa, idempotência e uso, sem conteúdo criativo ou chave. A OpenAI pode reter a sessão e os dados enviados para a execução. O chat deve poder controlar o fluxo pela ponte WebMCP proposta, e a etapa de persona compradora passa a integrar a demo. A experiência ampliada e seus contratos estão em [revisão](specs/2026-11-05-experiencia-figma-marco-0.md); nenhuma implementação do estúdio fica autorizada pela existência desses documentos.
+
 ## Objetivo e recorte
 
 Entregar primeiro um fluxo criativo completo, online, para Matheus e equipe: a pessoa entra com Google, informa sua própria chave OpenAI para a sessão, descreve o objetivo, revisa uma direção, solicita a imagem e salva uma versão com imagem-base, texto editável e legenda. A pessoa pode compor e baixar o piloto em PNG e copiar a legenda, conforme a direção web anterior. App web e Codex Desktop acessam o mesmo projeto e peças. O Codex funciona sem a chave informada na sessão web.
