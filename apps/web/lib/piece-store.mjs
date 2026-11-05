@@ -14,7 +14,10 @@ function versionRow(row, projectId, pieceId) {
   if (row?.project_id !== projectId || !uuid(row.piece_id) || pieceId && row.piece_id !== pieceId || !integer(row.version) || row.version < 1 || typeof row.created_at !== 'string' ||
     !content || Object.keys(content).sort().join(',') !== 'caption,captionOrigin,date,headline,price' || !['headline', 'price', 'date', 'caption'].every(k => typeof content[k] === 'string' && content[k].length <= (k === 'caption' ? 4000 : k === 'headline' ? 500 : 100)) ||
     !['user', 'agent'].includes(content.captionOrigin) || !validMetadata(row.metadata, row.version)) throw Error('invalid response');
-  return { project_id: row.project_id, piece_id: row.piece_id, version: row.version, content, created_at: row.created_at, metadata: row.metadata };
+  // PostgREST timestamps may use an offset and microseconds. Browser state uses
+  // canonical ISO milliseconds so an already-persisted approval remains readable.
+  const metadata={...row.metadata,approval:{...row.metadata.approval,at:row.metadata.approval.at===null?null:new Date(row.metadata.approval.at).toISOString()}};
+  return { project_id: row.project_id, piece_id: row.piece_id, version: row.version, content, created_at: row.created_at, metadata };
 }
 export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }) {
   const upstream = createSupabasePieceStore({ url, anonKey, fetchImpl });
