@@ -2,7 +2,8 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import StudioApp from "./studio-app";
-import StudioShell, { StudioPanel } from "./studio-shell";
+import BrandSymbol from "./brand-symbol";
+import "./entry.css";
 
 export default function Workspace({ loginAvailable }) {
   const [objective, setObjective] = useState("");
@@ -263,94 +264,82 @@ export default function Workspace({ loginAvailable }) {
       </>
     );
   return (
-    <StudioShell
-      stage="projects"
-      statusText={
-        authState === "checking"
-          ? "Verificando sua conta…"
-          : "Ainda não conectado"
-      }
-    >
-      <StudioPanel
-        eyebrow="SUA IDEIA MERECE GANHAR FORMA"
-        title="Toda boa ideia começa com um objetivo."
-        description="Conte o que você quer divulgar. Vamos construir a direção criativa a partir daí."
-      >
-        <label htmlFor="objective">O que você quer divulgar?</label>
-        <textarea
-          id="objective"
-          name="objective"
-          rows={4}
-          placeholder="Uma aula, um produto, uma ideia…"
-          value={objective}
-          disabled={authState === "checking" || authState === "unavailable"}
-          onChange={(event) => {
-            setObjective(event.target.value);
-            if (activeIdentity.current)
-              memoryDrafts.current.set(
-                activeIdentity.current,
-                event.target.value,
-              );
-            try {
-              if (draftKey.current)
-                sessionStorage.setItem(draftKey.current, event.target.value);
-              setStorageError(false);
-            } catch {
-              setStorageError(true);
-            }
-          }}
-        />
-        <p className="studio-hint">
-          Seu rascunho fica neste navegador. Entre para abrir seus projetos.
-        </p>
-        <form
-          action="/auth/sign-in"
-          method="post"
-          onSubmit={(event) => {
-            try {
-              if (draftKey.current) {
-                sessionStorage.setItem(draftKey.current, objective);
-                sessionStorage.setItem(
-                  "compor-claim-pending",
-                  draftKey.current === "compor-objective:guest"
-                    ? "guest"
-                    : "anonymous",
-                );
-              } else if (objective) throw Error();
-            } catch {
-              if (objective) {
-                event.preventDefault();
-                setStorageError(true);
+    <main className="compor-entry" aria-labelledby="entry-title">
+      <div className="entry-content">
+        <div className="entry-brand" aria-label="Compor">
+          <BrandSymbol motion={authState === "checking" ? "working" : "arriving"} />
+          <img src="/studio/brand-wordmark.svg" alt="Compor" width="100" height="20.0997" />
+        </div>
+        <section className="entry-panel" aria-labelledby="entry-title">
+          <h1 id="entry-title">Bom ter você por aqui.</h1>
+          <p className="entry-description">
+            Traga uma ideia. Encontre a direção do seu próximo post em uma conversa.
+          </p>
+          <form
+            action="/auth/sign-in"
+            method="post"
+            onSubmit={(event) => {
+              try {
+                if (draftKey.current) {
+                  sessionStorage.setItem(draftKey.current, objective);
+                  sessionStorage.setItem(
+                    "compor-claim-pending",
+                    draftKey.current === "compor-objective:guest"
+                      ? "guest"
+                      : "anonymous",
+                  );
+                } else if (objective) throw Error();
+              } catch {
+                if (objective) {
+                  event.preventDefault();
+                  setStorageError(true);
+                }
               }
-            }
-          }}
-        >
-          <button
-            className="studio-button"
-            disabled={
-              !loginAvailable ||
-              authState === "unavailable" ||
-              authState === "checking"
-            }
+            }}
           >
-            Entrar com Google
-          </button>
-        </form>
-        {(authState === "unavailable" || authState === "offline") && (
-          <p role="status">Login temporariamente indisponível.</p>
-        )}
-        {loginError && (
-          <p role="alert">
-            Não foi possível concluir o login. Tente novamente.
-          </p>
-        )}
-        {storageError && (
-          <p role="alert">
-            Não foi possível preservar seu rascunho. Copie o texto antes de
-            continuar.
-          </p>
-        )}
-      </StudioPanel>
-    </StudioShell>
+            <button
+              className="entry-google"
+              disabled={
+                !loginAvailable ||
+                authState === "unavailable" ||
+                authState === "checking"
+              }
+            >
+              Entrar com Google
+            </button>
+          </form>
+          <p className="entry-note">Uma conta Google para entrar e retomar seus projetos.</p>
+          {authState === "checking" && (
+            <p className="entry-status" role="status">Verificando sua conta…</p>
+          )}
+          {(authState === "unavailable" || authState === "offline") && (
+            <p className="entry-alert" role="status">Login temporariamente indisponível.</p>
+          )}
+          {authState === "unavailable" && (
+            <button className="entry-retry" type="button" onClick={() => window.location.reload()}>
+              Tentar novamente
+            </button>
+          )}
+          {loginError && (
+            <p className="entry-alert" role="alert">
+              Não foi possível concluir o login. Tente novamente.
+            </p>
+          )}
+          {storageError && (
+            <p className="entry-alert" role="alert">
+              Não foi possível preservar seu rascunho. Copie o texto antes de
+              continuar.
+            </p>
+          )}
+          {objective && (
+            <details className="entry-draft" open={storageError}>
+              <summary>Seu rascunho anterior está preservado</summary>
+              <p>{objective}</p>
+            </details>
+          )}
+        </section>
+        <p className="entry-byline">Compor por We MathAI</p>
+      </div>
+    </main>
   );
 }

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState } from "react";
+import BrandSymbol from "./brand-symbol";
 import "./studio-shell.css";
 
 const assets = "/studio/";
@@ -90,12 +91,7 @@ export default function StudioShell({
       </a>
       <aside className="studio-sidebar" aria-label="Navegação Compor">
         <div className="studio-brand" aria-label="Compor">
-          <img
-            src={`${assets}brand-symbol.svg`}
-            alt=""
-            width="30"
-            height="30.4667"
-          />
+          <BrandSymbol />
           <img
             src={`${assets}brand-wordmark.svg`}
             alt="Compor"
