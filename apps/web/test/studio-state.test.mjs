@@ -33,6 +33,26 @@ test('navegar preserva rascunhos separados e base anterior não vira latest sile
  assert.equal(createPost(created,{pieceId:id(4)}),created,'mesma criação não cria outro rascunho');
 });
 
+test('reabrir uma versão sem edições reflete aprovação e revisão autoritativas do servidor',()=>{
+ const original=selected(),approval={status:'approved',kind:'explicit',sourceVersion:2,at};
+ let state=selectVersion(original,{pieceId:id(3),version:2,latestVersion:6,content,approval});
+ assert.deepEqual(getCurrentDraft(state).approval,approval);
+ assert.equal(getCurrentDraft(state).expectedLatestVersion,6);
+ assert.deepEqual(getCurrentDraft(original).approval,{status:'unapproved'});
+ state=selectVersion(state,{pieceId:id(3),version:2,latestVersion:6,content,approval:{status:'unapproved'}});
+ assert.deepEqual(getCurrentDraft(state).approval,{status:'unapproved'});
+});
+
+test('reabrir uma versão com edições preserva o rascunho e a aprovação da base local',()=>{
+ const approval={status:'approved',kind:'explicit',sourceVersion:2,at};
+ let state=selectVersion(initial(),{pieceId:id(3),version:2,latestVersion:5,content,approval});
+ state=editDraft(state,{field:'headline',value:'Edição que ainda não foi salva'});
+ state=selectVersion(state,{pieceId:id(3),version:2,latestVersion:6,content,approval:{status:'unapproved'}});
+ const draft=getCurrentDraft(state);
+ assert.equal(draft.content.headline,'Edição que ainda não foi salva');assert.equal(draft.dirty,true);
+ assert.equal(draft.expectedLatestVersion,5);assert.deepEqual(draft.approval,approval);
+});
+
 test('retoma um rascunho local existente sem substituir seu conteúdo nem seleção em erro',()=>{
  let state=createPost(selected(),{pieceId:id(10)});
  state=editDraft(state,{field:'headline',value:'Ainda não salvo'});
@@ -96,15 +116,45 @@ test('nova versão a partir da antiga fica atual e herda aprovação com origem 
  assert.throws(()=>recordSavedVersion(state,{pieceId:id(3),baseVersion:6,version:8,content:saved,eventId:id(42)}),error=>error.code==='studio_version_conflict');
 });
 
+test('salvamento adota a aprovação do servidor mesmo quando a base local não a conhecia',()=>{
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ let state=recordSavedVersion(selected(),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval});
+ assert.deepEqual(getCurrentDraft(state).approval,approval);
+ assert.deepEqual(state.drafts.find(item=>item.baseVersion===2).approval,{status:'unapproved'});
+ assert.equal(recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval}),state);
+ state=recordSavedVersion(approveDraft(selected(),{at,eventId:id(40)}),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:{status:'unapproved'}});
+ assert.deepEqual(getCurrentDraft(state).approval,{status:'unapproved'},'o retorno autoritativo também pode negar a herança calculada localmente');
+ const explicit={status:'approved',kind:'explicit',sourceVersion:6,at};
+ state=recordSavedVersion(selected(),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:explicit});
+ assert.deepEqual(getCurrentDraft(state).approval,explicit);
+});
+
+test('aprovação retornada deve corresponder à versão salva e não altera a seleção feita durante a espera',()=>{
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ const source=selected();
+ for(const invalid of [
+  {status:'approved',kind:'explicit',sourceVersion:2,at},
+  {status:'approved',kind:'inherited',sourceVersion:7,at},
+  {...approval,at:'2026-11-05T12:00:00+00:00'},
+ ])assert.throws(()=>recordSavedVersion(source,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:invalid}));
+ let state=createPost(source,{pieceId:id(4)});
+ state=editDraft(state,{field:'headline',value:'Outro post em edição'});
+ state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval});
+ assert.equal(getCurrentDraft(state).pieceId,id(4));assert.equal(getCurrentDraft(state).content.headline,'Outro post em edição');
+ assert.deepEqual(state.drafts.find(item=>item.pieceId===id(3)&&item.baseVersion===6).approval,approval);
+});
+
 test('resposta de salvamento preserva alterações feitas enquanto aguardava',()=>{
  let state=editDraft(selected(),{field:'headline',value:'Versão submetida'});
  const submitted={...getCurrentDraft(state).content};
  state=editDraft(state,{field:'headline',value:'Mais uma alteração local'});
- state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:submitted,eventId:id(41)});
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:submitted,eventId:id(41),approval});
  assert.equal(getCurrentDraft(state).baseVersion,2);
  assert.equal(getCurrentDraft(state).content.headline,'Mais uma alteração local');
  assert.equal(getCurrentDraft(state).dirty,true);
  assert.equal(state.drafts.find(item=>item.baseVersion===6).content.headline,'Versão submetida');
+ assert.deepEqual(state.drafts.find(item=>item.baseVersion===6).approval,approval);
  assert.throws(()=>approveDraft(state,{at,eventId:id(42)}),error=>error.code==='studio_unsaved_draft');
  const fresh=createPost(initial(),{pieceId:id(9)});
  assert.throws(()=>approveDraft(fresh,{at,eventId:id(43)}),error=>error.code==='studio_unsaved_draft');

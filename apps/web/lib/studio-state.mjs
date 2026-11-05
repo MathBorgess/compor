@@ -80,7 +80,18 @@ export function recordActionReceipt(state,receipt) {
 export const updateBrief = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.brief,key))) fail(); Object.assign(next.brief,patch); });
 export const updatePersona = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.persona,key))) fail(); Object.assign(next.persona,clone(patch)); });
 export function createPost(state, {pieceId}) { parseStudioState(state); if(!uuid(pieceId))fail();if(state.drafts.some(item=>item.pieceId===pieceId))return state;return change(state, next => { next.drafts.push({pieceId,baseVersion:0,expectedLatestVersion:0,content:blankContent(),dirty:false,approval:noApproval()}); next.selection={pieceId,baseVersion:0}; }); }
-export function selectVersion(state, {pieceId,version,latestVersion,content,approval = noApproval()}) { return change(state, next => { if (!contextValid({pieceId,baseVersion:version,expectedLatestVersion:latestVersion}) || !contentValid(content) || !approvalValid(approval)) fail(); const existing=next.drafts.find(item => item.pieceId===pieceId && item.baseVersion===version); if (!existing) next.drafts.push({pieceId,baseVersion:version,expectedLatestVersion:latestVersion,content:clone(content),dirty:false,approval:clone(approval)}); else if (!existing.dirty) existing.expectedLatestVersion=latestVersion; next.selection={pieceId,baseVersion:version}; }); }
+export function selectVersion(state, {pieceId,version,latestVersion,content,approval = noApproval()}) {
+  return change(state, next => {
+    if (!contextValid({pieceId,baseVersion:version,expectedLatestVersion:latestVersion}) || !contentValid(content) || !approvalForBase(approval,version)) fail();
+    const existing=next.drafts.find(item => item.pieceId===pieceId && item.baseVersion===version);
+    if (!existing) next.drafts.push({pieceId,baseVersion:version,expectedLatestVersion:latestVersion,content:clone(content),dirty:false,approval:clone(approval)});
+    else if (!existing.dirty) {
+      existing.expectedLatestVersion=latestVersion;
+      existing.approval=clone(approval);
+    }
+    next.selection={pieceId,baseVersion:version};
+  });
+}
 export function editDraft(state, {field,value}) { return change(state, next => { const draft=current(next); if (!['headline','price','date','caption'].includes(field)) fail(); draft.content[field]=value; if(field==='caption')draft.content.captionOrigin='user'; draft.dirty=true; }); }
 export function addMessage(state, message) { return change(state, next => { if (!keys(message,['id','role','text','createdAt'],['status','context'])) fail(); const draft=next.selection?current(next):null; next.messages.push({...clone(message),context:message.context??(draft?{pieceId:draft.pieceId,baseVersion:draft.baseVersion,expectedLatestVersion:draft.expectedLatestVersion}:null),status:message.status??'completed'}); }); }
 export function addMark(state, mark) { return change(state, next => { const draft=current(next); const value={...clone(mark),pieceId:draft.pieceId,baseVersion:draft.baseVersion}; if (!markValid(value)) fail(); next.marks.push(value); }); }
@@ -92,4 +103,17 @@ export function prepareAdjustment(state, {requestId,messageId,instruction,create
 export function settleAdjustment(state, {requestId,status,result,eventId,createdAt}) { return change(state, next => { const request=next.adjustments.find(item=>item.id===requestId); if(!request||!requestStates.includes(status)||status==='pending')fail(); if(['completed','failed'].includes(request.status))throw new StudioStateError('studio_operation_terminal'); if(result!==undefined && (!resultValid(result)||Object.hasOwn(result,'text')&&status!=='completed'))fail(); request.status=status; const message=next.messages.find(item=>item.id===request.messageId); message.status=status; if(result!==undefined){request.result={...request.result,...clone(result)}; if(Object.hasOwn(result,'text')){if(!uuid(result.messageId)||!iso(createdAt))fail();next.messages.push({id:result.messageId,role:'assistant',text:result.text,createdAt,context:{pieceId:request.context.pieceId,baseVersion:request.context.baseVersion,expectedLatestVersion:request.context.expectedLatestVersion},status:'completed'});}} event(next,{in_progress:'operation_in_progress',consent_required:'action_required',completed:'operation_completed',failed:'operation_failed',unknown:'outcome_unknown'}[status],requestId,eventId); }); }
 export function approveDraft(state, {at,eventId}) { return change(state, next => { const draft=current(next); if(!iso(at))fail();if(draft.baseVersion===0||draft.dirty)throw new StudioStateError('studio_unsaved_draft');draft.approval={status:'approved',kind:'explicit',sourceVersion:draft.baseVersion,at};event(next,'approval_explicit',null,eventId); }); }
 export function inheritApproval(approval, baseVersion) { if(!approvalForBase(approval,baseVersion)||!integer(baseVersion))fail();return freeze(approval.status==='approved'?{status:'approved',kind:'inherited',sourceVersion:baseVersion,at:approval.at}:noApproval()); }
-export function recordSavedVersion(state, {pieceId,baseVersion,version,content,eventId}) { parseStudioState(state); const prior=state.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version);if(prior&&JSON.stringify(prior.content)===JSON.stringify(content)&&state.events.some(item=>item.id===eventId&&item.type==='version_saved'))return state;return change(state,next=>{ const draft=next.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion);if(!draft||!integer(version,1)||version!==draft.expectedLatestVersion+1||!contentValid(content)||next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version))throw new StudioStateError('studio_version_conflict');const unchanged=JSON.stringify(draft.content)===JSON.stringify(content),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(content),dirty:false,approval:inheritApproval(draft.approval,baseVersion)};next.drafts.push(value);if(unchanged){draft.dirty=false;if(next.selection&&sameDraft(next.selection,draft))next.selection={pieceId,baseVersion:version};}event(next,'version_saved',null,eventId);}); }
+export function recordSavedVersion(state, {pieceId,baseVersion,version,content,eventId,approval}) {
+  parseStudioState(state);
+  if(approval!==undefined&&(!integer(version,1)||!approvalForBase(approval,version)))fail();
+  const prior=state.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version);
+  if(prior&&JSON.stringify(prior.content)===JSON.stringify(content)&&state.events.some(item=>item.id===eventId&&item.type==='version_saved'))return state;
+  return change(state,next=>{
+    const draft=next.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion);
+    if(!draft||!integer(version,1)||version!==draft.expectedLatestVersion+1||!contentValid(content)||next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version))throw new StudioStateError('studio_version_conflict');
+    const unchanged=JSON.stringify(draft.content)===JSON.stringify(content),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(content),dirty:false,approval:approval===undefined?inheritApproval(draft.approval,baseVersion):clone(approval)};
+    next.drafts.push(value);
+    if(unchanged){draft.dirty=false;if(next.selection&&sameDraft(next.selection,draft))next.selection={pieceId,baseVersion:version};}
+    event(next,'version_saved',null,eventId);
+  });
+}
