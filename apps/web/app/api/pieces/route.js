@@ -13,3 +13,4 @@ async function handle(method, request) {
 }
 export const GET = request => handle('GET', request);
 export const POST = request => handle('POST', request);
+export const PATCH = request => handle('PATCH', request);

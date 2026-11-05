@@ -1,4 +1,4 @@
-import { createSupabaseProjectStore } from '@compor/remote-mcp';
+import { createWebProjectStore } from '../../../lib/project-store.mjs';
 import { authClient, authConfig } from '../../../lib/supabase';
 import { resolveSupabaseActor } from '../../../lib/agent-auth.mjs';
 import { createProjectRoutes } from '../../../lib/project-route.mjs';
@@ -13,7 +13,7 @@ async function handle(method, request) {
     const routes = createProjectRoutes({
       appOrigin: config.app,
       resolveActor: async () => resolveSupabaseActor(await authClient(config)),
-      projectStore: createSupabaseProjectStore({ url: config.service, anonKey: config.key }),
+      projectStore: createWebProjectStore({ url: config.service, anonKey: config.key }),
     });
     return await routes[method](request);
   } catch { return Response.json({ error: 'unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } }); }
@@ -21,3 +21,4 @@ async function handle(method, request) {
 
 export const GET = request => handle('GET', request);
 export const POST = request => handle('POST', request);
+export const PATCH = request => handle('PATCH', request);

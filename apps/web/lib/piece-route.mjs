@@ -34,12 +34,27 @@ export function createPieceRoutes({ appOrigin, resolveActor, ownsProject, pieceS
       if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) return reply({ error: 'invalid_request' }, 400);
       let data;
       try { data = await parseBody(request); } catch { return reply({ error: 'invalid_request' }, 400); }
-      if (!uuid(data?.projectId) || !uuid(data?.pieceId) || !Number.isInteger(data?.expectedVersion) || data.expectedVersion < 0 || data.expectedVersion > 2147483646 || !validContent(data.content)) return reply({ error: 'invalid_request' }, 400);
+      if (!data || Object.keys(data).some(key => !['projectId','pieceId','expectedVersion','baseVersion','content'].includes(key)) || !uuid(data.projectId) || !uuid(data.pieceId) || !Number.isInteger(data.expectedVersion) || data.expectedVersion < 0 || data.expectedVersion > 2147483646 || !validContent(data.content) ||
+        data.baseVersion !== undefined && (!Number.isInteger(data.baseVersion) || data.baseVersion < 0 || data.baseVersion > data.expectedVersion || data.expectedVersion > 0 && data.baseVersion === 0)) return reply({ error: 'invalid_request' }, 400);
       let auth;
       try { auth = await check(data.projectId); } catch { return reply({ error: 'unavailable' }, 503); }
       if (auth.error) return reply({ error: auth.error }, auth.status);
       try {
-        const result = await pieceStore.save({ actor: { userId: auth.actor.userId }, token: auth.actor.token }, { projectId: data.projectId, pieceId: data.pieceId, expectedVersion: data.expectedVersion, content: data.content });
+        const result = await pieceStore.save({ actor: { userId: auth.actor.userId }, token: auth.actor.token }, { projectId: data.projectId, pieceId: data.pieceId, expectedVersion: data.expectedVersion, content: data.content, ...(data.baseVersion === undefined ? {} : { baseVersion: data.baseVersion }) });
+        return reply(result, result.status === 'conflict' ? 409 : result.status === 'not_found' ? 404 : 200);
+      } catch { return reply({ error: 'result_unknown', retryAutomatically: false }, 502); }
+    },
+    async PATCH(request) {
+      if (!appOrigin || request.headers.get('origin') !== appOrigin) return reply({ error: 'invalid_origin' }, 403);
+      if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) return reply({ error: 'invalid_request' }, 400);
+      let data;
+      try { data = await parseBody(request); } catch { return reply({ error: 'invalid_request' }, 400); }
+      if (!data || Object.keys(data).sort().join(',') !== 'expectedRevision,operation,pieceId,projectId,version' || data.operation !== 'approve' || !uuid(data.projectId) || !uuid(data.pieceId) || !Number.isInteger(data.version) || data.version < 1 || data.version > 2147483647 || !Number.isInteger(data.expectedRevision) || data.expectedRevision < 0 || data.expectedRevision > 2147483646) return reply({ error: 'invalid_request' }, 400);
+      let auth;
+      try { auth = await check(data.projectId); } catch { return reply({ error: 'unavailable' }, 503); }
+      if (auth.error) return reply({ error: auth.error }, auth.status);
+      try {
+        const result = await pieceStore.approve({ actor: { userId: auth.actor.userId }, token: auth.actor.token }, { projectId: data.projectId, pieceId: data.pieceId, version: data.version, expectedRevision: data.expectedRevision });
         return reply(result, result.status === 'conflict' ? 409 : result.status === 'not_found' ? 404 : 200);
       } catch { return reply({ error: 'result_unknown', retryAutomatically: false }, 502); }
     },

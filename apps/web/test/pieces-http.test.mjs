@@ -25,25 +25,37 @@ test('não lê nem grava projeto de outra pessoa', async () => {
   assert.equal(calls, 0);
 });
 
-test('lista versões do projeto com o token da pessoa e rejeita proprietário diferente', async () => {
+test('lista versões com metadata pelo RPC autorizado e rejeita projeto divergente', async () => {
   const { createProjectPieceStore } = await import('../lib/piece-store.mjs');
   let upstream;
-  const row = { project_id: projectId, piece_id: pieceId, version: 1, content, created_at: '2026-11-03T00:00:00Z', projects: { owner_id: userId } };
-  let range = '0-0/1';
-  const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => { upstream = { url, options }; return Response.json([row], { headers: { 'content-range': range } }); } });
+  const row = { project_id: projectId, piece_id: pieceId, version: 1, content, created_at: '2026-11-03T00:00:00Z', metadata: {baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} };
+  const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => { upstream = { url, options }; return Response.json([row]); } });
   const routes = createPieceRoutes({ resolveActor: async () => actor, ownsProject: async () => true, pieceStore: store });
   const response = await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
   assert.equal(response.status, 200);
-  assert.deepEqual((await response.json()).versions, [{ project_id: projectId, piece_id: pieceId, version: 1, content, created_at: row.created_at }]);
+  assert.deepEqual((await response.json()).versions, [row]);
   assert.equal(upstream.options.headers.authorization, 'Bearer fake-user-token');
-  assert.equal(upstream.options.headers.prefer, 'count=exact');
-  range = '0-0/2';
-  assert.equal((await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`))).status, 503, 'lista truncada não pode parecer completa');
-  range = '0-0/1';
-  row.projects.owner_id = 'outra-pessoa';
+  assert.equal(upstream.url.pathname,'/rest/v1/rpc/list_project_piece_versions_v2');
+  assert.deepEqual(JSON.parse(upstream.options.body),{p_project_id:projectId});
+  row.project_id = 'outra-pessoa';
   const denied = await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
   assert.equal(denied.status, 503);
   assert.doesNotMatch(await denied.text(), /Inscreva-se|fake-user-token/);
+});
+
+test('base explícita e aprovação usam contratos distintos sem aceitar aprovação inventada',async()=>{
+ let saved,approved;
+ const routes=createPieceRoutes({appOrigin:'https://compor.test',resolveActor:async()=>actor,ownsProject:async()=>true,pieceStore:{
+  save:async(context,input)=>{saved=input;assert.equal(context.token,actor.token);return {status:'saved'};},
+  approve:async(context,input)=>{approved=input;assert.equal(context.token,actor.token);return {status:'conflict',currentRevision:1};}
+ }});
+ assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content}))).status,200);
+ assert.deepEqual(saved,{projectId,pieceId,expectedVersion:3,baseVersion:1,content});
+ assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content,approval:{status:'approved'}}))).status,400);
+ const patch=body=>new Request('https://compor.test/api/pieces',{method:'PATCH',headers:{origin:'https://compor.test','content-type':'application/json'},body:JSON.stringify(body)});
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0}))).status,409);
+ assert.deepEqual(approved,{projectId,pieceId,version:2,expectedRevision:0});
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,approvedBy:userId}))).status,400);
 });
 
 test('falha após envio retorna resultado desconhecido sem retry', async () => {
