@@ -7,7 +7,10 @@ prontidão geral para produção.
 
 Abra o [piloto do Compor](https://compor-marco0.vercel.app) com a conta Google já
 autorizada e selecione **Demo de revisão — aula de composição visual**. O projeto
-tem uma peça com versões 1 e 2 e arquivos já salvos. Para comparar layout,
+tem a peça principal **Aula de composição visual — vamos criar juntos**, com
+versões 1 e 2 e arquivos já salvos. **Estudo alternativo — texto editável** é um
+segundo post usado para comprovar criação e seleção automática após salvar.
+O moodboard contém o PNG exportado como referência local. Para comparar layout,
 navegação e composição, use esses dados; este roteiro não exige outra chamada
 ao agente ou geração de imagem.
 
@@ -58,7 +61,9 @@ evidência em `94d282f`, corrige os pontos abaixo. Passaram 133 testes Agents,
 119 da web e a build; 64 testes de imagens privadas também passaram. A publicação
 final foi observada em `READY`: deployment `dpl_bTiWXMxDyVDXMtgKwkXCyXKn3N7a`,
 commit `94d282fba39b00ee15772dd64c48e13db52dcb85`, alias canônico e sem erro de
-alias. A reabertura dessa versão é verificada separadamente, sem nova geração.
+alias. A reabertura restaurou a imagem e os dados sem chave OpenAI. Também foram
+comprovados o início de outro post pelo WebMCP nativo, seu salvamento com seleção
+automática da versão 1 e a inclusão do PNG no moodboard, sem nova geração.
 
 | Situação encontrada | Comportamento preparado para revisão |
 | --- | --- |
