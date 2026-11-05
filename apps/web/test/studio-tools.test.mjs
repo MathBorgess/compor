@@ -151,3 +151,34 @@ test("aprovação não permite executar no projeto que ficou inativo", async () 
   );
   assert.equal(calls, 0);
 });
+test("recibo persistido impede duplicar efeito após recriar o executor com revisão mais nova", async () => {
+  const persisted = new Map();
+  let calls = 0, revision = 1;
+  const make = () => createStudioTools({
+    getScope: () => ({userId,projectId,revision}),
+    getReceipt: id => persisted.get(id),
+    saveReceipt: async receipt => {persisted.set(receipt.requestId,structuredClone(receipt));return receipt.result;},
+    handlers: {compor_editar_briefing: async () => {calls++;revision++;return {status:'completed',local:true};}},
+  });
+  const first = make();await first.execute('compor_editar_briefing',args);first.dispose();
+  const restored = make();assert.equal((await restored.execute('compor_editar_briefing',args)).status,'completed');assert.equal(calls,1);assert.equal(revision,2);
+  await assert.rejects(()=>restored.execute('compor_editar_briefing',{...args,value:'Outra oferta'}),/action_conflict/);
+  restored.dispose();
+});
+test("recibo incerto sobrevive à recriação sem repetir o handler interrompido", async () => {
+  const persisted = new Map();let calls = 0;
+  const make = () => createStudioTools({
+    getScope: () => ({userId,projectId,revision:1}),getReceipt:id=>persisted.get(id),
+    saveReceipt:async receipt=>{persisted.set(receipt.requestId,structuredClone(receipt));return receipt.result;},
+    handlers:{compor_editar_briefing:async()=>{calls++;throw Error('interrompido');}},
+  });
+  const first=make();await assert.rejects(()=>first.execute('compor_editar_briefing',args));first.dispose();
+  const restored=make();assert.equal((await restored.execute('compor_editar_briefing',args)).status,'unknown');assert.equal(calls,1);restored.dispose();
+});
+test("dispose durante registro nativo pendente aborta o registro e seus executores", async () => {
+  let release,arrive;const entered=new Promise(resolve=>{arrive=resolve;}),gate=new Promise(resolve=>{release=resolve;});const registrations=[];
+  const tools=createStudioTools({getScope:()=>({userId,projectId,revision:1}),handlers:{compor_editar_briefing:async()=>({status:'completed'})}});
+  const pending=tools.register({registerTool:async(definition,options)=>{registrations.push({definition,options});arrive();await gate;}});
+  await entered;tools.dispose();release();assert.equal((await pending).native,false);assert.equal(registrations.length,1);assert.equal(registrations[0].options.signal.aborted,true);
+  await assert.rejects(()=>registrations[0].definition.execute(args),/action_unavailable/);
+});
