@@ -35,14 +35,13 @@ async function startServer(t, env = {}) {
   return { port, response };
 }
 
-test("a pessoa pode começar pelo objetivo sem afirmar que o serviço está conectado", async (t) => {
+test("a entrada exige Google e mantém serviços indisponíveis sem configuração", async (t) => {
   const { port, response } = await startServer(t, { SUPABASE_URL: '', SUPABASE_PUBLISHABLE_KEY: '', APP_ORIGIN: '' });
   assert.equal(response.status, 200);
   const html = await response.text();
-  assert.match(html, /Seu objetivo/);
-  assert.match(html, /Ainda não conectado/);
-  assert.match(html, /<textarea[^>]*id="objective"/);
-  assert.match(html, /<button[^>]*disabled[^>]*>Continuar<\/button>/);
+  assert.match(html, /Bom ter você por aqui/);
+  assert.match(html, /<button[^>]*disabled[^>]*>Entrar com Google<\/button>/);
+  assert.doesNotMatch(html, /<textarea|type="password"|Continuar sem conta/);
   assert.doesNotMatch(html, /Projeto salvo/);
   assert.equal((await fetch(`http://127.0.0.1:${port}/api/projects`)).status, 503, 'projetos indisponíveis sem Supabase');
   const login = await fetch(`http://127.0.0.1:${port}/auth/sign-in`, { method: 'POST', redirect: 'manual' });

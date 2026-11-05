@@ -24,7 +24,7 @@ async function app(t){
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
  const page=await context.newPage(),errors=[],external=[],calls=[];
- page.on('pageerror',error=>errors.push(error.message));page.on('console',entry=>{if(entry.type()==='error')errors.push(entry.text());});
+ page.on('pageerror',error=>errors.push(error.message));page.on('console',entry=>{if(entry.type()==='error')errors.push(`${entry.text()} (${entry.location().url})`);});
  const session={state:'connected',userId:alice,hold:null};
  const versions=[{project_id:projectId,piece_id:existingPiece,version:1,content:content('Original antigo')},{project_id:projectId,piece_id:existingPiece,version:2,content:content('Atual existente')}];
  await page.route('**/*',async route=>{
@@ -163,5 +163,5 @@ test('revalidação de identidade oculta a conta anterior e troca de conta limpa
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
- assert.deepEqual(errors,['Failed to load resource: the server responded with a status of 503 (Service Unavailable)']);
+ assert.deepEqual(errors,[`Failed to load resource: the server responded with a status of 503 (Service Unavailable) (${origin}/auth/session)`]);
 });

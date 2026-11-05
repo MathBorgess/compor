@@ -175,11 +175,13 @@ function ProjectStudio({
     [saving, setSaving] = useState(false),
     [base, setBase] = useState<Blob|null>(null),
     [preview, setPreview] = useState<Blob|null>(null),
-    [references, setReferences] = useState<(StudioReference & {url:string})[]>([]),
+    [referenceImages, setReferenceImages] = useState<{manifest:string;items:(StudioReference & {url:string})[]}|null>(null),
     [proposal, setProposal] = useState<{prompt:string}|null>(null),
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
     [compact, setCompact] = useState(false);
+  const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
+  const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const stateRef = useRef<StudioState|null>(null),
     versionRef = useRef<PieceVersion[]>([]),
     toolsRef = useRef<ReturnType<typeof createStudioTools>|null>(null),
@@ -247,7 +249,7 @@ function ProjectStudio({
     } catch {}
   }, [stage, userId, project.id, Boolean(s)]);
   useEffect(() => {
-    if (!s || !local.storage.current) return;
+    if (!s || !referenceManifest || !local.storage.current) return;
     let live = true;
     const urls:string[] = [];
     const storage=local.storage.current;
@@ -264,7 +266,7 @@ function ProjectStudio({
       }),
     )
       .then((items) => {
-        if (live) setReferences(items.filter((item): item is StudioReference & {url:string} => item !== null));
+        if (live) setReferenceImages({manifest:referenceManifest,items:items.filter((item): item is StudioReference & {url:string} => item !== null)});
       })
       .catch(() => {
         if (live)
@@ -276,7 +278,7 @@ function ProjectStudio({
       live = false;
       urls.forEach((url) => URL.revokeObjectURL(url));
     };
-  }, [s?.references, project.id, userId]);
+  }, [referenceManifest, project.id, userId]);
   useEffect(() => {
     setPreview(null);
     setBase(null);
