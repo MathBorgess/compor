@@ -182,3 +182,44 @@ test("dispose durante registro nativo pendente aborta o registro e seus executor
   await entered;tools.dispose();release();assert.equal((await pending).native,false);assert.equal(registrations.length,1);assert.equal(registrations[0].options.signal.aborted,true);
   await assert.rejects(()=>registrations[0].definition.execute(args),/action_unavailable/);
 });
+
+test("persistir o recibo não autoriza agir depois de perder ou trocar a identidade", async (t) => {
+  for (const nextUserId of [null, "44444444-4444-4444-8444-444444444444"]) {
+    await t.test(nextUserId === null ? "revalidação em andamento" : "outra conta", async () => {
+      let scope = { userId, projectId, revision: 1 }, calls = 0, release, entered;
+      const writing = new Promise(resolve => { entered = resolve; });
+      const gate = new Promise(resolve => { release = resolve; });
+      const tools = createStudioTools({
+        getScope: () => scope,
+        saveReceipt: async receipt => {
+          scope = { ...scope, revision: scope.revision + 1 };
+          const result = { ...receipt.result, revision: scope.revision };
+          if (receipt.result.status === "unknown") { entered(); await gate; }
+          return result;
+        },
+        handlers: { compor_editar_briefing: async () => { calls++; return { status: "completed" }; } },
+      });
+      const executing = tools.execute("compor_editar_briefing", args);
+      await writing;
+      scope = { ...scope, userId: nextUserId };
+      release();
+      await assert.rejects(executing, /context_changed/);
+      assert.equal(calls, 0, "no domain effect occurs after the identity boundary changes");
+      tools.dispose();
+    });
+  }
+});
+
+test("repetição com recibo não divulga o resultado se a identidade muda durante o hash", async () => {
+  let scope = { userId, projectId, revision: 1 }, calls = 0;
+  const tools = createStudioTools({
+    getScope: () => scope,
+    handlers: { compor_editar_briefing: async () => { calls++; return { status: "completed" }; } },
+  });
+  await tools.execute("compor_editar_briefing", args);
+  const repeating = tools.execute("compor_editar_briefing", args);
+  scope = { ...scope, userId: null };
+  await assert.rejects(repeating, /context_changed/);
+  assert.equal(calls, 1);
+  tools.dispose();
+});
