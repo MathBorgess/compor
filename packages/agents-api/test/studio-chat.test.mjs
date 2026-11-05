@@ -29,7 +29,7 @@ function fixture(options={}){
   return Response.json({id:'sess_one',status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
- return{...createStudioChatHandlers(deps),calls,records,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;}};
+ return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{
  const f=fixture();let r=await f.chat(request(body));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
@@ -114,4 +114,62 @@ test('consulta de turno concluído permanece concluída quando a sessão exige a
  // required_actions describes the current session, not the historical turn.
  const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.status,'completed');
  f.set({status:'failed',actions:[]});assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
+});
+
+test('poll distingue ausência de vínculo, assinatura inválida e falha de metadados sem revelar segredos',async t=>{
+ const events=[],original=console.info;console.info=value=>events.push(value);t.after(()=>{console.info=original;});
+ const f=fixture();await f.chat(request(body));
+ const binding=f.records.get(requestId).binding;f.records.get(requestId).binding=null;
+ let result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.deepEqual(result,{status:'unknown',retryAutomatically:false,errorCode:'session_binding_missing',phase:'binding_missing',requestId,attemptId});
+ f.records.get(requestId).binding='v4.invalid.signature';
+ result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.phase,'binding_verify');assert.equal(result.errorCode,'session_binding_invalid');assert.equal('sessionId'in result,false);
+ f.records.get(requestId).binding=binding;
+ f.store.get=async()=>{throw Error(`PRIVATE_PROVIDER_BODY ${apiKey} ${body.message}`);};
+ result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.phase,'store_get');assert.equal(result.requestId,requestId);assert.equal('attemptId'in result,false);assert.equal('sessionId'in result,false);
+ assert.doesNotMatch(JSON.stringify({events,result}),/PRIVATE_PROVIDER_BODY|sk-synthetic|Atualize a oferta/);
+ assert.ok(events.every(value=>/^COMPOR_STUDIO_EVENT unknown_[a-z_]+$/.test(value)));
+});
+
+test('poll inclui somente sessão com proveniência assinada e categoriza lookup/lista/status',async()=>{
+ for(const [stage,expectedPhase,expectedCode]of [
+  ['http','session_lookup','provider_http_404'],['body','session_lookup','provider_body_invalid'],
+  ['session','session_validate','provider_session_invalid'],['list','turn_list_validate','provider_turn_list_invalid'],
+  ['match','turn_match','provider_turn_unresolved'],['status','turn_status','provider_turn_status_invalid'],
+ ]){
+  let posts=0;const f=fixture({fetch:async(url,init={})=>{
+   if(init.method==='POST'){posts++;return Response.json({id:'sess_one'});}
+   if(url.includes('/turns?'))return Response.json(stage==='list'?{data:'PRIVATE_PROVIDER_BODY'}:stage==='match'?{data:[],has_more:true}:{data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:stage==='status'?'PRIVATE_PROVIDER_BODY':'in_progress'}],has_more:false});
+   if(stage==='http')return Response.json({error:{message:`PRIVATE_PROVIDER_BODY ${apiKey}`}},{status:404});
+   if(stage==='body')return new Response(`PRIVATE_PROVIDER_BODY ${apiKey}`);
+   return Response.json({id:stage==='session'?'sess_other':'sess_one',status:'in_progress',required_actions:[]});
+  }});
+  await f.chat(request(body));const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+  assert.equal(result.phase,expectedPhase,stage);assert.equal(result.errorCode,expectedCode,stage);assert.equal(result.sessionId,'sess_one');assert.equal(result.attemptId,attemptId);assert.equal(posts,1);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY|sk-synthetic/);
+ }
+});
+
+test('falha de poll da tentativa existente mantém o bloqueio e não cria sessão nem a marca failed',async()=>{
+ let posts=0;const f=fixture({fetch:async(url,init={})=>{if(init.method==='POST'){posts++;return Response.json({id:'sess_one'});}throw Error('PRIVATE lookup failure');}});
+ await f.chat(request(body));const result=await(await f.chat(request(body))).json();
+ assert.equal(result.status,'unknown');assert.equal(result.phase,'session_lookup');assert.equal(result.sessionId,'sess_one');assert.equal(f.records.get(requestId).state,'running');assert.equal(posts,1);
+ const busy=await f.chat(request({...body,requestId:request2}));assert.equal(busy.status,409);assert.equal(posts,1);
+});
+
+test('criação incerta diferencia parsing e persistência sem expor sessão não comprovada',async()=>{
+ for(const [response,phase,code]of [[new Response('PRIVATE_PROVIDER_BODY'),'provider_create_parse','provider_create_body_invalid'],[Response.json({session:'sess_unverified'}),'provider_create_validate','provider_session_id_invalid'],[new Response('PRIVATE_PROVIDER_BODY',{status:502}),'provider_create','provider_http_502']]){
+  const f=fixture({fetch:async()=>response});const result=await(await f.chat(request(body))).json();
+  assert.equal(result.status,'unknown');assert.equal(result.phase,phase);assert.equal(result.errorCode,code);assert.equal(result.requestId,requestId);assert.equal(result.attemptId,attemptId);assert.equal('sessionId'in result,false);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY/);
+ }
+ const f=fixture();f.store.bind=async()=>{throw Error(`PRIVATE_STORE ${apiKey}`);};
+ const result=await(await f.chat(request(body))).json();assert.equal(result.phase,'session_bind');assert.equal(result.sessionId,'sess_one');assert.equal(result.attemptId,attemptId);assert.equal(f.records.get(requestId).state,'unknown');
+});
+
+test('falha ao registrar turno e resultado local desconhecido carregam referências técnicas',async()=>{
+ const f=fixture();await f.chat(request(body));f.store.state=async()=>{throw Error(`PRIVATE_STATE ${apiKey}`);};
+ const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.phase,'turn_state_write');assert.equal(result.sessionId,'sess_one');assert.doesNotMatch(JSON.stringify(result),/PRIVATE_STATE|sk-synthetic/);
+ const g=fixture();await g.chat(request(body));g.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_novo_post',turn_id:'turn_one',call_id:'call_new',arguments:{projectId,requestId,revision:1}}]});
+ const pending=await(await g.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ const local=await(await g.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'unknown'}}))).json();
+ assert.equal(local.phase,'action_local_unknown');assert.equal(local.requestId,requestId);assert.equal(local.attemptId,attemptId);assert.equal(local.sessionId,'sess_one');assert.equal(g.calls.filter(c=>c.url?.endsWith('/events')).length,0);
 });
