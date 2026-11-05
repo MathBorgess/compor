@@ -19,7 +19,10 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
     fetch: async (url, options) => {
       calls.push({ url:String(url), method:options.method, auth:options.headers.Authorization });
       if (options.method === 'POST') {
-        const sent=JSON.parse(options.body); assert.ok(sent.agent.tools.some(tool=>tool.name==='generate_image')); assert.doesNotMatch(options.body,/sk-test-secret/);
+        const sent=JSON.parse(options.body); const imageTool=sent.agent.tools.find(tool=>tool.name==='generate_image'); assert.ok(imageTool); assert.doesNotMatch(options.body,/sk-test-secret/);
+        assert.match(sent.agent.instructions,/chame generate_image/); assert.match(sent.agent.instructions,/sem esperar confirmação antes dessa chamada/);
+        assert.match(sent.agent.instructions,/não gera a imagem nem inicia a Images API/); assert.match(sent.agent.instructions,/pedirá confirmação explícita antes da geração de imagem/);
+        assert.match(sent.agent.instructions,/turno do agente pode gerar custo/); assert.match(imageTool.description,/não gera a imagem/); assert.match(imageTool.description,/aprovação explícita antes de iniciar a geração/);
         agentSignal = options.signal;
         return new Response(new ReadableStream({ start(controller) { controller.enqueue(encode.encode('data: {"type":"agent.session.created","session":{"id":"sess_actual"}}\n\n')); controller.enqueue(encode.encode('data: {"type":"agent.session.requires_action","session":{"id":"sess_actual"}}\n\n')); }, cancel() { cancelled=true; return new Promise(() => {}); } }), { status:201 });
       }
@@ -32,7 +35,7 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
   assert.equal(data.status,'consent_required'); assert.equal(data.prompt,'Foto sem texto'); assert.equal(data.attemptId,attemptId);
   assert.deepEqual(finished, []); assert.deepEqual(measurements,[{event:'start',part:'agent'}]); assert.equal(cancelled,true);
   assert.deepEqual(calls.map(call=>call.method),['POST','GET']); assert.ok(calls.every(call=>call.auth===`Bearer ${apiKey}`));
-  assert.equal(calls[1].url,'https://api.openai.com/v1/agents/sessions/sess_actual');
+  assert.equal(calls[0].url,'https://api.openai.com/v1/agents/sessions'); assert.equal(calls[1].url,'https://api.openai.com/v1/agents/sessions/sess_actual');
   assert.doesNotMatch(JSON.stringify(data), /sk-test-secret|fake-user-token|sess_browser_forged|call_browser_forged/);
   const context={ userId,projectId,attemptId };
   assert.deepEqual(bindings.verifyAction({token:data.actionBinding,...context}),{...context,sessionId:'sess_actual',turnId:'turn_123',callId:'call_123',promptDigest:createHash('sha256').update('Foto sem texto').digest('hex')});
