@@ -28,6 +28,8 @@ export default function Workspace({ loginAvailable }) {
   useLayoutEffect(() => {
     if (authState === "connected" && openAIKeyInput.current)
       openAIKeyInput.current.value = openAIKey.current;
+    else if (authState === "checking" && openAIKeyInput.current)
+      openAIKeyInput.current.value = "";
   }, [authState, authenticatedUser]);
   useEffect(() => {
     const clearOnExit = () => clearOpenAIKey();
@@ -45,6 +47,7 @@ export default function Workspace({ loginAvailable }) {
     );
     if (!loginAvailable) {
       clearOpenAIKey();
+      setAuthenticatedUser(null);
       activeIdentity.current = "offline";
       setAuthState("offline");
       return;
@@ -131,6 +134,7 @@ export default function Workspace({ loginAvailable }) {
             setAuthState("connected");
           } else if (data.state === "signed-out") {
             clearOpenAIKey();
+            setAuthenticatedUser(null);
             try {
               sessionStorage.removeItem("compor-claim-pending");
               const seenAccount =
@@ -153,6 +157,7 @@ export default function Workspace({ loginAvailable }) {
             setAuthState("signed-out");
           } else {
             clearOpenAIKey();
+            setAuthenticatedUser(null);
             draftKey.current = null;
             setObjective("");
             setAuthState("unavailable");
@@ -161,6 +166,7 @@ export default function Workspace({ loginAvailable }) {
         .catch((error) => {
           if (currentGeneration === generation && error.name !== "AbortError") {
             clearOpenAIKey();
+            setAuthenticatedUser(null);
             setAuthState("unavailable");
           }
         });
@@ -198,46 +204,57 @@ export default function Workspace({ loginAvailable }) {
       setStorageError(true);
     }
   };
-  if (authState === "connected")
+  if (authenticatedUser && ["connected", "checking"].includes(authState))
     return (
-      <StudioApp
-        key={authenticatedUser}
-        userId={authenticatedUser}
-        initialObjective={objective}
-        hasApiKey={hasOpenAIKey}
-        getApiKey={() =>
-          openAIKeyOwner.current === authenticatedUser ? openAIKey.current : ""
-        }
-        onRemoveKey={clearOpenAIKey}
-        recoveryBanner={
-          hasPendingDraft ? (
-            <div role="status">
-              <p>Há um rascunho anterior preservado neste navegador.</p>
-              <button onClick={recoverPending}>
-                Recuperar rascunho anterior
-              </button>
-            </div>
-          ) : null
-        }
-        keyInput={
-          <label>
-            Chave OpenAI
-            <input
-              ref={openAIKeyInput}
-              type="password"
-              autoComplete="off"
-              spellCheck={false}
-              maxLength={300}
-              defaultValue={openAIKey.current}
-              onChange={(event) => {
-                openAIKey.current = event.target.value;
-                openAIKeyOwner.current = authenticatedUser;
-                setHasOpenAIKey(Boolean(event.target.value));
-              }}
-            />
+      <>
+        {authState === "checking" && <p role="status">Verificando sua conta…</p>}
+        <div
+          hidden={authState !== "connected"}
+          inert={authState !== "connected"}
+          data-testid="studio-auth-boundary"
+        >
+          <StudioApp
+            key={authenticatedUser}
+            userId={authenticatedUser}
+            initialObjective={objective}
+            hasApiKey={authState === "connected" && hasOpenAIKey}
+            getApiKey={() =>
+              authState === "connected" && openAIKeyOwner.current === authenticatedUser
+              ? openAIKey.current
+              : ""
+            }
+            onRemoveKey={clearOpenAIKey}
+            recoveryBanner={
+              hasPendingDraft ? (
+                <div role="status">
+                  <p>Há um rascunho anterior preservado neste navegador.</p>
+                  <button onClick={recoverPending}>
+                    Recuperar rascunho anterior
+                  </button>
+                </div>
+              ) : null
+            }
+            keyInput={
+              <label>
+                Chave OpenAI
+                <input
+                  ref={openAIKeyInput}
+                  type="password"
+                  autoComplete="off"
+                  spellCheck={false}
+                  maxLength={300}
+                  defaultValue={openAIKey.current}
+                  onChange={(event) => {
+                    openAIKey.current = event.target.value;
+                    openAIKeyOwner.current = authenticatedUser;
+                    setHasOpenAIKey(Boolean(event.target.value));
+                  }}
+                />
           </label>
         }
       />
+        </div>
+      </>
     );
   return (
     <StudioShell

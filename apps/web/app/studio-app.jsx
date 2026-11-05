@@ -240,13 +240,14 @@ function ProjectStudio({
     } catch {}
   }, [Boolean(s)]);
   useEffect(() => {
+    if (!s) return;
     try {
       sessionStorage.setItem(
         `compor-studio-stage:${userId}:${project.id}`,
         stage,
       );
     } catch {}
-  }, [stage, userId, project.id]);
+  }, [stage, userId, project.id, Boolean(s)]);
   useEffect(() => {
     if (!s || !local.storage.current) return;
     let live = true;
@@ -257,13 +258,15 @@ function ProjectStudio({
           { userId, projectId: project.id },
           ref.id,
         );
-        if (!value) return null;
+        if (!value || !live) return null;
         const url = URL.createObjectURL(value.file);
         urls.push(url);
         return { ...ref, url };
       }),
     ).then((items) => {
       if (live) setReferences(items.filter(Boolean));
+    }).catch(() => {
+      if (live) setNotice("Não foi possível recuperar as referências deste navegador.");
     });
     return () => {
       live = false;
@@ -274,6 +277,9 @@ function ProjectStudio({
     setPreview(null);
     setBase(null);
   }, [draft?.pieceId, draft?.baseVersion]);
+  useEffect(() => {
+    setPreview(null);
+  }, [base, draft?.content.headline, draft?.content.price, draft?.content.date]);
 
   function nextStage(value) {
     setStage(value);
@@ -476,6 +482,23 @@ function ProjectStudio({
       );
     }
   }
+  async function removeFile(id) {
+    local.change((value) => removeReference(value, id));
+    try {
+      await local.flush();
+      await local.storage.current?.removeReference(
+        { userId, projectId: project.id },
+        id,
+      );
+      if (active.current) setNotice("Referência removida do moodboard.");
+    } catch (error) {
+      if (active.current) setNotice(
+        error.code === "studio_reference_in_use"
+          ? "A referência saiu do moodboard e continua preservada no histórico local de ajustes."
+          : "A referência saiu do moodboard, mas não foi possível confirmar a remoção do arquivo local.",
+      );
+    }
+  }
   if (local.loading || !s)
     return (
       <StudioShell stage="projects" statusText="Conta conectada">
@@ -598,13 +621,7 @@ function ProjectStudio({
                   <img src={ref.url} alt={ref.name} />
                   <figcaption>{ref.name}</figcaption>
                   <button
-                    onClick={() => {
-                      local.change((value) => removeReference(value, ref.id));
-                      local.storage.current.removeReference(
-                        { userId, projectId: project.id },
-                        ref.id,
-                      );
-                    }}
+                    onClick={() => removeFile(ref.id)}
                   >
                     Remover referência
                   </button>
