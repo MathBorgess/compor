@@ -451,6 +451,7 @@ function ProjectStudio({
           baseVersion: d.baseVersion,
           version: data.version.version,
           content: data.version.content,
+          approval: data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval : data.version.metadata ? {status:"unapproved"} : undefined,
           eventId: crypto.randomUUID(),
         }),
       );
