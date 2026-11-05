@@ -1,5 +1,5 @@
 export const STUDIO_SCHEMA_VERSION = 1;
-export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
+export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, actionReceipts: 200, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
 
 export class StudioStateError extends Error {
   constructor(code = 'invalid_studio_state') { super(code); this.name = 'StudioStateError'; this.code = code; }
@@ -24,9 +24,12 @@ const clone = value => structuredClone(value);
 const blankContent = () => ({ headline: '', price: '', date: '', caption: '', captionOrigin: 'user' });
 const noApproval = () => ({ status: 'unapproved' });
 const requestStates = ['pending','in_progress','consent_required','completed','failed','unknown'];
+const actionResultValid = (value,projectId) => keys(value,['status'],['revision','projectId','pieceId','baseVersion','expectedLatestVersion','version','unsaved','local','title']) && ['completed','declined','unknown','pending_confirmation'].includes(value.status) && (!Object.hasOwn(value,'revision')||integer(value.revision)) && (!Object.hasOwn(value,'projectId')||value.projectId===projectId) && (!Object.hasOwn(value,'pieceId')||value.pieceId===null||uuid(value.pieceId)) && (!Object.hasOwn(value,'baseVersion')||value.baseVersion===null||integer(value.baseVersion)) && (!Object.hasOwn(value,'expectedLatestVersion')||integer(value.expectedLatestVersion)) && (!Object.hasOwn(value,'version')||integer(value.version,1)) && ['unsaved','local'].every(key=>!Object.hasOwn(value,key)||typeof value[key]==='boolean') && (!Object.hasOwn(value,'title')||text(value.title,200,false));
+const actionReceiptValid = (value,projectId) => keys(value,['requestId','fingerprint','result']) && uuid(value.requestId) && typeof value.fingerprint==='string' && /^[0-9a-f]{64}$/.test(value.fingerprint) && actionResultValid(value.result,projectId);
+const sameActionResult = (left,right) => Object.keys(left).length===Object.keys(right).length && Object.keys(left).every(key=>Object.hasOwn(right,key)&&left[key]===right[key]);
 
 export function parseStudioState(value) {
-  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
+  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events'],['actionReceipts']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
   if (!keys(value.brief, ['offer','audience','action','direction']) || !Object.values(value.brief).every(item => text(item, 4000))) fail();
   const persona = value.persona;
   if (!keys(persona, ['audience','situation','need','culturalReferences','claims']) || !['audience','situation','need'].every(key => text(persona[key], 2000)) || !text(persona.culturalReferences, 4000) || !Array.isArray(persona.claims) || persona.claims.length > 100 || !unique(persona.claims) || !persona.claims.every(item => keys(item, ['id','text','provenance','source']) && uuid(item.id) && text(item.text, 2000) && text(item.source, 2000) && ['hypothesis','creator_report','buyer_report','public_source','unknown'].includes(item.provenance))) fail();
@@ -38,8 +41,11 @@ export function parseStudioState(value) {
   if (!unique(value.references) || !value.references.every(referenceValid) || value.references.reduce((sum, item) => sum + item.size, 0) > STUDIO_LIMITS.referenceTotalBytes) fail();
   if (!unique(value.adjustments) || !value.adjustments.every(item => adjustmentValid(item,value))) fail();
   if (!unique(value.events) || !value.events.every((item,index) => keys(item, ['id','type','requestId','sequence']) && uuid(item.id) && ['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit'].includes(item.type) && (item.requestId === null || uuid(item.requestId) && value.adjustments.some(request=>request.id===item.requestId)) && item.sequence === index + 1)) fail();
-  if (new TextEncoder().encode(JSON.stringify(value)).byteLength > STUDIO_LIMITS.stateBytes) throw new StudioStateError('studio_state_limit');
-  return freeze(clone(value));
+  const actionReceipts=Object.hasOwn(value,'actionReceipts')?value.actionReceipts:[];
+  if(!Array.isArray(actionReceipts)||actionReceipts.length>STUDIO_LIMITS.actionReceipts||!unique(actionReceipts,item=>item.requestId)||!actionReceipts.every(item=>actionReceiptValid(item,value.projectId)))fail();
+  const normalized={...value,actionReceipts};
+  if (new TextEncoder().encode(JSON.stringify(normalized)).byteLength > STUDIO_LIMITS.stateBytes) throw new StudioStateError('studio_state_limit');
+  return freeze(clone(normalized));
 }
 function resultValid(value) { return keys(value, [], ['messageId','text','assetId']) && Object.keys(value).length>0 && (!Object.hasOwn(value, 'messageId') || Object.hasOwn(value,'text') && uuid(value.messageId)) && (!Object.hasOwn(value, 'text') || uuid(value.messageId) && text(value.text, 16_000)) && (!Object.hasOwn(value, 'assetId') || uuid(value.assetId)); }
 function adjustmentValid(item,state) {
@@ -59,6 +65,18 @@ function event(state, type, requestId, id) { if (!uuid(id)) fail(); if (state.ev
 export function createStudioState({userId,projectId}) { return parseStudioState({schemaVersion:1,userId,projectId,revision:0,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
 export const getCurrentDraft = state => { parseStudioState(state); return state.selection ? freeze(clone(current(state))) : null; };
 export function selectDraft(state, {pieceId,baseVersion}) { return change(state,next=>{if(!uuid(pieceId)||!integer(baseVersion)||!next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion))throw new StudioStateError('studio_draft_unavailable');next.selection={pieceId,baseVersion};}); }
+/** Compose with a domain reducer and save once to commit the effect and receipt together. */
+export function recordActionReceipt(state,receipt) {
+  const parsed=parseStudioState(state);
+  if(!actionReceiptValid(receipt,parsed.projectId))throw new StudioStateError('studio_action_receipt_invalid');
+  const previous=parsed.actionReceipts.find(item=>item.requestId===receipt.requestId);
+  if(previous){
+    if(previous.fingerprint!==receipt.fingerprint)throw new StudioStateError('studio_action_conflict');
+    if(sameActionResult(previous.result,receipt.result))return state;
+    if(['completed','declined'].includes(previous.result.status))throw new StudioStateError('studio_action_conflict');
+  }else if(parsed.actionReceipts.length>=STUDIO_LIMITS.actionReceipts)throw new StudioStateError('studio_action_receipt_limit');
+  return change(state,next=>{const existing=next.actionReceipts.find(item=>item.requestId===receipt.requestId);if(existing)existing.result=clone(receipt.result);else next.actionReceipts.push(clone(receipt));});
+}
 export const updateBrief = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.brief,key))) fail(); Object.assign(next.brief,patch); });
 export const updatePersona = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.persona,key))) fail(); Object.assign(next.persona,clone(patch)); });
 export function createPost(state, {pieceId}) { parseStudioState(state); if(!uuid(pieceId))fail();if(state.drafts.some(item=>item.pieceId===pieceId))return state;return change(state, next => { next.drafts.push({pieceId,baseVersion:0,expectedLatestVersion:0,content:blankContent(),dirty:false,approval:noApproval()}); next.selection={pieceId,baseVersion:0}; }); }

@@ -37,6 +37,11 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.conflict=races.some(item=>item.status==='rejected'&&item.reason.code==='studio_storage_conflict');
   result.otherAccount=await repo.load(other)===null;result.otherProject=await repo.load(anotherProject)===null;
   state=await repo.load(scope);repo.close();result.reopened=(await repo.load(scope)).brief.offer===state.brief.offer;
+  const revisionBeforeReceipt=state.revision;
+  state=domain.recordActionReceipt(domain.updateBrief(state,{direction:'Efeito e recibo salvos juntos'}),{requestId:id(9),fingerprint:'a'.repeat(64),result:{status:'completed',local:true}});
+  await repo.save(state,{expectedRevision:revisionBeforeReceipt});repo.close();
+  const restoredReceipt=await repo.load(scope);
+  result.receipt=restoredReceipt.brief.direction==='Efeito e recibo salvos juntos'&&restoredReceipt.actionReceipts[0].requestId===id(9);
   const originalPut=IDBObjectStore.prototype.put;
   IDBObjectStore.prototype.put=function(...args){if(this.name==='states')throw new DOMException('synthetic quota','QuotaExceededError');return originalPut.apply(this,args);};
   result.quota=await expectError(repo.save(domain.updateBrief(state,{offer:'Não foi salvo'}),{expectedRevision:state.revision}),'studio_storage_quota');
