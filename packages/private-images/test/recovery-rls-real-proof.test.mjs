@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { readFile, mkdtemp, rm } from 'node:fs/promises';
+import { readFile, writeFile, chmod, mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -60,4 +60,23 @@ test('psql valida recuperação entre duas identidades, preserva dados e recusa 
  await db.exec(`create or replace function public.bind_agent_session_recovery(p_project_id uuid,p_attempt_id uuid,p_binding text)
   returns boolean language plpgsql security definer set search_path='' as $$begin return true;end$$`);
  await assert.rejects(call(),e=>e.code!==0 && /unexpected recovery function or permissions/.test(e.stderr));await preserved();
+});
+
+test('wrapper fixa destino e TLS e exige evidência de rollback',async t=>{
+ const dir=await mkdtemp(join(tmpdir(),'compor-recovery-wrapper-'));t.after(()=>rm(dir,{recursive:true,force:true}));
+ const openssl=join(dir,'openssl'),psql=join(dir,'psql'),ca=join(dir,'ca'),args=join(dir,'args'),envFile=join(dir,'env');
+ const fp='sha256 Fingerprint=80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA';
+ await writeFile(ca,'synthetic');await writeFile(openssl,`#!/bin/sh\nprintf '%s\\n' '${fp}'\n`);await chmod(openssl,0o700);
+ await writeFile(psql,`#!/bin/sh\nprintf '%s\\n' "$@" > '${args}'\nenv > '${envFile}'\nwhile [ "$#" -gt 0 ]; do if [ "$1" = '-o' ]; then shift; printf '%s\\n' 'ROLLBACK' 'RECOVERY_RLS_CHECKS_PASSED_AND_ROLLED_BACK' > "$1"; break; fi; shift; done\n`);await chmod(psql,0o700);
+ const env={...process.env,PATH:`${dir}:${process.env.PATH}`,TMPDIR:dir,PGHOST:'attacker.invalid',PGOPTIONS:'malicious'};
+ const wrapper=join(root,'supabase/tests/recovery_rls_capture.sh');
+ let result=spawnSync('sh',[wrapper,ca],{env,encoding:'utf8'});assert.equal(result.status,0,result.stderr);
+ const argv=(await readFile(args,'utf8')).split('\n'),child=(await readFile(envFile,'utf8')).split('\n');
+ assert.ok(argv.includes('db.dpboawdnuxuzjoufpiry.supabase.co'));assert.ok(argv.includes('-W'));
+ assert.ok(child.includes('PGSSLMODE=verify-full'));assert.ok(child.includes('PGGSSENCMODE=disable'));
+ assert.ok(!child.some(value=>value.startsWith('PGHOST=')||value.startsWith('PGOPTIONS=')));
+ await writeFile(psql,'#!/bin/sh\nexit 0\n');
+ result=spawnSync('sh',[wrapper,ca],{env,encoding:'utf8'});assert.notEqual(result.status,0);
+ await writeFile(openssl,"#!/bin/sh\nprintf '%s\\n' 'wrong'\n");
+ result=spawnSync('sh',[wrapper,ca],{env,encoding:'utf8'});assert.notEqual(result.status,0);
 });
