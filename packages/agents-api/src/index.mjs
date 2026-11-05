@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 import {AGENT_MODEL} from './agent-model.mjs';
 import { recordAgentEvent, recordProviderStatus, recordProviderClientError } from './telemetry.mjs';
 const MAX_REQUEST = 16 * 1024;
@@ -43,7 +44,7 @@ export function pendingImageAction(session, key, delegated) {
   const action = session.required_actions[0];
   let args = action?.arguments;
   if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
-  if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
+  if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !isAgentCallId(action.call_id) || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
   return { turnId: action.turn_id, callId: action.call_id, prompt: args.prompt };
 }
 

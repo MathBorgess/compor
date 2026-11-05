@@ -10,9 +10,9 @@ const approvedClaim = {...claim,pieceId,version:1};
 function fixture(options = {}) {
   const calls = [], state = { claimed: false };
   const fn = createImageToolExecution({
-    bindings: { verifyApprovedAction: ({userId: u, pieceId: p, version: v}) => u === userId && p === pieceId && v === 1 ? approvedClaim : null },
+    bindings: { verifyApprovedAction: ({userId: u, pieceId: p, version: v}) => u === userId && p === pieceId && v === 1 ? {...approvedClaim,callId:options.callId??approvedClaim.callId} : null },
     ownsVersion: async () => !options.accessRevoked,
-    fetch: async () => { calls.push('lookup'); return Response.json({ id:'sess_a', status:'requires_action', required_actions:[{ type:'function_call', name:'generate_image', turn_id:'turn_a', call_id:'call_a', arguments:{prompt:options.prompt ?? prompt} }] }); },
+    fetch: async () => { calls.push('lookup'); return Response.json({ id:'sess_a', status:'requires_action', required_actions:[{ type:'function_call', name:'generate_image', turn_id:'turn_a', call_id:options.pendingCallId??options.callId??'call_a', arguments:{prompt:options.prompt ?? prompt} }] }); },
     reservations: {
       reserve: async () => { calls.push('reserve'); return {id:reservationId,state:'reserved'}; },
       declareConsent: async () => { calls.push('consent'); },
@@ -49,6 +49,13 @@ test('medição registra contagens recebidas e preserva imagem se registro final
 test('recusa outra conta, autorização ausente ou prompt alterado antes da geração',async()=>{
  for(const scenario of ['actor','approval','prompt']) { const f=fixture({prompt:scenario==='prompt'?'alterado':undefined}); if(scenario==='actor') f.input.actor={...actor,userId:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa'}; if(scenario==='approval') f.input.explicitApproval=false; assert.notEqual((await f.fn(f.input)).status,'completed'); assert.ok(!f.calls.includes('image')); }
 });
+test('exec assinado não permite troca pelo ID de outra chamada nem por outra conta',async()=>{
+ const callId='exec_'+ 'e'.repeat(56);
+ for(const scenario of ['actor','mismatch']){
+  const f=fixture({callId,...(scenario==='mismatch'?{pendingCallId:'exec_other'}:{})});if(scenario==='actor')f.input.actor={...actor,userId:projectId};
+  assert.equal((await f.fn(f.input)).status,'rejected');assert.ok(!f.calls.includes('reserve'));assert.ok(!f.calls.includes('image'));
+ }
+});
 test('falhas após claim preservam resultado desconhecido sem repetir imagem',async()=>{
  for(const option of ['imageFail','storageFail','completeFail']) {const f=fixture({[option]:true}); const result=await f.fn(f.input); assert.equal(result.status,'unknown'); assert.ok(f.calls.includes('unknown')); assert.ok(!JSON.stringify(result).includes(key)); await f.fn(f.input); assert.equal(f.calls.filter(x=>x==='image').length,1);}
 });
@@ -58,29 +65,36 @@ test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
  const {createPrivateImageHandler}=await import('../../private-images/src/index.mjs');
  const {createImageToolReservationStore}=await import('../src/image-tool-reservation.mjs');
  const {createSessionBindings}=await import('../src/session-binding.mjs');
+ const {createImageToolResultSender}=await import('../src/image-tool-result.mjs');
  const bindings=createSessionBindings({secret:Buffer.alloc(32,4)});
- const signed=bindings.issueAction({...claim,prompt});
+ const callId='exec_'+ 'f'.repeat(56),submissionId='88888888-8888-4888-8888-888888888888';
+ const signed=bindings.issueAction({...claim,callId,prompt});
  const approve=createImageToolApproval({bindings,ownsVersion:async()=>true});
  const approved=await approve({actor,projectId,pieceId,version:1,attemptId,actionBinding:signed,explicitApproval:true});
  assert.ok(approved);
  const png=Buffer.alloc(33); Buffer.from([137,80,78,71,13,10,26,10]).copy(png); png.writeUInt32BE(13,8); png.write('IHDR',12); png.writeUInt32BE(1,16); png.writeUInt32BE(1,20);
- let images=0, saved=false, claimed=false;
+ let images=0, saved=false, claimed=false,resultClaimed=false,events=0;
  const fakeFetch=async (target,init={})=>{
    const url=new URL(target);
-   if(url.hostname==='api.openai.com' && url.pathname.includes('/agents/')) return Response.json({id:'sess_a',status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:{prompt}}]});
+   if(url.hostname==='api.openai.com'&&url.pathname.endsWith('/events')){events++;assert.equal(JSON.parse(init.body).events[0].call_id,callId);return new Response(null,{status:202});}
+   if(url.hostname==='api.openai.com' && url.pathname.includes('/agents/')) return Response.json({id:'sess_a',agent:{model:'gpt-6.1-terra'},status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:callId,arguments:{prompt}}]});
    if(url.hostname==='api.openai.com') {images++;return Response.json({data:[{b64_json:png.toString('base64')}]});}
    if(url.pathname.endsWith('/piece_versions')) return Response.json([{project_id:projectId,piece_id:pieceId,version:1,projects:{owner_id:userId}}]);
    if(url.pathname.includes('/storage/')) {saved=true;return Response.json({});}
-   if(url.pathname.endsWith('/reserve_image_tool_call')) return Response.json([{reservation_id:reservationId,state:'reserved',is_new:true}]);
+   if(url.pathname.endsWith('/reserve_image_tool_call')) {assert.equal(JSON.parse(init.body).p_call_id,callId);return Response.json([{reservation_id:reservationId,state:'reserved',is_new:true}]);}
    if(url.pathname.endsWith('/declare_image_generation_consent')) return Response.json([{declaration_id:reservationId,is_new:true}]);
    if(url.pathname.endsWith('/claim_image_tool_execution')) {const first=!claimed;claimed=true;return Response.json([{execution_id:executionId,asset_id:assetId,state:'running',is_new:first}]);}
    if(url.pathname.endsWith('/complete_image_tool_execution')) {assert.ok(saved);return Response.json(true);}
+   if(url.pathname.endsWith('/claim_image_tool_result_submission')){assert.equal(JSON.parse(init.body).p_call_id,callId);const first=!resultClaimed;resultClaimed=true;return Response.json([{submission_id:submissionId,asset_id:assetId,state:'sending',is_new:first}]);}
+   if(url.pathname.endsWith('/finish_image_tool_result_submission'))return Response.json(true);
    throw Error('unexpected');
  };
  const auth=async req=>req.headers.get('authorization')===`Bearer ${actor.token}`?actor:null;
- const execute=createImageToolExecution({bindings,ownsVersion:async()=>true,reservations:createImageToolReservationStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:fakeFetch}),imageHandler:createImageHandler({authenticate:auth,fetch:fakeFetch}),imageStorageHandler:createPrivateImageHandler({appOrigin:'https://example.test',supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:auth,fetch:fakeFetch}),appOrigin:'https://example.test',fetch:fakeFetch});
+ const reservations=createImageToolReservationStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:fakeFetch});
+ const execute=createImageToolExecution({bindings,ownsVersion:async()=>true,reservations,imageHandler:createImageHandler({authenticate:auth,fetch:fakeFetch}),imageStorageHandler:createPrivateImageHandler({appOrigin:'https://example.test',supabaseUrl:'https://project.supabase.co',publishableKey:'sb_publishable_test',authenticate:auth,fetch:fakeFetch}),appOrigin:'https://example.test',fetch:fakeFetch});
  const result=await execute({actor,projectId,pieceId,version:1,attemptId,actionBinding:approved,apiKey:key,explicitApproval:true});
- assert.equal(result.status,'completed');assert.equal(images,1);assert.ok(saved);assert.ok(!JSON.stringify(result).includes(key));
+ assert.equal(result.status,'completed');assert.equal(images,1);assert.equal(result.toolResult.call_id,callId);assert.ok(saved);assert.ok(!JSON.stringify(result).includes(key));
+ const send=createImageToolResultSender({bindings,ownsVersion:async()=>true,reservations,fetch:fakeFetch});const resume={actor,projectId,pieceId,version:1,attemptId,executionId,actionBinding:approved,apiKey:key};assert.equal((await send(resume)).status,'accepted');assert.equal((await send(resume)).status,'unknown');assert.equal(events,1);assert.equal(images,1);
 });
 
 

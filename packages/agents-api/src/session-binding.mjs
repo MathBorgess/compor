@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 import { createHash, createHmac, timingSafeEqual } from 'node:crypto';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -66,7 +67,7 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
   }
   function issueAction({ userId, projectId, attemptId, sessionId, turnId, callId, prompt }) {
     const iat = now();
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !callIdValid(callId, 'call') || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || /sk-[^\s]+/i.test(prompt) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !isAgentCallId(callId) || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || /sk-[^\s]+/i.test(prompt) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
     const promptDigest = createHash('sha256').update(prompt, 'utf8').digest('hex');
     const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, turnId, callId, promptDigest, iat, exp: iat + lifetime })).toString('base64url');
     const signature = createHmac('sha256', signingKey).update(`v2.${payload}`).digest('base64url');
@@ -81,7 +82,7 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual, expected)) return null;
       const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
       const claim = JSON.parse(raw.toString('utf8')); const current = now();
-      if (!claim || Object.keys(claim).length !== 9 || claim.userId !== userId || claim.projectId !== projectId || claim.attemptId !== attemptId || !sessionIdValid(claim.sessionId) || !callIdValid(claim.turnId, 'turn') || !callIdValid(claim.callId, 'call') || !/^[0-9a-f]{64}$/.test(claim.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(claim.iat) || !Number.isSafeInteger(claim.exp) || claim.exp !== claim.iat + lifetime || claim.iat > current || current >= claim.exp) return null;
+      if (!claim || Object.keys(claim).length !== 9 || claim.userId !== userId || claim.projectId !== projectId || claim.attemptId !== attemptId || !sessionIdValid(claim.sessionId) || !callIdValid(claim.turnId, 'turn') || !isAgentCallId(claim.callId) || !/^[0-9a-f]{64}$/.test(claim.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(claim.iat) || !Number.isSafeInteger(claim.exp) || claim.exp !== claim.iat + lifetime || claim.iat > current || current >= claim.exp) return null;
       return { userId, projectId, attemptId, sessionId: claim.sessionId, turnId: claim.turnId, callId: claim.callId, promptDigest: claim.promptDigest };
     } catch { return null; }
   }
@@ -103,7 +104,7 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual,expected)) return null;
       const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
       const c = JSON.parse(raw.toString('utf8')), current = now();
-      if (!c || Object.keys(c).length !== 11 || c.userId !== userId || c.projectId !== projectId || c.attemptId !== attemptId || c.pieceId !== pieceId || c.version !== version || !sessionIdValid(c.sessionId) || !callIdValid(c.turnId,'turn') || !callIdValid(c.callId,'call') || !/^[0-9a-f]{64}$/.test(c.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(c.iat) || !Number.isSafeInteger(c.exp) || c.exp !== c.iat + lifetime || c.iat > current || current >= c.exp) return null;
+      if (!c || Object.keys(c).length !== 11 || c.userId !== userId || c.projectId !== projectId || c.attemptId !== attemptId || c.pieceId !== pieceId || c.version !== version || !sessionIdValid(c.sessionId) || !callIdValid(c.turnId,'turn') || !isAgentCallId(c.callId) || !/^[0-9a-f]{64}$/.test(c.promptDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(c.iat) || !Number.isSafeInteger(c.exp) || c.exp !== c.iat + lifetime || c.iat > current || current >= c.exp) return null;
       return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,promptDigest:c.promptDigest };
     } catch { return null; }
   }

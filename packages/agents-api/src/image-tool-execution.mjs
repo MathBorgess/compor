@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 import { createHash } from 'node:crypto';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -30,7 +31,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
     try { action = bindings.verifyApprovedAction({token: actionBinding, userId: actor.userId, projectId, attemptId, pieceId, version}); } catch { return {status:'rejected'}; }
-    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.callId ?? '') || !/^[0-9a-f]{64}$/.test(action.promptDigest ?? '')) return {status:'rejected'};
+    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !isAgentCallId(action.callId) || !/^[0-9a-f]{64}$/.test(action.promptDigest ?? '')) return {status:'rejected'};
     try { if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return {status:'rejected'}; } catch { return unknown(); }
     let prompt;
     try {

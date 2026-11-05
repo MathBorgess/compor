@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 // Not wired to image generation or a public route. Successful reservation is not consent.
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = (value, prefix) => typeof value === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(value) && !/sk-/i.test(value);
@@ -18,7 +19,7 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
     } catch { throw new Error('reservation status unknown'); }
   }
   function validCall(input) {
-    return uuid.test(input?.projectId ?? '') && id(input?.sessionId, 'sess') && id(input?.turnId, 'turn') && id(input?.callId, 'call');
+    return uuid.test(input?.projectId ?? '') && id(input?.sessionId, 'sess') && id(input?.turnId, 'turn') && isAgentCallId(input?.callId);
   }
   return {
     async reserve(input) {

@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 // Protocol-only experimental boundary. It is not wired to an HTTP route, provider,
 // durable store, or tool registration; these helpers cannot authorize or execute work.
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -12,14 +13,14 @@ export function describePendingImageCall({ event, binding, explicitApproval } = 
   if (matches.length !== 1) return null;
   const action = matches[0];
   const args = action.arguments;
-  if (!identifier(action.turn_id, 'turn') || !identifier(action.call_id, 'call') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 ||
+  if (!identifier(action.turn_id, 'turn') || !isAgentCallId(action.call_id) || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 ||
       typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || /sk-[^\s]+/i.test(args.prompt)) return null;
   return { sessionId: binding.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: args.prompt, binding: { userId: binding.userId, projectId: binding.projectId, pieceId: binding.pieceId, version: binding.version, attemptId: binding.attemptId, sessionId: binding.sessionId } };
 }
 
 /** Construct a non-secret protocol result; this function does not submit an event. */
 export function imageResultUnknown(call) {
-  if (!identifier(call?.turnId, 'turn') || !identifier(call?.callId, 'call')) throw new TypeError('invalid call');
+  if (!identifier(call?.turnId, 'turn') || !isAgentCallId(call?.callId)) throw new TypeError('invalid call');
   return { type: 'agent.session.input.tool_result', turn_id: call.turnId, call_id: call.callId, success: false, error: 'Resultado desconhecido. Não repita automaticamente; confirme o estado da tentativa.' };
 }
 

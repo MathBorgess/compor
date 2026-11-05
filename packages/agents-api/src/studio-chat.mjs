@@ -1,3 +1,4 @@
+import {isAgentCallId} from './agent-call-id.mjs';
 import {AGENT_MODEL} from './agent-model.mjs';
 import {PERSONA_SKILL_INSTRUCTIONS} from './studio-persona-skill.mjs';
 import {AGENT_STUDIO_TOOLS,parseStudioAction} from './studio-chat-tools.mjs';
@@ -138,7 +139,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(session.required_actions.length!==1)throw Error('multiple pending actions');
    const action=session.required_actions[0];let args=action?.arguments;
    if(typeof args==='string'){if(args.length>16000)throw Error('invalid action');args=JSON.parse(args);}
-   if(action?.type!=='function_call'||action.turn_id!==turn.id||!identifier(action.call_id,'call')||!args||typeof args!=='object'||Array.isArray(args)||JSON.stringify(args).includes(key)||/sk-[^\s]+/i.test(JSON.stringify(args)))throw Error('invalid action');
+   if(action?.type!=='function_call'||action.turn_id!==turn.id||!isAgentCallId(action.call_id)||!args||typeof args!=='object'||Array.isArray(args)||JSON.stringify(args).includes(key)||/sk-[^\s]+/i.test(JSON.stringify(args)))throw Error('invalid action');
    if(action.name==='generate_image'){
     if(Object.keys(args).join(',')!=='prompt'||!safeText(args.prompt,4000)||!args.prompt.trim())throw Error('invalid image action');
    }else{parseStudioAction(action.name,args);if(args.projectId!==scope.projectId)throw Error('invalid action project');}

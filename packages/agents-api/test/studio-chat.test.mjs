@@ -86,6 +86,20 @@ test('function pendente vira ação assinada e só um resultado é enviado',asyn
  assert.equal((await(await f.action(request(actionBody))).json()).status,'running');await f.action(request(actionBody));
  const sent=f.calls.filter(c=>c.url?.endsWith('/events'));assert.equal(sent.length,1);assert.equal(sent[0].body.events[0].call_id,'call_one');assert.equal(sent[0].body.events[0].success,true);
 });
+test('exec pendente percorre poll, binding e ACK exato, sem aceitar outra conta ou call substituída',async()=>{
+ let identity={userId,token:'jwt-synthetic'};const f=fixture({resolveActor:async()=>identity}),callId='exec_'+ 'b'.repeat(56),args={projectId,requestId,revision:1};
+ await f.chat(request(body));const action={type:'function_call',name:'compor_contexto',turn_id:'turn_one',call_id:callId,arguments:args};f.set({status:'requires_action',turnState:'waiting',actions:[action]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'action_required');assert.equal(pending.action.callId,callId);
+ const input={apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'completed',revision:2}};
+ identity={userId:request2,token:'other-jwt'};assert.equal((await f.action(request(input))).status,403);identity={userId,token:'jwt-synthetic'};
+ f.set({actions:[{...action,call_id:'exec_different'}]});assert.equal((await f.action(request(input))).status,403);assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0);
+ f.set({actions:[action]});assert.equal((await(await f.action(request(input))).json()).status,'running');await f.action(request(input));const sent=f.calls.filter(call=>call.url?.endsWith('/events'));assert.equal(sent.length,1);assert.equal(sent[0].body.events[0].call_id,callId);
+});
+test('exec de imagem em poll produz handoff assinado preservando o ID e recusa ID inválido',async()=>{
+ const f=fixture();await f.chat(request(body));const callId='exec_'+ 'c'.repeat(56),action={type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:callId,arguments:{prompt:'Synthetic image'}};f.set({status:'requires_action',turnState:'waiting',actions:[action]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'consent_required');const bindings=createSessionBindings({secret:Buffer.alloc(32,7)});assert.equal(bindings.verifyAction({token:pending.actionBinding,userId,projectId,attemptId}).callId,callId);
+ f.set({actions:[{...action,call_id:'exec_'+ 'x'.repeat(129)}]});assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).phase,'action_validate');assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0);
+});
 test('imagem exige contrato de consentimento e pode ser recusada sem chamar Images API',async()=>{
  const f=fixture();await f.chat(request(body));f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:'call_image',arguments:{prompt:'Formas azuis'}}]});
  const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'consent_required');assert.ok(pending.actionBinding.startsWith('v2.'));assert.ok(pending.declineBinding.startsWith('s1.'));
