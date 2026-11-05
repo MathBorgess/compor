@@ -1,6 +1,7 @@
 import {AGENT_MODEL} from './agent-model.mjs';
 import {PERSONA_SKILL_INSTRUCTIONS} from './studio-persona-skill.mjs';
 import {AGENT_STUDIO_TOOLS,parseStudioAction} from './studio-chat-tools.mjs';
+import {summarizeStudioItems} from './studio-item-trace.mjs';
 const ROOT='https://api.openai.com/v1/agents/sessions';
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 const identifier=(x,p)=>typeof x==='string'&&new RegExp(`^${p}_[A-Za-z0-9_-]{1,128}$`).test(x)&&!/sk-/i.test(x);
@@ -163,7 +164,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    const text=messages[0].content.filter(c=>c?.type==='output_text'&&typeof c.text==='string').map(c=>c.text).join('');
    if(!safeText(text,64000)||!text||text.includes(key))throw Error('invalid answer');
    d.phase='turn_finish';await finish(scope,record,'completed',session.usage);
-   return reply({status:'completed',requestId:scope.requestId,attemptId:record.attemptId,text,usage:session.usage?{input_tokens:count(session.usage.input_tokens),output_tokens:count(session.usage.output_tokens),total_tokens:count(session.usage.total_tokens)}:null});
+   return reply({status:'completed',requestId:scope.requestId,attemptId:record.attemptId,sessionId,turnId:turn.id,itemTrace:summarizeStudioItems(page.data,{projectId:scope.projectId,turnId:turn.id}),text,usage:session.usage?{input_tokens:count(session.usage.input_tokens),output_tokens:count(session.usage.output_tokens),total_tokens:count(session.usage.total_tokens)}:null});
   }
   d.phase='turn_state_write';await state(scope,record,'running',turn.id);return reply({status:'running',requestId:scope.requestId,attemptId:record.attemptId},202);
  }

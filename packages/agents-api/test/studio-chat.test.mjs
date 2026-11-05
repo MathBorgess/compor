@@ -182,3 +182,20 @@ test('novas sessões e sua medição usam Terra por escolha explícita do produt
  assert.equal(f.calls.find(c=>c.url?.endsWith('/sessions')&&c.method==='POST').body.agent.model,'gpt-6.1-terra');
  assert.equal(measurements[0].model,'gpt-6.1-terra');
 });
+test('completed devolve somente trace técnico dos items já consultados e IDs verificados',async()=>{
+ const story='PRIVATE_CREATIVE_STORY',requests=[];
+ const f=fixture({fetch:async(url,init={})=>{
+  requests.push({url,method:init.method??'GET'});
+  if(init.method==='POST')return Response.json({id:'sess_one'});
+  if(url.includes('/items?'))return Response.json({has_more:false,data:[
+   {type:'function_call',turn_id:'turn_one',call_id:'call_trace',status:'failed',name:'functions.compor_editar_briefing',arguments:JSON.stringify({projectId,requestId,revision:1,field:'offer',value:story,[apiKey]:story})},
+   {type:'function_call_output',turn_id:'turn_one',call_id:'call_trace',status:'failed',error:`Tool unavailable ${apiKey} ${story}`,output:JSON.stringify({apiKey,story})},
+   {type:'message',turn_id:'turn_one',role:'assistant',status:'completed',phase:'final_answer',content:[{type:'output_text',text:'Resposta sintética final.'}]},
+  ]});
+  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]});
+  return Response.json({id:'sess_one',status:'idle',required_actions:[]});
+ }});
+ await f.chat(request(body));const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(result.status,'completed');assert.equal(result.sessionId,'sess_one');assert.equal(result.turnId,'turn_one');assert.equal(result.itemTrace.functionCalls,1);assert.equal(result.itemTrace.outputs,1);assert.equal(result.itemTrace.items[0].unknownArgumentKeyCount,1);assert.equal(result.itemTrace.items[1].errorClass,'unavailable');
+ assert.doesNotMatch(JSON.stringify(result),/PRIVATE_CREATIVE_STORY|sk-synthetic|call_trace/);assert.equal(requests.filter(call=>call.method==='POST').length,1);assert.equal(requests.filter(call=>call.method==='GET').length,3);assert.equal(requests.filter(call=>call.url.includes('/items?')).length,1);
+});
