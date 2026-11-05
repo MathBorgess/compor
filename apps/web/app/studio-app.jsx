@@ -344,11 +344,13 @@ function ProjectStudio({
         setBase(blob);
       else if (active.current)
         setNotice("A imagem está preservada no rascunho da versão de origem.");
+      return true;
     } catch {
       if (active.current)
         setNotice(
           "Não foi possível preservar a imagem no navegador. O arquivo anterior foi mantido.",
         );
+      return false;
     }
   }
 
