@@ -2,6 +2,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { createStudioState } from "../lib/studio-state.mjs";
 import { createStudioStorage } from "../lib/studio-storage.mjs";
+import { createStudioStateWriter } from "../lib/studio-state-writer.mjs";
 
 export function useStudioState({ userId, projectId }) {
   const [state, setState] = useState(null),
@@ -12,9 +13,7 @@ export function useStudioState({ userId, projectId }) {
   useEffect(() => {
     const record = {
       state: null,
-      pending: null,
-      storedRevision: null,
-      saving: null,
+      writer: null,
       repo: null,
     };
     active.current = record;
@@ -28,14 +27,26 @@ export function useStudioState({ userId, projectId }) {
     const load = record.repo
       ? record.repo.load({ userId, projectId })
       : Promise.resolve(null);
-    load
+    function initialize(value, storedRevision) {
+      record.state = value;
+      record.writer = createStudioStateWriter({
+        repository: record.repo,
+        storedRevision,
+        onError: () => {
+          if (active.current === record)
+            setError(
+              "Não foi possível preservar as alterações. Outra aba pode ter atualizado o projeto; seu trabalho continua nesta aba.",
+            );
+        },
+      });
+      setState(value);
+      setLoading(false);
+    }
+    const ready = load
       .then((saved) => {
         if (active.current !== record) return;
         const value = saved ?? createStudioState({ userId, projectId });
-        record.state = value;
-        record.storedRevision = saved?.revision ?? null;
-        setState(value);
-        setLoading(false);
+        initialize(value, saved?.revision ?? null);
         if (!record.repo)
           setError(
             "Armazenamento local indisponível. O trabalho ficará somente em memória.",
@@ -44,50 +55,24 @@ export function useStudioState({ userId, projectId }) {
       .catch(() => {
         if (active.current !== record) return;
         const value = createStudioState({ userId, projectId });
-        record.state = value;
-        setState(value);
-        setLoading(false);
+        initialize(value, null);
         setError(
           "Não foi possível abrir o trabalho local. Evite fechar esta aba.",
         );
       });
     return () => {
       if (active.current === record) active.current = null;
-      Promise.resolve(record.saving)
-        .catch(() => {})
-        .finally(() => record.repo?.close());
+      // Finish this record's load/write queue before closing its connection;
+      // the next account/project owns a different record and repository.
+      ready
+        .then(() => record.writer ? record.writer.close() : record.repo?.close())
+        .catch(() => {});
     };
   }, [userId, projectId]);
   const flush = useCallback(async () => {
     const record = active.current;
-    if (!record) throw Error("local_storage_unavailable");
-    if (record.saving) return record.saving;
-    record.saving = (async () => {
-      if (!record.repo) throw Error("local_storage_unavailable");
-      while (record.pending) {
-        const snapshot = record.pending;
-        record.pending = null;
-        try {
-          await record.repo.save(snapshot, {
-            expectedRevision: record.storedRevision,
-          });
-          record.storedRevision = snapshot.revision;
-        } catch (e) {
-          if (active.current === record) {
-            record.pending = record.pending ?? snapshot;
-            setError(
-              "Não foi possível preservar as alterações. Outra aba pode ter atualizado o projeto; seu trabalho continua nesta aba.",
-            );
-          }
-          throw e;
-        }
-      }
-    })();
-    try {
-      await record.saving;
-    } finally {
-      record.saving = null;
-    }
+    if (!record?.writer) throw Error("local_storage_unavailable");
+    await record.writer.flush();
   }, []);
   const change = useCallback(
     (reducer) => {
@@ -95,7 +80,7 @@ export function useStudioState({ userId, projectId }) {
       if (!record?.state) return null;
       const next = reducer(record.state);
       record.state = next;
-      record.pending = next;
+      record.writer.enqueue(next);
       setState(next);
       flush().catch(() => {});
       return next;
