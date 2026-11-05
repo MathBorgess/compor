@@ -298,7 +298,7 @@ export default function StudioChat({
       draft.pieceId !== action.context.pieceId ||
       draft.baseVersion !== action.context.baseVersion
     ) {
-      setNotice("Salve a versão aberta antes de gerar a imagem.");
+      setNotice("Salve a versão aberta e use “Revisar proposta na versão aberta” antes de confirmar a imagem.");
       return;
     }
     setBusy(true);
@@ -393,6 +393,7 @@ export default function StudioChat({
             >
               Confirmar geração de imagem
             </button>
+            <button type="button" disabled={busy||!hasApiKey} onClick={()=>poll(imageAction.requestId)}>Revisar proposta na versão aberta</button>
             <button
               type="button"
               disabled={busy || !hasApiKey}

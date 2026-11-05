@@ -54,6 +54,8 @@ export function createStudioTools({
       .map((byte) => byte.toString(16).padStart(2, "0"))
       .join("");
     const receiptKey = `${scope.userId}:${args.projectId}:${args.requestId}`;
+    const afterHash=getScope();
+    if(disposed||signal?.aborted||afterHash?.userId!==scope.userId||afterHash?.projectId!==scope.projectId)throw Error("context_changed");
     const previous = receipts.get(receiptKey) ?? getReceipt(args.requestId);
     if (previous) {
       if (previous.fingerprint !== fingerprint) throw Error("action_conflict");
@@ -93,8 +95,9 @@ export function createStudioTools({
         (args.revision !== undefined && latest?.revision !== args.revision)
       )
         throw Error("context_changed");
-      await record({ status: "unknown" });
-      if (disposed || signal?.aborted) throw Error("action_unavailable");
+      const reserved=await record({ status: "unknown" });
+      const afterReservation=getScope();
+      if(disposed||signal?.aborted||afterReservation?.userId!==scope.userId||afterReservation?.projectId!==scope.projectId||afterReservation?.revision!==(reserved.revision??latest.revision))throw Error("context_changed");
       const result = await handler(args, { signal });
       if (
         !result ||
