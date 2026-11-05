@@ -1080,10 +1080,11 @@ function ProjectStudio({
   );
 }
 function Preview({ blob }:{blob:Blob}) {
-  const [url, setUrl] = useState<string|null>(null);
+  const [image, setImage] = useState<{blob:Blob;url:string}|null>(null);
+  const url = image?.blob === blob ? image.url : null;
   useEffect(() => {
     const value = URL.createObjectURL(blob);
-    setUrl(value);
+    setImage({blob,url:value});
     return () => URL.revokeObjectURL(value);
   }, [blob]);
   return url ? (

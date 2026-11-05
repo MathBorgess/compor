@@ -3,9 +3,9 @@ import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {readFile} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {waitForApp,stopApp} from './wait-for-app.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -19,11 +19,20 @@ async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
  const origin=`http://127.0.0.1:${port}`;
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,COMPOR_STUDIO_WEB_ENABLED:'true',SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});
- t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
- const until=Date.now()+30000;for(;;){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>until||child.exitCode!==null)throw Error('app unavailable');await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
+ let browser;t.after(async()=>{try{await browser?.close();}finally{await stopApp(child);}});
+ await waitForApp({url:origin,child,signal:t.signal});
+ browser=await chromium.launch({executablePath:browserPath,headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
- const page=await context.newPage(),errors=[],external=[],calls=[];
+ const page=await context.newPage(),errors=[],external=[],calls=[],revokedImages=[];
+ page.setDefaultTimeout(6000);
+ await page.exposeFunction('reportRevokedImage',image=>revokedImages.push(image));
+ await page.addInitScript(()=>{
+  const revoke=URL.revokeObjectURL.bind(URL);
+  URL.revokeObjectURL=url=>{
+   for(const image of document.images)if(image.src===url)window.reportRevokedImage({url,alt:image.alt});
+   revoke(url);
+  };
+ });
  page.on('pageerror',error=>errors.push(error.message));page.on('console',entry=>{if(entry.type()==='error')errors.push(`${entry.text()} (${entry.location().url})`);});
  const session={state:'connected',userId:alice,hold:null};
  const versions=[{project_id:projectId,piece_id:existingPiece,version:1,content:content('Original antigo')},{project_id:projectId,piece_id:existingPiece,version:2,content:content('Atual existente')}];
@@ -43,11 +52,11 @@ async function app(t){
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
- return{page,origin,session,errors,external,calls};
+ return{page,origin,session,errors,external,calls,revokedImages};
 }
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
- const {page,origin,session,errors,external,calls}=await app(t);
+ const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
  await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
  await page.getByLabel('Título',{exact:true}).waitFor();
  await page.getByRole('tab',{name:'Fatos e textos',exact:true}).click();
@@ -67,6 +76,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.getByLabel('Legenda',{exact:true}).fill('Somente uma legenda de teste');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();
  await page.getByText('Nova versão salva.',{exact:true}).waitFor();
+ assert.deepEqual(revokedImages,[],'saving preserves a live URL for every rendered image');
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isEnabled(),true,'a saved clean version can be approved');
  assert.equal(await page.getByRole('button',{name:'Marcar elemento título',exact:true}).count(),0,'literal text is an instruction for the engine, without a local title overlay');
  const frame=page.getByLabel('Arte integral do post',{exact:true});
@@ -151,6 +161,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isDisabled(),true,'new base invalidates the earlier preview');
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);assert.equal(calls.filter(call=>call.path==='/api/studio/action').length,1);
  assert.equal(calls.some(call=>call.path.includes('/image')),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+ assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
 });
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{

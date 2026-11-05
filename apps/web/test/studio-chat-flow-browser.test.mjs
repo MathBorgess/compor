@@ -2,9 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {spawn} from 'node:child_process';
-import {once} from 'node:events';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {waitForApp,stopApp} from './wait-for-app.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -16,10 +16,11 @@ async function eventually(fn,predicate,timeout=6000){const until=Date.now()+time
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
- const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin,COMPOR_STUDIO_WEB_ENABLED:'true'}});
- t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
- const until=Date.now()+30000;for(;;){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>until||child.exitCode!==null)throw Error('app indisponível');await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(6000);
+ let startup='';const recordStartup=chunk=>{const output=startup+chunk;startup=output.length>6000?output.slice(0,4500)+output.slice(-1500):output;};
+ const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin,COMPOR_STUDIO_WEB_ENABLED:'true'}});child.stdout.on('data',recordStartup);child.stderr.on('data',recordStartup);
+ let browser;t.after(async()=>{try{await browser?.close();}finally{await stopApp(child);}});
+ await waitForApp({url:origin,child,signal:t.signal,diagnostics:()=>startup});
+ browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(6000);
  await page.addInitScript(()=>{const tools=Object.create(null);Object.defineProperty(window,'__studioNative',{value:tools});Object.defineProperty(document,'modelContext',{configurable:true,value:{registerTool:async(definition,{signal}={})=>{tools[definition.name]=definition;signal?.addEventListener('abort',()=>{if(tools[definition.name]===definition)delete tools[definition.name];},{once:true});}}});});
  const calls=[],external=[],errors=[],flow={};const versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
  page.on('pageerror',error=>errors.push(error.message));
@@ -75,7 +76,7 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo e r
   }
  };
  await openOriginal(page,origin);await page.getByLabel('Sua mensagem',{exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
- try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`);}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
+ try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`,{cause:error});}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await eventually(()=>page.getByLabel('Título',{exact:true}).inputValue(),value=>value==='Título novo refinado');await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1,'segunda versão também espera confirmação');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByRole('heading',{name:'Gerar a arte completa'}).waitFor();
  const proposal=page.locator('.studio-image-consent');assert.match(await proposal.innerText(),/Título novo refinado · versão 2/);const saves=calls.filter(call=>call.path==='/api/pieces');assert.deepEqual(saves.map(call=>[call.body.pieceId,call.body.baseVersion,call.body.expectedVersion]),[[newPiece,0,0],[newPiece,1,1]]);

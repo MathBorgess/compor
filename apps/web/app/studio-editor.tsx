@@ -23,7 +23,8 @@ export default function StudioEditor({
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [url, setUrl] = useState<string | null>(null);
+    [image, setImage] = useState<{blob:Blob;url:string} | null>(null);
+  const url = base && image?.blob === base ? image.url : null;
   const frame = useRef<HTMLDivElement>(null),
     start = useRef<{x:number;y:number} | null>(null),
     generation = useRef(0);
@@ -37,11 +38,11 @@ export default function StudioEditor({
   useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date]);
   useEffect(() => {
     if (!base) {
-      setUrl(null);
+      setImage(null);
       return;
     }
     const object = URL.createObjectURL(base);
-    setUrl(object);
+    setImage({blob:base,url:object});
     return () => URL.revokeObjectURL(object);
   }, [base]);
   if (!draft)
