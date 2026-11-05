@@ -31,6 +31,7 @@ export default function StudioEditor({
     setError("");
     generation.current++;
   }, [draft?.pieceId, draft?.baseVersion]);
+  useEffect(()=>{generation.current++;setBusy(false);},[base,draft?.content.headline,draft?.content.price,draft?.content.date,cropY]);
   useEffect(() => {
     if (!base) {
       setUrl(null);

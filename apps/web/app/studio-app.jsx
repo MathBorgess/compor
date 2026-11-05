@@ -199,7 +199,8 @@ function ProjectStudio({
     toolsRef = useRef(null),
     confirmResolver = useRef(null),
     active = useRef(true),
-    saveLock = useRef(false);
+    saveLock = useRef(false),
+    baseLoadGeneration=useRef(0);
   useEffect(() => {
     const media = window.matchMedia("(max-width:600px)");
     const update = () => setCompact(media.matches);
@@ -298,6 +299,7 @@ function ProjectStudio({
   useEffect(() => {
     setPreview(null);
     setBase(null);
+    const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
     let live = true;
     local.storage.current
@@ -310,7 +312,7 @@ function ProjectStudio({
         },
       )
       .then((value) => {
-        if (live && value) setBase(value.file);
+        if (live && loadGeneration===baseLoadGeneration.current && value) setBase(value.file);
       })
       .catch(() => {
         if (live)
@@ -321,6 +323,7 @@ function ProjectStudio({
     };
   }, [draft?.pieceId, draft?.baseVersion]);
   async function useBase({ blob, pieceId, version }) {
+    baseLoadGeneration.current++;
     try {
       await local.storage.current.putDraftAsset({
         userId,
