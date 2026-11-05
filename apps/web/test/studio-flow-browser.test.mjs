@@ -79,6 +79,7 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await markList.getByRole('button',{name:'Remover marcação 1',exact:true}).click();
  await eventually(()=>stored(page),value=>value?.marks?.length===1&&value.marks[0].kind==='area');
  assert.equal(await markList.getByText('Destacar este título',{exact:true}).count(),0);
+ await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
  await page.getByRole('tab',{name:'Moodboard',exact:true}).click();
  const files=await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
  await page.getByLabel('Adicionar PNG ou JPEG',{exact:true}).setInputFiles([{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
@@ -89,6 +90,7 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.getByRole('tab',{name:'Histórico',exact:true}).click();
  await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
  await page.getByLabel('Título',{exact:true}).fill('Alteração local da base antiga');
+ assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'editing a saved version requires saving before approval');
  await page.getByRole('tab',{name:'Histórico',exact:true}).click();
  await page.getByRole('button',{name:/Atual existente.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Atual existente');
@@ -121,6 +123,7 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.screenshot({path:'/tmp/compor-studio-visual-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,'page itself must not overflow; board may scroll internally');
+ const thirdTab=await page.getByRole('tab',{name:'Fatos e textos',exact:true}).boundingBox();assert.ok(thirdTab.x+thirdTab.width<=390,'the account status does not crowd the mobile tab strip');
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile.png',fullPage:true});
  await page.getByLabel('Título',{exact:true}).scrollIntoViewIfNeeded();
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');

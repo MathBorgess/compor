@@ -1,6 +1,8 @@
 "use client";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { composeStudioPng } from "../lib/studio-compose.mjs";
+
+const elementLabels = { headline: "título", price: "preço", date: "data" };
 
 export default function StudioEditor({
   draft,
@@ -8,6 +10,7 @@ export default function StudioEditor({
   base = null,
   onEdit,
   onMark,
+  onRemoveMark,
   onPreview,
   onApprove,
 }) {
@@ -21,6 +24,7 @@ export default function StudioEditor({
   const frame = useRef(null),
     start = useRef(null),
     generation = useRef(0);
+  const approvalHint = useId();
   useEffect(() => {
     setRegion(null);
     setNote("");
@@ -146,7 +150,7 @@ export default function StudioEditor({
                 setRegion({ elementId: field });
                 setNote("");
               }}
-              aria-label={`Marcar elemento ${field === "headline" ? "título" : field === "price" ? "preço" : "data"}`}
+              aria-label={`Marcar elemento ${elementLabels[field]}`}
             >
               {draft.content[field] ||
                 { headline: "Seu título", price: "", date: "" }[field]}
@@ -296,14 +300,46 @@ export default function StudioEditor({
             </button>
           </div>
         )}
+        {marks.length > 0 && (
+          <section className="studio-mark-list" aria-label="Marcações deste post">
+            <h3>Marcações para o próximo pedido</h3>
+            <ol>
+              {marks.map((mark, index) => (
+                <li key={mark.id}>
+                  <strong>
+                    {mark.kind === "element"
+                      ? `Elemento ${elementLabels[mark.elementId] || mark.elementId}`
+                      : `Área ${index + 1}`}
+                  </strong>
+                  <p>{mark.note}</p>
+                  <button
+                    type="button"
+                    aria-label={`Remover marcação ${index + 1}`}
+                    onClick={() => onRemoveMark?.(mark.id)}
+                  >
+                    Remover marcação
+                  </button>
+                </li>
+              ))}
+            </ol>
+          </section>
+        )}
         <div className="studio-editor-actions">
           <button type="button" disabled={busy} onClick={preview}>
             {busy ? "Preparando…" : "Preparar PNG"}
           </button>
-          <button type="button" onClick={() => onApprove?.()}>
+          <button
+            type="button"
+            disabled={draft.dirty || draft.baseVersion < 1}
+            aria-describedby={draft.dirty || draft.baseVersion < 1 ? approvalHint : undefined}
+            onClick={() => onApprove?.()}
+          >
             Aprovar esta versão
           </button>
         </div>
+        {(draft.dirty || draft.baseVersion < 1) && (
+          <p id={approvalHint} className="studio-hint">Salve a versão para aprovar este post.</p>
+        )}
         {error && <p role="alert">{error}</p>}
       </div>
     </div>

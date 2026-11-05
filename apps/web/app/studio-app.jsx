@@ -674,6 +674,7 @@ function ProjectStudio({
           addMark(value, { ...mark, id: crypto.randomUUID() }),
         )
       }
+      onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
       onPreview={(blob) => {
         setPreview(blob);
         setStage("review");

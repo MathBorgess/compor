@@ -341,9 +341,7 @@ export default function StudioChat({
   return (
     <section className="studio-chat-panel" aria-label="Conversa do projeto">
       <header className="studio-chat-header">
-        <span className="studio-chat-avatar" aria-hidden="true">
-          C
-        </span>
+        <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
         <div>
           <h2>Vamos compor juntos</h2>
           <p>Uma conversa, muitas possibilidades.</p>
