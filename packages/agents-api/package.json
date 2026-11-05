@@ -12,7 +12,8 @@
     "./image-tool-execution": "./src/image-tool-execution.mjs",
     "./image-tool-result": "./src/image-tool-result.mjs",
     "./usage-store": "./src/usage-store.mjs",
-    "./telemetry": "./src/telemetry.mjs"
+    "./telemetry": "./src/telemetry.mjs",
+    "./recovery-route": "./src/recovery-route.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

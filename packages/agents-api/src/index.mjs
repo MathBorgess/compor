@@ -36,18 +36,29 @@ async function limitedText(stream, limit) {
   return new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks));
 }
 
-async function readAgentEvents(stream, stopForAction) {
+// Only an explicitly pending provider function may be offered for consent.
+export function pendingImageAction(session, key, delegated) {
+  if (session?.status !== 'requires_action' || !Array.isArray(session.required_actions) || session.required_actions.length !== 1) throw new Error('invalid pending action');
+  const action = session.required_actions[0];
+  let args = action?.arguments;
+  if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
+  if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
+  return { turnId: action.turn_id, callId: action.call_id, prompt: args.prompt };
+}
+
+async function readAgentEvents(stream, stopForAction, onSession) {
   if (!stream) throw new Error('missing stream');
   const reader = stream.getReader(), decoder = new TextDecoder('utf-8', { fatal: true });
   let buffer = '', size = 0, sessionId = null, completed = false, rootTurnId = null;
   const parts = new Map();
-  function processBlock(block) {
+  async function processBlock(block) {
     const data = block.split(/\r?\n/).filter(line => line.startsWith('data:')).map(line => line.slice(5).trimStart()).join('\n');
     if (!data || data === '[DONE]') return false;
     const event = JSON.parse(data);
     if (event.type === 'agent.session.created') {
       if (sessionId || typeof event.session?.id !== 'string' || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(event.session.id)) throw new Error('invalid session');
       sessionId = event.session.id;
+      if (onSession) await onSession(sessionId);
     }
     if (event.type === 'agent.session.requires_action' && stopForAction) {
       if (!sessionId || event.session?.id !== sessionId) throw new Error('invalid action event');
@@ -76,10 +87,10 @@ async function readAgentEvents(stream, stopForAction) {
       while ((boundary = /\r?\n\r?\n/.exec(buffer))) {
         const block = buffer.slice(0, boundary.index);
         buffer = buffer.slice(boundary.index + boundary[0].length);
-        if (processBlock(block)) return { action: true, sessionId };
+        if (await processBlock(block)) return { action: true, sessionId };
       }
     }
-    if (buffer.trim() && processBlock(buffer)) return { action: true, sessionId };
+    if (buffer.trim() && await processBlock(buffer)) return { action: true, sessionId };
     return { action: false, sessionId, completed, output: [...parts.values()].filter(part => rootTurnId && part.turnId === rootTurnId).map(part => part.text).join('') };
   } finally {
     // Some transports never settle cancel(); initiate it without blocking the action.
@@ -88,7 +99,7 @@ async function readAgentEvents(stream, stopForAction) {
   }
 }
 
-export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false, mcpTool, spendLimitCents = 25 } = {}) {
+export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false, mcpTool, spendLimitCents = 25, onSession } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('authenticate is required');
   if (!Number.isInteger(spendLimitCents) || spendLimitCents < 1 || spendLimitCents > 500) throw new TypeError('invalid session spend limit');
   return async function handle(request) {
@@ -123,7 +134,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       if (response.status === 429) { agentAbort.abort(); return json({ error: 'openai_quota_or_rate_limit' }, 429); }
       if (!response.ok) { agentAbort.abort(); return json({ error: 'upstream_error' }, 502); }
       let observed;
-      try { observed = await readAgentEvents(response.body, enableImageTool); }
+      try { observed = await readAgentEvents(response.body, enableImageTool, onSession); }
       finally { agentAbort.abort(); }
       recordAgentEvent(observed.action ? 'stream_action' : observed.completed ? 'stream_completed' : 'stream_incomplete');
       if (enableImageTool && observed.sessionId) {
@@ -141,13 +152,9 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
           const text = observed.output.replaceAll(key, '[redacted]');
           return json({ sessionId: observed.sessionId, text: delegated ? text.replaceAll(delegated, '[redacted]') : text, usage: sanitizedUsage(session.usage) }, 200);
         }
-        if (session.status !== 'requires_action' || session.required_actions.length !== 1) throw new Error('invalid pending action');
-        const action = session.required_actions[0];
-        let args = action?.arguments;
-        if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
         const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');
-        if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.call_id ?? '') || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
-        return json({ status: 'consent_required', sessionId: observed.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: args.prompt }, 202);
+        const action = pendingImageAction(session, key, delegated);
+        return json({ status: 'consent_required', sessionId: observed.sessionId, ...action }, 202);
       }
       if (!observed.completed || !observed.sessionId || !observed.output) return json({ error: 'incomplete_turn' }, 502);
       const delegated = mcpTool?.transport?.authorization?.replace(/^Bearer /i, '');

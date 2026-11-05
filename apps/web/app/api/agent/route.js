@@ -27,6 +27,7 @@ export async function POST(request) {
     attempts: createSupabaseAttemptStore({url:config.service,anonKey:config.key}),
     usage: createUsageStore({url:config.service,anonKey:config.key}),
     spendLimitCents,
+    enableRecovery: process.env.COMPOR_AGENT_RECOVERY_ENABLED === 'true',
     bindings: createSessionBindings({secret:signingKey}),
     ...(scope ? {withMcp: ({actor,projectId},submit) => withAgentMcpTool({appOrigin:config.app,scope,token:actor.token,projectId},submit)} : {}),
   })(request);

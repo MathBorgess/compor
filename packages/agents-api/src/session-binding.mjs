@@ -33,6 +33,37 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       return { sessionId: claim.sessionId, userId, projectId, attemptId };
     } catch { return null; }
   }
+  // Durable, domain-separated provenance proof. The Supabase caller can write
+  // a row, so recovery must not trust its contents without this signature.
+  function issueRecovery({ userId, projectId, attemptId, sessionId }) {
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId)) throw new Error('invalid recovery context');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId })).toString('base64url');
+    return `v4.${payload}.${createHmac('sha256', signingKey).update(`v4.${payload}`).digest('base64url')}`;
+  }
+  function verifyRecovery({ token, userId, projectId, attemptId }) {
+    try {
+      if (typeof token !== 'string' || token.length > 2048 || ![userId, projectId, attemptId].every(uuid)) return null;
+      const p = token.split('.');
+      if (p.length !== 3 || p[0] !== 'v4' || !/^[A-Za-z0-9_-]+$/.test(p[1]) || !/^[A-Za-z0-9_-]+$/.test(p[2])) return null;
+      const actual = Buffer.from(p[2], 'base64url');
+      const expected = createHmac('sha256', signingKey).update(`v4.${p[1]}`).digest();
+      if (actual.length !== expected.length || actual.toString('base64url') !== p[2] || !timingSafeEqual(actual, expected)) return null;
+      const bytes = Buffer.from(p[1], 'base64url');
+      if (bytes.toString('base64url') !== p[1]) return null;
+      const value = JSON.parse(bytes.toString('utf8'));
+      if (!value || Object.keys(value).length !== 4 || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
+      return { userId, projectId, attemptId, sessionId: value.sessionId };
+    } catch { return null; }
+  }
+  // Stable per original attempt, but unlinkable without the server secret.
+  function recoveryAttemptKey({ userId, projectId, attemptId }) {
+    if (![userId, projectId, attemptId].every(uuid)) throw new Error('invalid recovery context');
+    const bytes = Buffer.from(createHmac('sha256', signingKey).update(`recovery-attempt-v1:${userId}:${projectId}:${attemptId}`).digest().subarray(0,16));
+    bytes[6] = (bytes[6] & 0x0f) | 0x40;
+    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    const hex = bytes.toString('hex');
+    return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
+  }
   function issueAction({ userId, projectId, attemptId, sessionId, turnId, callId, prompt }) {
     const iat = now();
     if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !callIdValid(callId, 'call') || typeof prompt !== 'string' || !prompt.trim() || prompt.length > 4000 || /sk-[^\s]+/i.test(prompt) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
@@ -76,5 +107,5 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,promptDigest:c.promptDigest };
     } catch { return null; }
   }
-  return Object.freeze({ issue, verify, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
+  return Object.freeze({ issue, verify, issueRecovery, verifyRecovery, recoveryAttemptKey, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
 }

@@ -11,6 +11,21 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 const projectId='11111111-1111-4111-8111-111111111111',pieceId='22222222-2222-4222-8222-222222222222',attemptId='33333333-3333-4333-8333-333333333333';
 const secret='sk-test-session-only-123456789012345', assetId='44444444-4444-4444-8444-444444444444', assetId2='55555555-5555-4555-8555-555555555555';
 
+test('recupera tentativa incerta após reload sem reiniciar chamada paga', {skip:!existsSync(browserPath)}, async t=>{
+ const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
+ const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
+ const deadline=Date.now()+30000;while(true){try{if((await fetch(origin)).ok)break;}catch{}if(Date.now()>deadline)throw Error('app indisponível');await new Promise(r=>setTimeout(r,200));}
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();let starts=0,recoveries=0,startKey;
+ await page.route('**/auth/session',r=>r.fulfill({json:{state:'connected',userId:'alice'}}));
+ await page.route('**/api/projects',r=>r.fulfill({json:{projects:[{id:projectId,title:'Oficina'}]}}));
+ await page.route('**/api/pieces*',r=>r.fulfill({json:{versions:[{project_id:projectId,piece_id:pieceId,version:1,content:{headline:'Convite',price:'',date:'',caption:'Legenda',captionOrigin:'user'}}]}}));
+ await page.route('**/api/agent',r=>{starts++;startKey=r.request().headers()['x-compor-attempt-id'];return r.fulfill({status:502,json:{error:'result_unknown'}});});
+ await page.route('**/api/agent/recover',r=>{recoveries++;assert.deepEqual(r.request().postDataJSON(),{apiKey:secret,projectId,idempotencyKey:startKey});return r.fulfill({status:202,json:{status:'consent_required',prompt:'Papel azul',attemptId,actionBinding:'signed-proof'}});});
+ await page.goto(origin);await page.getByLabel('O que você quer divulgar?').fill('Aula');await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir Oficina'}).click();await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Iniciar direção criativa'}).click();
+ await page.getByText(/resultado da tentativa é desconhecido/i).waitFor();const stored=await page.evaluate(()=>Object.entries(sessionStorage).find(([k])=>k.startsWith('compor-agent-attempt:'))?.[1]);assert.ok(!stored.includes(secret));assert.ok(!stored.includes('Aula'));assert.ok(stored.includes(startKey));
+ await page.reload();await page.getByLabel('Chave OpenAI').fill(secret);await page.getByRole('button',{name:'Abrir peça 1, versão 1'}).click();await page.getByRole('button',{name:'Consultar tentativa anterior'}).click();await page.getByText('Papel azul').waitFor();assert.equal(starts,1);assert.equal(recoveries,1);
+});
+
 test('resposta somente textual informa que não gerou imagem', {skip:!existsSync(browserPath)}, async t=>{
  const socket=createServer();await new Promise(r=>socket.listen(0,'127.0.0.1',r));const port=socket.address().port;await new Promise(r=>socket.close(r));const origin=`http://127.0.0.1:${port}`;
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});

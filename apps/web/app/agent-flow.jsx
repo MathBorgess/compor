@@ -55,6 +55,7 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
           try {
             const parsed = JSON.parse(saved);
             if (['accepted','unknown'].includes(parsed?.state)) restored = {state:parsed.state,assetId:uuid(parsed.assetId) ? parsed.assetId : null};
+            else if (parsed?.state === 'pending_agent' && uuid(parsed.idempotencyKey)) restored = {state:'unknown',idempotencyKey:parsed.idempotencyKey};
           } catch { /* Older pending markers remain unknown. */ }
           update(record, restored);
         }
@@ -92,10 +93,11 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
   async function start() {
     if (!initialized || record.value.state !== 'idle' || !canStart || !hasApiKey || !objective?.trim() || typeof getApiKey !== 'function') return;
     const apiKey = getApiKey(); if (!apiKey) return;
-    try { sessionStorage.setItem(key, 'pending'); } catch { update(record,{state:'storage_unavailable'}); return; }
+    const idempotencyKey = crypto.randomUUID();
+    try { const marker=JSON.stringify({state:'pending_agent',idempotencyKey}); sessionStorage.setItem(key, marker); if(sessionStorage.getItem(key)!==marker) throw Error('storage unavailable'); } catch { update(record,{state:'storage_unavailable'}); return; }
     update(record, {state:'starting',selectedAsset:null});
     try {
-      const response = await fetch('/api/agent', {method:'POST',headers:{'content-type':'application/json','x-compor-project-id':projectId,'x-compor-attempt-id':crypto.randomUUID()},body:JSON.stringify({apiKey,objective})});
+      const response = await fetch('/api/agent', {method:'POST',headers:{'content-type':'application/json','x-compor-project-id':projectId,'x-compor-attempt-id':idempotencyKey},body:JSON.stringify({apiKey,objective})});
       const data = await response.json();
       if (response.status === 202 && data?.status === 'consent_required' && typeof data.prompt === 'string' && data.prompt.length <= 4000 && !data.prompt.includes(apiKey) && uuid(data.attemptId) && typeof data.actionBinding === 'string' && data.actionBinding.length > 0 && data.actionBinding.length <= 2048 && !data.actionBinding.includes(apiKey)) {
         update(record, {state:'consent', prompt:data.prompt, attemptId:data.attemptId, actionBinding:data.actionBinding}); return;
@@ -104,12 +106,28 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
         update(record,{state:'text',text:data.text}); return;
       }
       throw Error();
-    } catch { update(record,{state:'unknown'}); }
+    } catch { update(record,{state:'unknown',idempotencyKey}); }
+  }
+  async function recover() {
+    const idempotencyKey=record.value.idempotencyKey;
+    if (record.value.state !== 'unknown' || !uuid(idempotencyKey) || !hasApiKey || typeof getApiKey !== 'function') return;
+    const apiKey=getApiKey(); if (!apiKey) return;
+    update(record,{state:'recovering',idempotencyKey});
+    try {
+      const response=await fetch('/api/agent/recover',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,idempotencyKey})});
+      const data=await response.json();
+      if (response.status===202 && data?.status==='consent_required' && typeof data.prompt==='string' && data.prompt.length<=4000 && !data.prompt.includes(apiKey) && uuid(data.attemptId) && typeof data.actionBinding==='string' && data.actionBinding.length>0 && data.actionBinding.length<=2048 && !data.actionBinding.includes(apiKey)) {
+        update(record,{state:'consent',prompt:data.prompt,attemptId:data.attemptId,actionBinding:data.actionBinding}); return;
+      }
+      if (response.ok && data?.status==='completed' && typeof data.text==='string' && !data.text.includes(apiKey)) {update(record,{state:'text',text:data.text}); return;}
+      update(record,{state:'unknown',idempotencyKey,recoveryStatus:data?.status==='in_progress'?'in_progress':'unavailable'});
+    } catch { update(record,{state:'unknown',idempotencyKey,recoveryStatus:'unavailable'}); }
   }
   async function confirm() {
     const current = record.value;
     if (current.state !== 'consent' || !canStart || !hasApiKey || typeof getApiKey !== 'function') return;
     const apiKey = getApiKey(); if (!apiKey) return;
+    try { const marker=JSON.stringify({state:'unknown',assetId:null}); sessionStorage.setItem(key,marker); if(sessionStorage.getItem(key)!==marker) throw Error('storage unavailable'); } catch {update(record,{...current,storageWarning:true}); return;}
     update(record,{state:'confirming',selectedAsset:null});
     try {
       const response = await fetch('/api/agent/image',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey,projectId,pieceId,version,attemptId:current.attemptId,actionBinding:current.actionBinding,explicitApproval:true})});
@@ -128,7 +146,8 @@ export default function AgentFlow({ userId, projectId, pieceId, version, canStar
     {flow.state === 'consent' && <><p>Imagem proposta para esta peça, versão {version}:</p><p>{flow.prompt}</p><button type="button" disabled={!canStart || !hasApiKey} onClick={confirm}>Confirmar geração de imagem</button></>}
     {flow.state === 'confirming' && <p role="status">Gerando imagem…</p>}
     {flow.state === 'accepted' && <><p role="status">O evento foi aceito. O turno ainda está em andamento.</p><button type="button" onClick={reset}>Iniciar nova tentativa</button></>}
-    {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p><button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
+    {flow.state === 'recovering' && <p role="status">Consultando a tentativa anterior…</p>}
+    {flow.state === 'unknown' && <><p role="alert">O resultado da tentativa é desconhecido. Ela pode ter sido executada; não será repetida automaticamente.</p>{uuid(flow.idempotencyKey) && <button type="button" disabled={!hasApiKey} onClick={recover}>Consultar tentativa anterior</button>}{flow.recoveryStatus === 'in_progress' && <p>A tentativa ainda está em andamento.</p>}{flow.recoveryStatus === 'unavailable' && <p>Não foi possível recuperar a tentativa.</p>}<button type="button" onClick={reset}>Entendi, iniciar nova tentativa</button></>}
     {flow.history?.length > 0 && <div><p>Imagens anteriores nesta aba</p>{flow.history.map((assetId,index) => <button key={assetId} type="button" onClick={() => update(record,{...record.value,selectedAsset:assetId})}>Ver imagem anterior {index + 1}</button>)}</div>}
     <AssetRecovery key={key} userId={userId} projectId={projectId} pieceId={pieceId} version={version} onSelect={assetId=>update(record,{...record.value,selectedAsset:assetId})} />
     {preview && <><img src={preview} alt="Imagem para revisão" /><p>A origem da imagem não foi comprovada e ela ainda não está aprovada.</p><button type="button" disabled={!previewBlob || typeof onUseImage !== 'function'} onClick={() => onUseImage(previewBlob)}>Usar imagem na composição</button></>}

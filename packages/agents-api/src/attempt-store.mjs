@@ -34,5 +34,18 @@ export function createSupabaseAttemptStore({ url, anonKey, fetch: fetchApi = glo
       const result = await rpc('finish_agent_attempt', actor, { p_project_id: projectId, p_attempt_id: attemptId, p_state: state });
       if (result !== true) throw new Error('invalid attempt response');
     },
+    async bindRecovery({ actor, projectId, attemptId, binding }) {
+      if (!uuid.test(projectId ?? '') || !uuid.test(attemptId ?? '') || typeof binding !== 'string' || !/^v4[.][A-Za-z0-9_-]+[.][A-Za-z0-9_-]+$/.test(binding) || binding.length > 2048) throw new Error('invalid recovery');
+      if (await rpc('bind_agent_session_recovery', actor, { p_project_id: projectId, p_attempt_id: attemptId, p_binding: binding }) !== true) throw new Error('recovery unavailable');
+    },
+    async getRecovery({ actor, projectId, idempotencyKey }) {
+      if (!uuid.test(projectId ?? '') || !uuid.test(idempotencyKey ?? '')) throw new Error('invalid recovery');
+      const rows = await rpc('get_agent_session_recovery', actor, { p_project_id: projectId, p_idempotency_key: idempotencyKey });
+      if (!Array.isArray(rows) || rows.length > 1) throw new Error('recovery unavailable');
+      if (rows.length === 0) return null;
+      const row = rows[0];
+      if (!uuid.test(row?.attempt_id ?? '') || !['started','completed','unknown'].includes(row?.attempt_state) || typeof row?.recovery_binding !== 'string' || row.recovery_binding.length > 2048) throw new Error('recovery unavailable');
+      return { attemptId:row.attempt_id, state:row.attempt_state, binding:row.recovery_binding };
+    },
   };
 }

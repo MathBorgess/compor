@@ -5,12 +5,13 @@ const projectIdPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a
 const response = (body, status) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store' } });
 
 /** Server-side seam; do not connect until the attempt store is durable and authorized. */
-export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, usage, withMcp, fetch, spendLimitCents = 25 } = {}) {
+export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject, attempts, bindings, usage, withMcp, fetch, spendLimitCents = 25, enableRecovery = false } = {}) {
   if (!Number.isInteger(spendLimitCents) || spendLimitCents < 1 || spendLimitCents > 500) throw new TypeError('invalid session spend limit');
   return async request => {
     if (request.method !== 'POST') return response({ error: 'method_not_allowed' }, 405);
     if (typeof appOrigin !== 'string' || typeof resolveActor !== 'function' || typeof ownsProject !== 'function' ||
         typeof attempts?.start !== 'function' || typeof attempts?.finish !== 'function' || typeof bindings?.issue !== 'function' || typeof bindings?.issueAction !== 'function') return response({ error: 'unavailable' }, 503);
+    if (enableRecovery && (typeof attempts.bindRecovery !== 'function' || typeof bindings.issueRecovery !== 'function')) return response({ error: 'unavailable' }, 503);
     if (request.headers.get('origin') !== appOrigin) { recordAgentEvent('origin_denied'); return response({ error: 'invalid_origin' }, 403); }
     if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type') ?? '')) { recordAgentEvent('request_invalid'); return response({ error: 'invalid_request' }, 400); }
     const projectId = request.headers.get('x-compor-project-id');
@@ -39,7 +40,11 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     const run = async mcpTool => {
       if (invoked) throw Error('duplicate invocation');
       invoked = true;
-      result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true, mcpTool, spendLimitCents })(request);
+      const onSession = enableRecovery ? async sessionId => {
+        const binding = bindings.issueRecovery({ userId: actor.userId, projectId, attemptId: attempt.id, sessionId });
+        await attempts.bindRecovery({ actor, projectId, attemptId: attempt.id, binding });
+      } : undefined;
+      result = await createAgentHandler({ authenticate: async () => ({ userId: actor.userId }), fetch, enableImageTool: true, mcpTool, spendLimitCents, onSession })(request);
     };
     try {
       if (withMcp === undefined) await run();
