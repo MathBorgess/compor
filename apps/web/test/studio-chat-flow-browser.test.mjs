@@ -89,3 +89,33 @@ test('efeito WebMCP persistido não se repete após refresh e recriação do exe
  const restored=await stored(page),repeated=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(repeated.status,'completed');assert.equal(repeated.revision,restored.revision);assert.deepEqual(await stored(page),restored,'nem o efeito nem o recibo são gravados novamente');assert.equal(restored.actionReceipts.length,1);
  const conflict=await page.evaluate(async args=>{try{await window.__studioNative.compor_editar_briefing.execute({...args,value:'Oferta trocada'});return null;}catch(error){return error.message;}},args);assert.equal(conflict,'action_conflict');assert.deepEqual(await stored(page),restored);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
+
+test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto a resposta está em andamento',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,versions,flow,errors,external}=await app(t);
+ versions.push({project_id:projectId,piece_id:newPiece,version:2,content:content('Post B fora do pedido')});
+ let release,entered,submitted;
+ const waiting=new Promise(resolve=>{entered=resolve;}),gate=new Promise(resolve=>{release=resolve;}),starting=new Promise(resolve=>{submitted=resolve;});
+ flow.chat=async body=>{
+  if(body.op!=='poll'){submitted();return{status:'running'};}
+  if(calls.some(call=>call.path==='/api/agent/image'))return{status:'completed',text:'Imagem preservada na origem.'};
+  entered();await gate;return consent('origin');
+ };
+ await openOriginal(page,origin);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha uma imagem para este post original.');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/Post B fora do pedido.*Versão 2/}).click();
+ await waiting;release();
+ const proposal=page.locator('.studio-image-consent');await proposal.waitFor();
+ assert.match(await proposal.innerText(),/Original preservado · versão 1/,'a proposta identifica a origem capturada, sem adotar a seleção feita durante a espera');
+ const confirm=page.getByRole('button',{name:'Confirmar geração de imagem',exact:true});
+ if(await confirm.isEnabled())await confirm.click();
+ await page.waitForLoadState('networkidle');
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
+ await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
+ const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,1);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
