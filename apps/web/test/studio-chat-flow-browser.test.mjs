@@ -158,3 +158,27 @@ test('editar o texto durante a codificação descarta o PNG anterior e mantém o
  assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isEnabled(),true);
  assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
+
+test('leitura antiga de versões não remove do histórico uma versão salva durante a espera',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,calls,errors}=await app(t);let release,entered,first=true;
+ const gate=new Promise(resolve=>{release=resolve;}),waiting=new Promise(resolve=>{entered=resolve;});
+ await page.route('**/api/pieces?*',async route=>{
+  if(route.request().method()!=='GET')return route.fallback();
+  if(first){first=false;const captured=structuredClone(versions);entered();await gate;return route.fulfill({headers:{'x-compor-old-read':'true'},json:{versions:captured}});}
+  return route.fulfill({json:{versions}});
+ });
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
+ await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
+ await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).click();
+ await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
+ await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ const saved=page.getByRole('button',{name:/Post criado durante a leitura anterior.*Versão 1/});await saved.waitFor();
+ const oldRead=page.waitForResponse(response=>response.headers()['x-compor-old-read']==='true');release();await oldRead;
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ assert.equal(await saved.count(),1,'a resposta anterior ao salvamento não substitui a versão que já foi confirmada');
+ await saved.click();assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post criado durante a leitura anterior');
+ assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1);assert.deepEqual(errors,[]);
+});
