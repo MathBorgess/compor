@@ -1,5 +1,7 @@
 # Compor
 
+**Desenvolvimento em 05/11/2026:** consulte a [arquitetura implementada](docs/architecture.md), o [contrato para agentes e contribuições](AGENTS.md), o [índice de ADRs](docs/adr/README.md) e os [gates de qualidade](docs/quality/gates.md). O app web já existe em Next.js/TypeScript; os relatos datados abaixo preservam etapas anteriores e não descrevem integralmente o estado atual.
+
 > **Gestão e documentação compartilhada — 24/10/2026:** a central do projeto passa a ser o [Confluence Compor](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/360627), com [onboarding](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/196637) e [testes e evidências](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/458753). O [Jira SCRUM](https://compor-mathai.atlassian.net/issues?jql=project%20%3D%20SCRUM%20ORDER%20BY%20key) acompanha tarefas, backlog e sprints. As fontes do Drive e os snapshots local e remoto foram preservados como histórico. Compor passa a ser construído em público e em comunidade, com contribuições selecionadas; essa direção não altera a visibilidade nem a licença do repositório. Consulte os [ponteiros e a precedência das fontes](docs/gestao-atlassian.md).
 
 Compor é uma proposta de espaço no navegador para explorar referências e alternativas, convergir em uma direção criativa e produzir um piloto com arte e legenda, preservando autoria, fatos e decisões. O primeiro recorte investiga responsáveis por cursos, mentorias e ebooks com uma tarefa real de comunicação e um obstáculo observável de criação.

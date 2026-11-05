@@ -1,0 +1,26 @@
+# Decisões de arquitetura
+
+Para entender o código atual, comece pelo [mapa da arquitetura](../architecture.md). Este índice preserva o estado de cada registro. `accepted` identifica uma decisão aceita no contexto do documento; não demonstra que tudo foi implementado ou continua vigente. `proposed` permanece proposta. `recorded` documenta a implementação observada, sem conceder uma aprovação histórica ausente.
+
+| ADR | Estado registrado | Leitura |
+| --- | --- | --- |
+| [0001](0001-contexto-local-e-colaboracao-github.md) | accepted | Contexto local e colaboração opcional pelo GitHub |
+| [0002](0002-organizacao-e-fluxo-individual.md) | accepted | Organização e operação individual da v0 |
+| [0003](0003-memoria-integral-da-organizacao.md) | accepted | Memória integral na proposta inicial |
+| [0004](0004-tres-perfis-de-teste.md) | accepted | Perfis de acesso para testes |
+| [0005](0005-observabilidade-centralizada-mlflow.md) | accepted | Observabilidade MLflow na direção anterior |
+| [0006](0006-feedback-e-evolucao-do-harness.md) | accepted | Feedback humano e evolução do harness |
+| [0007](0007-arquitetura-web-e-byok.md) | accepted | Direção web com BYOK e dados gerenciados |
+| [0008](0008-memoria-proativa-e-observabilidade.md) | accepted | Memória proativa e observabilidade autorizada |
+| [0009](0009-mcp-capacidades-compor.md) | accepted | MCP próprio para capacidades do Compor |
+| [0010](0010-motor-recomendacao-phoenix-e-mcp-dual.md) | accepted | Phoenix e adaptação MCP Dual |
+| [0011](0011-agents-api-e-mcp-remoto.md) | proposed | Proposta de Agents API gerenciada e MCP remoto |
+| [0012](0012-arte-integral-e-deliberacao-adaptativa.md) | accepted | Arte integral, conversa adaptativa e decisão humana |
+| [0013](0013-agile-deliberation-no-mcp.md) | Decisão descrita no corpo | Código e adaptação rastreável do Agile Deliberation |
+| [0014](0014-frontend-next-typescript.md) | accepted | Frontend Next.js em TypeScript estrito |
+| [0015](0015-backend-dados-e-autorizacao.md) | recorded | Backend, dados e autoridade por operação |
+| [0016](0016-agente-api-e-ferramentas.md) | recorded | Runtime gerenciado e ferramentas do agente |
+| [0017](0017-mcp-transportes-e-capacidades.md) | recorded | Fronteiras entre MCP remoto e stdio |
+| [0018](0018-gates-qualidade-e-performance.md) | accepted | Bloqueios automáticos, diagnósticos e revisão |
+
+Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

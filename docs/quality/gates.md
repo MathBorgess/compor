@@ -46,7 +46,7 @@ O script inicia um servidor de produção em uma porta local disponível e um pe
 
 Os limites de LCP e CLS usam os valores de referência publicados pelo Google. O limite de TBT usa a faixa mobile do Lighthouse. A mediana de laboratório não substitui o percentil 75 observado em usuários reais. [LCP](https://web.dev/articles/lcp), [CLS](https://web.dev/articles/cls), [TBT](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time).
 
-Os relatórios incluem acessibilidade e boas práticas para diagnóstico, sem impor uma nota agregada. Os artefatos `production-performance` e `maintainability` ficam disponíveis por cinco dias. Localmente, ficam em `quality-results/`, fora do Git.
+Os relatórios incluem acessibilidade e boas práticas para diagnóstico, sem impor uma nota agregada. Os artefatos `production-performance` e `maintainability` ficam disponíveis por cinco dias. Localmente, ficam em `quality-results/`, fora do Git. O job web também guarda `studio-screenshots` por cinco dias: são capturas desktop/mobile com dados sintéticos, para revisão visual, sem comparação automática com o Figma.
 
 ## Limites da cobertura
 

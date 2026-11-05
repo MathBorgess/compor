@@ -93,6 +93,15 @@ jobs:
           npx --no-install playwright-core install --with-deps chromium
           node --input-type=module -e "import {chromium} from 'playwright-core'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'BROWSER_EXECUTABLE_PATH=' + chromium.executablePath() + '\n');"
       - run: npm run quality:browser
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: always()
+        with:
+          name: studio-screenshots
+          path: |
+            /tmp/compor-entry-*.png
+            /tmp/compor-studio-visual-*.png
+          if-no-files-found: warn
+          retention-days: 5
 
   site:
     name: Public site build

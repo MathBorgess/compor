@@ -1,5 +1,7 @@
 # Arquitetura v0 — Compor
 
+**Leitura do código atual:** a [arquitetura implementada em 05/11/2026](architecture.md) identifica frontend, backend, agente, MCP, pastas e gates. Este documento preserva a direção aprovada em 27/10 e suas atualizações explícitas; hipóteses e tecnologias históricas não devem ser confundidas com o runtime atual.
+
 **Arquitetura v0 aprovada por Matheus em 27/10/2026.** A aprovação estabelece a direção arquitetural descrita aqui; não comprova a implementação da aplicação, das integrações e da infraestrutura, nem valida os resultados de produto. Hipóteses, escolhas candidatas e pontos explicitamente abertos permanecem sujeitos a validação.
 
 ## Diagrama e visão geral
