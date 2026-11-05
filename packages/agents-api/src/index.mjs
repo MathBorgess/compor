@@ -1,4 +1,4 @@
-import { recordAgentEvent, recordProviderStatus } from './telemetry.mjs';
+import { recordAgentEvent, recordProviderStatus, recordProviderClientError } from './telemetry.mjs';
 const MAX_REQUEST = 16 * 1024;
 const MAX_STREAM = 1024 * 1024;
 const endpoint = 'https://api.openai.com/v1/agents/sessions';
@@ -130,6 +130,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
         redirect: 'error',
       }); } catch (error) { recordAgentEvent('provider_create_failed'); throw error; }
       recordProviderStatus('provider_create_http',response.status);
+      if (response.status >= 400 && response.status < 500) await recordProviderClientError(response);
       if (response.status === 401 || response.status === 403) { agentAbort.abort(); return json({ error: 'openai_credentials_rejected' }, response.status); }
       if (response.status === 429) { agentAbort.abort(); return json({ error: 'openai_quota_or_rate_limit' }, 429); }
       if (!response.ok) { agentAbort.abort(); return json({ error: 'upstream_error' }, 502); }

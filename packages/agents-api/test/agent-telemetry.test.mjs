@@ -31,3 +31,41 @@ test('telemetria recusa texto arbitrário e limita status desconhecido a categor
  recordAgentEvent('SENSITIVE_OBJECTIVE');recordProviderStatus('SENSITIVE_PROVIDER_BODY',400);recordProviderStatus('provider_create_http',599);
  assert.deepEqual(events,['COMPOR_AGENT_EVENT provider_create_http_other']);
 }));
+
+test('classifica somente código, tipo e parâmetro reconhecidos sem registrar mensagem',async()=>capture(async events=>{
+ const handler=createProjectAgentHandler({...base,fetch:async()=>Response.json({error:{code:'unknown_parameter',type:'invalid_request_error',param:'spend_control',message:`SENSITIVE_OBJECTIVE ${key} synthetic-jwt`}}, {status:400})});
+ const result=await handler(request());
+ assert.equal(result.status,502);assert.deepEqual(await result.json(),{error:'result_unknown',retryAutomatically:false});
+ for(const event of ['provider_error_code_unknown_parameter','provider_error_type_invalid_request_error','provider_error_param_spend_control'])assert.ok(events.includes(`COMPOR_AGENT_EVENT ${event}`),event);
+ assert.doesNotMatch(events.join('\n'),/SENSITIVE|sk-private|synthetic-jwt/);
+}));
+
+test('dados desconhecidos, campos maliciosos ou corpo grande produzem somente other',async()=>{
+ for(const content of [
+  JSON.stringify({error:{code:`unknown_parameter ${key}`,type:'arbitrary',param:`spend_control.${key}`,message:'SENSITIVE'}}),
+  JSON.stringify({error:{code:'unknown_parameter',type:'invalid_request_error',param:'spend_control',message:'X'.repeat(5000)+'SENSITIVE'}}),
+  '{broken SENSITIVE',
+ ]) await capture(async events=>{
+  const handler=createProjectAgentHandler({...base,fetch:async()=>new Response(content,{status:400})});
+  const result=await handler(request());assert.equal(result.status,502);assert.deepEqual(await result.json(),{error:'result_unknown',retryAutomatically:false});
+  for(const suffix of ['code_other','type_other','param_other'])assert.ok(events.includes(`COMPOR_AGENT_EVENT provider_error_${suffix}`),suffix);
+  assert.doesNotMatch(events.join('\n'),/SENSITIVE|sk-private|unknown_parameter|spend_control|arbitrary/);
+ });
+});
+
+test('corpo de erro que não termina não retarda indefinidamente nem provoca repetição',async()=>capture(async events=>{
+ let sent=0;
+ const stalled=new ReadableStream({pull(){return new Promise(()=>{});}});
+ const handler=createProjectAgentHandler({...base,fetch:async()=>{sent++;return new Response(stalled,{status:400});}});
+ const result=await handler(request());assert.equal(result.status,502);assert.equal(sent,1);
+ assert.ok(events.includes('COMPOR_AGENT_EVENT provider_error_code_other'));
+}));
+
+test('credencial recusada e limitação preservam os retornos anteriores',async()=>{
+ for(const status of [401,403,429]) await capture(async events=>{
+  const handler=createProjectAgentHandler({...base,fetch:async()=>Response.json({error:{type:'invalid_request_error',message:'SENSITIVE'}},{status})});
+  const result=await handler(request());assert.equal(result.status,status);
+  assert.deepEqual(await result.json(),{error:status===429?'openai_quota_or_rate_limit':'openai_credentials_rejected'});
+  assert.doesNotMatch(events.join('\n'),/SENSITIVE/);
+ });
+});
