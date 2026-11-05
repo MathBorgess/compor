@@ -7,6 +7,14 @@ import {
 } from "../lib/studio-state.mjs";
 import { referenceImagesForRequest } from "../lib/studio-reference-images.mjs";
 
+const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
+const diagnosticCount=value=>Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
+function inspectionSummary(data){
+ const status=['completed','failed','running','action_required','consent_required','unknown'].includes(data?.status)?data.status:'unknown';
+ const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
+ return {status,usage:data?.usage?{input_tokens:diagnosticCount(data.usage.input_tokens),output_tokens:diagnosticCount(data.usage.output_tokens)}:null,technical:data?.itemTrace?{functionCalls:diagnosticCount(data.itemTrace.functionCalls),outputs:diagnosticCount(data.itemTrace.outputs),omittedItems:diagnosticCount(data.itemTrace.omittedItems),validSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===true).length,invalidSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===false).length,errorClasses:[...new Set(items.filter(item=>item?.type==='function_call_output').map(item=>['timeout','unavailable','other'].includes(item.errorClass)?item.errorClass:null).filter(Boolean))]}:null};
+}
+
 export default function StudioChat({
   state,
   getState,
@@ -24,25 +32,34 @@ export default function StudioChat({
     [notice, setNotice] = useState(""),
     [imageAction, setImageAction] = useState(null),
     [pending, setPending] = useState(null),
-    [usage, setUsage] = useState(null);
+    [usage, setUsage] = useState(null),
+    [lastCompleted,setLastCompleted]=useState(null),
+    [inspecting,setInspecting]=useState(false),
+    [inspection,setInspection]=useState(null);
   const mounted = useRef(true),
     previous = useRef(null),
     timer = useRef(null),
     request = useRef(null),
     actionCount = useRef(new Map()),
-    imageContext=useRef(null);
+    imageContext=useRef(null),
+    inspectionLock=useRef(false),
+    inspectionSequence=useRef(0);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
   useEffect(() => {
     mounted.current = true;
+    setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     try {
       const value = JSON.parse(sessionStorage.getItem(marker) ?? "null");
       if (value && typeof value.requestId === "string")
         setPending(value.requestId);
       previous.current = value?.previousAttemptKey ?? null;
+      setLastCompleted(uuid(value?.previousAttemptKey)?value.previousAttemptKey:null);
       imageContext.current=value?.imageContext??null;
     } catch {}
     return () => {
       mounted.current = false;
+      inspectionSequence.current++;
+      inspectionLock.current=false;
       clearTimeout(timer.current);
       request.current?.abort();
     };
@@ -108,6 +125,7 @@ export default function StudioChat({
         text: data.text ?? "Operação concluída.",
       });
       previous.current = requestId;
+      setLastCompleted(requestId);
       remember(null);
       setPending(null);
       setBusy(false);
@@ -195,9 +213,22 @@ export default function StudioChat({
       }
     }
   }
+  async function inspectLastCompleted(){
+    if(!mounted.current||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!hasApiKey)return;
+    inspectionLock.current=true;setInspecting(true);setInspection(null);
+    const serial=++inspectionSequence.current;
+    try{
+      const data=await api('/api/studio/chat',{op:'poll',projectId:state.projectId,requestId:lastCompleted});
+      if(mounted.current&&serial===inspectionSequence.current)setInspection(inspectionSummary(data));
+    }catch{
+      if(mounted.current&&serial===inspectionSequence.current)setInspection({status:'unavailable',usage:null,technical:null});
+    }finally{
+      if(serial===inspectionSequence.current){inspectionLock.current=false;if(mounted.current)setInspecting(false);}
+    }
+  }
   async function send(event) {
     event.preventDefault();
-    if (!message.trim() || !hasApiKey || busy || pending) return;
+    if (!message.trim() || !hasApiKey || busy || pending || inspectionLock.current) return;
     setNotice("");
     setBusy(true);
     const requestId = crypto.randomUUID();
@@ -419,6 +450,22 @@ export default function StudioChat({
             Consultar esta tentativa
           </button>
         )}
+        {!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
+          <button type="button" className="studio-button-secondary" disabled={!hasApiKey||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
+          {!hasApiKey&&<p>Conecte sua chave para consultar a solicitação anterior.</p>}
+          {inspection&&<div role="status">
+            <p>Estado da solicitação anterior: {{completed:'concluída',failed:'terminou com falha',running:'em andamento',action_required:'aguardando ação',consent_required:'aguardando confirmação',unknown:'não confirmado',unavailable:'consulta indisponível'}[inspection.status]}.</p>
+            <p>Esta consulta não executa ações nem inicia uma nova solicitação.</p>
+            {inspection.usage&&<p>Uso informado: {inspection.usage.input_tokens??'?'} tokens de entrada e {inspection.usage.output_tokens??'?'} de saída. Custo final desconhecido.</p>}
+            {inspection.technical&&<details><summary>Diagnóstico técnico</summary><dl>
+              <dt>Ferramentas registradas</dt><dd>{inspection.technical.functionCalls??'?'}</dd>
+              <dt>Resultados registrados</dt><dd>{inspection.technical.outputs??'?'}</dd>
+              <dt>Argumentos válidos na amostra</dt><dd>{inspection.technical.validSchemas}</dd>
+              <dt>Argumentos inválidos na amostra</dt><dd>{inspection.technical.invalidSchemas}</dd>
+              <dt>Itens fora da amostra</dt><dd>{inspection.technical.omittedItems??'?'}</dd>
+            </dl>{inspection.technical.errorClasses.map(code=><p key={code}>Ocorrência: {{timeout:'tempo de espera excedido',unavailable:'ferramenta indisponível',other:'falha sem classificação'}[code]}.</p>)}</details>}
+          </div>}
+        </div>}
       </div>
       <form className="studio-chat-composer" onSubmit={send}>
         <div className="studio-chat-context">
@@ -476,7 +523,7 @@ export default function StudioChat({
           </small>
           <button
             className="studio-button"
-            disabled={!message.trim() || !hasApiKey || busy || Boolean(pending)}
+            disabled={!message.trim() || !hasApiKey || busy || inspecting || Boolean(pending)}
           >
             {busy ? "Trabalhando…" : "Enviar →"}
           </button>
