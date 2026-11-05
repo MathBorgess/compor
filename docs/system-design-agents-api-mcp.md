@@ -2,6 +2,12 @@
 
 **Estado:** proposta atualizada em 02/11/2026 para revisão de Matheus. A arquitetura integral ainda não foi aprovada. Nada neste documento comprova implementação, deploy, acesso a API, compatibilidade ou qualidade criativa.
 
+**Atualização de escopo em 05/11/2026:** Matheus decidiu incluir no primeiro marco a experiência completa do [Figma do Compor](https://www.figma.com/design/KlGEjt2D3tQHsHb4RsDr6i/Compor-%C2%B7-90-%E2%80%94-Arquivo-original-e-revis%C3%A3o?node-id=22-1743), incluindo quadro criativo e conversa contínua. Essa decisão substitui a referência abaixo a uma interface apenas mínima; o histórico é preservado. Login Google, chave OpenAI apenas em memória, consentimento e acesso do Codex sem essa chave continuam válidos. O Figma contém um custo de exemplo, não uma estimativa real.
+
+A interface existente ainda não atende a esse novo recorte. Antes de implementá-lo, detalhar o vínculo entre conversa, projeto e peças, a retomada da sessão gerenciada, a persistência do quadro e os estados de execução, falha e custo. Não presumir que uma resposta textual ou uma sessão ociosa comprove a geração de imagem. A implementação, a autorização por conta e a jornada completa precisam de verificação própria.
+
+**Conversa e versões, decisões de 05/11/2026:** cada projeto tem uma conversa, contextualizada pela peça e versão abertas. Quando a pessoa pedir alterações a partir de uma versão anterior, o resultado cria uma nova versão e preserva a anterior. A autorização por conta continua obrigatória para ler ou alterar qualquer peça.
+
 ## Objetivo e recorte
 
 Entregar primeiro um fluxo criativo completo, online, para Matheus e equipe: a pessoa entra com Google, informa sua própria chave OpenAI para a sessão, descreve o objetivo, revisa uma direção, solicita a imagem e salva uma versão com imagem-base, texto editável e legenda. A pessoa pode compor e baixar o piloto em PNG e copiar a legenda, conforme a direção web anterior. App web e Codex Desktop acessam o mesmo projeto e peças. O Codex funciona sem a chave informada na sessão web.
