@@ -6,6 +6,7 @@ const commands = [
   ['compor_contexto', 'Consulta o projeto, a peça e a versão abertas e informa quais alterações ainda são locais.', {}, false, true],
   ['compor_editar_briefing', 'Atualiza um campo do briefing local e mostra a alteração na interface.', { field: { enum: ['offer', 'audience', 'action', 'direction'] }, value: string(4000) }, false],
   ['compor_editar_persona', 'Atualiza o rascunho local da persona compradora. Não transforma hipóteses em fatos.', { field: { enum: ['audience', 'situation', 'need', 'culturalReferences'] }, value: string(4000) }, false],
+  ['compor_registrar_afirmacao_persona', 'Registra uma afirmação local da persona com sua procedência declarada. public_source exige source com URL HTTPS consultada; a fonte não autentica a afirmação.', { text: string(2000), provenance: {enum:['hypothesis','creator_report','buyer_report','public_source']}, source: string(2000) }, false],
   ['compor_novo_post', 'Inicia um post em rascunho no projeto. O rascunho anterior é preservado no navegador.', {}, false],
   ['compor_editar_peca', 'Edita um campo do post em rascunho na aba.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, field: { enum: ['headline', 'price', 'date', 'caption'] }, value: string(4000) }, false],
   ['compor_abrir_versao', 'Abre uma versão existente como base sem sobrescrever o rascunho anterior.', { pieceId: string(36), version: { type: 'integer', minimum: 1 } }, false],
@@ -15,7 +16,7 @@ const commands = [
 ];
 
 export const STUDIO_TOOLS = Object.freeze(commands.map(([name, description, properties, consequential, readOnly]) => Object.freeze({
-  name, description, inputSchema: fields({ ...scopeProperties, ...properties }, readOnly ? ['projectId','requestId'] : undefined),
+  name, description, inputSchema: fields({ ...scopeProperties, ...properties }, readOnly ? ['projectId','requestId'] : name==='compor_registrar_afirmacao_persona'?['projectId','revision','requestId','text','provenance']:undefined),
   annotations: { readOnlyHint: Boolean(readOnly), consequentialHint: Boolean(consequential) },
 })));
 
@@ -33,6 +34,12 @@ function parse(tool, value) {
   if (!uuid(value.projectId) || !uuid(value.requestId) || ('pieceId' in value && !uuid(value.pieceId))) throw Error('invalid_action');
   if ('title' in value && !value.title.trim()) throw Error('invalid_action');
   if ('prompt' in value && !value.prompt.trim()) throw Error('invalid_action');
+  if(tool.name==='compor_registrar_afirmacao_persona'){
+    if(!value.text.trim())throw Error('invalid_action');
+    if(value.provenance==='public_source'){
+      try{const source=new URL(value.source);if(source.protocol!=='https:'||source.username||source.password||/\s/.test(value.source))throw Error();}catch{throw Error('invalid_action');}
+    }
+  }
   return value;
 }
 

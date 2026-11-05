@@ -11,3 +11,9 @@ test('contexto permite descobrir revisão; mutações exigem revisão e campos p
  assert.equal(AGENT_STUDIO_TOOLS.filter(t=>t.name==='generate_image').length,1);
  assert.equal(AGENT_STUDIO_TOOLS.some(t=>t.name==='compor_propor_imagem'),false);
 });
+test('afirmações de persona preservam procedência e exigem HTTPS para fonte pública',()=>{
+ const value={...scope,revision:1,text:'Talvez prefiram exercícios guiados.',provenance:'hypothesis'};
+ assert.deepEqual(parseStudioAction('compor_registrar_afirmacao_persona',value),value);
+ for(const source of [undefined,'javascript:alert(1)','http://site.test','https://user:secret@site.test'])assert.throws(()=>parseStudioAction('compor_registrar_afirmacao_persona',{...value,provenance:'public_source',source}));
+ assert.equal(parseStudioAction('compor_registrar_afirmacao_persona',{...value,provenance:'public_source',source:'https://site.test/page'}).source,'https://site.test/page');
+});
