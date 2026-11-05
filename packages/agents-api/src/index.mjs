@@ -99,9 +99,8 @@ async function readAgentEvents(stream, stopForAction, onSession) {
   }
 }
 
-export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false, mcpTool, spendLimitCents = 25, onSession } = {}) {
+export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.fetch, enableImageTool = false, mcpTool, onSession } = {}) {
   if (typeof authenticate !== 'function') throw new TypeError('authenticate is required');
-  if (!Number.isInteger(spendLimitCents) || spendLimitCents < 1 || spendLimitCents > 500) throw new TypeError('invalid session spend limit');
   return async function handle(request) {
     if (request.method !== 'POST') return json({ error: 'method_not_allowed' }, 405);
     try {
@@ -125,7 +124,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       try { response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela solicitar a geração de uma imagem, use a função generate_image com uma descrição apropriada; a geração depende de confirmação explícita. Não afirme ter gerado uma imagem antes do resultado da função.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, spend_control: { limit: spendLimitCents }, stream: true }),
+        body: JSON.stringify({ agent: { model: 'gpt-6-astra', instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela solicitar a geração de uma imagem, use a função generate_image com uma descrição apropriada; a geração depende de confirmação explícita. Não afirme ter gerado uma imagem antes do resultado da função.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Solicita uma imagem, sujeita a consentimento explícito.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
         signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
       }); } catch (error) { recordAgentEvent('provider_create_failed'); throw error; }

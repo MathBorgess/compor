@@ -19,15 +19,14 @@ test('MCP delegado exige medição durável antes do envio pago', async()=>{
  assert.equal((await handler(request())).status,200);assert.deepEqual(steps,['usage-start','delegate','provider','usage-finish','attempt-finish']);assert.deepEqual(recordedUsage,{input_tokens:100,output_tokens:50,total_tokens:150});
 });
 
-test('project handler forwards the server spend limit and rejects invalid configuration before any attempt', async () => {
+test('project handler mantém a requisição compatível sem o campo de limite rejeitado', async () => {
  let sent;
- const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,spendLimitCents:7,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,
+ const handler=createProjectAgentHandler({appOrigin:'https://compor.test',bindings,resolveActor:async()=>({userId:'alice',token:'fake-token'}),ownsProject:async()=>true,
   attempts:{start:async()=>({id:attempt,state:'started',isNew:true}),finish:async()=>{}},
   fetch:async(_url,options)=>{if(options.method==='GET')return Response.json({id:'sess_123',status:'idle',required_actions:[]});sent=JSON.parse(options.body);return new Response('data: {"type":"agent.session.created","session":{"id":"sess_123"}}\n\ndata: {"type":"agent.session.turn.output_text.done","turn_id":"turn_root","text":"Ideia"}\n\ndata: {"type":"agent.session.turn.completed","turn":{"id":"turn_root","subagent_id":null}}\n\n',{status:201});}
  });
  assert.equal((await handler(request())).status,200);
- assert.deepEqual(sent.spend_control,{limit:7});
- assert.throws(()=>createProjectAgentHandler({spendLimitCents:501}),TypeError);
+ assert.equal('spend_control' in sent,false);
 });
 
 test('conexão opcional envia apenas credencial MCP opaca à sessão e não retorna segredo', async () => {

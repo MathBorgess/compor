@@ -23,27 +23,25 @@ test('an authenticated creator receives the completed creative response', async 
   assert.deepEqual(payload.environment, { type: 'none' });
   assert.equal(payload.input, 'Promover café');
   assert.equal(payload.stream, true);
-  assert.deepEqual(payload.spend_control, { limit: 25 });
+  assert.equal('spend_control' in payload, false);
   assert.equal(upstream.options.body.includes(key), false);
 });
 
-test('uses only a server-supplied bounded spend limit for a new agent session', async () => {
+test('não envia campo de limite incompatível nem aceita limite vindo do cliente', async () => {
   let payload;
   const events = [
     { type: 'agent.session.created', session: { id: 'sess_123' } },
     { type: 'agent.session.turn.output_text.done', turn_id: 'turn_root', text: 'Olá' },
     { type: 'agent.session.turn.completed', turn: { id: 'turn_root', subagent_id: null } },
   ].map(event => `data: ${JSON.stringify(event)}\n\n`).join('');
-  const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), spendLimitCents: 50, fetch: async (_url, options) => {
+  const handler = createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), fetch: async (_url, options) => {
     payload = JSON.parse(options.body);
     return new Response(events, { status: 201 });
   }});
   const result = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: 'sk-test-secret-123456789012345', objective: 'Teste', spend_control: { limit: 99999 } }) }));
   assert.equal(result.status, 200);
-  assert.deepEqual(payload.spend_control, { limit: 50 });
-  for (const value of [0, -1, 1.5, NaN, Infinity, 501, '25', null]) {
-    assert.throws(() => createAgentHandler({ authenticate: async () => ({ userId: 'creator' }), spendLimitCents: value }), TypeError);
-  }
+  assert.equal('spend_control' in payload, false);
+  assert.equal(payload.agent.model,'gpt-6-astra');
 });
 
 test('a rejected OpenAI credential returns a useful error without exposing the upstream body', async () => {
