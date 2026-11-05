@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createConfiguredAgentMcpScope } from '../lib/agent-mcp-scope.mjs';
+import { createConfiguredAgentMcpScope } from '../lib/agent-mcp-scope.ts';
 
 test('MCP delegado exige flag e chave canônica própria antes de aceitar requisições', () => {
  const config={service:'https://project.supabase.co',app:'https://compor.vercel.app',key:'sb_publishable_test'};

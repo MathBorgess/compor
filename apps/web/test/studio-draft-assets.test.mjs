@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
-import {readFile} from 'node:fs/promises';
+import {browserModuleSource} from './browser-module-source.mjs';
 import {createServer} from 'node:http';
 import {chromium} from 'playwright-core';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 async function browser(t){
- const server=createServer(async(request,response)=>{const path=request.url;if(['/studio-state.mjs','/studio-storage.mjs','/studio-image.mjs'].includes(path)){response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${path}`,import.meta.url)));}else response.end('<!doctype html><title>Local draft asset test</title>');});
+ const server=createServer(async(request,response)=>{const path=request.url;if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(path)){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${path}`,import.meta.url)));}else response.end('<!doctype html><title>Local draft asset test</title>');});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
  const instance=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>instance.close());const page=await instance.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);return page;
 }
@@ -15,7 +15,7 @@ async function browser(t){
 test('upgrade v1 para v2 preserva rascunhos e referências; bases e prévias ficam segregadas e retomáveis',{skip:!existsSync(browserPath)},async t=>{
  const page=await browser(t);
  const result=await page.evaluate(async()=>{
-  const {createStudioState,createPost,updateBrief}=await import('/studio-state.mjs'),{createStudioStorage}=await import('/studio-storage.mjs');
+  const {createStudioState,createPost,updateBrief}=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts');
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const scope={userId:id(1),projectId:id(2)},address={pieceId:id(3),baseVersion:0,kind:'base'};
   const canvas=document.createElement('canvas');canvas.width=128;canvas.height=160;
@@ -45,14 +45,14 @@ test('upgrade v1 para v2 preserva rascunhos e referências; bases e prévias fic
  });
  for(const [name,value]of Object.entries(result))assert.equal(value,true,name);
  await page.reload();
- const restored=await page.evaluate(async()=>{const {createStudioStorage}=await import('/studio-storage.mjs');const repo=createStudioStorage({name:'compor-studio-upgrade'}),value=await repo.getDraftAsset({userId:'00000000-0000-4000-8000-000000000001',projectId:'00000000-0000-4000-8000-000000000002'},{pieceId:'00000000-0000-4000-8000-000000000003',baseVersion:0,kind:'base'});repo.close();return{mime:value?.file.type,width:value?.metadata.width};});
+ const restored=await page.evaluate(async()=>{const {createStudioStorage}=await import('/studio-storage.ts');const repo=createStudioStorage({name:'compor-studio-upgrade'}),value=await repo.getDraftAsset({userId:'00000000-0000-4000-8000-000000000001',projectId:'00000000-0000-4000-8000-000000000002'},{pieceId:'00000000-0000-4000-8000-000000000003',baseVersion:0,kind:'base'});repo.close();return{mime:value?.file.type,width:value?.metadata.width};});
  assert.deepEqual(restored,{mime:'image/jpeg',width:128});
 });
 
 test('arquivos são validados antes do decoder e quota global combina referências e assets de projetos diferentes',{skip:!existsSync(browserPath),timeout:30000},async t=>{
  const page=await browser(t);
  const result=await page.evaluate(async()=>{
-  const {createStudioStorage}=await import('/studio-storage.mjs');const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+  const {createStudioStorage}=await import('/studio-storage.ts');const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   let decoded=0;
   const checked=createStudioStorage({name:'compor-studio-header',decodeImage:async()=>{decoded++;throw Error('must not decode');}});
   const forged=new Uint8Array(24),view=new DataView(forged.buffer);forged.set([137,80,78,71,13,10,26,10]);view.setUint32(8,13);forged.set([73,72,68,82],12);view.setUint32(16,20000);view.setUint32(20,20000);
@@ -76,7 +76,7 @@ test('arquivos são validados antes do decoder e quota global combina referênci
 test('limite global de quantidade recusa o 501º blob sem descartar arquivos anteriores',{skip:!existsSync(browserPath)},async t=>{
  const page=await browser(t);
  const result=await page.evaluate(async()=>{
-  const {createStudioStorage}=await import('/studio-storage.mjs'),id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+  const {createStudioStorage}=await import('/studio-storage.ts'),id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
   const scope={userId:id(1),projectId:id(2)},address={pieceId:id(3),baseVersion:0,kind:'base'},name='compor-studio-count';
   const repo=createStudioStorage({name});await repo.putDraftAsset({...scope,...address,file});repo.close();

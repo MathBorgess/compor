@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createPieceRoutes } from '../lib/piece-route.mjs';
+import { createPieceRoutes } from '../lib/piece-route.ts';
 const projectId = '11111111-1111-4111-8111-111111111111';
 const pieceId = '22222222-2222-4222-8222-222222222222';
 const userId = '33333333-3333-4333-8333-333333333333';
@@ -26,7 +26,7 @@ test('não lê nem grava projeto de outra pessoa', async () => {
 });
 
 test('lista versões com metadata pelo RPC autorizado e rejeita projeto divergente', async () => {
-  const { createProjectPieceStore } = await import('../lib/piece-store.mjs');
+  const { createProjectPieceStore } = await import('../lib/piece-store.ts');
   let upstream;
   const row = { project_id: projectId, piece_id: pieceId, version: 1, content, created_at: '2026-11-03T00:00:00Z', metadata: {baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} };
   const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => { upstream = { url, options }; return Response.json([row]); } });

@@ -26,14 +26,14 @@ async function app(t){
  const page=await context.newPage(),errors=[],external=[],calls=[];
  page.on('pageerror',error=>errors.push(error.message));page.on('console',entry=>{if(entry.type()==='error')errors.push(entry.text());});
  const session={state:'connected',userId:alice,hold:null};
- const versions=[{piece_id:existingPiece,version:1,content:content('Original antigo')},{piece_id:existingPiece,version:2,content:content('Atual existente')}];
+ const versions=[{project_id:projectId,piece_id:existingPiece,version:1,content:content('Original antigo')},{project_id:projectId,piece_id:existingPiece,version:2,content:content('Atual existente')}];
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session'){if(session.hold)await session.hold;return route.fulfill({status:session.state==='unavailable'?503:200,json:{state:session.state,userId:session.userId}});}
   if(url.pathname==='/api/projects')return route.fulfill({json:{projects:[{id:projectId,title:'Projeto sintético'}]}});
   if(url.pathname==='/api/pieces'){
    if(request.method()==='GET')return route.fulfill({json:{versions}});
-   const body=request.postDataJSON();calls.push({path:url.pathname,body});const version={piece_id:body.pieceId,version:body.expectedVersion+1,content:body.content};versions.push(version);return route.fulfill({json:{status:'saved',version}});
+   const body=request.postDataJSON();calls.push({path:url.pathname,body});const version={project_id:projectId,piece_id:body.pieceId,version:body.expectedVersion+1,content:body.content};versions.push(version);return route.fulfill({json:{status:'saved',version}});
   }
   if(url.pathname==='/api/studio/chat'){
    const body=request.postDataJSON();calls.push({path:url.pathname,body});

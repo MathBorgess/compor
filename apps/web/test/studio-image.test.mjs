@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {studioImageDimensions} from '../lib/studio-image.mjs';
+import {studioImageDimensions} from '../lib/studio-image.ts';
 function png(width,height){const bytes=new Uint8Array(33);bytes.set([137,80,78,71,13,10,26,10,0,0,0,13,73,72,68,82]);const view=new DataView(bytes.buffer);view.setUint32(16,width);view.setUint32(20,height);return new Blob([bytes],{type:'image/png'});}
 test('dimensões são verificadas antes de decodificar pixels',async()=>{
  assert.deepEqual(await studioImageDimensions(png(1080,1350)),{width:1080,height:1350});

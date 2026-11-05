@@ -17,7 +17,7 @@ test('entrada Studio oferece Google, preserva rascunho anterior e permite recupe
   const origin = `http://127.0.0.1:${port}`;
   const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], {
     stdio: 'ignore',
-    env: { ...process.env, COMPOR_STUDIO_WEB_ENABLED: 'true', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin },
+    env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin },
   });
   t.after(async () => {
     if (child.exitCode === null && child.signalCode === null) {
@@ -102,6 +102,10 @@ test('entrada Studio oferece Google, preserva rascunho anterior e permite recupe
   await page.getByRole('button', { name: 'Tentar novamente', exact: true }).click();
   await page.locator('.entry-google:not([disabled])').waitFor();
   assert.equal(await page.locator('.entry-draft').count(), 0);
+  for (const width of [1440, 390]) {
+    await page.setViewportSize({ width, height: 844 });
+    await page.screenshot({ path: `/tmp/compor-entry-${width}.png`, fullPage: true });
+  }
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);
 });

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseDirection, proposeCriterion, decideCriterion, directionForAgent } from '../lib/studio-direction.mjs';
-import { createStudioState, parseStudioState, createPost, addCreativeCriterion, recordCreativeDecision, prepareAdjustment } from '../lib/studio-state.mjs';
+import { parseDirection, proposeCriterion, decideCriterion, directionForAgent } from '../lib/studio-direction.ts';
+import { createStudioState, parseStudioState, createPost, addCreativeCriterion, recordCreativeDecision, prepareAdjustment } from '../lib/studio-state.ts';
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 const criterion = (viewpoint = 'creator', dimension = 'visual') => ({ id: id(10), viewpoint, dimension, statement: 'Proximidade sem promessa de resultado', example: { description: 'Mostrar uma situação concreta de aprendizado', referenceId: null }, counterexample: { description: 'Prometer transformação garantida', referenceId: null }, provenance: 'hypothesis', source: '', tension: 'O criador prefere impacto; a persona pode precisar de contexto.' });

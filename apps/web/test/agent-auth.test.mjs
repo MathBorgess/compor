@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { resolveSupabaseActor, ownsSupabaseProject } from '../lib/agent-auth.mjs';
+import { resolveSupabaseActor, ownsSupabaseProject } from '../lib/agent-auth.ts';
 const user = '63de811f-c75c-4571-968c-38a8b3f0accd';
 const project = '0a3be452-5152-41d1-a3e8-fc2be56d67e1';
 
@@ -26,7 +26,7 @@ test('busca projeto sob o token da pessoa e exige id e proprietário corresponde
 });
 
 test('verifica a versão exata sob token do dono e rejeita dados de outra conta',async()=>{
- const {ownsSupabaseVersion}=await import('../lib/agent-auth.mjs');let captured;
+ const {ownsSupabaseVersion}=await import('../lib/agent-auth.ts');let captured;
  const piece='33333333-3333-4333-8333-333333333333';
  const args={config:{service:'https://example.supabase.co',key:'sb_publishable_test'},actor:{userId:user,token:'fake-token'},projectId:project,pieceId:piece,version:1,fetch:async(url,options)=>{captured={url,options};return Response.json([{project_id:project,piece_id:piece,version:1,projects:{owner_id:user}}]);}};
  assert.equal(await ownsSupabaseVersion(args),true);assert.equal(captured.options.headers.authorization,'Bearer fake-token');assert.equal(captured.url.searchParams.get('version'),'eq.1');

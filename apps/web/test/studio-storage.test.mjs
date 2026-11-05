@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
-import {readFile} from 'node:fs/promises';
+import {browserModuleSource} from './browser-module-source.mjs';
 import {createServer} from 'node:http';
 import {chromium} from 'playwright-core';
-import {createStudioStorage} from '../lib/studio-storage.mjs';
+import {createStudioStorage} from '../lib/studio-storage.ts';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('ausência de armazenamento é explícita e nenhum erro expõe o conteúdo',async()=>{
@@ -16,20 +16,20 @@ test('ausência de armazenamento é explícita e nenhum erro expõe o conteúdo'
 test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito e falha atomicamente', {skip:!existsSync(browserPath)},async t=>{
  const server=createServer(async(request,response)=>{
   const name=request.url?.split('?')[0];
-  if(['/studio-state.mjs','/studio-storage.mjs','/studio-image.mjs'].includes(name)){
-   response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${name}`,import.meta.url)));
+  if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(name)){
+   response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));
   }else{response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>Teste local de armazenamento</title>');}
  });
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const evidence=await page.evaluate(async()=>{
-  const domain=await import('/studio-state.mjs'),{createStudioStorage}=await import('/studio-storage.mjs');
+  const domain=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts');
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const scope={userId:id(1),projectId:id(2)},other={userId:id(3),projectId:id(2)},anotherProject={userId:id(1),projectId:id(4)};
   const repo=createStudioStorage(),second=createStudioStorage();
   const result={};
-  const expectError=async(promise,code)=>{try{await promise;throw Error('expected failure');}catch(error){if(error.code!==code)throw Error(`unexpected category ${error.code}`);return true;}};
+  const expectError=async(promise,code)=>{try{await promise;throw Error('expected failure');}catch(error){if(error.code!==code)throw Error(`unexpected category ${error.code}`,{cause:error});return true;}};
   let state=domain.createStudioState(scope);await repo.save(state,{expectedRevision:null});
   const candidateA=domain.updateBrief(state,{offer:'Oferta A'}),candidateB=domain.updateBrief(state,{offer:'Oferta B'});
   const races=await Promise.allSettled([repo.save(candidateA,{expectedRevision:0}),second.save(candidateB,{expectedRevision:0})]);
@@ -60,6 +60,9 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.oversized=await expectError(repo.putReference({...scope,id:id(12),file:new File([new Uint8Array(8*1024*1024+1)],'large.png',{type:'image/png'})}),'studio_reference_invalid');
   state=domain.addReference(state,meta);await repo.save(state,{expectedRevision:state.revision-1});
   result.inUse=await expectError(repo.removeReference(scope,id(10)),'studio_reference_in_use');
+  state=domain.addCreativeCriterion(state,{id:id(20),viewpoint:'creator',dimension:'visual',statement:'Contraste suave',example:{description:'Fundo claro com azul',referenceId:id(10)},counterexample:{description:'Neon de alto contraste',referenceId:null},provenance:'creator_report',source:'',tension:''});await repo.save(state,{expectedRevision:state.revision-1});
+  state=domain.removeReference(state,id(10));await repo.save(state,{expectedRevision:state.revision-1});
+  result.criterionPreserved=await expectError(repo.removeReference(scope,id(10)),'studio_reference_in_use') && (await repo.getReference(scope,id(10))).file.size===png.size;
   await repo.removeReference(scope,id(11));result.removed=await repo.getReference(scope,id(11))===null;
   repo.close();second.close();
   const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
@@ -71,12 +74,12 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
 });
 
 test('budget de referências é aplicado antes de gravação e preserva o último estado legível', {skip:!existsSync(browserPath)},async t=>{
- const server=createServer(async(request,response)=>{const name=request.url;if(['/studio-state.mjs','/studio-storage.mjs','/studio-image.mjs'].includes(name)){response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${name}`,import.meta.url)));}else response.end('<!doctype html>');});
+ const server=createServer(async(request,response)=>{const name=request.url;if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(name)){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));}else response.end('<!doctype html>');});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const result=await page.evaluate(async()=>{
-  const {createStudioStorage}=await import('/studio-storage.mjs');
+  const {createStudioStorage}=await import('/studio-storage.ts');
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const scope={userId:id(1),projectId:id(2)},repo=createStudioStorage({name:'compor-studio-budget'});
   const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));

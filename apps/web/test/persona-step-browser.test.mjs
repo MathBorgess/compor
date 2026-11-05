@@ -15,11 +15,13 @@ test('etapa da pessoa compradora permite lacunas e preserva informações com fo
   const fixture = await mkdtemp(resolve(tmpdir(), 'compor-persona-ui-'));
   t.after(() => rm(fixture, { recursive: true, force: true }));
   await mkdir(resolve(fixture, 'app'));
+  await mkdir(resolve(fixture, 'lib'));
   await symlink(resolve('node_modules'), resolve(fixture, 'node_modules'), 'dir');
   await writeFile(resolve(fixture, 'package.json'), JSON.stringify({ name: 'compor-persona-test', private: true, type: 'module' }));
   await writeFile(resolve(fixture, 'next.config.mjs'), 'export default { turbopack: { root: import.meta.dirname } };');
   await writeFile(resolve(fixture, 'app/layout.jsx'), 'export default function Layout({children}) { return <html lang="pt-BR"><body>{children}</body></html>; }');
-  await writeFile(resolve(fixture, 'app/persona-step.jsx'), await readFile(new URL('../app/persona-step.jsx', import.meta.url)));
+  await writeFile(resolve(fixture, 'app/persona-step.tsx'), await readFile(new URL('../app/persona-step.tsx', import.meta.url)));
+  await writeFile(resolve(fixture, 'lib/studio-domain.ts'), await readFile(new URL('../lib/studio-domain.ts', import.meta.url)));
   await writeFile(resolve(fixture, 'app/page.jsx'), `"use client";
 import {useState} from 'react';
 import PersonaStep from './persona-step';
@@ -35,8 +37,9 @@ export default function TestPage() {
   const origin = `http://127.0.0.1:${port}`;
   let startup = '';
   const child = spawn(process.execPath, [resolve('node_modules/next/dist/bin/next'), 'dev', fixture, '--webpack', '-p', String(port), '-H', '127.0.0.1'], { stdio: ['ignore', 'pipe', 'pipe'], env: { PATH: process.env.PATH, NEXT_TELEMETRY_DISABLED: '1' } });
-  child.stdout.on('data', chunk => { startup = (startup + chunk).slice(-5000); });
-  child.stderr.on('data', chunk => { startup = (startup + chunk).slice(-5000); });
+  const recordStartup = chunk => { const output = startup + chunk; startup = output.length > 5000 ? output.slice(0, 4000) + output.slice(-1000) : output; };
+  child.stdout.on('data', recordStartup);
+  child.stderr.on('data', recordStartup);
   t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
   const deadline = Date.now() + 30000;
   for (;;) {

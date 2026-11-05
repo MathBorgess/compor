@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createProjectPieceStore } from '../lib/piece-store.mjs';
-import { createWebProjectStore } from '../lib/project-store.mjs';
-import { createProjectRoutes } from '../lib/project-route.mjs';
+import { createProjectPieceStore } from '../lib/piece-store.ts';
+import { createWebProjectStore } from '../lib/project-store.ts';
+import { createProjectRoutes } from '../lib/project-route.ts';
 
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',pieceId='33333333-3333-4333-8333-333333333333';
 const context={actor:{userId},token:'token-user'},content={headline:'Peça',price:'',date:'',caption:'Legenda',captionOrigin:'user'};
@@ -46,7 +46,7 @@ test('normaliza timestamps reais do PostgREST na listagem, aprovação e salvame
  const listed=(await store.listProject(context,projectId))[0];assert.equal(listed.metadata.approval.at,canonical);
  assert.equal((await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0})).version.metadata.approval.at,canonical);
  assert.equal((await store.save(context,{projectId,pieceId,baseVersion:1,expectedVersion:2,content})).version.metadata.approval.at,canonical);
- const {createStudioState,selectVersion,approveDraft}=await import('../lib/studio-state.mjs');
+ const {createStudioState,selectVersion,approveDraft}=await import('../lib/studio-state.ts');
  let state=selectVersion(createStudioState({userId,projectId}),{pieceId,version:3,latestVersion:3,content,approval:listed.metadata.approval});
  state=approveDraft(state,{at:canonical,eventId:'44444444-4444-4444-8444-444444444444'});assert.equal(state.drafts[0].approval.at,canonical);
 });

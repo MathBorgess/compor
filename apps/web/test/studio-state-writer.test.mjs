@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createStudioStateWriter } from '../lib/studio-state-writer.mjs';
+import { createStudioStateWriter } from '../lib/studio-state-writer.ts';
 
 const ticks = async () => { for (let i = 0; i < 12; i++) await Promise.resolve(); };
 function controlledRepository() {

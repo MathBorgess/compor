@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {fetchPrivateImage} from '../lib/private-image-fetch.mjs';
+import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
 
 const source=Buffer.alloc(5*1024*1024+99,7),digest=createHash('sha256').update(source).digest('hex');
 const query=new URLSearchParams({projectId:'project',pieceId:'piece',version:'1',assetId:'asset'});

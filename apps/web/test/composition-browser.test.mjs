@@ -1,13 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
+import { browserModuleSource } from './browser-module-source.mjs';
 import { chromium } from 'playwright-core';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
 test('preserva os bytes da arte integral, sem renderizar campos sobre o PNG', { skip: !existsSync(browserPath) }, async t => {
-  const source = await readFile(new URL('../lib/compose-png.mjs', import.meta.url), 'utf8');
+  const source = await browserModuleSource(new URL('../lib/compose-png.ts', import.meta.url));
   const browser = await chromium.launch({ executablePath: browserPath, headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage();
@@ -35,7 +35,7 @@ test('preserva os bytes da arte integral, sem renderizar campos sobre o PNG', { 
 });
 
 test('recusa entrada inválida ou excessiva antes da decodificação, sem chamadas externas', { skip: !existsSync(browserPath) }, async t => {
-  const source = await readFile(new URL('../lib/compose-png.mjs', import.meta.url), 'utf8');
+  const source = await browserModuleSource(new URL('../lib/compose-png.ts', import.meta.url));
   const browser = await chromium.launch({ executablePath: browserPath, headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage();
@@ -69,7 +69,7 @@ test('recusa entrada inválida ou excessiva antes da decodificação, sem chamad
 });
 
 test('não executa duas decodificações ao mesmo tempo na mesma aba', { skip: !existsSync(browserPath) }, async t => {
-  const source = await readFile(new URL('../lib/compose-png.mjs', import.meta.url), 'utf8');
+  const source = await browserModuleSource(new URL('../lib/compose-png.ts', import.meta.url));
   const browser = await chromium.launch({ executablePath: browserPath, headless: true });
   t.after(() => browser.close());
   const page = await browser.newPage();

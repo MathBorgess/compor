@@ -7,7 +7,7 @@ import { createServer as httpsServer } from 'node:https';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { fetchPrivateImage } from '../lib/private-image-fetch.mjs';
+import { fetchPrivateImage } from '../lib/private-image-fetch.ts';
 
 test('rota de imagens permanece fechada sem habilitação explícita', async t => {
   const probe=createServer();await new Promise(resolve=>probe.listen(0,'127.0.0.1',resolve));const port=probe.address().port;await new Promise(resolve=>probe.close(resolve));

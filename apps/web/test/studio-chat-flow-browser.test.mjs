@@ -226,3 +226,20 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  await page.getByRole('tab',{name:'Histórico',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 2/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'reabrir versões e recarregar não regenera a imagem');assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
+
+test('critério proposto mostra contraste e tensão, e só o criador registra uma decisão persistida',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,errors}=await app(t);await openOriginal(page,origin,{key:false});
+ await page.waitForFunction(()=>typeof window.__studioNative?.compor_propor_criterio?.execute==='function');
+ const state=await stored(page),args={projectId,requestId:id(170),revision:state.revision,viewpoint:'recipient',dimension:'message',statement:'Convidativo sem pressionar',example:'Conheça a oficina e veja se combina com você.',counterexample:'Compre agora ou fique para trás.',exampleReferenceId:'',counterexampleReferenceId:'',provenance:'hypothesis',source:'',tension:'O criador prefere urgência; a persona pode precisar de contexto.'};
+ const result=await page.evaluate(args=>window.__studioNative.compor_propor_criterio.execute(args),args);assert.equal(result.status,'completed');
+ await page.getByRole('heading',{name:'Uma direção com significado',exact:true}).waitFor();
+ await page.getByText(args.example,{exact:true}).waitFor();await page.getByText(args.counterexample,{exact:true}).waitFor();
+ assert.match(await page.locator('.direction-tension').innerText(),/O criador prefere urgência/);
+ const proposed=await eventually(()=>stored(page),value=>value?.direction.criteria.length===1);assert.equal(proposed.direction.decisions.length,0);assert.equal(proposed.direction.criteria[0].provenance,'hypothesis');
+ await page.getByRole('button',{name:'Usar este critério',exact:true}).click();
+ const chosen=await eventually(()=>stored(page),value=>value?.direction.decisions.length===1);assert.equal(chosen.direction.decisions[0].choice,'accept');assert.equal(chosen.direction.criteria[0].provenance,'hypothesis','decisão criativa não inventa evidência de público');
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('tab',{name:'Direção',exact:true}).click();
+ await page.getByRole('button',{name:'Usar este critério',exact:true,pressed:true}).waitFor();
+ await page.getByRole('button',{name:'Reabrir decisão',exact:true}).click();
+ const reopened=await eventually(()=>stored(page),value=>value?.direction.decisions.length===2);assert.deepEqual(reopened.direction.decisions.map(decision=>decision.choice),['accept','reopen']);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
+});

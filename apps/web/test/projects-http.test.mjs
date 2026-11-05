@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createSupabaseProjectStore } from '@compor/remote-mcp';
-import { createProjectRoutes } from '../lib/project-route.mjs';
+import { createProjectRoutes } from '../lib/project-route.ts';
 
 const userId = '63de811f-c75c-4571-968c-38a8b3f0accd';
 const actor = { userId, token: 'fake-user-token' };
