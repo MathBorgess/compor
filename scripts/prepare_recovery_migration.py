@@ -12,14 +12,15 @@ from prepare_compor_migrations import MIGRATIONS, git
 import prepare_image_26_migration as image
 
 SOURCE_COMMIT = '8c28f98af059463ccdfd8d4a46adcb859ea112fd'
+READ_COMMIT = '04d986b479f588afe3fcad85b0cabe958d5352a7'
 NAME = '20261103000011_agent_session_recovery.sql'
 DIGEST = 'e31e9d29edd88c1bbed8877a00a0b744de99973c97f8d3cea4c2380438d2925a'
 
 
 def prepare():
-    if git('rev-parse', '--verify', f'{SOURCE_COMMIT}^{{commit}}').decode().strip() != SOURCE_COMMIT:
+    if git('rev-parse', '--verify', f'{READ_COMMIT}^{{commit}}').decode().strip() != READ_COMMIT:
         raise ValueError('commit de origem inválido')
-    content = git('show', f'{SOURCE_COMMIT}:supabase/migrations/{NAME}')
+    content = git('show', f'{READ_COMMIT}:supabase/migrations/{NAME}')
     if hashlib.sha256(content).hexdigest() != DIGEST:
         raise ValueError('hash da migração não corresponde')
     # Reuse the audited table/role guard from the independently reviewed 2.6 bundle.

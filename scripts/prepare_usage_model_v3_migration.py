@@ -15,12 +15,13 @@ import prepare_image_26_migration as image
 ROOT = Path(__file__).resolve().parent.parent
 NAME = '20261105000015_usage_model_v3.sql'
 SOURCE_COMMIT = 'ea0424907af132243ce040d0edfd8f47b8304955'
+READ_COMMIT = 'cbb1e027bfec06783c13da51f2c38e6dc4ee8ca0'
 DIGEST = 'd0b672c2454e8275a899480dbe852e1e5ef1fc3cf6a1d422e96c26ec0fa799c3'
 TABLES = studio.BASE_TABLES + studio.NEW_TABLES + ['public.usage_measurements', 'public.image_tool_reservations', 'public.image_tool_executions', 'public.image_tool_result_submissions']
 
 
 def content():
-    data = git('show', f'{SOURCE_COMMIT}:supabase/migrations/{NAME}')
+    data = git('show', f'{READ_COMMIT}:supabase/migrations/{NAME}')
     if hashlib.sha256(data).hexdigest() != DIGEST:
         raise ValueError('migração difere do blob revisado')
     return data.decode()
@@ -36,7 +37,7 @@ def audit_guard(applied):
 
 def legacy_specs():
     sources = []
-    for name, commit, digest in [('20261103000009_usage_measurements.sql', image.BASE_COMMIT, MIGRATIONS['20261103000009_usage_measurements.sql']), (image.NAME, image.SOURCE_COMMIT, image.DIGEST)]:
+    for name, commit, digest in [('20261103000009_usage_measurements.sql', image.BASE_COMMIT, MIGRATIONS['20261103000009_usage_measurements.sql']), (image.NAME, image.READ_COMMIT, image.DIGEST)]:
         data = git('show', f'{commit}:supabase/migrations/{name}')
         if hashlib.sha256(data).hexdigest() != digest:
             raise ValueError('origem da medição legada mudou')

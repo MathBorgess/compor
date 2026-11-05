@@ -11,21 +11,22 @@ from pathlib import Path
 from prepare_compor_migrations import MIGRATIONS, git
 
 SOURCE_COMMIT = '1feceb7531d80cee9a9547d198c1ff218779a700'
+READ_COMMIT = '46c5a85c948ec49b7b2916ee5fb8e880ceb8c9a1'
 BASE_COMMIT = '35925f0b130fb4ed0123d2b460cc42ffe2698c2f'
 NAME = '20261105000012_image_model_26.sql'
 DIGEST = '6bd71c0eba6f30b1c87bb3125f33257095ac0aa7a458421fa4ac95a829b208a7'
 
 
 def prepare():
-    if git('rev-parse', '--verify', f'{SOURCE_COMMIT}^{{commit}}').decode().strip() != SOURCE_COMMIT:
+    if git('rev-parse', '--verify', f'{READ_COMMIT}^{{commit}}').decode().strip() != READ_COMMIT:
         raise ValueError('commit de origem inválido')
     expected_paths = [f'supabase/migrations/{name}' for name in MIGRATIONS] + [f'supabase/migrations/{NAME}']
-    if git('ls-tree', '-r', '--name-only', SOURCE_COMMIT, '--', 'supabase/migrations').decode().splitlines() != expected_paths:
+    if git('ls-tree', '-r', '--name-only', READ_COMMIT, '--', 'supabase/migrations').decode().splitlines() != expected_paths:
         raise ValueError('lista de migrações difere do commit revisado')
     for name, digest in {**MIGRATIONS, NAME: DIGEST}.items():
-        if hashlib.sha256(git('show', f'{SOURCE_COMMIT}:supabase/migrations/{name}')).hexdigest() != digest:
+        if hashlib.sha256(git('show', f'{READ_COMMIT}:supabase/migrations/{name}')).hexdigest() != digest:
             raise ValueError(f'hash não corresponde: {name}')
-    content = git('show', f'{SOURCE_COMMIT}:supabase/migrations/{NAME}').decode('utf-8')
+    content = git('show', f'{READ_COMMIT}:supabase/migrations/{NAME}').decode('utf-8')
     rows = ',\n'.join(f"('{name[:14]}','{name}','{BASE_COMMIT}','{digest}')" for name, digest in MIGRATIONS.items())
     prefix = r'''\set ON_ERROR_STOP on
 BEGIN;

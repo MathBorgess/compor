@@ -16,11 +16,12 @@ import prepare_image_26_migration as image
 ROOT=Path(__file__).resolve().parent.parent
 NAME='20261105000016_provider_call_ids.sql'
 SOURCE_COMMIT='2375eab3f390a5343a32abf78ab1df01736e0f3a'
+READ_COMMIT='03a13b815df4fb8c3ad551f1891efdf68f0b9d60'
 DIGEST='997f7e476b3347f397381c743940ac5c83fa7b6da907d4677516cb02af035c54'
 IMAGE_SIGNATURE='public.reserve_image_tool_call(uuid,uuid,integer,uuid,text,text,text)'
 
 def content():
-    data=git('show',f'{SOURCE_COMMIT}:supabase/migrations/{NAME}')
+    data=git('show',f'{READ_COMMIT}:supabase/migrations/{NAME}')
     if hashlib.sha256(data).hexdigest()!=DIGEST:
         raise ValueError('migração difere do blob revisado')
     return data.decode()

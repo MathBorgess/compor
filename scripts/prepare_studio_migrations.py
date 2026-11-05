@@ -17,6 +17,7 @@ import prepare_image_26_migration as image
 import prepare_recovery_migration as recovery
 
 ROOT = Path(__file__).resolve().parent.parent
+READ_COMMIT = '7a3d50a4cd3f289b84c3e502d80e3a199e37ef87'
 SOURCES = [
     ('20261105000013_studio_turn_metadata.sql', '4cc8f9ebe372f5f2ea028c6ff480998778ee99c1', '7d8fd22588e865ebac063c62be57f9bb7e89d3cd24d9beacae705886a1a12c9e'),
     ('20261105000014_version_metadata.sql', '237b1dde1159408a430bd447e7000a4ef176f28a', 'e6b01622c81d2f86d13175c9def11938f932d2c1b9abc44d426d06c5bd5fa62f'),
@@ -29,10 +30,10 @@ CONNECTION_EVIDENCE = '\\set ON_ERROR_STOP on\n\\conninfo\nSELECT ssl,version,ci
 
 def blobs():
     result = []
-    for name, commit, digest in SOURCES:
-        if git('rev-parse', '--verify', f'{commit}^{{commit}}').decode().strip() != commit:
-            raise ValueError('commit de origem inválido')
-        data = git('show', f'{commit}:supabase/migrations/{name}')
+    if git('rev-parse', '--verify', f'{READ_COMMIT}^{{commit}}').decode().strip() != READ_COMMIT:
+        raise ValueError('commit de origem inválido')
+    for name, _commit, digest in SOURCES:
+        data = git('show', f'{READ_COMMIT}:supabase/migrations/{name}')
         if hashlib.sha256(data).hexdigest() != digest:
             raise ValueError(f'hash não corresponde: {name}')
         result.append(data.decode())
