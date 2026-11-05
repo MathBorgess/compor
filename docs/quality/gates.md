@@ -4,17 +4,23 @@ O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull r
 
 | Job | Condição de aprovação | Escopo |
 | --- | --- | --- |
-| Static checks | ESLint sem erros ou avisos e testes do avaliador de orçamento aprovados | JavaScript do app web, bibliotecas, pacotes e scripts de qualidade |
+| Static checks | ESLint sem erros ou avisos e testes do avaliador de orçamento aprovados | TypeScript/TSX do app web, JavaScript dos pacotes e scripts de qualidade |
 | Contracts and data isolation | Todas as suítes dos pacotes e dos scripts Python aprovadas | Autorização, isolamento, idempotência, persistência, recuperação e contratos com fornecedores simulados |
-| Web behavior | Chromium instalado e toda a suíte web aprovada | Navegação, interação e estados do app com fixtures locais |
+| Web types and behavior | TypeScript estrito, Chromium instalado e toda a suíte web aprovada | Navegação, interação e estados do app com fixtures locais |
 | Public site build | `astro check` e build aprovados | Site público e seus headers de saída |
 | Production performance | Build Next de produção e todos os limites abaixo aprovados | Entrada `/` sem sessão, com configuração pública sintética |
 
 As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs não recebem secrets e não fazem deploy. O token tem somente `contents: read`. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
 
+No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `userns` somente ao caminho exato do Chromium instalado. Isso permite iniciar o sandbox do navegador baixado pelo Playwright, que não usa o caminho coberto pelo perfil do Chrome do sistema. O job mantém AppArmor ativo e não passa `--no-sandbox` ao Lighthouse. A configuração segue a [orientação do Chromium para perfis AppArmor](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md) e existe somente no runner temporário.
+
 ## Correção e manutenção
 
-O ESLint aplica as regras recomendadas de correção, incluindo nomes inexistentes, propriedades duplicadas e expressões ambíguas entre linhas. Variáveis e imports sem uso bloqueiam arquivos JavaScript e MJS. Argumentos e erros capturados podem ficar sem uso. A verificação de uso está desativada em JSX porque o parser básico não reconhece imports usados somente nas tags JSX. Não há mudanças de formatação obrigatórias.
+O TypeScript verifica o app Next com `strict: true` e sem ignorar erros no build. Componentes usam TSX; rotas e lógica usam TS. `quality:typecheck` bloqueia erros de contrato antes dos testes do navegador. O ESLint bloqueia `any` explícito, supressões TypeScript e arquivos JavaScript de produção em `apps/web/app` e `apps/web/lib`. Testes e ferramentas podem continuar em MJS.
+
+Dados de HTTP, storage e ferramentas passam por schemas em runtime. Declarações `.d.ts` descrevem os pacotes compartilhados ainda escritos em JavaScript; elas verificam seus consumidores TypeScript, mas não substituem os testes das implementações desses pacotes. O estúdio usa importação dinâmica após a sessão para reduzir o código carregado na entrada.
+
+O ESLint aplica as regras recomendadas de correção, incluindo nomes inexistentes, propriedades duplicadas e expressões ambíguas entre linhas. Variáveis e imports sem uso bloqueiam arquivos TypeScript, TSX, JavaScript e MJS. Argumentos e erros capturados podem ficar sem uso. A verificação de uso está desativada em JSX porque o parser básico não reconhece imports usados somente nas tags JSX. Não há mudanças de formatação obrigatórias.
 
 `no-empty` permite blocos `catch` vazios usados nas rotas de recuperação existentes. `no-control-regex` está desativada porque os validadores existentes examinam caracteres de controle. Essas exceções são explícitas em [eslint.config.mjs](../../eslint.config.mjs).
 
@@ -56,6 +62,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | --- | --- | --- |
 | `npm ci --ignore-scripts` | Node 24 | Ferramentas de qualidade fixadas no lockfile |
 | `npm run quality:lint` | Instalação da raiz | Erros de correção e imports sem uso |
+| `npm run quality:typecheck` | Instalação web | Checagem TypeScript estrita do app Next |
 | `npm run quality:test` | Node 24 | Testes de rejeição de páginas inválidas e limites excedidos |
 | `npm run quality:maintenance` | Instalação da raiz | `quality-results/maintainability/complexity.json` |
 | `npm run quality:unit` | Instalação dos pacotes `private-images` e `remote-mcp`, Python 3, `psql` e histórico Git completo | Resultados dos testes de pacotes e migrações |

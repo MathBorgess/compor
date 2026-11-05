@@ -6,6 +6,7 @@ const root = resolve(import.meta.dirname, '../..');
 const packages = readdirSync(resolve(root, 'packages'), { withFileTypes: true })
   .filter(entry => entry.isDirectory())
   .map(entry => `packages/${entry.name}`);
+packages.push('prototypes/compor-mcp');
 
 for (const directory of packages) {
   console.log(`Testing ${directory}`);

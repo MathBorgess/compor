@@ -59,14 +59,20 @@ jobs:
           cache-dependency-path: |
             packages/private-images/package-lock.json
             packages/remote-mcp/package-lock.json
+            packages/agile-deliberation/package-lock.json
+            packages/agents-api/package-lock.json
+            prototypes/compor-mcp/package-lock.json
       - run: sudo apt-get update && sudo apt-get install --yes postgresql-client
       - run: psql --version
       - run: npm ci --ignore-scripts --prefix packages/private-images
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
+      - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
+      - run: npm ci --ignore-scripts --prefix packages/agents-api
+      - run: npm ci --ignore-scripts --prefix prototypes/compor-mcp
       - run: npm run quality:unit
 
   web:
-    name: Web behavior
+    name: Web types and behavior
     runs-on: ubuntu-24.04
     timeout-minutes: 30
     steps:
@@ -80,6 +86,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci --ignore-scripts --prefix apps/web
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
+      - run: npm run quality:typecheck
       - name: Install the browser used by tests
         working-directory: apps/web
         run: |
@@ -126,6 +133,16 @@ jobs:
         run: |
           npx --no-install playwright-core install --with-deps chromium
           node --input-type=module -e "import {chromium} from 'playwright-core'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'BROWSER_EXECUTABLE_PATH=' + chromium.executablePath() + '\n');"
+      - name: Allow the Lighthouse browser to create its sandbox
+        shell: bash
+        run: |
+          chromium_path="$(realpath "$BROWSER_EXECUTABLE_PATH")"
+          if [[ ! "$chromium_path" =~ ^/[A-Za-z0-9_./-]+$ ]] || [[ ! -x "$chromium_path" ]]; then
+            printf '%s\n' 'Chromium must be an executable with a literal absolute path.' >&2
+            exit 1
+          fi
+          printf 'abi <abi/4.0>,\ninclude <tunables/global>\nprofile compor-lighthouse "%s" flags=(unconfined) {\n  userns,\n}\n' "$chromium_path" | sudo tee /etc/apparmor.d/compor-lighthouse > /dev/null
+          sudo apparmor_parser -r /etc/apparmor.d/compor-lighthouse
       - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: apps/web/.next/cache

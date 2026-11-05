@@ -1,3 +1,5 @@
 /node_modules/
 /quality-results/
 /scripts/__pycache__/
+**/node_modules/
+**/*.tsbuildinfo
