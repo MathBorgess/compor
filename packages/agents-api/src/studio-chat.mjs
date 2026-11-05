@@ -197,7 +197,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    const inputDigest=studioBindings.digest({message:body.message,context:body.context,history:body.history??[],previousAttemptKey:body.previousAttemptKey??null,referenceImages:body.referenceImages});
    const reserved=await store.reserve({...scope,inputDigest});
    if(reserved.status==='not_found')return reply({error:'not_found'},404);
-   if(['conflict','busy'].includes(reserved.status))return reply({status:reserved.status,retryAutomatically:false},409);
+   // The reservation refused this new request before inserting metadata or
+   // contacting the provider. A conflicting ID may already have been sent.
+   if(reserved.status==='busy')return reply({status:'failed',error:'project_busy',failurePhase:'before_submission',requestId:scope.requestId,retryAutomatically:false},409);
+   if(reserved.status==='conflict')return reply({status:'conflict',retryAutomatically:false},409);
    record=reserved.turn;rememberRecord(d,scope,record);
    if(reserved.status==='reserved')d.emit('attempt_reserved');
    if(reserved.status==='existing'){

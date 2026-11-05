@@ -50,6 +50,16 @@ test('próxima mensagem reutiliza sessão Terra ociosa e nunca direciona turno a
  assert.equal(f.calls.filter(c=>c.url?.endsWith('/sessions')&&c.method==='POST').length,1);
  f.set({status:'idle',turnState:'completed',turn:'turn_two'});const done=await f.chat(request({op:'poll',apiKey,projectId,requestId:request2}));assert.equal((await done.json()).status,'completed');
 });
+test('projeto ocupado recusa apenas o novo pedido antes de medição e provedor; conflito preserva incerteza',async()=>{
+ const effects={start:0,finish:0,attempt:0};
+ const f=fixture({usage:{async start(){effects.start++;return true;},async finish(){effects.finish++;}},attempts:{async bindRecovery(){effects.attempt++;},async finish(){effects.attempt++;}}});
+ const old={requestId,projectId,userId,attemptId,inputDigest:'a'.repeat(64),state:'unknown',binding:null,turnId:null};f.records.set(requestId,structuredClone(old));
+ const response=await f.chat(request({...body,requestId:request2}));
+ assert.equal(response.status,409);assert.deepEqual(await response.json(),{status:'failed',error:'project_busy',failurePhase:'before_submission',requestId:request2,retryAutomatically:false});
+ assert.equal(f.records.has(request2),false);assert.deepEqual(f.records.get(requestId),old);assert.deepEqual(effects,{start:0,finish:0,attempt:0});assert.deepEqual(f.calls,[]);
+ const conflict=await f.chat(request(body));assert.equal(conflict.status,409);assert.deepEqual(await conflict.json(),{status:'conflict',retryAutomatically:false});
+ assert.deepEqual(f.records.get(requestId),old);assert.deepEqual(effects,{start:0,finish:0,attempt:0});assert.deepEqual(f.calls,[]);
+});
 
 function seedPrevious(f,model){
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)});

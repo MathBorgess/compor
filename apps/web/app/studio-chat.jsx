@@ -188,7 +188,11 @@ export default function StudioChat({
       remember(null);
       setBusy(false);
       setNotice(
-        "A solicitação terminou com falha. Seu trabalho foi preservado.",
+        data.error === "project_busy" &&
+          data.failurePhase === "before_submission" &&
+          data.requestId === requestId
+          ? "Este pedido não foi enviado à OpenAI porque outro pedido deste projeto ainda precisa ser consultado. Seu trabalho foi preservado."
+          : "A solicitação terminou com falha. Seu trabalho foi preservado.",
       );
       return;
     }
