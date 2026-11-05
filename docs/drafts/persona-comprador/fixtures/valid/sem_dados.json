@@ -1,0 +1,13 @@
+{
+  "schema_version": "persona-comprador.v1-draft",
+  "contexto": {
+    "projeto_id": null,
+    "peca_id": null,
+    "versao": null,
+    "skill_version": null
+  },
+  "fontes": [],
+  "afirmacoes": [],
+  "implicacoes_criativas": [],
+  "perguntas_abertas": []
+}

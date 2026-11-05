@@ -1,0 +1,79 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://compor.mathai.com.br/schemas/persona-comprador.v1-draft.json",
+  "title": "Persona comprador - contrato proposto para avaliação",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "contexto", "fontes", "afirmacoes", "implicacoes_criativas", "perguntas_abertas"],
+  "properties": {
+    "schema_version": {"const": "persona-comprador.v1-draft"},
+    "contexto": {
+      "type": "object", "additionalProperties": false,
+      "required": ["projeto_id", "peca_id", "versao", "skill_version"],
+      "properties": {
+        "projeto_id": {"type": ["string", "null"], "minLength": 1},
+        "peca_id": {"type": ["string", "null"], "minLength": 1},
+        "versao": {"type": ["integer", "null"], "minimum": 1},
+        "skill_version": {"type": ["string", "null"], "minLength": 1}
+      }
+    },
+    "fontes": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/fonte"}},
+    "afirmacoes": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/afirmacao"}},
+    "implicacoes_criativas": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/implicacao"}},
+    "perguntas_abertas": {"type": "array", "maxItems": 200, "items": {"$ref": "#/$defs/pergunta"}}
+  },
+  "$defs": {
+    "id": {"type": "string", "minLength": 1, "maxLength": 64, "pattern": "^[a-z][a-z0-9_-]*$"},
+    "ids": {"type": "array", "maxItems": 200, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+    "fonte": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "procedencia", "referencia"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "procedencia": {"enum": ["relato_comprador", "relato_criador", "fonte_externa", "hipotese", "desconhecida"]},
+        "referencia": {"type": ["string", "null"], "minLength": 1, "maxLength": 2048}
+      },
+      "allOf": [
+        {"if": {"properties": {"procedencia": {"const": "fonte_externa"}}, "required": ["procedencia"]},
+         "then": {"properties": {"referencia": {"type": "string", "minLength": 1}}}}
+      ]
+    },
+    "afirmacao": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "campo", "conteudo", "estado", "fontes_ids", "vigente", "substitui_id"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "campo": {"enum": ["publico_e_situacao", "necessidade", "barreira", "alternativa", "criterio_de_decisao", "referencia_cultural"]},
+        "conteudo": {"type": ["string", "null"], "minLength": 1, "maxLength": 10000},
+        "estado": {"enum": ["sustentado", "hipotese", "divergente", "desconhecido"]},
+        "fontes_ids": {"$ref": "#/$defs/ids"},
+        "vigente": {"type": "boolean"},
+        "substitui_id": {"anyOf": [{"$ref": "#/$defs/id"}, {"type": "null"}]}
+      },
+      "allOf": [
+        {"if": {"properties": {"estado": {"const": "desconhecido"}}, "required": ["estado"]},
+         "then": {"properties": {"conteudo": {"type": "null"}}},
+         "else": {"properties": {"conteudo": {"type": "string", "minLength": 1}}}},
+        {"if": {"properties": {"estado": {"enum": ["sustentado", "divergente"]}}, "required": ["estado"]},
+         "then": {"properties": {"fontes_ids": {"minItems": 1}}}}
+      ]
+    },
+    "implicacao": {
+      "type": "object", "additionalProperties": false,
+      "required": ["id", "conteudo", "estado", "afirmacoes_ids"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"}, "conteudo": {"type": "string", "minLength": 1, "maxLength": 10000},
+        "estado": {"enum": ["sugestao", "hipotese"]}, "afirmacoes_ids": {"$ref": "#/$defs/ids"}
+      },
+      "allOf": [
+        {"if": {"properties": {"estado": {"const": "sugestao"}}, "required": ["estado"]},
+         "then": {"properties": {"afirmacoes_ids": {"minItems": 1}}}}
+      ]
+    },
+    "pergunta": {
+      "type": "object", "additionalProperties": false,
+      "required": ["conteudo", "afirmacoes_ids"],
+      "properties": {"conteudo": {"type": "string", "minLength": 1, "maxLength": 10000}, "afirmacoes_ids": {"$ref": "#/$defs/ids"}}
+    }
+  }
+}

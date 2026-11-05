@@ -1,0 +1,91 @@
+{
+  "schema_version": "persona-comprador.v1-draft",
+  "contexto": {
+    "projeto_id": "projeto-sintetico",
+    "peca_id": "peca-sintetica",
+    "versao": 1,
+    "skill_version": "0.1-draft"
+  },
+  "fontes": [
+    {
+      "id": "s1",
+      "procedencia": "relato_criador",
+      "referencia": "insumo-sintetico-1"
+    },
+    {
+      "id": "s2",
+      "procedencia": "fonte_externa",
+      "referencia": "https://example.org/referencia-sintetica"
+    }
+  ],
+  "afirmacoes": [
+    {
+      "id": "a1",
+      "campo": "publico_e_situacao",
+      "conteudo": "A pessoa criadora relata que o público busca aprender culinária.",
+      "estado": "sustentado",
+      "fontes_ids": [
+        "s1"
+      ],
+      "vigente": true,
+      "substitui_id": null
+    },
+    {
+      "id": "a2",
+      "campo": "barreira",
+      "conteudo": "Pode faltar tempo para praticar.",
+      "estado": "hipotese",
+      "fontes_ids": [],
+      "vigente": true,
+      "substitui_id": null
+    },
+    {
+      "id": "a3",
+      "campo": "referencia_cultural",
+      "conteudo": "Referência fictícia informada anteriormente.",
+      "estado": "sustentado",
+      "fontes_ids": [
+        "s1"
+      ],
+      "vigente": false,
+      "substitui_id": null
+    },
+    {
+      "id": "a4",
+      "campo": "referencia_cultural",
+      "conteudo": "A fonte descreve uma obra fictícia; familiaridade do público não foi verificada.",
+      "estado": "sustentado",
+      "fontes_ids": [
+        "s2"
+      ],
+      "vigente": true,
+      "substitui_id": "a3"
+    }
+  ],
+  "implicacoes_criativas": [
+    {
+      "id": "i1",
+      "conteudo": "Explorar uma mensagem sobre práticas curtas.",
+      "estado": "hipotese",
+      "afirmacoes_ids": [
+        "a2"
+      ]
+    },
+    {
+      "id": "i2",
+      "conteudo": "Considerar a referência após revisão da pessoa.",
+      "estado": "sugestao",
+      "afirmacoes_ids": [
+        "a4"
+      ]
+    }
+  ],
+  "perguntas_abertas": [
+    {
+      "conteudo": "Que situação recente sustenta essa hipótese?",
+      "afirmacoes_ids": [
+        "a2"
+      ]
+    }
+  ]
+}
