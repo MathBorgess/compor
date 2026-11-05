@@ -44,7 +44,9 @@ Os eventos estruturados da Vercel mostraram o modelo Terra, chamadas recebidas/a
 - Um envio recusado com `busy` não chegava ao provedor, mas permanecia pendente no navegador. O patch encerra somente esse pedido novo e mantém solicitações anteriores incertas.
 - A imagem real foi gerada e aplicada, mas o texto final do agente ainda dizia que a proposta aguardava confirmação. O patch explicita geração/armazenamento no resultado da tool e acrescenta confirmação factual da aplicação local, sem reescrever a resposta do modelo.
 
-Esses patches posteriores foram verificados localmente; a publicação final e a verificação de reabertura são registradas no guia de revisão. Não houve uma segunda geração para retestar texto do modelo.
+Esses patches posteriores passaram em 133 testes de Agents, 119 da web e na build. Foram publicados no deployment `dpl_bTiWXMxDyVDXMtgKwkXCyXKn3N7a`, código `94d282fba39b00ee15772dd64c48e13db52dcb85`, observado em READY com alias canônico e sem erro de alias. Não houve uma segunda geração para retestar texto do modelo.
+
+Após a publicação, a aba foi reaberta no endereço canônico sem a chave OpenAI. A versão 2 e sua imagem foram restauradas. O WebMCP nativo iniciou outro post sem chave ou chamada OpenAI; seu primeiro salvamento selecionou automaticamente a versão 1, comprovando a correção de comparação JSONB na interface real. O PNG exportado foi adicionado ao moodboard e a versão 2 original foi reaberta. A demonstração ficou aberta na revisão da arte; o código até `94d282f` teve push confirmado no GitHub pelo endereço atual do repositório.
 
 ## Limites desta evidência
 
