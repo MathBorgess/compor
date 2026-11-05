@@ -159,3 +159,44 @@ test('resposta de salvamento preserva alterações feitas enquanto aguardava',()
  const fresh=createPost(initial(),{pieceId:id(9)});
  assert.throws(()=>approveDraft(fresh,{at,eventId:id(43)}),error=>error.code==='studio_unsaved_draft');
 });
+
+const freshPost=()=>Object.entries(content).filter(([field])=>field!=='captionOrigin').reduce((state,[field,value])=>editDraft(state,{field,value}),createPost(initial(),{pieceId:id(3)}));
+const reorderedContent=value=>({date:value.date,price:value.price,caption:value.caption,headline:value.headline,captionOrigin:value.captionOrigin});
+
+test('primeiro salvamento segue a versão limpa mesmo quando o servidor reordena as chaves JSONB',()=>{
+ const source=freshPost(),submitted=getCurrentDraft(source).content;
+ const saved=recordSavedVersion(source,{pieceId:id(3),baseVersion:0,version:1,content:reorderedContent(submitted),eventId:id(41)});
+ const current=getCurrentDraft(saved);
+ assert.equal(current.baseVersion,1);assert.equal(current.expectedLatestVersion,1);assert.equal(current.dirty,false);
+ assert.deepEqual(current.content,submitted);
+ assert.equal(saved.drafts.find(draft=>draft.baseVersion===0).dirty,false);
+ assert.equal(getCurrentDraft(approveDraft(saved,{at,eventId:id(42)})).approval.status,'approved');
+ assert.equal(getCurrentDraft(source).baseVersion,0,'o snapshot anterior permanece imutável');
+});
+
+test('resposta com chaves reordenadas preserva cada alteração de conteúdo feita durante a espera',()=>{
+ for(const field of ['headline','price','date','caption']){
+  const source=freshPost(),submitted=getCurrentDraft(source).content;
+  const edited=editDraft(source,{field,value:`Alteração posterior de ${field}`});
+  const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:0,version:1,content:reorderedContent(submitted),eventId:id(41)});
+  const current=getCurrentDraft(saved);
+  assert.equal(current.baseVersion,0,field);assert.equal(current.dirty,true,field);
+  assert.equal(current.content[field],`Alteração posterior de ${field}`);
+  assert.deepEqual(saved.drafts.find(draft=>draft.baseVersion===1).content,submitted);
+ }
+ const source=selectVersion(initial(),{pieceId:id(3),version:1,latestVersion:1,content:{...content,captionOrigin:'agent'}});
+ const edited=editDraft(source,{field:'caption',value:content.caption});
+ const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:1,version:2,content:reorderedContent(getCurrentDraft(source).content),eventId:id(41)});
+ assert.equal(getCurrentDraft(saved).baseVersion,1);assert.equal(getCurrentDraft(saved).dirty,true);
+ assert.equal(getCurrentDraft(saved).content.captionOrigin,'user','a autoria também faz parte do conteúdo');
+});
+
+test('evento duplicado com outra ordem de chaves é inócuo e não aceita conteúdo divergente',()=>{
+ const source=freshPost(),submitted=getCurrentDraft(source).content;
+ const args={pieceId:id(3),baseVersion:0,version:1,content:submitted,eventId:id(41)};
+ const saved=recordSavedVersion(source,args);
+ assert.equal(recordSavedVersion(saved,{...args,content:reorderedContent(submitted)}),saved);
+ assert.equal(saved.events.length,1);assert.equal(saved.revision,source.revision+1);
+ assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),headline:'Outro título'}}),error=>error.code==='studio_version_conflict');
+ assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),extra:'campo inesperado'}}),error=>error.code==='studio_version_conflict');
+});

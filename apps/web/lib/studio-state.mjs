@@ -13,6 +13,7 @@ const text = (value, max, empty = true) => typeof value === 'string' && value.le
 const iso = value => typeof value === 'string' && value.length <= 32 && Number.isFinite(Date.parse(value)) && new Date(value).toISOString() === value;
 const unique = (items, by = item => item.id) => new Set(items.map(by)).size === items.length;
 const contentValid = value => keys(value, ['headline','price','date','caption','captionOrigin']) && text(value.headline, 500) && text(value.price, 100) && text(value.date, 100) && text(value.caption, 4000) && ['user','agent'].includes(value.captionOrigin);
+const sameContent = (left, right) => contentValid(left) && contentValid(right) && ['headline','price','date','caption','captionOrigin'].every(field => left[field] === right[field]);
 const approvalValid = value => keys(value, ['status'], ['kind','sourceVersion','at']) && (value.status === 'unapproved' ? Object.keys(value).length === 1 : value.status === 'approved' && ['explicit','inherited'].includes(value.kind) && integer(value.sourceVersion,1) && iso(value.at));
 const approvalForBase = (value,baseVersion) => approvalValid(value) && (value.status==='unapproved'||value.sourceVersion<=baseVersion&&(value.kind==='inherited'||value.sourceVersion===baseVersion));
 const sameDraft = (a, b) => a.pieceId === b.pieceId && a.baseVersion === b.baseVersion;
@@ -107,11 +108,11 @@ export function recordSavedVersion(state, {pieceId,baseVersion,version,content,e
   parseStudioState(state);
   if(approval!==undefined&&(!integer(version,1)||!approvalForBase(approval,version)))fail();
   const prior=state.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version);
-  if(prior&&JSON.stringify(prior.content)===JSON.stringify(content)&&state.events.some(item=>item.id===eventId&&item.type==='version_saved'))return state;
+  if(prior&&sameContent(prior.content,content)&&state.events.some(item=>item.id===eventId&&item.type==='version_saved'))return state;
   return change(state,next=>{
     const draft=next.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion);
     if(!draft||!integer(version,1)||version!==draft.expectedLatestVersion+1||!contentValid(content)||next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version))throw new StudioStateError('studio_version_conflict');
-    const unchanged=JSON.stringify(draft.content)===JSON.stringify(content),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(content),dirty:false,approval:approval===undefined?inheritApproval(draft.approval,baseVersion):clone(approval)};
+    const unchanged=sameContent(draft.content,content),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(content),dirty:false,approval:approval===undefined?inheritApproval(draft.approval,baseVersion):clone(approval)};
     next.drafts.push(value);
     if(unchanged){draft.dirty=false;if(next.selection&&sameDraft(next.selection,draft))next.selection={pieceId,baseVersion:version};}
     event(next,'version_saved',null,eventId);
