@@ -261,5 +261,6 @@ test('observabilidade correlaciona exec sem registrar conteúdo nem alterar cham
 });
 test('falha do coletor não altera o fluxo; requisição sem titularidade não emite IDs',async()=>{
  const f=fixture({onEvent:()=>{throw Error('PRIVATE_SINK');}});assert.equal((await f.chat(request(body))).status,202);assert.equal((await f.chat(request({op:'poll',apiKey,projectId,requestId}))).status,202);
+ const asyncSink=fixture({onEvent:async()=>{throw Error('PRIVATE_ASYNC_SINK');}});assert.equal((await asyncSink.chat(request(body))).status,202);await new Promise(resolve=>setImmediate(resolve));assert.equal(asyncSink.calls.filter(call=>call.url?.endsWith('/sessions')&&call.method==='POST').length,1);
  const rows=[],g=fixture({ownsProject:async()=>false,onEvent:(...args)=>rows.push(args)});assert.equal((await g.chat(request(body))).status,404);assert.deepEqual(rows,[]);assert.equal(g.calls.length,0);
 });

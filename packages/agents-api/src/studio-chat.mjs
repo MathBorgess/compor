@@ -81,7 +81,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   const startedAt=now(),d={requestId,phase};
   d.emit=(name,extra={})=>{
    if(typeof onEvent!=='function')return;
-   try{onEvent(name,{requestId:d.requestId,attemptId:d.attemptId,sessionId:d.sessionId,turnId:d.turnId,callId:d.callId,callIdAccepted:d.callIdAccepted,turnStatus:d.turnStatus,model:d.model,phase:d.phase,durationMs:Math.max(0,now()-startedAt),inputTokens:d.inputTokens,outputTokens:d.outputTokens,providerStatusCode:extra.providerStatusCode});}catch{}
+   try{Promise.resolve(onEvent(name,{requestId:d.requestId,attemptId:d.attemptId,sessionId:d.sessionId,turnId:d.turnId,callId:d.callId,callIdAccepted:d.callIdAccepted,turnStatus:d.turnStatus,model:d.model,phase:d.phase,durationMs:Math.max(0,now()-startedAt),inputTokens:d.inputTokens,outputTokens:d.outputTokens,providerStatusCode:extra.providerStatusCode})).catch(()=>{});}catch{}
   };
   return d;
  }
