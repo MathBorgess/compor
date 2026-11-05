@@ -33,7 +33,7 @@ function validateImages(images){
  });
 }
 function inputContent(body,includeHistory){
- const data={message:body.message,context:body.context,requestId:body.requestId,...(includeHistory?{localConversation:body.history??[]}:{})};
+ const data={message:body.message,projectId:body.projectId,context:body.context,requestId:body.requestId,...(includeHistory?{localConversation:body.history??[]}:{})};
  const content=[{type:'input_text',text:JSON.stringify(data)}];
  for(const image of body.referenceImages??[])content.push({type:'input_text',text:`Referência visual local ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
  return [{role:'user',content}];

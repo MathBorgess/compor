@@ -22,7 +22,7 @@ export const STUDIO_TOOLS = Object.freeze(commands.map(([name, description, prop
 function parse(tool, value) {
   if (!value || typeof value !== 'object' || Array.isArray(value)) throw Error('invalid_action');
   const schema = tool.inputSchema;
-  if (Object.keys(value).some(key => !(key in schema.properties)) || schema.required.some(key => !(key in value))) throw Error('invalid_action');
+  if (Object.keys(value).some(key => !Object.hasOwn(schema.properties,key)) || schema.required.some(key => !Object.hasOwn(value,key))) throw Error('invalid_action');
   for (const [key, spec] of Object.entries(schema.properties)) {
     if (!(key in value)) continue;
     const item = value[key];
