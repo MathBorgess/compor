@@ -22,6 +22,8 @@ A etapa complementa o briefing da oferta e deve permitir pular campos desconheci
 
 A proposta deve preservar o princípio de não alongar a jornada: começar com as perguntas indispensáveis à criação e oferecer aprofundamento opcional por chat. A duração e o número de perguntas necessários são hipóteses de UX a testar, não medições. Perguntar por comportamentos e episódios recentes oferece uma fonte diferente de expectativas; o [guia de facilitação do GOV.UK](https://userresearch.blog.gov.uk/2014/07/11/what-makes-a-good-user-research-facilitator/) recomenda perguntas abertas sobre o que a pessoa fez, em vez de tratar opiniões isoladas como comportamento observado.
 
+**Recorte inicial da etapa:** depois do briefing da oferta, apresentar três campos curtos: quem a pessoa quer alcançar, em que situação esse comprador está e o que ele quer conseguir. Nenhum é obrigatório; o botão **Continuar com o que sei** mantém desconhecidos como vazios. Referências culturais, afirmações e fontes ficam em detalhes opcionais que a pessoa pode abrir, editar e remover. A origem distingue hipótese, relato da pessoa criadora, relato de comprador e fonte pública. O chat poderá aprofundar a análise após a conexão da IA; o formulário não gera uma persona fictícia por conta própria. Esse recorte ainda precisa de verificação de usabilidade e não estabelece duração ou taxa de conclusão.
+
 ## Contrato proposto para a skill de persona
 
 A unidade estudável é `persona-comprador`, com versão explícita de instruções, contrato e rubrica, isolada do motor de imagem e do controlador do chat. O nome e a forma de distribuição são provisórios. A skill trata da pessoa compradora da oferta, não do perfil Phoenix do criador, que continua em etapa posterior salvo nova decisão.

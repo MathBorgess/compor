@@ -10,6 +10,8 @@ Os desenhos complementares detalham a [ponte do chat com WebMCP](2026-11-05-chat
 
 A referência é a página [Web v0, revisão 50 e 59](https://www.figma.com/design/KlGEjt2D3tQHsHb4RsDr6i/Compor-%C2%B7-90-%E2%80%94-Arquivo-original-e-revis%C3%A3o?node-id=22-1743). A inspeção de 5 de novembro de 2026 usou metadados do Figma e observação visual dos quadros no navegador. O conector do Figma atingiu o limite do plano Starter ao solicitar contexto de design e imagens. As telas observadas têm tamanho de referência 1440 × 960. Não há comparação pixel a pixel, verificação completa dos componentes ou evidência de comportamento responsivo.
 
+Matheus também forneceu como referência o [arquivo principal do Compor, quadro 2009:13865](https://www.figma.com/design/8nEzYvk8LCTQzbknMgEw1c/Compor-%C2%B7-00-%E2%80%94-Arquivo-principal?node-id=2009-13865). A indicação é adicional; não substitui automaticamente a referência anterior. Os elementos aplicáveis e eventuais divergências precisam ser verificados na implementação visual.
+
 O arquivo inclui telas e variações que não foram individualmente inspecionadas. Nome de camada, texto e imagem de um protótipo descrevem uma intenção de interface. Eles não provam que a interação, o backend ou a integração com um provedor funcionem. Para implementar cada tela, obter seu contexto de design completo e conferir componentes, estilos e recursos originais. Não recriar ou substituir ativos por aproximação sem verificar a fonte.
 
 ## Decisões confirmadas
@@ -55,12 +57,13 @@ Os nomes a seguir descrevem responsabilidades, não tabelas ou contratos já exi
 | --- | --- | --- |
 | Projeto | Proprietário, identificação e informações necessárias para retomar o trabalho. | `projects` existe. A conta dona já é verificada por RLS e por operação. |
 | Briefing | Oferta, público, ação esperada, direção e estado dos fatos. Deve pertencer ao projeto e indicar sua revisão. | O objetivo livre existe na interface; não foi encontrada persistência dos campos estruturados. |
+| Persona compradora | Público, situação e necessidade do comprador do infoproduto, com hipóteses, fontes e referências culturais revisáveis. É rascunho local do projeto, distinto das preferências da pessoa criadora. | A skill tem contrato proposto e avaliação estrutural separada; sua análise no chat ainda exige integração e prova. |
 | Conversa | Uma conversa por projeto, com mensagens ordenadas, origem e estado no navegador. Cada solicitação deve registrar a peça e a versão que a contextualizam. | O fluxo atual apresenta uma resposta de tentativa. Ainda não há conversa contínua do produto. |
 | Sessão gerenciada | Vínculo recuperável entre a conversa do projeto e a sessão da Agents API, sem guardar a chave OpenAI. A identidade do projeto e o controle de acesso permanecem no Compor. | A retomada após desconexão requer prova real. A presença de ID ou estado `idle` não comprova sucesso do turno. |
 | Peça e versão | Peça identificável dentro do projeto; versões imutáveis com conteúdo, origem, versão de base e artefatos associados. | `piece_versions` já existe com comparação de versão esperada. A linhagem explícita da versão anterior e o fluxo a partir de qualquer versão precisam ser verificados ou ampliados. |
-| Referência e moodboard | Recurso, origem, autorização declarada quando aplicável, relação com projeto e elementos exibidos no quadro. | Há armazenamento privado de imagens por versão. O modelo de referências e seu quadro ainda não estão comprovados. |
+| Referência e moodboard | Recurso local, origem, autorização declarada quando aplicável, relação com projeto e elementos exibidos no quadro. Referências enviadas não são salvas no Supabase. | Há armazenamento privado de artefatos finais por versão; ele é distinto das referências locais. O modelo de referências e seu quadro ainda não estão comprovados. |
 | Marcação de ajuste | Região ou elemento escolhido, versão de origem e nota que forma o pedido. | Os quadros mostram a interação; representação, limites e persistência ainda precisam de desenho e testes. |
-| Aprovação | Ação explícita, autor, data e versão a que se refere. | A interface atual distingue download de aprovação, mas não há prova de estado persistente de aprovação. |
+| Aprovação | Aceite explícito com autor, data e versão, ou aprovação herdada com a versão de origem identificada. Herança não registra uma nova revisão humana. | A interface atual distingue download de aprovação, mas não há prova de estado persistente de aprovação. |
 | Tentativa e medição | Identidade da operação, contexto, estado, uso disponível e custo estimado quando fundamentado. Separar agente de imagem. | Há reservas e medições; não são fatura nem limite global comprovado. |
 
 A versão selecionada para consulta não deve ser confundida com a versão mais recente gravada. Uma solicitação sobre versão anterior deve referenciar essa base e produzir uma nova versão. A gravação precisa também detectar uma alteração concorrente do estado relevante, sem reescrever silenciosamente o trabalho de outra sessão ou do Codex.
@@ -71,7 +74,8 @@ A versão selecionada para consulta não deve ser confundida com a versão mais 
 flowchart LR
     A[Entrar com Google] --> B[Abrir ou criar projeto]
     B --> C[Preencher briefing e referências]
-    C --> D[Informar chave na sessão]
+    C --> P[Conhecendo quem vai comprar]
+    P --> D[Informar chave na sessão]
     D --> E[Revisar contexto e autorizar início]
     E --> F[Conversa do projeto e quadro criativo]
     F --> G[Selecionar peça e versão]
@@ -87,6 +91,8 @@ flowchart LR
 
 O diagrama propõe a ordem dos estados para discussão técnica. Ele não exige que toda edição ou mensagem gere imagem. A pessoa pode consultar o projeto e o histórico sem chave OpenAI; uma operação que chama a OpenAI exige a chave e a autorização aplicável. Ação de consultar, selecionar versão, baixar ou copiar não implica uma nova geração nem aprovação.
 
+A etapa de persona começa com público, situação e necessidade, todos opcionais. Campos desconhecidos podem ficar vazios; hipóteses e referências têm origem indicada e podem ser corrigidas. Fontes e informações adicionais ficam em uma seção opcional, permitindo continuar sem completar um questionário longo. O componente captura o rascunho, sem fabricar uma análise. Depois de conectar a IA, o chat poderá aprofundar a proposta e sugerir referências públicas com fontes, conforme o contrato da skill.
+
 O sistema deve distinguir pelo menos os estados de envio, execução, espera de ação, conclusão verificada, falha e resultado desconhecido. Uma desconexão HTTP não cancela necessariamente o trabalho no provedor. A interface precisa preservar o contexto e oferecer reconciliação da mesma tentativa quando houver identificador e autorização válidos. Ela não deve iniciar outra chamada paga automaticamente ao recuperar a tela.
 
 O resultado do agente precisa ser associado ao turno e ao contexto que o originaram. Uma imagem tardia deve continuar ligada à tentativa e à versão de origem. Ela não pode substituir silenciosamente a versão que a pessoa passou a editar enquanto aguardava. Se uma nova versão conflitar com escrita concorrente, preservar a proposta e apresentar o conflito.
@@ -98,7 +104,7 @@ O resultado do agente precisa ser associado ao turno e ao contexto que o origina
 3. O backend mantém o vínculo autorizado da conversa com a sessão gerenciada da OpenAI. O envio de uma mensagem usa contexto explícito e um identificador de submissão para lidar com repetição e concorrência. Os limites e a validade da sessão precisam ser comprovados com a API real.
 4. O agente recebe apenas as capacidades necessárias ao projeto por meio do MCP delegado. O Codex usa sua conexão OAuth própria e as ferramentas disponíveis, sem receber a chave web. Projetos, peças e versões são compartilhados com o Codex; a conversa web não é exposta pelo MCP. Os demais contratos precisam de verificação.
 5. A solicitação de imagem apresenta a ação paga antes de executá-la. O backend associa a solicitação à conta, ao projeto, à peça, à versão e à tentativa. A função de imagem não substitui a orquestração gerenciada do agente.
-6. Imagens e referências autorizadas usam armazenamento privado. O produto registra metadados de origem e vínculos necessários para revisão. Textos, preço, data e legenda permanecem editáveis e identificam sua origem quando conhecida. O provedor pode retornar imagem com texto mesmo quando instruído a não fazê-lo; a pessoa precisa revisá-la.
+6. Artefatos finais explicitamente salvos usam Storage privado da versão; referências, conversa e rascunhos permanecem no navegador. Os vínculos necessários à revisão acompanham o estado local, enquanto apenas metadados técnicos autorizados e dados da versão salva entram no servidor. Textos, preço, data e legenda permanecem editáveis e identificam sua origem quando conhecida. O provedor pode retornar imagem com texto mesmo quando instruído a não fazê-lo; a pessoa precisa revisá-la.
 7. A composição retrato precisa gerar um PNG com dimensões verificadas de 1080 × 1350 para o formato observado. A estratégia de geração, enquadramento ou redimensionamento deve preservar proporções e permitir revisar cortes. A qualidade final e a legibilidade precisam de verificação real; não decorrem apenas do tamanho do arquivo.
 8. Logs operacionais não registram chave, prompts, mensagens, imagens ou conteúdo criativo. Métricas registram modelo, estado, duração e uso disponível. Valores estimados não representam cobrança confirmada.
 
@@ -123,7 +129,7 @@ A proteção atualmente documentada e seus limites estão em [isolamento e prote
 As questões abaixo não foram resolvidas pelos quadros observados. As propostas não são decisões aprovadas.
 
 1. **Referências e conteúdo do quadro.** PNG e JPEG enviados pela pessoa estão decididos. Falta definir limites de arquivo, origem, permissão de uso e recursos de edição necessários no marco 0.
-2. **Marcação.** Áreas e elementos editáveis estão no escopo. Falta definir como preservar a associação e as coordenadas diante de redimensionamento e recorte.
+2. **Marcação.** Áreas e elementos editáveis estão no escopo. O [desenho de ajustes](../design/2026-11-05-avaliacao-ajustes-e-linhagem.md) propõe associação por versão e coordenadas relativas; falta implementar e verificar as transformações de redimensionamento e recorte.
 3. **Apresentação da aprovação.** Como mostrar a aprovação herdada e a sua versão de origem de forma compreensível? A transferência automática já foi decidida.
 4. **Responsividade e acessibilidade.** Não foram observadas telas móveis nem todos os estados de teclado, foco, leitor de tela ou erro no Figma. É necessário definir e validar comportamento utilizável sem inventar paridade visual.
 5. **Custo antes da operação.** Quando a conta não fornecer dados suficientes para previsão confiável, qual texto e qual nível de detalhe a interface apresenta? Qual mecanismo efetivo limita o gasto agregado entre agente e imagem? A issue [SCRUM-68](https://compor-mathai.atlassian.net/browse/SCRUM-68) acompanha limites e observabilidade.
@@ -132,6 +138,7 @@ As questões abaixo não foram resolvidas pelos quadros observados. As propostas
 ## Critérios de aceite
 
 - A pessoa entra com Google, cria ou abre um projeto e preenche o briefing. Projetos e versões explicitamente salvos podem ser recuperados em outra sessão; rascunhos e transitórios dependem do navegador em que foram criados. A ausência de referências não impede a jornada.
+- A etapa **Conhecendo quem vai comprar** distingue quem compra o infoproduto de quem usa o Compor, permite continuar com campos desconhecidos e preserva informações, hipóteses e fontes no rascunho local. A análise da skill é revisável; a captura manual não afirma que uma persona já foi pesquisada ou validada.
 - A chave não aparece em banco, armazenamento do navegador, URL, logs ou resultados de tools. Reabrir a sessão sem a chave permite consultar o projeto e solicita a chave para nova chamada autorizada. O Codex funciona sem a chave da web.
 - O projeto mantém uma conversa ordenada. Cada nova solicitação registra a peça e a versão selecionadas. Ao alternar peças ou versões, a interface mostra o contexto ativo antes do envio.
 - Ao abrir uma versão anterior e solicitar alteração, o resultado bem-sucedido é salvo como nova versão atual ligada à base. A versão anterior continua consultável e inalterada. Escrita concorrente gera conflito recuperável, sem perda silenciosa.
