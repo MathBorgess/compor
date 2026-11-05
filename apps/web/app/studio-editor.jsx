@@ -338,6 +338,7 @@ export default function StudioEditor({
             Aprovar esta versão
           </button>
         </div>
+        {draft.approval?.status==="approved"&&draft.approval.kind==="inherited"&&<p className="studio-hint">Aprovação herdada da versão {draft.approval.sourceVersion}. Esta herança não representa uma nova revisão humana.</p>}
         {(draft.dirty || draft.baseVersion < 1) && (
           <p id={approvalHint} className="studio-hint">Salve a versão para aprovar este post.</p>
         )}

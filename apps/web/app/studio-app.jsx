@@ -96,7 +96,7 @@ export default function StudioApp({
         userId={userId}
         isAuthenticated={isAuthenticated}
         project={selected}
-        onBack={() => setSelected(null)}
+        onBack={() => {setSelected(null);refresh();}}
         hasApiKey={hasApiKey}
         getApiKey={getApiKey}
         keyInput={keyInput}
@@ -811,6 +811,7 @@ function ProjectStudio({
         tab === "history" ? (
           <div className="studio-history">
             <h2>Histórico do projeto</h2>
+            <button className="studio-button" onClick={()=>newPost()}>Novo post</button>
             <button
               onClick={() =>
                 refreshVersions().catch(() =>
@@ -851,7 +852,8 @@ function ProjectStudio({
                 onClick={() => openVersion(version)}
               >
                 <strong>{version.content.headline || "Post sem título"}</strong>
-                <span>Versão {version.version}</span>
+                <span>Versão {version.version}{version.version===Math.max(...versions.filter(item=>item.piece_id===version.piece_id).map(item=>item.version))?" · atual":""}</span>
+                {version.metadata?.approval.status==="approved"&&<small>{version.metadata.approval.kind==="inherited"?`Aprovação herdada da versão ${version.metadata.approval.sourceVersion}`:"Aprovação explícita"}</small>}
               </button>
             ))}
           </div>
