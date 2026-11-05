@@ -81,6 +81,77 @@ def table_guard(tables):
     guard = guard.replace('IF EXISTS (SELECT 1 FROM pg_class WHERE oid=ANY(affected) AND relkind',
         "IF EXISTS (SELECT 1 FROM pg_class c JOIN pg_roles r ON r.oid=c.relowner WHERE c.oid=ANY(affected[2:" + str(len(tables)) + "]) AND r.rolname<>current_user)\n     OR EXISTS (SELECT 1 FROM pg_class WHERE oid=ANY(affected) AND relkind")
     guard = guard.replace('WHERE inhparent=ANY(affected)', 'WHERE inhparent=ANY(affected) OR inhrelid=ANY(affected)')
+    # ROLLBACK does not undo external callbacks or sequence increments. Index
+    # expressions/predicates and access-method/opclass callbacks run on INSERT,
+    # including the audit INSERT in the application bundle.
+    index_guard = r'''
+  IF EXISTS (
+    SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND (NOT i.indisvalid OR NOT i.indisready OR NOT i.indislive OR c.relkind<>'i')
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i JOIN pg_depend d ON d.classid='pg_class'::regclass AND d.objid=i.indexrelid
+    JOIN pg_proc p ON d.refclassid='pg_proc'::regclass AND p.oid=d.refobjid
+    JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND n.nspname<>'pg_catalog'
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i JOIN pg_depend d ON d.classid='pg_class'::regclass AND d.objid=i.indexrelid
+    JOIN pg_operator o ON d.refclassid='pg_operator'::regclass AND o.oid=d.refobjid
+    JOIN pg_namespace n ON n.oid=o.oprnamespace
+    LEFT JOIN pg_proc p ON p.oid=o.oprcode LEFT JOIN pg_namespace pn ON pn.oid=p.pronamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND (n.nspname<>'pg_catalog' OR pn.nspname IS DISTINCT FROM 'pg_catalog')
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i JOIN pg_class c ON c.oid=i.indexrelid JOIN pg_am a ON a.oid=c.relam
+    LEFT JOIN pg_proc p ON p.oid=a.amhandler LEFT JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND n.nspname IS DISTINCT FROM 'pg_catalog'
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i CROSS JOIN LATERAL unnest(i.indcollation::oid[]) x(collation_id)
+    LEFT JOIN pg_collation c ON c.oid=x.collation_id LEFT JOIN pg_namespace n ON n.oid=c.collnamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND x.collation_id<>0 AND n.nspname IS DISTINCT FROM 'pg_catalog'
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i CROSS JOIN LATERAL unnest(i.indclass::oid[]) x(class_id)
+    LEFT JOIN pg_opclass c ON c.oid=x.class_id LEFT JOIN pg_namespace cn ON cn.oid=c.opcnamespace
+    LEFT JOIN pg_opfamily f ON f.oid=c.opcfamily LEFT JOIN pg_namespace fn ON fn.oid=f.opfnamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND (cn.nspname IS DISTINCT FROM 'pg_catalog' OR fn.nspname IS DISTINCT FROM 'pg_catalog')
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i CROSS JOIN LATERAL unnest(i.indclass::oid[]) x(class_id)
+    JOIN pg_opclass c ON c.oid=x.class_id JOIN pg_amproc a ON a.amprocfamily=c.opcfamily
+    LEFT JOIN pg_proc p ON p.oid=a.amproc LEFT JOIN pg_namespace n ON n.oid=p.pronamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND n.nspname IS DISTINCT FROM 'pg_catalog'
+  ) OR EXISTS (
+    SELECT 1 FROM pg_index i CROSS JOIN LATERAL unnest(i.indclass::oid[]) x(class_id)
+    JOIN pg_opclass c ON c.oid=x.class_id JOIN pg_amop a ON a.amopfamily=c.opcfamily
+    LEFT JOIN pg_operator o ON o.oid=a.amopopr LEFT JOIN pg_namespace n ON n.oid=o.oprnamespace
+    LEFT JOIN pg_proc p ON p.oid=o.oprcode LEFT JOIN pg_namespace pn ON pn.oid=p.pronamespace
+    WHERE i.indrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND (n.nspname IS DISTINCT FROM 'pg_catalog' OR pn.nspname IS DISTINCT FROM 'pg_catalog')
+  ) THEN RAISE EXCEPTION 'unexpected index callback, operator, opclass, family, collation or access method'; END IF;
+  -- Pinned built-ins need not have pg_depend rows. Inspect function/operator
+  -- OIDs in their stored expression trees as well, so nextval and other
+  -- volatile built-ins cannot escape rollback through a default/check/policy.
+  IF EXISTS (SELECT 1 FROM pg_attribute WHERE attrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      AND attnum>0 AND NOT attisdropped AND attidentity<>'')
+  OR EXISTS (
+    WITH expressions AS (
+      SELECT adbin::text AS code FROM pg_attrdef WHERE adrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass])
+      UNION ALL SELECT conbin::text FROM pg_constraint WHERE conrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND conbin IS NOT NULL
+      UNION ALL SELECT polqual::text FROM pg_policy WHERE polrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND polqual IS NOT NULL
+      UNION ALL SELECT polwithcheck::text FROM pg_policy WHERE polrelid=ANY(affected || ARRAY['compor_migration_audit.applied'::regclass]) AND polwithcheck IS NOT NULL
+    ), refs AS (
+      SELECT m.parts[1] AS kind,m.parts[2]::oid AS target FROM expressions e
+      CROSS JOIN LATERAL regexp_matches(e.code,':(funcid|opfuncid|opno) ([0-9]+)','g') AS m(parts)
+    )
+    SELECT 1 FROM refs r LEFT JOIN pg_operator o ON r.kind='opno' AND o.oid=r.target
+    JOIN pg_proc p ON p.oid=CASE WHEN r.kind='opno' THEN o.oprcode::oid ELSE r.target END
+    WHERE p.provolatile='v' AND p.oid<>'pg_catalog.gen_random_uuid()'::regprocedure
+  ) THEN RAISE EXCEPTION 'unexpected identity or volatile default, constraint or policy'; END IF;
+'''
+    if guard.count('END $$;') != 1:
+        raise ValueError('fim da guarda de tabelas mudou')
+    guard = guard.replace('END $$;', index_guard + 'END $$;')
     return guard + '\n'
 
 

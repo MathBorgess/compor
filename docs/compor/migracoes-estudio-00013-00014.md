@@ -76,6 +76,22 @@ rules, herança, tipos e funções inesperadas em defaults/constraints/política
 A exceção gerenciada para `auth.users.confirmed_at` exige os tipos e a expressão
 exata `LEAST(email_confirmed_at, phone_confirmed_at)` já revisados.
 
+As guardas também cobrem os índices dessas tabelas e da auditoria. Dependências
+de funções e operadores em expressões/predicados, handlers de acesso, collations,
+opclasses, famílias e suas funções/operadores de suporte devem pertencer ao
+`pg_catalog`. Índices em construção ou inválidos também são recusados. Índices
+parciais e de expressão com built-ins continuam permitidos. Essa verificação
+ocorre antes de qualquer fixture: `ROLLBACK` não desfaz `nextval` ou efeitos
+externos de um callback de índice.
+
+Colunas identity e chamadas voláteis em defaults, constraints ou políticas são
+recusadas antes das fixtures. A exceção explícita é o built-in
+`pg_catalog.gen_random_uuid()`; `now()` e `auth.uid()` continuam permitidas por
+serem estáveis. A verificação também inspeciona os OIDs das árvores de expressão,
+pois built-ins fixados no catálogo podem não produzir dependências em
+`pg_depend`. Isso impede `nextval` nesses caminhos de avançar uma sequência mesmo
+quando as linhas da transação forem revertidas.
+
 As duas migrações e as duas entradas de auditoria são confirmadas juntas. As
 **15 entradas finais**, colunas e corpos/permissões das novas RPCs são conferidos
 antes do `COMMIT`. O wrapper exige a linha `COMMIT` na evidência; mesmo assim,
@@ -117,6 +133,13 @@ Os testes aplicam o histórico e o pacote em PGlite, recusam drift e aplicação
 parcial, injetam falha antes da auditoria e executam a prova real pelo `psql`
 contra o socket local. Também comprovam recusa de política permissiva, trigger,
 coluna inesperada e snapshot alterado, além da fixação de TLS/destino nos wrappers.
+Os casos negativos de índice de expressão, predicado, operador, callback de
+opclass e índice na auditoria exigem recusa antes de qualquer incremento na
+sequência sintética. O teste de callback cria uma opclass/família temporária no
+`pg_catalog` do PGlite isolado, com função de suporte fora desse schema, para
+verificar que conferir somente o namespace da opclass seria insuficiente.
+Casos com `nextval` em default, constraint e política, além de coluna identity,
+também exigem recusa com a sequência ainda não utilizada.
 
 PGlite usa uma conexão e identidades sintéticas por `SET ROLE`/claims. Isso não
 prova verificação de JWT pelo Supabase, sessões Google reais, concorrência em
