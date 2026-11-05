@@ -36,6 +36,7 @@ test('submit cria uma sessão assíncrona e repetição consulta sem nova geraç
  assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  const create=f.calls.find(c=>c.url?.endsWith('/sessions'));assert.equal(create.body.stream,false);assert.equal(create.body.environment.type,'none');assert.equal('spend_control'in create.body,false);assert.ok(create.body.agent.tools.some(t=>t.type==='web_search'));
  assert.equal(JSON.parse(create.body.input[0].content[0].text).projectId,projectId);
+ assert.equal(create.body.agent.tools.some(tool=>tool.type==='mcp'),false,'chat não oferece gravação MCP que contorne a confirmação da interface');
  r=await f.chat(request(body));assert.equal((await r.json()).status,'running');assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  f.set({status:'idle',turnState:'completed'});r=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal((await r.json()).text,'Atualização concluída na aba.');
 });
@@ -104,6 +105,13 @@ test('resultado persistente só continua se o servidor comprovar peça e versão
  const result=await(await f.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'completed',pieceId:request2,version:1}}))).json();assert.equal(result.status,'unknown');assert.equal(f.calls.filter(c=>c.url?.endsWith('/events')).length,0);
 });
 test('falha comprovada antes do envio libera somente a tentativa sem chamada paga',async()=>{
- const f=fixture({withMcp:async()=>{throw Error('delegação indisponível');}});
+ const f=fixture({usage:{start:async()=>false,finish:async()=>{}}});
  const response=await f.chat(request(body)),result=await response.json();assert.equal(response.status,503);assert.equal(result.status,'failed');assert.equal(result.failurePhase,'before_submission');assert.equal(f.records.get(requestId).state,'failed');assert.equal(f.calls.length,0);
+});
+test('consulta de turno concluído permanece concluída quando a sessão exige ação de outro turno',async()=>{
+ const f=fixture();await f.chat(request(body));f.set({status:'idle',turnState:'completed'});await f.chat(request({op:'poll',apiKey,projectId,requestId}));
+ f.set({status:'requires_action',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_newer',call_id:'call_newer',arguments:{prompt:'Outra mensagem'}}]});
+ // required_actions describes the current session, not the historical turn.
+ const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.status,'completed');
+ f.set({status:'failed',actions:[]});assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
 });

@@ -41,7 +41,7 @@ function inputContent(body,includeHistory){
 function headers(key,extra={}){return{Authorization:`Bearer ${key}`,'OpenAI-Beta':'agents=v1',...extra};}
 
 /** A request submits one event or reads the managed turn. No application agent loop. */
-export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,store,attempts,usage,bindings,studioBindings,withMcp,fetch:fetchApi=globalThis.fetch,now=Date.now}={}){
+export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,store,attempts,usage,bindings,studioBindings,fetch:fetchApi=globalThis.fetch,now=Date.now}={}){
  const dependencies=()=>appOrigin&&typeof resolveActor==='function'&&typeof ownsProject==='function'&&['reserve','get','bind','state','claimAction','finishAction','getAction'].every(name=>typeof store?.[name]==='function')&&['bindRecovery','finish'].every(name=>typeof attempts?.[name]==='function')&&['issueRecovery','verifyRecovery','issueAction'].every(name=>typeof bindings?.[name]==='function')&&['digest','issue','verify','actionRequestId'].every(name=>typeof studioBindings?.[name]==='function')&&(!usage||['start','finish'].every(name=>typeof usage[name]==='function'));
  async function authorize(request,limit=2*1024*1024){
   if(request.method!=='POST')return{error:reply({error:'method_not_allowed'},405)};
@@ -84,8 +84,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   if(!turn)return reply({status:'running',requestId:record.requestId,attemptId:record.attemptId},202);
   if(!['queued','in_progress','waiting','completed','failed','cancelled'].includes(turn.status))throw Error('invalid turn');
   if(!record.turnId)await state(scope,record,'running',turn.id);
-  if(['failed','cancelled'].includes(turn.status)||session.status==='failed'){await finish(scope,record,'failed',session.usage);return reply({status:'failed',retryAutomatically:false});}
-  if(session.status==='requires_action'){
+  if(['failed','cancelled'].includes(turn.status)){await finish(scope,record,'failed',session.usage);return reply({status:'failed',retryAutomatically:false});}
+  // A session may already be executing a newer message. The requested turn,
+  // never the session's current status, determines a prior request's outcome.
+  if(turn.status!=='completed'&&session.status==='requires_action'){
    if(session.required_actions.length!==1)throw Error('multiple pending actions');
    const action=session.required_actions[0];let args=action?.arguments;
    if(typeof args==='string'){if(args.length>16000)throw Error('invalid action');args=JSON.parse(args);}
@@ -102,7 +104,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    return reply({status:'action_required',requestId:scope.requestId,attemptId:record.attemptId,action:{name:action.name,args:uiArgs,callId:action.call_id,turnId:turn.id},actionBinding:binding},202);
   }
   if(turn.status==='completed'){
-   if(session.required_actions.length)throw Error('pending actions');
+   if(session.required_actions.some(action=>action?.turn_id===turn.id))throw Error('pending actions');
    const page=await get(`${sessionId}/turns/${turn.id}/items?limit=100&order=asc`,key);
    if(!Array.isArray(page.data)||page.has_more!==false)throw Error('incomplete items');
    const messages=page.data.filter(i=>i?.type==='message'&&i.role==='assistant'&&i.status==='completed'&&i.phase==='final_answer'&&i.turn_id===turn.id);
@@ -149,14 +151,13 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     if(!r.ok){if(definiteRejection(r.status)){await finish(scope,record,'failed',null);return reply({status:'failed',error:'provider_rejected',retryAutomatically:false},r.status);}throw Error('submission unknown');}
     try{Promise.resolve(r.body?.cancel()).catch(()=>{});}catch{}
    }else{
-    const submit=async mcpTool=>{
+    const submit=async()=>{
      dispatched=true;
-     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:'gpt-6-astra',instructions,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[...AGENT_STUDIO_TOOLS,{type:'web_search',mode:'live',context_size:'low'},...(mcpTool?[mcpTool]:[])]},environment:{type:'none'},input:inputContent(body,true),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
+     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:'gpt-6-astra',instructions,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[...AGENT_STUDIO_TOOLS,{type:'web_search',mode:'live',context_size:'low'}]},environment:{type:'none'},input:inputContent(body,true),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
      if(!r.ok){if(definiteRejection(r.status)){await finish(scope,record,'failed',null);return {rejected:r.status};}throw Error('creation unknown');}
      const session=await limitedJson(r.body,256000);if(!identifier(session?.id,'sess'))throw Error('session missing');sessionId=session.id;expiresAt=new Date(now()+280000).toISOString();return {created:true};
     };
-    let submitted;
-    if(withMcp){await withMcp({actor,projectId:scope.projectId},async tool=>{submitted=await submit(tool);});if(!submitted)throw Error('delegation unavailable');}else submitted=await submit();
+    const submitted=await submit();
     if(submitted.rejected)return reply({status:'failed',error:'provider_rejected',retryAutomatically:false},submitted.rejected);
     const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId});
     await store.bind({...scope,binding,expiresAt,priorTurnId:null,initialInput:0,initialOutput:0});await attempts.bindRecovery({actor,projectId:scope.projectId,attemptId:record.attemptId,binding});

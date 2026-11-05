@@ -4,17 +4,13 @@ import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
 import {createSupabaseAttemptStore} from '@compor/agents-api/attempt-store';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createUsageStore} from '@compor/agents-api/usage-store';
-import {withAgentMcpTool} from '@compor/remote-mcp/agent-scope';
 import {authClient,authConfig} from './supabase';
 import {agentSigningKey} from './agent-config.mjs';
-import {createConfiguredAgentMcpScope} from './agent-mcp-scope.mjs';
 import {resolveSupabaseActor,ownsSupabaseProject,ownsSupabaseVersion} from './agent-auth.mjs';
 
 export function configuredStudioChat(env=process.env){
  const config=authConfig(),secret=agentSigningKey();
  if(env.COMPOR_STUDIO_CHAT_ENABLED!=='true'||!config||!secret)return null;
- const mcp=createConfiguredAgentMcpScope(config,env);
- if(env.COMPOR_AGENT_MCP_ENABLED==='true'&&!mcp)return null;
  const credentials={url:config.service,anonKey:config.key};
  return createStudioChatHandlers({appOrigin:config.app,
   resolveActor:async()=>resolveSupabaseActor(await authClient(config)),
@@ -35,6 +31,5 @@ export function configuredStudioChat(env=process.env){
   },
   store:createStudioStore(credentials),attempts:createSupabaseAttemptStore(credentials),usage:createUsageStore(credentials),
   bindings:createSessionBindings({secret}),studioBindings:createStudioBindings({secret}),
-  ...(mcp?{withMcp:({actor,projectId},submit)=>withAgentMcpTool({appOrigin:config.app,scope:mcp,token:actor.token,projectId},submit)}:{}),
  });
 }
