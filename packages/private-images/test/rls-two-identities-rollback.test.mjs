@@ -31,7 +31,20 @@ test('psql: duas identidades, rollback e recusas contra políticas/triggers inse
  await db.exec(`insert into auth.users(id) values ('aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa');
   insert into public.projects(id,owner_id,title) values ('bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb','aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa','keep-existing');`);
  const args=['-X','-v','ON_ERROR_STOP=1','-h',dir,'-p',String(port),'-U','postgres','-d','postgres','-f',sql];
- const call=()=>run('psql',args,{maxBuffer:1024*1024});
+ // psql may exit on a guarded error before pglite-socket has finished its
+ // asynchronous disconnect rollback. Wait for that cleanup before touching
+ // the same embedded database or starting the next client.
+ const waitForDisconnect=async()=>{
+  const deadline=Date.now()+10000;
+  while(server.getStats().activeConnections!==0 || db.isInTransaction()) {
+   if(Date.now()>deadline) throw Error('pglite socket did not finish disconnect rollback');
+   await new Promise(resolve=>setTimeout(resolve,5));
+  }
+ };
+ const call=async()=>{
+  try {return await run('psql',args,{maxBuffer:1024*1024});}
+  finally {await waitForDisconnect();}
+ };
  const result=await call();assert.match(result.stdout,/RLS_SYNTHETIC_CHECKS_PASSED_AND_ROLLED_BACK/);
  const preserved=async()=>{
   const {rows}=await db.query(`select (select count(*) from auth.users)::integer as users,
