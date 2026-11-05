@@ -8,24 +8,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 PREPARE = ROOT / 'scripts/prepare_compor_migrations.py'
 APPLY = ROOT / 'scripts/apply_compor_migrations_test_project.sh'
-COMMIT = subprocess.check_output(['git', 'rev-parse', 'HEAD'], cwd=ROOT, text=True).strip()
+REVIEWED_ELEVEN_MIGRATION_COMMIT = '35925f0b130fb4ed0123d2b460cc42ffe2698c2f'
 
 class ApplyPreparationTest(unittest.TestCase):
     def test_exact_source_and_modified_bundle(self):
-        prepared = json.loads(subprocess.check_output(['python3', str(PREPARE), COMMIT], cwd=ROOT, text=True))
+        prepared = json.loads(subprocess.check_output(['python3', str(PREPARE), REVIEWED_ELEVEN_MIGRATION_COMMIT], cwd=ROOT, text=True))
         path = Path(prepared['path'])
         try:
             self.assertEqual(prepared['migrations'], 11)
-            subprocess.run(['python3', str(PREPARE), '--verify', COMMIT, str(path)], cwd=ROOT, check=True, capture_output=True)
+            subprocess.run(['python3', str(PREPARE), '--verify', REVIEWED_ELEVEN_MIGRATION_COMMIT, str(path)], cwd=ROOT, check=True, capture_output=True)
             path.write_bytes(path.read_bytes() + b'-- modified\n')
-            self.assertNotEqual(subprocess.run(['python3', str(PREPARE), '--verify', COMMIT, str(path)], cwd=ROOT, capture_output=True).returncode, 0)
+            self.assertNotEqual(subprocess.run(['python3', str(PREPARE), '--verify', REVIEWED_ELEVEN_MIGRATION_COMMIT, str(path)], cwd=ROOT, capture_output=True).returncode, 0)
             self.assertNotEqual(subprocess.run(['python3', str(PREPARE), 'HEAD'], cwd=ROOT, capture_output=True).returncode, 0)
         finally:
             path.unlink(missing_ok=True)
             path.parent.rmdir()
 
     def test_wrapper_pins_tls_target_and_rejects_tampering(self):
-        prepared = json.loads(subprocess.check_output(['python3', str(PREPARE), COMMIT], cwd=ROOT, text=True))
+        prepared = json.loads(subprocess.check_output(['python3', str(PREPARE), REVIEWED_ELEVEN_MIGRATION_COMMIT], cwd=ROOT, text=True))
         path = Path(prepared['path'])
         try:
             with tempfile.TemporaryDirectory(prefix='compor-apply-wrapper-test-') as tmp:
@@ -34,7 +34,7 @@ class ApplyPreparationTest(unittest.TestCase):
                 openssl = tmpdir / 'openssl'; openssl.write_text('#!/bin/sh\nprintf "%s\\n" "' + fingerprint + '"\n'); openssl.chmod(0o700)
                 psql = tmpdir / 'psql'; psql.write_text(f'#!/bin/sh\nprintf "%s\\n" "$@" > "{args}"\nenv > "{environment}"\n'); psql.chmod(0o700)
                 env = {**os.environ, 'PATH': f'{tmpdir}:' + os.environ['PATH'], 'PGHOST': 'attacker.invalid', 'PGOPTIONS': '-c ssl=off', 'TMPDIR': str(tmpdir)}
-                cmd = ['sh', str(APPLY), COMMIT, str(path), str(ca)]
+                cmd = ['sh', str(APPLY), REVIEWED_ELEVEN_MIGRATION_COMMIT, str(path), str(ca)]
                 subprocess.run(cmd, cwd=ROOT, env=env, check=True, capture_output=True)
                 argv = args.read_text().splitlines(); actual_env = dict(line.split('=',1) for line in environment.read_text().splitlines())
                 self.assertIn('db.dpboawdnuxuzjoufpiry.supabase.co', argv)
