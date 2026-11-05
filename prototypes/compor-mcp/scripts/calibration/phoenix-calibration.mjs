@@ -78,8 +78,7 @@ function bootstrap(diffs) {
   for(let i=0;i<PROTOCOL.bootstrapSamples;i++) { let sum=0; for(let j=0;j<diffs.length;j++)sum+=diffs[Math.floor(r()*diffs.length)]; vals.push(sum/diffs.length); }
   vals.sort((a,b)=>a-b); return [round(vals[Math.floor(vals.length*.025)]),round(vals[Math.floor(vals.length*.975)])];
 }
-export function runStudy() {
-  const splits = Object.fromEntries(['train','validation','test'].map(k => [k, PROTOCOL[k].map(session)]));
+export function runStudy(splits = Object.fromEntries(['train','validation','test'].map(k => [k, PROTOCOL[k].map(session)]))) {
   const r = rng(PROTOCOL.searchSeed), params = [createPhoenixHyperparams(), ...Array.from({length:PROTOCOL.randomTrials},()=>proposed(r))];
   const trials = params.map((hp,index)=>({ index, hp, train:withoutRows(evaluate(splits.train,hp)) }));
   const finalists = [...trials].sort((a,b)=>b.train.ndcg3-a.train.ndcg3 || a.index-b.index).slice(0,PROTOCOL.finalists);

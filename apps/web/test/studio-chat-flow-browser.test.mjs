@@ -52,8 +52,9 @@ async function openOriginal(page,origin,{key=true}={}){
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
  if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
- await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).setInputFiles({name,mimeType:mime,buffer});
- await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).click()]);
+ await chooser.setFiles({name,mimeType:mime,buffer});
+ try{await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();}catch(error){throw Error(`${error.message}\nUpload: ${JSON.stringify({mime,size:buffer.length,alerts:await page.getByRole('alert').allTextContents(),selection:(await stored(page))?.selection})}`,{cause:error});}
  await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  return buffer;
 }

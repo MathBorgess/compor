@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "date": "2026-11-05",
+  "label": "synthetic_simulation_not_human_evaluation",
+  "sourceResult": "docs/evals/2026-10-29-phoenix-calibracao/result-after-unknown-sid.json",
+  "sourceResultSha256": "465a6fcaa4b46dfdcd09e6aa2f21f8588e9161021223298e08c8a3951d3a3cc7",
+  "fixtureManifest": "prototypes/compor-mcp/test/fixtures/phoenix-calibration-v1/manifest.json",
+  "fixtureManifestSha256": "a053edab05aae03077962ba8bed3c92aac56d43577b33133388a1dcb749da59b",
+  "historicalGeneratorSha256": "59f8bf9162d5a02898eeb5854ba6a031af374b9613a88ab0e671d7db3e7eeb2a",
+  "generatorSha256": "24b849654f3fa281315bc3009af26e5a0752df157e704722669647894207620f",
+  "resultSha256": "97a345b0ae597babe537ff57563795f12f15ff4d9c1677bc94a4ee1e5d1ff5db",
+  "changedFields": [
+    "hashes.generator"
+  ],
+  "runtime": {
+    "node": "v24.16.0",
+    "platform": "darwin",
+    "arch": "arm64"
+  },
+  "observation": "Replay of historical input bytes; only the executed study source hash differs. This is not the original binary execution or evidence from Linux."
+}

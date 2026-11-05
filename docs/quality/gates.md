@@ -12,6 +12,8 @@ O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull r
 
 As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs não recebem secrets e não fazem deploy. O token tem somente `contents: read`. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
 
+Os testes de sanitização do protótipo exigem `cwebp` e `dwebp` no `PATH`; o job instala e verifica ambos antes da suíte. O [pacote `webp` do Ubuntu 24.04](https://packages.ubuntu.com/noble/amd64/webp/filelist) fornece esses executáveis. Ausência dos codecs continua sendo falha, sem ignorar testes de pixels, transparência ou remoção de metadados.
+
 Nos preparos de migração, `READ_COMMIT` identifica os bytes em um commit publicado; `SOURCE_COMMIT` e `SOURCES` preservam os IDs históricos registrados na auditoria. Os hashes e as guardas continuam obrigatórios. Uma regressão executa os preparos em um checkout sem os commits locais antigos e exige os mesmos oito arquivos SQL/proof, byte a byte. Os [hashes preservados e a falha que motivou a separação](migration-pins-2026-11-05.md) estão registrados.
 
 No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `userns` somente ao caminho exato do Chromium instalado. Isso permite iniciar o sandbox do navegador baixado pelo Playwright, que não usa o caminho coberto pelo perfil do Chrome do sistema. O job mantém AppArmor ativo e não passa `--no-sandbox` ao Lighthouse. A configuração segue a [orientação do Chromium para perfis AppArmor](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md) e existe somente no runner temporário.
@@ -67,7 +69,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | `npm run quality:typecheck` | Instalação web | Checagem TypeScript estrita do app Next |
 | `npm run quality:test` | Node 24 | Testes de rejeição de páginas inválidas e limites excedidos |
 | `npm run quality:maintenance` | Instalação da raiz | `quality-results/maintainability/complexity.json` |
-| `npm run quality:unit` | Instalação dos pacotes `private-images` e `remote-mcp`, Python 3, `psql` e histórico Git completo | Resultados dos testes de pacotes e migrações |
+| `npm run quality:unit` | Instalação dos pacotes `private-images`, `remote-mcp`, `agile-deliberation`, `agents-api` e do protótipo, Python 3, `psql`, `cwebp`/`dwebp` no `PATH` e histórico Git completo | Resultados dos testes de pacotes e migrações |
 | `npm run quality:browser` | Instalação web e `remote-mcp`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
 | `npm run quality:build` | Instalação web | Build Next de produção |
 | `npm run quality:performance` | Build de produção, instalação da raiz e browser definido | Bundle, cinco relatórios HTML e JSON, resumo e log do servidor |

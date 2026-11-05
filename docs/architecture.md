@@ -91,7 +91,7 @@ As instruções do Agile Deliberation são compartilhadas com o MCP. O agente es
 
 ## Instalação e verificação
 
-Use Node 24, Python 3, cliente `psql` e histórico Git completo para reproduzir os jobs. O repositório contém pacotes com dependências `file:`; instalar somente a raiz não instala todos eles. A partir da raiz:
+Use Node 24, Python 3, cliente `psql`, `cwebp`/`dwebp` no `PATH` e histórico Git completo para reproduzir os jobs. No Ubuntu, o pacote `webp` fornece os dois binários de imagem. O repositório contém pacotes com dependências `file:`; instalar somente a raiz não instala todos eles. A partir da raiz:
 
 ```sh
 npm ci --ignore-scripts

@@ -62,8 +62,12 @@ jobs:
             packages/agile-deliberation/package-lock.json
             packages/agents-api/package-lock.json
             prototypes/compor-mcp/package-lock.json
-      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client
-      - run: psql --version
+      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client webp
+      - name: Verify migration and image tools
+        run: |
+          psql --version
+          cwebp -version
+          dwebp -version
       - run: npm ci --ignore-scripts --prefix packages/private-images
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
       - run: npm ci --ignore-scripts --prefix packages/agile-deliberation

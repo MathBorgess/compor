@@ -797,11 +797,11 @@ test('Sanitização binária preserva pixels reais em WebP decodificável, rejei
     topLeftRgba: [0, 0, 0, 0], // pixel (0,0) totalmente transparente
   });
   const cwebpLossy = spawnSync(
-    '/opt/homebrew/bin/cwebp',
+    'cwebp',
     ['-quiet', '-q', '90', '-alpha_q', '100', '-o', '-', '--', '-'],
     { input: rgbaTransparentPng },
   );
-  assert.equal(cwebpLossy.status, 0);
+  assert.equal(cwebpLossy.status, 0, cwebpLossy.error?.message || cwebpLossy.stderr.toString());
   const lossyWebpWithAlpha = Buffer.from(cwebpLossy.stdout);
   assert.ok(lossyWebpWithAlpha.includes(Buffer.from('ALPH')), 'cwebp lossy com transparência gera chunk ALPH');
 
