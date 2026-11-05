@@ -33,6 +33,7 @@ export default function StudioApp({
   onRemoveKey,
   initialObjective,
   recoveryBanner,
+  isAuthenticated,
 }) {
   const [projects, setProjects] = useState([]),
     [selected, setSelected] = useState(null),
@@ -93,6 +94,7 @@ export default function StudioApp({
       <ProjectStudio
         key={`${userId}:${selected.id}`}
         userId={userId}
+        isAuthenticated={isAuthenticated}
         project={selected}
         onBack={() => setSelected(null)}
         hasApiKey={hasApiKey}
@@ -176,6 +178,7 @@ function ProjectStudio({
   keyInput,
   onRemoveKey,
   initialObjective,
+  isAuthenticated,
 }) {
   const local = useStudioState({ userId, projectId: project.id }),
     s = local.state;
@@ -572,7 +575,11 @@ function ProjectStudio({
     const tools = createStudioTools({
       getScope: () => {
         const value = local.get();
-        return { userId, projectId: project.id, revision: value?.revision };
+        return {
+          userId: isAuthenticated?.() === false ? null : userId,
+          projectId: project.id,
+          revision: value?.revision,
+        };
       },
       handlers: Object.fromEntries(
         [
@@ -911,6 +918,43 @@ function ProjectStudio({
         )
       }
       chat={chat}
+      overlays={
+        <>
+          {dialog && (
+            <StudioDialog
+              title="Confirmar alteração no projeto?"
+              onClose={() => resolveConfirmation(false)}
+            >
+              <p>
+                {dialog.name === "compor_salvar_versao"
+                  ? "Uma nova versão será salva."
+                  : "O nome do projeto será atualizado."}
+              </p>
+              <button onClick={() => resolveConfirmation(true)}>
+                Confirmar
+              </button>
+              <button onClick={() => resolveConfirmation(false)}>
+                Cancelar
+              </button>
+            </StudioDialog>
+          )}
+          {proposal && (
+            <StudioDialog
+              title="Imagem proposta"
+              onClose={() => setProposal(null)}
+            >
+              <p>{proposal.prompt}</p>
+              <p>
+                Esta proposta ainda não gerou uma imagem. A execução depende da
+                confirmação da chamada vinculada ao agente.
+              </p>
+              <button onClick={() => setProposal(null)}>
+                Voltar ao estúdio
+              </button>
+            </StudioDialog>
+          )}
+        </>
+      }
       footer={
         <>
           {local.error && <p role="alert">{local.error}</p>}
@@ -1086,30 +1130,6 @@ function ProjectStudio({
             Pedir ajuste no estúdio
           </button>
         </StudioPanel>
-      )}
-      {dialog && (
-        <StudioDialog
-          title="Confirmar alteração no projeto?"
-          onClose={() => resolveConfirmation(false)}
-        >
-          <p>
-            {dialog.name === "compor_salvar_versao"
-              ? "Uma nova versão será salva."
-              : "O nome do projeto será atualizado."}
-          </p>
-          <button onClick={() => resolveConfirmation(true)}>Confirmar</button>
-          <button onClick={() => resolveConfirmation(false)}>Cancelar</button>
-        </StudioDialog>
-      )}
-      {proposal && (
-        <StudioDialog title="Imagem proposta" onClose={() => setProposal(null)}>
-          <p>{proposal.prompt}</p>
-          <p>
-            Esta proposta ainda não gerou uma imagem. A execução depende da
-            confirmação da chamada vinculada ao agente.
-          </p>
-          <button onClick={() => setProposal(null)}>Voltar ao estúdio</button>
-        </StudioDialog>
       )}
     </StudioShell>
   );

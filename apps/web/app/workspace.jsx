@@ -207,7 +207,9 @@ export default function Workspace({ loginAvailable }) {
   if (authenticatedUser && ["connected", "checking"].includes(authState))
     return (
       <>
-        {authState === "checking" && <p role="status">Verificando sua conta…</p>}
+        {authState === "checking" && (
+          <p role="status">Verificando sua conta…</p>
+        )}
         <div
           hidden={authState !== "connected"}
           inert={authState !== "connected"}
@@ -217,11 +219,15 @@ export default function Workspace({ loginAvailable }) {
             key={authenticatedUser}
             userId={authenticatedUser}
             initialObjective={objective}
+            isAuthenticated={() =>
+              activeIdentity.current === `user:${authenticatedUser}`
+            }
             hasApiKey={authState === "connected" && hasOpenAIKey}
             getApiKey={() =>
-              authState === "connected" && openAIKeyOwner.current === authenticatedUser
-              ? openAIKey.current
-              : ""
+              activeIdentity.current === `user:${authenticatedUser}` &&
+              openAIKeyOwner.current === authenticatedUser
+                ? openAIKey.current
+                : ""
             }
             onRemoveKey={clearOpenAIKey}
             recoveryBanner={
@@ -250,9 +256,9 @@ export default function Workspace({ loginAvailable }) {
                     setHasOpenAIKey(Boolean(event.target.value));
                   }}
                 />
-          </label>
-        }
-      />
+              </label>
+            }
+          />
         </div>
       </>
     );
