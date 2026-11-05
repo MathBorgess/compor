@@ -4,24 +4,96 @@
   "private": true,
   "type": "module",
   "exports": {
-    ".": "./src/index.mjs",
-    "./project-route": "./src/project-route.mjs",
-    "./attempt-store": "./src/attempt-store.mjs",
-    "./session-binding": "./src/session-binding.mjs",
-    "./image-tool-reservation": "./src/image-tool-reservation.mjs",
-    "./image-tool-execution": "./src/image-tool-execution.mjs",
-    "./image-tool-result": "./src/image-tool-result.mjs",
-    "./usage-store": "./src/usage-store.mjs",
-    "./telemetry": "./src/telemetry.mjs",
-    "./recovery-route": "./src/recovery-route.mjs",
-    "./studio-chat": "./src/studio-chat.mjs",
-    "./studio-chat-tools": "./src/studio-chat-tools.mjs",
-    "./studio-chat-store": "./src/studio-chat-store.mjs",
-    "./studio-chat-bindings": "./src/studio-chat-bindings.mjs",
-    "./studio-persona-skill": "./src/studio-persona-skill.mjs",
-    "./studio-telemetry": "./src/studio-telemetry.mjs",
-    "./image-proposal": "./src/image-proposal.mjs",
-    "./artwork-input": "./src/artwork-input.mjs"
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.mjs",
+      "default": "./src/index.mjs"
+    },
+    "./project-route": {
+      "types": "./src/project-route.d.ts",
+      "import": "./src/project-route.mjs",
+      "default": "./src/project-route.mjs"
+    },
+    "./attempt-store": {
+      "types": "./src/attempt-store.d.ts",
+      "import": "./src/attempt-store.mjs",
+      "default": "./src/attempt-store.mjs"
+    },
+    "./session-binding": {
+      "types": "./src/session-binding.d.ts",
+      "import": "./src/session-binding.mjs",
+      "default": "./src/session-binding.mjs"
+    },
+    "./image-tool-reservation": {
+      "types": "./src/image-tool-reservation.d.ts",
+      "import": "./src/image-tool-reservation.mjs",
+      "default": "./src/image-tool-reservation.mjs"
+    },
+    "./image-tool-execution": {
+      "types": "./src/image-tool-execution.d.ts",
+      "import": "./src/image-tool-execution.mjs",
+      "default": "./src/image-tool-execution.mjs"
+    },
+    "./image-tool-result": {
+      "types": "./src/image-tool-result.d.ts",
+      "import": "./src/image-tool-result.mjs",
+      "default": "./src/image-tool-result.mjs"
+    },
+    "./usage-store": {
+      "types": "./src/usage-store.d.ts",
+      "import": "./src/usage-store.mjs",
+      "default": "./src/usage-store.mjs"
+    },
+    "./telemetry": {
+      "types": "./src/telemetry.d.ts",
+      "import": "./src/telemetry.mjs",
+      "default": "./src/telemetry.mjs"
+    },
+    "./recovery-route": {
+      "types": "./src/recovery-route.d.ts",
+      "import": "./src/recovery-route.mjs",
+      "default": "./src/recovery-route.mjs"
+    },
+    "./studio-chat": {
+      "types": "./src/studio-chat.d.ts",
+      "import": "./src/studio-chat.mjs",
+      "default": "./src/studio-chat.mjs"
+    },
+    "./studio-chat-tools": {
+      "types": "./src/studio-chat-tools.d.ts",
+      "import": "./src/studio-chat-tools.mjs",
+      "default": "./src/studio-chat-tools.mjs"
+    },
+    "./studio-chat-store": {
+      "types": "./src/studio-chat-store.d.ts",
+      "import": "./src/studio-chat-store.mjs",
+      "default": "./src/studio-chat-store.mjs"
+    },
+    "./studio-chat-bindings": {
+      "types": "./src/studio-chat-bindings.d.ts",
+      "import": "./src/studio-chat-bindings.mjs",
+      "default": "./src/studio-chat-bindings.mjs"
+    },
+    "./studio-persona-skill": {
+      "types": "./src/studio-persona-skill.d.ts",
+      "import": "./src/studio-persona-skill.mjs",
+      "default": "./src/studio-persona-skill.mjs"
+    },
+    "./studio-telemetry": {
+      "types": "./src/studio-telemetry.d.ts",
+      "import": "./src/studio-telemetry.mjs",
+      "default": "./src/studio-telemetry.mjs"
+    },
+    "./image-proposal": {
+      "types": "./src/image-proposal.d.ts",
+      "import": "./src/image-proposal.mjs",
+      "default": "./src/image-proposal.mjs"
+    },
+    "./artwork-input": {
+      "types": "./src/artwork-input.d.ts",
+      "import": "./src/artwork-input.mjs",
+      "default": "./src/artwork-input.mjs"
+    }
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

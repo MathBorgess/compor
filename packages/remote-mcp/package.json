@@ -3,9 +3,23 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "exports": { ".": { "types": "./src/index.d.ts", "import": "./src/index.js" }, "./agent-scope": "./src/agent-scope.js" },
-  "engines": { "node": ">=20" },
-  "scripts": { "test": "node --test test/*.test.mjs" },
+  "exports": {
+    ".": {
+      "types": "./src/index.d.ts",
+      "import": "./src/index.js"
+    },
+    "./agent-scope": {
+      "types": "./src/agent-scope.d.ts",
+      "import": "./src/agent-scope.js",
+      "default": "./src/agent-scope.js"
+    }
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  },
   "dependencies": {
     "@modelcontextprotocol/sdk": "1.32.2",
     "zod": "4.6.7"
