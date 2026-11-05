@@ -10,7 +10,7 @@ actual=$(openssl x509 -in "$ca_file" -noout -fingerprint -sha256) || exit 2
 [ "$actual" = "$expected" ] || { printf '%s\n' 'CA inesperada; conexão cancelada.' >&2; exit 2; }
 script_dir=$(CDPATH= cd -P "$(dirname "$0")" && pwd -P)
 sql_path="$script_dir/recovery_rls_rollback.sql"
-expected_sql='110ce7044c97ee75a6f9d8e0bd9a74ef62c15521f10bb24b11337cc4f635e6c3'
+expected_sql='e49f6df0f1669179a9d7df2b94b2375cdf14d0ca7f6829e75d5e21cf102e61b7'
 actual_sql=$(shasum -a 256 "$sql_path" | cut -d ' ' -f1)
 [ "$actual_sql" = "$expected_sql" ] || { printf '%s\n' 'SQL inesperado; teste cancelado.' >&2; exit 2; }
 umask 077

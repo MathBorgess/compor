@@ -136,10 +136,25 @@ BEGIN
   EXCEPTION WHEN insufficient_privilege THEN write_denied := true; END;
   IF NOT read_denied OR NOT write_denied THEN RAISE EXCEPTION 'direct access was not denied'; END IF;
 END $$;
-SELECT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.syntheticA.proof')
- AND public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.syntheticA.proof')
- AND NOT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.different.proof')
- AND NOT public.bind_agent_session_recovery(:'project_b'::uuid,:'attempt_b'::uuid,'v4.cross.proof') AS passed \gset
+SELECT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.syntheticA.proof') AS passed \gset
+\if :passed
+\else
+  \echo 'Recovery bind check for identity A failed'
+  SELECT 1/0;
+\endif
+SELECT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.syntheticA.proof') AS passed \gset
+\if :passed
+\else
+  \echo 'Recovery bind check for identity A failed'
+  SELECT 1/0;
+\endif
+SELECT NOT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.different.proof') AS passed \gset
+\if :passed
+\else
+  \echo 'Recovery bind check for identity A failed'
+  SELECT 1/0;
+\endif
+SELECT NOT public.bind_agent_session_recovery(:'project_b'::uuid,:'attempt_b'::uuid,'v4.cross.proof') AS passed \gset
 \if :passed
 \else
   \echo 'Recovery bind check for identity A failed'
@@ -153,8 +168,13 @@ SELECT (SELECT count(*) FROM public.get_agent_session_recovery(:'project_a'::uui
   SELECT 1/0;
 \endif
 SELECT set_config('request.jwt.claim.sub',:'user_b',true);
-SELECT public.bind_agent_session_recovery(:'project_b'::uuid,:'attempt_b'::uuid,'v4.syntheticB.proof')
- AND NOT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.cross.proof') AS passed \gset
+SELECT public.bind_agent_session_recovery(:'project_b'::uuid,:'attempt_b'::uuid,'v4.syntheticB.proof') AS passed \gset
+\if :passed
+\else
+  \echo 'Recovery bind check for identity B failed'
+  SELECT 1/0;
+\endif
+SELECT NOT public.bind_agent_session_recovery(:'project_a'::uuid,:'attempt_a'::uuid,'v4.cross.proof') AS passed \gset
 \if :passed
 \else
   \echo 'Recovery bind check for identity B failed'
