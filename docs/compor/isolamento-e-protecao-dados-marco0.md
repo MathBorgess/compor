@@ -2,6 +2,8 @@
 
 Registro do estado e das evidências observadas em 4 de novembro de 2026 no projeto Supabase de teste do Compor e no deployment Vercel. O objetivo é permitir revisar onde a identidade é verificada, como uma operação é vinculada à conta e quais garantias ainda dependem de prova. O código e a configuração podem mudar; este registro não substitui a verificação do ambiente ativo.
 
+**Atualização em 05/11/2026:** as migrações de medição do modelo 2.6 (`20261105000012`) e recuperação de sessão (`20261103000011`) foram aplicadas, nessa ordem, no projeto de teste. As duas confirmaram `COMMIT` e a auditoria própria registra 13 entradas. A recuperação mantém tabela sem acesso direto pelos papéis de aplicação e RPCs que verificam conta e projeto; o backend valida o vínculo assinado antes de usá-lo. A flag da funcionalidade permanece desativada até a verificação no banco real. Testes locais com duas identidades sintéticas passaram; JWTs reais, concorrência e Storage entre contas permanecem sem prova. A ordem incomum e a auditoria própria precisam ser conciliadas antes de usar o histórico da CLI Supabase.
+
 ## Identidade e escopo
 
 O isolamento do marco 0 é por **conta**, não por organização ou equipe compartilhada: um projeto pertence a um único `owner_id`, associado à identidade do Supabase. O Google é o provedor de login do aplicativo; o Supabase Auth mantém a sessão e entrega a identidade usada pelo backend e pelo Postgres. A chave OpenAI fornecida no app serve para a sessão de geração, não identifica a conta Compor e não é exigida pelo Codex.

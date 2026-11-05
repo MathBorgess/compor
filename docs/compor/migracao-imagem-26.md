@@ -1,5 +1,7 @@
 # Migração para GPT-Image-2.6 Flare
 
+**Evidência em 05/11/2026:** a migração foi aplicada no projeto de teste com 12 entradas de auditoria e `COMMIT`; o deployment que usa o modelo ficou pronto na Vercel. A conta listou acesso ao modelo. Uma chamada sintética direta à Images API, 1024 × 1024 e qualidade `low`, retornou HTTP 200 e dados com assinatura PNG válida (754.229 bytes). O uso informado foi de 17 tokens de texto de entrada e 824 tokens de imagem de saída, com estimativa de US$ 0,024805 pela tabela standard, sem confirmar a fatura. A imagem ficou em memória durante a prova. Isso não comprova o adaptador, a qualidade `auto` nem a jornada integrada com agente, Storage e app.
+
 O modelo ativo passa a ser `gpt-image-2.6-flare`, aceito pela [Images API](https://developers.openai.com/api/reference/resources/images/methods/generate). A imagem sintética gerada anteriormente com 2.5 não comprova acesso nem qualidade do modelo 2.6; sua evidência histórica permanece identificada como 2.5. Os preços standard de [2.6 Flare](https://developers.openai.com/api/docs/models/gpt-image-2.6-flare) em 4/11/2026 eram US$ 5 por milhão de tokens de texto de entrada, US$ 8 por milhão de tokens de imagem de entrada e US$ 30 por milhão de tokens de imagem de saída. Estimativas continuam condicionadas a contagens suficientes e não são faturamento.
 
 ## Compatibilidade e implantação

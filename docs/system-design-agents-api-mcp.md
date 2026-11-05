@@ -6,7 +6,9 @@
 
 A interface existente ainda não atende a esse novo recorte. Antes de implementá-lo, detalhar o vínculo entre conversa, projeto e peças, a retomada da sessão gerenciada, a persistência do quadro e os estados de execução, falha e custo. Não presumir que uma resposta textual ou uma sessão ociosa comprove a geração de imagem. A implementação, a autorização por conta e a jornada completa precisam de verificação própria.
 
-**Conversa e versões, decisões de 05/11/2026:** cada projeto tem uma conversa, contextualizada pela peça e versão abertas. Quando a pessoa pedir alterações a partir de uma versão anterior, o resultado cria uma nova versão e preserva a anterior. A autorização por conta continua obrigatória para ler ou alterar qualquer peça.
+**Conversa e versões, decisões de 05/11/2026:** cada projeto tem uma conversa, contextualizada pela peça e versão abertas. Quando a pessoa pedir alterações a partir de uma versão anterior, o resultado cria uma nova versão atual e preserva a anterior. Se a origem estiver aprovada, a nova versão herda a aprovação, com sua origem registrada. A pessoa pode marcar áreas da arte e selecionar elementos editáveis. A autorização por conta continua obrigatória para ler ou alterar qualquer peça.
+
+O Codex compartilha projetos, peças e versões com a web, mas não acessa a conversa da web no primeiro marco. O moodboard aceita referências PNG e JPEG enviadas pela pessoa.
 
 ## Objetivo e recorte
 
