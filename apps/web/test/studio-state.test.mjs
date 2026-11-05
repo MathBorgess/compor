@@ -1,0 +1,202 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.mjs';
+
+const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const at='2026-11-05T12:00:00.000Z';
+const content={headline:'Peça sintética',price:'R$ 20',date:'10/11',caption:'Legenda sintética',captionOrigin:'user'};
+const initial=()=>createStudioState({userId:id(1),projectId:id(2)});
+const selected=()=>selectVersion(initial(),{pieceId:id(3),version:2,latestVersion:5,content});
+const reference={id:id(8),name:'sintetica.png',mime:'image/png',size:200,width:10,height:10};
+
+test('state local é segregado, versionado e imutável, sem campo ou conteúdo de chave',()=>{
+ const state=updateBrief(initial(),{offer:'Curso fictício'});
+ assert.equal(initial().brief.offer,'');
+ assert.equal(state.revision,1);assert.equal(state.projectId,id(2));
+ assert.throws(()=>{state.brief.offer='Outra';},TypeError);
+ assert.deepEqual(parseStudioState(JSON.parse(JSON.stringify(state))),state);
+ assert.throws(()=>parseStudioState({...state,apiKey:'qualquer'}));
+ assert.throws(()=>updateBrief(state,{offer:`Não guardar sk-${'a'.repeat(30)}`}));
+ assert.throws(()=>updatePersona(state,{claims:[{id:id(9),text:'Hipótese',provenance:'certeza_inventada',source:''}]}));
+ assert.throws(()=>parseStudioState({...state,schemaVersion:99}));
+});
+
+test('navegar preserva rascunhos separados e base anterior não vira latest silenciosamente',()=>{
+ let state=editDraft(selected(),{field:'headline',value:'Alteração local'});
+ state=selectVersion(state,{pieceId:id(3),version:5,latestVersion:5,content});
+ assert.equal(getCurrentDraft(state).baseVersion,5);
+ state=selectVersion(state,{pieceId:id(3),version:2,latestVersion:6,content});
+ assert.equal(getCurrentDraft(state).content.headline,'Alteração local');
+ assert.equal(getCurrentDraft(state).expectedLatestVersion,5);
+ const created=createPost(state,{pieceId:id(4)});
+ assert.equal(created.drafts.length,3);
+ assert.equal(createPost(created,{pieceId:id(4)}),created,'mesma criação não cria outro rascunho');
+});
+
+test('reabrir uma versão sem edições reflete aprovação e revisão autoritativas do servidor',()=>{
+ const original=selected(),approval={status:'approved',kind:'explicit',sourceVersion:2,at};
+ let state=selectVersion(original,{pieceId:id(3),version:2,latestVersion:6,content,approval});
+ assert.deepEqual(getCurrentDraft(state).approval,approval);
+ assert.equal(getCurrentDraft(state).expectedLatestVersion,6);
+ assert.deepEqual(getCurrentDraft(original).approval,{status:'unapproved'});
+ state=selectVersion(state,{pieceId:id(3),version:2,latestVersion:6,content,approval:{status:'unapproved'}});
+ assert.deepEqual(getCurrentDraft(state).approval,{status:'unapproved'});
+});
+
+test('reabrir uma versão com edições preserva o rascunho e a aprovação da base local',()=>{
+ const approval={status:'approved',kind:'explicit',sourceVersion:2,at};
+ let state=selectVersion(initial(),{pieceId:id(3),version:2,latestVersion:5,content,approval});
+ state=editDraft(state,{field:'headline',value:'Edição que ainda não foi salva'});
+ state=selectVersion(state,{pieceId:id(3),version:2,latestVersion:6,content,approval:{status:'unapproved'}});
+ const draft=getCurrentDraft(state);
+ assert.equal(draft.content.headline,'Edição que ainda não foi salva');assert.equal(draft.dirty,true);
+ assert.equal(draft.expectedLatestVersion,5);assert.deepEqual(draft.approval,approval);
+});
+
+test('retoma um rascunho local existente sem substituir seu conteúdo nem seleção em erro',()=>{
+ let state=createPost(selected(),{pieceId:id(10)});
+ state=editDraft(state,{field:'headline',value:'Ainda não salvo'});
+ state=selectVersion(state,{pieceId:id(3),version:5,latestVersion:5,content});
+ state=selectDraft(state,{pieceId:id(10),baseVersion:0});
+ assert.equal(getCurrentDraft(state).content.headline,'Ainda não salvo');
+ assert.equal(getCurrentDraft(state).dirty,true);
+ const before=state;
+ assert.throws(()=>selectDraft(state,{pieceId:id(11),baseVersion:0}),error=>error.code==='studio_draft_unavailable');
+ assert.equal(state,before);assert.equal(state.selection.pieceId,id(10));
+});
+
+test('pedido congela mensagem, base, marcações e referências mesmo após mudar seleção',()=>{
+ let state=addReference(selected(),reference);
+ state=addMark(state,{id:id(10),kind:'area',x:.1,y:.2,width:.3,height:.4,note:'Ajustar cor'});
+ state=addMark(state,{id:id(11),kind:'element',elementId:'headline',note:'Dar destaque'});
+ state=prepareAdjustment(state,{requestId:id(20),messageId:id(21),instruction:'Ajuste somente a área indicada',createdAt:at,eventId:id(22)});
+ const frozen=state.adjustments[0].context;
+ state=createPost(state,{pieceId:id(4)});
+ state=removeReference(state,id(8));
+ assert.equal(frozen.pieceId,id(3));assert.equal(frozen.baseVersion,2);assert.equal(frozen.expectedLatestVersion,5);
+ assert.equal(frozen.marks.length,2);assert.equal(frozen.references[0].id,id(8));
+ assert.equal(state.references.length,0);assert.equal(state.adjustments[0].context.references.length,1);
+ assert.throws(()=>{frozen.marks[0].x=.9;},TypeError);
+ state=settleAdjustment(state,{requestId:id(20),status:'completed',result:{messageId:id(23),text:'Proposta da mesma base'},eventId:id(24),createdAt:at});
+ assert.equal(state.messages[1].context.pieceId,id(3));assert.equal(getCurrentDraft(state).pieceId,id(4));
+ assert.equal(state.messages[1].context.baseVersion,2);
+});
+
+test('resultado desconhecido impede novo pedido e consulta não é tratada como nova execução',()=>{
+ let state=prepareAdjustment(selected(),{requestId:id(20),messageId:id(21),instruction:'Alterar o título',createdAt:at,eventId:id(22)});
+ state=settleAdjustment(state,{requestId:id(20),status:'unknown',result:{assetId:id(99)},eventId:id(23)});
+ assert.throws(()=>prepareAdjustment(state,{requestId:id(30),messageId:id(31),instruction:'Repetir',createdAt:at,eventId:id(32)}),error=>error.code==='studio_operation_active');
+ state=settleAdjustment(state,{requestId:id(20),status:'completed',result:{messageId:id(24),text:'Concluído após consulta'},createdAt:at,eventId:id(25)});
+ assert.equal(state.adjustments.length,1);assert.equal(state.messages.filter(m=>m.role==='assistant').length,1);
+ assert.equal(state.adjustments[0].result.assetId,id(99),'artefato conhecido não se perde com resultado do turno incerto');
+ assert.throws(()=>settleAdjustment(state,{requestId:id(20),status:'in_progress',eventId:id(26)}),error=>error.code==='studio_operation_terminal');
+});
+
+test('marcas fora da arte e vínculos de mensagem adulterados são rejeitados',()=>{
+ assert.throws(()=>addMark(selected(),{id:id(9),kind:'area',x:.9,y:0,width:.2,height:.2,note:''}));
+ assert.throws(()=>addMark(selected(),{id:id(9),kind:'element',elementId:'',note:''}));
+ let state=prepareAdjustment(selected(),{requestId:id(20),messageId:id(21),instruction:'Alterar',createdAt:at,eventId:id(22)});
+ const changed=JSON.parse(JSON.stringify(state));changed.messages[0].context.pieceId=id(4);
+ assert.throws(()=>parseStudioState(changed));
+ const foreign=JSON.parse(JSON.stringify(state));foreign.adjustments[0].context.projectId=id(7);
+ assert.throws(()=>parseStudioState(foreign));
+ assert.throws(()=>addMessage(state,{id:id(9),role:'assistant',text:'Mensagem',createdAt:'ontem'}));
+});
+
+test('nova versão a partir da antiga fica atual e herda aprovação com origem real',()=>{
+ let state=approveDraft(selected(),{at,eventId:id(40)});
+ state=editDraft(state,{field:'caption',value:'Ajuste da base antiga'});
+ const saved={...content,caption:'Ajuste da base antiga'};
+ state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:saved,eventId:id(41)});
+ const current=getCurrentDraft(state);
+ assert.equal(current.baseVersion,6);assert.equal(current.expectedLatestVersion,6);
+ assert.deepEqual(current.approval,{status:'approved',kind:'inherited',sourceVersion:2,at});
+ assert.equal(state.drafts.find(item=>item.baseVersion===2).content.caption,'Ajuste da base antiga');
+ assert.equal(recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:saved,eventId:id(41)}),state);
+ assert.throws(()=>recordSavedVersion(state,{pieceId:id(3),baseVersion:6,version:8,content:saved,eventId:id(42)}),error=>error.code==='studio_version_conflict');
+});
+
+test('salvamento adota a aprovação do servidor mesmo quando a base local não a conhecia',()=>{
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ let state=recordSavedVersion(selected(),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval});
+ assert.deepEqual(getCurrentDraft(state).approval,approval);
+ assert.deepEqual(state.drafts.find(item=>item.baseVersion===2).approval,{status:'unapproved'});
+ assert.equal(recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval}),state);
+ state=recordSavedVersion(approveDraft(selected(),{at,eventId:id(40)}),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:{status:'unapproved'}});
+ assert.deepEqual(getCurrentDraft(state).approval,{status:'unapproved'},'o retorno autoritativo também pode negar a herança calculada localmente');
+ const explicit={status:'approved',kind:'explicit',sourceVersion:6,at};
+ state=recordSavedVersion(selected(),{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:explicit});
+ assert.deepEqual(getCurrentDraft(state).approval,explicit);
+});
+
+test('aprovação retornada deve corresponder à versão salva e não altera a seleção feita durante a espera',()=>{
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ const source=selected();
+ for(const invalid of [
+  {status:'approved',kind:'explicit',sourceVersion:2,at},
+  {status:'approved',kind:'inherited',sourceVersion:7,at},
+  {...approval,at:'2026-11-05T12:00:00+00:00'},
+ ])assert.throws(()=>recordSavedVersion(source,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval:invalid}));
+ let state=createPost(source,{pieceId:id(4)});
+ state=editDraft(state,{field:'headline',value:'Outro post em edição'});
+ state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content,eventId:id(41),approval});
+ assert.equal(getCurrentDraft(state).pieceId,id(4));assert.equal(getCurrentDraft(state).content.headline,'Outro post em edição');
+ assert.deepEqual(state.drafts.find(item=>item.pieceId===id(3)&&item.baseVersion===6).approval,approval);
+});
+
+test('resposta de salvamento preserva alterações feitas enquanto aguardava',()=>{
+ let state=editDraft(selected(),{field:'headline',value:'Versão submetida'});
+ const submitted={...getCurrentDraft(state).content};
+ state=editDraft(state,{field:'headline',value:'Mais uma alteração local'});
+ const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
+ state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:submitted,eventId:id(41),approval});
+ assert.equal(getCurrentDraft(state).baseVersion,2);
+ assert.equal(getCurrentDraft(state).content.headline,'Mais uma alteração local');
+ assert.equal(getCurrentDraft(state).dirty,true);
+ assert.equal(state.drafts.find(item=>item.baseVersion===6).content.headline,'Versão submetida');
+ assert.deepEqual(state.drafts.find(item=>item.baseVersion===6).approval,approval);
+ assert.throws(()=>approveDraft(state,{at,eventId:id(42)}),error=>error.code==='studio_unsaved_draft');
+ const fresh=createPost(initial(),{pieceId:id(9)});
+ assert.throws(()=>approveDraft(fresh,{at,eventId:id(43)}),error=>error.code==='studio_unsaved_draft');
+});
+
+const freshPost=()=>Object.entries(content).filter(([field])=>field!=='captionOrigin').reduce((state,[field,value])=>editDraft(state,{field,value}),createPost(initial(),{pieceId:id(3)}));
+const reorderedContent=value=>({date:value.date,price:value.price,caption:value.caption,headline:value.headline,captionOrigin:value.captionOrigin});
+
+test('primeiro salvamento segue a versão limpa mesmo quando o servidor reordena as chaves JSONB',()=>{
+ const source=freshPost(),submitted=getCurrentDraft(source).content;
+ const saved=recordSavedVersion(source,{pieceId:id(3),baseVersion:0,version:1,content:reorderedContent(submitted),eventId:id(41)});
+ const current=getCurrentDraft(saved);
+ assert.equal(current.baseVersion,1);assert.equal(current.expectedLatestVersion,1);assert.equal(current.dirty,false);
+ assert.deepEqual(current.content,submitted);
+ assert.equal(saved.drafts.find(draft=>draft.baseVersion===0).dirty,false);
+ assert.equal(getCurrentDraft(approveDraft(saved,{at,eventId:id(42)})).approval.status,'approved');
+ assert.equal(getCurrentDraft(source).baseVersion,0,'o snapshot anterior permanece imutável');
+});
+
+test('resposta com chaves reordenadas preserva cada alteração de conteúdo feita durante a espera',()=>{
+ for(const field of ['headline','price','date','caption']){
+  const source=freshPost(),submitted=getCurrentDraft(source).content;
+  const edited=editDraft(source,{field,value:`Alteração posterior de ${field}`});
+  const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:0,version:1,content:reorderedContent(submitted),eventId:id(41)});
+  const current=getCurrentDraft(saved);
+  assert.equal(current.baseVersion,0,field);assert.equal(current.dirty,true,field);
+  assert.equal(current.content[field],`Alteração posterior de ${field}`);
+  assert.deepEqual(saved.drafts.find(draft=>draft.baseVersion===1).content,submitted);
+ }
+ const source=selectVersion(initial(),{pieceId:id(3),version:1,latestVersion:1,content:{...content,captionOrigin:'agent'}});
+ const edited=editDraft(source,{field:'caption',value:content.caption});
+ const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:1,version:2,content:reorderedContent(getCurrentDraft(source).content),eventId:id(41)});
+ assert.equal(getCurrentDraft(saved).baseVersion,1);assert.equal(getCurrentDraft(saved).dirty,true);
+ assert.equal(getCurrentDraft(saved).content.captionOrigin,'user','a autoria também faz parte do conteúdo');
+});
+
+test('evento duplicado com outra ordem de chaves é inócuo e não aceita conteúdo divergente',()=>{
+ const source=freshPost(),submitted=getCurrentDraft(source).content;
+ const args={pieceId:id(3),baseVersion:0,version:1,content:submitted,eventId:id(41)};
+ const saved=recordSavedVersion(source,args);
+ assert.equal(recordSavedVersion(saved,{...args,content:reorderedContent(submitted)}),saved);
+ assert.equal(saved.events.length,1);assert.equal(saved.revision,source.revision+1);
+ assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),headline:'Outro título'}}),error=>error.code==='studio_version_conflict');
+ assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),extra:'campo inesperado'}}),error=>error.code==='studio_version_conflict');
+});

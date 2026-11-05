@@ -1,0 +1,48 @@
+# Compor — continuidade do marco 0
+
+**Estado em 3 de novembro de 2026:** trabalho local baseado no commit `47ec05f`, para revisão; não há demonstração E2E do produto nem deploy autorizado. A especificação é [marco 0](../specs/2026-11-02-marco-0-backend-agents-mcp.md). Não interpretar código, testes ou este registro como conclusão de tarefas no Jira.
+
+## Implementado parcialmente
+
+- O app Next.js possui login Google/Supabase, chave OpenAI mantida apenas em memória na aba, projetos e versões de peças com resolução explícita de conflito. O campo da chave não a valida nem inicia geração; `/api/agent` permanece fechado com 503.
+- O MCP HTTP possui ferramentas de briefing, projetos e versões. OAuth do Supabase, descoberta e consentimento são experimentais e desativados por padrão; a conexão real e a transferência de imagens pelo Codex Desktop não foram comprovadas.
+- O editor compõe e baixa PNG no navegador a partir de uma imagem local cujo uso a pessoa confirmou. A base existe somente em memória e não fica vinculada à versão salva; download não é aprovação. Há adaptador separado para Storage privado, ainda não conectado ao produto.
+- Agents API, Images API, reserva de chamada, declaração de consentimento e estimativa de custo existem como recortes internos. Não há execução integrada da função de imagem, reconciliação de resultado nem observabilidade persistente. Estados incertos não são prova de falha e não devem gerar retry automático.
+
+## Evidência e limites
+
+- **OpenAI real, sintética e separada:** o [registro da prova](2026-11-03-validacao-sintetica-openai.md) informa Agents API HTTP 201 e Images API HTTP 200 com `gpt-image-2.5-flare`, qualidade `low`; não testa o adaptador, a qualidade `auto` ou a jornada completa. Foram autorizados até **US$ 5 no total**; a imagem foi estimada em US$ 0,00596, enquanto custo do agente e total faturado são desconhecidos. A autorização não equivale a crédito ou gasto remanescente comprovado.
+- **SQL relatado:** Matheus informou que o script de teste isolado terminou com `ROLLBACK`; a saída completa não foi observada pelo agente. O [registro](2026-11-03-supabase-rls-validacao.md) delimita o relato aos snapshots das três primeiras migrações. Não demonstra aplicação durável nem Storage, OAuth ou E2E. As migrações propostas não foram comprovadamente aplicadas de forma persistente.
+- **Simulações:** testes de navegador/HTTP usam serviços e imagens sintéticos; PGlite exercita SQL e RLS em uma conexão. O [plano de concorrência](2026-11-03-concorrencia-reserva-imagem.md) com conexões PostgreSQL independentes não foi executado. Isolamento em Supabase/Storage reais, OAuth, Codex e integração pelo produto permanecem sem prova.
+
+## Vínculo de sessão experimental
+
+O adaptador interno lê o stream até `requires_action`, consulta a sessão na OpenAI com a mesma chave transitória e retorna proposta para consentimento, mantendo a tentativa `started`. Uma atestação HMAC temporária vincula conta, projeto, tentativa, sessão, turno, chamada e digest do prompt. A chave de assinatura do backend ainda não foi provisionada; a prova não substitui autenticação, autorização, consentimento ou nova consulta da ação pendente. Perda/expiração da prova ou queda antes de seu retorno não têm recuperação durável implementada. A rota permanece fechada e nenhum teste comprova a execução real dessa ferramenta.
+
+## Próximos passos
+
+1. Revisar a segurança e validar as migrações e políticas em ambiente isolado com duas contas, concorrência real entre conexões e testes de Storage, registrando evidência observada.
+2. Conectar escolha explícita à ação verificada, revalidar sessão/chamada e digest, reservar antes de gerar, persistir o asset e o resultado por tentativa e reconciliar interrupções sem retry automático.
+3. Integrar medições duráveis de agente, imagem e infraestrutura quando disponíveis; exibir uso/custo desconhecidos e conferir a fatura separadamente.
+4. Demonstrar login, OAuth/refresh/revogação, Codex sem chave web, transferência autorizada e jornada app + MCP completa, com testes de isolamento, falhas e revisão humana.
+5. Preparar a implantação para revisão; **deploy e entrada de convidados dependem de autorização específica**. Manter evidências de testes simulados, relato e operação real claramente separados.
+
+## Atualização posterior — claim e asset
+
+O recorte local `c48c79f`, baseado no trabalho descrito acima, adiciona uma execução durável única por reserva. O claim exige declaração de consentimento, tentativa iniciada e propriedade atual; cria um `asset_id` estável e retorna duplicatas sem autorizar outra execução. Uma execução `unknown` não libera nova tentativa nem é convertida automaticamente em sucesso. A conclusão associa o resultado ao objeto já existente no caminho privado esperado da conta, projeto, peça e versão. O adaptador HTTP transmite IDs e token da conta, sem persistir chave OpenAI ou prompt.
+
+A verificação local do recorte passou em **6 testes HTTP simulados e 1 teste SQL em PGlite**. O PGlite usa uma conexão: requisições submetidas em paralelo não provam o comportamento dos locks em transações PostgreSQL independentes. O repositório contém agora **sete migrações propostas** (`00000` a `00006`); sua aplicação persistente não foi comprovada, e o relato anterior de `ROLLBACK` não valida as migrações posteriores.
+
+O objeto encontrado e o estado de conclusão comprovam somente a associação registrada, não que os bytes vieram da OpenAI: a própria conta autenticada pode chamar as RPCs e enviar seu objeto. O claim isolado não autoriza cobrança. A execução da tool, Images API e Storage não estão conectados ao produto; faltam verificar a ação pendente e seu digest, registrar e vincular a escolha explícita à execução, coordenar uma chamada única, persistir e reconciliar seu resultado sem retry automático, entregar o resultado à sessão e testar a jornada real. Permanecem necessárias revisão de segurança, testes em duas contas e conexões independentes, validação de Storage e OAuth reais e observabilidade durável. Nenhuma rota de geração foi habilitada por este recorte; deploy permanece sujeito à autorização específica mencionada acima.
+
+## Atualização posterior — execução interna e envio de resultado
+
+**Estado da branch em `429b62b`:** os recortes internos agora incluem a composição da execução de imagem e um remetente pontual de `agent.session.input.tool_result`, ambos sem rota pública. A execução reconfere a ação pendente e seu digest na sessão OpenAI, a propriedade da versão e a aprovação assinada; registra declaração e claim, chama o adaptador de imagem uma vez, armazena no asset reservado e registra a associação. Após a persistência, o remetente volta a conferir a aprovação, a propriedade e a ação pendente, reserva o envio por execução concluída e envia um evento com o ID do asset. A chave OpenAI permanece transitória em memória. Esses componentes precisam ser chamados por código de servidor confiável: ainda não há interface de confirmação nem ligação ao produto, e não foi demonstrada a jornada E2E. Este parágrafo atualiza as lacunas de implementação interna mencionadas no adendo anterior, sem alterar as lacunas de integração e validação real.
+
+A segunda atestação HMAC inclui a peça e a versão aprovadas, além da identidade, projeto, tentativa, sessão, turno, chamada e digest do prompt. Sua emissão exige confirmação explícita e verificação de propriedade por um adaptador confiável; a execução consulta a propriedade novamente. O assinador HMAC e a autenticação/CSRF do ponto de entrada continuam sem provisionamento ou integração de produção. Expiração ou perda da prova, rotação de segredo e interrupção entre etapas ainda não têm recuperação completa.
+
+A migração `00007` acrescenta claim único e estados `sending`, `unknown` e `sent` para o envio. **HTTP 202 e `sent` indicam aceitação do evento, não conclusão ou sucesso do turno.** Corpo de resposta e cancelamento não bloqueiam o remetente. Resultado incerto, queda em `sending` ou falha após aceitação não geram reenvio automático; ainda falta reconciliação e observação do turno. O próprio titular pode invocar RPCs e enviar seus objetos: metadados e existência do asset não comprovam origem OpenAI, integridade dos bytes ou auditoria inviolável.
+
+Há agora **oito migrações propostas** (`00000` a `00007`), sem aplicação persistente comprovada. O relato anterior de `ROLLBACK` cobre somente snapshots das três primeiras; não demonstra que as demais foram executadas nem que funcionam no Supabase. Os testes simulados mais recentes passaram para execução e remetente (10 testes, incluindo 202, stream aberto, cancelamento e timeout); um teste PGlite adicional exercitou o claim de envio e isolamento com uma única conexão. Nenhum deles prova concorrência entre transações independentes, Storage/OAuth reais ou integração com Codex. As verificações OpenAI sintéticas e o limite autorizado de **US$ 5 no total** permanecem os registrados acima; custo do agente, total faturado e saldo desse limite continuam desconhecidos.
+
+Para prosseguir: revisar os recortes e seus limites de autorização; validar as oito migrações, RLS, Storage e concorrência em ambiente isolado com duas contas e conexões independentes; integrar confirmação, autenticação e proteção por operação ao app; instrumentar e reconciliar custos, interrupções, envio e continuação do turno; então demonstrar a jornada completa do app e do MCP/Codex sem chave web. A confirmação de deploy continua necessária conforme registrado acima. Nenhum resultado neste adendo é aprovação de peça ou evidência de geração integrada real.

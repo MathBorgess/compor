@@ -77,8 +77,22 @@ Sugestão de texto, composição ou mudança apresentada para revisão do autor 
 _Avoid_: Alteração aplicada, aprovação
 
 **Aprovação**:
-Aceite explícito de uma peça após a revisão de fatos, voz, legibilidade e recursos. Aplicar uma sugestão, exportar e publicar são ações distintas desse aceite.
+Estado de aceite de uma peça em uma versão identificada. Pode resultar da revisão explícita ou da transferência de aprovação de uma versão de origem, preservando a distinção entre as duas. Aplicar uma sugestão, exportar e publicar são ações distintas desse aceite.
 _Avoid_: Aplicação de sugestão, exportação, publicação
+
+A definição anterior descrevia somente aceite explícito. A decisão de 05/11/2026 ampliou o termo para incluir a aprovação herdada, mantendo a origem identificada.
+
+**Aprovação herdada**:
+Transferência automática do aceite da versão de origem para a nova versão derivada, com a origem identificada. Não representa uma nova revisão da pessoa sobre o resultado.
+_Avoid_: Revisão explícita nova, aprovação inferida do silêncio
+
+**Persona compradora**:
+Descrição revisável de quem pode comprar a oferta divulgada, sua situação, necessidades e referências, distinguindo relatos, fontes, hipóteses e informações desconhecidas.
+_Avoid_: Biografia inventada, perfil da pessoa criadora, público comprovado sem evidência
+
+**Pessoa criadora**:
+Pessoa que usa o Compor para divulgar uma oferta. Seu gosto e suas preferências não definem automaticamente quem compra seu infoproduto.
+_Avoid_: Persona compradora, audiência inferida do gosto do autor
 
 **Atualização de contexto**:
 Adoção explícita de novas versões da base ou das skills por uma campanha, preservando a referência às versões anteriores.

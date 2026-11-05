@@ -1,0 +1,27 @@
+{
+  "name": "@compor/agents-api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.mjs",
+    "./project-route": "./src/project-route.mjs",
+    "./attempt-store": "./src/attempt-store.mjs",
+    "./session-binding": "./src/session-binding.mjs",
+    "./image-tool-reservation": "./src/image-tool-reservation.mjs",
+    "./image-tool-execution": "./src/image-tool-execution.mjs",
+    "./image-tool-result": "./src/image-tool-result.mjs",
+    "./usage-store": "./src/usage-store.mjs",
+    "./telemetry": "./src/telemetry.mjs",
+    "./recovery-route": "./src/recovery-route.mjs",
+    "./studio-chat": "./src/studio-chat.mjs",
+    "./studio-chat-tools": "./src/studio-chat-tools.mjs",
+    "./studio-chat-store": "./src/studio-chat-store.mjs",
+    "./studio-chat-bindings": "./src/studio-chat-bindings.mjs",
+    "./studio-persona-skill": "./src/studio-persona-skill.mjs",
+    "./studio-telemetry": "./src/studio-telemetry.mjs"
+  },
+  "scripts": {
+    "test": "node --test test/*.test.mjs"
+  }
+}
