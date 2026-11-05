@@ -9,10 +9,11 @@ import { referenceImagesForRequest } from "../lib/studio-reference-images.mjs";
 
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const diagnosticCount=value=>Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
+const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 function inspectionSummary(data){
  const status=['completed','failed','running','action_required','consent_required','unknown'].includes(data?.status)?data.status:'unknown';
  const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
- return {status,usage:data?.usage?{input_tokens:diagnosticCount(data.usage.input_tokens),output_tokens:diagnosticCount(data.usage.output_tokens)}:null,technical:data?.itemTrace?{functionCalls:diagnosticCount(data.itemTrace.functionCalls),outputs:diagnosticCount(data.itemTrace.outputs),omittedItems:diagnosticCount(data.itemTrace.omittedItems),validSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===true).length,invalidSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===false).length,errorClasses:[...new Set(items.filter(item=>item?.type==='function_call_output').map(item=>['timeout','unavailable','other'].includes(item.errorClass)?item.errorClass:null).filter(Boolean))]}:null};
+ return {status,authenticationRejected:status==='unknown'&&data?.errorCode==='provider_http_401',usage:data?.usage?{input_tokens:diagnosticCount(data.usage.input_tokens),output_tokens:diagnosticCount(data.usage.output_tokens)}:null,technical:data?.itemTrace?{functionCalls:diagnosticCount(data.itemTrace.functionCalls),outputs:diagnosticCount(data.itemTrace.outputs),omittedItems:diagnosticCount(data.itemTrace.omittedItems),validSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===true).length,invalidSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===false).length,errorClasses:[...new Set(items.filter(item=>item?.type==='function_call_output').map(item=>['timeout','unavailable','other'].includes(item.errorClass)?item.errorClass:null).filter(Boolean))]}:null};
 }
 
 export default function StudioChat({
@@ -190,6 +191,9 @@ export default function StudioChat({
         "A solicitação terminou com falha. Seu trabalho foi preservado.",
       );
       return;
+    }
+    if(data.status==='unknown'&&data.errorCode==='provider_http_401'){
+      setBusy(false);setNotice(openAIAuthenticationNotice);return;
     }
     setBusy(false);
     setNotice(
@@ -454,7 +458,7 @@ export default function StudioChat({
           <button type="button" className="studio-button-secondary" disabled={!hasApiKey||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
           {!hasApiKey&&<p>Conecte sua chave para consultar a solicitação anterior.</p>}
           {inspection&&<div role="status">
-            <p>Estado da solicitação anterior: {{completed:'concluída',failed:'terminou com falha',running:'em andamento',action_required:'aguardando ação',consent_required:'aguardando confirmação',unknown:'não confirmado',unavailable:'consulta indisponível'}[inspection.status]}.</p>
+            {inspection.authenticationRejected?<p role="alert">{openAIAuthenticationNotice}</p>:<p>Estado da solicitação anterior: {{completed:'concluída',failed:'terminou com falha',running:'em andamento',action_required:'aguardando ação',consent_required:'aguardando confirmação',unknown:'não confirmado',unavailable:'consulta indisponível'}[inspection.status]}.</p>}
             <p>Esta consulta não executa ações nem inicia uma nova solicitação.</p>
             {inspection.usage&&<p>Uso informado: {inspection.usage.input_tokens??'?'} tokens de entrada e {inspection.usage.output_tokens??'?'} de saída. Custo final desconhecido.</p>}
             {inspection.technical&&<details><summary>Diagnóstico técnico</summary><dl>
