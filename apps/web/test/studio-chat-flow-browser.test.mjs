@@ -119,3 +119,42 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,1);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
+
+test('codificação pendente de uma prévia não publica a arte no post aberto depois',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,calls,errors}=await app(t);
+ versions.push({project_id:projectId,piece_id:newPiece,version:2,content:content('Post B preservado')});
+ await openOriginal(page,origin,{key:false});
+ await page.evaluate(()=>{
+  const original=HTMLCanvasElement.prototype.toBlob;
+  HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
+ });
+ await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
+ await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
+ await page.evaluate(()=>window.__releasePreviewEncoding());
+ await page.waitForFunction(()=>window.__previewEncodingDone===true);
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'a prévia da instância desmontada não muda a navegação nem se associa a B');
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
+ assert.equal(calls.length,0);assert.deepEqual(errors,[]);
+});
+
+test('editar o texto durante a codificação descarta o PNG anterior e mantém o rascunho atual',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,errors}=await app(t);await openOriginal(page,origin,{key:false});
+ await page.evaluate(()=>{
+  const original=HTMLCanvasElement.prototype.toBlob;
+  HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
+ });
+ await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
+ await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
+ await page.getByLabel('Título',{exact:true}).fill('Título alterado durante a composição');
+ await page.evaluate(()=>window.__releasePreviewEncoding());
+ await page.waitForFunction(()=>window.__previewEncodingDone===true);
+ await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
+ assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'o PNG com texto anterior não se torna a prévia do rascunho alterado');
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Título alterado durante a composição');
+ assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isEnabled(),true);
+ assert.equal(calls.length,0);assert.deepEqual(errors,[]);
+});
