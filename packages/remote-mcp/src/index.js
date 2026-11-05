@@ -1,6 +1,7 @@
 import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import { WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/sdk/server/webStandardStreamableHttp.js';
 import { z } from 'zod';
+import { registerDeliberationTools } from '@compor/agile-deliberation';
 
 const unauthorized = () => new Response('Autenticação necessária.', { status: 401, headers: { 'WWW-Authenticate': 'Bearer', 'Cache-Control': 'no-store' } });
 const unavailable = () => new Response('Serviço indisponível.', { status: 503, headers: { 'Cache-Control': 'no-store' } });
@@ -179,6 +180,7 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore 
     try { bounded = await boundedRequest(request); } catch { return new Response('Requisição inválida.', { status: 400 }); }
     if (!bounded) return tooLarge();
     const server = new McpServer({ name: 'compor-remote', version: '0.1.0' });
+    registerDeliberationTools(server);
     server.registerTool('prepare_brief', {
       description: 'Organiza fatos fornecidos e aponta campos ausentes. Não inventa, persiste ou confirma dados.',
       inputSchema: {

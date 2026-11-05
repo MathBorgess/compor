@@ -70,7 +70,7 @@ export async function withAgentMcpTool({ appOrigin, scope, token, projectId } = 
   if (typeof grant !== 'string' || !grant) return { status: 'unavailable' };
   try {
     await submit({ type: 'mcp', server_label: 'compor', connection_origin: 'service', required: true,
-      allowed_tools: ['prepare_brief', 'list_piece_versions', 'save_piece_version'],
+      allowed_tools: ['prepare_brief', 'prepare_deliberation', 'propose_criterion_refinement', 'list_piece_versions', 'save_piece_version'],
       transport: { type: 'http', server_url: `${origin}/api/agent-mcp`, authorization: `Bearer ${grant}` } });
     return { status: 'invoked' };
   } catch { return { status: 'result_unknown', retryAutomatically: false }; }

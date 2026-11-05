@@ -1,0 +1,33 @@
+{
+  "repository": "https://github.com/google-research/google-research",
+  "commit": "d3a4bd8f0eceddda553e47085033b537935b283f",
+  "retrievedAt": "2026-11-05",
+  "license": "Apache-2.0",
+  "upstreamNotice": false,
+  "files": [
+    {
+      "file": "definitions.py",
+      "sourcePath": "agile_deliberation/agile_deliberation_lib/definitions.py",
+      "sha256": "ab5c4463d7a712999578f3e60bb048dcdc08f8e954952d302429ccd9089ae3ed",
+      "gitBlobSha": "9e789fc21efbfb2e997e6852667e7042bcc4ef0a"
+    },
+    {
+      "file": "reflection.py",
+      "sourcePath": "agile_deliberation/agile_deliberation_lib/reflection.py",
+      "sha256": "60c7e88be80a33c496364b92da92f0614f8a6b8d4180d7130eb54832b1b0171b",
+      "gitBlobSha": "98222997a974b8d97fa54255d9cc8cef0fc22f6f"
+    },
+    {
+      "file": "refine_definition.py",
+      "sourcePath": "agile_deliberation/agile_deliberation_lib/refine_definition.py",
+      "sha256": "16f42fe02d3da189c983781533058319789ccaed4c940ba4d7ebb5bc72fcbad2",
+      "gitBlobSha": "4ae1c5d5a892ac08c8eb385bb83016078b12c0d4"
+    },
+    {
+      "file": "LICENSE",
+      "sourcePath": "LICENSE",
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "gitBlobSha": "d645695673349e3947e8e5ae42332d0ac3164cd7"
+    }
+  ]
+}

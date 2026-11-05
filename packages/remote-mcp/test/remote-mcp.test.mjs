@@ -72,7 +72,7 @@ test('cliente autenticado negocia MCP e prepara briefing sem inventar fatos', as
   try {
     await client.connect(transport);
     const { tools } = await client.listTools();
-    assert.deepEqual(tools.map(t => t.name), ['prepare_brief']);
+    assert.deepEqual(tools.map(t => t.name), ['prepare_deliberation', 'propose_criterion_refinement', 'prepare_brief']);
     const result = await client.callTool({ name: 'prepare_brief', arguments: { objective: 'Divulgar oficina' } });
     assert.equal(result.isError, undefined);
     assert.deepEqual(result.structuredContent, { objective: 'Divulgar oficina', audience: null, offer: null, format: null, missing: ['audience', 'offer', 'format'], persists_data: false });

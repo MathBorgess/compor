@@ -14,7 +14,7 @@ O Codex compartilha projetos, peças e versões com a web, mas não acessa a con
 
 ## Objetivo e recorte
 
-Entregar primeiro um fluxo criativo completo, online, para Matheus e equipe: a pessoa entra com Google, informa sua própria chave OpenAI para a sessão, descreve o objetivo, revisa uma direção, solicita a imagem e salva uma versão com imagem-base, texto editável e legenda. A pessoa pode compor e baixar o piloto em PNG e copiar a legenda, conforme a direção web anterior. App web e Codex Desktop acessam o mesmo projeto e peças. O Codex funciona sem a chave informada na sessão web.
+Entregar primeiro um fluxo criativo completo, online, para Matheus e equipe. A pessoa entra com Google e segue direto à conversa. Briefing, persona e referências são preenchidos progressivamente; a chave OpenAI aparece quando necessária. GPT Image gera a arte inteira com títulos, preços e datas. Alterar esses campos instrui outra geração, sem sobreposição local de texto. Ajustes criam novas versões, e a legenda permanece separada para copiar. A pessoa baixa o PNG gerado. Essa decisão de 05/11/2026 substitui a composição local anterior, conforme o [ADR 0012](adr/0012-arte-integral-e-deliberacao-adaptativa.md). App web e Codex Desktop acessam o mesmo projeto e peças. O Codex funciona sem a chave informada na sessão web.
 
 O primeiro passo de implementação é o backend, seguido da interface mínima necessária à demonstração de ponta a ponta nos dois clientes. A pessoa pode fornecer referências ou seguir sem elas. A web começa com dados novos: perfis e peças locais existentes não são importados nem alterados.
 
@@ -59,6 +59,14 @@ A Agents API pode operar sem sandbox e chamar MCP remoto; essa é a hipótese ma
 O [Codex documenta geração integrada de imagem](https://learn.chatgpt.com/docs/image-generation), mas a documentação consultada não demonstra que a mesma tool esteja disponível na Agents API. Isso é uma lacuna de evidência, não prova de impossibilidade. A [Images API](https://developers.openai.com/api/docs/guides/image-generation) é o caminho definido se a capacidade nativa não atender. Uma chave de projeto OpenAI pode ser usada para Agents e Images quando tiver acesso e permissões para ambas; assinatura ChatGPT e API key não são equivalentes.
 
 Se for usada function tool: a Agents API emite uma chamada; o backend a correlaciona à execução e à autorização da pessoa, recebe a chave da sessão ativa, chama Images API, salva o resultado privado e devolve o resultado correlacionado ao agente. Caso a pessoa feche o navegador, a chave deixe de estar disponível ou a execução expire, o backend não promete completar a chamada até que a chave seja reapresentada e o estado seja reconciliado. O fluxo detalhado depende de prova integrada. [Funções da Agents API](https://developers.openai.com/api/docs/guides/agents-api/tools/functions).
+
+## Agile Deliberation incorporado em 05/11/2026
+
+O [ADR 0013](adr/0013-agile-deliberation-no-mcp.md) introduz `@compor/agile-deliberation`. O [mapa de incorporação](agile-deliberation.md) distingue fontes Python copiadas sob Apache 2.0, métodos portados para JavaScript, instruções adaptadas e partes do experimento não executadas. O commit de origem acompanha o resultado das ferramentas.
+
+O MCP remoto e o stdio registram `prepare_deliberation` e `propose_criterion_refinement`. São operações puras, sem persistência ou consultas externas. O cliente fornece critérios e histórico autorizados, recebe uma comparação de exemplos ou uma revisão proposta, e mantém a decisão humana. A autenticação remota e a delegação por projeto continuam nas fronteiras existentes. O MCP não lê o histórico local do navegador.
+
+O agente web pode consumir `methodologyInstructions` do mesmo pacote. O método separa criador/destinatário e visual/mensagem, preserva a origem reportada e trata persona simulada como hipótese. Não impõe cobertura obrigatória das quatro combinações antes de gerar. A aplicação Next.js migra para TypeScript estrito nesta rodada; a verificação de tipos e os testes continuam responsáveis por comprovar a integração.
 
 ## Jornada e componentes
 
@@ -134,7 +142,7 @@ A conta da chave paga os usos OpenAI do app; Vercel e Supabase têm custos e lim
 
 ## Critérios de aceite do marco 0
 
-1. Na web: login Google, chave de sessão, direção revisável, pedido explícito de imagem, texto editável e legenda; salvar e recuperar uma versão em projeto privado, compor e baixar o piloto em PNG e copiar a legenda.
+1. Na web, entrar com Google, conversar, esclarecer ambiguidades relevantes e autorizar a geração da arte integral. Salvar e recuperar versões em projeto privado, baixar o PNG e copiar a legenda separada.
 2. No Codex Desktop: conectar à mesma conta, abrir o mesmo projeto, criar ou revisar e salvar uma versão, incluindo a imagem necessária, sem a chave da sessão web. Se autenticação, geração ou transferência não funcionar, o critério permanece não atendido.
 3. Uma pessoa não acessa projetos, peças ou arquivos de outra por ID, URL, token MCP ou credencial administrativa mal empregada. RLS e autorização por operação são testados inclusive no Storage.
 4. Medição e observabilidade funcionam desde a primeira execução; uso desconhecido é visível e não equivale a custo zero. Segredos e conteúdo criativo não aparecem em logs.

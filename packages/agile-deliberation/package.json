@@ -1,0 +1,12 @@
+{
+  "name": "@compor/agile-deliberation",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": { "types": "./src/index.d.ts", "import": "./src/index.js" },
+    "./methodology": { "types": "./src/methodology.d.ts", "import": "./src/methodology.js" }
+  },
+  "scripts": { "test": "node --test test/*.test.mjs" },
+  "dependencies": { "@modelcontextprotocol/sdk": "1.32.2", "zod": "4.6.7" }
+}

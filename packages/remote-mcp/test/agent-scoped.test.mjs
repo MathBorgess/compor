@@ -36,7 +36,7 @@ test('delegação limita chamada MCP ao projeto e token verificados e expira', a
     await assert.rejects(() => connect(grant, otherEnvironment.handle));
     await assert.rejects(() => connect(`${grant.slice(0, -1)}${grant.endsWith('A') ? 'B' : 'A'}`));
     const tools = await client.listTools();
-    assert.deepEqual(tools.tools.map(t => t.name).sort(), ['list_piece_versions', 'prepare_brief', 'save_piece_version']);
+    assert.deepEqual(tools.tools.map(t => t.name).sort(), ['list_piece_versions', 'prepare_brief', 'prepare_deliberation', 'propose_criterion_refinement', 'save_piece_version']);
     const denied = await client.callTool({ name: 'list_piece_versions', arguments: { projectId: otherProject, pieceId: piece } });
     assert.equal(denied.isError, true); assert.equal(calls, 0);
     const deniedWrite = await client.callTool({ name: 'save_piece_version', arguments: { projectId: otherProject, pieceId: piece, expectedVersion: 0, content: { headline: '', price: '', date: '', caption: '', captionOrigin: 'user' } } });
@@ -67,6 +67,7 @@ test('configuração de sessão usa destino fixo HTTPS e não devolve credenciai
   assert.doesNotMatch(sent.transport.authorization, new RegExp(token));
   assert.equal(sent.transport.server_url, 'https://compor.vercel.app/api/agent-mcp');
   assert.equal(sent.connection_origin, 'service');
+  assert.deepEqual(sent.allowed_tools, ['prepare_brief', 'prepare_deliberation', 'propose_criterion_refinement', 'list_piece_versions', 'save_piece_version']);
   assert.equal(sent.transport.headers, undefined);
   for (const appOrigin of ['http://localhost:3000', 'https://127.0.0.1', 'https://example.internal', 'https://compor.vercel.app@evil.com', 'https://compor.vercel.app/path', 'https://compor.vercel.app?x=y']) {
     assert.deepEqual(await withAgentMcpTool({ appOrigin, scope, token, projectId: project }, () => { throw Error('should not run'); }), { status: 'unavailable' });

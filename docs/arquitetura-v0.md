@@ -7,7 +7,7 @@
 - [Arquitetura, entidades e aprendizado pelo uso](design/compor-arquitetura-v0.excalidraw) — arquivo editável no Excalidraw.
 - [Resumo da arquitetura no Confluence](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/1376258).
 - [Agente e setup — página de aprofundamento](https://compor-mathai.atlassian.net/wiki/spaces/COMPOR/pages/4194328/Agente+e+setup+arquitetura+v0) · [diagrama editável](design/compor-agente-setup-v0.excalidraw) · [referências e verificações](design/2026-10-27-agente-setup-referencias.md).
-- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. O sistema solicita uma imagem sem texto; textos, preços e datas são editáveis no app, separados da imagem e compostos no PNG. Se a imagem contiver texto inesperado, a pessoa o revisa antes de usar. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
+- A pessoa usa o Compor no navegador, com conexão obrigatória, para explorar referências e alternativas, convergir em uma direção criativa e gerar um piloto com arte e legenda. Conforme decisão de 05/11/2026 no [ADR 0012](adr/0012-arte-integral-e-deliberacao-adaptativa.md), GPT Image gera a arte inteira, incluindo títulos, preços e datas. Os campos no app instruem a próxima geração, sem camadas fixas sobre a imagem. Ajustes produzem novas versões; a legenda continua separada e copiável. Essa decisão substitui a composição local de textos prevista em 27/10. A saída prevista é baixar o PNG e copiar o texto; o download não constitui aprovação da peça.
 
 ## Tecnologias e decisões
 
@@ -23,6 +23,12 @@
 
 O desenvolvimento pode avançar em paralelo: **design** prototipa a experiência; **frontend** implementa a interface e seus estados; **agentic** desenvolve e avalia MCP, skills e tools. Os contratos entre as frentes ainda precisam ser fechados e testados em conjunto. Testes do MCP com harnesses não dependem de uma interface pronta.
 
+## Incorporação do Agile Deliberation
+
+Em 05/11/2026, Matheus solicitou incorporar código do Agile Deliberation ao MCP e registrar sua adaptação. O [ADR 0013](adr/0013-agile-deliberation-no-mcp.md) e o [mapa do método](agile-deliberation.md) identificam os arquivos copiados, o commit de origem, os métodos portados e as extensões do Compor. MCP remoto e stdio usam o mesmo pacote para delimitar critérios e comparar revisões propostas. Exemplos e contraexemplos esclarecem apenas ambiguidades relevantes. O criador decide tensões com a hipótese sobre a persona.
+
+A aplicação web usa Next.js. A migração para TypeScript com verificação estrita integra esta rodada; seu estado efetivo é verificado pelo build e pelo gate de tipos. O pacote da metodologia é JavaScript compartilhado com declarações de tipos para os consumidores.
+
 ## O design precisa possibilitar e incentivar
 
 - Mostrar referências, rótulos e interpretações, distinguindo o que a pessoa informou do que o agente inferiu; permitir corrigir, combinar ou criar rótulos.
@@ -30,7 +36,7 @@ O desenvolvimento pode avançar em paralelo: **design** prototipa a experiência
 - Preparar um quadro estruturado com referências, pistas e prioridades sem gerar imagem nem salvar memória automaticamente; a pessoa revisa as escolhas antes de gerar.
 - Explorar e comparar alternativas, escolher dimensões a variar e manter, rejeitar todas, voltar a divergir e refinar uma direção; os rótulos não implicam que todos os atributos de uma referência devam ser copiados.
 - Preservar projeto e alterações em falhas; deixar claro o custo possível de análise e geração com BYOK. A pessoa inicia a exploração e decide quando avançar.
-- Permitir editar textos, preços e datas antes de compô-los no PNG, sem exigir aprovação para baixar o rascunho. Se houver fato pendente, avisar e permitir o download; eventual regra para uma saída final permanece em aberto.
+- Permitir revisar textos, preços e datas como instruções para gerar uma nova versão da arte integral, sem exigir aprovação para baixar o rascunho. Se houver fato pendente, avisar e permitir o download; eventual regra para uma saída final permanece em aberto.
 - Mostrar como memórias e referências influenciam a tarefa; permitir consultar e corrigir hipóteses, além de consultar, confirmar, corrigir ou remover não preferências quando a pessoa quiser. Oferecer sugestões ocasionais de revisão, sem frequência predefinida.
 - Ao rejeitar uma proposta, permitir selecionar o aspecto rejeitado ou explicar o motivo opcionalmente. Sem motivo explícito, uma possível causa apontada pelo agente permanece hipótese, não fato.
 - Oferecer reações opcionais por versão e pergunta opcional sobre o motivo de baixar o rascunho; não confundir reação, download e aprovação.
