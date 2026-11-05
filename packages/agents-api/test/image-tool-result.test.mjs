@@ -5,7 +5,7 @@ import {createImageToolReservationStore} from '../src/image-tool-reservation.mjs
 import {createImageToolResultSender} from '../src/image-tool-result.mjs';
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',pieceId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',executionId='55555555-5555-4555-8555-555555555555',submissionId='66666666-6666-4666-8666-666666666666',assetId='77777777-7777-4777-8777-777777777777';
 const actor={userId,token:'fake-private-token'},apiKey='sk-abcdefghijklmnopqrstuvwxyz123456',prompt='imagem';
-function setup({timeout=false,bodyMode=null,usage}={}) {
+function setup({timeout=false,bodyMode=null,usage,sessionModel='gpt-6-astra'}={}) {
  const bindings=createSessionBindings({secret:Buffer.alloc(32,8)});
  const original=bindings.issueAction({userId,projectId,attemptId,sessionId:'sess_a',turnId:'turn_a',callId:'call_a',prompt});
  const actionBinding=bindings.issueApprovedAction({actionBinding:original,userId,projectId,attemptId,pieceId,version:1});
@@ -19,16 +19,27 @@ function setup({timeout=false,bodyMode=null,usage}={}) {
     if(bodyMode) return new Response(new ReadableStream({start(){},cancel(){trace.push({path:'/cancel'});if(bodyMode==='reject')return Promise.reject(Error(apiKey));return new Promise(()=>{});}}),{status:202});
     return Response.json({}, {status:202});
   }
-  return Response.json({id:'sess_a',status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:{prompt}}]});
+  return Response.json({id:'sess_a',...(sessionModel===null?{}:{agent:{model:sessionModel}}),status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:{prompt}}]});
  };
  const reservations=createImageToolReservationStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch});
  const send=createImageToolResultSender({bindings,ownsVersion:async()=>true,reservations,usage,fetch,sendTimeoutMs:timeout?20:15000});
  return {send,input:{actor,projectId,pieceId,version:1,attemptId,executionId,actionBinding,apiKey},trace};
 }
 test('continuação reserva medição antes de enviar e 202 não marca o turno concluído',async()=>{
- const measurements=[];const usage={start:async c=>{measurements.push({action:'start',part:c.part,partId:c.partId});return true;},finish:async c=>measurements.push({action:'finish',state:c.state})};
- const f=setup({usage});assert.equal((await f.send(f.input)).status,'accepted');assert.deepEqual(measurements,[{action:'start',part:'agent_resume',partId:submissionId}]);
+ const measurements=[];const usage={start:async c=>{measurements.push({action:'start',part:c.part,partId:c.partId,model:c.model});return true;},finish:async c=>measurements.push({action:'finish',state:c.state})};
+ const f=setup({usage});assert.equal((await f.send({...f.input,model:'gpt-6.1-terra'})).status,'accepted');assert.deepEqual(measurements,[{action:'start',part:'agent_resume',partId:submissionId,model:'gpt-6-astra'}]);
  assert.doesNotMatch(JSON.stringify(measurements),/imagem|sk-|fake-private-token/);
+});
+test('retomada Terra usa o modelo observado na sessão, sem reclassificar o histórico Astra',async()=>{
+ const models=[];const f=setup({sessionModel:'gpt-6.1-terra',usage:{start:async context=>{models.push(context.model);return true;},finish:async()=>{}}});
+ assert.equal((await f.send({...f.input,model:'gpt-6-astra'})).status,'accepted');assert.deepEqual(models,['gpt-6.1-terra']);
+});
+test('modelo ausente ou desconhecido fica incerto antes do claim, medição e envio',async()=>{
+ for(const sessionModel of [null,'','gpt-unknown']){
+  let measured=0;const f=setup({sessionModel,usage:{start:async()=>{measured++;return true;},finish:async()=>{}}});
+  assert.deepEqual(await f.send({...f.input,model:'gpt-6.1-terra'}),{status:'unknown',retryAutomatically:false});assert.equal(measured,0);
+  assert.equal(f.trace.filter(item=>item.path.endsWith('/claim_image_tool_result_submission')||item.path.endsWith('/events')).length,0);
+ }
 });
 test('falha ao reservar medição impede envio que poderia retomar cobrança',async()=>{
  const f=setup({usage:{start:async()=>false,finish:async()=>{}}});assert.equal((await f.send(f.input)).status,'unknown');assert.equal(f.trace.filter(c=>c.path.endsWith('/events')).length,0);

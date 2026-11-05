@@ -28,7 +28,7 @@ test('fluxo HTTP com adaptadores reais e serviços simulados exige prova e evita
  const fetch=async (target,init={})=>{
   const url=new URL(target),path=url.pathname;
   if(path==='/v1/agents/sessions/sess_a/events'){postCount++;return Response.json({}, {status:202});}
-  if(path==='/v1/agents/sessions/sess_a')return Response.json({id:'sess_a',status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:{prompt}}]});
+  if(path==='/v1/agents/sessions/sess_a')return Response.json({id:'sess_a',agent:{model:'gpt-6-astra'},status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:{prompt}}]});
   if(path==='/v1/images/generations'){generationCount++;return Response.json({data:[{b64_json:png.toString('base64')}]});}
   if(path==='/rest/v1/piece_versions')return Response.json([{project_id:projectId,piece_id:pieceId,version:1,projects:{owner_id:actor.userId}}]);
   if(path.includes('/storage/v1/object/')){saved=true;return Response.json({});}

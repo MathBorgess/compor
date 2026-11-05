@@ -17,11 +17,16 @@ export function createImageToolResultSender({bindings,ownsVersion,reservations,u
     if(!action || action.userId!==actor.userId || action.projectId!==projectId || action.pieceId!==pieceId || action.version!==version || action.attemptId!==attemptId || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId??'') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId??'') || !/^call_[A-Za-z0-9_-]{1,128}$/.test(action.callId??'') || !/^[0-9a-f]{64}$/.test(action.promptDigest??'')) return {status:'rejected'};
     try {if(await ownsVersion({actor,projectId,pieceId,version})!==true)return {status:'rejected'};} catch{return unknown();}
     const base=`https://api.openai.com/v1/agents/sessions/${encodeURIComponent(action.sessionId)}`;
+    let model;
     try {
       const response=await fetchApi(base,{headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1'},redirect:'error',signal:AbortSignal.timeout(10000)});
       if(!response.ok)return unknown();
       const s=JSON.parse(await readLimited(response.body,256*1024)), calls=s?.required_actions;
       if(s.id!==action.sessionId || s.status!=='requires_action' || !Array.isArray(calls) || calls.length!==1)return {status:'rejected'};
+      // Use the verified provider configuration, never a caller/default model.
+      // Model changes must be reconciled at a terminal turn boundary.
+      if(!['gpt-6-astra','gpt-6.1-terra'].includes(s.agent?.model))return unknown();
+      model=s.agent.model;
       const c=calls[0];let a=c?.arguments;
       if(typeof a==='string'){if(a.length>8192)return {status:'rejected'};a=JSON.parse(a);}
       if(c?.type!=='function_call'||c.name!=='generate_image'||c.turn_id!==action.turnId||c.call_id!==action.callId||!a||typeof a!=='object'||Array.isArray(a)||Object.keys(a).length!==1||typeof a.prompt!=='string'||!a.prompt.trim()||a.prompt.length>4000||/sk-[^\s]+/i.test(a.prompt)||a.prompt.includes(apiKey)||createHash('sha256').update(a.prompt).digest('hex')!==action.promptDigest)return {status:'rejected'};
@@ -31,7 +36,7 @@ export function createImageToolResultSender({bindings,ownsVersion,reservations,u
       if(!uuid(submission?.id)||!uuid(submission?.assetId)||submission.isNew!==true||submission.state!=='sending')return unknown();
     } catch{return unknown();}
     let measurementStarted=false,accepted=false;
-    const measurement={actor,projectId,attemptId,part:'agent_resume',partId:submission.id};
+    const measurement={actor,projectId,attemptId,part:'agent_resume',partId:submission.id,model};
     try {
       if(usage){if(await usage.start(measurement)!==true)throw Error('usage unavailable');measurementStarted=true;}
       const event={type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:submission.assetId})};
