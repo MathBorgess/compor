@@ -686,6 +686,8 @@ function ProjectStudio({
       }
       onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
       onPreview={(blob) => {
+        const current=getCurrentDraft(local.get());
+        if(current?.pieceId!==draft?.pieceId||current?.baseVersion!==draft?.baseVersion||JSON.stringify(current?.content)!==JSON.stringify(draft?.content))return;
         setPreview(blob);
         setStage("review");
       }}

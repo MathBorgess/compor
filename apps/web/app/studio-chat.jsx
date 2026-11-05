@@ -29,7 +29,8 @@ export default function StudioChat({
     previous = useRef(null),
     timer = useRef(null),
     request = useRef(null),
-    actionCount = useRef(new Map());
+    actionCount = useRef(new Map()),
+    imageContext=useRef(null);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
   useEffect(() => {
     mounted.current = true;
@@ -38,6 +39,7 @@ export default function StudioChat({
       if (value && typeof value.requestId === "string")
         setPending(value.requestId);
       previous.current = value?.previousAttemptKey ?? null;
+      imageContext.current=value?.imageContext??null;
     } catch {}
     return () => {
       mounted.current = false;
@@ -49,7 +51,7 @@ export default function StudioChat({
     try {
       sessionStorage.setItem(
         marker,
-        JSON.stringify({ requestId, previousAttemptKey: previous.current }),
+        JSON.stringify({ requestId, previousAttemptKey: previous.current,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}) }),
       );
     } catch {
       throw Error("Não foi possível preservar a tentativa neste navegador.");
@@ -113,14 +115,9 @@ export default function StudioChat({
       return;
     }
     if (data.status === "consent_required") {
-      const current = getCurrentDraft(getState());
-      const context = current
-        ? {
-            pieceId: current.pieceId,
-            baseVersion: current.baseVersion,
-            headline: current.content.headline,
-          }
-        : null;
+      const known=imageContext.current??getState().adjustments.find(item=>item.id===requestId)?.context;
+      const target=known?getState().drafts.find(item=>item.pieceId===known.pieceId&&item.baseVersion===known.baseVersion):null;
+      const context=known?{pieceId:known.pieceId,baseVersion:known.baseVersion,headline:target?.content.headline??""}:null;
       if (!context)
         throw Error("Não foi possível identificar o post desta proposta.");
       setImageAction({ ...data, requestId, context });
@@ -145,6 +142,14 @@ export default function StudioChat({
         data.action.args,
       );
       await flush();
+      if(result.status==="completed"){
+        const args=data.action.args;
+        if(data.action.name==="compor_novo_post")imageContext.current={pieceId:result.pieceId,baseVersion:0};
+        else if(data.action.name==="compor_abrir_versao")imageContext.current={pieceId:args.pieceId,baseVersion:args.version};
+        else if(data.action.name==="compor_salvar_versao")imageContext.current={pieceId:result.pieceId,baseVersion:result.version};
+        else if(data.action.name==="compor_editar_peca")imageContext.current={pieceId:args.pieceId,baseVersion:args.baseVersion};
+        remember(requestId);
+      }
       const next = await api("/api/studio/action", {
         projectId: state.projectId,
         requestId,
@@ -219,6 +224,7 @@ export default function StudioChat({
       );
       if (!next) throw Error("O projeto ainda está carregando.");
       prepared = true;
+      imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
       remember(requestId);
       setPending(requestId);
@@ -298,7 +304,7 @@ export default function StudioChat({
       draft.pieceId !== action.context.pieceId ||
       draft.baseVersion !== action.context.baseVersion
     ) {
-      setNotice("Salve a versão aberta e use “Revisar proposta na versão aberta” antes de confirmar a imagem.");
+      setNotice("Abra a versão indicada na proposta e confirme que ela está salva, sem alterações locais. Se a proposta ainda for para um rascunho, recuse-a e peça uma nova depois de salvar.");
       return;
     }
     setBusy(true);
@@ -393,7 +399,7 @@ export default function StudioChat({
             >
               Confirmar geração de imagem
             </button>
-            <button type="button" disabled={busy||!hasApiKey} onClick={()=>poll(imageAction.requestId)}>Revisar proposta na versão aberta</button>
+            <button type="button" disabled={busy||!hasApiKey} onClick={()=>poll(imageAction.requestId)}>Consultar a mesma proposta</button>
             <button
               type="button"
               disabled={busy || !hasApiKey}
