@@ -1,11 +1,10 @@
 import {AGENT_STUDIO_TOOLS,parseStudioAction} from './studio-chat-tools.mjs';
+import {isAgentCallId} from './agent-call-id.mjs';
 
 const knownNames=new Set(AGENT_STUDIO_TOOLS.map(tool=>tool.name));
 const knownKeys=new Set(AGENT_STUDIO_TOOLS.flatMap(tool=>Object.keys(tool.parameters.properties)));
 const statuses=new Set(['in_progress','completed','failed','incomplete']);
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-// Keep this predicate identical to the action guard in studio-chat.mjs.
-const identifier=(x,p)=>typeof x==='string'&&new RegExp(`^${p}_[A-Za-z0-9_-]{1,128}$`).test(x)&&!/sk-/i.test(x);
 function toolName(value){
  if(typeof value!=='string')return {name:null,canonical:null};
  if(knownNames.has(value))return {name:value,canonical:value};
@@ -61,9 +60,9 @@ export function summarizeStudioItems(items,{projectId,turnId}={}){
   const status=statuses.has(item.status)?item.status:'other';
   if(item.type==='function_call'){
    functionCalls++;const {name,canonical}=toolName(item.name),args=argumentsObject(item.arguments),keys=args?Object.keys(args):[];
-   rows.push({type:'function_call',status,name,callIdAccepted:identifier(item.call_id,'call'),argumentKeys:keys.filter(key=>knownKeys.has(key)).sort(),unknownArgumentKeyCount:Math.min(1000,keys.filter(key=>!knownKeys.has(key)).length),argumentsParsed:Boolean(args),requestIdUuid:uuid(args?.requestId),projectMatches:typeof projectId==='string'&&args?.projectId===projectId,revisionIsInteger:Number.isSafeInteger(args?.revision),schemaValid:schemaValid(canonical,args)});
+   rows.push({type:'function_call',status,name,callIdAccepted:isAgentCallId(item.call_id),argumentKeys:keys.filter(key=>knownKeys.has(key)).sort(),unknownArgumentKeyCount:Math.min(1000,keys.filter(key=>!knownKeys.has(key)).length),argumentsParsed:Boolean(args),requestIdUuid:uuid(args?.requestId),projectMatches:typeof projectId==='string'&&args?.projectId===projectId,revisionIsInteger:Number.isSafeInteger(args?.revision),schemaValid:schemaValid(canonical,args)});
   }else if(item.type==='function_call_output'){
-   const error=outputErrorText(item);outputs++;rows.push({type:'function_call_output',status,name:names.get(item.call_id)?.name??null,callIdAccepted:identifier(item.call_id,'call'),errorClass:outputErrorClass(error),errorSignals:outputErrorSignals(error)});
+   const error=outputErrorText(item);outputs++;rows.push({type:'function_call_output',status,name:names.get(item.call_id)?.name??null,callIdAccepted:isAgentCallId(item.call_id),errorClass:outputErrorClass(error),errorSignals:outputErrorSignals(error)});
   }
  }
  return {observedItems:scoped.length,functionCalls,outputs,omittedItems:Math.max(0,rows.length-24),items:rows.slice(0,24)};

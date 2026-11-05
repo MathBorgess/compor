@@ -1,6 +1,7 @@
 import {createStudioChatHandlers} from '@compor/agents-api/studio-chat';
 import {createStudioStore} from '@compor/agents-api/studio-chat-store';
 import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
+import {recordStudioEvent} from '@compor/agents-api/studio-telemetry';
 import {createSupabaseAttemptStore} from '@compor/agents-api/attempt-store';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createUsageStore} from '@compor/agents-api/usage-store';
@@ -12,7 +13,7 @@ export function configuredStudioChat(env=process.env){
  const config=authConfig(),secret=agentSigningKey();
  if(env.COMPOR_STUDIO_CHAT_ENABLED!=='true'||!config||!secret)return null;
  const credentials={url:config.service,anonKey:config.key};
- return createStudioChatHandlers({appOrigin:config.app,
+ return createStudioChatHandlers({appOrigin:config.app,onEvent:recordStudioEvent,
   resolveActor:async()=>resolveSupabaseActor(await authClient(config)),
   ownsProject:args=>ownsSupabaseProject({...args,config}),ownsVersion:args=>ownsSupabaseVersion({...args,config}),
   verifyDurableResult:async({actor,projectId,name,args,result})=>{

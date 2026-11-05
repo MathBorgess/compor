@@ -21,7 +21,7 @@ test('trace contém apenas nomes permitidos, chaves conhecidas e validade sem va
  assert.doesNotMatch(JSON.stringify(trace),/sk-private|PRIVATE_STORY|call_one|call_two|11111111|22222222/);
 });
 test('callIdAccepted reproduz o identificador aceito pelo action guard sem expor seu valor',()=>{
- const samples=[['call_one',true],['call_'+ 'a'.repeat(128),true],['call_'+ 'a'.repeat(129),false],['call_',false],['CALL_one',false],['turn_one',false],[null,false],['call_sk-secret',false],['call_'+story,true]];
+ const samples=[['call_one',true],['exec_synthetic',true],['exec_'+ 'a'.repeat(128),true],['exec_'+ 'a'.repeat(129),false],['call_'+ 'a'.repeat(128),true],['call_'+ 'a'.repeat(129),false],['call_',false],['CALL_one',false],['turn_one',false],[null,false],['call_sk-secret',false],['call_'+story,true]];
  for(const [call_id,accepted]of samples){
   const trace=summarizeStudioItems([{type:'function_call',turn_id:turnId,call_id,status:'failed',name:'compor_contexto',arguments:{projectId,requestId}},{type:'function_call_output',turn_id:turnId,call_id,status:'failed',error:story}],{projectId,turnId});
   assert.ok(trace.items.every(item=>item.callIdAccepted===accepted));assert.doesNotMatch(JSON.stringify(trace),/PRIVATE_STORY|call_one|sk-secret/);

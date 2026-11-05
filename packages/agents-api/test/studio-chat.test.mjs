@@ -4,6 +4,7 @@ import {createStudioChatHandlers} from '../src/studio-chat.mjs';
 import {createSessionBindings} from '../src/session-binding.mjs';
 import {createStudioBindings} from '../src/studio-chat-bindings.mjs';
 import {AGENT_MODEL} from '../src/agent-model.mjs';
+import {recordStudioEvent} from '../src/studio-telemetry.mjs';
 
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',requestId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',request2='55555555-5555-4555-8555-555555555555';
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
@@ -242,4 +243,23 @@ test('completed devolve somente trace técnico dos items já consultados e IDs v
  await f.chat(request(body));const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
  assert.equal(result.status,'completed');assert.equal(result.sessionId,'sess_one');assert.equal(result.turnId,'turn_one');assert.equal(result.itemTrace.functionCalls,1);assert.equal(result.itemTrace.outputs,1);assert.equal(result.itemTrace.items[0].unknownArgumentKeyCount,1);assert.equal(result.itemTrace.items[1].errorClass,'unavailable');
  assert.doesNotMatch(JSON.stringify(result),/PRIVATE_CREATIVE_STORY|sk-synthetic|call_trace/);assert.equal(requests.filter(call=>call.method==='POST').length,1);assert.equal(requests.filter(call=>call.method==='GET').length,3);assert.equal(requests.filter(call=>call.url.includes('/items?')).length,1);
+});
+
+
+test('observabilidade correlaciona exec sem registrar conteúdo nem alterar chamadas',async t=>{
+ const rows=[],original=console.info;console.info=value=>{if(value.startsWith('{'))rows.push(JSON.parse(value));};t.after(()=>{console.info=original;});
+ const f=fixture({onEvent:recordStudioEvent});await f.chat(request(body));
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_contexto',turn_id:'turn_one',call_id:'exec_observed',arguments:{projectId,requestId,revision:1}}]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(pending.status,'action_required');
+ assert.equal((await f.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'completed',revision:1}}))).status,202);
+ f.set({status:'idle',turnState:'completed',actions:[]});assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
+ for(const name of ['attempt_reserved','session_created','turn_observed','action_received','action_accepted'])assert.ok(rows.some(row=>row.name===name),name);
+ const action=rows.find(row=>row.name==='action_accepted');assert.equal(action.callId,'exec_observed');assert.equal(action.sessionId,'sess_one');assert.equal(action.turnId,'turn_one');assert.equal(action.requestId,requestId);assert.equal(action.model,AGENT_MODEL);
+ assert.doesNotMatch(JSON.stringify(rows),new RegExp([apiKey,body.message,'Oficina','jwt-synthetic',projectId,userId,'actionBinding'].join('|')));
+ assert.equal(f.calls.filter(call=>call.url?.endsWith('/sessions')&&call.method==='POST').length,1);assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,1);
+});
+test('falha do coletor não altera o fluxo; requisição sem titularidade não emite IDs',async()=>{
+ const f=fixture({onEvent:()=>{throw Error('PRIVATE_SINK');}});assert.equal((await f.chat(request(body))).status,202);assert.equal((await f.chat(request({op:'poll',apiKey,projectId,requestId}))).status,202);
+ const rows=[],g=fixture({ownsProject:async()=>false,onEvent:(...args)=>rows.push(args)});assert.equal((await g.chat(request(body))).status,404);assert.deepEqual(rows,[]);assert.equal(g.calls.length,0);
 });

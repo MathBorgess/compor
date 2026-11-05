@@ -37,6 +37,7 @@ function unknownReply(d,error){
  const phase=Object.hasOwn(diagnosticPhases,d?.phase)?d.phase:'unknown';
  const errorCode=error instanceof ProviderDiagnosticError&&providerDiagnosticCodes.has(error.code)?error.code:diagnosticPhases[phase];
  try{console.info(`COMPOR_STUDIO_EVENT unknown_${phase}_${errorCode}`);}catch{}
+ try{d.emit?.('unknown',{providerStatusCode:/^provider_http_[0-9]{3}$/.test(errorCode)?Number(errorCode.slice(-3)):undefined});}catch{}
  return reply({status:'unknown',retryAutomatically:false,errorCode,phase,
   ...(uuid(d?.requestId)?{requestId:d.requestId}:{}),...(uuid(d?.attemptId)?{attemptId:d.attemptId}:{}),
   ...(identifier(d?.sessionId,'sess')?{sessionId:d.sessionId}:{})},202);
@@ -75,7 +76,15 @@ function inputContent(body,includeHistory){
 function headers(key,extra={}){return{Authorization:`Bearer ${key}`,'OpenAI-Beta':'agents=v1',...extra};}
 
 /** A request submits one event or reads the managed turn. No application agent loop. */
-export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,store,attempts,usage,bindings,studioBindings,fetch:fetchApi=globalThis.fetch,now=Date.now}={}){
+export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,store,attempts,usage,bindings,studioBindings,onEvent,fetch:fetchApi=globalThis.fetch,now=Date.now}={}){
+ function diagnostic(requestId,phase){
+  const startedAt=now(),d={requestId,phase};
+  d.emit=(name,extra={})=>{
+   if(typeof onEvent!=='function')return;
+   try{onEvent(name,{requestId:d.requestId,attemptId:d.attemptId,sessionId:d.sessionId,turnId:d.turnId,callId:d.callId,callIdAccepted:d.callIdAccepted,turnStatus:d.turnStatus,model:d.model,phase:d.phase,durationMs:Math.max(0,now()-startedAt),inputTokens:d.inputTokens,outputTokens:d.outputTokens,providerStatusCode:extra.providerStatusCode});}catch{}
+  };
+  return d;
+ }
  const dependencies=()=>appOrigin&&typeof resolveActor==='function'&&typeof ownsProject==='function'&&['reserve','get','bind','state','claimAction','finishAction','getAction'].every(name=>typeof store?.[name]==='function')&&['bindRecovery','finish'].every(name=>typeof attempts?.[name]==='function')&&['issueRecovery','verifyRecovery','issueAction'].every(name=>typeof bindings?.[name]==='function')&&['digest','issue','verify','actionRequestId'].every(name=>typeof studioBindings?.[name]==='function')&&(!usage||['start','finish'].every(name=>typeof usage[name]==='function'));
  async function authorize(request,limit=2*1024*1024){
   if(request.method!=='POST')return{error:reply({error:'method_not_allowed'},405)};
@@ -125,10 +134,12 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   d.phase='session_lookup';const session=await get(sessionId,key);
   d.phase='session_validate';
   if(session.id!==sessionId||!Array.isArray(session.required_actions))throw Error('invalid session');
+  d.model=session.agent?.model;d.inputTokens=count(session.usage?.input_tokens);d.outputTokens=count(session.usage?.output_tokens);
   const turn=await rootTurn(sessionId,key,record,d);
   if(!turn)return reply({status:'running',requestId:record.requestId,attemptId:record.attemptId},202);
   d.phase='turn_status';
   if(!['queued','in_progress','waiting','completed','failed','cancelled'].includes(turn.status))throw Error('invalid turn');
+  d.turnId=turn.id;d.turnStatus=turn.status;d.emit('turn_observed');
   d.phase='turn_state_write';
   if(!record.turnId)await state(scope,record,'running',turn.id);
   if(['failed','cancelled'].includes(turn.status)){d.phase='turn_finish';await finish(scope,record,'failed',session.usage);return reply({status:'failed',retryAutomatically:false});}
@@ -138,6 +149,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    d.phase='action_validate';
    if(session.required_actions.length!==1)throw Error('multiple pending actions');
    const action=session.required_actions[0];let args=action?.arguments;
+   d.callId=action?.call_id;d.callIdAccepted=isAgentCallId(d.callId);d.emit('action_received');
    if(typeof args==='string'){if(args.length>16000)throw Error('invalid action');args=JSON.parse(args);}
    if(action?.type!=='function_call'||action.turn_id!==turn.id||!isAgentCallId(action.call_id)||!args||typeof args!=='object'||Array.isArray(args)||JSON.stringify(args).includes(key)||/sk-[^\s]+/i.test(JSON.stringify(args)))throw Error('invalid action');
    if(action.name==='generate_image'){
@@ -171,7 +183,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  }
  async function chat(request){
   const auth=await authorize(request);if(auth.error)return auth.error;const{body,actor,scope}=auth,key=body.apiKey;
-  const d={requestId:scope.requestId,phase:'store_get'};
+  const d=diagnostic(scope.requestId,'store_get');
   if(body.op==='poll'){
    if(Object.keys(body).sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
    try{const record=await store.get(scope);if(!record)return reply({error:'not_found'},404);return await poll(scope,record,key,d);}catch(error){return unknownReply(d,error);}
@@ -187,6 +199,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(reserved.status==='not_found')return reply({error:'not_found'},404);
    if(['conflict','busy'].includes(reserved.status))return reply({status:reserved.status,retryAutomatically:false},409);
    record=reserved.turn;rememberRecord(d,scope,record);
+   if(reserved.status==='reserved')d.emit('attempt_reserved');
    if(reserved.status==='existing'){
     if(record.state==='failed')return reply({status:'failed',retryAutomatically:false});
     try{return await poll(scope,record,key,d);}catch(error){return unknownReply(d,error);}
@@ -231,6 +244,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     d.sessionId=proof(scope,{...record,binding}).sessionId;
     d.phase='session_bind';await store.bind({...scope,binding,expiresAt,priorTurnId:null,initialInput:0,initialOutput:0});d.phase='recovery_bind';await attempts.bindRecovery({actor,projectId:scope.projectId,attemptId:record.attemptId,binding});
    }
+   d.model=AGENT_MODEL;d.emit(previous?'session_reused':'session_created');
    return reply({status:'running',requestId:scope.requestId,attemptId:record.attemptId,sessionReused:Boolean(previous)},202);
   }catch(error){
    if(!dispatched){try{await finish(scope,record,'failed',null);}catch{}return reply({status:'failed',error:'unavailable',failurePhase:'before_submission',requestId:scope.requestId,attemptId:record.attemptId,retryAutomatically:false},503);}
@@ -239,14 +253,16 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  }
  async function action(request){
   const auth=await authorize(request,64000);if(auth.error)return auth.error;const{body,scope}=auth;
-  const d={requestId:scope.requestId,phase:'action_binding'};
+  const d=diagnostic(scope.requestId,'action_binding');
   if(Object.keys(body).sort().join(',')!=='actionBinding,apiKey,projectId,requestId,result'||typeof body.actionBinding!=='string'||!body.result||typeof body.result!=='object'||Array.isArray(body.result)||!['completed','declined','unknown'].includes(body.result.status)||JSON.stringify(body.result).length>32000||JSON.stringify(body.result).includes(body.apiKey)||/sk-[^\s]+/i.test(JSON.stringify(body.result)))return reply({error:'invalid_request'},400);
   try{
    const signed=studioBindings.verify({token:body.actionBinding,userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId});if(!signed)return reply({error:'invalid_binding'},403);
+   d.turnId=signed.turnId;d.callId=signed.callId;d.callIdAccepted=isAgentCallId(signed.callId);
    d.phase='action_store_get';const record=await store.get(scope);rememberRecord(d,scope,record);
    if(!record||record.attemptId!==signed.attemptId)return reply({error:'not_found'},404);
    d.phase='action_binding';const verified=proof(scope,record);if(verified.sessionId!==signed.sessionId)return reply({error:'not_found'},404);d.sessionId=verified.sessionId;
    d.phase='action_lookup';const session=await get(signed.sessionId,body.apiKey),pending=session.required_actions;
+   if(session.id===signed.sessionId)d.model=session.agent?.model;
    d.phase='action_pending';if(session.id!==signed.sessionId||session.status!=='requires_action'||!Array.isArray(pending)||pending.length!==1)return unknownReply(d);
    d.phase='action_validate';
    const call=pending[0];let args=call.arguments;if(typeof args==='string')args=JSON.parse(args);
@@ -265,7 +281,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     if(!response.ok)throw providerFailure(response.status);
    }catch(error){await store.finishAction({...scope,submissionId:claim.id,state:'unknown'});await state(scope,record,'unknown');return unknownReply(d,error);}
    finally{try{Promise.resolve(response?.body?.cancel()).catch(()=>{});}catch{}}
-   d.phase='action_receipt_write';await store.finishAction({...scope,submissionId:claim.id,state:'accepted'});d.phase='turn_state_write';await state(scope,record,'running');return reply({status:'running',requestId:scope.requestId,attemptId:record.attemptId},202);
+   d.phase='action_receipt_write';await store.finishAction({...scope,submissionId:claim.id,state:'accepted'});d.phase='turn_state_write';await state(scope,record,'running');d.emit('action_accepted');return reply({status:'running',requestId:scope.requestId,attemptId:record.attemptId},202);
   }catch(error){return unknownReply(d,error);}
  }
  return {chat,action};
