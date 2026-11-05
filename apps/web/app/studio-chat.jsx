@@ -10,6 +10,10 @@ import { referenceImagesForRequest } from "../lib/studio-reference-images.mjs";
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const diagnosticCount=value=>Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
+function imageReceiptFor(value,userId,projectId){
+ if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;
+ return value;
+}
 function inspectionSummary(data){
  const status=['completed','failed','running','action_required','consent_required','unknown'].includes(data?.status)?data.status:'unknown';
  const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
@@ -37,17 +41,21 @@ export default function StudioChat({
     [lastCompleted,setLastCompleted]=useState(null),
     [inspecting,setInspecting]=useState(false),
     [inspection,setInspection]=useState(null);
+  const [imageReceipt,setImageReceipt]=useState(null);
   const mounted = useRef(true),
     previous = useRef(null),
     timer = useRef(null),
     request = useRef(null),
     actionCount = useRef(new Map()),
     imageContext=useRef(null),
+    receiptRef=useRef(null),
+    activeMarker=useRef(null),
     inspectionLock=useRef(false),
     inspectionSequence=useRef(0);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
   useEffect(() => {
     mounted.current = true;
+    activeMarker.current=marker;receiptRef.current=null;setImageReceipt(null);
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     try {
       const value = JSON.parse(sessionStorage.getItem(marker) ?? "null");
@@ -56,9 +64,11 @@ export default function StudioChat({
       previous.current = value?.previousAttemptKey ?? null;
       setLastCompleted(uuid(value?.previousAttemptKey)?value.previousAttemptKey:null);
       imageContext.current=value?.imageContext??null;
+      receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
     } catch {}
     return () => {
       mounted.current = false;
+      activeMarker.current=null;
       inspectionSequence.current++;
       inspectionLock.current=false;
       clearTimeout(timer.current);
@@ -69,7 +79,7 @@ export default function StudioChat({
     try {
       sessionStorage.setItem(
         marker,
-        JSON.stringify({ requestId, previousAttemptKey: previous.current,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}) }),
+        JSON.stringify({ requestId, previousAttemptKey: previous.current,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}),...(receiptRef.current?{imageReceipt:receiptRef.current}:{}) }),
       );
     } catch {
       throw Error("Não foi possível preservar a tentativa neste navegador.");
@@ -348,6 +358,8 @@ export default function StudioChat({
     }
     setBusy(true);
     setImageAction(null);
+    let imageAvailable=false,imageApplied=false;
+    const isCurrentScope=()=>mounted.current&&activeMarker.current===marker;
     try {
       const data = await api("/api/agent/image", {
         projectId: state.projectId,
@@ -358,6 +370,7 @@ export default function StudioChat({
         explicitApproval: true,
       });
       if (data.assetId) {
+        if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
         const { fetchPrivateImage } =
           await import("../lib/private-image-fetch.mjs");
         const image = await fetchPrivateImage(
@@ -368,18 +381,24 @@ export default function StudioChat({
             assetId: data.assetId,
           }),
         );
-        if (mounted.current)
-          onUseImage?.({
+        imageAvailable=true;
+        if(!isCurrentScope())return;
+        if(typeof onUseImage!=='function'||await onUseImage({
             blob: image,
             pieceId: draft.pieceId,
             version: draft.baseVersion,
-          });
+          })!==true)throw Error('image application unconfirmed');
+        if(!isCurrentScope())return;
+        imageApplied=true;
+        receiptRef.current={userId:state.userId,projectId:state.projectId,requestId:action.requestId,pieceId:draft.pieceId,version:draft.baseVersion,assetId:data.assetId};
+        setImageReceipt(receiptRef.current);
+        remember(action.requestId);
       }
-      await poll(action.requestId);
+      if(isCurrentScope())await poll(action.requestId);
     } catch (e) {
-      if (mounted.current) {
+      if (isCurrentScope()) {
         setBusy(false);
-        setNotice(e.message);
+        setNotice(imageApplied?"A imagem foi adicionada à versão de origem, mas não foi possível guardar sua confirmação neste navegador. Consulte a mesma tentativa.":imageAvailable?"A imagem foi gerada, mas não foi possível confirmar sua aplicação à versão de origem. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.":e.message);
       }
     }
   }
@@ -417,6 +436,9 @@ export default function StudioChat({
           <p role="status" className="studio-hint">
             {notice}
           </p>
+        )}
+        {imageReceipt&&imageReceiptFor(imageReceipt,state.userId,state.projectId)&&state.selection?.pieceId===imageReceipt.pieceId&&state.selection?.baseVersion===imageReceipt.version&&(
+          <p role="status" className="studio-hint">Imagem gerada e adicionada a este post · versão {imageReceipt.version}.</p>
         )}
         {imageAction && (
           <div className="studio-image-consent">

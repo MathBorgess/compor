@@ -11,7 +11,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const userId=id(1),projectId=id(3),originalPiece=id(4),newPiece=id(11);
 const apiKey=`sk-synthetic-${'x'.repeat(30)}`;
 const content=headline=>({headline,price:'R$ 20',date:'20/11',caption:'Legenda sintética',captionOrigin:'user'});
-const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmTkAAAAASUVORK5CYII=','base64');
+const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 async function eventually(fn,predicate,timeout=6000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('estado esperado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
 async function app(t){
@@ -72,6 +72,7 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo e r
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByRole('heading',{name:'Uma imagem para este post'}).waitFor();
  const proposal=page.locator('.studio-image-consent');assert.match(await proposal.innerText(),/Título novo refinado · versão 2/);const saves=calls.filter(call=>call.path==='/api/pieces');assert.deepEqual(saves.map(call=>[call.body.pieceId,call.body.baseVersion,call.body.expectedVersion]),[[newPiece,0,0],[newPiece,1,1]]);
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
+ await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Imagem-base selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:2,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'2');assert.equal(versions[0].content.headline,'Original preservado');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===2&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
@@ -116,6 +117,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
+ await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();await page.getByRole('img',{name:'Imagem-base selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,1);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
