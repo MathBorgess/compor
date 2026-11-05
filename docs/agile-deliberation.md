@@ -36,7 +36,7 @@ A ferramenta devolve definições com sinais e folhas, cobertura informativa e n
 
 As duas ferramentas são registradas em `packages/remote-mcp/src/index.js` e `prototypes/compor-mcp/src/server.ts`. O primeiro conserva autenticação por chamada e isolamento dos projetos. O segundo conserva sua identidade local. Nenhuma nova ferramenta acessa storage, perfil Phoenix ou serviços externos.
 
-O export `@compor/agile-deliberation/methodology` oferece `methodologyInstructions` e `methodology`, com versão da adaptação e commit da origem. Ele não carrega bibliotecas de classificação nem exige chamada de modelo. O agente web pode incluir essas instruções junto das regras de ferramenta e decisão humana do estúdio.
+O export `@compor/agile-deliberation/methodology` oferece `methodologyInstructions` e `methodology`, com versão da adaptação e commit da origem. Ele não carrega bibliotecas de classificação nem exige chamada de modelo. O agente web inclui essas instruções em `packages/agents-api/src/studio-direction-instructions.mjs`, junto das regras de ferramenta e decisão humana do estúdio. A mesma versão da metodologia orienta os dois transportes MCP e a conversa web.
 
 ## Evidência de verificação
 
