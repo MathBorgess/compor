@@ -15,7 +15,12 @@ export function createUsageStore({url,anonKey,fetch:fetchApi=globalThis.fetch}={
   const result=await response.json();if(typeof result!=='boolean')throw Error('invalid usage response');return result;
  }
  return Object.freeze({
-  start:context=>rpc('start_usage_measurement_v2',context),
+  start:context=>{
+   if(context.model===undefined)return rpc('start_usage_measurement_v2',context);
+   const allowed=context.part==='image'?['gpt-image-2.5-flare','gpt-image-2.6-flare']:['gpt-6-astra','gpt-6.1-terra'];
+   if(!allowed.includes(context.model))throw Error('invalid usage model');
+   return rpc('start_usage_measurement_v3',context,{p_model:context.model});
+  },
   async finish({state,usage,...context}) {
    if(!['completed','unknown'].includes(state))throw Error('invalid state');
    const result=await rpc('finish_usage_measurement',context,{p_state:state,p_input_tokens:count(usage?.input_tokens),p_output_tokens:count(usage?.output_tokens),p_total_tokens:count(usage?.total_tokens),p_input_text_tokens:count(usage?.input_tokens_details?.text_tokens),p_input_image_tokens:count(usage?.input_tokens_details?.image_tokens),p_output_image_tokens:count(usage?.output_tokens_details?.image_tokens)});

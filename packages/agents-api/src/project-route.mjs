@@ -1,3 +1,4 @@
+import {AGENT_MODEL} from './agent-model.mjs';
 import { createAgentHandler } from './index.mjs';
 import { recordAgentEvent } from './telemetry.mjs';
 
@@ -29,7 +30,7 @@ export function createProjectAgentHandler({ appOrigin, resolveActor, ownsProject
     catch { recordAgentEvent('attempt_reservation_failed'); return response({ error: 'unavailable' }, 503); }
     if (!attempt.isNew) { recordAgentEvent('attempt_existing'); return response({ error: 'attempt_exists', state: attempt.state, retryAutomatically: false }, 409); }
     recordAgentEvent('attempt_reserved');
-    const measurement={actor,projectId,attemptId:attempt.id,part:'agent',partId:attempt.id};
+    const measurement={actor,projectId,attemptId:attempt.id,part:'agent',partId:attempt.id,model:AGENT_MODEL};
     if (usage) {
       try {if (typeof usage.start!=='function' || typeof usage.finish!=='function' || await usage.start(measurement)!==true) throw Error('usage unavailable');}
       catch {recordAgentEvent('usage_reservation_failed');try {await attempts.finish({actor,projectId,attemptId:attempt.id,state:'unknown'});} catch {} return response({error:'unavailable'},503);}

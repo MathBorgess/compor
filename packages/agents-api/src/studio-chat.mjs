@@ -1,3 +1,4 @@
+import {AGENT_MODEL} from './agent-model.mjs';
 import {PERSONA_SKILL_INSTRUCTIONS} from './studio-persona-skill.mjs';
 import {AGENT_STUDIO_TOOLS,parseStudioAction} from './studio-chat-tools.mjs';
 const ROOT='https://api.openai.com/v1/agents/sessions';
@@ -93,7 +94,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  }
  async function state(scope,record,value,turnId){if(record.state===value&&(!turnId||record.turnId===turnId))return;await store.state({...scope,state:value,turnId});record.state=value;if(turnId)record.turnId=turnId;}
  function proof(scope,record){const p=bindings.verifyRecovery({token:record.binding,userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId});if(!p||!identifier(p.sessionId,'sess'))throw Error('unverified session');return p;}
- function measurement(scope,record){return{actor:scope.actor,projectId:scope.projectId,attemptId:record.attemptId,part:'agent',partId:record.attemptId};}
+ function measurement(scope,record){return{actor:scope.actor,projectId:scope.projectId,attemptId:record.attemptId,part:'agent',partId:record.attemptId,model:AGENT_MODEL};}
  async function finish(scope,record,status,counts){
   if(['completed','failed'].includes(record.state))return;
   await state(scope,record,status,record.turnId);
@@ -212,7 +213,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     const submit=async()=>{
      dispatched=true;
      d.phase='provider_create';
-     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:'gpt-6-astra',instructions,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[...AGENT_STUDIO_TOOLS,{type:'web_search',mode:'live',context_size:'low'}]},environment:{type:'none'},input:inputContent(body,true),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
+     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:AGENT_MODEL,instructions,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[...AGENT_STUDIO_TOOLS,{type:'web_search',mode:'live',context_size:'low'}]},environment:{type:'none'},input:inputContent(body,true),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
      if(!r.ok){if(definiteRejection(r.status)){await finish(scope,record,'failed',null);return {rejected:r.status};}throw providerFailure(r.status);}
      d.phase='provider_create_parse';const session=await limitedJson(r.body,256000);d.phase='provider_create_validate';if(!identifier(session?.id,'sess'))throw Error('session missing');sessionId=session.id;expiresAt=new Date(now()+280000).toISOString();return {created:true};
     };

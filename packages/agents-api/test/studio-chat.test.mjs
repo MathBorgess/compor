@@ -173,3 +173,12 @@ test('falha ao registrar turno e resultado local desconhecido carregam referênc
  const local=await(await g.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'unknown'}}))).json();
  assert.equal(local.phase,'action_local_unknown');assert.equal(local.requestId,requestId);assert.equal(local.attemptId,attemptId);assert.equal(local.sessionId,'sess_one');assert.equal(g.calls.filter(c=>c.url?.endsWith('/events')).length,0);
 });
+
+
+test('novas sessões e sua medição usam Terra por escolha explícita do produto',async()=>{
+ const measurements=[];
+ const f=fixture({usage:{async start(value){measurements.push(value);return true;},async finish(){}}});
+ await f.chat(request(body));
+ assert.equal(f.calls.find(c=>c.url?.endsWith('/sessions')&&c.method==='POST').body.agent.model,'gpt-6.1-terra');
+ assert.equal(measurements[0].model,'gpt-6.1-terra');
+});

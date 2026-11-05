@@ -23,3 +23,16 @@ test('migração ausente recusa reserva sem fallback para a função antiga',asy
  await assert.rejects(()=>store.start({actor,projectId,attemptId,part:'image',partId}),/usage unavailable/);
  assert.deepEqual(requests,['/rest/v1/rpc/start_usage_measurement_v2']);
 });
+
+
+test('modelo explícito usa reserva v3 e não reclassifica a reserva legada',async()=>{
+ const paths=[],bodies=[];
+ const store=createUsageStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:async(url,init)=>{paths.push(url.pathname);bodies.push(JSON.parse(init.body));return Response.json(true);}});
+ assert.equal(await store.start({actor,projectId,attemptId,part:'agent',partId,model:'gpt-6.1-terra'}),true);
+ assert.equal(paths[0],'/rest/v1/rpc/start_usage_measurement_v3');assert.equal(bodies[0].p_model,'gpt-6.1-terra');
+ await store.start({actor,projectId,attemptId,part:'agent_resume',partId,model:'gpt-6-astra'});assert.equal(bodies[1].p_model,'gpt-6-astra');
+ await store.start({actor,projectId,attemptId,part:'agent',partId});assert.equal(paths[2],'/rest/v1/rpc/start_usage_measurement_v2');
+ assert.throws(()=>store.start({actor,projectId,attemptId,part:'agent',partId,model:'gpt-image-2.6-flare'}));assert.equal(paths.length,3);
+ const missing=[];const absent=createUsageStore({url:'https://project.supabase.co',anonKey:'sb_publishable_test',fetch:async url=>{missing.push(url.pathname);return new Response(null,{status:404});}});
+ await assert.rejects(()=>absent.start({actor,projectId,attemptId,part:'agent',partId,model:'gpt-6.1-terra'}));assert.deepEqual(missing,['/rest/v1/rpc/start_usage_measurement_v3']);
+});

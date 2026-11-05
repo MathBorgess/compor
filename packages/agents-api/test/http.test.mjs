@@ -41,7 +41,7 @@ test('não envia campo de limite incompatível nem aceita limite vindo do client
   const result = await handler(new Request('http://localhost/agent', { method: 'POST', body: JSON.stringify({ apiKey: 'sk-test-secret-123456789012345', objective: 'Teste', spend_control: { limit: 99999 } }) }));
   assert.equal(result.status, 200);
   assert.equal('spend_control' in payload, false);
-  assert.equal(payload.agent.model,'gpt-6-astra');
+  assert.equal(payload.agent.model,'gpt-6.1-terra');
 });
 
 test('a rejected OpenAI credential returns a useful error without exposing the upstream body', async () => {
