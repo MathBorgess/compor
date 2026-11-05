@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,getCurrentDraft,editDraft,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.mjs';
+import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.mjs';
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const at='2026-11-05T12:00:00.000Z';
@@ -31,6 +31,18 @@ test('navegar preserva rascunhos separados e base anterior não vira latest sile
  const created=createPost(state,{pieceId:id(4)});
  assert.equal(created.drafts.length,3);
  assert.equal(createPost(created,{pieceId:id(4)}),created,'mesma criação não cria outro rascunho');
+});
+
+test('retoma um rascunho local existente sem substituir seu conteúdo nem seleção em erro',()=>{
+ let state=createPost(selected(),{pieceId:id(10)});
+ state=editDraft(state,{field:'headline',value:'Ainda não salvo'});
+ state=selectVersion(state,{pieceId:id(3),version:5,latestVersion:5,content});
+ state=selectDraft(state,{pieceId:id(10),baseVersion:0});
+ assert.equal(getCurrentDraft(state).content.headline,'Ainda não salvo');
+ assert.equal(getCurrentDraft(state).dirty,true);
+ const before=state;
+ assert.throws(()=>selectDraft(state,{pieceId:id(11),baseVersion:0}),error=>error.code==='studio_draft_unavailable');
+ assert.equal(state,before);assert.equal(state.selection.pieceId,id(10));
 });
 
 test('pedido congela mensagem, base, marcações e referências mesmo após mudar seleção',()=>{

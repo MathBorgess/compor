@@ -57,7 +57,7 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.inUse=await expectError(repo.removeReference(scope,id(10)),'studio_reference_in_use');
   await repo.removeReference(scope,id(11));result.removed=await repo.getReference(scope,id(11))===null;
   repo.close();second.close();
-  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1',1);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
   await new Promise((resolve,reject)=>{const tx=db.transaction('states','readwrite');tx.objectStore('states').put({scope:JSON.stringify([scope.userId,scope.projectId]),state:{...state,schemaVersion:99}});tx.oncomplete=resolve;tx.onerror=reject;});db.close();
   result.corrupt=await expectError(repo.load(scope),'studio_storage_corrupt');repo.close();
   return result;

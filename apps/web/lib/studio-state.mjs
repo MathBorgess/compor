@@ -1,5 +1,5 @@
 export const STUDIO_SCHEMA_VERSION = 1;
-export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024 });
+export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
 
 export class StudioStateError extends Error {
   constructor(code = 'invalid_studio_state') { super(code); this.name = 'StudioStateError'; this.code = code; }
@@ -58,6 +58,7 @@ function event(state, type, requestId, id) { if (!uuid(id)) fail(); if (state.ev
 
 export function createStudioState({userId,projectId}) { return parseStudioState({schemaVersion:1,userId,projectId,revision:0,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
 export const getCurrentDraft = state => { parseStudioState(state); return state.selection ? freeze(clone(current(state))) : null; };
+export function selectDraft(state, {pieceId,baseVersion}) { return change(state,next=>{if(!uuid(pieceId)||!integer(baseVersion)||!next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion))throw new StudioStateError('studio_draft_unavailable');next.selection={pieceId,baseVersion};}); }
 export const updateBrief = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.brief,key))) fail(); Object.assign(next.brief,patch); });
 export const updatePersona = (state, patch) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.persona,key))) fail(); Object.assign(next.persona,clone(patch)); });
 export function createPost(state, {pieceId}) { parseStudioState(state); if(!uuid(pieceId))fail();if(state.drafts.some(item=>item.pieceId===pieceId))return state;return change(state, next => { next.drafts.push({pieceId,baseVersion:0,expectedLatestVersion:0,content:blankContent(),dirty:false,approval:noApproval()}); next.selection={pieceId,baseVersion:0}; }); }
