@@ -4,6 +4,8 @@
 
 A especificação anterior do [backend e MCP](2026-11-02-marco-0-backend-agents-mcp.md) descrevia uma interface mínima. A decisão de 5 de novembro amplia aquele recorte para a experiência completa. As garantias de autenticação, autorização, preservação, confirmação de geração e medição continuam aplicáveis. Os detalhes de UX não definidos por aquela especificação continuam sujeitos às decisões abaixo.
 
+Os desenhos complementares detalham a [ponte do chat com WebMCP](2026-11-05-chat-webmcp-fluxo.md), a [avaliação independente de ajustes e linhagem](../design/2026-11-05-avaliacao-ajustes-e-linhagem.md) e a [pesquisa da persona compradora](../pesquisa/2026-11-05-persona-comprador-infoproduto.md). A [skill de persona](../drafts/persona-comprador/SKILL.md) é um rascunho para revisão, sem ativação.
+
 ## Referências e limites da observação
 
 A referência é a página [Web v0, revisão 50 e 59](https://www.figma.com/design/KlGEjt2D3tQHsHb4RsDr6i/Compor-%C2%B7-90-%E2%80%94-Arquivo-original-e-revis%C3%A3o?node-id=22-1743). A inspeção de 5 de novembro de 2026 usou metadados do Figma e observação visual dos quadros no navegador. O conector do Figma atingiu o limite do plano Starter ao solicitar contexto de design e imagens. As telas observadas têm tamanho de referência 1440 × 960. Não há comparação pixel a pixel, verificação completa dos componentes ou evidência de comportamento responsivo.
@@ -17,6 +19,10 @@ O arquivo inclui telas e variações que não foram individualmente inspecionada
 - A nova versão criada a partir de uma versão anterior torna-se a versão atual. A pessoa pode indicar ajustes marcando áreas da arte ou selecionando elementos editáveis. Essas regras foram confirmadas em 5 de novembro de 2026.
 - Quando a versão de origem estiver aprovada, a aprovação é transferida automaticamente para a nova versão. A implementação deve registrar a origem dessa aprovação, sem representar uma revisão adicional que não aconteceu. Matheus confirmou essa regra em 5 de novembro de 2026.
 - As referências do moodboard no primeiro marco são imagens PNG e JPEG enviadas pela pessoa. O Codex compartilha projetos, peças e versões; a conversa da web não é compartilhada pelo MCP. Matheus confirmou essas regras em 5 de novembro de 2026.
+- Os rascunhos, o histórico da conversa e estados transitórios do marco 0 ficam apenas no navegador. Isso substitui a proposta anterior de persistir todo o estado recuperável no Supabase. Projetos e versões salvos continuam persistidos e protegidos por conta; os dados locais podem ser perdidos ao limpar o navegador ou mudar de dispositivo. A chave continua apenas em memória. Matheus autorizou manter no Supabase somente metadados técnicos mínimos de tentativa, idempotência e uso, sem mensagens, rascunhos, referências ou chave.
+- A regra local descreve o armazenamento do Compor. A Agents API recebe o contexto necessário ao pedido e mantém sua própria sessão na OpenAI, cuja retenção já foi aceita; armazenamento local não isola dados de scripts ou extensões com acesso à página.
+- Ajustes podem ser solicitados por marcações e pela conversa. O chat deve poder controlar ações da aplicação, como atualizar dados de projeto ou iniciar um post novo; o contrato WebMCP e as confirmações necessárias ainda dependem de investigação técnica e revisão. A jornada inclui a etapa **Conhecendo quem vai comprar** e uma skill de persona compradora, com referências e critérios mensuráveis, vinculada à [SCRUM-70](https://compor-mathai.atlassian.net/browse/SCRUM-70).
+- A pessoa pode seguir na etapa da persona com hipóteses e campos desconhecidos. A skill pode pesquisar referências culturais públicas na web quando útil, apresentando fontes e identificando hipóteses; uma referência encontrada não comprova que o público específico a conheça.
 - O acesso ao Compor usa Google por meio do Supabase. O acesso demonstrativo com senha mostrado no Figma não substitui essa decisão.
 - A chave OpenAI é informada para a sessão web, permanece em memória e é reapresentada quando necessário. A chave é enviada por conexão protegida ao backend para operações autorizadas. O Codex autentica no MCP pela conta Compor e não depende da chave da sessão web.
 - A OpenAI Agents API gerencia a sessão e o ciclo do agente. O backend atende às funções necessárias, inclusive imagem quando aplicável. Isso não introduz um loop de agente próprio com Agents SDK.
@@ -49,7 +55,7 @@ Os nomes a seguir descrevem responsabilidades, não tabelas ou contratos já exi
 | --- | --- | --- |
 | Projeto | Proprietário, identificação e informações necessárias para retomar o trabalho. | `projects` existe. A conta dona já é verificada por RLS e por operação. |
 | Briefing | Oferta, público, ação esperada, direção e estado dos fatos. Deve pertencer ao projeto e indicar sua revisão. | O objetivo livre existe na interface; não foi encontrada persistência dos campos estruturados. |
-| Conversa | Uma conversa por projeto, com mensagens ordenadas, origem e estado. Cada solicitação deve registrar a peça e a versão que a contextualizam. | O fluxo atual apresenta uma resposta de tentativa. Ainda não há conversa contínua persistida do produto. |
+| Conversa | Uma conversa por projeto, com mensagens ordenadas, origem e estado no navegador. Cada solicitação deve registrar a peça e a versão que a contextualizam. | O fluxo atual apresenta uma resposta de tentativa. Ainda não há conversa contínua do produto. |
 | Sessão gerenciada | Vínculo recuperável entre a conversa do projeto e a sessão da Agents API, sem guardar a chave OpenAI. A identidade do projeto e o controle de acesso permanecem no Compor. | A retomada após desconexão requer prova real. A presença de ID ou estado `idle` não comprova sucesso do turno. |
 | Peça e versão | Peça identificável dentro do projeto; versões imutáveis com conteúdo, origem, versão de base e artefatos associados. | `piece_versions` já existe com comparação de versão esperada. A linhagem explícita da versão anterior e o fluxo a partir de qualquer versão precisam ser verificados ou ampliados. |
 | Referência e moodboard | Recurso, origem, autorização declarada quando aplicável, relação com projeto e elementos exibidos no quadro. | Há armazenamento privado de imagens por versão. O modelo de referências e seu quadro ainda não estão comprovados. |
@@ -87,7 +93,7 @@ O resultado do agente precisa ser associado ao turno e ao contexto que o origina
 
 ## Fronteiras técnicas propostas
 
-1. A interface Next.js organiza navegação, briefing, quadro, conversa e revisão. Estado recuperável do produto é persistido no Supabase. A chave fica apenas em memória da aba e pode precisar ser informada novamente após recarregar ou trocar de sessão.
+1. A interface Next.js organiza navegação, briefing, quadro, conversa e revisão. Rascunhos e estados transitórios permanecem no navegador; projetos e versões explicitamente salvos usam Supabase. A chave fica apenas em memória da aba e pode precisar ser informada novamente após recarregar ou trocar de sessão.
 2. Cada operação no backend confirma a sessão do Supabase e autoriza a conta, o projeto e os recursos associados. A RLS e as políticas do Storage também verificam o acesso. Um ID de projeto, peça ou imagem não concede autorização.
 3. O backend mantém o vínculo autorizado da conversa com a sessão gerenciada da OpenAI. O envio de uma mensagem usa contexto explícito e um identificador de submissão para lidar com repetição e concorrência. Os limites e a validade da sessão precisam ser comprovados com a API real.
 4. O agente recebe apenas as capacidades necessárias ao projeto por meio do MCP delegado. O Codex usa sua conexão OAuth própria e as ferramentas disponíveis, sem receber a chave web. Projetos, peças e versões são compartilhados com o Codex; a conversa web não é exposta pelo MCP. Os demais contratos precisam de verificação.
@@ -125,7 +131,7 @@ As questões abaixo não foram resolvidas pelos quadros observados. As propostas
 
 ## Critérios de aceite
 
-- A pessoa entra com Google, cria ou abre um projeto, preenche o briefing e retorna ao trabalho salvo em outra sessão. A ausência de referências não impede a jornada.
+- A pessoa entra com Google, cria ou abre um projeto e preenche o briefing. Projetos e versões explicitamente salvos podem ser recuperados em outra sessão; rascunhos e transitórios dependem do navegador em que foram criados. A ausência de referências não impede a jornada.
 - A chave não aparece em banco, armazenamento do navegador, URL, logs ou resultados de tools. Reabrir a sessão sem a chave permite consultar o projeto e solicita a chave para nova chamada autorizada. O Codex funciona sem a chave da web.
 - O projeto mantém uma conversa ordenada. Cada nova solicitação registra a peça e a versão selecionadas. Ao alternar peças ou versões, a interface mostra o contexto ativo antes do envio.
 - Ao abrir uma versão anterior e solicitar alteração, o resultado bem-sucedido é salvo como nova versão atual ligada à base. A versão anterior continua consultável e inalterada. Escrita concorrente gera conflito recuperável, sem perda silenciosa.
