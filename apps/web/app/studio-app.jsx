@@ -200,7 +200,8 @@ function ProjectStudio({
     confirmResolver = useRef(null),
     active = useRef(true),
     saveLock = useRef(false),
-    baseLoadGeneration=useRef(0);
+    baseLoadGeneration=useRef(0),
+    versionsReadSequence=useRef(0);
   useEffect(() => {
     const media = window.matchMedia("(max-width:600px)");
     const update = () => setCompact(media.matches);
@@ -212,13 +213,14 @@ function ProjectStudio({
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
   async function refreshVersions() {
+    const readSequence=++versionsReadSequence.current;
     const response = await fetch(
       `/api/pieces?projectId=${encodeURIComponent(project.id)}`,
       { cache: "no-store" },
     );
     if (!response.ok) throw Error("Não foi possível carregar as versões.");
     const data = await response.json();
-    if (active.current) setVersions(data.versions);
+    if (active.current&&readSequence===versionsReadSequence.current) setVersions(data.versions);
     return data.versions;
   }
   useEffect(() => {
@@ -420,6 +422,7 @@ function ProjectStudio({
     setNotice("");
     try {
       await local.flush();
+      versionsReadSequence.current++;
       const response = await fetch("/api/pieces", {
         method: "POST",
         headers: { "content-type": "application/json" },
@@ -440,7 +443,8 @@ function ProjectStudio({
       }
       if (!response.ok || data.status !== "saved") throw Error("save_unknown");
       if (!active.current) return { status: "unknown" };
-      setVersions((items) => [...items, data.version]);
+      versionsReadSequence.current++;
+      setVersions((items) => [...items.filter(item=>item.piece_id!==data.version.piece_id||item.version!==data.version.version), data.version]);
       local.change((value) =>
         recordSavedVersion(value, {
           pieceId: d.pieceId,
@@ -716,6 +720,7 @@ function ProjectStudio({
           });
           const data = await response.json();
           if (!response.ok || data.status !== "approved") throw Error();
+          versionsReadSequence.current++;
           await refreshVersions();
           const current = getCurrentDraft(local.get());
           if (
