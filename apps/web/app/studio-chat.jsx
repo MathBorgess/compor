@@ -5,6 +5,7 @@ import {
   settleAdjustment,
   getCurrentDraft,
 } from "../lib/studio-state.mjs";
+import { referenceImagesForRequest } from "../lib/studio-reference-images.mjs";
 
 export default function StudioChat({
   state,
@@ -15,12 +16,15 @@ export default function StudioChat({
   hasApiKey,
   getApiKey,
   onUseImage,
+  loadReference,
+  loadBase,
 }) {
   const [message, setMessage] = useState(""),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [imageAction, setImageAction] = useState(null),
-    [pending, setPending] = useState(null);
+    [pending, setPending] = useState(null),
+    [usage, setUsage] = useState(null);
   const mounted = useRef(true),
     previous = useRef(null),
     timer = useRef(null),
@@ -63,7 +67,19 @@ export default function StudioChat({
       signal: controller.signal,
     });
     const data = await response.json();
-    if (!response.ok && response.status !== 202)
+    if (
+      path === "/api/studio/chat" &&
+      body.op !== "poll" &&
+      [400, 401, 403, 404, 413].includes(response.status) &&
+      [
+        "invalid_request",
+        "unauthorized",
+        "invalid_origin",
+        "not_found",
+      ].includes(data.error)
+    )
+      return { status: "failed" };
+    if (!response.ok && response.status !== 202 && data.status !== "failed")
       throw Error(
         data.error === "turn_in_progress"
           ? "Uma solicitação anterior ainda está em andamento."
@@ -84,6 +100,7 @@ export default function StudioChat({
   async function handle(data, requestId, count = 0) {
     if (!mounted.current) return;
     if (data.status === "completed") {
+      setUsage(data.usage ?? null);
       settle(requestId, "completed", {
         messageId: crypto.randomUUID(),
         text: data.text ?? "Operação concluída.",
@@ -96,7 +113,17 @@ export default function StudioChat({
       return;
     }
     if (data.status === "consent_required") {
-      setImageAction({ ...data, requestId });
+      const current = getCurrentDraft(getState());
+      const context = current
+        ? {
+            pieceId: current.pieceId,
+            baseVersion: current.baseVersion,
+            headline: current.content.headline,
+          }
+        : null;
+      if (!context)
+        throw Error("Não foi possível identificar o post desta proposta.");
+      setImageAction({ ...data, requestId, context });
       setBusy(false);
       setNotice("Revise a proposta antes de gerar a imagem.");
       return;
@@ -167,8 +194,20 @@ export default function StudioChat({
     event.preventDefault();
     if (!message.trim() || !hasApiKey || busy || pending) return;
     setNotice("");
+    setBusy(true);
     const requestId = crypto.randomUUID();
+    let prepared = false,
+      submitted = false;
     try {
+      const before = getState();
+      const selected=getCurrentDraft(before), storedBase=await loadBase?.();
+      const baseId=storedBase?selected?.pieceId:null;
+      const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
+      const referenceImages=await referenceImagesForRequest(visualReferences,id=>id===baseId?storedBase:loadReference(id),21);
+      if (getState().revision !== before.revision)
+        throw Error(
+          "O contexto mudou enquanto as referências eram preparadas. Revise e envie novamente.",
+        );
       const next = change((value) =>
         prepareAdjustment(value, {
           requestId,
@@ -179,6 +218,7 @@ export default function StudioChat({
         }),
       );
       if (!next) throw Error("O projeto ainda está carregando.");
+      prepared = true;
       await flush();
       remember(requestId);
       setPending(requestId);
@@ -190,6 +230,9 @@ export default function StudioChat({
           pieceId: draft?.pieceId ?? null,
           baseVersion: draft?.baseVersion ?? 0,
           expectedLatestVersion: draft?.expectedLatestVersion ?? 0,
+          content: draft?.content ?? null,
+          approval: draft?.approval ?? null,
+          baseImageId: baseId,
           brief: next.brief,
           persona: next.persona,
           marks: next.marks.filter(
@@ -199,28 +242,62 @@ export default function StudioChat({
           ),
           references: next.references,
         };
+      submitted = true;
       const data = await api("/api/studio/chat", {
         projectId: state.projectId,
         requestId,
         message: message.trim(),
         context,
-        history: next.messages
+        history: before.messages
           .slice(-30)
           .map(({ role, text }) => ({ role, text })),
+        referenceImages,
         ...(previous.current ? { previousAttemptKey: previous.current } : {}),
       });
       await handle(data, requestId);
     } catch (e) {
       if (mounted.current) {
+        if (prepared && !submitted) {
+          settle(requestId, "failed");
+          remember(null);
+          setPending(null);
+        }
         setBusy(false);
         setNotice(e.message);
+      }
+    }
+  }
+  async function declineImage() {
+    const action = imageAction;
+    if (!action?.declineBinding || busy) return;
+    setBusy(true);
+    try {
+      const next = await api("/api/studio/action", {
+        projectId: state.projectId,
+        requestId: action.requestId,
+        actionBinding: action.declineBinding,
+        result: { status: "declined" },
+      });
+      setImageAction(null);
+      await handle(next, action.requestId);
+    } catch (error) {
+      if (mounted.current) {
+        setBusy(false);
+        setNotice(error.message);
       }
     }
   }
   async function confirmImage() {
     const action = imageAction,
       draft = getCurrentDraft(getState());
-    if (!action || !draft || draft.dirty || draft.baseVersion < 1) {
+    if (
+      !action ||
+      !draft ||
+      draft.dirty ||
+      draft.baseVersion < 1 ||
+      draft.pieceId !== action.context.pieceId ||
+      draft.baseVersion !== action.context.baseVersion
+    ) {
       setNotice("Salve a versão aberta antes de gerar a imagem.");
       return;
     }
@@ -246,7 +323,12 @@ export default function StudioChat({
             assetId: data.assetId,
           }),
         );
-        if (mounted.current) onUseImage?.(image);
+        if (mounted.current)
+          onUseImage?.({
+            blob: image,
+            pieceId: draft.pieceId,
+            version: draft.baseVersion,
+          });
       }
       await poll(action.requestId);
     } catch (e) {
@@ -296,6 +378,10 @@ export default function StudioChat({
         {imageAction && (
           <div className="studio-image-consent">
             <h3>Uma imagem para este post</h3>
+            <p>
+              {imageAction.context.headline || "Post sem título"} · versão{" "}
+              {imageAction.context.baseVersion || "ainda não salva"}
+            </p>
             <p>{imageAction.prompt}</p>
             <p>
               A geração será cobrada pela OpenAI. O custo final ainda é
@@ -311,14 +397,10 @@ export default function StudioChat({
             </button>
             <button
               type="button"
-              onClick={() => {
-                setImageAction(null);
-                setNotice(
-                  "A proposta continua pendente na sessão. Você pode consultá-la novamente.",
-                );
-              }}
+              disabled={busy || !hasApiKey}
+              onClick={declineImage}
             >
-              Voltar à criação
+              Recusar geração
             </button>
           </div>
         )}
@@ -334,6 +416,43 @@ export default function StudioChat({
         )}
       </div>
       <form className="studio-chat-composer" onSubmit={send}>
+        <div className="studio-chat-context">
+          <strong>
+            {getCurrentDraft(state)?.content.headline || "Post sem título"}
+          </strong>
+          <span>
+            {" "}
+            ·{" "}
+            {getCurrentDraft(state)?.baseVersion
+              ? `base: versão ${getCurrentDraft(state).baseVersion}`
+              : "rascunho novo"}
+          </span>
+          <details>
+            <summary>Revisar contexto do pedido</summary>
+            <p>{state.references.length} referências locais</p>
+            {state.marks
+              .filter(
+                (mark) =>
+                  mark.pieceId === state.selection?.pieceId &&
+                  mark.baseVersion === state.selection?.baseVersion,
+              )
+              .map((mark) => (
+                <p key={mark.id}>
+                  {mark.kind === "area"
+                    ? "Área da arte"
+                    : `Elemento: ${{ headline: "título", price: "preço", date: "data", caption: "legenda" }[mark.elementId] ?? mark.elementId}`}{" "}
+                  · {mark.note}
+                </p>
+              ))}
+          </details>
+          {usage && (
+            <small>
+              Uso acumulado informado pela sessão: {usage.input_tokens ?? "?"}{" "}
+              tokens de entrada e {usage.output_tokens ?? "?"} de saída. Custo
+              final desconhecido.
+            </small>
+          )}
+        </div>
         <label htmlFor="studio-chat-message">Sua mensagem</label>
         <textarea
           id="studio-chat-message"

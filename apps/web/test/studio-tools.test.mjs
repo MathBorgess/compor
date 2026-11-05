@@ -94,6 +94,9 @@ test("escrita durável exige confirmação fora dos argumentos do modelo", async
         projectId,
         revision: 1,
         requestId,
+        pieceId: requestId,
+        baseVersion: 0,
+        expectedLatestVersion: 0,
       })
     ).status,
     "declined",
@@ -140,6 +143,9 @@ test("aprovação não permite executar no projeto que ficou inativo", async () 
         projectId,
         revision: 1,
         requestId,
+        pieceId: requestId,
+        baseVersion: 0,
+        expectedLatestVersion: 0,
       }),
     /context_changed/,
   );

@@ -1,9 +1,13 @@
 import { studioImageDimensions } from "./studio-image.mjs";
 /** Small visual context for the current operation; originals remain in IndexedDB. */
-export async function referenceImagesForRequest(references, load) {
+export async function referenceImagesForRequest(
+  references,
+  load,
+  maximum = 20,
+) {
   if (
     !Array.isArray(references) ||
-    references.length > 20 ||
+    references.length > maximum ||
     typeof load !== "function"
   )
     throw Error("Referências inválidas.");

@@ -95,14 +95,20 @@ export default function StudioEditor({
         <button
           type="button"
           aria-pressed={mode === "select"}
-          onClick={() => setMode("select")}
+          onClick={() => {
+            setMode("select");
+            setRegion(null);
+          }}
         >
           Selecionar elemento
         </button>
         <button
           type="button"
           aria-pressed={mode === "area"}
-          onClick={() => setMode("area")}
+          onClick={() => {
+            setMode("area");
+            setRegion({ x: 0.25, y: 0.25, width: 0.5, height: 0.5 });
+          }}
         >
           Marcar área
         </button>
@@ -226,6 +232,41 @@ export default function StudioEditor({
         )}
         {region && (
           <div className="studio-adjustment-note">
+            {!region.elementId && (
+              <div className="studio-area-coordinates">
+                {[
+                  ["x", "Posição horizontal"],
+                  ["y", "Posição vertical"],
+                  ["width", "Largura"],
+                  ["height", "Altura"],
+                ].map(([field, label]) => (
+                  <label key={field}>
+                    {label}
+                    <input
+                      type="range"
+                      min={field === "x" || field === "y" ? 0 : 0.01}
+                      max={
+                        field === "x"
+                          ? 1 - region.width
+                          : field === "y"
+                            ? 1 - region.height
+                            : field === "width"
+                              ? 1 - region.x
+                              : 1 - region.y
+                      }
+                      step="0.01"
+                      value={region[field]}
+                      onChange={(event) =>
+                        setRegion((value) => ({
+                          ...value,
+                          [field]: Number(event.target.value),
+                        }))
+                      }
+                    />
+                  </label>
+                ))}
+              </div>
+            )}
             <label>
               O que deve mudar nesta {region.elementId ? "seleção" : "área"}?
               <textarea

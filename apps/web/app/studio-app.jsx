@@ -9,6 +9,7 @@ import {
   updatePersona,
   createPost,
   selectVersion,
+  selectDraft,
   getCurrentDraft,
   editDraft,
   addMark,
@@ -17,9 +18,12 @@ import {
   removeReference,
   approveDraft,
   recordSavedVersion,
+  recordActionReceipt,
 } from "../lib/studio-state.mjs";
 import { createStudioTools } from "../lib/studio-tools.mjs";
 import StudioChat from "./studio-chat";
+import StudioDialog from "./studio-dialog";
+import StudioAssets from "./studio-assets";
 
 export default function StudioApp({
   userId,
@@ -184,12 +188,22 @@ function ProjectStudio({
     [preview, setPreview] = useState(null),
     [references, setReferences] = useState([]),
     [proposal, setProposal] = useState(null),
-    [dialog, setDialog] = useState(null);
+    [dialog, setDialog] = useState(null),
+    [projectDetails, setProjectDetails] = useState(project),
+    [compact, setCompact] = useState(false);
   const stateRef = useRef(null),
     versionRef = useRef([]),
     toolsRef = useRef(null),
     confirmResolver = useRef(null),
-    active = useRef(true);
+    active = useRef(true),
+    saveLock = useRef(false);
+  useEffect(() => {
+    const media = window.matchMedia("(max-width:600px)");
+    const update = () => setCompact(media.matches);
+    update();
+    media.addEventListener("change", update);
+    return () => media.removeEventListener("change", update);
+  }, []);
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
@@ -263,11 +277,16 @@ function ProjectStudio({
         urls.push(url);
         return { ...ref, url };
       }),
-    ).then((items) => {
-      if (live) setReferences(items.filter(Boolean));
-    }).catch(() => {
-      if (live) setNotice("Não foi possível recuperar as referências deste navegador.");
-    });
+    )
+      .then((items) => {
+        if (live) setReferences(items.filter(Boolean));
+      })
+      .catch(() => {
+        if (live)
+          setNotice(
+            "Não foi possível recuperar as referências deste navegador.",
+          );
+      });
     return () => {
       live = false;
       urls.forEach((url) => URL.revokeObjectURL(url));
@@ -276,18 +295,73 @@ function ProjectStudio({
   useEffect(() => {
     setPreview(null);
     setBase(null);
+    if (!draft || !local.storage.current) return;
+    let live = true;
+    local.storage.current
+      .getDraftAsset(
+        { userId, projectId: project.id },
+        {
+          pieceId: draft.pieceId,
+          baseVersion: draft.baseVersion,
+          kind: "base",
+        },
+      )
+      .then((value) => {
+        if (live && value) setBase(value.file);
+      })
+      .catch(() => {
+        if (live)
+          setNotice("Não foi possível recuperar a imagem local desta versão.");
+      });
+    return () => {
+      live = false;
+    };
   }, [draft?.pieceId, draft?.baseVersion]);
+  async function useBase({ blob, pieceId, version }) {
+    try {
+      await local.storage.current.putDraftAsset({
+        userId,
+        projectId: project.id,
+        pieceId,
+        baseVersion: version,
+        kind: "base",
+        file: blob,
+      });
+      const current = getCurrentDraft(local.get());
+      if (
+        active.current &&
+        current?.pieceId === pieceId &&
+        current.baseVersion === version
+      )
+        setBase(blob);
+      else if (active.current)
+        setNotice("A imagem está preservada no rascunho da versão de origem.");
+    } catch {
+      if (active.current)
+        setNotice(
+          "Não foi possível preservar a imagem no navegador. O arquivo anterior foi mantido.",
+        );
+    }
+  }
+
   useEffect(() => {
     setPreview(null);
-  }, [base, draft?.content.headline, draft?.content.price, draft?.content.date]);
+  }, [
+    base,
+    draft?.content.headline,
+    draft?.content.price,
+    draft?.content.date,
+  ]);
 
   function nextStage(value) {
     setStage(value);
     setNotice("");
   }
-  function newPost() {
+  function newPost(pieceId = crypto.randomUUID()) {
     local.change((value) =>
-      createPost(value, { pieceId: crypto.randomUUID() }),
+      value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
+        ? selectDraft(value, { pieceId, baseVersion: 0 })
+        : createPost(value, { pieceId }),
     );
     setBase(null);
     setPreview(null);
@@ -324,10 +398,18 @@ function ProjectStudio({
     confirmResolver.current = null;
     setDialog(null);
   }
-  async function saveCurrent() {
+  async function saveCurrent(args) {
     const current = local.get(),
       d = getCurrentDraft(current);
-    if (!d || saving) throw Error("save_unavailable");
+    if (!d || saveLock.current) throw Error("save_unavailable");
+    if (
+      args?.pieceId &&
+      (args.pieceId !== d.pieceId ||
+        args.baseVersion !== d.baseVersion ||
+        args.expectedLatestVersion !== d.expectedLatestVersion)
+    )
+      throw Error("context_changed");
+    saveLock.current = true;
     setSaving(true);
     setNotice("");
     try {
@@ -339,6 +421,7 @@ function ProjectStudio({
           projectId: project.id,
           pieceId: d.pieceId,
           expectedVersion: d.expectedLatestVersion,
+          baseVersion: d.baseVersion,
           content: d.content,
         }),
       });
@@ -361,14 +444,25 @@ function ProjectStudio({
           eventId: crypto.randomUUID(),
         }),
       );
+      if (base)
+        await useBase({
+          blob: base,
+          pieceId: d.pieceId,
+          version: data.version.version,
+        });
       setNotice("Nova versão salva.");
-      return { status: "completed", version: data.version.version };
+      return {
+        status: "completed",
+        pieceId: d.pieceId,
+        version: data.version.version,
+      };
     } catch {
       setNotice(
         "O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.",
       );
       return { status: "unknown" };
     } finally {
+      saveLock.current = false;
       if (active.current) setSaving(false);
     }
   }
@@ -383,6 +477,7 @@ function ProjectStudio({
         revision: state.revision,
         pieceId: d?.pieceId ?? null,
         baseVersion: d?.baseVersion ?? null,
+        expectedLatestVersion: d?.expectedLatestVersion ?? 0,
         unsaved: Boolean(d?.dirty),
       };
     },
@@ -396,9 +491,34 @@ function ProjectStudio({
       );
       return { status: "completed", local: true };
     },
-    compor_novo_post: async () => {
-      newPost();
+    compor_registrar_afirmacao_persona: async (args) => {
+      if (
+        !local.get().persona.claims.some((claim) => claim.id === args.requestId)
+      )
+        local.change((value) =>
+          updatePersona(value, {
+            claims: [
+              ...value.persona.claims,
+              {
+                id: args.requestId,
+                text: args.text,
+                provenance: args.provenance,
+                ...(args.source ? { source: args.source } : {}),
+              },
+            ],
+          }),
+        );
       return { status: "completed", local: true };
+    },
+    compor_novo_post: async (args) => {
+      newPost(args.requestId);
+      return {
+        status: "completed",
+        local: true,
+        pieceId: args.requestId,
+        baseVersion: 0,
+        expectedLatestVersion: 0,
+      };
     },
     compor_editar_peca: async (args) => {
       const d = getCurrentDraft(local.get());
@@ -422,8 +542,25 @@ function ProjectStudio({
       return { status: "completed" };
     },
     compor_salvar_versao: saveCurrent,
-    compor_renomear_projeto: async () => {
-      throw Error("project_update_unavailable");
+    compor_renomear_projeto: async (args) => {
+      const response = await fetch("/api/projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          projectId: project.id,
+          title: args.title,
+          expectedRevision: projectDetails.revision ?? 0,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.status !== "renamed") {
+        setNotice(
+          "Não foi possível confirmar a alteração do nome. Atualize os projetos antes de repetir.",
+        );
+        return { status: "unknown" };
+      }
+      if (active.current) setProjectDetails(data.project);
+      return { status: "completed", title: data.project.title };
     },
     compor_propor_imagem: async (args) => {
       setProposal({ prompt: args.prompt });
@@ -442,6 +579,7 @@ function ProjectStudio({
           "compor_contexto",
           "compor_editar_briefing",
           "compor_editar_persona",
+          "compor_registrar_afirmacao_persona",
           "compor_novo_post",
           "compor_editar_peca",
           "compor_abrir_versao",
@@ -451,6 +589,20 @@ function ProjectStudio({
         ].map((name) => [name, (...args) => handlers.current[name](...args)]),
       ),
       confirm: confirmAction,
+      getReceipt: (id) =>
+        local.get()?.actionReceipts.find((receipt) => receipt.requestId === id),
+      canRecord: () => local.get()?.actionReceipts.length < 200,
+      saveReceipt: async (receipt) => {
+        const result = {
+          ...receipt.result,
+          revision: local.get().revision + 1,
+        };
+        local.change((value) =>
+          recordActionReceipt(value, { ...receipt, result }),
+        );
+        await local.flush();
+        return result;
+      },
     });
     toolsRef.current = tools;
     let registration;
@@ -492,11 +644,12 @@ function ProjectStudio({
       );
       if (active.current) setNotice("Referência removida do moodboard.");
     } catch (error) {
-      if (active.current) setNotice(
-        error.code === "studio_reference_in_use"
-          ? "A referência saiu do moodboard e continua preservada no histórico local de ajustes."
-          : "A referência saiu do moodboard, mas não foi possível confirmar a remoção do arquivo local.",
-      );
+      if (active.current)
+        setNotice(
+          error.code === "studio_reference_in_use"
+            ? "A referência saiu do moodboard e continua preservada no histórico local de ajustes."
+            : "A referência saiu do moodboard, mas não foi possível confirmar a remoção do arquivo local.",
+        );
     }
   }
   if (local.loading || !s)
@@ -525,17 +678,51 @@ function ProjectStudio({
         setPreview(blob);
         setStage("review");
       }}
-      onApprove={() => {
-        try {
-          local.change((value) =>
-            approveDraft(value, {
-              at: new Date().toISOString(),
-              eventId: crypto.randomUUID(),
-            }),
-          );
-          setNotice("Aprovação registrada nesta versão.");
-        } catch {
+      onApprove={async () => {
+        const selected = getCurrentDraft(local.get());
+        const version = versionRef.current.find(
+          (v) =>
+            v.piece_id === selected?.pieceId &&
+            v.version === selected?.baseVersion,
+        );
+        if (!selected || selected.dirty || !version) {
           setNotice("Salve a versão antes de aprovar.");
+          return;
+        }
+        try {
+          const response = await fetch("/api/pieces", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              operation: "approve",
+              projectId: project.id,
+              pieceId: selected.pieceId,
+              version: selected.baseVersion,
+              expectedRevision: version.metadata?.revision ?? 0,
+            }),
+          });
+          const data = await response.json();
+          if (!response.ok || data.status !== "approved") throw Error();
+          await refreshVersions();
+          const current = getCurrentDraft(local.get());
+          if (
+            current?.pieceId === selected.pieceId &&
+            current.baseVersion === selected.baseVersion &&
+            !current.dirty
+          )
+            local.change((value) =>
+              approveDraft(value, {
+                at:
+                  data.version?.metadata?.approval?.at ??
+                  new Date().toISOString(),
+                eventId: crypto.randomUUID(),
+              }),
+            );
+          setNotice("Aprovação salva nesta versão.");
+        } catch {
+          setNotice(
+            "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
+          );
         }
       }}
     />
@@ -549,17 +736,40 @@ function ProjectStudio({
       tools={toolsRef}
       hasApiKey={hasApiKey}
       getApiKey={getApiKey}
-      onUseImage={setBase}
-      onProposal={setProposal}
+      onUseImage={useBase}
+      loadBase={async () => {
+        const d = getCurrentDraft(local.get());
+        return d
+          ? local.storage.current?.getDraftAsset(
+              { userId, projectId: project.id },
+              { pieceId: d.pieceId, baseVersion: d.baseVersion, kind: "base" },
+            )
+          : null;
+      }}
+      loadReference={(id) =>
+        local.storage.current?.getReference(
+          { userId, projectId: project.id },
+          id,
+        )
+      }
     />
   );
   return (
     <StudioShell
       stage={stage}
-      projectTitle={project.title}
+      projectTitle={projectDetails.title}
       activeTab={tab}
       statusText="Conta conectada"
       canOpenStudio
+      versionStatus={
+        draft?.approval.status === "approved"
+          ? "Aprovado"
+          : draft?.dirty
+            ? "Rascunho"
+            : draft?.baseVersion
+              ? `Versão ${draft.baseVersion}`
+              : "Rascunho"
+      }
       onTabChange={setTab}
       onNewProject={onBack}
       onBack={onBack}
@@ -568,13 +778,21 @@ function ProjectStudio({
       }
       onReview={() => nextStage("review")}
       headerActions={
-        <button
-          className="studio-button"
-          disabled={!draft || saving}
-          onClick={saveCurrent}
-        >
-          {saving ? "Salvando…" : "Salvar versão"}
-        </button>
+        <>
+          <button
+            className="studio-button-secondary"
+            onClick={() => nextStage("connect")}
+          >
+            {hasApiKey ? "IA conectada" : "Conectar IA"}
+          </button>
+          <button
+            className="studio-button"
+            disabled={!draft || saving}
+            onClick={() => saveCurrent()}
+          >
+            {saving ? "Salvando…" : "Salvar versão"}
+          </button>
+        </>
       }
       canvas={
         tab === "history" ? (
@@ -589,6 +807,31 @@ function ProjectStudio({
             >
               Atualizar versões
             </button>
+            <h3>Rascunhos neste navegador</h3>
+            {s.drafts.map((item) => (
+              <button
+                key={`${item.pieceId}:${item.baseVersion}`}
+                onClick={() => {
+                  local.change((value) =>
+                    selectDraft(value, {
+                      pieceId: item.pieceId,
+                      baseVersion: item.baseVersion,
+                    }),
+                  );
+                  setTab("post");
+                  setStage("studio");
+                }}
+              >
+                <strong>{item.content.headline || "Post sem título"}</strong>
+                <span>
+                  {item.baseVersion
+                    ? `Base: versão ${item.baseVersion}`
+                    : "Novo post"}
+                  {item.dirty ? " · alterações locais" : ""}
+                </span>
+              </button>
+            ))}
+            <h3>Versões salvas</h3>
             {versions.map((version) => (
               <button
                 key={`${version.piece_id}:${version.version}`}
@@ -620,9 +863,7 @@ function ProjectStudio({
                 <figure key={ref.id}>
                   <img src={ref.url} alt={ref.name} />
                   <figcaption>{ref.name}</figcaption>
-                  <button
-                    onClick={() => removeFile(ref.id)}
-                  >
+                  <button onClick={() => removeFile(ref.id)}>
                     Remover referência
                   </button>
                 </figure>
@@ -635,7 +876,16 @@ function ProjectStudio({
             <dl>
               {Object.entries(s.brief).map(([key, value]) => (
                 <div key={key}>
-                  <dt>{key}</dt>
+                  <dt>
+                    {
+                      {
+                        offer: "Oferta",
+                        audience: "Público",
+                        action: "Ação esperada",
+                        direction: "Direção criativa",
+                      }[key]
+                    }
+                  </dt>
                   <dd>{value || "Ainda não informado"}</dd>
                 </div>
               ))}
@@ -651,6 +901,8 @@ function ProjectStudio({
         ) : (
           <CreativeBoard
             title={draft ? "Post atual" : "Sua criação"}
+            surfaceWidth={compact ? 352 : 772}
+            surfaceHeight={compact ? 1760 : 1100}
             onCurrentPost={() => setTab("post")}
           >
             {editor}
@@ -779,12 +1031,28 @@ function ProjectStudio({
               accept="image/png,image/jpeg"
               onChange={(e) => {
                 const file = e.target.files?.[0];
-                if (file) setBase(file);
+                if (file && draft)
+                  useBase({
+                    blob: file,
+                    pieceId: draft.pieceId,
+                    version: draft.baseVersion,
+                  });
                 e.target.value = "";
               }}
             />
           </label>
           <p>{draft?.content.caption}</p>
+          {draft && (
+            <StudioAssets
+              userId={userId}
+              projectId={project.id}
+              pieceId={draft.pieceId}
+              version={draft.baseVersion}
+              canSave={draft.baseVersion > 0 && !draft.dirty}
+              preview={preview}
+              onUseImage={useBase}
+            />
+          )}
           <button
             className="studio-button"
             onClick={() => {
@@ -819,13 +1087,10 @@ function ProjectStudio({
         </StudioPanel>
       )}
       {dialog && (
-        <div
-          className="studio-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Confirmar alteração"
+        <StudioDialog
+          title="Confirmar alteração no projeto?"
+          onClose={() => resolveConfirmation(false)}
         >
-          <h2>Confirmar alteração no projeto?</h2>
           <p>
             {dialog.name === "compor_salvar_versao"
               ? "Uma nova versão será salva."
@@ -833,23 +1098,17 @@ function ProjectStudio({
           </p>
           <button onClick={() => resolveConfirmation(true)}>Confirmar</button>
           <button onClick={() => resolveConfirmation(false)}>Cancelar</button>
-        </div>
+        </StudioDialog>
       )}
       {proposal && (
-        <div
-          className="studio-modal"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Proposta de imagem"
-        >
-          <h2>Imagem proposta</h2>
+        <StudioDialog title="Imagem proposta" onClose={() => setProposal(null)}>
           <p>{proposal.prompt}</p>
           <p>
             Esta proposta ainda não gerou uma imagem. A execução depende da
             confirmação da chamada vinculada ao agente.
           </p>
           <button onClick={() => setProposal(null)}>Voltar ao estúdio</button>
-        </div>
+        </StudioDialog>
       )}
     </StudioShell>
   );

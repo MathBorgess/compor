@@ -194,3 +194,39 @@
 @media (prefers-reduced-motion: reduce) {
   .compor-studio * { scroll-behavior: auto !important; }
 }
+
+.compor-studio .studio-panel form { display: grid; gap: 18px; }
+.studio-project-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 20px; }
+.studio-project-card { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--studio-line); border-radius: 14px; background: white; text-align: left; color: var(--studio-ink); }
+.studio-project-card strong { font-size: 18px; }
+.studio-project-card > span:last-child { color: var(--studio-cobalt); font-size: 13px; }
+.studio-project-art { display: grid; place-items: center; min-height: 110px; border-radius: 10px; background: var(--studio-blue-tint); color: var(--studio-cobalt); font-size: 48px; font-weight: 700; }
+.studio-project-create { padding-top: 24px; border-top: 1px solid var(--studio-line); }
+.compor-studio .persona-step { width: min(760px,100%); margin: 0 auto; padding: 30px; border: 1px solid var(--studio-line); border-radius: 18px; background: white; }
+.persona-step h2 { font-size: 28px; color: var(--studio-cobalt); }
+.persona-fields,.persona-evidence,.persona-claim { display: grid; gap: 16px; margin-top: 20px; }
+.persona-step label { display: grid; gap: 7px; font-size: 13px; }
+.persona-step :is(input,textarea,select) { width: 100%; padding: 12px; border: 1px solid var(--studio-line); border-radius: 9px; background: white; }
+.persona-actions { display: flex; justify-content: flex-end; gap: 12px; margin-top: 24px; }
+.persona-step button,.studio-history button,.studio-moodboard button { padding: 10px 16px; border: 1px solid var(--studio-cobalt); border-radius: 9px; background: var(--studio-cobalt); color: white; font: inherit; }
+.persona-step button.secondary { background: white; color: var(--studio-cobalt); }
+.studio-history { display: grid; gap: 14px; }
+.studio-history > button { display: grid; gap: 5px; text-align: left; background: white; color: var(--studio-ink); border-color: var(--studio-line); }
+.studio-moodboard { display: grid; gap: 18px; }
+.studio-reference-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(170px,1fr)); gap: 16px; }
+.studio-reference-grid figure { margin: 0; background: white; border: 1px solid var(--studio-line); border-radius: 12px; padding: 12px; overflow-wrap: anywhere; }
+.studio-reference-grid img { display: block; width: 100%; height: 160px; object-fit: contain; }
+.studio-reference-grid figcaption { margin: 8px 0; font-size: 12px; }
+.studio-modal { max-width: min(520px,calc(100vw - 32px)); border: 1px solid #dedfd9; border-radius: 16px; padding: 28px; color: #2c2d2f; font: 400 14px/1.5 'Compor DM Sans',sans-serif; }
+.studio-modal::backdrop { background: #12214388; }
+.studio-modal h2 { margin-top: 0; }
+.studio-modal button { padding: 10px 18px; margin-right: 10px; border: 1px solid #123eab; border-radius: 9px; background: #123eab; color: white; }
+.studio-export-preview { display: block; width: min(100%,360px); height: auto; margin: 0 auto; border-radius: 10px; }
+.studio-image-consent { padding: 16px; border: 1px solid var(--studio-line); border-radius: 12px; background: var(--studio-blue-tint); display: grid; gap: 12px; }
+.studio-area-coordinates { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 10px; }
+@media(max-width:600px) { .compor-studio .persona-step { padding: 20px; } .studio-project-grid { grid-template-columns: 1fr; } .studio-header-actions { flex-wrap: wrap; } .studio-header-actions .studio-button { min-width: auto; } }
+
+.studio-board-content:has(.studio-editor) {padding:32px;}
+@media(max-width:600px){.studio-board-content:has(.studio-editor){padding:16px;}.studio-editor{grid-template-columns:320px;}.studio-editor-inspector{width:320px;min-width:0;}}
+
+.studio-assets{margin:24px 0;padding:20px;border:1px solid var(--studio-line);border-radius:16px;background:#fffdf7;}.studio-assets button{margin:6px 6px 6px 0;}.studio-asset-preview img{max-width:100%;max-height:420px;object-fit:contain;}.studio-chat-context{font-size:12px;line-height:1.5;margin-bottom:12px;}.studio-chat-context details{margin-top:6px;}.studio-chat-context small{display:block;margin-top:6px;}

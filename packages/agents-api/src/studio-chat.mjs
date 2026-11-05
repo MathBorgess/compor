@@ -23,7 +23,7 @@ function contextValid(value){
 }
 function validateImages(images){
  if(images===undefined)return [];
- if(!Array.isArray(images)||images.length>20)throw Error('invalid reference images');let length=0;
+ if(!Array.isArray(images)||images.length>21)throw Error('invalid reference images');let length=0;
  return images.map(image=>{
   if(!image||Object.keys(image).sort().join(',')!=='data,id,mime'||!uuid(image.id)||!['image/png','image/jpeg'].includes(image.mime)||typeof image.data!=='string'||image.data.length>350000||!/^[A-Za-z0-9+/]+={0,2}$/.test(image.data))throw Error('invalid reference images');
   const bytes=Buffer.from(image.data,'base64');if(bytes.toString('base64')!==image.data)throw Error('invalid reference images');length+=image.data.length;if(length>1000000)throw Error('reference images too large');
@@ -35,7 +35,7 @@ function validateImages(images){
 function inputContent(body,includeHistory){
  const data={message:body.message,projectId:body.projectId,context:body.context,requestId:body.requestId,...(includeHistory?{localConversation:body.history??[]}:{})};
  const content=[{type:'input_text',text:JSON.stringify(data)}];
- for(const image of body.referenceImages??[])content.push({type:'input_text',text:`Referência visual local ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
+ for(const image of body.referenceImages??[])content.push({type:'input_text',text:`${image.id===body.context.baseImageId?"Imagem-base da versão selecionada":"Referência visual local"} ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
  return [{role:'user',content}];
 }
 function headers(key,extra={}){return{Authorization:`Bearer ${key}`,'OpenAI-Beta':'agents=v1',...extra};}

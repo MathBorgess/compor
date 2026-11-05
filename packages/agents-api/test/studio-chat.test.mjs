@@ -91,7 +91,7 @@ test('sessão expirada abre outra somente no novo pedido e inclui o histórico l
 test('referências são somente PNG/JPEG base64, limitadas e enviadas como input_image',async()=>{
  const image={id:request2,mime:'image/png',data:Buffer.from([137,80,78,71,13,10,26,10]).toString('base64')};
  const f=fixture();assert.equal((await f.chat(request({...body,referenceImages:[{...image,data:'https://foreign.test/image.png'}]}))).status,400);
- assert.equal((await f.chat(request({...body,referenceImages:Array(21).fill(image)}))).status,400);assert.equal(f.calls.length,0);
+ assert.equal((await f.chat(request({...body,referenceImages:Array(22).fill(image)}))).status,400);assert.equal(f.calls.length,0);
  await f.chat(request({...body,referenceImages:[image]}));assert.equal(f.calls[0].body.input[0].content[2].type,'input_image');
 });
 test('rejeição definitiva permite novo pedido; resposta HTTP408 preserva a incerteza',async()=>{
