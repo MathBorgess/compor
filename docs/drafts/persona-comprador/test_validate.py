@@ -19,6 +19,10 @@ EXPECTED = {
     'fonte_externa_sem_referencia': 'schema_invalid',
     'versao_invalida': 'schema_invalid',
     'substituida_ativa': 'invalid_replacement',
+    'substituicao_campo_diferente': 'invalid_replacement',
+    'apoio_desconhecido': 'unknown_claim_support',
+    'apoio_misto_com_desconhecido': 'unknown_claim_support',
+    'hipotese_apoio_desconhecido': 'unknown_claim_support',
 }
 
 

@@ -57,7 +57,7 @@ def validate(document, schema):
         if claim['estado'] in ('sustentado', 'divergente') and not any(source and source['procedencia'] not in ('hipotese', 'desconhecida') for source in linked_sources):
             errors.add('unsupported_state')
         previous = claim['substitui_id']
-        if previous is not None and (previous not in claims or previous == claim['id'] or claims[previous]['vigente']):
+        if previous is not None and (previous not in claims or previous == claim['id'] or claims[previous]['vigente'] or claims[previous]['campo'] != claim['campo']):
             errors.add('invalid_replacement')
         seen = set()
         cursor = claim
@@ -74,6 +74,8 @@ def validate(document, schema):
                 errors.add('missing_claim')
             elif not claims[claim_id]['vigente']:
                 errors.add('inactive_claim')
+            elif claims[claim_id]['estado'] == 'desconhecido':
+                errors.add('unknown_claim_support')
     for question in document['perguntas_abertas']:
         if any(claim_id not in claims for claim_id in question['afirmacoes_ids']):
             errors.add('missing_claim')
