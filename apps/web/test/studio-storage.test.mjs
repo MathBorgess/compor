@@ -16,7 +16,7 @@ test('ausência de armazenamento é explícita e nenhum erro expõe o conteúdo'
 test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito e falha atomicamente', {skip:!existsSync(browserPath)},async t=>{
  const server=createServer(async(request,response)=>{
   const name=request.url?.split('?')[0];
-  if(name==='/studio-state.mjs'||name==='/studio-storage.mjs'){
+  if(['/studio-state.mjs','/studio-storage.mjs','/studio-image.mjs'].includes(name)){
    response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${name}`,import.meta.url)));
   }else{response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>Teste local de armazenamento</title>');}
  });
@@ -66,7 +66,7 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
 });
 
 test('budget de referências é aplicado antes de gravação e preserva o último estado legível', {skip:!existsSync(browserPath)},async t=>{
- const server=createServer(async(request,response)=>{const name=request.url;if(name==='/studio-state.mjs'||name==='/studio-storage.mjs'){response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${name}`,import.meta.url)));}else response.end('<!doctype html>');});
+ const server=createServer(async(request,response)=>{const name=request.url;if(['/studio-state.mjs','/studio-storage.mjs','/studio-image.mjs'].includes(name)){response.setHeader('Content-Type','text/javascript');response.end(await readFile(new URL(`../lib${name}`,import.meta.url)));}else response.end('<!doctype html>');});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);

@@ -1,3 +1,4 @@
+import { studioImageDimensions } from "./studio-image.mjs";
 const WIDTH = 1080,
   HEIGHT = 1350;
 const text = (value, max) => {
@@ -28,12 +29,18 @@ export async function composeStudioPng({
       !base.size
     )
       throw Error("Use PNG ou JPEG de até 8 MB.");
+    const dimensions = await studioImageDimensions(base, {
+      maxDimension: 4096,
+      maxPixels: 16_777_216,
+    });
     try {
       bitmap = await createImageBitmap(base);
     } catch {
       throw Error("Não foi possível abrir a imagem.");
     }
     if (
+      bitmap.width !== dimensions.width ||
+      bitmap.height !== dimensions.height ||
       bitmap.width < 64 ||
       bitmap.height < 64 ||
       bitmap.width > 4096 ||
@@ -44,6 +51,7 @@ export async function composeStudioPng({
     }
   }
   try {
+    await document.fonts?.ready;
     const canvas = document.createElement("canvas");
     canvas.width = WIDTH;
     canvas.height = HEIGHT;
@@ -74,7 +82,7 @@ export async function composeStudioPng({
     }
     ctx.fillStyle = bitmap ? "#ffffff" : "#123eab";
     ctx.textBaseline = "top";
-    ctx.font = "700 76px sans-serif";
+    ctx.font = "700 76px 'Compor DM Sans', sans-serif";
     const lines = [];
     let line = "";
     for (const word of headline.split(/\s+/).filter(Boolean)) {
@@ -90,7 +98,7 @@ export async function composeStudioPng({
     if (lines.length > 6) throw Error("Reduza o título para caber na arte.");
     const startY = Math.max(100, 1040 - lines.length * 90);
     lines.forEach((part, i) => ctx.fillText(part, 72, startY + i * 90));
-    ctx.font = "600 42px sans-serif";
+    ctx.font = "700 42px 'Compor DM Sans', sans-serif";
     for (const [label, y] of [
       [price, 1152],
       [date, 1220],

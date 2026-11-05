@@ -1,3 +1,4 @@
+import {studioImageDimensions} from './studio-image.mjs';
 import { parseStudioState, STUDIO_LIMITS } from './studio-state.mjs';
 
 export class StudioStorageError extends Error {
@@ -70,8 +71,9 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const png=[137,80,78,71,13,10,26,10].every((value,index)=>bytes[index]===value);
     const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
     if((file.type==='image/png'&&!png)||(file.type==='image/jpeg'&&!jpeg))throw new StudioStorageError('studio_reference_invalid');
+    const dimensions=await studioImageDimensions(file);
     let image;
-    try{image=await decodeImage(file);const metadata={id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height};if(!metadataValid(metadata))throw Error();return metadata;}
+    try{image=await decodeImage(file);if(image.width!==dimensions.width||image.height!==dimensions.height)throw Error();const metadata={id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height};if(!metadataValid(metadata))throw Error();return metadata;}
     catch{throw new StudioStorageError('studio_reference_invalid');}
     finally{try{image?.close();}catch{}}
   }
