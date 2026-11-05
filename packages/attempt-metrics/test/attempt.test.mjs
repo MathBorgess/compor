@@ -78,3 +78,14 @@ test('observações não podem ser alteradas pelo chamador nem finalizadas duas 
   assert.equal(attempt.snapshot().state, 'completed');
   assert.throws(() => attempt.markUnknown(), /already finished/);
 });
+
+
+test('o modelo 2.6 tem estimativa própria e preserva suporte ao histórico 2.5', () => {
+  for (const model of ['gpt-image-2.5-flare', 'gpt-image-2.6-flare']) {
+    const result = createAttempt({ kind: 'image', model, image: { size: '1024x1024', quality: 'auto' }, clock: () => 0 })
+      .complete({ inputTextTokens: 16, inputImageTokens: 0, cachedInputTokens: 0, outputImageTokens: 196, serviceTier: 'standard' });
+    assert.equal(result.model, model);
+    assert.equal(result.estimatedCost.amountUsd, 0.00596);
+    assert.equal(result.estimatedCost.pricingVersion, model === 'gpt-image-2.6-flare' ? 'openai-public-2026-11-04' : 'openai-public-2026-11-03');
+  }
+});

@@ -4,7 +4,7 @@ const pricingVersion = 'openai-public-2026-11-03';
 const nonnegativeInteger = value => Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000;
 
 export function createAttempt({ kind, model, image, clock = () => performance.now() }) {
-  if (!((kind === 'agent' && model === 'gpt-6-astra') || (kind === 'image' && model === 'gpt-image-2.5-flare')) || typeof clock !== 'function') throw new TypeError('invalid attempt configuration');
+  if (!((kind === 'agent' && model === 'gpt-6-astra') || (kind === 'image' && ['gpt-image-2.5-flare', 'gpt-image-2.6-flare'].includes(model))) || typeof clock !== 'function') throw new TypeError('invalid attempt configuration');
   if (kind === 'image' && (image?.size !== '1024x1024' || !['auto', 'low'].includes(image?.quality))) throw new TypeError('invalid image configuration');
   const startedAt = clock();
   if (!Number.isFinite(startedAt)) throw new TypeError('invalid clock');
@@ -40,7 +40,7 @@ export function createAttempt({ kind, model, image, clock = () => performance.no
         safeUsage = { inputTextTokens, inputImageTokens, cachedInputTokens, outputImageTokens, serviceTier };
       }
       if (inputTextTokens !== null && inputImageTokens !== null && cachedInputTokens === 0 && outputImageTokens !== null && serviceTier === 'standard') {
-        estimate = { amountUsd: (inputTextTokens * 5 + inputImageTokens * 8 + outputImageTokens * 30) / 1_000_000, pricingVersion, isFinalBill: false };
+        estimate = { amountUsd: (inputTextTokens * 5 + inputImageTokens * 8 + outputImageTokens * 30) / 1_000_000, pricingVersion: model === 'gpt-image-2.6-flare' ? 'openai-public-2026-11-04' : pricingVersion, isFinalBill: false };
       }
     }
     record = { ...record, state: 'completed', durationMs: endedAt - startedAt, usage: safeUsage, estimatedCost: estimate };
