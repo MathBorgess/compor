@@ -7,9 +7,9 @@ Registro da conversa Codex de 05/11/2026. Base de implementação `7a3d50a4cd3f2
 - [x] Read the Principles section of the poteto-mode skill.
 - [x] Phase A: Frame
 - [x] Phase B: Design the workflow
-- [ ] Phase C: Run the loop
-- [ ] Phase D: Keep the audit trail
-- [ ] Phase E: Verify and hand back
+- [x] Phase C: Run the loop
+- [x] Phase D: Keep the audit trail
+- [x] Phase E: Verify and hand back
 
 ## Direção confirmada
 
@@ -66,3 +66,11 @@ O fluxo final foi confirmado pelo dono. Google leva à conversa, briefing e pers
 Matheus pediu incorporar código do Agile Deliberation ao MCP com proveniência e arquitetura atualizadas. A adaptação distingue classificação visual no estudo original de critérios criativos do Compor. Fontes copiadas terão commit fixado, licença e mapa de métodos.
 
 Matheus também pediu migrar a aplicação Next.js para TypeScript. Componentes passam a TSX, rotas e lógica a TS, com tipagem estrita e gate de compilação. A migração preserva os comportamentos e testes da arte integral, histórico e autorização.
+
+Matheus pediu ainda `AGENTS.md` e ADRs por camada, com estrutura de pastas e regras efetivamente cobradas nos gates. O [guia atual](../architecture.md) e os ADRs 0014–0018 registram frontend, backend, agente, MCP e qualidade. O produto usa Agents API gerenciada; o SDK pertence aos experimentos.
+
+## Entrega e evidência
+
+A [verificação final](../quality/verification-2026-11-05.md) registra testes, build do checkout e bundle isolado, performance, revisão visual e limitações. A trilha está em [.audit/design-deliberation.tsv](../../.audit/design-deliberation.tsv). A revisão está preparada em branch própria; este registro não afirma criação de PR, merge ou deploy.
+
+Experience First orientou entrada direta e briefing progressivo. Model the Domain separou proposta de critério, decisão humana e operação aprovada. Prove It Works orientou regressões que falham antes da correção e passam depois, além dos gates reproduzíveis.

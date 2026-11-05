@@ -1,0 +1,13 @@
+ts	phase	decision	why	evidence	result
+2026-11-05T18:00:00Z	frame	Trabalhar em worktree a partir do main atual	O checkout inicial contém trabalho anterior e arquivos locais de outras atividades	7a3d50a4cd3f289b84c3e502d80e3a199e37ef87	open
+2026-11-05T19:08:43Z	frame	Corrigir o horário da primeira linha, que foi preenchido sem consultar o relógio	O horário da primeira linha não é evidência e fica substituído pelo timestamp desta correção	docs/plans/2026-11-05-design-deliberation.md	Primeira linha preservada; horário não confiável
+2026-11-05T19:08:43Z	decision	Criador decide tensões; conversa é adaptativa e começa após Google	Respostas explícitas do dono nesta conversa de 05/11/2026	docs/adr/0012-arte-integral-e-deliberacao-adaptativa.md	confirmed
+2026-11-05T20:25:58+00:00	implementation	Integrar arte integral, deliberação e Next TS/TSX	Pedidos explícitos e decisões confirmadas	1a79284	implemented
+2026-11-05T20:25:58+00:00	review	Corrigir edição de PNG grande e URLs de referências	Falhas reais reproduzidas; cópia explícita e cache por conteúdo	4045dc0	targeted tests passed
+2026-11-05T20:25:58+00:00	verification	Validar tipagem, lint, site e instalação limpa	Gates devem ser reproduzíveis sem credenciais	docs/quality/gates.md	passed locally
+2026-11-05T20:25:58+00:00	visual	Inspecionar entrada e estúdio desktop/mobile	Identidade do Figma e conversa primeiro no mobile	/tmp/compor-entry-1440.png; /tmp/compor-studio-visual-mobile.png	reviewed; impeccable detect []
+2026-11-05T20:25:58+00:00	scope	Registrar AGENTS e arquitetura por camada	Pedido explícito posterior do dono em 05/11/2026	docs/architecture.md	in progress
+2026-11-05T23:16:45+00:00	verification	Fechar todos os gates locais	392 contratos, 138 web, 8 Python e builds aprovados	docs/quality/verification-2026-11-05.md	passed
+2026-11-05T23:16:45+00:00	performance	Registrar orçamento da entrada sem sessão	Cinco runs com medianas dentro dos limites, sem alegar ganho versus baseline inválido	quality-results/performance/summary.json	LCP 904.26 ms; initial JS 222016 gzip bytes
+2026-11-05T23:16:45+00:00	architecture	Registrar AGENTS e ADRs por camada	Pedido explícito do dono; código observado separado de propostas históricas	docs/architecture.md; docs/adr/0014-0018	documented
+2026-11-05T23:16:45+00:00	handoff	Preparar revisão da branch sem merge ou deploy	Gates locais completos; CI Linux e proteção da branch são verificações distintas	codex/compor-design-deliberation	ready for pull request

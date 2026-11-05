@@ -123,6 +123,8 @@ npm run quality:maintenance
 
 Não rode browser e Lighthouse concorrentes ao medir performance. Os [gates](quality/gates.md) definem escopo, orçamentos e limites. O [ADR 0018](adr/0018-gates-qualidade-e-performance.md) distingue bloqueios automáticos, diagnósticos e revisão. CI não faz deploy e não usa credenciais de geração. O empacotamento de deploy precisa acompanhar o grafo de dependências e a configuração TypeScript; build do checkout não comprova build do bundle de deploy.
 
+`scripts/stage_vercel_web.py` prepara o bundle da Vercel a partir de um commit Git imutável. Copia somente fontes permitidas, inclui a configuração TypeScript e confina dependências locais em `vendor`. O pacote de deliberação leva licença e proveniência da origem. A preparação recusa destinos dentro do repositório, arquivos sensíveis e caminhos de dependência fora desse grafo. Ela não executa deploy.
+
 Na redação deste mapa, a execução do novo workflow no GitHub Actions ainda não foi observada. Build, tipos e lint locais no macOS não comprovam o resultado do runner Linux. Os registros de verificação devem identificar o commit, ambiente e escopo de cada execução.
 
 ## Limites e histórico
