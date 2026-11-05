@@ -1,11 +1,13 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {readFile, rm} from 'node:fs/promises';
-import {execFileSync} from 'node:child_process';
+import {execFileSync, spawnSync} from 'node:child_process';
 import {PGlite} from '@electric-sql/pglite';
 
 const root=new URL('../../../',import.meta.url).pathname;
-const commit=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
+// This bundle is deliberately pinned to the eleven migrations reviewed and
+// applied in the pilot. HEAD can contain later, separately applied migrations.
+const commit='35925f0b130fb4ed0123d2b460cc42ffe2698c2f';
 const prepared=JSON.parse(execFileSync('python3',['scripts/prepare_compor_migrations.py',commit],{cwd:root,encoding:'utf8'}));
 const sql=(await readFile(prepared.path,'utf8')).replace(/^\\set .*$/m,'');
 
@@ -19,6 +21,16 @@ async function fixture(t) {
  create table storage.objects(bucket_id text,name text);alter table storage.objects enable row level security;`);
  return db;
 }
+
+test('recusa preparar HEAD quando há migrações adicionais não revisadas pelo pacote histórico',()=>{
+ const head=execFileSync('git',['rev-parse','HEAD'],{cwd:root,encoding:'utf8'}).trim();
+ const files=execFileSync('git',['ls-tree','-r','--name-only',head,'--','supabase/migrations'],{cwd:root,encoding:'utf8'}).trim().split('\n');
+ assert.ok(files.length>11, 'o HEAD deve conter migrações além das onze históricas');
+ const result=spawnSync('python3',['scripts/prepare_compor_migrations.py',head],{cwd:root,encoding:'utf8'});
+ assert.equal(result.status,1);
+ assert.match(result.stderr,/a lista de migrações difere da revisada/);
+ assert.equal(result.stdout,'');
+});
 
 test('commit aplica as onze migrações e auditoria privada; repetição não altera o resultado',async t=>{
  const db=await fixture(t);
