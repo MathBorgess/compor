@@ -8,7 +8,7 @@ import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 
-test('upload autorizado e textos editáveis geram e baixam PNG local sem rede externa', { skip: !existsSync(browserPath) }, async t => {
+test('upload autorizado preserva arte integral e legenda separada ao baixar PNG sem rede externa', { skip: !existsSync(browserPath) }, async t => {
   const socket = createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port; await new Promise(resolve => socket.close(resolve));
   const origin = `http://127.0.0.1:${port}`;
@@ -52,7 +52,8 @@ test('upload autorizado e textos editáveis geram e baixam PNG local sem rede ex
   const secondDownload = page.waitForEvent('download');
   await page.getByRole('link', { name: 'Baixar PNG' }).click();
   const secondFile = await readFile(await (await secondDownload).path());
-  assert.notDeepEqual(secondFile, file, 'alteração no texto deve alterar os pixels exportados');
+  assert.deepEqual(secondFile, file, 'alterar instruções não modifica os pixels da arte');
+  assert.deepEqual(file, Buffer.from(pixels), 'exportação preserva o PNG original');
   assert.equal(await page.getByLabel('Legenda').inputValue(), 'Legenda continua editável');
   await page.evaluate(() => window.dispatchEvent(new Event('focus')));
   await page.getByText('Imagem carregada: base.png').waitFor();

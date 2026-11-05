@@ -1,12 +1,16 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
+import dynamic from "next/dynamic";
 import StudioShell, { StudioPanel, CreativeBoard } from "./studio-shell";
-import PersonaStep from "./persona-step";
+const PersonaStep = dynamic(() => import("./persona-step"));
+const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
 import { useStudioState } from "./use-studio-state";
 import {
   updateBrief,
   updatePersona,
+  addCreativeCriterion,
+  recordCreativeDecision,
   createPost,
   selectVersion,
   selectDraft,
@@ -23,7 +27,7 @@ import {
 import { createStudioTools } from "../lib/studio-tools.mjs";
 import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
-import StudioAssets from "./studio-assets";
+const StudioAssets = dynamic(() => import("./studio-assets"));
 
 export default function StudioApp({
   userId,
@@ -37,7 +41,8 @@ export default function StudioApp({
 }) {
   const [projects, setProjects] = useState([]),
     [selected, setSelected] = useState(null),
-    [projectName, setProjectName] = useState(""),
+    [projectName, setProjectName] = useState(initialObjective || ""),
+    [openingPrompt, setOpeningPrompt] = useState(""),
     [state, setState] = useState("loading"),
     [notice, setNotice] = useState(""),
     [uncertain, setUncertain] = useState(false);
@@ -73,12 +78,13 @@ export default function StudioApp({
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: projectName }),
+        body: JSON.stringify({ title: projectName.trim().slice(0, 120) }),
       });
       if (!response.ok) throw Error();
       const data = await response.json();
       setProjects((items) => [...items, data.project]);
       setSelected(data.project);
+      setOpeningPrompt(projectName.trim());
       setProjectName("");
       setState("ready");
     } catch {
@@ -101,7 +107,7 @@ export default function StudioApp({
         getApiKey={getApiKey}
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
-        initialObjective={initialObjective}
+        initialObjective={openingPrompt || initialObjective}
       />
     );
   return (
@@ -113,58 +119,25 @@ export default function StudioApp({
       }
     >
       {recoveryBanner}
-      <StudioPanel
-        eyebrow="UM LUGAR PARA SUAS IDEIAS"
-        title="Seus projetos"
-        description="Retome uma criação ou comece uma nova história."
-      >
-        {state === "loading" && <p role="status">Carregando seus projetos…</p>}
-        <div className="studio-project-grid">
-          {projects.map((project) => (
-            <button
-              className="studio-project-card"
-              key={project.id}
-              onClick={() => setSelected(project)}
-            >
-              <span className="studio-project-art" aria-hidden="true">
-                C
-              </span>
-              <strong>{project.title}</strong>
-              <span>Abrir projeto →</span>
-            </button>
-          ))}
-        </div>
-        {state !== "loading" && projects.length === 0 && (
-          <p>Você ainda não tem projetos. Seu primeiro post começa aqui.</p>
-        )}
-        <form onSubmit={create} className="studio-project-create">
-          <label htmlFor="studio-project-name">Nome do projeto</label>
-          <input
-            id="studio-project-name"
-            maxLength={200}
-            value={projectName}
-            onChange={(e) => setProjectName(e.target.value)}
-            placeholder="Ex.: lançamento da minha aula"
-          />
-          <button
-            className="studio-button"
-            disabled={state !== "ready" || uncertain || !projectName.trim()}
-          >
-            {state === "creating" ? "Criando…" : "Criar projeto"}
-          </button>
+      <section className="studio-starter" aria-labelledby="starter-title">
+        <h2 id="starter-title">O que vamos comunicar?</h2>
+        <p>Comece com uma ideia, uma oferta ou uma dúvida. A conversa ajuda a encontrar o visual e a mensagem para quem vai receber seu post.</p>
+        <form onSubmit={create}>
+          <label htmlFor="studio-project-name">Sua ideia</label>
+          <textarea id="studio-project-name" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
+          <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Abrindo conversa…" : "Começar conversa"}</button>
         </form>
         {notice && <p role="alert">{notice}</p>}
-        {(state === "error" || uncertain) && (
-          <button type="button" onClick={refresh}>
-            Atualizar projetos
-          </button>
-        )}
-        {uncertain && (
-          <button type="button" onClick={() => setUncertain(false)}>
-            Entendi, iniciar outra criação
-          </button>
-        )}
-      </StudioPanel>
+        {(state === "error" || uncertain) && <button type="button" onClick={refresh}>Atualizar projetos</button>}
+        {uncertain && <button type="button" onClick={() => setUncertain(false)}>Entendi, iniciar outra criação</button>}
+      </section>
+      <section className="studio-recent-projects" aria-label="Conversas e projetos anteriores">
+        <h2>Continue de onde parou</h2>
+        {state === "loading" && <p role="status">Carregando seus projetos…</p>}
+        <div className="studio-project-grid">
+          {projects.map(project => <button className="studio-project-card" key={project.id} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong>{project.title}</strong><span>Retomar conversa</span></button>)}
+        </div>
+      </section>
     </StudioShell>
   );
 }
@@ -182,7 +155,7 @@ function ProjectStudio({
 }) {
   const local = useStudioState({ userId, projectId: project.id }),
     s = local.state;
-  const [stage, setStage] = useState("brief"),
+  const [stage, setStage] = useState("studio"),
     [tab, setTab] = useState("post"),
     [versions, setVersions] = useState([]),
     [notice, setNotice] = useState(""),
@@ -240,6 +213,9 @@ function ProjectStudio({
       );
   }, [Boolean(s)]);
   useEffect(() => {
+    if (s && !s.selection) local.change(value => createPost(value, { pieceId: crypto.randomUUID() }));
+  }, [Boolean(s)]);
+  useEffect(() => {
     if (!s) return;
     try {
       const saved = sessionStorage.getItem(
@@ -247,10 +223,6 @@ function ProjectStudio({
       );
       if (
         [
-          "brief",
-          "persona",
-          "connect",
-          "confirm",
           "studio",
           "review",
           "export",
@@ -516,11 +488,24 @@ function ProjectStudio({
                 id: args.requestId,
                 text: args.text,
                 provenance: args.provenance,
-                ...(args.source ? { source: args.source } : {}),
+                source: args.source || "",
               },
             ],
           }),
         );
+      return { status: "completed", local: true };
+    },
+    compor_propor_criterio: async args => {
+      for (const id of [args.exampleReferenceId, args.counterexampleReferenceId].filter(Boolean)) {
+        if (!local.get().references.some(reference => reference.id === id)) throw Error("reference_unavailable");
+      }
+      local.change(value => addCreativeCriterion(value, {
+        id: args.requestId, viewpoint: args.viewpoint, dimension: args.dimension, statement: args.statement,
+        example: { description: args.example, referenceId: args.exampleReferenceId || null },
+        counterexample: { description: args.counterexample, referenceId: args.counterexampleReferenceId || null },
+        provenance: args.provenance, source: args.source || "", tension: args.tension || "",
+      }));
+      setTab("direction");
       return { status: "completed", local: true };
     },
     compor_novo_post: async (args) => {
@@ -652,6 +637,10 @@ function ProjectStudio({
     }
   }
   async function removeFile(id) {
+    if (local.get().direction.criteria.some(criterion => [criterion.example.referenceId, criterion.counterexample.referenceId].includes(id))) {
+      setNotice("Esta imagem faz parte de um exemplo na Direção e continua preservada com esse critério.");
+      return;
+    }
     local.change((value) => removeReference(value, id));
     try {
       await local.flush();
@@ -659,7 +648,7 @@ function ProjectStudio({
         { userId, projectId: project.id },
         id,
       );
-      if (active.current) setNotice("Referência removida do moodboard.");
+      if (active.current) setNotice("Referência removida.");
     } catch (error) {
       if (active.current)
         setNotice(
@@ -758,6 +747,9 @@ function ProjectStudio({
       hasApiKey={hasApiKey}
       getApiKey={getApiKey}
       onUseImage={useBase}
+      prepareImageVersion={saveCurrent}
+      initialMessage={s.messages.length === 0 ? initialObjective : ""}
+      connection={<details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa usa sua API. Cada imagem pede uma confirmação separada.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details>}
       loadBase={async () => {
         const d = getCurrentDraft(local.get());
         return d
@@ -800,6 +792,9 @@ function ProjectStudio({
       onReview={() => nextStage("review")}
       headerActions={
         <>
+          <button className="studio-button-secondary" disabled={!draft} onClick={() => nextStage("review")}>
+            Revisar post
+          </button>
           <button
             className="studio-button-secondary"
             onClick={() => nextStage("connect")}
@@ -816,7 +811,7 @@ function ProjectStudio({
         </>
       }
       canvas={
-        tab === "history" ? (
+        tab === "direction" ? <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} /> : tab === "history" ? (
           <div className="studio-history">
             <h2>Histórico do projeto</h2>
             <button className="studio-button" onClick={()=>newPost()}>Novo post</button>
@@ -977,51 +972,6 @@ function ProjectStudio({
         </>
       }
     >
-      {stage === "brief" && (
-        <StudioPanel
-          eyebrow="CONTE SUA IDEIA"
-          title="O que vamos criar?"
-          description="Uma direção começa com o que você quer comunicar."
-        >
-          <form
-            onSubmit={(e) => {
-              e.preventDefault();
-              nextStage("persona");
-            }}
-          >
-            {[
-              ["offer", "O que você oferece?"],
-              ["audience", "Para quem?"],
-              ["action", "O que a pessoa deve fazer?"],
-              ["direction", "Qual direção você imagina?"],
-            ].map(([field, label]) => (
-              <label key={field}>
-                {label}
-                <textarea
-                  value={s.brief[field]}
-                  maxLength={4000}
-                  onChange={(e) =>
-                    local.change((value) =>
-                      updateBrief(value, { [field]: e.target.value }),
-                    )
-                  }
-                />
-              </label>
-            ))}
-            <button className="studio-button">Continuar</button>
-          </form>
-        </StudioPanel>
-      )}
-      {stage === "persona" && (
-        <PersonaStep
-          value={s.persona}
-          onChange={(value) =>
-            local.change((state) => updatePersona(state, value))
-          }
-          onBack={() => nextStage("brief")}
-          onContinue={() => nextStage("connect")}
-        />
-      )}
       {stage === "connect" && (
         <StudioPanel
           eyebrow="SUA IA, SUA ESCOLHA"
@@ -1036,40 +986,15 @@ function ProjectStudio({
           <button
             className="studio-button"
             disabled={!hasApiKey}
-            onClick={() => nextStage("confirm")}
+            onClick={() => nextStage("studio")}
           >
             Continuar
           </button>
           <button onClick={onRemoveKey} disabled={!hasApiKey}>
             Remover chave
           </button>
-          <button onClick={() => nextStage("confirm")}>
+          <button onClick={() => nextStage("studio")}>
             Continuar sem IA por enquanto
-          </button>
-        </StudioPanel>
-      )}
-      {stage === "confirm" && (
-        <StudioPanel
-          eyebrow="VOCÊ NO CONTROLE"
-          title="Tudo pronto para começar?"
-          description="Revise sua direção. Cada geração de imagem pedirá sua confirmação antes de consumir a API de imagem."
-        >
-          <h3>{s.brief.offer || "Sua nova criação"}</h3>
-          <p>
-            {s.brief.direction || "Você pode explorar a direção na conversa."}
-          </p>
-          <p>
-            O custo final depende do uso da OpenAI. Ainda não há teto automático
-            de gasto.
-          </p>
-          <button
-            className="studio-button"
-            onClick={() => {
-              if (!draft) newPost();
-              else nextStage("studio");
-            }}
-          >
-            Abrir estúdio
           </button>
         </StudioPanel>
       )}
@@ -1120,7 +1045,7 @@ function ProjectStudio({
                 const url = URL.createObjectURL(preview),
                   a = document.createElement("a");
                 a.href = url;
-                a.download = "compor-post-1080x1350.png";
+                a.download = `compor-post-v${draft?.baseVersion || "rascunho"}.png`;
                 a.click();
                 setTimeout(() => URL.revokeObjectURL(url), 1000);
               }
@@ -1160,7 +1085,7 @@ function Preview({ blob }) {
     <img
       src={url}
       className="studio-export-preview"
-      alt="Prévia da arte em 1080 por 1350 pixels"
+      alt="Prévia da arte integral, sem textos adicionados pelo aplicativo"
     />
   ) : null;
 }

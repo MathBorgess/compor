@@ -34,8 +34,10 @@ export default function StudioChat({
   prepareImageVersion,
   loadReference,
   loadBase,
+  initialMessage = "",
+  connection,
 }) {
-  const [message, setMessage] = useState(""),
+  const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [imageAction, setImageAction] = useState(null),
@@ -529,6 +531,7 @@ export default function StudioChat({
         </div>}
       </div>
       <form className="studio-chat-composer" onSubmit={send}>
+        {connection}
         <div className="studio-chat-context">
           <strong>
             {getCurrentDraft(state)?.content.headline || "Post sem título"}

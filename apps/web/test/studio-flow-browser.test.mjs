@@ -46,42 +46,46 @@ async function app(t){
  return{page,origin,session,errors,external,calls};
 }
 
-test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls}=await app(t);
  await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await page.getByLabel('O que você oferece?',{exact:true}).fill('Aula fictícia');
- await page.getByLabel('Qual direção você imagina?',{exact:true}).fill('Cores claras e formas');
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('heading',{name:'Conhecendo quem vai comprar',exact:true}).waitFor();
+ await page.getByLabel('Título',{exact:true}).waitFor();
+ await page.getByRole('tab',{name:'Fatos e textos',exact:true}).click();
  await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
  await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
  await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
+ const files=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
+ assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isDisabled(),true,'an empty draft cannot export placeholder artwork');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).setInputFiles({name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
+ await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'an unsaved post cannot be approved');
  await page.getByLabel('Título',{exact:true}).fill('Meu primeiro post sintético');
  await page.getByLabel('Legenda',{exact:true}).fill('Somente uma legenda de teste');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();
  await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isEnabled(),true,'a saved clean version can be approved');
- await page.getByRole('button',{name:'Marcar elemento título',exact:true}).click();
- await page.getByLabel('O que deve mudar nesta seleção?',{exact:true}).fill('Destacar este título');
- await page.getByRole('button',{name:'Adicionar ao pedido',exact:true}).click();
- await page.getByRole('button',{name:'Marcar área',exact:true}).click();
- const frame=page.getByLabel('Arte do post em formato retrato',{exact:true});await frame.scrollIntoViewIfNeeded();const rect=await frame.boundingBox();
- await page.mouse.move(rect.x+40,rect.y+40);await page.mouse.down();await page.mouse.move(rect.x+140,rect.y+150,{steps:4});await page.mouse.up();
- await page.getByLabel('O que deve mudar nesta área?',{exact:true}).fill('Ajustar esta região');
- await page.getByRole('button',{name:'Adicionar ao pedido',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Marcar elemento título',exact:true}).count(),0,'literal text is an instruction for the engine, without a local title overlay');
+ const frame=page.getByLabel('Arte integral do post',{exact:true});
+ for(const [index,instruction] of ['Destacar esta região','Ajustar esta região'].entries()){
+  await page.getByRole('button',{name:'Marcar área',exact:true}).click();
+  await frame.scrollIntoViewIfNeeded();const rect=await frame.boundingBox();
+  await page.mouse.move(rect.x+40+index*10,rect.y+40);await page.mouse.down();await page.mouse.move(rect.x+140,rect.y+150,{steps:4});await page.mouse.up();
+  await page.getByLabel('O que deve mudar nesta área?',{exact:true}).fill(instruction);
+  await page.getByRole('button',{name:'Adicionar ao pedido',exact:true}).click();
+ }
  await eventually(()=>stored(page),value=>value?.marks?.length===2);
  const markList=page.getByRole('region',{name:'Marcações deste post',exact:true});
- await markList.getByText('Destacar este título',{exact:true}).waitFor();
+ await markList.getByText('Destacar esta região',{exact:true}).waitFor();
  await markList.getByText('Ajustar esta região',{exact:true}).waitFor();
  await markList.getByRole('button',{name:'Remover marcação 1',exact:true}).click();
  await eventually(()=>stored(page),value=>value?.marks?.length===1&&value.marks[0].kind==='area');
- assert.equal(await markList.getByText('Destacar este título',{exact:true}).count(),0);
+ assert.equal(await markList.getByText('Destacar esta região',{exact:true}).count(),0);
  await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
- await page.getByRole('tab',{name:'Moodboard',exact:true}).click();
- const files=await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
+ await page.getByRole('tab',{name:'Referências',exact:true}).click();
  await page.getByLabel('Adicionar PNG ou JPEG',{exact:true}).setInputFiles([{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
  await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
@@ -123,7 +127,7 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.screenshot({path:'/tmp/compor-studio-visual-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,'page itself must not overflow; board may scroll internally');
- const thirdTab=await page.getByRole('tab',{name:'Fatos e textos',exact:true}).boundingBox();assert.ok(thirdTab.x+thirdTab.width<=390,'the account status does not crowd the mobile tab strip');
+ const activeTab=await page.getByRole('tab',{name:'Estúdio',exact:true}).boundingBox();assert.ok(activeTab.x>=0&&activeTab.x+activeTab.width<=390,'the active mobile tab remains visible');
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile.png',fullPage:true});
  await page.getByLabel('Título',{exact:true}).scrollIntoViewIfNeeded();
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');
@@ -133,12 +137,15 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.getByLabel('Título',{exact:true}).waitFor();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
- await page.getByRole('tab',{name:'Moodboard',exact:true}).click();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await page.getByRole('tab',{name:'Referências',exact:true}).click();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
  await page.getByRole('tab',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).setInputFiles({name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
+ await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
- await page.getByRole('img',{name:'Prévia da arte em 1080 por 1350 pixels',exact:true}).waitFor();
+ await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();const file=await(await download).path();const bytes=await readFile(file);
- assert.equal(bytes.readUInt32BE(16),1080);assert.equal(bytes.readUInt32BE(20),1350);
+ assert.deepEqual(bytes,Buffer.from(files.png,'base64'),'export preserves every pixel and PNG byte despite title, price and date instructions');
  await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).setInputFiles({name:'base.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')});
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isDisabled(),true,'new base invalidates the earlier preview');
@@ -148,13 +155,13 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await page.getByLabel('O que você oferece?',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
+ await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
  let release;session.hold=new Promise(resolve=>{release=resolve;});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);session.userId=bob;release();session.hold=null;
- await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('O que você oferece?',{exact:true}).waitFor();assert.equal(await page.getByLabel('O que você oferece?',{exact:true}).inputValue(),'');
- await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('Título',{exact:true}).waitFor();assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
- session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  assert.deepEqual(errors,['Failed to load resource: the server responded with a status of 503 (Service Unavailable)']);
 });

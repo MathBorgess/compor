@@ -124,7 +124,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const scopeKey=scopeOf(scope),key=referenceKey(scopeKey,id);
     return transaction(['states','references'],'readwrite',(tx,done,fail)=>{
       const request=tx.objectStore('states').get(scopeKey);
-      request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
+      request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||state.direction.criteria.some(item=>[item.example.referenceId,item.counterexample.referenceId].includes(id))||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
     });
   }
   function putDraftAsset(input) {

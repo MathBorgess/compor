@@ -94,6 +94,18 @@ _Avoid_: Biografia inventada, perfil da pessoa criadora, público comprovado sem
 Pessoa que usa o Compor para divulgar uma oferta. Seu gosto e suas preferências não definem automaticamente quem compra seu infoproduto.
 _Avoid_: Persona compradora, audiência inferida do gosto do autor
 
+**Critério criativo**:
+Definição revisável do que torna o visual ou a mensagem adequados a uma peça, com a perspectiva da pessoa criadora ou da persona compradora identificada. Exemplos e contraexemplos esclarecem seu significado e seus limites.
+_Avoid_: Fato da oferta, nota universal de qualidade, resposta comprovada do público
+
+**Contraexemplo criativo**:
+Referência visual ou de mensagem que mostra um limite de um critério criativo e explicita o motivo da inadequação naquele contexto.
+_Avoid_: Estilo permanentemente proibido, rejeição sem motivo, regra válida para toda campanha
+
+**Tensão criativa**:
+Conflito entre critérios da pessoa criadora e hipóteses sobre a adequação à persona compradora. A pessoa criadora decide como resolver o conflito após conhecer as alternativas.
+_Avoid_: Decisão automática pela persona, resultado comprovado de audiência
+
 **Atualização de contexto**:
 Adoção explícita de novas versões da base ou das skills por uma campanha, preservando a referência às versões anteriores.
 _Avoid_: Aprovação de peça, recebimento de arquivos

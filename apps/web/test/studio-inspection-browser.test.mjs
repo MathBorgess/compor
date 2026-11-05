@@ -39,7 +39,7 @@ export default function Fixture(){const[key,setKey]=useState(''),[state]=useStat
   if(status==='running')await page.waitForTimeout(2200);
   assert.equal(calls.length,count+1,'cada clique faz somente uma consulta sem timer ou ACK');assert.deepEqual(calls.at(-1),{path:'/api/studio/chat',body:{op:'poll',projectId,requestId,apiKey}});
   assert.equal(await page.getByTestId('snapshot').innerText(),before);assert.deepEqual(await page.evaluate(()=>window.__inspectionCounts),{change:0,flush:0,tools:0,image:0});
-  assert.equal(await page.getByRole('heading',{name:'Uma imagem para este post'}).count(),0);assert.doesNotMatch(await page.locator('body').innerText(),/PRIVATE_PROVIDER_STORY|sk-synthetic|sess_verified|turn_verified|functions.compor_contexto/);
+  assert.equal(await page.getByRole('heading',{name:'Gerar a arte completa'}).count(),0);assert.doesNotMatch(await page.locator('body').innerText(),/PRIVATE_PROVIDER_STORY|sk-synthetic|sess_verified|turn_verified|functions.compor_contexto/);
  }
  await page.getByText('Diagnóstico técnico',{exact:true}).click();await page.getByText('Ocorrência: ferramenta indisponível.').waitFor();assert.equal(await page.evaluate(marker=>sessionStorage.getItem(marker),marker),stored);
  responseErrorCode='provider_http_401';await consult.click();await page.getByText(authenticationNotice,{exact:true}).waitFor();assert.equal(calls.length,6);assert.equal(await page.getByText('Estado da solicitação anterior: não confirmado.',{exact:true}).count(),0);assert.equal(await page.getByTestId('snapshot').innerText(),before);

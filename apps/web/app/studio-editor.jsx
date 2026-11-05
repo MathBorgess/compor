@@ -19,7 +19,6 @@ export default function StudioEditor({
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
-    [cropY, setCropY] = useState(0.5),
     [url, setUrl] = useState(null);
   const frame = useRef(null),
     start = useRef(null),
@@ -31,7 +30,7 @@ export default function StudioEditor({
     setError("");
     generation.current++;
   }, [draft?.pieceId, draft?.baseVersion]);
-  useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date,cropY]);
+  useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date]);
   useEffect(() => {
     if (!base) {
       setUrl(null);
@@ -84,8 +83,6 @@ export default function StudioEditor({
     try {
       const blob = await composeStudioPng({
         base,
-        content: draft.content,
-        cropY,
       });
       if (seq === generation.current) onPreview?.(blob);
     } catch (e) {
@@ -105,10 +102,11 @@ export default function StudioEditor({
             setRegion(null);
           }}
         >
-          Selecionar elemento
+          Ver arte
         </button>
         <button
           type="button"
+          disabled={!base}
           aria-pressed={mode === "area"}
           onClick={() => {
             setMode("area");
@@ -130,34 +128,16 @@ export default function StudioEditor({
         onPointerCancel={() => {
           start.current = null;
         }}
-        aria-label="Arte do post em formato retrato"
+        aria-label="Arte integral do post"
       >
         {url && (
           <img
             className="studio-post-base"
             src={url}
-            alt="Imagem-base selecionada"
-            style={{ objectPosition: `50% ${cropY * 100}%` }}
+            alt="Arte integral da versão selecionada"
           />
         )}
-        <div className={`studio-post-copy ${url ? "with-base" : ""}`}>
-          {["headline", "price", "date"].map((field) => (
-            <button
-              key={field}
-              type="button"
-              className={`studio-post-${field}`}
-              disabled={mode === "area"}
-              onClick={() => {
-                setRegion({ elementId: field });
-                setNote("");
-              }}
-              aria-label={`Marcar elemento ${elementLabels[field]}`}
-            >
-              {draft.content[field] ||
-                { headline: "Seu título", price: "", date: "" }[field]}
-            </button>
-          ))}
-        </div>
+        {!url && <div className="studio-art-empty"><h2>A sua ideia ganha forma aqui</h2><p>Conte o que quer comunicar ou traga uma referência. Vamos criar a arte inteira, incluindo os textos.</p></div>}
         {region?.width > 0 && (
           <div
             className="studio-area-mark"
@@ -187,6 +167,7 @@ export default function StudioEditor({
         )}
       </div>
       <div className="studio-post-inspector">
+        <p className="studio-hint">Estes textos orientam a próxima geração. Alterá-los não modifica os pixels da arte atual.</p>
         <label>
           Título
           <input
@@ -222,19 +203,6 @@ export default function StudioEditor({
             onChange={(e) => onEdit?.("caption", e.target.value)}
           />
         </label>
-        {url && (
-          <label>
-            Enquadramento vertical
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={cropY}
-              onChange={(e) => setCropY(Number(e.target.value))}
-            />
-          </label>
-        )}
         {region && (
           <div className="studio-adjustment-note">
             {!region.elementId && (
@@ -326,7 +294,7 @@ export default function StudioEditor({
           </section>
         )}
         <div className="studio-editor-actions">
-          <button type="button" disabled={busy} onClick={preview}>
+          <button type="button" disabled={busy || !base} onClick={preview}>
             {busy ? "Preparando…" : "Preparar PNG"}
           </button>
           <button

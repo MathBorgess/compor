@@ -7,7 +7,8 @@ import "./studio-shell.css";
 const assets = "/studio/";
 const tabs = [
   { id: "post", label: "Estúdio" },
-  { id: "moodboard", label: "Moodboard" },
+  { id: "moodboard", label: "Referências" },
+  { id: "direction", label: "Direção" },
   { id: "facts", label: "Fatos e textos" },
   { id: "history", label: "Histórico" },
 ];
@@ -80,9 +81,8 @@ export default function StudioShell({
           ? tabs.length - 1
           : (currentIndex + direction + tabs.length) % tabs.length;
     onTabChange?.(tabs[next].id);
-    event.currentTarget.parentElement
-      .querySelectorAll('[role="tab"]')
-      [next]?.focus();
+    const buttons = event.currentTarget.parentElement.querySelectorAll('[role="tab"]');
+    buttons[next]?.focus();
   }
   return (
     <div className="compor-studio" data-stage={stage}>

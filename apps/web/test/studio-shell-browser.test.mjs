@@ -48,7 +48,7 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   for (const name of ['brand-symbol.svg', 'brand-wordmark.svg', 'folder.svg', 'image.svg', 'history.svg', 'dot.svg', 'compor-avatar.svg']) assert.ok((await readFile(new URL(`../public/studio/${name}`, import.meta.url))).length > 100);
   await page.getByRole('tab', { name: 'Estúdio', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
-  assert.equal(await page.getByRole('tab', { name: 'Moodboard' }).getAttribute('aria-selected'), 'true');
+  assert.equal(await page.getByRole('tab', { name: 'Referências' }).getAttribute('aria-selected'), 'true');
   await page.getByRole('tab', { name: 'Estúdio', exact: true }).click();
   await page.getByRole('button', { name: 'Aumentar zoom' }).click();
   await page.getByRole('button', { name: 'Restaurar zoom a 100%' }).waitFor();

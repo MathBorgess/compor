@@ -48,8 +48,16 @@ async function openOriginal(page,origin,{key=true}={}){
  if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
 }
+async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
+ if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).setInputFiles({name,mimeType:mime,buffer});
+ await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
+ return buffer;
+}
 const action=(name,args,binding)=>({status:'action_required',action:{name,args},actionBinding:binding});
-const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
+const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
 
 test('chat cria e salva versões com confirmação; imagem usa snapshot novo e recusa não chama Images',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,calls,versions,flow,errors,external}=await app(t);let submits=0;
@@ -69,13 +77,13 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo e r
  await openOriginal(page,origin);await page.getByLabel('Sua mensagem',{exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`);}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await eventually(()=>page.getByLabel('Título',{exact:true}).inputValue(),value=>value==='Título novo refinado');await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1,'segunda versão também espera confirmação');
- await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByRole('heading',{name:'Uma imagem para este post'}).waitFor();
+ await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByRole('heading',{name:'Gerar a arte completa'}).waitFor();
  const proposal=page.locator('.studio-image-consent');assert.match(await proposal.innerText(),/Título novo refinado · versão 2/);const saves=calls.filter(call=>call.path==='/api/pieces');assert.deepEqual(saves.map(call=>[call.body.pieceId,call.body.baseVersion,call.body.expectedVersion]),[[newPiece,0,0],[newPiece,1,1]]);
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
- await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Imagem-base selecionada',exact:true}).waitFor();
- const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:2,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,apiKey});
- const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'2');assert.equal(versions[0].content.headline,'Original preservado');
- const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===2&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
+ await page.getByText('Imagem gerada e adicionada a este post · versão 3.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
+ const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');
+ const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
  const beforeDecline=calls.length;await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha outra imagem para eu revisar.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('button',{name:'Recusar geração',exact:true}).click();await page.getByText('Proposta recusada sem gerar outra imagem.',{exact:true}).waitFor();
  const declined=calls.slice(beforeDecline);assert.equal(declined.some(call=>call.path==='/api/agent/image'),false);assert.equal(declined.some(call=>call.path==='/api/images'),false);const receipt=declined.find(call=>call.path==='/api/studio/action');assert.equal(receipt.body.actionBinding,'decline-binding-decline');assert.deepEqual(receipt.body.result,{status:'declined'});
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
@@ -117,8 +125,8 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
- await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();await page.getByRole('img',{name:'Imagem-base selecionada',exact:true}).waitFor();
- const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,1);
+ await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,2);assert.equal(versions.find(version=>version.piece_id===originalPiece&&version.version===1).content.headline,'Original preservado');
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -126,6 +134,7 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
  const {page,origin,versions,calls,errors}=await app(t);
  versions.push({project_id:projectId,piece_id:newPiece,version:2,content:content('Post B preservado')});
  await openOriginal(page,origin,{key:false});
+ await attachImage(page);
  await page.evaluate(()=>{
   const original=HTMLCanvasElement.prototype.toBlob;
   HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
@@ -143,20 +152,21 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
  assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
 
-test('editar o texto durante a codificação descarta o PNG anterior e mantém o rascunho atual',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+test('trocar a imagem durante a codificação descarta a prévia anterior e conserva a nova arte',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,errors}=await app(t);await openOriginal(page,origin,{key:false});
+ await attachImage(page);
  await page.evaluate(()=>{
   const original=HTMLCanvasElement.prototype.toBlob;
   HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
  });
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
- await page.getByLabel('Título',{exact:true}).fill('Título alterado durante a composição');
+ await attachImage(page,{mime:'image/png',name:'replacement.png',buffer:png});
  await page.evaluate(()=>window.__releasePreviewEncoding());
  await page.waitForFunction(()=>window.__previewEncodingDone===true);
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
- assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'o PNG com texto anterior não se torna a prévia do rascunho alterado');
- assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Título alterado durante a composição');
+ assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'a imagem substituída não se torna a prévia da arte atual');
+ await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isEnabled(),true);
  assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
@@ -170,10 +180,6 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
   return route.fulfill({json:{versions}});
  });
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
- await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).click();
- await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
  await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  await page.getByRole('tab',{name:'Histórico',exact:true}).click();
@@ -183,4 +189,40 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
  assert.equal(await saved.count(),1,'a resposta anterior ao salvamento não substitui a versão que já foi confirmada');
  await saved.click();assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post criado durante a leitura anterior');
  assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1);assert.deepEqual(errors,[]);
+});
+
+test('a conversa gera a arte integral de um rascunho sem exigir salvamento prévio',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,versions,flow,errors,external}=await app(t);
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Primeira arte pronta.'}:consent('draft');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();
+ await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ const before=await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.headline==='Curso de planilhas'));assert.equal(before.selection.baseVersion,0);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('heading',{name:'Gerar a arte completa',exact:true}).waitFor();
+ assert.equal(calls.some(call=>call.path==='/api/pieces'||call.path==='/api/agent/image'),false,'a proposta não salva nem gera antes da confirmação');
+ await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Primeira arte pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
+ const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.pieceId,before.selection.pieceId);assert.equal(generation[0].body.version,1);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Curso de planilhas',price:'R$ 49',date:'12/12'},source:null,images:[]});
+ assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1);assert.equal(versions.find(version=>version.piece_id===before.selection.pieceId).content.caption,'');
+ const after=await eventually(()=>stored(page),state=>state?.selection?.baseVersion===1);assert.equal(after.selection.pieceId,before.selection.pieceId);assert.equal(JSON.stringify(after).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('edição envia os bytes aprovados da origem e referência e preserva a imagem anterior',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow,errors,external}=await app(t);let referenceId;
+ flow.chat=body=>{
+  if(body.op==='poll')return{status:'completed',text:'Nova arte editada.'};
+  referenceId=body.context.references[0].id;
+  return{...consent('edit'),proposal:{prompt:'Mude a paleta seguindo a referência, mantendo os textos.',operation:'edit',baseImageId:originalPiece,referenceIds:[referenceId]}};
+ };
+ await openOriginal(page,origin);
+ const source=await attachImage(page,{mime:'image/png',name:'original.png'});
+ await page.getByRole('tab',{name:'Referências',exact:true}).click();await page.getByLabel('Adicionar PNG ou JPEG',{exact:true}).setInputFiles({name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('tab',{name:'Estúdio',exact:true}).click();
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('heading',{name:'Editar a arte em uma nova versão',exact:true}).waitFor();
+ assert.equal(calls.some(call=>call.path==='/api/agent/image'),false);
+ await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
+ const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
+ await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ await page.getByRole('tab',{name:'Histórico',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 2/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'reabrir versões e recarregar não regenera a imagem');assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

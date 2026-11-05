@@ -12,7 +12,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const userId=id(1),projectId=id(2),requestId=id(3),pieceId=id(4),assetId=id(5),otherPiece=id(6),marker=`compor-studio-chat:${userId}:${projectId}`;
 const apiKey=`sk-synthetic-${'x'.repeat(30)}`,staleText='A proposta está pronta e aguarda sua confirmação.';
 const receipt='Imagem gerada e adicionada a este post · versão 2.';
-const failure='A imagem foi gerada, mas não foi possível confirmar sua aplicação à versão de origem. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.';
+const failure='A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.';
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 
 test('receipt confirma aplicação aguardada sem alterar o agente; escopo e falha não regeneram imagem',{skip:!existsSync(browserPath),timeout:90000},async t=>{

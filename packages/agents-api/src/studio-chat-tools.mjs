@@ -8,6 +8,7 @@ const commands = [
   ['compor_editar_briefing', 'Atualiza um campo do briefing local e mostra a alteração na interface.', { field: { enum: ['offer', 'audience', 'action', 'direction'] }, value: string(4000) }, false],
   ['compor_editar_persona', 'Atualiza o rascunho local da persona compradora. Não transforma hipóteses em fatos.', { field: { enum: ['audience', 'situation', 'need', 'culturalReferences'] }, value: string(4000) }, false],
   ['compor_registrar_afirmacao_persona', 'Registra uma afirmação local da persona com sua procedência declarada. public_source exige source com URL HTTPS consultada; a fonte não autentica a afirmação.', { text: string(2000), provenance: {enum:['hypothesis','creator_report','buyer_report','public_source']}, source: string(2000) }, false],
+  ['compor_propor_criterio', 'Propõe um critério criativo com exemplo e contraexemplo para uma ambiguidade relevante. A pessoa decide na interface; esta ferramenta não adota nem rejeita critérios. Use campos vazios quando não houver fonte, referência ou tensão.', { viewpoint: {enum:['creator','recipient']}, dimension: {enum:['visual','message']}, statement:string(600), example:string(500), counterexample:string(500), exampleReferenceId:string(36), counterexampleReferenceId:string(36), provenance:{enum:['hypothesis','creator_report','buyer_report','public_source']}, source:string(1000), tension:string(600) }, false],
   ['compor_novo_post', 'Inicia um post em rascunho no projeto. O rascunho anterior é preservado no navegador.', {}, false],
   ['compor_editar_peca', 'Edita um campo do post em rascunho na aba.', { pieceId: string(36), baseVersion: { type: 'integer', minimum: 0 }, field: { enum: ['headline', 'price', 'date', 'caption'] }, value: string(4000) }, false],
   ['compor_abrir_versao', 'Abre uma versão existente como base sem sobrescrever o rascunho anterior.', { pieceId: string(36), version: { type: 'integer', minimum: 1 } }, false],
@@ -35,11 +36,15 @@ function parse(tool, value) {
   if (!uuid(value.projectId) || !uuid(value.requestId) || ('pieceId' in value && !uuid(value.pieceId))) throw Error('invalid_action');
   if ('title' in value && !value.title.trim()) throw Error('invalid_action');
   if ('prompt' in value && !value.prompt.trim()) throw Error('invalid_action');
-  if(tool.name==='compor_registrar_afirmacao_persona'){
-    if(!value.text.trim())throw Error('invalid_action');
+  if(tool.name==='compor_registrar_afirmacao_persona'||tool.name==='compor_propor_criterio'){
+    if(tool.name==='compor_registrar_afirmacao_persona'&&!value.text.trim())throw Error('invalid_action');
     if(value.provenance==='public_source'){
       try{const source=new URL(value.source);if(source.protocol!=='https:'||source.username||source.password||/\s/.test(value.source))throw Error();}catch{throw Error('invalid_action');}
     }
+  }
+  if(tool.name==='compor_propor_criterio'){
+    if(!value.statement.trim()||!value.example.trim()||!value.counterexample.trim())throw Error('invalid_action');
+    for(const id of [value.exampleReferenceId,value.counterexampleReferenceId])if(id!==''&&!uuid(id))throw Error('invalid_action');
   }
   return value;
 }
