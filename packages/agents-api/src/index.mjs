@@ -1,3 +1,4 @@
+import { parseImageProposal, IMAGE_PROPOSAL_SCHEMA } from './image-proposal.mjs';
 import {isAgentCallId} from './agent-call-id.mjs';
 import {AGENT_MODEL} from './agent-model.mjs';
 import { recordAgentEvent, recordProviderStatus, recordProviderClientError } from './telemetry.mjs';
@@ -44,8 +45,10 @@ export function pendingImageAction(session, key, delegated) {
   const action = session.required_actions[0];
   let args = action?.arguments;
   if (typeof args === 'string') { if (args.length > 8192) throw new Error('invalid arguments'); args = JSON.parse(args); }
-  if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !isAgentCallId(action.call_id) || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || args.prompt.includes(key) || (delegated && args.prompt.includes(delegated)) || /sk-[^\s]+/i.test(args.prompt)) throw new Error('invalid pending action');
-  return { turnId: action.turn_id, callId: action.call_id, prompt: args.prompt };
+  if (action?.type !== 'function_call' || action.name !== 'generate_image' || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turn_id ?? '') || !isAgentCallId(action.call_id)) throw new Error('invalid pending action');
+  const proposal = parseImageProposal(args);
+  if (proposal.prompt.includes(key) || (delegated && proposal.prompt.includes(delegated))) throw new Error('invalid pending action');
+  return { turnId: action.turn_id, callId: action.call_id, prompt: proposal.prompt, proposal };
 }
 
 async function readAgentEvents(stream, stopForAction, onSession) {
@@ -126,7 +129,7 @@ export function createAgentHandler({ authenticate, fetch: fetchApi = globalThis.
       try { response = await fetchApi(endpoint, {
         method: 'POST',
         headers: { Authorization: `Bearer ${key}`, 'OpenAI-Beta': 'agents=v1', 'Content-Type': 'application/json' },
-        body: JSON.stringify({ agent: { model: AGENT_MODEL, instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela pedir uma imagem, chame generate_image com uma descrição apropriada para preparar a proposta, sem esperar confirmação antes dessa chamada. A chamada apenas prepara a proposta: não gera a imagem nem inicia a Images API. Depois, o aplicativo apresentará a proposta e pedirá confirmação explícita antes da geração de imagem. O turno do agente pode gerar custo. Não afirme ter gerado uma imagem antes de receber o resultado da geração.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Prepara uma proposta de imagem para confirmação no aplicativo. Esta chamada não gera a imagem; o aplicativo pedirá aprovação explícita antes de iniciar a geração.', parameters: { type: 'object', properties: { prompt: { type: 'string' } }, required: ['prompt'], additionalProperties: false } }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
+        body: JSON.stringify({ agent: { model: AGENT_MODEL, instructions: enableImageTool ? 'Ajude a pessoa com seu objetivo criativo. Quando ela pedir uma imagem, chame generate_image com uma descrição apropriada para preparar a proposta, sem esperar confirmação antes dessa chamada. A chamada apenas prepara a proposta: não gera a imagem nem inicia a Images API. Depois, o aplicativo apresentará a proposta e pedirá confirmação explícita antes da geração de imagem. O turno do agente pode gerar custo. Não afirme ter gerado uma imagem antes de receber o resultado da geração.' : 'Ajude a pessoa a explorar uma direção criativa para seu objetivo.', ...((enableImageTool || mcpTool) ? { tools: [...(enableImageTool ? [{ type: 'function', name: 'generate_image', description: 'Prepara uma proposta de imagem para confirmação no aplicativo. Esta chamada não gera a imagem; o aplicativo pedirá aprovação explícita antes de iniciar a geração.', parameters: IMAGE_PROPOSAL_SCHEMA }] : []), ...(mcpTool ? [mcpTool] : [])] } : {}) }, environment: { type: 'none' }, input: body.objective, stream: true }),
         signal: AbortSignal.any([AbortSignal.timeout(90_000), agentAbort.signal]),
         redirect: 'error',
       }); } catch (error) { recordAgentEvent('provider_create_failed'); throw error; }

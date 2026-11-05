@@ -116,7 +116,7 @@ test('exec de imagem em poll produz handoff assinado preservando o ID e recusa I
 });
 test('imagem exige contrato de consentimento e pode ser recusada sem chamar Images API',async()=>{
  const f=fixture();await f.chat(request(body));f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:'call_image',arguments:{prompt:'Formas azuis'}}]});
- const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'consent_required');assert.ok(pending.actionBinding.startsWith('v2.'));assert.ok(pending.declineBinding.startsWith('s1.'));
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'consent_required');assert.ok(pending.actionBinding.startsWith('v5.'));assert.ok(pending.declineBinding.startsWith('s1.'));
  const invalid=await f.action(request({apiKey,projectId,requestId,actionBinding:pending.declineBinding,result:{status:'completed'}}));assert.equal(invalid.status,403);
  await f.action(request({apiKey,projectId,requestId,actionBinding:pending.declineBinding,result:{status:'declined'}}));assert.ok(f.calls.every(c=>!c.url?.includes('/images/')));
 });

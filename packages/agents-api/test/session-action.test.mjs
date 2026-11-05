@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { createSessionBindings } from '../src/session-binding.mjs';
 import { createProjectAgentHandler } from '../src/project-route.mjs';
 import { createAgentHandler } from '../src/index.mjs';
-import { createHash } from 'node:crypto';
+import { imageProposalDigest } from '../src/artwork-input.mjs';
 const userId='11111111-1111-4111-8111-111111111111', projectId='22222222-2222-4222-8222-222222222222', attemptId='33333333-3333-4333-8333-333333333333', idempotencyKey='44444444-4444-4444-8444-444444444444';
 const apiKey='sk-test-secret-123456789012345';
 const request = () => new Request('https://compor.test/api/agent', { method: 'POST', headers: { origin:'https://compor.test', 'content-type':'application/json', 'x-compor-project-id':projectId, 'x-compor-attempt-id':idempotencyKey }, body: JSON.stringify({ apiKey, objective:'Oficina', sessionId:'sess_browser_forged', callId:'call_browser_forged' }) });
@@ -38,7 +38,7 @@ test('ação pendente é verificada no provedor, vinculada cedo e espera consent
   assert.equal(calls[0].url,'https://api.openai.com/v1/agents/sessions'); assert.equal(calls[1].url,'https://api.openai.com/v1/agents/sessions/sess_actual');
   assert.doesNotMatch(JSON.stringify(data), /sk-test-secret|fake-user-token|sess_browser_forged|call_browser_forged/);
   const context={ userId,projectId,attemptId };
-  assert.deepEqual(bindings.verifyAction({token:data.actionBinding,...context}),{...context,sessionId:'sess_actual',turnId:'turn_123',callId:'call_123',promptDigest:createHash('sha256').update('Foto sem texto').digest('hex')});
+  assert.deepEqual(bindings.verifyAction({token:data.actionBinding,...context}),{...context,sessionId:'sess_actual',turnId:'turn_123',callId:'call_123',proposalDigest:imageProposalDigest({prompt:'Foto sem texto'})});
   assert.equal(bindings.verifyAction({token:data.actionBinding,...context,userId:'55555555-5555-4555-8555-555555555555'}),null);
   const [v,payload,signature]=data.actionBinding.split('.'); const changed=JSON.parse(Buffer.from(payload,'base64url')); changed.callId='call_browser_forged';
   assert.equal(bindings.verifyAction({token:`${v}.${Buffer.from(JSON.stringify(changed)).toString('base64url')}.${signature}`,...context}),null);

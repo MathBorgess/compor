@@ -6,7 +6,7 @@ const key = 'sk-test-secret-123456789012345';
 const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
 const request = body => new Request('http://localhost/image', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
 
-test('uma pessoa autenticada solicita imagem base explicitamente e recebe PNG', async () => {
+test('uma pessoa autenticada solicita uma arte integral explicitamente e recebe PNG', async () => {
   let calls = 0;
   const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async (url, options) => {
     calls++;
@@ -15,7 +15,9 @@ test('uma pessoa autenticada solicita imagem base explicitamente e recebe PNG', 
     const payload = JSON.parse(options.body);
     assert.equal(payload.model, 'gpt-image-2.6-flare');
     assert.equal(payload.quality, 'auto');
-    assert.match(payload.prompt, /sem texto/i);
+    assert.equal(payload.prompt, 'Uma oficina de cerâmica');
+    assert.equal(payload.size, '1024x1280');
+    assert.doesNotMatch(payload.prompt, /sem texto/i);
     assert.equal(options.body.includes(key), false);
     return Response.json({ data: [{ b64_json: png }] });
   } });
@@ -102,4 +104,23 @@ test('credencial recusada e imagem inválida não expõem respostas do provedor'
   const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
   assert.equal(response.status, 502);
   assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
+});
+
+test('edição envia os pixels originais em multipart na ordem aprovada, sem URLs remotas',async()=>{
+ const originals=[Buffer.from(png,'base64'),Buffer.concat([Buffer.from(png,'base64'),Buffer.from([1,2,3])])];
+ let calls=0;
+ const handler=createImageHandler({authenticate:async()=>({userId:'user-1'}),fetch:async(url,options)=>{
+  calls++;assert.equal(url,'https://api.openai.com/v1/images/edits');assert.equal(options.headers['Content-Type'],undefined);
+  const form=options.body;assert.ok(form instanceof FormData);assert.equal(form.get('model'),'gpt-image-2.6-flare');assert.equal(form.get('size'),'1024x1280');
+  assert.equal(form.get('prompt'),'Título literal R$ 129,90');
+  const files=form.getAll('image[]');assert.equal(files.length,2);
+  for(let i=0;i<files.length;i++){assert.equal(files[i].type,'image/png');assert.deepEqual(Buffer.from(await files[i].arrayBuffer()),originals[i]);}
+  return Response.json({data:[{b64_json:png}]});
+ }});
+ const response=await handler(request({apiKey:key,prompt:'Título literal R$ 129,90',authorizeGeneration:true,images:originals.map(data=>({mime:'image/png',data:data.toString('base64')}))}));
+ assert.equal(response.status,200);assert.equal(calls,1);
+ for(const images of [[{url:'http://127.0.0.1/image'}],[{mime:'image/png',data:'https://example.com/x'}],[{mime:'image/jpeg',data:png}]]){
+  assert.equal((await handler(request({apiKey:key,prompt:'Teste',authorizeGeneration:true,images}))).status,400);
+ }
+ assert.equal(calls,1);
 });

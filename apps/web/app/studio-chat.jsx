@@ -5,6 +5,8 @@ import {
   settleAdjustment,
   getCurrentDraft,
 } from "../lib/studio-state.mjs";
+import { parseImageProposal } from "@compor/agents-api/image-proposal";
+import { prepareArtworkInput } from "../lib/studio-artwork-input.mjs";
 import { referenceImagesForRequest } from "../lib/studio-reference-images.mjs";
 
 const uuid=value=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
@@ -29,6 +31,7 @@ export default function StudioChat({
   hasApiKey,
   getApiKey,
   onUseImage,
+  prepareImageVersion,
   loadReference,
   loadBase,
 }) {
@@ -128,7 +131,7 @@ export default function StudioChat({
     );
   }
   async function handle(data, requestId, count = 0) {
-    if (!mounted.current) return;
+    if (!mounted.current || activeMarker.current !== marker) return;
     if (data.status === "completed") {
       setUsage(data.usage ?? null);
       settle(requestId, "completed", {
@@ -149,9 +152,19 @@ export default function StudioChat({
       const context=known?{pieceId:known.pieceId,baseVersion:known.baseVersion,headline:target?.content.headline??""}:null;
       if (!context)
         throw Error("Não foi possível identificar o post desta proposta.");
-      setImageAction({ ...data, requestId, context });
+      const proposal = parseImageProposal(data.proposal ?? {prompt: data.prompt});
+      let artworkInput = null, inputError = '';
+      try {
+        const snapshot = getState(), selected = getCurrentDraft(snapshot);
+        const source = snapshot.drafts.find(item => item.pieceId === context.pieceId && item.baseVersion === context.baseVersion);
+        if (!source || (proposal.operation === 'edit' && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== context.baseVersion))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
+        artworkInput = await prepareArtworkInput({proposal, draft: source, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
+        if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
+      } catch (error) { artworkInput = null; inputError = error.message; }
+      if (!mounted.current || activeMarker.current !== marker) return;
+      setImageAction({ ...data, proposal, artworkInput, inputError, requestId, context });
       setBusy(false);
-      setNotice("Revise a proposta antes de gerar a imagem.");
+      setNotice(inputError || "Revise a arte e os textos antes de gerar a nova versão.");
       return;
     }
     if (data.status === "action_required") {
@@ -290,6 +303,7 @@ export default function StudioChat({
           baseImageId: baseId,
           brief: next.brief,
           persona: next.persona,
+          direction: next.direction,
           marks: next.marks.filter(
             (mark) =>
               mark.pieceId === draft?.pieceId &&
@@ -348,26 +362,38 @@ export default function StudioChat({
     if (
       !action ||
       !draft ||
-      draft.dirty ||
-      draft.baseVersion < 1 ||
+      !action.artworkInput ||
+      (typeof prepareImageVersion !== "function" && (draft.dirty || draft.baseVersion < 1)) ||
       draft.pieceId !== action.context.pieceId ||
-      draft.baseVersion !== action.context.baseVersion
+      draft.baseVersion !== action.context.baseVersion ||
+      ["headline", "price", "date"].some(field => draft.content[field] !== action.artworkInput.literalText[field])
     ) {
-      setNotice("Abra a versão indicada na proposta e confirme que ela está salva, sem alterações locais. Se a proposta ainda for para um rascunho, recuse-a e peça uma nova depois de salvar.");
+      setNotice("O post ou seus textos mudaram. Abra a versão indicada e consulte a mesma proposta para revisar antes de gerar.");
       return;
     }
     setBusy(true);
     setImageAction(null);
     let imageAvailable=false,imageApplied=false;
+    let target = {pieceId: draft.pieceId, version: draft.baseVersion};
     const isCurrentScope=()=>mounted.current&&activeMarker.current===marker;
     try {
+      if (typeof prepareImageVersion === "function") {
+        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion});
+        if (!saved || saved.status !== "completed" || saved.pieceId !== draft.pieceId || !Number.isSafeInteger(saved.version) || saved.version <= draft.baseVersion) throw Error("Não foi possível preparar a nova versão. Confira o histórico antes de tentar novamente.");
+        target = {pieceId: saved.pieceId, version: saved.version};
+        if (!isCurrentScope()) return;
+      }
+      if (action.artworkInput.source && target.version <= action.artworkInput.source.version) throw Error("Salve uma nova versão para preservar a imagem de origem antes de editar.");
+      imageContext.current = {pieceId: target.pieceId, baseVersion: target.version};
+      remember(action.requestId);
       const data = await api("/api/agent/image", {
         projectId: state.projectId,
-        pieceId: draft.pieceId,
-        version: draft.baseVersion,
+        pieceId: target.pieceId,
+        version: target.version,
         attemptId: action.attemptId,
         actionBinding: action.actionBinding,
         explicitApproval: true,
+        artworkInput: action.artworkInput,
       });
       if (data.assetId) {
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
@@ -376,8 +402,8 @@ export default function StudioChat({
         const image = await fetchPrivateImage(
           new URLSearchParams({
             projectId: state.projectId,
-            pieceId: draft.pieceId,
-            version: String(draft.baseVersion),
+            pieceId: target.pieceId,
+            version: String(target.version),
             assetId: data.assetId,
           }),
         );
@@ -385,12 +411,12 @@ export default function StudioChat({
         if(!isCurrentScope())return;
         if(typeof onUseImage!=='function'||await onUseImage({
             blob: image,
-            pieceId: draft.pieceId,
-            version: draft.baseVersion,
+            pieceId: target.pieceId,
+            version: target.version,
           })!==true)throw Error('image application unconfirmed');
         if(!isCurrentScope())return;
         imageApplied=true;
-        receiptRef.current={userId:state.userId,projectId:state.projectId,requestId:action.requestId,pieceId:draft.pieceId,version:draft.baseVersion,assetId:data.assetId};
+        receiptRef.current={userId:state.userId,projectId:state.projectId,requestId:action.requestId,pieceId:target.pieceId,version:target.version,assetId:data.assetId};
         setImageReceipt(receiptRef.current);
         remember(action.requestId);
       }
@@ -398,7 +424,7 @@ export default function StudioChat({
     } catch (e) {
       if (isCurrentScope()) {
         setBusy(false);
-        setNotice(imageApplied?"A imagem foi adicionada à versão de origem, mas não foi possível guardar sua confirmação neste navegador. Consulte a mesma tentativa.":imageAvailable?"A imagem foi gerada, mas não foi possível confirmar sua aplicação à versão de origem. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.":e.message);
+        setNotice(imageApplied?"A imagem foi adicionada à nova versão, mas não foi possível guardar sua confirmação neste navegador. Consulte a mesma tentativa.":imageAvailable?"A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.":e.message);
       }
     }
   }
@@ -442,12 +468,17 @@ export default function StudioChat({
         )}
         {imageAction && (
           <div className="studio-image-consent">
-            <h3>Uma imagem para este post</h3>
+            <h3>{imageAction.proposal.operation === "edit" ? "Editar a arte em uma nova versão" : "Gerar a arte completa"}</h3>
             <p>
               {imageAction.context.headline || "Post sem título"} · versão{" "}
               {imageAction.context.baseVersion || "ainda não salva"}
             </p>
             <p>{imageAction.prompt}</p>
+            {imageAction.artworkInput && <>
+              <p>{imageAction.proposal.operation === "edit" ? "A imagem selecionada será enviada como origem. " : ""}{imageAction.proposal.referenceIds.length} referências visuais. Formato retrato 4:5.</p>
+              <dl className="studio-artwork-texts">{Object.entries(imageAction.artworkInput.literalText).filter(([, value]) => value).map(([field, value]) => <div key={field}><dt>{{headline: "Título na arte", price: "Preço na arte", date: "Data na arte"}[field]}</dt><dd>{value}</dd></div>)}</dl>
+              <p>A arte inteira será gerada, incluindo esses textos. Confira grafia, fatos e legibilidade no resultado. A versão anterior permanece no histórico.</p>
+            </>}
             <p>
               A geração será cobrada pela OpenAI. O custo final ainda é
               desconhecido.
@@ -455,7 +486,7 @@ export default function StudioChat({
             <button
               type="button"
               className="studio-button"
-              disabled={busy || !hasApiKey}
+              disabled={busy || !hasApiKey || !imageAction.artworkInput}
               onClick={confirmImage}
             >
               Confirmar geração de imagem

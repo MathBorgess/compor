@@ -57,3 +57,17 @@ test('imagem confirmada no Storage permanece recuperável se registro final fica
  const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'unknown',retryAutomatically:false,assetId}),send:async()=>{sends++;}});
  const response=await handler(request());assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.equal(sends,0);
 });
+
+test('HTTP preserva o pacote revisado e recusa entradas remotas antes de aprovar',async()=>{
+ const artworkInput={literalText:{headline:'Oferta',price:'R$ 12',date:''},source:null,images:[]};
+ let approvals=0,executions=0;
+ const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,
+  approve:async input=>{approvals++;assert.deepEqual(input.artworkInput,artworkInput);return 'proof';},
+  execute:async input=>{executions++;assert.deepEqual(input.artworkInput,artworkInput);return {status:'unknown'};},send:async()=>{throw Error('unexpected');},
+ });
+ assert.equal((await handler(request({...body,artworkInput}))).status,502);
+ for(const changed of [{...artworkInput,images:[{url:'http://127.0.0.1/private'}]},{...artworkInput,literalText:{headline:'Oferta'}},null]){
+  assert.equal((await handler(request({...body,artworkInput:changed}))).status,400);
+ }
+ assert.equal(approvals,1);assert.equal(executions,1);
+});

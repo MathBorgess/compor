@@ -1,3 +1,4 @@
+import { parseImageProposal } from './image-proposal.mjs';
 import {AGENT_STUDIO_TOOLS,parseStudioAction} from './studio-chat-tools.mjs';
 import {isAgentCallId} from './agent-call-id.mjs';
 
@@ -17,7 +18,7 @@ function argumentsObject(value){
 function schemaValid(name,args){
  if(!name||!args)return false;
  try{
-  if(name==='generate_image')return Object.keys(args).join(',')==='prompt'&&typeof args.prompt==='string'&&args.prompt.trim().length>0&&args.prompt.length<=4000&&!/sk-[^\s]+/i.test(args.prompt);
+  if(name==='generate_image'){parseImageProposal(args);return true;}
   parseStudioAction(name,args);return true;
  }catch{return false;}
 }

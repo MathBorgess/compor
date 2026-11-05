@@ -52,7 +52,7 @@ export function createAgentRecoveryHandler({ appOrigin, resolveActor, ownsProjec
           attemptId=child.id;
         }
         const actionBinding=bindings.issueAction({userId:actor.userId,projectId,attemptId,sessionId:proof.sessionId,...action});
-        return reply({status:'consent_required',attemptId,prompt:action.prompt,actionBinding},202);
+        return reply({status:'consent_required',attemptId,prompt:action.prompt,proposal:action.proposal,actionBinding},202);
       }
       if(session.status!=='idle' || session.required_actions.length)throw Error('invalid session state');
       const turns=await get('/turns?limit=100&order=asc');

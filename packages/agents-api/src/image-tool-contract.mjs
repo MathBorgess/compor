@@ -1,3 +1,4 @@
+import { parseImageProposal } from './image-proposal.mjs';
 import {isAgentCallId} from './agent-call-id.mjs';
 // Protocol-only experimental boundary. It is not wired to an HTTP route, provider,
 // durable store, or tool registration; these helpers cannot authorize or execute work.
@@ -13,9 +14,10 @@ export function describePendingImageCall({ event, binding, explicitApproval } = 
   if (matches.length !== 1) return null;
   const action = matches[0];
   const args = action.arguments;
-  if (!identifier(action.turn_id, 'turn') || !isAgentCallId(action.call_id) || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 ||
-      typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || /sk-[^\s]+/i.test(args.prompt)) return null;
-  return { sessionId: binding.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: args.prompt, binding: { userId: binding.userId, projectId: binding.projectId, pieceId: binding.pieceId, version: binding.version, attemptId: binding.attemptId, sessionId: binding.sessionId } };
+  if (!identifier(action.turn_id, 'turn') || !isAgentCallId(action.call_id)) return null;
+  let proposal;
+  try { proposal = parseImageProposal(args); } catch { return null; }
+  return { sessionId: binding.sessionId, turnId: action.turn_id, callId: action.call_id, prompt: proposal.prompt, proposal, binding: { userId: binding.userId, projectId: binding.projectId, pieceId: binding.pieceId, version: binding.version, attemptId: binding.attemptId, sessionId: binding.sessionId } };
 }
 
 /** Construct a non-secret protocol result; this function does not submit an event. */

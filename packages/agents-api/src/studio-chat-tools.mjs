@@ -1,3 +1,4 @@
+import { IMAGE_PROPOSAL_SCHEMA } from './image-proposal.mjs';
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const string = maxLength => ({ type: 'string', maxLength });
 const fields = (properties, required = Object.keys(properties)) => ({ type: 'object', properties, required, additionalProperties: false });
@@ -49,4 +50,4 @@ export function parseStudioAction(name,value) {
  if(!tool)throw Error('invalid_action');
  return parse(tool,value);
 }
-export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma proposta de imagem. A Images API só será acionada após a confirmação explícita da pessoa no aplicativo. O resultado generated_and_stored com assetId confirma geração e armazenamento na versão indicada; a aplicação no navegador é uma etapa separada.',parameters:fields({prompt:string(4000)})}]);
+export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma arte integral com imagem e textos. operation=create produz nova composição; operation=edit exige baseImageId da imagem selecionada. referenceIds identifica referências visuais fornecidas no contexto. Inclua no prompt a direção e os textos desejados. A Images API só será acionada após a confirmação explícita da pessoa no aplicativo. O resultado generated_and_stored com assetId confirma geração e armazenamento na versão indicada; a aplicação no navegador é uma etapa separada.',parameters:IMAGE_PROPOSAL_SCHEMA}]);

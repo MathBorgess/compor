@@ -19,7 +19,9 @@
     "./studio-chat-store": "./src/studio-chat-store.mjs",
     "./studio-chat-bindings": "./src/studio-chat-bindings.mjs",
     "./studio-persona-skill": "./src/studio-persona-skill.mjs",
-    "./studio-telemetry": "./src/studio-telemetry.mjs"
+    "./studio-telemetry": "./src/studio-telemetry.mjs",
+    "./image-proposal": "./src/image-proposal.mjs",
+    "./artwork-input": "./src/artwork-input.mjs"
   },
   "scripts": {
     "test": "node --test test/*.test.mjs"

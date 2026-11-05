@@ -1,12 +1,12 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { createHash } from 'node:crypto';
+import { imageProposalDigest, artworkInputDigest } from '../src/artwork-input.mjs';
 import { createImageToolExecution, createImageToolApproval } from '../src/image-tool-execution.mjs';
 
 const userId = '11111111-1111-4111-8111-111111111111', projectId = '22222222-2222-4222-8222-222222222222', pieceId = '33333333-3333-4333-8333-333333333333', attemptId = '44444444-4444-4444-8444-444444444444', reservationId = '55555555-5555-4555-8555-555555555555', executionId = '66666666-6666-4666-8666-666666666666', assetId = '77777777-7777-4777-8777-777777777777';
 const key = 'sk-abcdefghijklmnopqrstuvwxyz123456', actor = { userId, token: 'private-user-token' }, prompt = 'imagem de teste';
-const claim = { userId, projectId, attemptId, sessionId:'sess_a', turnId:'turn_a', callId:'call_a', promptDigest:createHash('sha256').update(prompt).digest('hex') };
-const approvedClaim = {...claim,pieceId,version:1};
+const claim = { userId, projectId, attemptId, sessionId:'sess_a', turnId:'turn_a', callId:'call_a', proposalDigest:imageProposalDigest({prompt}) };
+const approvedClaim = {...claim,pieceId,version:1,artworkDigest:artworkInputDigest()};
 function fixture(options = {}) {
   const calls = [], state = { claimed: false };
   const fn = createImageToolExecution({
@@ -117,4 +117,40 @@ test('aprovação assinada impede troca de peça ou versão e exige acesso atual
 
 test('falha ao concluir após salvar preserva referência de imagem sem repetir geração',async()=>{
  const f=fixture({completeFail:true});const result=await f.fn(f.input);assert.equal(result.status,'unknown');assert.equal(result.assetId,assetId);assert.equal(result.retryAutomatically,false);assert.ok(f.calls.includes('unknown'));await f.fn(f.input);assert.equal(f.calls.filter(x=>x==='image').length,1);
+});
+
+test('edição aprovada vincula pixels, textos e origem; adulteração nunca reserva nem gera',async()=>{
+ const {createSessionBindings}=await import('../src/session-binding.mjs');
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,6)}),refId='88888888-8888-4888-8888-888888888888';
+ const proposal={prompt:'Mude a composição mantendo a oferta',operation:'edit',baseImageId:pieceId,referenceIds:[refId]};
+ const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB','base64');
+ const artworkInput={literalText:{headline:'Oferta de hoje',price:'R$ 129,90',date:'12/12'},source:{pieceId,version:1},images:[{id:pieceId,role:'base',mime:'image/png',data:bytes.toString('base64')},{id:refId,role:'reference',mime:'image/png',data:bytes.toString('base64')}]};
+ const signed=bindings.issueAction({...claim,proposal});
+ let sourceAllowed=true,pendingProposal=proposal;
+ const calls=[];
+ const ownsVersion=async({pieceId:id,version})=>id===pieceId&&(version===2||version===1&&sourceAllowed);
+ const approve=createImageToolApproval({bindings,ownsVersion});
+ const approvalInput={actor,projectId,pieceId,version:2,attemptId,actionBinding:signed,explicitApproval:true,artworkInput};
+ assert.equal(await approve({...approvalInput,version:1}),null,'origem não pode ser sobrescrita');
+ assert.equal(await approve({...approvalInput,explicitApproval:false}),null);
+ sourceAllowed=false;assert.equal(await approve(approvalInput),null);sourceAllowed=true;
+ const proof=await approve(approvalInput);assert.ok(proof);
+ const execute=createImageToolExecution({bindings,ownsVersion,appOrigin:'https://example.test',
+  fetch:async()=>{calls.push('lookup');return Response.json({id:'sess_a',status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_a',call_id:'call_a',arguments:pendingProposal}]});},
+  reservations:{reserve:async()=>{calls.push('reserve');return{id:reservationId,state:'reserved'};},declareConsent:async()=>{},claimExecution:async()=>({id:executionId,assetId,state:'running',isNew:true}),markExecutionUnknown:async()=>{},completeExecution:async()=>{}},
+  imageHandler:async req=>{calls.push('image');const body=await req.json();assert.match(body.prompt,/Oferta de hoje/);assert.match(body.prompt,/R\$ 129,90/);assert.match(body.prompt,/Edite a primeira imagem/);assert.deepEqual(body.images,artworkInput.images.map(({mime,data})=>({mime,data})));return Response.json({imageBase64:bytes.toString('base64')});},
+  imageStorageHandler:async req=>{assert.equal(new URL(req.url).searchParams.get('version'),'2');return Response.json({status:'stored',assetId},{status:201});},
+ });
+ const input={...approvalInput,actionBinding:proof,apiKey:key};
+ const changed=[
+  {...artworkInput,literalText:{...artworkInput.literalText,price:'R$ 1'}},
+  {...artworkInput,images:artworkInput.images.slice(0,1)},
+  {...artworkInput,images:[artworkInput.images[0],{...artworkInput.images[1],data:Buffer.concat([bytes,Buffer.from([1])]).toString('base64')}]},
+  {...artworkInput,source:{pieceId,version:2}},
+ ];
+ for(const packet of changed)assert.equal((await execute({...input,artworkInput:packet})).status,'rejected');
+ assert.deepEqual(calls,[]);
+ sourceAllowed=false;assert.equal((await execute(input)).status,'rejected');sourceAllowed=true;
+ pendingProposal={...proposal,referenceIds:[]};assert.equal((await execute(input)).status,'rejected');assert.ok(!calls.includes('reserve'));
+ pendingProposal=proposal;assert.equal((await execute(input)).status,'completed');assert.equal(calls.filter(call=>call==='image').length,1);
 });

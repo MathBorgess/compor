@@ -1,5 +1,5 @@
 import {isAgentCallId} from './agent-call-id.mjs';
-import { createHash } from 'node:crypto';
+import { parseArtworkInput, artworkInputDigest, imageProposalDigest, validateArtworkForProposal, compileArtworkPrompt } from './artwork-input.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const unknown = () => ({ status: 'unknown', retryAutomatically: false });
@@ -16,24 +16,31 @@ async function boundedText(stream, limit) {
 // This does not submit tool_result or expose an HTTP route.
 export function createImageToolApproval({ bindings, ownsVersion } = {}) {
   if (typeof bindings?.issueApprovedAction !== 'function' || typeof ownsVersion !== 'function') throw new TypeError('invalid dependencies');
-  return async ({actor, projectId, pieceId, version, attemptId, actionBinding, explicitApproval} = {}) => {
+  return async ({actor, projectId, pieceId, version, attemptId, actionBinding, explicitApproval, artworkInput} = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || explicitApproval !== true) return null;
     try {
+      const input = parseArtworkInput(artworkInput);
       if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return null;
-      return bindings.issueApprovedAction({actionBinding,userId:actor.userId,projectId,attemptId,pieceId,version});
+      if (input.source && (input.source.pieceId !== pieceId || input.source.version >= version || await ownsVersion({actor,projectId,pieceId,version:input.source.version}) !== true)) return null;
+      return bindings.issueApprovedAction({actionBinding,userId:actor.userId,projectId,attemptId,pieceId,version,artworkInput:input});
     } catch { return null; }
   };
 }
 export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
   if (typeof bindings?.verifyApprovedAction !== 'function' || typeof ownsVersion !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
   if (usage && (typeof usage.start !== 'function' || typeof usage.finish !== 'function')) throw new TypeError('invalid usage store');
-  return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval } = {}) => {
+  return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval, artworkInput } = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
     try { action = bindings.verifyApprovedAction({token: actionBinding, userId: actor.userId, projectId, attemptId, pieceId, version}); } catch { return {status:'rejected'}; }
-    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !isAgentCallId(action.callId) || !/^[0-9a-f]{64}$/.test(action.promptDigest ?? '')) return {status:'rejected'};
+    if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !isAgentCallId(action.callId) || !/^[0-9a-f]{64}$/.test(action.proposalDigest ?? '') || !/^[0-9a-f]{64}$/.test(action.artworkDigest ?? '')) return {status:'rejected'};
     try { if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return {status:'rejected'}; } catch { return unknown(); }
-    let prompt;
+    let prompt, input;
+    try {
+      input = parseArtworkInput(artworkInput);
+      if (artworkInputDigest(input) !== action.artworkDigest) return {status:'rejected'};
+      if (input.source && (input.source.pieceId !== pieceId || input.source.version >= version || await ownsVersion({actor,projectId,pieceId,version:input.source.version}) !== true)) return {status:'rejected'};
+    } catch { return {status:'rejected'}; }
     try {
       const response = await fetchApi(`https://api.openai.com/v1/agents/sessions/${encodeURIComponent(action.sessionId)}`, {headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1'},redirect:'error',signal:AbortSignal.timeout(10000)});
       if (!response.ok) return unknown();
@@ -42,8 +49,13 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (session.id !== action.sessionId || session.status !== 'requires_action' || !Array.isArray(calls) || calls.length !== 1) return {status:'rejected'};
       const call = calls[0]; let args = call?.arguments;
       if (typeof args === 'string') { if (args.length > 8192) return {status:'rejected'}; args = JSON.parse(args); }
-      if (call?.type !== 'function_call' || call.name !== 'generate_image' || call.turn_id !== action.turnId || call.call_id !== action.callId || !args || typeof args !== 'object' || Array.isArray(args) || Object.keys(args).length !== 1 || typeof args.prompt !== 'string' || !args.prompt.trim() || args.prompt.length > 4000 || /sk-[^\s]+/i.test(args.prompt) || args.prompt.includes(apiKey) || createHash('sha256').update(args.prompt).digest('hex') !== action.promptDigest) return {status:'rejected'};
-      prompt = args.prompt;
+      if (call?.type !== 'function_call' || call.name !== 'generate_image' || call.turn_id !== action.turnId || call.call_id !== action.callId) return {status:'rejected'};
+      let proposal;
+      try {
+        ({proposal} = validateArtworkForProposal(args, input));
+        if (imageProposalDigest(proposal) !== action.proposalDigest || proposal.prompt.includes(apiKey)) return {status:'rejected'};
+      } catch { return {status:'rejected'}; }
+      prompt = compileArtworkPrompt(proposal, input);
     } catch { return unknown(); }
     let execution;
     try {
@@ -58,7 +70,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     let storedAssetId;
     try {
       if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
-      const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,authorizeGeneration:true})}));
+      const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true})}));
       if (!image.ok) throw new Error('generation uncertain');
       const result = await image.json();
       if (usage) {measurementFinished=true; try {await usage.finish({...measurement,state:'completed',usage:result?.usage});usageRecorded=true;} catch { /* preserve image; measurement remains uncertain */ }}
