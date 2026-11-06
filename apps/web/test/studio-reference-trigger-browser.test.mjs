@@ -72,8 +72,10 @@ test('nova oferta ou limpar e remarcar a mesma imagem iniciam nova rodada',{skip
  await page.getByRole('button',{name:'Limpar seleção'}).click();await page.getByRole('button',{name:'Selecionar primeira'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,3);assert.equal(calls[2].context.references[0].id,first);
 });
 test('pedido explícito é enviado sem recomendação interna contraditória',{skip:!existsSync(browserPath),timeout:15000},async t=>{
- const {page,calls,origin}=await setup(t);await page.goto(origin);await page.getByLabel('Sua mensagem').fill('Gere uma peça agora');await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Enviar →',exact:true}).click();
- await page.waitForTimeout(500);assert.equal(calls.length,1);assert.equal(calls[0].message,'Gere uma peça agora');assert.equal('next' in calls[0].context.readiness,false);
+ const {page,calls,origin}=await setup(t);await page.goto(origin);await page.getByLabel('Sua mensagem').fill('Gere uma peça agora');await page.getByRole('button',{name:'Conectar'}).click();
+ const response=page.waitForResponse(result=>new URL(result.url()).pathname==='/api/studio/chat'&&result.request().method()==='POST');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();await response;
+ assert.equal(calls.length,1);assert.equal(calls[0].message,'Gere uma peça agora');assert.equal('next' in calls[0].context.readiness,false);
 });
 
 test('seleção com persistência lenta rearma iniciativa após o salvamento',{skip:!existsSync(browserPath),timeout:35000},async t=>{
