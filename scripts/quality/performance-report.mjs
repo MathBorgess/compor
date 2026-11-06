@@ -36,7 +36,7 @@ export function budgetFailures(bundle, lighthouse, budgets) {
 // paths to local Next chunks so logs cannot include query strings or URLs from
 // a third-party report. Lighthouse's raw reports remain available as artifacts.
 export function summarizeDiagnostics(result, origin) {
-  const number = value => Number.isFinite(value) && value >= 0 ? Math.round(value * 10) / 10 : null;
+  const number = value => Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER / 10 ? Math.round(value * 10) / 10 : null;
   const items = id => {
     const value = result?.audits?.[id]?.details?.items;
     return Array.isArray(value) ? value : [];
@@ -50,6 +50,7 @@ export function summarizeDiagnostics(result, origin) {
     } catch { return 'other'; }
   };
   return {
+    benchmarkIndex: number(result?.environment?.benchmarkIndex),
     totalBlockingTimeMs: number(result?.audits?.['total-blocking-time']?.numericValue),
     mainThread: items('mainthread-work-breakdown').flatMap(item =>
       typeof item?.group === 'string' && /^[a-zA-Z]+$/.test(item.group) && number(item.duration) !== null
@@ -58,5 +59,9 @@ export function summarizeDiagnostics(result, origin) {
       const totalMs = number(item?.total);
       return totalMs === null ? [] : [{ path: path(item.url), totalMs, scriptingMs: number(item.scripting), parseCompileMs: number(item.scriptParseCompile) }];
     }).slice(0, 10),
+    longTasks: items('long-tasks').flatMap(item => {
+      const durationMs = number(item?.duration), startTimeMs = number(item?.startTime);
+      return durationMs === null || startTimeMs === null ? [] : [{ path: path(item.url), startTimeMs, durationMs }];
+    }).sort((a, b) => b.durationMs - a.durationMs).slice(0, 10),
   };
 }
