@@ -49,6 +49,17 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.atomic=(await repo.load(scope)).brief.offer===state.brief.offer;
   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=3;canvas.getContext('2d').fillRect(0,0,2,3);
   const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
+  const source={pieceId:id(40),baseVersion:0,kind:'base'},target={pieceId:id(40),baseVersion:1,kind:'base'},otherTarget={pieceId:id(40),baseVersion:2,kind:'base'};
+  await repo.putDraftAsset({...scope,...source,file:png});
+  result.assetCopied=await repo.copyDraftAsset(scope,source,target)==='copied' && (await repo.getDraftAsset(scope,target)).file.size===png.size;
+  await second.putDraftAsset({...scope,...otherTarget,file:jpeg});
+  result.assetNotOverwritten=await repo.copyDraftAsset(scope,source,otherTarget)==='exists' && (await repo.getDraftAsset(scope,otherTarget)).file.type==='image/jpeg';
+  result.missingAsset=await repo.copyDraftAsset(other,source,target)==='missing';
+  const originalAdd=IDBObjectStore.prototype.add;
+  IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return originalAdd.apply(this,args);};
+  result.assetQuota=await expectError(repo.copyDraftAsset(scope,source,{...target,baseVersion:3}),'studio_storage_quota');
+  IDBObjectStore.prototype.add=originalAdd;
+  result.assetAtomic=await repo.getDraftAsset(scope,{...target,baseVersion:3})===null && (await repo.getDraftAsset(scope,source)).file.size===png.size;
   const meta=await repo.putReference({...scope,id:id(10),file:new File([png],'local.png',{type:'image/png'})});
   const jpegMeta=await repo.putReference({...scope,id:id(11),file:new File([jpeg],'local.jpg',{type:'image/jpeg'}),source:{originUrl:'https://www.pinterest.com/pin/e1_example/',board:'behance/typography'}});
   result.source=jpegMeta.source?.originUrl==='https://www.pinterest.com/pin/e1_example/'&&(await repo.getReference(scope,id(11))).metadata.source?.board==='behance/typography';

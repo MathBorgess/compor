@@ -28,5 +28,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0022](0022-busca-visual-e-sinais.md) | recorded | Busca visual externa e sinais explícitos autenticados |
 | [0023](0023-referencias-e-conversa-flutuante.md) | accepted | Referências no centro e conversa flutuante recolhível |
 | [0024](0024-exploracao-limitada-e-pecas-flexiveis.md) | accepted | Limites de exploração, links indicados e campos flexíveis |
+| [0025](0025-prova-de-desfecho-da-exploracao.md) | recorded | Prova efêmera de conclusão ou recusa da exploração e implantação coordenada |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

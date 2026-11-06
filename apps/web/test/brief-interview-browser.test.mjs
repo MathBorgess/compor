@@ -241,12 +241,14 @@ test('detalhes podem ser recolhidos e a conversa ampliada por teclado ou ponteir
   assert.deepEqual(errors,[]);
 });
 
-test('consultar explorações mostra resultados confirmados e incertos sem gerar imagens', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page, origin, calls, errors} = await app(t);
+test('consultar explorações mostra resultados confirmados, recusados e incertos sem gerar imagens', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
+  const {page, origin, calls, errors, images} = await app(t);
+  images.unshift({id:'00000000-0000-4000-8000-000000000094',project_id:projectId,state:'rejected',created_at:'2026-11-06T12:02:00Z',ordinal:3,batch_id:'00000000-0000-4000-8000-000000000093',batch_position:3});
   await openProject(page, origin);
   await page.getByRole('button', {name: 'Consultar explorações', exact: true}).click();
   const gallery = page.getByRole('region', {name: 'Explorações de imagem', exact: true});
   await gallery.getByText('Resultado não confirmado.', {exact: true}).waitFor();
+  await gallery.getByText('Chave recusada; nenhuma imagem foi gerada.', {exact: true}).waitFor();
   const image = gallery.getByRole('button', {name: 'Usar imagem 1 na conversa e na Direção', exact: true});
   await image.waitFor();
   assert.equal(await image.count(), 1);

@@ -8,7 +8,7 @@ const imagesSchema = z.object({
   images: z.array(z.object({
     id: z.string().uuid(),
     project_id: z.string().uuid(),
-    state: z.enum(["running", "unknown", "completed"]),
+    state: z.enum(["running", "unknown", "completed", "rejected"]),
     created_at: z.string(),
     ordinal: z.number().int().positive().optional(),
     batch_id: z.string().uuid().nullable().optional(),
@@ -105,7 +105,7 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   function imageCard(item: ImageRecord) {
     const label = item.ordinal ? String(item.ordinal) : item.id;
     return <figure key={item.id}>
-      {item.state === "completed" ? <button type="button" className="reference-image-select" aria-pressed={selectedIds.includes(item.id)} aria-label={`${selectedIds.includes(item.id) ? "Imagem usada" : "Usar imagem"} ${label} na conversa e na Direção`} disabled={Boolean(selecting) || selectedIds.includes(item.id)} onClick={() => useImage(item.id, item.ordinal)}><img src={`/api/studio/explorations/image?${new URLSearchParams({ projectId, imageId: item.id })}`} alt="" /><span>{selecting === item.id ? "Adicionando…" : selectedIds.includes(item.id) ? "Selecionada" : "Usar na conversa"}</span></button> : <p role="status">{item.state === "running" ? "Geração em andamento." : "Resultado não confirmado."}</p>}
+      {item.state === "completed" ? <button type="button" className="reference-image-select" aria-pressed={selectedIds.includes(item.id)} aria-label={`${selectedIds.includes(item.id) ? "Imagem usada" : "Usar imagem"} ${label} na conversa e na Direção`} disabled={Boolean(selecting) || selectedIds.includes(item.id)} onClick={() => useImage(item.id, item.ordinal)}><img src={`/api/studio/explorations/image?${new URLSearchParams({ projectId, imageId: item.id })}`} alt="" /><span>{selecting === item.id ? "Adicionando…" : selectedIds.includes(item.id) ? "Selecionada" : "Usar na conversa"}</span></button> : <p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p>}
       <figcaption>Imagem {label}</figcaption>
     </figure>;
   }

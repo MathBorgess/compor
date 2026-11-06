@@ -3,7 +3,7 @@ import type { Actor } from './agent-auth.ts';
 import type { AuthConfig } from './supabase.ts';
 import { explorationImageRecordSchema, type ExplorationStore } from './exploration-image-route.ts';
 
-const reservation=z.array(z.object({state:z.enum(['running','unknown','completed','busy','blocked','awaiting_feedback']),is_new:z.boolean()})).length(1);
+const reservation=z.array(z.object({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback']),is_new:z.boolean()})).length(1);
 const entries=z.array(explorationImageRecordSchema).max(101);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 async function readBounded(response:Response):Promise<Buffer> {
@@ -29,14 +29,18 @@ export function createExplorationImageStore(config:AuthConfig, fetchApi:typeof f
     return await response.json();
   }
   return {
-    async reserve(actor,projectId,requestId,digest,batch) {
-      const params={p_project_id:projectId,p_id:requestId,p_prompt_digest:digest};
-      const row=reservation.parse(await rpc(actor,batch?'reserve_exploration_image_batched':'reserve_exploration_image',batch?{...params,p_batch_id:batch.id,p_batch_position:batch.position}:params))[0];
+    async reserve(actor,projectId,requestId,digest,rejectionDigest,batch) {
+      const params={p_project_id:projectId,p_id:requestId,p_prompt_digest:digest,p_rejection_digest:rejectionDigest};
+      const row=reservation.parse(await rpc(actor,batch?'reserve_exploration_image_batched_proven':'reserve_exploration_image_proven',batch?{...params,p_batch_id:batch.id,p_batch_position:batch.position}:params))[0];
       if(row.is_new && row.state!=='running')throw Error('invalid reservation');
       return {state:row.state,isNew:row.is_new};
     },
-    async finish(actor,projectId,requestId,state) {
-      if(await rpc(actor,'finish_exploration_image',{p_project_id:projectId,p_id:requestId,p_state:state})!==true)throw Error('unavailable');
+    async finish(actor,projectId,requestId,state,secret) {
+      const params={p_project_id:projectId,p_id:requestId};
+      if(await rpc(actor,state==='completed'?'complete_exploration_image_proven':'finish_exploration_image',state==='completed'?{...params,p_rejection_secret:secret}:{...params,p_state:state})!==true)throw Error('unavailable');
+    },
+    async reject(actor,projectId,requestId,secret) {
+      if(await rpc(actor,'reject_exploration_image',{p_project_id:projectId,p_id:requestId,p_rejection_secret:secret})!==true)throw Error('unavailable');
     },
     async resume(actor,projectId) {
       return z.enum(['resumed','not_paused','blocked']).parse(await rpc(actor,'resume_exploration_review',{p_project_id:projectId}));

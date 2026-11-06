@@ -14,6 +14,7 @@ const content=headline=>({headline,price:'R$ 20',date:'20/11',caption:'Legenda s
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 async function eventually(fn,predicate,timeout=6000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('estado esperado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
+async function assetBytes(page,pieceId,version){return page.evaluate(async ({userId,projectId,pieceId,version})=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{const row=await new Promise((resolve,reject)=>{const key=JSON.stringify([JSON.stringify([userId,projectId]),pieceId,version,'base']);const r=db.transaction('draftAssets').objectStore('draftAssets').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});return row?Array.from(new Uint8Array(await row.file.arrayBuffer())):null;}finally{db.close();}},{userId,projectId,pieceId,version});}
 async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
 async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
 async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
@@ -296,17 +297,30 @@ test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(b
  const state=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);assert.equal(state.drafts.find(d=>d.baseVersion===1).content.headline,'Conteúdo persistido');assert.deepEqual(errors,[]);
 });
 
-test('409 recupera uma versão idêntica já salva sem perder edição durante consulta',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,calls,errors}=await app(t);let release,entered;
+test('409 recupera versão idêntica e imagem-base sem perder edição durante consulta',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,calls,errors,flow}=await app(t);let release,entered;
  const gate=new Promise(resolve=>{release=resolve;}),waiting=new Promise(resolve=>{entered=resolve;});
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
+ const image=await attachImage(page,{mime:'image/png',name:'original.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Conteúdo já salvo'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
  await page.route('**/api/pieces?*',async route=>{entered();await gate;return route.fulfill({json:{versions}});});
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await waiting;await page.getByLabel('Título',{exact:true}).fill('Edição posterior preservada');release();
  await page.getByText('Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',{exact:true}).waitFor();
- const after=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);const recovered=after.drafts.find(d=>d.baseVersion===1&&d.pieceId===draft.pieceId);assert.equal(recovered.content.headline,'Edição posterior preservada');assert.equal(recovered.dirty,true);assert.equal(versions.find(v=>v.piece_id===draft.pieceId).content.headline,'Conteúdo já salvo');assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,0);assert.deepEqual(errors,[]);
+ const after=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);const recovered=after.drafts.find(d=>d.baseVersion===1&&d.pieceId===draft.pieceId);assert.equal(recovered.content.headline,'Edição posterior preservada');assert.equal(recovered.dirty,true);assert.equal(versions.find(v=>v.piece_id===draft.pieceId).content.headline,'Conteúdo já salvo');
+ assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image,'a versão recuperada recebe os bytes da imagem-base original');
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
+ assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,0);
+ // A subsequent simulated edit must transport the recovered bytes, not just
+ // show a cached preview from the previous selection.
+ await page.unroute('**/api/pieces');
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte recuperada editada.'}:{...consent('recovered'),proposal:{prompt:'Ajuste a arte preservada.',operation:'edit',baseImageId:draft.pieceId,referenceIds:[]}};
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('Arte recuperada editada.',{exact:true}).waitFor();
+ const generation=calls.filter(c=>c.path==='/api/agent/image');assert.equal(generation.length,1);assert.deepEqual(generation[0].body.artworkInput.source,{pieceId:draft.pieceId,version:1});assert.equal(generation[0].body.artworkInput.images[0].data,image.toString('base64'));assert.deepEqual(errors,[]);
 });
 
 test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!existsSync(browserPath),timeout:60000},async t=>{
@@ -316,6 +330,17 @@ test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!ex
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',{exact:true}).waitFor();
  const after=await stored(page);assert.equal(after.selection.baseVersion,0);assert.equal(after.drafts.find(d=>d.pieceId===draft.pieceId&&d.baseVersion===0).content.headline,'Minha edição');assert.deepEqual(errors,[]);
+});
+
+test('falha ao copiar imagem para versão recuperada não troca a seleção nem perde a origem',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
+ const image=await attachImage(page,{mime:'image/png',name:'original.png'});
+ const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Arte preservada'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
+ versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
+ await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
+ await page.evaluate(()=>{const add=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return add.apply(this,args);};});
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',{exact:true}).waitFor();
+ assert.equal((await stored(page)).selection.baseVersion,0);assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,0)),image);assert.equal(await assetBytes(page,draft.pieceId,1),null);assert.deepEqual(errors,[]);
 });
 
 test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na geração',{skip:!existsSync(browserPath),timeout:60000},async t=>{

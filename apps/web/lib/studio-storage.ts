@@ -171,9 +171,34 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       request.onsuccess=()=>{const raw:unknown=request.result;if(raw===undefined){done(null);return;}let value;try{value=parseRecord(raw);}catch(error){fail(error);return;}if(value.scope!==scopeKey||!("pieceId" in value.metadata)||!recordValid(value,true)||value.metadata.pieceId!==address.pieceId||value.metadata.baseVersion!==address.baseVersion||value.metadata.kind!==address.kind){fail(new StudioStorageError('studio_storage_corrupt'));return;}done({metadata:Object.freeze({...value.metadata}),file:value.file});};
     });
   }
+  // Preserve an existing destination, including one written by another tab.
+  // Read source and create the destination in the same transaction so a
+  // concurrent upload cannot be silently overwritten between check and copy.
+  function copyDraftAsset(scope:StudioScope,source:DraftAssetAddress,target:DraftAssetAddress):Promise<'copied'|'exists'|'missing'> {
+    const task=fileQueue.then(async()=>{
+      const scopeKey=scopeOf(scope),from=draftAddress(scopeKey,source),to=draftAddress(scopeKey,target);
+      if(from.pieceId!==to.pieceId || from.kind!==to.kind || from.key===to.key)throw new StudioStorageError('studio_storage_invalid');
+      return transaction<'copied'|'exists'|'missing'>(['references','draftAssets'],'readwrite',(tx,done,fail)=>{
+        const store=tx.objectStore('draftAssets'),refs=tx.objectStore('references').getAll(),assets=store.getAll();
+        let references:StoredRecord[]|undefined,records:StoredRecord[]|undefined;
+        const copy=()=>{if(!references||!records)return;try{
+          const original=records.find(record=>record.key===from.key),existing=records.find(record=>record.key===to.key);
+          const matches=(record:StoredRecord,address:ReturnType<typeof draftAddress>)=>record.scope===scopeKey && 'pieceId' in record.metadata && recordValid(record,true) && record.metadata.pieceId===address.pieceId && record.metadata.baseVersion===address.baseVersion && record.metadata.kind===address.kind;
+          if(existing){if(!matches(existing,to))throw new StudioStorageError('studio_storage_corrupt');done('exists');return;}
+          if(!original){done('missing');return;}
+          if(!matches(original,from)||!('pieceId' in original.metadata))throw new StudioStorageError('studio_storage_corrupt');
+          checkGlobalBudget(references,records,null,original.file.size);
+          store.add({key:to.key,scope:scopeKey,metadata:{...original.metadata,baseVersion:to.baseVersion},file:original.file});done('copied');
+        }catch(error){fail(error);}};
+        refs.onsuccess=()=>{try{references=parseRecords(refs.result);copy();}catch(error){fail(error);}};
+        assets.onsuccess=()=>{try{records=parseRecords(assets.result);copy();}catch(error){fail(error);}};
+      });
+    }).catch(error=>{throw storageError(error);});
+    fileQueue=task.catch(()=>{});return task;
+  }
   async function removeDraftAsset(scope:StudioScope,input:DraftAssetAddress):Promise<boolean> {
     const address=draftAddress(scopeOf(scope),input);
     return transaction(['draftAssets'],'readwrite',(tx,done)=>{tx.objectStore('draftAssets').delete(address.key);done(true);});
   }
-  return Object.freeze({load,save,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
+  return Object.freeze({load,save,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
 }

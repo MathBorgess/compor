@@ -487,6 +487,13 @@ function ProjectStudio({
         const latest = matching.reduce<PieceVersion | null>((previous, item) => !previous || item.version > previous.version ? item : previous, null);
         if (latest?.version === d.expectedLatestVersion + 1 && latest.metadata?.baseVersion === (d.baseVersion || null) &&
           samePieceContent(latest.content, d.content)) {
+          if (!active.current) return { status: "unknown" };
+          const storage=local.storage.current;
+          if (!storage) throw Error("storage_unavailable");
+          await storage.copyDraftAsset({userId,projectId:project.id},
+            {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
+            {pieceId:d.pieceId,baseVersion:latest.version,kind:'base'});
+          if (!active.current) return { status: "unknown" };
           local.change(value => recordSavedVersion(value, {
             pieceId:d.pieceId, baseVersion:d.baseVersion, version:latest.version, content:latest.content,
             approval:latest.metadata?.approval.status === "approved" ? latest.metadata.approval : {status:"unapproved"},
@@ -502,6 +509,12 @@ function ProjectStudio({
       const data=savedVersionSchema.parse(input);
       if (!response.ok || data.status !== "saved") throw Error("save_unknown");
       if (!active.current) return { status: "unknown" };
+      const storage=local.storage.current;
+      if (!storage) throw Error("storage_unavailable");
+      await storage.copyDraftAsset({userId,projectId:project.id},
+        {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
+        {pieceId:d.pieceId,baseVersion:data.version.version,kind:'base'});
+      if (!active.current) return { status: "unknown" };
       versionsReadSequence.current++;
       setVersions((items) => [...items.filter(item=>item.piece_id!==data.version.piece_id||item.version!==data.version.version), data.version]);
       local.change((value) =>
@@ -514,12 +527,6 @@ function ProjectStudio({
           eventId: crypto.randomUUID(),
         }),
       );
-      if (base)
-        await useBase({
-          blob: base,
-          pieceId: d.pieceId,
-          version: data.version.version,
-        });
       setNotice("Nova versão salva.");
       return {
         status: "completed",

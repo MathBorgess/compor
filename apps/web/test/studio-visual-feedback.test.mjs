@@ -67,7 +67,7 @@ test('comentário literal de imagem mostrada não exige seleção e grava sinal 
  const state=selected('Na imagem 42, gostei muito das cores.'),sent=[];
  const input={projectId,requestId:id(15),revision:state.revision,ordinal:42,quote:'gostei muito das cores'};
  const fetchApi=async(url,options)=>{
-  if(url.startsWith('/api/studio/explorations?'))return Response.json({images:[{id:id(8),project_id:projectId,state:'completed',ordinal:42}]});
+  if(url.startsWith('/api/studio/explorations?'))return Response.json({images:[{id:id(9),project_id:projectId,state:'rejected',ordinal:43},{id:id(8),project_id:projectId,state:'completed',ordinal:42}]});
   sent.push(JSON.parse(options.body));return new Response('{}',{status:201});
  };
  const result=await recordGeneratedComment(state,input,fetchApi,undefined,[{id:id(8),ordinal:42}]);
@@ -86,7 +86,7 @@ test('ordinal ambíguo, não mostrado ou sem opinião não registra sinal',async
 
 test('imagem mostrada de outro projeto ou não concluída não recebe comentário',async()=>{
  const state=selected('Na imagem 42, gostei do contraste.');const input={projectId,requestId:id(15),revision:0,ordinal:42,quote:'gostei do contraste'};
- let posted=0;for(const row of [{id:id(8),project_id:id(99),state:'completed',ordinal:42},{id:id(8),project_id:projectId,state:'running',ordinal:42}]){
+ let posted=0;for(const row of [{id:id(8),project_id:id(99),state:'completed',ordinal:42},{id:id(8),project_id:projectId,state:'running',ordinal:42},{id:id(8),project_id:projectId,state:'rejected',ordinal:42}]){
   const result=await recordGeneratedComment(state,input,async(url)=>{if(url.startsWith('/api/studio/explorations?'))return Response.json({images:[row]});posted++;return new Response('{}',{status:201});},undefined,[{id:id(8),ordinal:42}]);
   assert.equal(result.feedbackStatus,'reference_unavailable');
  }

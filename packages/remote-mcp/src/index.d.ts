@@ -20,5 +20,5 @@ export interface PieceStore {
 }
 export function createSupabasePieceStore(options: { url: string; anonKey: string; fetchImpl?: typeof fetch }): PieceStore;
 export type ExplorationInput = {projectId:string;requestId:string;prompt:string};
-export type ExplorationResult = {status:'completed';requestId:string;imageId:string} | {status:'running'|'unknown'|'busy'|'blocked'|'awaiting_feedback';requestId:string;retryAutomatically:false};
+export type ExplorationResult = {status:'completed';requestId:string;imageId:string} | {status:'running'|'unknown'|'busy'|'blocked'|'awaiting_feedback'|'rejected';requestId:string;retryAutomatically:false};
 export function createRemoteMcpHandler(options?: { authenticate?: Authenticate; projectStore?: ProjectStore; pieceStore?: PieceStore; exploration?:(context:ProjectContext,input:ExplorationInput,key:string)=>Promise<ExplorationResult>; explorationRead?:(context:ProjectContext,input:{projectId:string;imageId:string})=>Promise<Uint8Array>; explorationResume?:(context:ProjectContext,input:{projectId:string})=>Promise<'resumed'|'not_paused'|'blocked'> }): (request: Request) => Promise<Response>;

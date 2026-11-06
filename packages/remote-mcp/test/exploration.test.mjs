@@ -42,6 +42,16 @@ test('resultado incerto é devolvido sem repetição automática',async()=>{
  const client=await connect(handle,{'x-compor-openai-key':key});
  try {const result=await client.callTool({name:'generate_exploration_image',arguments:args});assert.deepEqual(result.structuredContent,{status:'unknown',requestId:args.requestId,retryAutomatically:false});assert.equal(calls,1);}finally{await client.close();}
 });
+test('recusa confirmada é comunicada sem repetir nem expor a chave',async()=>{
+ let calls=0;
+ const handle=createRemoteMcpHandler({authenticate:async()=>({userId:id(3)}),exploration:async()=>{calls++;return{status:'rejected',requestId:args.requestId,retryAutomatically:false};}});
+ const client=await connect(handle,{'x-compor-openai-key':key});
+ try {
+  const result=await client.callTool({name:'generate_exploration_image',arguments:args});
+  assert.deepEqual(result.structuredContent,{status:'rejected',requestId:args.requestId,retryAutomatically:false});
+  assert.equal(calls,1);assert.doesNotMatch(JSON.stringify(result),/sk-xxx|session-token/);
+ } finally {await client.close();}
+});
 test('MCP respeita a pausa compartilhada e retoma somente pela ferramenta explícita',async()=>{
  let resumed=0;
  const handle=createRemoteMcpHandler({authenticate:async()=>({userId:id(3)}),exploration:async()=>({status:'awaiting_feedback',requestId:args.requestId,retryAutomatically:false}),explorationResume:async(context,input)=>{assert.equal(context.actor.userId,id(3));assert.equal(input.projectId,args.projectId);resumed++;return 'resumed';}});

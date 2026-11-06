@@ -34,7 +34,7 @@ async function handle(request:Request) {
           }));
           return z.discriminatedUnion('status',[
             z.strictObject({status:z.literal('completed'),requestId:z.string().uuid(),imageId:z.string().uuid()}),
-            z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback']),requestId:z.string().uuid(),retryAutomatically:z.literal(false)}),
+            z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected']),requestId:z.string().uuid(),retryAutomatically:z.literal(false)}),
           ]).parse(await result.json());
         },explorationResume:async(context,input)=>{
           const service=explorationRuntime({userId:context.actor.userId,token:context.token});

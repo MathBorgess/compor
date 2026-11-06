@@ -30,7 +30,7 @@ export async function recordGeneratedComment(state:StudioState,args:ActionInputB
     const params=new URLSearchParams({projectId:args.projectId,...(args.ordinal<2147483647?{beforeOrdinal:String(args.ordinal+1)}:{})});
     const response=await fetchApi(`/api/studio/explorations?${params}`,{cache:'no-store',signal});
     if(!response.ok)return {status:'unknown'};
-    const result=z.object({images:z.array(z.object({id:z.string().uuid(),project_id:z.string().uuid(),state:z.enum(['running','unknown','completed']),ordinal:z.number().int().positive()})).max(100)}).parse(await response.json());
+    const result=z.object({images:z.array(z.object({id:z.string().uuid(),project_id:z.string().uuid(),state:z.enum(['running','unknown','completed','rejected']),ordinal:z.number().int().positive()})).max(100)}).parse(await response.json());
     const found=result.images.filter(item=>item.ordinal===args.ordinal&&item.id===matches[0].id&&item.project_id===args.projectId&&item.state==='completed');
     if(found.length!==1)return {status:'completed',feedbackStatus:'reference_unavailable'};
     const saved=await fetchApi('/api/studio/explorations/signals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:args.requestId,projectId:args.projectId,imageId:found[0].id,action:'comment',comment:quote,supersedes:null}),signal});

@@ -1,4 +1,4 @@
-import { createHash } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { Actor } from './agent-auth.ts';
 import { explorationPlanSchema,type ExplorationPlan } from './generated-feedback-contract.ts';
@@ -6,14 +6,18 @@ import { explorationPlanSchema,type ExplorationPlan } from './generated-feedback
 const id = z.string().uuid();
 const batchSchema=z.strictObject({id,position:z.number().int().min(1).max(3)});
 export type ExplorationBatch=z.infer<typeof batchSchema>;
-export const explorationImageRecordSchema=z.strictObject({id,project_id:id,state:z.enum(['running','unknown','completed']),created_at:z.string(),ordinal:z.number().int().positive(),batch_id:id.nullable(),batch_position:z.number().int().min(1).max(3).nullable()});
+export const explorationImageRecordSchema=z.strictObject({id,project_id:id,state:z.enum(['running','unknown','completed','rejected']),created_at:z.string(),ordinal:z.number().int().positive(),batch_id:id.nullable(),batch_position:z.number().int().min(1).max(3).nullable()});
 export type ExplorationImageRecord=z.infer<typeof explorationImageRecordSchema>;
 const input = z.object({projectId:id,requestId:id,prompt:z.string().trim().min(1).max(8000),plan:explorationPlanSchema.optional(),batch:batchSchema.optional()}).strict();
 const reply = (body:unknown,status:number) => Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
-type Reservation = {state:'running'|'unknown'|'completed'|'busy'|'blocked'|'awaiting_feedback';isNew:boolean};
+type Reservation = {state:'running'|'unknown'|'completed'|'rejected'|'busy'|'blocked'|'awaiting_feedback';isNew:boolean};
+// Only the image provider's explicit credential rejection may create this
+// error. The handler must never infer it from a generic HTTP status.
+export class ExplorationCredentialsRejected extends Error {}
 export type ExplorationStore = {
-  reserve: (actor:Actor, projectId:string, requestId:string, digest:string, batch?:ExplorationBatch)=>Promise<Reservation>;
-  finish: (actor:Actor, projectId:string, requestId:string, state:'unknown'|'completed')=>Promise<void>;
+  reserve: (actor:Actor, projectId:string, requestId:string, digest:string, rejectionDigest:string, batch?:ExplorationBatch)=>Promise<Reservation>;
+  finish: (actor:Actor, projectId:string, requestId:string, state:'unknown'|'completed', secret:string)=>Promise<void>;
+  reject: (actor:Actor, projectId:string, requestId:string, secret:string)=>Promise<void>;
   put: (actor:Actor, projectId:string, requestId:string, bytes:Uint8Array)=>Promise<void>;
   list: (actor:Actor, projectId:string, beforeOrdinal?:number)=>Promise<ExplorationImageRecord[]>;
   read: (actor:Actor, projectId:string, requestId:string)=>Promise<Response>;
@@ -57,20 +61,32 @@ export function createExplorationImageRoute(deps:Dependencies) {
       try { actor=await actorFor(data.projectId); } catch { return reply({error:'unavailable'},503); }
       if(!actor)return reply({error:'not_found'},404);
       const digest=createHash('sha256').update(data.prompt).update(data.plan?JSON.stringify(data.plan):'').update(data.batch?JSON.stringify(data.batch):'').digest('hex');
+      const rejectionSecret=randomBytes(32);
+      const rejectionDigest=createHash('sha256').update(rejectionSecret).digest('hex');
       let reserved:Reservation;
-      try { reserved=await deps.store.reserve(actor,data.projectId,data.requestId,digest,data.batch); }
+      try { reserved=await deps.store.reserve(actor,data.projectId,data.requestId,digest,rejectionDigest,data.batch); }
       catch { return reply({status:'unknown',requestId:data.requestId,retryAutomatically:false},503); }
       if(!reserved.isNew) return reserved.state==='completed'
         ? reply({status:'completed',requestId:data.requestId,imageId:data.requestId},200)
         : reply({status:reserved.state,requestId:data.requestId,retryAutomatically:false},409);
       try {
         if(data.plan) { if(!deps.store.plan)throw Error('plan unavailable'); await deps.store.plan(actor,data.projectId,data.requestId,data.plan); }
-        const bytes=await deps.generate(actor,key,data.prompt);
+        let bytes:Uint8Array;
+        try { bytes=await deps.generate(actor,key,data.prompt); }
+        catch(error) {
+          if(error instanceof ExplorationCredentialsRejected) {
+            // A missing or ambiguous persistence response stays unknown; it
+            // must not authorize a subsequent paid attempt automatically.
+            await deps.store.reject(actor,data.projectId,data.requestId,rejectionSecret.toString('hex'));
+            return reply({status:'rejected',requestId:data.requestId,retryAutomatically:false},401);
+          }
+          throw error;
+        }
         await deps.store.put(actor,data.projectId,data.requestId,bytes);
-        await deps.store.finish(actor,data.projectId,data.requestId,'completed');
+        await deps.store.finish(actor,data.projectId,data.requestId,'completed',rejectionSecret.toString('hex'));
         return reply({status:'completed',requestId:data.requestId,imageId:data.requestId},200);
       } catch {
-        await deps.store.finish(actor,data.projectId,data.requestId,'unknown').catch(()=>{});
+        await deps.store.finish(actor,data.projectId,data.requestId,'unknown',rejectionSecret.toString('hex')).catch(()=>{});
         return reply({status:'unknown',requestId:data.requestId,retryAutomatically:false},502);
       }
     },

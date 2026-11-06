@@ -14,3 +14,14 @@ test('stream sem tamanho declarado é interrompido no limite antes de acumular r
  const store=createExplorationImageStore(config,async()=>new Response(stream,{headers:{'content-type':'image/png'}}));
  await assert.rejects(()=>store.read(actor,id(2),id(3)),/invalid image/);assert.ok(chunks<=10);assert.equal(cancelled,true);
 });
+test('reserva vincula hash e finalização comprovada usa segredo apenas na RPC correspondente',async()=>{
+ const calls=[];
+ const store=createExplorationImageStore(config,async(url,init)=>{calls.push({path:new URL(url).pathname,body:JSON.parse(init.body),auth:init.headers.authorization});return Response.json(calls.length===1?[{state:'running',is_new:true}]:true);});
+ const digest='a'.repeat(64),proof='b'.repeat(64),secret='c'.repeat(64);
+ assert.deepEqual(await store.reserve(actor,id(2),id(3),digest,proof,{id:id(4),position:2}),{state:'running',isNew:true});
+ await store.finish(actor,id(2),id(3),'completed',secret);
+ assert.equal(calls[0].path,'/rest/v1/rpc/reserve_exploration_image_batched_proven');
+ assert.equal(calls[0].body.p_rejection_digest,proof);assert.equal('p_rejection_secret' in calls[0].body,false);
+ assert.equal(calls[1].path,'/rest/v1/rpc/complete_exploration_image_proven');assert.equal(calls[1].body.p_rejection_secret,secret);
+ assert.ok(calls.every(call=>call.auth==='Bearer session-token'));
+});
