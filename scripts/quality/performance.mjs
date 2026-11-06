@@ -8,7 +8,7 @@ import { gzipSync } from 'node:zlib';
 import { cpus, loadavg, platform, arch } from 'node:os';
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
-import { summarizeRuns, budgetFailures } from './performance-report.mjs';
+import { summarizeRuns, budgetFailures, summarizeDiagnostics } from './performance-report.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const app = resolve(root, 'apps/web');
@@ -108,6 +108,7 @@ try {
     })),
   };
   console.log(JSON.stringify({ bundle: { ...bundle, initialFiles: undefined }, metrics, failures }, null, 2));
+  console.log(JSON.stringify({ diagnostics: results.map(result => summarizeDiagnostics(result, origin)) }, null, 2));
   if (failures.length) throw Error(`Performance budget failed. ${failures.join('; ')}`);
 } catch (error) {
   report = { ...report, status: 'failed', error: error.message };
