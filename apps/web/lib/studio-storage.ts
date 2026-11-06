@@ -21,7 +21,7 @@ function scopeOf({userId,projectId}: Partial<StudioScope>={}) { if(!uuid(userId)
 const referenceKey = (scope:string,id:string) => {if(!uuid(id))throw new StudioStorageError('studio_storage_invalid');return JSON.stringify([scope,id]);};
 function draftAddress(scope:string,{pieceId,baseVersion,kind}:Partial<DraftAssetAddress>={}) {if(!uuid(pieceId)||typeof baseVersion!=='number'||!Number.isSafeInteger(baseVersion)||baseVersion<0||(kind!=='base'&&kind!=='preview'))throw new StudioStorageError('studio_storage_invalid');return{key:JSON.stringify([scope,pieceId,baseVersion,kind]),pieceId,baseVersion,kind};}
 const storageError = (error: unknown) => error instanceof StudioStorageError ? error : new StudioStorageError(error instanceof Error && error.name==='QuotaExceededError'?'studio_storage_quota':'studio_storage_unavailable');
-const metadataValid = (value: StudioReference) => value && Object.getPrototypeOf(value)===Object.prototype && Object.keys(value).sort().join(',')==='height,id,mime,name,size,width' && uuid(value.id) && typeof value.name==='string' && value.name.length>0 && value.name.length<=200 && !/sk-[A-Za-z0-9_-]{20,}/.test(value.name) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size>0 && value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
+const metadataValid = (value: StudioReference) => value && Object.getPrototypeOf(value)===Object.prototype && referenceSchema.safeParse(value).success && uuid(value.id) && typeof value.name==='string' && value.name.length>0 && value.name.length<=200 && !/sk-[A-Za-z0-9_-]{20,}/.test(value.name) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size>0 && value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
 const assetMetadataValid = (value: DraftAssetMetadata) => value && Object.getPrototypeOf(value)===Object.prototype && Object.keys(value).sort().join(',')==='baseVersion,height,kind,mime,pieceId,size,width' && uuid(value.pieceId) && Number.isSafeInteger(value.baseVersion)&&value.baseVersion>=0 && ['base','preview'].includes(value.kind) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size)&&value.size>0&&value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
 const recordValid = (record: StoredRecord,asset=false) => record && (asset?("pieceId" in record.metadata && assetMetadataValid(record.metadata)):("id" in record.metadata && metadataValid(record.metadata))) && record.file instanceof Blob && record.file.size===record.metadata.size && record.file.type===record.metadata.mime;
 
@@ -93,18 +93,18 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       };
     });
   }
-  async function prepareFile({id,file}:{id:string;file:File}):Promise<StudioReference> {
+  async function prepareFile({id,file,source}:{id:string;file:File;source?:StudioReference['source']}):Promise<StudioReference> {
     if(!uuid(id)||!(file instanceof Blob)||!['image/png','image/jpeg'].includes(file.type)||file.size<1||file.size>STUDIO_LIMITS.referenceBytes||typeof file.name!=='string'||file.name.length<1||file.name.length>200||/sk-[A-Za-z0-9_-]{20,}/.test(file.name)||typeof decodeImage!=='function')throw new StudioStorageError('studio_reference_invalid');
     const bytes=new Uint8Array(await file.slice(0,8).arrayBuffer());
     const png=[137,80,78,71,13,10,26,10].every((value,index)=>bytes[index]===value);
     const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
     if((file.type==='image/png'&&!png)||(file.type==='image/jpeg'&&!jpeg))throw new StudioStorageError('studio_reference_invalid');
     let image;
-    try{const dimensions=await studioImageDimensions(file);image=await decodeImage(file);if(image.width!==dimensions.width||image.height!==dimensions.height)throw Error();const metadata=referenceSchema.parse({id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height});if(!metadataValid(metadata))throw Error();return metadata;}
+    try{const dimensions=await studioImageDimensions(file);image=await decodeImage(file);if(image.width!==dimensions.width||image.height!==dimensions.height)throw Error();const metadata=referenceSchema.parse({id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height,...(source ? {source}: {})});if(!metadataValid(metadata))throw Error();return metadata;}
     catch{throw new StudioStorageError('studio_reference_invalid');}
     finally{try{image?.close();}catch{}}
   }
-  function putReference(input:StudioScope & {id:string;file:File}):Promise<StudioReference> {
+  function putReference(input:StudioScope & {id:string;file:File;source?:StudioReference['source']}):Promise<StudioReference> {
     const task=fileQueue.then(async()=>{
       const scope=scopeOf(input),key=referenceKey(scope,input.id),metadata=await prepareFile(input);
       return transaction<StudioReference>(['references','draftAssets'],'readwrite',(tx,done,fail)=>{

@@ -5,6 +5,6 @@ import type {ImageReservationStore} from './image-tool-reservation.js';
 import type {UsageStore} from './usage-store.js';
 export type ImageApprovalInput=AttemptScope & VersionScope & {actionBinding:string;explicitApproval:true;artworkInput:ArtworkInput};
 export type ImageExecutionInput=ImageApprovalInput & {apiKey:string};
-export type ImageExecutionResult={status:'rejected'} | {status:'unknown';retryAutomatically:false;assetId?:string;usageRecorded?:boolean} | {status:'completed';executionId:string;usageRecorded?:boolean;toolResult:{type:'agent.session.input.tool_result';turn_id:string;call_id:string;success:true;output:string}};
+export type ImageExecutionResult={status:'rejected'|'busy'|'blocked'} | {status:'unknown';retryAutomatically:false;assetId?:string;usageRecorded?:boolean} | {status:'completed';executionId:string;usageRecorded?:boolean;toolResult:{type:'agent.session.input.tool_result';turn_id:string;call_id:string;success:true;output:string}};
 export function createImageToolApproval(options:{bindings:SessionBindings;ownsVersion:OwnsVersion}):(input:ImageApprovalInput)=>Promise<string|null>;
 export function createImageToolExecution(options:{bindings:SessionBindings;ownsVersion:OwnsVersion;reservations:ImageReservationStore;imageHandler:RequestHandler;imageStorageHandler:RequestHandler;usage?:UsageStore;appOrigin:string;fetch?:typeof fetch}):(input:ImageExecutionInput)=>Promise<ImageExecutionResult>;

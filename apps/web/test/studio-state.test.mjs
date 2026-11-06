@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.ts';
+import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,setCreativeField,removeCreativeField,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.ts';
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const at='2026-11-05T12:00:00.000Z';
@@ -150,10 +150,11 @@ test('resposta de salvamento preserva alterações feitas enquanto aguardava',()
  state=editDraft(state,{field:'headline',value:'Mais uma alteração local'});
  const approval={status:'approved',kind:'inherited',sourceVersion:2,at};
  state=recordSavedVersion(state,{pieceId:id(3),baseVersion:2,version:6,content:submitted,eventId:id(41),approval});
- assert.equal(getCurrentDraft(state).baseVersion,2);
+ assert.equal(getCurrentDraft(state).baseVersion,6);
+ assert.equal(getCurrentDraft(state).expectedLatestVersion,6);
  assert.equal(getCurrentDraft(state).content.headline,'Mais uma alteração local');
  assert.equal(getCurrentDraft(state).dirty,true);
- assert.equal(state.drafts.find(item=>item.baseVersion===6).content.headline,'Versão submetida');
+ assert.equal(state.drafts.find(item=>item.baseVersion===6).content.headline,'Mais uma alteração local');
  assert.deepEqual(state.drafts.find(item=>item.baseVersion===6).approval,approval);
  assert.throws(()=>approveDraft(state,{at,eventId:id(42)}),error=>error.code==='studio_unsaved_draft');
  const fresh=createPost(initial(),{pieceId:id(9)});
@@ -180,14 +181,13 @@ test('resposta com chaves reordenadas preserva cada alteração de conteúdo fei
   const edited=editDraft(source,{field,value:`Alteração posterior de ${field}`});
   const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:0,version:1,content:reorderedContent(submitted),eventId:id(41)});
   const current=getCurrentDraft(saved);
-  assert.equal(current.baseVersion,0,field);assert.equal(current.dirty,true,field);
+  assert.equal(current.baseVersion,1,field);assert.equal(current.expectedLatestVersion,1,field);assert.equal(current.dirty,true,field);
   assert.equal(current.content[field],`Alteração posterior de ${field}`);
-  assert.deepEqual(saved.drafts.find(draft=>draft.baseVersion===1).content,submitted);
  }
  const source=selectVersion(initial(),{pieceId:id(3),version:1,latestVersion:1,content:{...content,captionOrigin:'agent'}});
  const edited=editDraft(source,{field:'caption',value:content.caption});
  const saved=recordSavedVersion(edited,{pieceId:id(3),baseVersion:1,version:2,content:reorderedContent(getCurrentDraft(source).content),eventId:id(41)});
- assert.equal(getCurrentDraft(saved).baseVersion,1);assert.equal(getCurrentDraft(saved).dirty,true);
+ assert.equal(getCurrentDraft(saved).baseVersion,2);assert.equal(getCurrentDraft(saved).expectedLatestVersion,2);assert.equal(getCurrentDraft(saved).dirty,true);
  assert.equal(getCurrentDraft(saved).content.captionOrigin,'user','a autoria também faz parte do conteúdo');
 });
 
@@ -199,4 +199,30 @@ test('evento duplicado com outra ordem de chaves é inócuo e não aceita conte�
  assert.equal(saved.events.length,1);assert.equal(saved.revision,source.revision+1);
  assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),headline:'Outro título'}}),error=>error.code==='studio_version_conflict');
  assert.throws(()=>recordSavedVersion(saved,{...args,content:{...reorderedContent(submitted),extra:'campo inesperado'}}),error=>error.code==='studio_version_conflict');
+});
+
+test('iniciativa das referências preserva evento interno e não inventa mensagem da pessoa',async()=>{
+ const {REFERENCE_SELECTION_EVENT}=await import('../lib/studio-state.ts');
+ let state=prepareAdjustment(selected(),{requestId:id(20),messageId:id(21),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at,eventId:id(22)});
+ assert.equal(state.messages.at(-1).role,'system');assert.equal(state.messages.filter(item=>item.role==='user').length,0);
+ state=settleAdjustment(state,{requestId:id(20),status:'completed',result:{messageId:id(23),text:'Essas referências parecem mais editoriais. É por aí?'},createdAt:at,eventId:id(24)});
+ assert.equal(state.messages.at(-1).role,'assistant');assert.doesNotThrow(()=>parseStudioState(state));
+ assert.throws(()=>prepareAdjustment(selected(),{requestId:id(30),messageId:id(31),instruction:'fala inventada',origin:'system',createdAt:at,eventId:id(32)}));
+});
+
+
+test('campos dinâmicos preservam versões antigas e fazem parte do rascunho salvo',()=>{
+ const previous=selected(); const field={id:id(50),label:'Local',value:'Ateliê central',origin:'user'};
+ const edited=setCreativeField(previous,field);assert.equal(getCurrentDraft(edited).content.fields[0].value,'Ateliê central');assert.equal(getCurrentDraft(previous).content.fields,undefined);
+ const result=recordSavedVersion(edited,{pieceId:id(3),baseVersion:2,version:6,content:getCurrentDraft(edited).content,eventId:id(51)});
+ assert.equal(getCurrentDraft(result).content.fields[0].label,'Local');
+ const without=removeCreativeField(result,id(50));assert.deepEqual(getCurrentDraft(without).content.fields,[]);assert.equal(getCurrentDraft(result).content.fields.length,1);
+ assert.throws(()=>setCreativeField(previous,{...field,label:' '}));assert.throws(()=>setCreativeField(previous,{...field,value:'sk-segredo'}));
+});
+
+test('campos dinâmicos com chaves reordenadas pelo banco não criam rascunho sujo',()=>{
+ const before=setCreativeField(selected(),{id:id(60),label:'Data da oficina',value:'20/11',origin:'user'}), sent=getCurrentDraft(before).content;
+ const returned={captionOrigin:sent.captionOrigin,caption:sent.caption,date:sent.date,price:sent.price,headline:sent.headline,fields:[{value:'20/11',origin:'user',label:'Data da oficina',id:id(60)}]};
+ const state=recordSavedVersion(before,{pieceId:id(3),baseVersion:2,version:6,content:returned,eventId:id(61)});
+ assert.equal(getCurrentDraft(state).dirty,false);assert.equal(getCurrentDraft(state).content.fields[0].value,'20/11');
 });

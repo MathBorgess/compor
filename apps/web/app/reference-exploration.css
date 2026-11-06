@@ -1,0 +1,14 @@
+.reference-exploration { display:grid; gap:1rem; max-width:72rem; padding:1.25rem; border:1px solid var(--studio-line); border-radius:14px; background:white; }
+.reference-exploration h2 { color:var(--studio-cobalt); }
+.reference-exploration form,.reference-exploration label { display:grid; gap:.5rem; }
+.reference-exploration input:not([type="checkbox"]),.reference-exploration textarea { width:100%; min-width:0; padding:.65rem; }
+.reference-exploration .reference-consent { display:flex; align-items:flex-start; gap:.5rem; }
+.reference-consent input { margin-top:.25rem; }
+.reference-results { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,15rem),1fr)); gap:1rem; }
+.reference-results article { min-width:0; padding:1rem; border:1px solid var(--studio-line); border-radius:.75rem; display:grid; align-content:start; gap:.7rem; }
+.reference-results img { display:block; width:100%; height:13rem; object-fit:contain; }
+.reference-results a,.reference-history a { overflow-wrap:anywhere; }
+.reference-results h3,.reference-results p { margin:0; }
+.reference-results button,.reference-history button,.reference-exploration > div > button { margin:.2rem; }
+.reference-history { display:grid; gap:1rem; padding-left:1.5rem; }
+.reference-history li { overflow-wrap:anywhere; }

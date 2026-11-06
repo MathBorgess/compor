@@ -1,7 +1,12 @@
 import { z } from 'zod';
+import { pinOriginSchema } from './reference-exploration-contract.ts';
+import { boardSlugSchema } from './phoenix/catalog.ts';
 
 const id = z.string();
-export const pieceContentSchema = z.strictObject({headline:z.string(),price:z.string(),date:z.string(),caption:z.string(),captionOrigin:z.enum(['user','agent'])});
+const creativeFieldText = (limit:number) => z.string().max(limit).refine(value => !/[\u0000-\u001f\u007f]/.test(value) && !/sk-[^\s]+/i.test(value));
+export const creativeFieldSchema = z.strictObject({id:z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:creativeFieldText(500),origin:z.enum(['user','agent'])});
+export type CreativeField = z.infer<typeof creativeFieldSchema>;
+export const pieceContentSchema = z.strictObject({headline:z.string(),price:z.string(),date:z.string(),caption:z.string(),captionOrigin:z.enum(['user','agent']),fields:z.array(creativeFieldSchema).max(20).refine(fields=>new Set(fields.map(field=>field.id.toLowerCase())).size===fields.length).optional()});
 export type PieceContent = z.infer<typeof pieceContentSchema>;
 export const approvalSchema = z.union([z.strictObject({status:z.literal('unapproved')}),z.strictObject({status:z.literal('approved'),kind:z.enum(['explicit','inherited']),sourceVersion:z.number(),at:z.string()})]);
 export type Approval = z.infer<typeof approvalSchema>;
@@ -10,7 +15,11 @@ export type DraftContext = z.infer<typeof draftContextSchema>;
 export const draftSchema = draftContextSchema.extend({content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema});
 export type StudioDraft = z.infer<typeof draftSchema>;
 export type Draft = StudioDraft;
-export const referenceSchema = z.strictObject({id,name:z.string(),mime:z.enum(['image/png','image/jpeg']),size:z.number(),width:z.number(),height:z.number()});
+export const referenceSourceSchema = z.union([
+  z.strictObject({originUrl:pinOriginSchema,board:boardSlugSchema,title:z.string().trim().min(1).max(300).optional()}),
+  z.strictObject({kind:z.literal('generated'),projectId:z.string().uuid(),imageId:z.string().uuid(),ordinal:z.number().int().positive().optional()}),
+]);
+export const referenceSchema = z.strictObject({id,name:z.string(),mime:z.enum(['image/png','image/jpeg']),size:z.number(),width:z.number(),height:z.number(),source:referenceSourceSchema.optional()});
 export type StudioReference = z.infer<typeof referenceSchema>;
 export type Reference = StudioReference;
 const markBase={id,pieceId:id,baseVersion:z.number(),note:z.string()};
@@ -30,7 +39,7 @@ export const briefSchema=z.strictObject({offer:z.string(),audience:z.string(),ac
 export type Brief=z.infer<typeof briefSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
 export type RequestStatus=z.infer<typeof requestStatusSchema>;
-export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema});
+export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema});
 export type StudioMessage=z.infer<typeof messageSchema>;
 export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional()});
 export type AdjustmentContext=z.infer<typeof adjustmentContextSchema>;
@@ -40,7 +49,7 @@ export const adjustmentSchema=z.strictObject({id,messageId:id,createdAt:z.string
 export type Adjustment=z.infer<typeof adjustmentSchema>;
 export const eventSchema=z.strictObject({id,type:z.enum(['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit']),requestId:id.nullable(),sequence:z.number()});
 export type StudioEvent=z.infer<typeof eventSchema>;
-export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.number().optional(),projectId:id.optional(),pieceId:id.nullable().optional(),baseVersion:z.number().nullable().optional(),expectedLatestVersion:z.number().optional(),version:z.number().optional(),unsaved:z.boolean().optional(),local:z.boolean().optional(),title:z.string().optional()});
+export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.number().optional(),projectId:id.optional(),pieceId:id.nullable().optional(),baseVersion:z.number().nullable().optional(),expectedLatestVersion:z.number().optional(),version:z.number().optional(),unsaved:z.boolean().optional(),local:z.boolean().optional(),title:z.string().optional(),feedbackStatus:z.enum(['recorded','ambiguous','quote_not_found','reference_unavailable']).optional()});
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;

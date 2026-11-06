@@ -16,6 +16,7 @@
     "quality:typecheck": "npm --prefix apps/web run typecheck"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.15",
     "@eslint/js": "10.0.1",
     "chrome-launcher": "1.2.2",
     "eslint": "10.14.0",

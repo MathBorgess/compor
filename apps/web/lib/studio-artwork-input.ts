@@ -75,7 +75,7 @@ export async function prepareArtworkTransport(options: ArtworkPreparationOptions
     images.push(Object.freeze({id: source.id, role: source.role, mime: file.type, data: btoa(binary)}));
   }
   const artworkInput = Object.freeze({
-    literalText: Object.freeze({headline: options.draft.content.headline, price: options.draft.content.price, date: options.draft.content.date}),
+    literalText: Object.freeze({headline: options.draft.content.headline, price: options.draft.content.price, date: options.draft.content.date, ...(options.draft.content.fields !== undefined ? {fields: options.draft.content.fields.map(field => ({...field}))} : {})}),
     source: proposal.operation === 'edit' ? Object.freeze({pieceId: options.draft.pieceId, version: options.draft.baseVersion}) : null,
     images: Object.freeze(images),
   });

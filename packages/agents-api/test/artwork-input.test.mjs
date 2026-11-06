@@ -45,3 +45,24 @@ test('pacote rejeita dados inválidos e tamanho acima do orçamento antes da exe
  assert.throws(()=>imageProposalDigest({...proposal,referenceIds:null}));
  assert.throws(()=>imageProposalDigest({...proposal,referenceIds:[refId,refId]}));
 });
+
+test('título multilinha é preservado literalmente, mantendo outros controles inválidos',()=>{
+ const headline='Primeira linha\nSegunda linha';
+ const multiline={...input,literalText:{...input.literalText,headline}};
+ assert.equal(parseArtworkInput(multiline).literalText.headline,headline);
+ assert.ok(compileArtworkPrompt(proposal,multiline).includes(JSON.stringify(headline)));
+ assert.notEqual(artworkInputDigest(multiline),artworkInputDigest({...multiline,literalText:{...multiline.literalText,headline:headline.replace('\n',' ')}}));
+ for(const control of ['\u0000','\t','\r'])assert.throws(()=>parseArtworkInput({...multiline,literalText:{...multiline.literalText,headline:`A${control}B`}}));
+ assert.throws(()=>parseArtworkInput({...multiline,literalText:{...multiline.literalText,price:'R$ 10\n'} }));
+});
+
+test('campos dinâmicos integram o prompt e o vínculo da geração sem afetar o formato legado',()=>{
+ const field={id:'33333333-3333-4333-8333-333333333333',label:'Local',value:'Ateliê central',origin:'user'};
+ const next={...input,literalText:{...input.literalText,fields:[field]}};
+ assert.match(compileArtworkPrompt(proposal,next),/Ateliê central/);
+ assert.notEqual(artworkInputDigest(next),artworkInputDigest(input));
+ assert.notEqual(artworkInputDigest(next),artworkInputDigest({...next,literalText:{...next.literalText,fields:[{...field,value:'Outro lugar'}]}}));
+ assert.deepEqual(parseArtworkInput(input),input);
+ assert.throws(()=>parseArtworkInput({...next,literalText:{...next.literalText,fields:[field,field]}}));
+ assert.throws(()=>parseArtworkInput({...next,literalText:{...next.literalText,fields:[{...field,value:'sk-segredo'}]}}));
+});

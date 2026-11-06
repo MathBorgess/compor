@@ -18,6 +18,7 @@ function Example({ value, references, label }: { value: CreativeCriterion["examp
   return <div className="direction-example">
     <h4>{label}</h4>
     {reference?.url && <img src={reference.url} alt={reference.name} width="160" height="120" />}
+    {reference?.source && ('originUrl' in reference.source ? <a href={reference.source.originUrl} target="_blank" rel="noopener noreferrer">Ver origem no Pinterest</a> : <small>Exploração gerada neste projeto.</small>)}
     <p>{value.description}</p>
     {value.referenceId && !reference && <small>Referência fora do moodboard atual. A descrição continua preservada.</small>}
   </div>;

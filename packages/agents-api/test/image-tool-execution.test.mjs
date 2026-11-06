@@ -16,7 +16,7 @@ function fixture(options = {}) {
     reservations: {
       reserve: async () => { calls.push('reserve'); return {id:reservationId,state:'reserved'}; },
       declareConsent: async () => { calls.push('consent'); },
-      claimExecution: async () => { calls.push('claim'); if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
+      claimExecution: async () => { calls.push('claim'); if (options.claimState) return {state:options.claimState}; if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
       markExecutionUnknown: async () => {calls.push('unknown');},
       completeExecution: async () => {calls.push('complete'); if(options.completeFail) throw Error(key);},
     },
@@ -31,6 +31,10 @@ function fixture(options = {}) {
 test('atendimento único vincula sessão, declaração e asset e devolve tool_result', async()=>{
  const {fn,input,calls}=fixture(); const result=await fn(input); assert.equal(result.status,'completed'); assert.equal(result.toolResult.success,true); assert.equal(JSON.parse(result.toolResult.output).assetId,assetId); assert.deepEqual(calls,['lookup','reserve','consent','claim','image','storage','complete']); assert.ok(!JSON.stringify(result).includes(key));
  const second=await fn(input); assert.equal(second.status,'unknown'); assert.equal(calls.filter(x=>x==='image').length,1);
+});
+
+test('claim ocupado ou bloqueado é informado antes da geração paga',async()=>{
+ for(const claimState of ['busy','blocked']) {const f=fixture({claimState});assert.deepEqual(await f.fn(f.input),{status:claimState});assert.ok(!f.calls.includes('image'));assert.ok(!f.calls.includes('unknown'));}
 });
 
 test('instrumentação deve reservar medição antes de gerar imagem paga',async()=>{

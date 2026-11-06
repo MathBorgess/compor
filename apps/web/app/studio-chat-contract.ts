@@ -19,6 +19,6 @@ export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.numbe
 export type ImageContext=z.infer<typeof imageContextSchema>;
 export const receiptSchema=z.strictObject({userId:z.string(),projectId:z.string(),requestId:z.string(),pieceId:z.string(),version:z.number().int(),assetId:z.string()});
 export type ImageReceipt=z.infer<typeof receiptSchema>;
-export const chatMarkerSchema=z.object({requestId:z.string().nullable(),previousAttemptKey:z.string().nullable().optional(),imageContext:imageContextSchema.nullable().optional(),imageReceipt:receiptSchema.nullable().optional()});
+export const chatMarkerSchema=z.object({requestId:z.string().nullable(),previousAttemptKey:z.string().nullable().optional(),imageContext:imageContextSchema.nullable().optional(),imageReceipt:receiptSchema.nullable().optional(),imageProtocolVersion:z.literal(1).optional()});
 export type ImageAction=Extract<ChatResponse,{status:'consent_required'}>&{proposal:ImageProposal;artworkInput:ArtworkInput|null;inputError:string;requestId:string;context:ImageContext&{headline:string};canPrepareTransport:boolean;conversions:readonly ArtworkConversion[];sourceFingerprint:string|null};
 export type Inspection={status:'completed'|'failed'|'running'|'action_required'|'consent_required'|'unknown'|'unavailable';authenticationRejected?:boolean;usage:{input_tokens:number|null;output_tokens:number|null}|null;technical:{functionCalls:number|null;outputs:number|null;omittedItems:number|null;validSchemas:number;invalidSchemas:number;errorClasses:string[]}|null};

@@ -1,13 +1,20 @@
 "use client";
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
+import ReactMarkdown from "react-markdown";
 import {
   prepareAdjustment,
   settleAdjustment,
   getCurrentDraft,
+  REFERENCE_SELECTION_EVENT,
 } from "../lib/studio-state.ts";
 import { parseImageProposal } from "@compor/agents-api/image-proposal";
 import { prepareArtworkTransport, artworkSourceFingerprint, ArtworkTransportRequiredError } from "../lib/studio-artwork-input.ts";
+import { sameCreativeFields } from "../lib/studio-state.ts";
+import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
+import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, referenceFingerprint, referenceRoundKey } from '../lib/studio-reference-round.ts';
+import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
+import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
@@ -15,6 +22,11 @@ import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { chatResponseSchema, errorResponseSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
+const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
+async function contextDigest(state:StudioState) {
+ const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
+ return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
+}
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;
@@ -41,7 +53,9 @@ export default function StudioChat({
   loadBase,
   initialMessage = "",
   connection,
-}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode }) {
+  explorationRecovery,
+  developerMode = false,
+}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
   const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
@@ -52,7 +66,14 @@ export default function StudioChat({
     [inspecting,setInspecting]=useState(false),
     [inspection,setInspection]=useState<Inspection|null>(null);
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
+  const [detailsVisible,setDetailsVisible]=useState(true);
+  const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
+  const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
+  const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
+  const [roundRevision,setRoundRevision]=useState(0);
   const mounted = useRef(true),
+    messagesRef = useRef<HTMLDivElement>(null),
+    followMessages = useRef(true),
     previous = useRef<string|null>(null),
     timer = useRef<ReturnType<typeof setTimeout>|undefined>(undefined),
     request = useRef<AbortController|null>(null),
@@ -61,17 +82,57 @@ export default function StudioChat({
     receiptRef=useRef<ImageReceipt|null>(null),
     activeMarker=useRef<string|null>(null),
     preparationSequence=useRef(0),
+    legacyPending=useRef(false),
     inspectionLock=useRef(false),
-    inspectionSequence=useRef(0);
+    inspectionSequence=useRef(0),
+    failedAutomatic=useRef<string|null>(null);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
+  const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}`;
+  const availability=useRef({message,busy,pending,hasApiKey});
+  availability.current={message,busy,pending,hasApiKey};
+  const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
+  function referenceRecord() {
+    try {
+      const raw=localStorage.getItem(referenceMarker);
+      if(raw===null)return undefined;
+      const value:unknown=JSON.parse(raw);
+      if (!value || typeof value!=='object' || !('fingerprint' in value) || !('requestId' in value) || !('context' in value) || !('status' in value)) return null;
+      if (typeof value.fingerprint!=='string'||typeof value.context!=='string'||!uuid(value.requestId)||!['submitted','completed'].includes(String(value.status))) return null;
+      const epoch='epoch' in value&&typeof value.epoch==='string'?value.epoch:'initial';
+      return {fingerprint:value.fingerprint,context:value.context,requestId:value.requestId,status:value.status,epoch};
+    } catch { return null; }
+  }
+  function completeReferenceRecord(requestId:string) {
+    const value=referenceRecord();
+    if(value?.requestId===requestId) localStorage.setItem(referenceMarker,JSON.stringify({...value,status:'completed'}));
+  }
+  function automaticRequest(requestId:string) {
+    const snapshot=getState();
+    const operation=snapshot.adjustments.find(item=>item.id===requestId);
+    return Boolean(operation&&snapshot.messages.some(item=>item.id===operation.messageId&&item.role==='system'));
+  }
+  useEffect(() => {
+    const messages = messagesRef.current;
+    if (messages && followMessages.current) messages.scrollTop = messages.scrollHeight;
+  }, [state.messages, notice, imageAction, pending, explorationRecovery]);
+  useEffect(() => {
+    if (!busy || !messagesRef.current) return;
+    followMessages.current = true;
+    messagesRef.current.scrollTop = messagesRef.current.scrollHeight;
+  }, [busy]);
+  const imageSubmissionMarker = `compor-image-submission:${state.userId}`;
+  const imageRejectedMarker = `compor-image-not-dispatched:${state.userId}:${state.projectId}`;
   useEffect(() => {
     mounted.current = true;
-    preparationSequence.current++;setImageAction(null);setBusy(false);
+    preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
     activeMarker.current=marker;receiptRef.current=null;setImageReceipt(null);
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     try {
+      const submitted=localStorage.getItem(imageSubmissionMarker);
+      setClosedImageAttempt(uuid(submitted)?submitted:null);
       const parsed = chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker) ?? "null"));
       const value = parsed.success ? parsed.data : null;
+      legacyPending.current=Boolean(value?.requestId && value.imageProtocolVersion !== 1);
       if (value && typeof value.requestId === "string")
         setPending(value.requestId);
       previous.current = value?.previousAttemptKey ?? null;
@@ -93,12 +154,29 @@ export default function StudioChat({
     try {
       sessionStorage.setItem(
         marker,
-        JSON.stringify({ requestId, previousAttemptKey: previous.current,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}),...(receiptRef.current?{imageReceipt:receiptRef.current}:{}) }),
+        JSON.stringify({ requestId, previousAttemptKey: previous.current,imageProtocolVersion:1,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}),...(receiptRef.current?{imageReceipt:receiptRef.current}:{}) }),
       );
     } catch {
       throw Error("Não foi possível preservar a tentativa neste navegador.");
     }
   }
+  useEffect(()=>{
+    if(pending)return;
+    const record=referenceRecord();
+    if(record?.status!=='submitted')return;
+    const operation=state.adjustments.find(item=>item.id===record.requestId);
+    if(!operation||['completed','failed'].includes(operation.status)||!state.messages.some(item=>item.id===operation.messageId&&item.role==='system'))return;
+    try { remember(record.requestId);setPending(record.requestId);setNotice('Uma conversa anterior ainda precisa ser consultada.'); } catch { setNotice('Não foi possível recuperar a tentativa neste navegador.'); }
+  },[marker,pending,state.adjustments,state.messages]);
+  useEffect(()=>{
+    try{ensureReferenceRound(state);}catch{}
+    const key=referenceRoundKey(state);
+    const changed=(event:Event)=>{if(event instanceof CustomEvent&&event.detail===key)setRoundRevision(value=>value+1);};
+    const stored=(event:StorageEvent)=>{if(event.storageArea===localStorage&&event.key===key)setRoundRevision(value=>value+1);};
+    window.addEventListener('compor-reference-round-changed',changed);
+    window.addEventListener('storage',stored);
+    return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
+  },[marker]);
   async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse> {
     const key = getApiKey?.();
     if (!key) throw Error("Informe sua chave OpenAI para continuar.");
@@ -112,6 +190,10 @@ export default function StudioChat({
     });
     const input:unknown = await response.json();
     const envelope = errorResponseSchema.parse(input);
+    if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
+      return {status:"failed",error:"image_invalid_request"};
+    if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
+      return {status:"failed",error:`image_${envelope.status}`};
     if (
       path === "/api/studio/chat" &&
       body.op !== "poll" &&
@@ -144,13 +226,29 @@ export default function StudioChat({
   }
   async function handle(data:ChatResponse, requestId:string, count = 0):Promise<void> {
     if (!mounted.current || activeMarker.current !== marker) return;
+    const automatic=automaticRequest(requestId);
+    if(automatic&&(data.status==='consent_required'||data.status==='action_required')) {
+      setBusy(false);setNotice('A resposta precisa ser consultada antes de continuar.');return;
+    }
     if (data.status === "completed") {
+      const record=automatic?referenceRecord():null;
+      const current=automatic?getState():null;
+      const valid=!automatic||Boolean(record&&current&&record.requestId===requestId&&record.fingerprint===referenceFingerprint(current)&&record.epoch===readReferenceRound(current)?.epoch&&record.context===await contextDigest(current));
       setUsage(data.usage ?? null);
-      settle(requestId, "completed", {
+      if(valid) settle(requestId, "completed", {
         messageId: crypto.randomUUID(),
         text: data.text ?? "Operação concluída.",
       });
-      previous.current = requestId;
+      else settle(requestId,"completed");
+      if(automatic) { try { if(valid) completeReferenceRecord(requestId); else localStorage.removeItem(referenceMarker); } catch {} previous.current=null; }
+      else previous.current = requestId;
+      try {
+        if (receiptRef.current?.requestId === requestId && localStorage.getItem(imageSubmissionMarker) === requestId) localStorage.removeItem(imageSubmissionMarker);
+        if (localStorage.getItem(imageRejectedMarker) === requestId) localStorage.removeItem(imageRejectedMarker);
+        const submitted=localStorage.getItem(imageSubmissionMarker);
+        setClosedImageAttempt(uuid(submitted)?submitted:null);
+      } catch { /* A stale marker safely prevents automatic resubmission. */ }
+      setImageNeedsReconciliation(false);setImageNeedsDecision(false);
       setLastCompleted(requestId);
       remember(null);
       setPending(null);
@@ -177,9 +275,35 @@ export default function StudioChat({
         if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
       } catch (error) { artworkInput = null; inputError = errorMessage(error); canPrepareTransport = error instanceof ArtworkTransportRequiredError; }
       if (!mounted.current || activeMarker.current !== marker || preparationSequence.current !== preparation) return;
-      setImageAction({ ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [] });
-      setBusy(false);
-      setNotice(inputError || "Revise a arte e os textos antes de gerar a nova versão.");
+      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [] };
+      setImageAction(action);
+      try {
+        if (localStorage.getItem(imageRejectedMarker) === requestId) {
+          setImageNeedsReconciliation(false);setImageNeedsDecision(true);setBusy(false);
+          setNotice('A imagem não foi enviada. Recuse esta proposta antes de pedir outra geração.');
+          return;
+        }
+        const submitted=localStorage.getItem(imageSubmissionMarker);
+        if (submitted) {
+          setBusy(false);
+          if (submitted === requestId) { setImageNeedsReconciliation(true);setImageNeedsDecision(false);setNotice('Esta tentativa precisa ser verificada antes de continuar.'); }
+          else { setImageAction(null);setNotice('Uma geração anterior ainda precisa ser consultada. Não iniciaremos outra automaticamente.'); }
+          return;
+        }
+      } catch {setBusy(false);setNotice('Não foi possível preservar o estado da geração neste navegador.');return;}
+      setImageNeedsReconciliation(false);setImageNeedsDecision(false);
+      if (artworkInput) {
+        if (legacyPending.current) {
+          setImageAction(null);
+          setBusy(false);
+          setNotice("Esta tentativa começou antes da proteção de reenvio. Consulte seus resultados antes de iniciar outra geração.");
+          return;
+        }
+        await confirmImage(action);
+      } else {
+        setBusy(false);
+        setNotice(inputError);
+      }
       return;
     }
     if (data.status === "action_required") {
@@ -216,11 +340,12 @@ export default function StudioChat({
       return handle(next, requestId, count + 1);
     }
     if (data.status === "running" && count < 60) {
-      setNotice("O Compor está trabalhando na sua solicitação…");
+      setNotice("");
       timer.current = setTimeout(() => poll(requestId, count + 1), 2000);
       return;
     }
     if (data.status === "failed") {
+      if(automatic) { try { completeReferenceRecord(requestId); } catch {} }
       settle(requestId, "failed");
       setPending(null);
       remember(null);
@@ -272,11 +397,58 @@ export default function StudioChat({
       if(serial===inspectionSequence.current){inspectionLock.current=false;if(mounted.current)setInspecting(false);}
     }
   }
+  useEffect(()=>{
+    if(!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    const timeout=setTimeout(()=>{ void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
+      if(!lock||!mounted.current||activeMarker.current!==marker)return;
+      const available=availability.current;
+      if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
+      const before=getState();
+      if(referenceFingerprint(before)!==referenceSet||referenceContext(before)!==referenceContextValue||!before.references.length||!getCurrentDraft(before)||before.adjustments.some(item=>!['completed','failed'].includes(item.status)))return;
+      const existing=referenceRecord(),round=readReferenceRound(before);
+      if(existing===null||!round||round.fingerprint!==referenceSet||existing?.status==='submitted')return;
+      let prepared=false,submitted=false;
+      const identity=`${round.epoch}:${referenceContextValue}`;
+      const requestId=crypto.randomUUID();
+      availability.current.busy=true;setBusy(true);setNotice('');
+      try {
+        const digest=await contextDigest(before);
+        if(!canStartReferenceRound({record:existing,round,fingerprint:referenceSet,context:digest,failed:failedAutomatic.current===identity}))return;
+        const feedback=await loadReadinessFeedback(before.projectId,before.references);
+        const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
+        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
+        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        const next=change(value=>prepareAdjustment(value,{requestId,messageId:crypto.randomUUID(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:new Date().toISOString(),eventId:crypto.randomUUID()}));
+        if(!next)throw Error('O projeto ainda está carregando.');
+        prepared=true;
+        await flush();
+        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest) {
+          settle(requestId,'failed');prepared=false;return;
+        }
+        localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch}));
+        remember(requestId);setPending(requestId);availability.current.pending=requestId;
+        const draft=getCurrentDraft(next);
+        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references};
+        submitted=true;
+        const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:before.messages.filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
+        await handle(data,requestId);
+      } catch(error) {
+        if(mounted.current){
+          if(!submitted)failedAutomatic.current=identity;
+          if(prepared&&!submitted){settle(requestId,'failed');try{completeReferenceRecord(requestId);remember(null);}catch{}setPending(null);}
+          setNotice(errorMessage(error));setBusy(false);
+        }
+      } finally { if(!submitted&&mounted.current){availability.current.busy=false;setBusy(false);} }
+    });},5000);
+    return ()=>clearTimeout(timeout);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!message.trim() || !hasApiKey || busy || pending || inspectionLock.current) return;
     setNotice("");
     setBusy(true);
+    legacyPending.current=false;
     const requestId = crypto.randomUUID();
     let prepared = false,
       submitted = false;
@@ -284,6 +456,7 @@ export default function StudioChat({
       const before = getState();
       const selected=getCurrentDraft(before), storedBase=await loadBase?.();
       if(!selected)throw Error("Selecione um post antes de conversar.");
+      const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
       const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
@@ -309,6 +482,7 @@ export default function StudioChat({
       setBusy(true);
       setMessage("");
       const draft = getCurrentDraft(next),
+        {level, evidence, gaps, limitations} = assessReadiness({brief:next.brief,persona:next.persona,direction:next.direction,references:next.references,referenceFeedback:feedback.referenceFeedback}),
         context = {
           revision: next.revision,
           pieceId: draft?.pieceId ?? null,
@@ -320,6 +494,10 @@ export default function StudioChat({
           brief: next.brief,
           persona: next.persona,
           direction: next.direction,
+          readiness: {level, evidence, gaps, limitations},
+          referenceFeedback: feedback.referenceFeedback,
+          accountReferenceHints: feedback.accountHints,
+          feedbackAvailability: feedback.availability,
           marks: next.marks.filter(
             (mark) =>
               mark.pieceId === draft?.pieceId &&
@@ -334,6 +512,7 @@ export default function StudioChat({
         message: message.trim(),
         context,
         history: before.messages
+          .filter(item=>item.role!=='system')
           .slice(-30)
           .map(({ role, text }) => ({ role, text })),
         referenceImages,
@@ -352,9 +531,41 @@ export default function StudioChat({
       }
     }
   }
+  async function reconcileImage() {
+    const action=imageAction;
+    if(!action||busy||!imageNeedsReconciliation||action.context.baseVersion<1)return;
+    setBusy(true);
+    try {
+      const response=await fetch('/api/agent/image/reconcile',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,pieceId:action.context.pieceId,version:action.context.baseVersion,attemptId:action.attemptId,actionBinding:action.actionBinding})});
+      const result:unknown=await response.json();
+      if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='fenced')throw Error('unverified');
+      if(!mounted.current||activeMarker.current!==marker)return;
+      if(!recordImageNotDispatched(localStorage,imageSubmissionMarker,imageRejectedMarker,action.requestId))throw Error('marker changed');
+      setImageNeedsReconciliation(false);setImageNeedsDecision(true);
+      setNotice('A imagem não foi enviada. A proposta antiga foi bloqueada; recuse-a antes de pedir outra geração.');
+    } catch {
+      if(mounted.current&&activeMarker.current===marker)setNotice('Não foi possível confirmar o envio. A tentativa continua preservada e não será repetida automaticamente.');
+    } finally {if(mounted.current&&activeMarker.current===marker)setBusy(false);}
+  }
+  async function reconcileClosedImage() {
+    const requestId=closedImageAttempt;
+    if(!requestId||busy)return;
+    setBusy(true);
+    try {
+      const response=await fetch('/api/agent/image/reconcile-closed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,requestId})});
+      const result:unknown=await response.json();
+      if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='confirmed')throw Error('unverified');
+      if(!mounted.current||activeMarker.current!==marker)return;
+      if(localStorage.getItem(imageSubmissionMarker)!==requestId)throw Error('marker changed');
+      localStorage.removeItem(imageSubmissionMarker);setClosedImageAttempt(null);
+      setNotice('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
+    } catch {
+      if(mounted.current&&activeMarker.current===marker)setNotice('Não foi possível confirmar o envio. A tentativa continua preservada.');
+    } finally {if(mounted.current&&activeMarker.current===marker)setBusy(false);}
+  }
   async function declineImage() {
     const action = imageAction;
-    if (!action?.declineBinding || busy) return;
+    if (!action?.declineBinding || busy || imageNeedsReconciliation) return;
     setBusy(true);
     try {
       const next = await api("/api/studio/action", {
@@ -393,8 +604,9 @@ export default function StudioChat({
       if (!unchanged()) throw Error('O post ou suas imagens mudaram durante a preparação. Consulte a mesma proposta para revisar.');
       const currentFingerprint = await artworkSourceFingerprint(options);
       if (!unchanged() || currentFingerprint !== prepared.sourceFingerprint) throw Error('O post ou suas imagens mudaram durante a preparação. Consulte a mesma proposta para revisar.');
-      setImageAction({...action, ...prepared, inputError: '', canPrepareTransport: false});
-      setNotice('Cópias preparadas. Revise as alterações antes de confirmar a geração.');
+      const ready = {...action, ...prepared, inputError: '', canPrepareTransport: false};
+      setImageAction(ready);
+      await confirmImage(ready);
     } catch (error) {
       if (isCurrentScope()) {
         setImageAction({...action, artworkInput: null, conversions: [], sourceFingerprint: null});
@@ -404,8 +616,8 @@ export default function StudioChat({
       if (isCurrentScope()) setBusy(false);
     }
   }
-  async function confirmImage() {
-    const action = imageAction,
+  async function confirmImage(action:ImageAction|null = imageAction) {
+    const
       draft = getCurrentDraft(getState());
     if (
       !action ||
@@ -416,7 +628,20 @@ export default function StudioChat({
       draft.baseVersion !== action.context.baseVersion ||
       (["headline", "price", "date"] satisfies (keyof typeof draft.content)[]).some(field => draft.content[field] !== action.artworkInput?.literalText[field])
     ) {
+      setBusy(false);
       setNotice("O post ou seus textos mudaram. Abra a versão indicada e consulte a mesma proposta para revisar antes de gerar.");
+      return;
+    }
+    try {
+      if (localStorage.getItem(imageSubmissionMarker)) {
+        setImageAction(null);
+        setBusy(false);
+        setNotice("Uma geração anterior ainda precisa ser consultada. Não iniciaremos outra automaticamente.");
+        return;
+      }
+    } catch {
+      setBusy(false);
+      setNotice("Não foi possível preservar o estado da geração neste navegador.");
       return;
     }
     setBusy(true);
@@ -438,19 +663,52 @@ export default function StudioChat({
         if (!saved || saved.status !== "completed" || saved.pieceId !== draft.pieceId || typeof saved.version!=="number" || !Number.isSafeInteger(saved.version) || saved.version <= draft.baseVersion) throw Error("Não foi possível preparar a nova versão. Confira o histórico antes de tentar novamente.");
         target = {pieceId: saved.pieceId, version: saved.version};
         if (!isCurrentScope()) return;
+        const savedDraft = getCurrentDraft(getState());
+        if (!savedDraft || savedDraft.pieceId !== target.pieceId || savedDraft.baseVersion !== target.version || savedDraft.dirty ||
+          (["headline", "price", "date"] satisfies (keyof typeof savedDraft.content)[]).some(field => savedDraft.content[field] !== action.artworkInput?.literalText[field]) ||
+          !sameCreativeFields(savedDraft.content.fields, action.artworkInput?.literalText.fields)) {
+          imageContext.current = {pieceId: target.pieceId, baseVersion: target.version};
+          remember(action.requestId);
+          setImageAction({...action, context: {...action.context, baseVersion: target.version}, artworkInput: null, conversions: [], sourceFingerprint: null, canPrepareTransport: false});
+          throw Error("O post mudou enquanto a versão era salva. Consulte a mesma proposta antes de gerar.");
+        }
       }
       if (action.artworkInput.source && target.version <= action.artworkInput.source.version) throw Error("Salve uma nova versão para preservar a imagem de origem antes de editar.");
       imageContext.current = {pieceId: target.pieceId, baseVersion: target.version};
       remember(action.requestId);
-      const data = await api("/api/agent/image", {
-        projectId: state.projectId,
-        pieceId: target.pieceId,
-        version: target.version,
-        attemptId: action.attemptId,
-        actionBinding: action.actionBinding,
-        explicitApproval: true,
-        artworkInput: action.artworkInput,
-      });
+      if (!getApiKey()) throw Error("Conecte sua chave para continuar.");
+      const savedRevision = getState().revision;
+      let data:ChatResponse;
+      for (;;) {
+        try {
+          if (localStorage.getItem(imageSubmissionMarker)) throw Error();
+          localStorage.setItem(imageSubmissionMarker, action.requestId);
+          if (localStorage.getItem(imageSubmissionMarker) !== action.requestId) throw Error();
+        } catch { throw Error("Não foi possível preservar o estado da geração. Nenhuma imagem foi enviada."); }
+        data = await api("/api/agent/image", {
+          projectId: state.projectId,
+          pieceId: target.pieceId,
+          version: target.version,
+          attemptId: action.attemptId,
+          actionBinding: action.actionBinding,
+          explicitApproval: true,
+          artworkInput: action.artworkInput,
+        });
+        if (data.status === 'failed' && data.error === 'image_invalid_request') {
+          setImageAction({...action,context:{...action.context,baseVersion:target.version},artworkInput:null,conversions:[],sourceFingerprint:null,canPrepareTransport:false});
+          setImageNeedsReconciliation(true);setImageNeedsDecision(false);setBusy(false);
+          setNotice('Esta requisição não enviou a imagem e o post salvo foi preservado. Verifique a tentativa antes de continuar.');
+          return;
+        }
+        if (data.status !== "failed" || !["image_busy", "image_blocked"].includes(data.error ?? "")) break;
+        // The server confirms that no image request was sent for this reservation.
+        if (localStorage.getItem(imageSubmissionMarker) === action.requestId) localStorage.removeItem(imageSubmissionMarker);
+        if (data.error === "image_blocked") throw Error("Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.");
+        setNotice("Aguardando a exploração atual terminar para gerar esta peça…");
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        if (!isCurrentScope()) return;
+        if (!getApiKey() || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
+      }
       if (data.assetId) {
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
         const { fetchPrivateImage } =
@@ -493,8 +751,40 @@ export default function StudioChat({
           <h2>Vamos compor juntos</h2>
           <p>Uma conversa, muitas possibilidades.</p>
         </div>
+        <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls="studio-chat-details" onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
-      <div className="studio-chat-messages" aria-live="polite">
+      <div id="studio-chat-details" className="studio-chat-meta" hidden={!detailsVisible} onToggle={(event) => {
+        const opened = event.target;
+        if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
+        event.currentTarget.querySelectorAll<HTMLDetailsElement>(":scope > details").forEach((item) => { if (item !== opened) item.open = false; });
+      }}>
+        {connection}
+        <details className="studio-chat-context">
+          <summary>Contexto do pedido</summary>
+          <strong className="studio-context-title">
+            {currentDraft?.content.headline || "Post sem título"}
+          </strong>
+          <span>
+            {" "}
+            ·{" "}
+            {currentDraft?.baseVersion
+              ? `base: versão ${currentDraft.baseVersion}`
+              : "rascunho novo"}
+          </span>
+          <p>{state.references.length} referências · {state.marks.filter(mark => mark.pieceId === state.selection?.pieceId && mark.baseVersion === state.selection?.baseVersion).length} marcações no post</p>
+          {developerMode && usage && (
+            <small>
+              Uso acumulado informado pela sessão: {usage.input_tokens ?? "?"}{" "}
+              tokens de entrada e {usage.output_tokens ?? "?"} de saída. Custo
+              final desconhecido.
+            </small>
+          )}
+        </details>
+      </div>
+      <div className="studio-chat-messages" aria-live="polite" ref={messagesRef} onScroll={(event) => {
+        const element = event.currentTarget;
+        followMessages.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
+      }}>
         {state.messages.length === 0 && (
           <div className="studio-message" data-role="assistant">
             <p>
@@ -503,7 +793,7 @@ export default function StudioChat({
             </p>
           </div>
         )}
-        {state.messages.map((item) => (
+        {state.messages.filter(item=>item.role!=='system').map((item) => (
           <article
             className="studio-message"
             data-role={item.role}
@@ -512,9 +802,29 @@ export default function StudioChat({
             <span className="studio-message-label">
               {item.role === "user" ? "Você" : "Compor"}
             </span>
-            <p>{item.text}</p>
+            {item.role === 'assistant' ? (
+              <div className="studio-message-markdown">
+                <ReactMarkdown
+                  urlTransform={(value) => {
+                    try {
+                      const url = new URL(value);
+                      return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : '';
+                    } catch { return ''; }
+                  }}
+                  components={{
+                    a: ({href, children}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
+                    img: ({alt}) => <span>{alt}</span>,
+                  }}
+                >{item.text}</ReactMarkdown>
+              </div>
+            ) : <p>{item.text}</p>}
           </article>
         ))}
+        {busy && <div className="studio-message studio-thinking" role="status">
+          <span className="studio-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
+          <span>Compor está trabalhando…</span>
+        </div>}
+        {explorationRecovery}
         {notice && (
           <p role="status" className="studio-hint">
             {notice}
@@ -533,7 +843,7 @@ export default function StudioChat({
             <p>{imageAction.prompt}</p>
             {imageAction.canPrepareTransport && <div>
               <p>Prepare cópias em JPEG neste navegador, sem IA nem envio. A qualidade será ajustada e as dimensões só serão reduzidas se necessário. Transparências recebem fundo branco. Os arquivos originais permanecem intactos.</p>
-              <button type="button" disabled={busy} onClick={prepareImageCopies}>{imageAction.proposal.operation === 'edit' ? 'Preparar cópia para edição' : 'Preparar cópias para envio'}</button>
+              <button type="button" disabled={busy||imageNeedsReconciliation||imageNeedsDecision} onClick={prepareImageCopies}>{imageAction.proposal.operation === 'edit' ? 'Preparar cópia para edição' : 'Preparar cópias para envio'}</button>
             </div>}
             {imageAction.conversions.length > 0 && <div>
               <ul aria-label="Cópias preparadas para envio">{imageAction.conversions.map(conversion => <li key={conversion.id}>
@@ -543,25 +853,18 @@ export default function StudioChat({
             </div>}
             {imageAction.artworkInput && <>
               <p>{imageAction.proposal.operation === "edit" ? "A imagem selecionada será enviada como origem. " : ""}{imageAction.proposal.referenceIds.length} referências visuais. Formato retrato 4:5.</p>
-              <dl className="studio-artwork-texts">{Object.entries(imageAction.artworkInput.literalText).filter(([, value]) => value).map(([field, value]) => <div key={field}><dt>{field === "headline" ? "Título na arte" : field === "price" ? "Preço na arte" : "Data na arte"}</dt><dd>{value}</dd></div>)}</dl>
+              <dl className="studio-artwork-texts">{([['Título na arte',imageAction.artworkInput.literalText.headline],['Preço na arte',imageAction.artworkInput.literalText.price],['Data na arte',imageAction.artworkInput.literalText.date]] satisfies [string,string][]).filter(([,value])=>value).map(([label,value])=><div key={label}><dt>{label}</dt><dd>{value}</dd></div>)}{imageAction.artworkInput.literalText.fields?.filter(field=>field.value).map(field=><div key={field.id}><dt>{field.label}</dt><dd>{field.value}</dd></div>)}</dl>
               <p>A arte inteira será gerada, incluindo esses textos. Confira grafia, fatos e legibilidade no resultado. A versão anterior permanece no histórico.</p>
             </>}
             <p>
               A geração será cobrada pela OpenAI. O custo final ainda é
               desconhecido.
             </p>
-            <button
-              type="button"
-              className="studio-button"
-              disabled={busy || !hasApiKey || !imageAction.artworkInput}
-              onClick={confirmImage}
-            >
-              Confirmar geração de imagem
-            </button>
+            {imageNeedsReconciliation && <button type="button" disabled={busy} onClick={reconcileImage}>Verificar envio anterior</button>}
             <button type="button" disabled={busy||!hasApiKey} onClick={()=>poll(imageAction.requestId)}>Consultar a mesma proposta</button>
             <button
               type="button"
-              disabled={busy || !hasApiKey}
+              disabled={busy || !hasApiKey || imageNeedsReconciliation}
               onClick={declineImage}
             >
               Recusar geração
@@ -578,7 +881,8 @@ export default function StudioChat({
             Consultar esta tentativa
           </button>
         )}
-        {!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
+        {closedImageAttempt && !pending && !imageAction && <button type="button" className="studio-button-secondary" disabled={busy} onClick={reconcileClosedImage}>Verificar envio anterior</button>}
+        {developerMode&&!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
           <button type="button" className="studio-button-secondary" disabled={!hasApiKey||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
           {!hasApiKey&&<p>Conecte sua chave para consultar a solicitação anterior.</p>}
           {inspection&&<div role="status">
@@ -596,67 +900,24 @@ export default function StudioChat({
         </div>}
       </div>
       <form className="studio-chat-composer" onSubmit={send}>
-        {connection}
-        <div className="studio-chat-context">
-          <strong>
-            {currentDraft?.content.headline || "Post sem título"}
-          </strong>
-          <span>
-            {" "}
-            ·{" "}
-            {currentDraft?.baseVersion
-              ? `base: versão ${currentDraft.baseVersion}`
-              : "rascunho novo"}
-          </span>
-          <details>
-            <summary>Revisar contexto do pedido</summary>
-            <p>{state.references.length} referências locais</p>
-            {state.marks
-              .filter(
-                (mark) =>
-                  mark.pieceId === state.selection?.pieceId &&
-                  mark.baseVersion === state.selection?.baseVersion,
-              )
-              .map((mark) => (
-                <p key={mark.id}>
-                  {mark.kind === "area"
-                    ? "Área da arte"
-                    : `Elemento: ${mark.elementId}`}{" "}
-                  · {mark.note}
-                </p>
-              ))}
-          </details>
-          {usage && (
-            <small>
-              Uso acumulado informado pela sessão: {usage.input_tokens ?? "?"}{" "}
-              tokens de entrada e {usage.output_tokens ?? "?"} de saída. Custo
-              final desconhecido.
-            </small>
-          )}
-        </div>
-        <label htmlFor="studio-chat-message">Sua mensagem</label>
+        <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
+        <label className="studio-visually-hidden" htmlFor="studio-chat-message">Sua mensagem</label>
         <textarea
           id="studio-chat-message"
-          rows={3}
+          rows={1}
           maxLength={4000}
           value={message}
           disabled={busy}
-          placeholder="Peça um ajuste, abra um novo post…"
+          placeholder="Escreva uma mensagem…"
           onChange={(e) => setMessage(e.target.value)}
         />
-        <div className="studio-composer-actions">
-          <small>
-            {hasApiKey
-              ? "Conversa guardada neste navegador."
-              : "Conecte sua chave para conversar com a IA."}
-          </small>
           <button
             className="studio-button"
+            aria-label={busy ? "Trabalhando…" : "Enviar →"}
             disabled={!message.trim() || !hasApiKey || busy || inspecting || Boolean(pending)}
           >
-            {busy ? "Trabalhando…" : "Enviar →"}
+            <span aria-hidden="true">↑</span>
           </button>
-        </div>
       </form>
     </section>
   );

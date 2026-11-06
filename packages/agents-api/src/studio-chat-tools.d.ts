@@ -6,8 +6,11 @@ export interface ActionInputByName {
  compor_editar_persona: Scope & {field:'audience'|'situation'|'need'|'culturalReferences';value:string};
  compor_registrar_afirmacao_persona: Scope & {text:string;provenance:'hypothesis'|'creator_report'|'buyer_report'|'public_source';source?:string};
  compor_propor_criterio: Scope & {viewpoint:'creator'|'recipient';dimension:'visual'|'message';statement:string;example:string;counterexample:string;exampleReferenceId:string;counterexampleReferenceId:string;provenance:'hypothesis'|'creator_report'|'buyer_report'|'public_source';source:string;tension:string};
+ compor_registrar_feedback_visual: Scope & {referenceId:string;action:'selected'|'rejected'|'comment';quote:string};
+ compor_comentar_imagem_gerada: Scope & {ordinal:number;quote:string};
  compor_novo_post: Scope;
  compor_editar_peca: Scope & {pieceId:string;baseVersion:number;field:'headline'|'price'|'date'|'caption';value:string};
+ compor_adicionar_campo: Scope & {pieceId:string;baseVersion:number;label:string};
  compor_abrir_versao: Scope & {pieceId:string;version:number};
  compor_salvar_versao: Scope & {pieceId:string;baseVersion:number;expectedLatestVersion:number};
  compor_renomear_projeto: Scope & {title:string};

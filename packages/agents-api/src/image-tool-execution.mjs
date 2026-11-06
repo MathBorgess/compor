@@ -63,6 +63,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (!uuid(reservation?.id) || reservation.state !== 'reserved') return unknown();
       await reservations.declareConsent({actor,reservationId:reservation.id,confirmed:true});
       execution = await reservations.claimExecution({actor,reservationId:reservation.id});
+      if (execution?.state === 'busy' || execution?.state === 'blocked') return {status:execution.state};
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
     let measurementStarted=false, measurementFinished=false, usageRecorded=false;

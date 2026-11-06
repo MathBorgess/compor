@@ -34,6 +34,18 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       const result = await rpc('mark_image_tool_call_unknown', input.actor, { p_project_id: input.projectId, p_session_id: input.sessionId, p_turn_id: input.turnId, p_call_id: input.callId });
       if (result !== true) throw new Error('reservation status unknown');
     },
+    async fenceUnsubmitted(input) {
+      if (!validCall(input) || !uuid.test(input.pieceId ?? '') || !uuid.test(input.attemptId ?? '') || !Number.isInteger(input.version) || input.version < 1 || input.version > 2147483647) throw new Error('invalid reservation');
+      const result = await rpc('fence_unsubmitted_image_tool_call', input.actor, {p_project_id:input.projectId,p_piece_id:input.pieceId,p_piece_version:input.version,p_attempt_id:input.attemptId,p_session_id:input.sessionId,p_turn_id:input.turnId,p_call_id:input.callId});
+      if (!['fenced','unverified'].includes(result)) throw new Error('reservation status unknown');
+      return {status:result};
+    },
+    async confirmClosedAttempt({actor,projectId,requestId}) {
+      if (!uuid.test(projectId ?? '') || !uuid.test(requestId ?? '')) throw new Error('invalid attempt');
+      const result=await rpc('confirm_closed_image_attempt',actor,{p_project_id:projectId,p_request_id:requestId});
+      if (!['confirmed','unverified'].includes(result)) throw new Error('reservation status unknown');
+      return {status:result};
+    },
     async declareConsent({ actor, reservationId, confirmed }) {
       if (!uuid.test(reservationId ?? '') || confirmed !== true) throw new Error('invalid declaration');
       const rows = await rpc('declare_image_generation_consent', actor, { p_reservation_id: reservationId, p_confirmed: true });
@@ -45,6 +57,7 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!uuid.test(reservationId ?? '')) throw new Error('invalid execution');
       const rows = await rpc('claim_image_tool_execution', actor, { p_reservation_id: reservationId });
       const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+      if (['busy','blocked'].includes(row?.state) && row.execution_id === null && row.asset_id === null && row.is_new === false) return {state:row.state};
       if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running', 'unknown', 'completed'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
       return { id: row.execution_id, assetId: row.asset_id, state: row.state, isNew: row.is_new };
     },

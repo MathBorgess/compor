@@ -13,6 +13,10 @@ test('aprovação explícita executa e retorna somente aceitação e asset',asyn
 test('origem e confirmação inválidas não acionam geração',async()=>{for(const req of [request({...body,explicitApproval:false}),request(body,'https://evil.test')]){const f=setup();assert.notEqual((await f.handler(req)).status,202);assert.deepEqual(f.calls,[]);}});
 test('autorização negada e resultado desconhecido não geram repetição',async()=>{let f=setup({allow:false});assert.equal((await f.handler(request())).status,403);assert.deepEqual(f.calls,['approve']);f=setup({sendStatus:'unknown'});const r=await f.handler(request());assert.equal(r.status,502);assert.deepEqual(await r.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.deepEqual(f.calls,['approve','execute','send']);});
 
+test('ocupação conhecida não envia resultado ao agente nem é classificada como geração incerta',async()=>{
+ for(const status of ['busy','blocked']) {let sends=0;const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status}),send:async()=>{sends++;}});const result=await handler(request());assert.equal(result.status,200);assert.deepEqual(await result.json(),{status});assert.equal(sends,0);}
+});
+
 test('fluxo HTTP com adaptadores reais e serviços simulados exige prova e evita segunda imagem',async()=>{
  const {createSessionBindings}=await import('../../../packages/agents-api/src/session-binding.mjs');
  const {createImageToolReservationStore}=await import('../../../packages/agents-api/src/image-tool-reservation.mjs');

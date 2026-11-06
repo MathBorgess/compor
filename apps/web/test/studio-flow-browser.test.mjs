@@ -43,6 +43,13 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session'){if(session.hold)await session.hold;return route.fulfill({status:session.state==='unavailable'?503:200,json:{state:session.state,userId:session.userId}});}
+  if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
+  if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
+  if (url.pathname === '/api/studio/references/signals') {
+   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   return route.fulfill({json:{signals:[]}});
+  }
+    if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
   if(url.pathname==='/api/projects')return route.fulfill({json:{projects:[{id:projectId,title:'Projeto sintético'}]}});
   if(url.pathname==='/api/pieces'){
    if(request.method()==='GET')return route.fulfill({json:{versions}});
@@ -61,7 +68,7 @@ async function app(t){
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
- await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await openEditor(page);
  await openDrawer(page,'Marca');
  await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
@@ -120,7 +127,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.getByText('Novo post preparado no navegador.',{exact:true}).waitFor();await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
  await page.getByLabel('Título',{exact:true}).fill('Rascunho que permanece local');
- await page.getByLabel('Preço',{exact:true}).fill('R$ 15');await page.getByLabel('Data',{exact:true}).fill('20/11');
+ await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 15');await page.getByLabel('Data',{exact:true}).fill('20/11');
  await eventually(()=>stored(page),value=>value?.drafts?.some(d=>d.content.headline==='Rascunho que permanece local'));
  let release;session.hold=new Promise(resolve=>{release=resolve;});
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));

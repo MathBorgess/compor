@@ -6,9 +6,14 @@ const PersonaStep = dynamic(() => import("./persona-step"));
 const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
 import { useStudioState } from "./use-studio-state";
-import { useBriefInterview } from "./use-brief-interview";
-import { BriefCanvas, BriefChat } from "./brief-interview";
-import { nextPrompt } from "../lib/brief-interview";
+import BriefSummary from "./brief-summary";
+import ReferenceExploration from "./reference-exploration";
+import type { ExploredReference } from "../lib/reference-exploration-contract";
+import ExplorationGallery from "./exploration-gallery";
+import { useExplorationLoop } from "./use-exploration-loop";
+import { selectedExplorationKey } from "../lib/exploration-batch";
+import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
+import { recordReferenceRound } from "../lib/studio-reference-round";
 import {
   updateBrief,
   updatePersona,
@@ -18,7 +23,10 @@ import {
   selectVersion,
   selectDraft,
   getCurrentDraft,
+  samePieceContent,
   editDraft,
+  setCreativeField,
+  removeCreativeField,
   addMark,
   removeMark,
   addReference,
@@ -37,8 +45,8 @@ import { projectsSchema, projectResponseSchema, versionsSchema, savedVersionSche
 import type { StudioState, StudioReference, ActionResult, DraftContext } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
-type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name])=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean};
+type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal})=>Promise<ActionResult>};
+type StudioAppProps={userId:string;hasApiKey:boolean;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
@@ -54,6 +62,10 @@ export default function StudioApp({
   initialObjective,
   recoveryBanner,
   isAuthenticated,
+  developerMode = false,
+  accountLabel = "",
+  localAccount = false,
+  onSignOut,
 }: StudioAppProps) {
   const [projects, setProjects] = useState<Project[]>([]),
     [selected, setSelected] = useState<Project|null>(null),
@@ -133,6 +145,10 @@ export default function StudioApp({
         key={`${userId}:${selected.id}`}
         userId={userId}
         isAuthenticated={isAuthenticated}
+        developerMode={developerMode}
+        accountLabel={accountLabel}
+        localAccount={localAccount}
+        onSignOut={onSignOut}
         project={selected}
         projects={projects}
         onOpenProject={project => {setOpeningPrompt("");setSelected(project);}}
@@ -149,7 +165,9 @@ export default function StudioApp({
   return (
     <StudioShell
       stage="projects"
-      statusText="Conta conectada"
+      accountLabel={accountLabel}
+      localAccount={localAccount}
+      onSignOut={onSignOut}
       onNewProject={() =>
         document.getElementById("studio-project-name")?.focus()
       }
@@ -192,11 +210,15 @@ function ProjectStudio({
   onRemoveKey,
   initialObjective,
   isAuthenticated,
+  developerMode = false,
+  accountLabel = "",
+  localAccount = false,
+  onSignOut,
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
-  const interview = useBriefInterview({state:s,change:session.change,userId,projectId:project.id});
   const [editorRequested, setEditorRequested] = useState(false);
+  const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
     [versions, setVersions] = useState<PieceVersion[]>([]),
     [notice, setNotice] = useState(""),
@@ -230,7 +252,14 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
-  const showBrief = Boolean(interview.prompt) || (!editorRequested && !base && !draft?.baseVersion && !draft?.content.headline && !draft?.content.price && !draft?.content.date && !draft?.content.caption);
+  const showBrief = !editorRequested && !base && !draft?.baseVersion && !draft?.content.headline && !draft?.content.price && !draft?.content.date && !draft?.content.caption && !draft?.content.fields?.length;
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, enabled: stageRestored && stage === "studio" && showBrief });
+  async function signOutSafely() {
+    exploration.pause();
+    try { if (!session.loading) await session.flush(); }
+    catch (error) { setNotice("Não foi possível preservar o projeto antes de sair."); throw error; }
+    await onSignOut?.();
+  }
   async function refreshVersions() {
     const readSequence=++versionsReadSequence.current;
     const response = await fetch(
@@ -253,12 +282,6 @@ function ProjectStudio({
     };
   }, [project.id]);
   useEffect(() => {
-    if (s && initialObjective && !s.brief.direction)
-      local.change((value) =>
-        updateBrief(value, { direction: initialObjective }),
-      );
-  }, [Boolean(s)]);
-  useEffect(() => {
     if (s && !s.selection) local.change(value => createPost(value, { pieceId: crypto.randomUUID() }));
   }, [Boolean(s)]);
   useEffect(() => {
@@ -269,6 +292,7 @@ function ProjectStudio({
       );
       if (saved === "studio" || saved === "review" || saved === "export") setStage(saved);
     } catch {}
+    setStageRestored(true);
   }, [Boolean(s)]);
   useEffect(() => {
     if (!s) return;
@@ -374,6 +398,7 @@ function ProjectStudio({
     draft?.content.headline,
     draft?.content.price,
     draft?.content.date,
+    JSON.stringify(draft?.content.fields),
   ]);
 
   function nextStage(value:StudioStage) {
@@ -382,7 +407,6 @@ function ProjectStudio({
     if(value !== "studio") setViewingArt(false);
   }
   function newPost(pieceId:string = crypto.randomUUID()) {
-    interview.close();
     setEditorRequested(false);
     local.change((value) =>
       value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
@@ -396,7 +420,6 @@ function ProjectStudio({
     setStage("studio");
   }
   function openVersion(version:PieceVersion) {
-    interview.close();
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
       .reduce((n, v) => Math.max(n, v.version), 0);
@@ -457,9 +480,23 @@ function ProjectStudio({
       });
       const input:unknown = await response.json();
       if (response.status === 409) {
-        setNotice(
-          "Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.",
-        );
+        // A previous save may have succeeded even if its response was not recorded locally.
+        // Recover only when the immediately following version has the same base and content.
+        const versions = await refreshVersions();
+        const matching = versions.filter(item => item.piece_id === d.pieceId);
+        const latest = matching.reduce<PieceVersion | null>((previous, item) => !previous || item.version > previous.version ? item : previous, null);
+        if (latest?.version === d.expectedLatestVersion + 1 && latest.metadata?.baseVersion === (d.baseVersion || null) &&
+          samePieceContent(latest.content, d.content)) {
+          local.change(value => recordSavedVersion(value, {
+            pieceId:d.pieceId, baseVersion:d.baseVersion, version:latest.version, content:latest.content,
+            approval:latest.metadata?.approval.status === "approved" ? latest.metadata.approval : {status:"unapproved"},
+            eventId:crypto.randomUUID(),
+          }));
+          await local.flush();
+          setNotice("Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.");
+        } else {
+          setNotice("Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.");
+        }
         return { status: "unknown" };
       }
       const data=savedVersionSchema.parse(input);
@@ -542,6 +579,8 @@ function ProjectStudio({
         );
       return { status: "completed", local: true };
     },
+    compor_registrar_feedback_visual: async (args, context) => recordVisualFeedback(local.get(), args, fetch, context?.signal),
+    compor_comentar_imagem_gerada: async (args, context) => recordGeneratedComment(local.get(), args, fetch, context?.signal),
     compor_propor_criterio: async args => {
       for (const id of [args.exampleReferenceId, args.counterexampleReferenceId].filter(Boolean)) {
         if (!local.get().references.some(reference => reference.id === id)) throw Error("reference_unavailable");
@@ -577,6 +616,12 @@ function ProjectStudio({
         editDraft(value, { field: args.field, value: args.value }),
       );
       return { status: "completed", local: true };
+    },
+    compor_adicionar_campo: async args => {
+      const d=getCurrentDraft(local.get());
+      if(!d || d.pieceId!==args.pieceId || d.baseVersion!==args.baseVersion) throw Error("context_changed");
+      local.change(value => setCreativeField(value,{id:args.requestId,label:args.label,value:"",origin:"agent"}));
+      return {status:"completed",local:true};
     },
     compor_abrir_versao: async (args) => {
       const version = versionRef.current.find(
@@ -634,9 +679,12 @@ function ProjectStudio({
         compor_editar_briefing: args => handlersRef.current.compor_editar_briefing(args),
         compor_editar_persona: args => handlersRef.current.compor_editar_persona(args),
         compor_registrar_afirmacao_persona: args => handlersRef.current.compor_registrar_afirmacao_persona(args),
+        compor_registrar_feedback_visual: (args, context) => handlersRef.current.compor_registrar_feedback_visual(args, context),
+        compor_comentar_imagem_gerada: (args, context) => handlersRef.current.compor_comentar_imagem_gerada(args, context),
         compor_propor_criterio: args => handlersRef.current.compor_propor_criterio(args),
         compor_novo_post: args => handlersRef.current.compor_novo_post(args),
         compor_editar_peca: args => handlersRef.current.compor_editar_peca(args),
+        compor_adicionar_campo: args => handlersRef.current.compor_adicionar_campo(args),
         compor_abrir_versao: args => handlersRef.current.compor_abrir_versao(args),
         compor_salvar_versao: args => handlersRef.current.compor_salvar_versao(args),
         compor_renomear_projeto: args => handlersRef.current.compor_renomear_projeto(args),
@@ -681,12 +729,44 @@ function ProjectStudio({
         });
         local.change((value) => addReference(value, metadata));
       }
+      await local.flush();
+      try { recordReferenceRound(local.get()); } catch {}
       setNotice("Referências adicionadas neste navegador.");
     } catch {
       setNotice(
         "Não foi possível adicionar a imagem. Use PNG ou JPEG dentro dos limites informados.",
       );
     }
+  }
+  async function storeSelectedReference(source:NonNullable<StudioReference['source']>,file:File) {
+    const storage=local.storage.current;
+    if (!storage || !active.current || !isAuthenticated()) throw Error("studio_storage_unavailable");
+    const scope={userId,projectId:project.id};
+    const metadata=await storage.putReference({...scope,id:crypto.randomUUID(),file,source});
+    try {
+      const current=local.get();
+      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId || !local.change(value=>addReference(value,metadata))) throw Error("studio_unavailable");
+    } catch(error) {
+      await storage.removeReference(scope,metadata.id).catch(()=>{});
+      throw error;
+    }
+    await local.flush();
+    try { recordReferenceRound(local.get()); } catch {}
+  }
+  async function useExploredReference(reference:ExploredReference,file:File) {
+    if (local.get().references.some(item => item.source && 'originUrl' in item.source && item.source.originUrl === reference.originUrl)) return;
+    await storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file);
+  }
+  async function useGeneratedReference(imageId:string,file:File,ordinal?:number) {
+    const alreadySelected=local.get().references.some(item => item.source && 'kind' in item.source && item.source.kind === 'generated' && item.source.projectId === project.id && item.source.imageId === imageId);
+    if (alreadySelected) return;
+    const signalKey=`compor-exploration-selection-signal:${userId}:${project.id}:${imageId}`;
+    let signalId=localStorage.getItem(signalKey);
+    if(!signalId) { signalId=crypto.randomUUID();localStorage.setItem(signalKey,signalId); }
+    const response=await fetch('/api/studio/explorations/signals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:signalId,projectId:project.id,imageId,action:'selected',comment:'',supersedes:null})});
+    if(!response.ok)throw Error('selection_unconfirmed');
+    await storeSelectedReference({kind:'generated',projectId:project.id,imageId,...(ordinal === undefined ? {} : {ordinal})},file);
+    localStorage.setItem(selectedExplorationKey(userId,project.id,imageId),'1');
   }
   async function removeFile(id:string) {
     if (local.get().direction.criteria.some(criterion => [criterion.example.referenceId, criterion.counterexample.referenceId].includes(id))) {
@@ -696,6 +776,7 @@ function ProjectStudio({
     local.change((value) => removeReference(value, id));
     try {
       await local.flush();
+      try { recordReferenceRound(local.get()); } catch {}
       await local.storage.current?.removeReference(
         { userId, projectId: project.id },
         id,
@@ -720,13 +801,16 @@ function ProjectStudio({
   }
   if (local.loading || !s)
     return (
-      <StudioShell stage="projects" statusText="Conta conectada">
+      <StudioShell stage="projects" accountLabel={accountLabel} localAccount={localAccount} onSignOut={onSignOut ? signOutSafely : undefined}>
         <p role="status">Abrindo seu espaço de criação…</p>
       </StudioShell>
     );
+  const selectedGeneratedIds = s.references.flatMap(reference => reference.source && 'kind' in reference.source && reference.source.kind === 'generated' ? [reference.source.imageId] : []);
+  const selectedOrigins = s.references.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);
   const editor = (
     <StudioEditor
       draft={draft}
+      brief={s.brief}
       base={base}
       onViewArt={() => {setDrawer(null);setViewingArt(true);}}
       marks={s.marks.filter(
@@ -736,6 +820,8 @@ function ProjectStudio({
       onEdit={(field, value) =>
         local.change((state) => editDraft(state, { field, value }))
       }
+      onSetField={field => local.change(state => setCreativeField(state, field))}
+      onRemoveField={id => local.change(state => removeCreativeField(state, id))}
       onMark={(mark) =>
         local.change((value) =>
           addMark(value, { ...mark, id: crypto.randomUUID() }),
@@ -802,6 +888,7 @@ function ProjectStudio({
   const chat = (
     <StudioChat
       state={s}
+      developerMode={developerMode}
       getState={local.get}
       change={local.change}
       flush={local.flush}
@@ -811,7 +898,8 @@ function ProjectStudio({
       onUseImage={useBase}
       prepareImageVersion={saveCurrent}
       initialMessage={s.messages.length === 0 ? initialObjective : ""}
-      connection={<details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa usa sua API. Cada imagem pede uma confirmação separada.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details>}
+      connection={<><details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa e as explorações usam sua API e geram consumo.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details><details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details></>}
+      explorationRecovery={exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div>}
       loadBase={async () => {
         const d = getCurrentDraft(local.get());
         return d
@@ -833,7 +921,9 @@ function ProjectStudio({
     <StudioShell
       stage={stage}
       projectTitle={projectDetails.title}
-      statusText="Conta conectada"
+      accountLabel={accountLabel}
+      localAccount={localAccount}
+      onSignOut={onSignOut ? signOutSafely : undefined}
       canOpenStudio
       versionStatus={
         draft?.approval.status === "approved"
@@ -891,8 +981,11 @@ function ProjectStudio({
       onCloseArt={() => setViewingArt(false)}
       onDownload={downloadPreview}
       downloadDisabled={!preview}
-      yellowDownload={!interview.prompt}
+      yellowDownload
+      conversationFocus={showBrief}
+      chatMessageCount={s.messages.length}
       bases={<>
+          <ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
           <div className="studio-history">
             <h2>Histórico do projeto</h2>
             <button className="studio-button" onClick={()=>newPost()}>Novo post</button>
@@ -910,7 +1003,6 @@ function ProjectStudio({
               <button
                 key={`${item.pieceId}:${item.baseVersion}`}
                 onClick={() => {
-                  interview.close();
                   local.change((value) =>
                     selectDraft(value, {
                       pieceId: item.pieceId,
@@ -996,17 +1088,16 @@ function ProjectStudio({
         <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
       </>}
       canvas={
-        showBrief ? <>
-          <BriefCanvas prompt={interview.prompt} record={interview.record} discarded={interview.discarded} references={interview.references} calibrating={interview.calibrating} onChoose={interview.choose} onStart={() => nextPrompt(interview.record) ? interview.start() : setDrawer("marca")} />
-          <button className="studio-button-secondary" type="button" onClick={() => {interview.close();setEditorRequested(true);}}>Definir textos da arte</button>
-        </> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+        showBrief ? <div className="studio-brief">
+          <ReferenceExploration key={`references:${project.id}`} projectId={project.id} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} />
+          <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
+          <BriefSummary state={s} />
+          <button className="studio-button-secondary" type="button" onClick={() => setEditorRequested(true)}>Definir textos da arte</button>
+        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
           {editor}
         </CreativeBoard>
       }
-      chat={<>
-        <div className="studio-conversation" hidden={Boolean(interview.prompt)}>{chat}</div>
-        {interview.prompt && <BriefChat prompt={interview.prompt} calibrating={interview.calibrating} value={interview.answer} onChange={interview.setAnswer} onSubmit={interview.submit} onSkip={interview.skip} onClose={interview.close} />}
-      </>}
+      chat={chat}
       overlays={
         <>
           {dialog && (
@@ -1048,7 +1139,6 @@ function ProjectStudio({
         <>
           {local.error && <p role="alert">{local.error}</p>}
           {notice && <p role="status">{notice}</p>}
-          {interview.notice && <p role="status">{interview.notice}</p>}
         </>
       }
     >

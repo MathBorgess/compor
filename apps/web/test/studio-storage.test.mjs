@@ -50,7 +50,8 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=3;canvas.getContext('2d').fillRect(0,0,2,3);
   const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
   const meta=await repo.putReference({...scope,id:id(10),file:new File([png],'local.png',{type:'image/png'})});
-  const jpegMeta=await repo.putReference({...scope,id:id(11),file:new File([jpeg],'local.jpg',{type:'image/jpeg'})});
+  const jpegMeta=await repo.putReference({...scope,id:id(11),file:new File([jpeg],'local.jpg',{type:'image/jpeg'}),source:{originUrl:'https://www.pinterest.com/pin/e1_example/',board:'behance/typography'}});
+  result.source=jpegMeta.source?.originUrl==='https://www.pinterest.com/pin/e1_example/'&&(await repo.getReference(scope,id(11))).metadata.source?.board==='behance/typography';
   result.metadata=meta.width===2&&meta.height===3&&jpegMeta.mime==='image/jpeg';
   result.blob=(await repo.getReference(scope,id(10))).file.size===png.size;
   result.noCrossBlob=await repo.getReference(other,id(10))===null&&await repo.getReference(anotherProject,id(10))===null;

@@ -1,0 +1,67 @@
+import { createPhoenixHyperparams } from './phoenix/hyperparams.ts';
+import { deterministicRouteBoards } from './phoenix/deterministic.ts';
+import { exploredReferenceSchema, type ExploredReference, type ReferenceSignal } from './reference-exploration-contract.ts';
+import type { BoardAffinityEntry, UserTasteProfile } from './phoenix/models.ts';
+
+const MAX_FEED_BYTES = 1024 * 1024;
+function decode(value:string) {
+  return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&(?:amp|lt|gt|quot|apos|#39);/g, entity => ({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&#39;':"'"})[entity] ?? entity);
+}
+function tag(item:string,name:string) { return decode(item.match(new RegExp(`<${name}(?:\\s[^>]*)?>([\\s\\S]*?)<\\/${name}>`,'i'))?.[1] ?? ''); }
+export function parseReferenceFeed(xml:string, board:string):ExploredReference[] {
+  const items = xml.match(/<item(?:\s[^>]*)?>[\s\S]*?<\/item>/gi) ?? [];
+  return items.slice(0,100).flatMap(item => {
+    const link = tag(item,'link') || tag(item,'guid');
+    const match = link.match(/^https:\/\/(?:www\.)?pinterest\.com\/pin\/([A-Za-z0-9_-]{1,160})\/?(?:[?#].*)?$/i);
+    const description = tag(item,'description');
+    const preview = description.match(/https:\/\/i\.pinimg\.com\/[a-zA-Z0-9_./%-]+\.(?:jpe?g|png|webp)/i)?.[0];
+    if (!match || !preview) return [];
+    const title = tag(item,'title').replace(/<[^>]*>/g,' ').replace(/\s+/g,' ').trim().slice(0,300) || 'Referência visual';
+    const candidate = exploredReferenceSchema.safeParse({id:match[1],title,board,originUrl:`https://www.pinterest.com/pin/${match[1]}/`,previewUrl:preview});
+    return candidate.success ? [candidate.data] : [];
+  });
+}
+function currentSignals(signals:ReferenceSignal[]) {
+  const superseded = new Set(signals.map(signal=>signal.supersedes).filter(value=>value!==null));
+  return signals.filter(signal=>!superseded.has(signal.id));
+}
+export function boardAffinities(signals:ReferenceSignal[]):BoardAffinityEntry[] {
+  const counts = new Map<string,{positive:number; total:number}>();
+  const latest = new Set<string>();
+  const ordered = [...currentSignals(signals)].sort((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id));
+  for (const signal of ordered) {
+    if(signal.action==='comment'||latest.has(signal.originUrl))continue;
+    latest.add(signal.originUrl);
+    const count=counts.get(signal.board) ?? {positive:0,total:0};
+    count.total++; if(signal.action==='selected')count.positive++;
+    counts.set(signal.board,count);
+  }
+  return [...counts].map(([board,count])=>({board,positive_actions:count.positive,total_impressions:count.total,affinity_score:(count.positive+1)/(count.total+2)}));
+}
+async function readBounded(response:Response):Promise<string> {
+  if (!response.body) throw Error('empty');
+  const reader=response.body.getReader(), chunks:Uint8Array[]=[]; let size=0;
+  try { for (;;) { const {value,done}=await reader.read(); if(done)break; size+=value.length; if(size>MAX_FEED_BYTES)throw Error('feed too large'); chunks.push(value); } }
+  finally { await reader.cancel().catch(()=>{}); }
+  return new TextDecoder().decode(Buffer.concat(chunks));
+}
+export async function searchReferences({query,signals,fetchApi=fetch}:{query:string;signals:ReferenceSignal[];fetchApi?:typeof fetch}) {
+  const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
+  const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(signals)});
+  const boards=[...new Set(routed.board_allocations.map(item=>item.board).filter(board=>!board.endsWith('/feed')))];
+  const responses=await Promise.all(boards.map(async board=>{
+    try {
+      const response=await fetchApi(`https://www.pinterest.com/${board}.rss`,{headers:{accept:'application/rss+xml, application/xml, text/xml'},redirect:'error',signal:AbortSignal.timeout(5000)});
+      if(!response.ok)throw Error('unavailable');
+      return {ok:true,items:parseReferenceFeed(await readBounded(response),board)};
+    } catch { return {ok:false,items:[]}; }
+  }));
+  const normalized=query.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
+  const terms=normalized.split(/[^a-z0-9]+/).filter(term=>term.length>=3);
+  const seen=new Set<string>();
+  const references=responses.flatMap(item=>item.items).filter(item=>{if(seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
+    const score=(title:string)=>{const text=title.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();return terms.reduce((sum,term)=>sum+Number(text.includes(term)),0);};
+    return score(b.title)-score(a.title);
+  }).slice(0,12);
+  return {status:references.length?'ok':responses.some(response=>response.ok)?'empty':'unavailable',references};
+}
