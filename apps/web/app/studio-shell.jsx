@@ -48,6 +48,7 @@ export default function StudioShell({
   onDrawerChange,
   onDownload,
   downloadDisabled = false,
+  yellowDownload = true,
   viewingArt = false,
   onCloseArt,
   onLayoutChange,
@@ -315,7 +316,7 @@ export default function StudioShell({
           {onDownload ? (
             <button
               type="button"
-              className="studio-button studio-button-yellow"
+              className={yellowDownload ? "studio-button studio-button-yellow" : "studio-button studio-button-secondary"}
               disabled={downloadDisabled}
               onClick={onDownload}
             >

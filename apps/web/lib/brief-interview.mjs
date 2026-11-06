@@ -61,6 +61,48 @@ export function emptyBriefRecord() {
   return {};
 }
 
+export const adjustmentQuestion = "Qual se aproxima do que você quer, e o que mudaria?";
+
+const promptCues = {
+  persona: ["para quem", "pessoas interessadas", "publico", "público", "quem compra"],
+  objetivo: ["deve fazer", "pedir para conhecer", "entrar na lista", "começar hoje", "comecar hoje"],
+  personalidade: ["tom de voz", "falar com", "direto e calmo", "sem pressa"],
+  preco: ["r$", "preço", "preco"],
+  data: ["data do", "em novembro", "no dia"],
+};
+
+function normalize(value) {
+  return value.normalize("NFD").replace(/\p{M}/gu, "").toLowerCase();
+}
+
+export function coveredText(answer, prompt) {
+  const haystack = normalize(answer);
+  const option = prompt.options?.find((item) => {
+    const title = normalize(item.title);
+    const body = normalize(item.text);
+    return (title.length >= 8 && haystack.includes(title)) || (body.length >= 16 && haystack.includes(body));
+  });
+  if (option) return option.text;
+  const cues = promptCues[prompt.id] ?? [];
+  if (cues.some((cue) => haystack.includes(normalize(cue)))) return answer.trim();
+  return "";
+}
+
+export function answerWithReuse(record, id, text) {
+  let next = answerPrompt(record, id, text);
+  const prompts = [...briefDecisions, ...optionalPrompts];
+  const start = prompts.findIndex((item) => item.id === id);
+  const reused = [];
+  for (const prompt of prompts.slice(start + 1)) {
+    if (next[prompt.id]) continue;
+    const covered = coveredText(text, prompt);
+    if (!covered) continue;
+    next = answerPrompt(next, prompt.id, covered);
+    reused.push(prompt.id);
+  }
+  return { record: next, reused };
+}
+
 export function nextPrompt(record) {
   const decision = briefDecisions.find((item) => !record[item.id]);
   if (decision) return { kind: "decision", ...decision };

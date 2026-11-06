@@ -23,8 +23,9 @@ import {
 import { createStudioTools } from "../lib/studio-tools.mjs";
 import { BriefCanvas, BriefChat } from "./brief-interview";
 import {
-  answerPrompt,
+  answerWithReuse,
   artFacts,
+  briefDecisions,
   informedText,
   nextPrompt,
   recordFromStudio,
@@ -286,7 +287,7 @@ function ProjectStudio({
         decision: interviewPrompt.id,
         projectId: project.id,
         title: projectDetails.title,
-        briefing: `${interviewPrompt.limit} ${interviewPrompt.question}`,
+        briefing: `${interviewPrompt.limit} ${interviewPrompt.question} Qual se aproxima do que você quer, e o que mudaria?`,
       }),
     })
       .then((response) => (response.ok ? response.json() : null))
@@ -841,22 +842,31 @@ function ProjectStudio({
         local.change((value) => editDraft(value, { field: "date", value: art.date }));
     }
   }
+  function keepDiscarded(applied, currentId, chosenId) {
+    setDiscardedOptions((current) => {
+      const next = { ...current };
+      const source = interviewPrompt?.options ?? [];
+      next[currentId] = chosenId ? source.filter((item) => item.id !== chosenId) : source;
+      for (const id of applied.reused) {
+        const decision = briefDecisions.find((item) => item.id === id);
+        if (!decision?.options) continue;
+        next[id] = decision.options.filter((item) => item.text !== applied.record[id]?.text);
+      }
+      return next;
+    });
+  }
   function chooseBriefOption(option) {
     if (!interviewPrompt?.options) return;
-    setDiscardedOptions((current) => ({
-      ...current,
-      [interviewPrompt.id]: interviewPrompt.options.filter((item) => item.id !== option.id),
-    }));
-    rememberBrief(answerPrompt(interviewRecord, interviewPrompt.id, option.text));
+    const applied = answerWithReuse(interviewRecord, interviewPrompt.id, option.text);
+    keepDiscarded(applied, interviewPrompt.id, option.id);
+    rememberBrief(applied.record);
     setBriefAnswer("");
   }
   function submitBriefAnswer() {
     if (!interviewPrompt || !briefAnswer.trim()) return;
-    setDiscardedOptions((current) => ({
-      ...current,
-      [interviewPrompt.id]: interviewPrompt.options ?? [],
-    }));
-    rememberBrief(answerPrompt(interviewRecord, interviewPrompt.id, briefAnswer));
+    const applied = answerWithReuse(interviewRecord, interviewPrompt.id, briefAnswer);
+    keepDiscarded(applied, interviewPrompt.id);
+    rememberBrief(applied.record);
     setBriefAnswer("");
   }
   function skipBriefPrompt() {
@@ -1020,6 +1030,7 @@ function ProjectStudio({
       basesCount={s.references.length}
       onDownload={downloadPreview}
       downloadDisabled={!preview}
+      yellowDownload={!showInterview}
       viewingArt={viewingArt}
       onCloseArt={() => setViewingArt(false)}
       onBack={onBack}
@@ -1163,10 +1174,9 @@ function ProjectStudio({
         <BriefCanvas
           prompt={interviewPrompt}
           record={interviewRecord}
-          discarded={discardedOptions[interviewPrompt.id] ?? []}
+          discarded={discardedOptions}
           references={decisionRefs}
           calibrating={calibrating}
-          calibrated={calibrated}
           onChoose={chooseBriefOption}
         />
       ) : (

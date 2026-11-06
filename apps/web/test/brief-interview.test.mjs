@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   answerPrompt,
+  answerWithReuse,
   artFacts,
   nextPrompt,
   skipPrompt,
@@ -24,4 +25,12 @@ test("a entrevista faz uma pergunta por vez e não leva sugestão para a arte", 
   record = answerPrompt(record, "produto", "Aula fictícia");
   record = answerPrompt(record, "preco", "R$ 49");
   assert.deepEqual(artFacts(record), { headline: "Aula fictícia", price: "R$ 49", date: "" });
+  const reused = answerWithReuse(
+    {},
+    "produto",
+    "Uma aula curta para Pessoas interessadas em aprender. O post deve pedir para conhecer a aula.",
+  );
+  assert.equal(reused.record.persona.origin, "informado");
+  assert.equal(reused.record.objetivo.text, "Pedir para conhecer a aula.");
+  assert.equal(nextPrompt(reused.record).id, "personalidade");
 });

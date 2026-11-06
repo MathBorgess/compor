@@ -230,7 +230,12 @@
 .studio-brief-summary span { color: var(--studio-cobalt); font-size: 12px; }
 .studio-brief-options { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; }
 .studio-brief-option { display: grid; gap: 8px; align-content: start; padding: 12px; }
+.studio-brief-option figure { margin: 0; }
 .studio-brief-option img { width: 100%; height: 180px; object-fit: cover; border-radius: 8px; background: var(--studio-cream); }
+.studio-brief-option figcaption { margin-top: 6px; color: var(--studio-cobalt); font-size: 12px; font-weight: 500; }
+.studio-brief-refs span { display: block; color: var(--studio-muted); }
+.studio-decision-card { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--studio-line); }
+.studio-decision-card h3 { font-size: 14px; text-transform: capitalize; }
 .studio-brief-option h3 { color: var(--studio-cobalt); font-size: 16px; }
 .studio-brief-refs { display: grid; gap: 6px; margin: 0; padding: 0; list-style: none; color: var(--studio-ink); font-size: 12px; }
 .studio-brief details { color: var(--studio-muted); }

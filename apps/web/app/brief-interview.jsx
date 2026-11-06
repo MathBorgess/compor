@@ -1,47 +1,60 @@
 "use client";
 
-import { previewImage } from "../lib/brief-interview.mjs";
+import { adjustmentQuestion, briefDecisions, previewImage } from "../lib/brief-interview.mjs";
 
 export function BriefCanvas({
   prompt,
   record,
-  discarded = [],
+  discarded = {},
   references = [],
   calibrating = false,
-  calibrated = false,
   onChoose,
 }) {
   const entries = Object.entries(record).filter(([, value]) => value && !value.skipped);
+  const answered = briefDecisions.filter((item) => record[item.id] && !record[item.id].skipped);
   return (
     <div className="studio-brief">
       <section className="studio-brief-summary" aria-label="Brief">
         <h2>Brief</h2>
         {entries.length === 0 ? <p>Os campos aparecem aqui conforme a conversa.</p> : null}
-        <dl>
-          {entries.map(([id, value]) => (
-            <div key={id}>
-              <dt>{id}</dt>
-              <dd>
-                {value.text || "Sem texto"} <span>{value.origin}</span>
-              </dd>
-            </div>
-          ))}
-        </dl>
+        {answered.map((item) => (
+          <article key={item.id} className="studio-decision-card">
+            <h3>{item.id}</h3>
+            <p>
+              {record[item.id].text} <span>{record[item.id].origin}</span>
+            </p>
+            {discarded[item.id]?.length ? (
+              <details>
+                <summary>Opções descartadas</summary>
+                <ul>
+                  {discarded[item.id].map((option) => (
+                    <li key={option.id}>{option.title}</li>
+                  ))}
+                </ul>
+              </details>
+            ) : null}
+          </article>
+        ))}
       </section>
       {prompt?.kind === "decision" ? (
         <section aria-label={`Opções de ${prompt.id}`}>
+          <h2>{prompt.question}</h2>
           <p>{prompt.limit}</p>
-          <p role="status">{calibrating ? "Calibrando…" : calibrated ? "Phoenix calibrado para esta decisão." : "Calibração indisponível."}</p>
+          {calibrating ? <p role="status">calibrando…</p> : null}
           <div className="studio-brief-options">
             {prompt.options.map((option) => (
               <article key={option.id} className="studio-brief-option">
-                <img src={previewImage(option)} alt={`Prévia de ${option.title}`} />
+                <figure>
+                  <img src={previewImage(option)} alt={`exploração: ${option.title}`} />
+                  <figcaption>exploração</figcaption>
+                </figure>
                 <h3>{option.title}</h3>
                 <p>{option.text}</p>
                 <ul className="studio-brief-refs">
                   {references.slice(0, 2).map((item) => (
                     <li key={item.id}>
-                      {item.board}: {item.description}
+                      {item.description}
+                      <span>Fonte: {item.board}</span>
                     </li>
                   ))}
                 </ul>
@@ -51,16 +64,6 @@ export function BriefCanvas({
               </article>
             ))}
           </div>
-          {discarded.length > 0 ? (
-            <details>
-              <summary>Opções descartadas</summary>
-              <ul>
-                {discarded.map((item) => (
-                  <li key={item.id}>{item.title}</li>
-                ))}
-              </ul>
-            </details>
-          ) : null}
         </section>
       ) : null}
     </div>
@@ -74,13 +77,13 @@ export function BriefChat({ prompt, calibrating, value, onChange, onSubmit, onSk
       <header className="studio-chat-header">
         <div>
           <h2>Compor</h2>
-          <p>{calibrating ? "Calibrando…" : "Uma pergunta por vez."}</p>
+          <p>{calibrating ? "calibrando…" : "Uma pergunta por vez."}</p>
         </div>
       </header>
       <div className="studio-chat-messages">
         <div className="studio-message" data-role="assistant">
           <span className="studio-message-label">Compor</span>
-          <p>{prompt.question}</p>
+          <p>{prompt.kind === "decision" ? adjustmentQuestion : prompt.question}</p>
         </div>
       </div>
       <form
