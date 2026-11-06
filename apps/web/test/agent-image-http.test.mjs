@@ -1,9 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAgentImageRoute,createImageReceiptPreflight} from '../lib/agent-image-route.ts';
+import {createAgentImageRoute} from '../lib/agent-image-route.ts';
 const actor={userId:'11111111-1111-4111-8111-111111111111',token:'private-token'};
 const projectId='22222222-2222-4222-8222-222222222222',pieceId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',executionId='55555555-5555-4555-8555-555555555555',assetId='66666666-6666-4666-8666-666666666666';
-const requestId='77777777-7777-4777-8777-777777777777',contentSha256='a'.repeat(64);
 const apiKey='sk-abcdefghijklmnopqrstuvwxyz123456';
 const body={projectId,pieceId,version:1,attemptId,apiKey,actionBinding:'signed',explicitApproval:true};
 const request=(value=body,origin='https://compor.test')=>new Request('https://compor.test/api/agent/image',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(value)});
@@ -13,45 +12,6 @@ function setup({allow=true,sendStatus='accepted'}={}) {
 test('aprovação explícita executa e retorna somente aceitação e asset',async()=>{const f=setup();const result=await f.handler(request());assert.equal(result.status,202);const data=await result.json();assert.deepEqual(data,{status:'accepted',assetId});assert.deepEqual(f.calls,['approve','execute','send']);assert.doesNotMatch(JSON.stringify(data),/sk-|private-token/);});
 test('origem e confirmação inválidas não acionam geração',async()=>{for(const req of [request({...body,explicitApproval:false}),request(body,'https://evil.test')]){const f=setup();assert.notEqual((await f.handler(req)).status,202);assert.deepEqual(f.calls,[]);}});
 test('autorização negada e resultado desconhecido não geram repetição',async()=>{let f=setup({allow:false});assert.equal((await f.handler(request())).status,403);assert.deepEqual(f.calls,['approve']);f=setup({sendStatus:'unknown'});const r=await f.handler(request());assert.equal(r.status,502);assert.deepEqual(await r.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.deepEqual(f.calls,['approve','execute','send']);});
-
-test('prova de imagem só é persistida após execução e envio confirmados',async()=>{
- const calls=[];let storeFails=false,sendStatus='accepted',proofRecord=null;
- const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,
-  approve:async()=>{calls.push('approve');return 'action-proof';},
-  execute:async()=>{calls.push('execute');return {status:'completed',executionId,contentSha256,toolResult:{output:JSON.stringify({assetId})}};},
-  send:async()=>{calls.push('send');return {status:sendStatus};},
-  receipt:{preflight:async value=>{calls.push('preflight');assert.deepEqual(value,{actor,projectId,requestId,attemptId});return true;},store:async value=>{calls.push('store');proofRecord=value;if(storeFails)throw Error('response lost');}},
- });
- let response=await handler(request({...body,requestId}));assert.equal(response.status,202);assert.deepEqual(await response.json(),{status:'accepted',assetId});
- assert.deepEqual(calls,['preflight','approve','execute','send','store']);assert.deepEqual(proofRecord,{actor,projectId,requestId,attemptId,pieceId,version:1,executionId,assetId,contentSha256});
- calls.length=0;sendStatus='unknown';response=await handler(request({...body,requestId}));assert.equal(response.status,502);assert.deepEqual(calls,['preflight','approve','execute','send']);
- calls.length=0;sendStatus='accepted';storeFails=true;response=await handler(request({...body,requestId}));assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.deepEqual(calls,['preflight','approve','execute','send','store']);
-});
-
-test('preflight de recibo indisponível ou escopo incompatível falha antes de gerar',async()=>{
- for(const preflight of [async()=>false,async()=>{throw Error('store unavailable');}]){
-  let approvals=0,executions=0;
-  const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>{approvals++;return 'proof';},execute:async()=>{executions++;return {status:'unknown'};},send:async()=>({status:'unknown'}),receipt:{preflight,store:async()=>{throw Error('unexpected');}}});
-  const dispatchId='99999999-9999-4999-8999-999999999999';
-  const response=await handler(request({...body,requestId,dispatchId}));assert.equal(response.status,503);assert.deepEqual(await response.json(),{error:'image_preflight_unavailable',requestId,attemptId,dispatchId});assert.equal(approvals,0);assert.equal(executions,0);
-  const legacy=await handler(request({...body,requestId}));assert.equal(legacy.status,503);assert.deepEqual(await legacy.json(),{error:'unavailable'});
- }
-});
-
-test('preflight vincula pedido e tentativa ao escopo e exige RPC disponível',async()=>{
- const context={actor,projectId,requestId,attemptId},turn={userId:actor.userId,projectId,requestId,attemptId,state:'action_required'};
- let current=turn,status='unverified',lookups=0;
- const preflight=createImageReceiptPreflight({getTurn:async value=>{assert.deepEqual(value,{actor,projectId,requestId});return current;},lookup:async()=>{lookups++;return {status};}});
- assert.equal(await preflight(context),true);assert.equal(lookups,1);
- for(const change of [{userId:assetId},{projectId:assetId},{requestId:assetId},{attemptId:assetId},{state:'completed'}]){current={...turn,...change};assert.equal(await preflight(context),false);}
- assert.equal(lookups,1,'não consulta nem autoriza recibo de escopo incompatível');current=turn;status='candidate';assert.equal(await preflight(context),false);
- const unavailable=createImageReceiptPreflight({getTurn:async()=>turn,lookup:async()=>{throw Error('missing RPC');}});await assert.rejects(()=>unavailable(context));
-});
-
-test('sem hash comprovável a imagem não produz recibo nem libera a tentativa',async()=>{
- let stores=0;const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'completed',executionId,toolResult:{output:JSON.stringify({assetId})}}),send:async()=>({status:'accepted'}),receipt:{preflight:async()=>true,store:async()=>{stores++;}}});
- const response=await handler(request({...body,requestId}));assert.equal(response.status,502);assert.deepEqual(await response.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.equal(stores,0);
-});
 
 test('ocupação conhecida não envia resultado ao agente nem é classificada como geração incerta',async()=>{
  for(const status of ['busy','blocked']) {let sends=0;const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status}),send:async()=>{sends++;}});const result=await handler(request());assert.equal(result.status,200);assert.deepEqual(await result.json(),{status});assert.equal(sends,0);}
@@ -114,4 +74,9 @@ test('HTTP preserva o pacote revisado e recusa entradas remotas antes de aprovar
   assert.equal((await handler(request({...body,artworkInput:changed}))).status,400);
  }
  assert.equal(approvals,1);assert.equal(executions,1);
+});
+
+test('prompt agregado inválido retorna recusa local antes de envio do resultado',async()=>{
+ let sends=0;const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'invalid_prompt'}),send:async()=>{sends++;}});
+ const response=await handler(request());assert.equal(response.status,400);assert.deepEqual(await response.json(),{error:'invalid_request'});assert.equal(sends,0);
 });

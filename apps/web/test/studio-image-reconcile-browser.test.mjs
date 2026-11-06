@@ -15,7 +15,7 @@ const receipt='Imagem gerada e adicionada a este post · versão 2.';
 const failure='A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.';
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 
-for(const mode of ['invalid_request','preflight']) test(`reconcilia ${mode} e envio anterior sem repetir imagem nem perder versão`,{skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('reconcilia 400 e envio anterior sem repetir imagem nem perder versão',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const fixture=await mkdtemp(new URL('../app/studio-image-receipt-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
  await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
 import {useEffect,useRef,useState} from 'react';import StudioChat from '../studio-chat';
@@ -27,17 +27,13 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-50000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,1000));}
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
- let fence='unverified',closedFence='unverified',imageMode=mode;
+ let fence='unverified',closedFence='unverified';
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body});
   if(url.pathname==='/api/studio/chat')return route.fulfill({status:202,json:{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}});
-  if(url.pathname==='/api/agent/image'){
-   if(imageMode==='invalid_request')return route.fulfill({status:400,json:{status:'failed',error:'invalid_request'}});
-   if(imageMode==='generic')return route.fulfill({status:503,json:{error:'unavailable'}});
-   return route.fulfill({status:503,json:{error:'image_preflight_unavailable',requestId:imageMode==='request_mismatch'?id(99):body.requestId,attemptId:imageMode==='attempt_mismatch'?id(99):body.attemptId,dispatchId:imageMode==='dispatch_mismatch'?id(99):body.dispatchId}});
-  }
+  if(url.pathname==='/api/agent/image')return route.fulfill({status:400,json:{status:'failed',error:'invalid_request'}});
   if(url.pathname==='/api/agent/image/reconcile')return route.fulfill({status:200,json:{status:fence}});
   if(url.pathname==='/api/agent/image/reconcile-closed')return route.fulfill({status:200,json:{status:closedFence}});
   if(url.pathname==='/api/studio/action')return route.fulfill({status:200,json:{status:'completed',text:'Proposta recusada.'}});
@@ -73,19 +69,5 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  closedFence='confirmed';await page.getByRole('button',{name:'Verificar envio anterior'}).click();
  await page.getByText(/A tentativa terminou sem enviar imagem/).waitFor();assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),null);
  assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,1,'verificação de turno concluído não gera imagem');
- if(mode==='preflight')for(const unknown of ['generic','request_mismatch','attempt_mismatch','dispatch_mismatch']){
-  imageMode=unknown;
-  await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
-  await page.reload();
-  const before=calls.filter(c=>c.path==='/api/agent/image').length;
-  const reconcilesBefore=calls.filter(c=>c.path==='/api/agent/image/reconcile').length;
-  const response=page.waitForResponse(result=>new URL(result.url()).pathname==='/api/agent/image');
-  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
-  await response;
-  await page.getByText('Não foi possível concluir a consulta. O resultado pode estar incerto.').waitFor();
-  assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),requestId,`${unknown}: resposta não correlacionada mantém fence`);
-  assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,before+1,`${unknown}: não reenvia imagem`);
-  assert.equal(calls.filter(c=>c.path==='/api/agent/image/reconcile').length,reconcilesBefore,`${unknown}: não reconcilia automaticamente`);
- }
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

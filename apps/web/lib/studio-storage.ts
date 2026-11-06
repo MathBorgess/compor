@@ -140,7 +140,8 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||state.direction.criteria.some(item=>[item.example.referenceId,item.counterexample.referenceId].includes(id))||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
     });
   }
-  async function prepareDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob}) {
+  function putDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob}):Promise<DraftAssetMetadata> {
+    const task=fileQueue.then(async()=>{
       const scope=scopeOf(input),address=draftAddress(scope,input),file=input.file;
       if(!(file instanceof Blob)||typeof decodeImage!=='function')throw new StudioStorageError('studio_draft_asset_invalid');
       let image:Pick<ImageBitmap,"width"|"height"|"close">|undefined,metadata:DraftAssetMetadata;
@@ -153,38 +154,10 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       }catch{throw new StudioStorageError('studio_draft_asset_invalid');}
       finally{try{image?.close();}catch{}}
       const blob=file.slice(0,file.size,file.type);
-      return {scope,address,metadata,blob};
-  }
-  function putDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob}):Promise<DraftAssetMetadata> {
-    const task=fileQueue.then(async()=>{
-      const {scope,address,metadata,blob}=await prepareDraftAsset(input);
       return transaction<DraftAssetMetadata>(['references','draftAssets'],'readwrite',(tx,done,fail)=>{
         const store=tx.objectStore('draftAssets'),referencesRequest=tx.objectStore('references').getAll(),assetsRequest=store.getAll();
         let references:StoredRecord[]|undefined,assets:StoredRecord[]|undefined;
         const put=()=>{if(!references||!assets)return;try{checkGlobalBudget(references,assets,address.key,metadata.size);store.put({key:address.key,scope,metadata,file:blob});done(Object.freeze(metadata));}catch(error){fail(error);}};
-        referencesRequest.onsuccess=()=>{try{references=parseRecords(referencesRequest.result);put();}catch(error){fail(error);}};
-        assetsRequest.onsuccess=()=>{try{assets=parseRecords(assetsRequest.result);put();}catch(error){fail(error);}};
-      });
-    }).catch(error=>{throw storageError(error);});
-    fileQueue=task.catch(()=>{});return task;
-  }
-  // Recovery must not overwrite a different image saved after generation.
-  // Read and add in one IndexedDB readwrite transaction, shared across tabs.
-  function putDraftAssetIfAbsent(input:StudioScope & DraftAssetAddress & {file:Blob}):Promise<'stored'|'exists'> {
-    const task=fileQueue.then(async()=>{
-      const {scope,address,metadata,blob}=await prepareDraftAsset(input);
-      return transaction<'stored'|'exists'>(['references','draftAssets'],'readwrite',(tx,done,fail)=>{
-        const store=tx.objectStore('draftAssets'),referencesRequest=tx.objectStore('references').getAll(),assetsRequest=store.getAll();
-        let references:StoredRecord[]|undefined,assets:StoredRecord[]|undefined;
-        const put=()=>{if(!references||!assets)return;try{
-          const existing=assets.find(record=>record.key===address.key);
-          if(existing){
-            if(existing.scope!==scope||!('pieceId' in existing.metadata)||!recordValid(existing,true)||existing.metadata.pieceId!==address.pieceId||existing.metadata.baseVersion!==address.baseVersion||existing.metadata.kind!==address.kind)throw new StudioStorageError('studio_storage_corrupt');
-            done('exists');return;
-          }
-          checkGlobalBudget(references,assets,null,metadata.size);
-          store.add({key:address.key,scope,metadata,file:blob});done('stored');
-        }catch(error){fail(error);}};
         referencesRequest.onsuccess=()=>{try{references=parseRecords(referencesRequest.result);put();}catch(error){fail(error);}};
         assetsRequest.onsuccess=()=>{try{assets=parseRecords(assetsRequest.result);put();}catch(error){fail(error);}};
       });
@@ -227,5 +200,5 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const address=draftAddress(scopeOf(scope),input);
     return transaction(['draftAssets'],'readwrite',(tx,done)=>{tx.objectStore('draftAssets').delete(address.key);done(true);});
   }
-  return Object.freeze({load,save,putReference,getReference,removeReference,putDraftAsset,putDraftAssetIfAbsent,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
+  return Object.freeze({load,save,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
 }

@@ -5,8 +5,6 @@ export interface ImageReservationStore {
  markUnknown(input:Pick<CallScope,'actor'|'projectId'|'sessionId'|'turnId'|'callId'>):Promise<void>;
  fenceUnsubmitted(input:CallScope):Promise<{status:'fenced'|'unverified'}>;
  confirmClosedAttempt(input:{actor:Actor;projectId:string;requestId:string}):Promise<{status:'confirmed'|'unverified'}>;
- storeImageReceipt(input:{actor:Actor;projectId:string;requestId:string;attemptId:string;executionId:string;proof:string}):Promise<void>;
- getImageReceiptCandidate(input:{actor:Actor;projectId:string;requestId:string}):Promise<{status:'unverified'}|{status:'candidate';requestId:string;attemptId:string;pieceId:string;version:number;executionId:string;assetId:string;proof:string}>;
  declareConsent(input:{actor:Actor;reservationId:string;confirmed:true}):Promise<{id:string;isNew:boolean}>;
  claimExecution(input:{actor:Actor;reservationId:string}):Promise<{state:'busy'|'blocked'} | {id:string;assetId:string;state:'running'|'unknown'|'completed';isNew:boolean}>;
  markExecutionUnknown(input:{actor:Actor;executionId:string}):Promise<void>;

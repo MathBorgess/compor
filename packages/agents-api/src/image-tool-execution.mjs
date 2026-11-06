@@ -1,5 +1,4 @@
 import {isAgentCallId} from './agent-call-id.mjs';
-import {createHash} from 'node:crypto';
 import { parseArtworkInput, artworkInputDigest, imageProposalDigest, validateArtworkForProposal, compileArtworkPrompt } from './artwork-input.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -57,6 +56,8 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
         if (imageProposalDigest(proposal) !== action.proposalDigest || proposal.prompt.includes(apiKey)) return {status:'rejected'};
       } catch { return {status:'rejected'}; }
       prompt = compileArtworkPrompt(proposal, input);
+      // Match the image handler UTF-16 budget before creating a durable claim.
+      if (prompt.length > 8000) return {status:'invalid_prompt'};
     } catch { return unknown(); }
     let execution;
     try {
@@ -77,17 +78,15 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       const result = await image.json();
       if (usage) {measurementFinished=true; try {await usage.finish({...measurement,state:'completed',usage:result?.usage});usageRecorded=true;} catch { /* preserve image; measurement remains uncertain */ }}
       if (typeof result?.imageBase64 !== 'string' || result.imageBase64.length > 12 * 1024 * 1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.imageBase64)) throw new Error('invalid image');
-      const bytes=Buffer.from(result.imageBase64,'base64');
-      const contentSha256=createHash('sha256').update(bytes).digest('hex');
       const url = new URL('/internal-storage',appOrigin);
       for (const [k,v] of Object.entries({projectId,pieceId,version:String(version),assetId:execution.assetId})) url.searchParams.set(k,v);
-      const stored = await imageStorageHandler(new Request(url, {method:'POST',headers:{origin:appOrigin,'content-type':'image/png',authorization:`Bearer ${actor.token}`},body:bytes}));
+      const stored = await imageStorageHandler(new Request(url, {method:'POST',headers:{origin:appOrigin,'content-type':'image/png',authorization:`Bearer ${actor.token}`},body:Buffer.from(result.imageBase64,'base64')}));
       if (!stored.ok) throw new Error('storage uncertain');
       const confirmation = await stored.json();
       if (confirmation?.status !== 'stored' || confirmation.assetId !== execution.assetId) throw new Error('storage uncertain');
       storedAssetId = execution.assetId;
       await reservations.completeExecution({actor,executionId:execution.id});
-      return {status:'completed',executionId:execution.id,contentSha256,...(usage?{usageRecorded}:{}),toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
+      return {status:'completed',executionId:execution.id,...(usage?{usageRecorded}:{}),toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
       if (usage && measurementStarted && !measurementFinished) {try {await usage.finish({...measurement,state:'unknown',usage:null});} catch { /* started remains uncertain */ }}
       try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }

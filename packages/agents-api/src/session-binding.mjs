@@ -6,21 +6,6 @@ const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-
 const sessionIdValid = value => typeof value === 'string' && /^sess_[A-Za-z0-9_-]{1,128}$/.test(value) && !/sk-/i.test(value);
 const callIdValid = (value, prefix) => typeof value === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(value) && !/sk-/i.test(value);
 const lifetime = 10 * 60 * 1000;
-const imageReceiptFields = ['userId','projectId','requestId','attemptId','pieceId','version','executionId','assetId','contentSha256'];
-function imageReceiptValid(value) {
-  return value !== null && typeof value === 'object' && !Array.isArray(value) &&
-    Object.keys(value).sort().join(',') === [...imageReceiptFields].sort().join(',') &&
-    ['userId','projectId','requestId','attemptId','pieceId','executionId','assetId'].every(key=>uuid(value[key])) &&
-    Number.isSafeInteger(value.version) && value.version >= 1 && value.version <= 2147483647 &&
-    typeof value.contentSha256 === 'string' && /^[0-9a-f]{64}$/.test(value.contentSha256);
-}
-function imageReceiptExpectedValid(value) {
-  if(value === null || typeof value !== 'object' || Array.isArray(value))return false;
-  const hasHash=Object.hasOwn(value,'contentSha256');
-  const allowed=hasHash?imageReceiptFields:imageReceiptFields.filter(key=>key!=='contentSha256');
-  return Object.keys(value).sort().join(',') === [...allowed].sort().join(',') &&
-    imageReceiptValid({...value,contentSha256:hasHash?value.contentSha256:'0'.repeat(64)});
-}
 
 /** Server-only HMAC proof. Not a user credential, durable storage or authorization by itself. */
 export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
@@ -71,32 +56,6 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (!value || Object.keys(value).length !== 4 || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
       return { userId, projectId, attemptId, sessionId: value.sessionId };
     } catch { return null; }
-  }
-  // Trusted server code may issue this durable receipt only after it has
-  // observed the exact image execution and submission succeed. A valid HMAC
-  // alone is not authorization: the caller must still verify current access.
-  function issueImageReceipt(claim) {
-    if (!imageReceiptValid(claim)) throw new Error('invalid image receipt');
-    const payload=Buffer.from(JSON.stringify(Object.fromEntries(imageReceiptFields.map(key=>[key,claim[key]])))).toString('base64url');
-    const signature=createHmac('sha256',signingKey).update(`compor.image-receipt.v1.${payload}`).digest('base64url');
-    return `v7.${payload}.${signature}`;
-  }
-  function verifyImageReceipt(input) {
-    try {
-      if(input===null || typeof input!=='object' || Array.isArray(input))return null;
-      const {token,...expected}=input;
-      if (!imageReceiptExpectedValid(expected) || typeof token !== 'string' || token.length > 2048) return null;
-      const parts=token.split('.');
-      if (parts.length!==3 || parts[0]!=='v7' || !/^[A-Za-z0-9_-]+$/.test(parts[1]) || !/^[A-Za-z0-9_-]+$/.test(parts[2])) return null;
-      const actual=Buffer.from(parts[2],'base64url');
-      const signature=createHmac('sha256',signingKey).update(`compor.image-receipt.v1.${parts[1]}`).digest();
-      if(actual.length!==signature.length || actual.toString('base64url')!==parts[2] || !timingSafeEqual(actual,signature))return null;
-      const raw=Buffer.from(parts[1],'base64url');
-      if(raw.toString('base64url')!==parts[1])return null;
-      const claim=JSON.parse(raw.toString('utf8'));
-      if(!imageReceiptValid(claim) || !Object.keys(expected).every(key=>claim[key]===expected[key]))return null;
-      return claim;
-    } catch {return null;}
   }
   // Stable per original attempt, but unlinkable without the server secret.
   function recoveryAttemptKey({ userId, projectId, attemptId }) {
@@ -151,5 +110,5 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,proposalDigest:c.proposalDigest,artworkDigest:c.artworkDigest };
     } catch { return null; }
   }
-  return Object.freeze({ issue, verify, issueRecovery, verifyRecovery, issueImageReceipt, verifyImageReceipt, recoveryAttemptKey, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
+  return Object.freeze({ issue, verify, issueRecovery, verifyRecovery, recoveryAttemptKey, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
 }

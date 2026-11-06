@@ -46,17 +46,6 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!['confirmed','unverified'].includes(result)) throw new Error('reservation status unknown');
       return {status:result};
     },
-    async storeImageReceipt({actor,projectId,requestId,attemptId,executionId,proof}) {
-      if (![projectId,requestId,attemptId,executionId].every(value=>uuid.test(value??'')) || typeof proof!=='string' || proof.length>2048 || !/^v7\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(proof)) throw new Error('invalid receipt');
-      if (await rpc('store_image_execution_receipt',actor,{p_project_id:projectId,p_request_id:requestId,p_attempt_id:attemptId,p_execution_id:executionId,p_proof:proof}) !== true) throw new Error('receipt unavailable');
-    },
-    async getImageReceiptCandidate({actor,projectId,requestId}) {
-      if (!uuid.test(projectId??'') || !uuid.test(requestId??'')) throw new Error('invalid attempt');
-      const result=await rpc('get_completed_image_receipt',actor,{p_project_id:projectId,p_request_id:requestId});
-      if(result && Object.keys(result).join(',')==='status' && result.status==='unverified')return {status:'unverified'};
-      if(!result || Object.keys(result).sort().join(',')!=='assetId,attemptId,executionId,pieceId,proof,requestId,status,version' || result.status!=='candidate' || result.requestId!==requestId || ![result.attemptId,result.pieceId,result.executionId,result.assetId].every(value=>uuid.test(value??'')) || !Number.isSafeInteger(result.version) || result.version<1 || result.version>2147483647 || typeof result.proof!=='string' || result.proof.length>2048 || !/^v7\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/.test(result.proof))throw new Error('receipt unavailable');
-      return result;
-    },
     async declareConsent({ actor, reservationId, confirmed }) {
       if (!uuid.test(reservationId ?? '') || confirmed !== true) throw new Error('invalid declaration');
       const rows = await rpc('declare_image_generation_consent', actor, { p_reservation_id: reservationId, p_confirmed: true });
