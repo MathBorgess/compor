@@ -4,16 +4,14 @@ import { z } from 'zod';
 // feedback fields. Validate the complete input before making any excerpts so
 // that a credential hidden beyond an excerpt cannot be sent accidentally.
 const safeText = value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value);
-const briefText = z.string().trim().refine(safeText);
-// This additional field previously was not sent to the planner. Accept common
-// words such as "task-flow", but reject any plausible session key everywhere,
-// including in content that will later be truncated.
-const briefAudienceText = z.string().trim().refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]{20,}/i.test(value));
+// Reject standalone short keys and long embedded keys while permitting words
+// such as task-flow. Check all content, including omitted excerpts.
+const briefText = z.string().trim().refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|(?:^|[^\p{L}\p{N}])sk-[^\s]+|sk-[^\s]{20,}/iu.test(value));
 const text = z.string().trim().max(1000).refine(safeText);
 const inputSchema = z.strictObject({
   offer: briefText,
   audience: briefText,
-  briefAudience: briefAudienceText.optional().default(''),
+  briefAudience: briefText.optional().default(''),
   goal: briefText,
   direction: briefText,
   accepted: z.array(text.min(1)).max(8),

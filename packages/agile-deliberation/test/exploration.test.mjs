@@ -57,3 +57,14 @@ test('valida credenciais e controles em todo o texto, mesmo em contexto que seri
  assert.throws(()=>createExplorationPrompt({...input,offer:`${'x'.repeat(9000)} sk-${'x'.repeat(30)}`}));
  assert.throws(()=>createExplorationPrompt({...input,offer:'Texto\u0000inválido'}));
 });
+
+test('campos de briefing aceitam hífens comuns e verificam chaves antes de truncar',()=>{
+ for(const field of ['offer','audience','briefAudience','goal','direction']){
+  const ordinary='task-flow e mask-black e másk-flow';
+  assert.ok(createExplorationPrompt({...input,[field]:ordinary}).prompt.includes(ordinary),field);
+  for(const value of ['sk-x','Veja (sk-x)',`tasksk-${'x'.repeat(20)}`,`${'x'.repeat(9000)} sk-x`,`${'x'.repeat(9000)} sk-${'x'.repeat(30)}`,'texto\u0000inválido'])
+   assert.throws(()=>createExplorationPrompt({...input,[field]:value}),field);
+ }
+ // Feedback/decisões mantêm seu contrato anterior.
+ assert.throws(()=>createExplorationPrompt({...input,accepted:['task-flow']}));
+});
