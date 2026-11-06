@@ -3,8 +3,6 @@ name: Supabase migrations
 on:
   push:
     branches: [main]
-    paths:
-      - 'supabase/migrations/**'
   workflow_dispatch:
 
 permissions:
@@ -43,10 +41,6 @@ jobs:
             echo '::error::O projeto não corresponde ao projeto verificado.'
             exit 1
           fi
-          # The latch is drafted and locally tested, but production identity,
-          # history, bootstrap and end-to-end compatibility are unverified.
-          echo '::error::Automação bloqueada: revise a trava e verifique o projeto, o histórico e o esquema de produção.'
-          exit 1
 
   migrate:
     name: Apply pending migrations

@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
-"""Test the draft workflow without a network or real credentials (requires PyYAML)."""
+"""Test the migration workflow without a network or real credentials (requires PyYAML)."""
 from pathlib import Path
 import os, shutil, subprocess, tempfile, yaml
 root=Path(__file__).resolve().parents[2]
 doc=yaml.load((root/'.github/workflows/supabase-migrations.yml').read_text(),Loader=yaml.BaseLoader)
 assert set(doc['on'])=={'push','workflow_dispatch'} and doc['on']['push']['branches']==['main']
+assert 'paths' not in doc['on']['push'] and 'paths-ignore' not in doc['on']['push']
 assert doc['concurrency']['cancel-in-progress']=='false' and doc['concurrency']['queue']=='max'
 pre=doc['jobs']['preflight']['steps'][0]['run']; migrate=doc['jobs']['migrate']['steps'][-1]['run']
 subprocess.run(['bash','-n'],input=pre,text=True,check=True);subprocess.run(['bash','-n'],input=migrate,text=True,check=True)
@@ -38,9 +39,11 @@ with open(os.environ['FAKE_LOG'],'a') as f:f.write('cli\\n')
 sys.exit(int(os.environ.get('FAIL_CLI','0')))
 ''');cli.chmod(0o755)
  env=os.environ.copy();env.update(PATH=str(d/'bin')+':'+env['PATH'],RUNNER_TEMP=tmp,FAKE_LOG=str(log),GITHUB_WORKSPACE=str(root),GITHUB_RUN_ID='101',GITHUB_RUN_ATTEMPT='1',SUPABASE_DB_PASSWORD='synthetic-secret',SUPABASE_PROJECT_REF='abcdefghijklmnopqrst',VERIFIED_PROJECT_REF='abcdefghijklmnopqrst',SUPABASE_DB_HOST='db.abcdefghijklmnopqrst.supabase.co',SUPABASE_DB_MIGRATIONS_ENABLED='false',PGHOSTADDR='203.0.113.1')
- for ref,enabled,checked in [('refs/heads/dev','true','abcdefghijklmnopqrst'),('refs/heads/main','','abcdefghijklmnopqrst'),('refs/heads/main','true','aaaaaaaaaaaaaaaaaaaa'),('refs/heads/main','true','abcdefghijklmnopqrst')]:
+ for ref,enabled,checked in [('refs/heads/dev','true','abcdefghijklmnopqrst'),('refs/heads/main','','abcdefghijklmnopqrst'),('refs/heads/main','true','aaaaaaaaaaaaaaaaaaaa')]:
   x=subprocess.run(['bash','-e','-c',pre],cwd=root,env={**env,'GITHUB_REF':ref,'MIGRATIONS_READY':enabled,'PROJECT_REF':'abcdefghijklmnopqrst','VERIFIED_PROJECT_REF':checked},capture_output=True,text=True)
   assert x.returncode and not log.exists()
+ x=subprocess.run(['bash','-e','-c',pre],cwd=root,env={**env,'GITHUB_REF':'refs/heads/main','MIGRATIONS_READY':'true','PROJECT_REF':'abcdefghijklmnopqrst','VERIFIED_PROJECT_REF':'abcdefghijklmnopqrst'},capture_output=True,text=True)
+ assert x.returncode==0 and not log.exists()
  for host,fail,expected in [('db.abcdefghijklmnopqrst.supabase.co','0',['acquire','cli','release']),('aws-0-us-east-1.pooler.supabase.com','1',['acquire','cli']),('db.aaaaaaaaaaaaaaaaaaaa.supabase.co','0',[])]:
   if log.exists():log.unlink()
   x=subprocess.run(['bash','-e','-c',migrate],cwd=root,env={**env,'SUPABASE_DB_HOST':host,'FAIL_CLI':fail},capture_output=True,text=True)
@@ -56,4 +59,4 @@ sys.exit(int(os.environ.get('FAIL_CLI','0')))
  (sandbox/'supabase'/'config.toml').write_text(head+'[db.migrations]'+section)
  x=subprocess.run(['bash','-e','-c',migrate],cwd=sandbox,env={**env,'GITHUB_WORKSPACE':str(sandbox),'PYTHONOPTIMIZE':'1'},capture_output=True,text=True)
  assert x.returncode != 0 and not log.exists()
-print('PASS: blocked preflight, SHA/target, sanitized env, disabled config, no password argv/log, no release on failure')
+print('PASS: enabled preflight, SHA/target, sanitized env, disabled config, no password argv/log, no release on failure')
