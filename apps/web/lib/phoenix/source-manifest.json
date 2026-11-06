@@ -1,0 +1,11 @@
+{
+  "sourceCommit": "1384a88390901eb3cf773a04f2268e174634f0de",
+  "sourceRoot": "prototypes/compor-mcp/src/phoenix_engine",
+  "files": {
+    "services/decision_api.ts": "02e365d40ab56de7786f176f1a5e169b5e246691f502290da027ce2b7d7fd5f9",
+    "domain/catalog.ts": "021c404bb6677e8081b5e2b17bfa2beb9e75e7c898799e1f308c12db527a015c",
+    "domain/models.ts": "a8433e0d4542b356296acb71fa8908ab67c198675723f3eb47ffbf40679c6caf",
+    "math/formulas.ts": "313643f08034836e5514ea0cebd693f41ada21b4ad8d5d2ea222992b7e53fc96",
+    "config/hyperparams.ts": "486375fb1a322da33d65e75f562a31d438a1e3fc7975fd976a8e786156f329d3"
+  }
+}

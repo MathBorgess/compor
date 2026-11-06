@@ -22,5 +22,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0016](0016-agente-api-e-ferramentas.md) | recorded | Runtime gerenciado e ferramentas do agente |
 | [0017](0017-mcp-transportes-e-capacidades.md) | recorded | Fronteiras entre MCP remoto e stdio |
 | [0018](0018-gates-qualidade-e-performance.md) | accepted | Bloqueios automáticos, diagnósticos e revisão |
+| [0019](0019-phoenix-deterministico-no-bundle-web.md) | recorded | Phoenix puro no bundle web, autorização e proveniência sintética |
+| [0020](0020-layout-pr17-e-conversa-adaptativa.md) | accepted | Layout do PR 17 com conversa adaptativa e decisão humana |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

@@ -1,11 +1,14 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import dynamic from "next/dynamic";
-import StudioShell, { StudioPanel, CreativeBoard, type StudioStage, type StudioTab } from "./studio-shell";
+import StudioShell, { StudioPanel, CreativeBoard, type StudioStage, type StudioDrawer } from "./studio-shell";
 const PersonaStep = dynamic(() => import("./persona-step"));
 const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
 import { useStudioState } from "./use-studio-state";
+import { useBriefInterview } from "./use-brief-interview";
+import { BriefCanvas, BriefChat } from "./brief-interview";
+import { nextPrompt } from "../lib/brief-interview";
 import {
   updateBrief,
   updatePersona,
@@ -36,7 +39,7 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name])=>Promise<ActionResult>};
 type StudioAppProps={userId:string;hasApiKey:boolean;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean};
-type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;onBack:()=>void};
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
@@ -60,6 +63,7 @@ export default function StudioApp({
     [notice, setNotice] = useState(""),
     [uncertain, setUncertain] = useState(false);
   const seq = useRef(0);
+  const focusCreate = useRef(false);
   async function refresh() {
     const n = ++seq.current;
     setState("loading");
@@ -83,6 +87,21 @@ export default function StudioApp({
       seq.current++;
     };
   }, [userId]);
+  useEffect(() => {
+    if (selected || !focusCreate.current || state !== "ready") return;
+    focusCreate.current = false;
+    document.getElementById("studio-project-name")?.focus();
+  }, [selected, state]);
+  function requestCreate() {
+    focusCreate.current = true;
+    setOpeningPrompt("");
+    setSelected(null);
+    refresh();
+  }
+  function projectRenamed(project:Project) {
+    setProjects(items => items.map(item => item.id === project.id ? {...item,...project} : item));
+    setSelected(current => current?.id === project.id ? {...current,...project} : current);
+  }
   async function create(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (state !== "ready" || uncertain || !projectName.trim()) return;
@@ -115,6 +134,10 @@ export default function StudioApp({
         userId={userId}
         isAuthenticated={isAuthenticated}
         project={selected}
+        projects={projects}
+        onOpenProject={project => {setOpeningPrompt("");setSelected(project);}}
+        onProjectRenamed={projectRenamed}
+        onCreateNew={requestCreate}
         onBack={() => {setSelected(null);refresh();}}
         hasApiKey={hasApiKey}
         getApiKey={getApiKey}
@@ -158,6 +181,10 @@ export default function StudioApp({
 function ProjectStudio({
   userId,
   project,
+  projects,
+  onOpenProject,
+  onProjectRenamed,
+  onCreateNew,
   onBack,
   hasApiKey,
   getApiKey,
@@ -168,8 +195,9 @@ function ProjectStudio({
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
+  const interview = useBriefInterview({state:s,change:session.change,userId,projectId:project.id});
+  const [editorRequested, setEditorRequested] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
-    [tab, setTab] = useState<StudioTab>("post"),
     [versions, setVersions] = useState<PieceVersion[]>([]),
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
@@ -179,7 +207,9 @@ function ProjectStudio({
     [proposal, setProposal] = useState<{prompt:string}|null>(null),
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
-    [compact, setCompact] = useState(false);
+    [compact, setCompact] = useState(false),
+    [drawer, setDrawer] = useState<StudioDrawer>(null),
+    [viewingArt, setViewingArt] = useState(false);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const stateRef = useRef<StudioState|null>(null),
@@ -200,6 +230,7 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
+  const showBrief = Boolean(interview.prompt) || (!editorRequested && !base && !draft?.baseVersion && !draft?.content.headline && !draft?.content.price && !draft?.content.date && !draft?.content.caption);
   async function refreshVersions() {
     const readSequence=++versionsReadSequence.current;
     const response = await fetch(
@@ -348,8 +379,11 @@ function ProjectStudio({
   function nextStage(value:StudioStage) {
     setStage(value);
     setNotice("");
+    if(value !== "studio") setViewingArt(false);
   }
   function newPost(pieceId:string = crypto.randomUUID()) {
+    interview.close();
+    setEditorRequested(false);
     local.change((value) =>
       value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
         ? selectDraft(value, { pieceId, baseVersion: 0 })
@@ -357,10 +391,12 @@ function ProjectStudio({
     );
     setBase(null);
     setPreview(null);
-    setTab("post");
+    setDrawer(null);
+    setViewingArt(false);
     setStage("studio");
   }
   function openVersion(version:PieceVersion) {
+    interview.close();
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
       .reduce((n, v) => Math.max(n, v.version), 0);
@@ -376,7 +412,8 @@ function ProjectStudio({
             : { status: "unapproved" },
       }),
     );
-    setTab("post");
+    setDrawer(null);
+    setViewingArt(false);
     setStage("studio");
   }
   function confirmAction(action:Confirmation) {
@@ -515,7 +552,7 @@ function ProjectStudio({
         counterexample: { description: args.counterexample, referenceId: args.counterexampleReferenceId || null },
         provenance: args.provenance, source: args.source || "", tension: args.tension || "",
       }));
-      setTab("direction");
+      setDrawer("marca");
       return { status: "completed", local: true };
     },
     compor_novo_post: async (args) => {
@@ -567,7 +604,11 @@ function ProjectStudio({
         );
         return { status: "unknown" };
       }
-      if (active.current) setProjectDetails(parsed.data.project);
+      if (parsed.data.project.id !== project.id) return { status: "unknown" };
+      if (active.current) {
+        setProjectDetails(parsed.data.project);
+        onProjectRenamed(parsed.data.project);
+      }
       return { status: "completed", title: parsed.data.project.title };
     },
     compor_propor_imagem: async (args) => {
@@ -669,6 +710,14 @@ function ProjectStudio({
         );
     }
   }
+  function downloadPreview() {
+    if(!preview) return;
+    const url=URL.createObjectURL(preview), anchor=document.createElement("a");
+    anchor.href=url;
+    anchor.download=`compor-post-v${draft?.baseVersion || "rascunho"}.png`;
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url),1000);
+  }
   if (local.loading || !s)
     return (
       <StudioShell stage="projects" statusText="Conta conectada">
@@ -679,6 +728,7 @@ function ProjectStudio({
     <StudioEditor
       draft={draft}
       base={base}
+      onViewArt={() => {setDrawer(null);setViewingArt(true);}}
       marks={s.marks.filter(
         (m) =>
           m.pieceId === draft?.pieceId && m.baseVersion === draft?.baseVersion,
@@ -696,6 +746,7 @@ function ProjectStudio({
         const current=getCurrentDraft(local.get());
         if(current?.pieceId!==draft?.pieceId||current?.baseVersion!==draft?.baseVersion||JSON.stringify(current?.content)!==JSON.stringify(draft?.content))return;
         setPreview(blob);
+        setViewingArt(false);
         setStage("review");
       }}
       onApprove={async () => {
@@ -782,7 +833,6 @@ function ProjectStudio({
     <StudioShell
       stage={stage}
       projectTitle={projectDetails.title}
-      activeTab={tab}
       statusText="Conta conectada"
       canOpenStudio
       versionStatus={
@@ -794,11 +844,13 @@ function ProjectStudio({
               ? `Versão ${draft.baseVersion}`
               : "Rascunho"
       }
-      onTabChange={setTab}
-      onNewProject={onBack}
-      onNavigate={(value) =>
-        value === "projects" ? onBack() : nextStage(value)
-      }
+      onTabChange={() => {setDrawer(null);nextStage("studio");}}
+      onNewProject={async () => {try {await local.flush();if(active.current) onCreateNew();} catch {setNotice("Não foi possível preservar o projeto antes de sair.");}}}
+      onNavigate={async value => {
+        if(value !== "projects") return nextStage(value);
+        try {await local.flush();if(active.current) onBack();}
+        catch {setNotice("Não foi possível preservar o projeto antes de sair.");}
+      }}
       onReview={() => nextStage("review")}
       headerActions={
         <>
@@ -820,8 +872,27 @@ function ProjectStudio({
           </button>
         </>
       }
-      canvas={
-        tab === "direction" ? <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} /> : tab === "history" ? (
+      projectId={project.id}
+      projects={projects}
+      onOpenProject={async target => {
+        try { await local.flush(); if(active.current) onOpenProject(target); }
+        catch { setNotice("Não foi possível preservar este projeto antes de trocar."); }
+      }}
+      onRenameProject={async title => {
+        try {
+          const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
+          return result.status === "completed";
+        } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
+      }}
+      basesCount={references.length + versions.length}
+      drawer={drawer}
+      onDrawerChange={setDrawer}
+      viewingArt={viewingArt}
+      onCloseArt={() => setViewingArt(false)}
+      onDownload={downloadPreview}
+      downloadDisabled={!preview}
+      yellowDownload={!interview.prompt}
+      bases={<>
           <div className="studio-history">
             <h2>Histórico do projeto</h2>
             <button className="studio-button" onClick={()=>newPost()}>Novo post</button>
@@ -839,13 +910,14 @@ function ProjectStudio({
               <button
                 key={`${item.pieceId}:${item.baseVersion}`}
                 onClick={() => {
+                  interview.close();
                   local.change((value) =>
                     selectDraft(value, {
                       pieceId: item.pieceId,
                       baseVersion: item.baseVersion,
                     }),
                   );
-                  setTab("post");
+                  setDrawer(null);
                   setStage("studio");
                 }}
               >
@@ -870,7 +942,6 @@ function ProjectStudio({
               </button>
             ))}
           </div>
-        ) : tab === "moodboard" ? (
           <div className="studio-moodboard">
             <h2>Referências da sua criação</h2>
             <p>Estas imagens permanecem neste navegador.</p>
@@ -898,7 +969,8 @@ function ProjectStudio({
               ))}
             </div>
           </div>
-        ) : tab === "facts" ? (
+      </>}
+      marca={<>
           <div>
             <h2>Fatos e direção</h2>
             <dl>
@@ -918,21 +990,23 @@ function ProjectStudio({
               onChange={(value) =>
                 local.change((state) => updatePersona(state, value))
               }
-              onContinue={() => setTab("post")}
+              onContinue={() => setDrawer(null)}
             />
           </div>
-        ) : (
-          <CreativeBoard
-            title={draft ? "Post atual" : "Sua criação"}
-            surfaceWidth={compact ? 352 : 772}
-            surfaceHeight={compact ? 1760 : 1100}
-            onCurrentPost={() => setTab("post")}
-          >
-            {editor}
-          </CreativeBoard>
-        )
+        <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
+      </>}
+      canvas={
+        showBrief ? <>
+          <BriefCanvas prompt={interview.prompt} record={interview.record} discarded={interview.discarded} references={interview.references} calibrating={interview.calibrating} onChoose={interview.choose} onStart={() => nextPrompt(interview.record) ? interview.start() : setDrawer("marca")} />
+          <button className="studio-button-secondary" type="button" onClick={() => {interview.close();setEditorRequested(true);}}>Definir textos da arte</button>
+        </> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+          {editor}
+        </CreativeBoard>
       }
-      chat={chat}
+      chat={<>
+        <div className="studio-conversation" hidden={Boolean(interview.prompt)}>{chat}</div>
+        {interview.prompt && <BriefChat prompt={interview.prompt} calibrating={interview.calibrating} value={interview.answer} onChange={interview.setAnswer} onSubmit={interview.submit} onSkip={interview.skip} onClose={interview.close} />}
+      </>}
       overlays={
         <>
           {dialog && (
@@ -974,6 +1048,7 @@ function ProjectStudio({
         <>
           {local.error && <p role="alert">{local.error}</p>}
           {notice && <p role="status">{notice}</p>}
+          {interview.notice && <p role="status">{interview.notice}</p>}
         </>
       }
     >

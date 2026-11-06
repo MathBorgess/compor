@@ -12,6 +12,11 @@ import sys
 from pathlib import Path
 
 PACKAGES = ('agents-api', 'agile-deliberation', 'images-api', 'private-images', 'remote-mcp')
+PHOENIX_FILES = ('app/api/studio/decision/route.ts', 'lib/phoenix-worker.ts',
+                 'lib/studio-decision-route.ts', 'lib/studio-decision-contract.ts',
+                 'lib/phoenix/catalog.ts', 'lib/phoenix/deterministic.ts',
+                 'lib/phoenix/formulas.ts', 'lib/phoenix/hyperparams.ts',
+                 'lib/phoenix/models.ts', 'lib/phoenix/source-manifest.json', 'lib/phoenix/PROVENANCE.md')
 DEPENDENCIES = ('dependencies', 'devDependencies', 'optionalDependencies', 'peerDependencies')
 UPSTREAM_FILES = {
     'third_party/google-research/agile_deliberation/LICENSE': 'apps/web/vendor/agile-deliberation/LICENSE',
@@ -95,7 +100,7 @@ def main():
         entries.append((destination, oid))
     names = {name for name, _ in entries}
     required = {'apps/web/package.json', 'apps/web/package-lock.json', 'apps/web/next.config.mjs',
-                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values())
+                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
     if not required.issubset(names) or not any(name.startswith('apps/web/app/') for name in names):
         raise ValueError('missing required source files')
     output.mkdir(mode=0o700)

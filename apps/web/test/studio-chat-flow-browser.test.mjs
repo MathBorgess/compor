@@ -14,6 +14,10 @@ const content=headline=>({headline,price:'R$ 20',date:'20/11',caption:'Legenda s
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 async function eventually(fn,predicate,timeout=6000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('estado esperado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
+async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
+async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
+async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
+async function chooseFiles(page,label,files){const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const recordStartup=chunk=>{const output=startup+chunk;startup=output.length>6000?output.slice(0,4500)+output.slice(-1500):output;};
@@ -22,14 +26,19 @@ async function app(t){
  await waitForApp({url:origin,child,signal:t.signal,diagnostics:()=>startup});
  browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(6000);
  await page.addInitScript(()=>{const tools=Object.create(null);Object.defineProperty(window,'__studioNative',{value:tools});Object.defineProperty(document,'modelContext',{configurable:true,value:{registerTool:async(definition,{signal}={})=>{tools[definition.name]=definition;signal?.addEventListener('abort',()=>{if(tools[definition.name]===definition)delete tools[definition.name];},{once:true});}}});});
- const calls=[],external=[],errors=[],flow={};const versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
+ const calls=[],external=[],errors=[],flow={},projectReads={count:0};const projects=[{id:projectId,title:'Projeto integrado',revision:1}],versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
-  if(url.pathname==='/api/projects')return route.fulfill({json:{projects:[{id:projectId,title:'Projeto integrado',revision:1}]}});
+  if(url.pathname==='/api/projects'){
+   if(request.method()==='GET'){projectReads.count++;return route.fulfill({json:{projects}});}
+   assert.equal(request.method(),'PATCH');const body=request.postDataJSON();calls.push({path:url.pathname,body});const index=projects.findIndex(project=>project.id===body.projectId),previous=projects[index];
+   if(!previous||body.expectedRevision!==previous.revision)return route.fulfill({status:409,json:{error:'revision_conflict'}});
+   const project={...previous,title:body.title,revision:previous.revision+1};projects[index]=project;return route.fulfill({json:{status:'renamed',project}});
+  }
   if(url.pathname==='/api/pieces'){
-   if(request.method()==='GET')return route.fulfill({json:{versions}});
+   if(request.method()==='GET')return route.fulfill({json:{versions:versions.filter(version=>version.project_id===url.searchParams.get('projectId'))}});
    const body=request.postDataJSON();calls.push({path:url.pathname,body});const version={project_id:projectId,piece_id:body.pieceId,version:body.expectedVersion+1,content:body.content};versions.push(version);return route.fulfill({json:{status:'saved',version}});
   }
   if(url.pathname==='/api/studio/chat'||url.pathname==='/api/studio/action'){
@@ -42,18 +51,17 @@ async function app(t){
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
- return {page,origin,calls,versions,flow,errors,external};
+ return {page,origin,calls,projects,projectReads,versions,flow,errors,external};
 }
 async function openOriginal(page,origin,{key=true}={}){
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Versões',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
 }
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
  if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
- const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).click()]);
- await chooser.setFiles({name,mimeType:mime,buffer});
+ await chooseFiles(page,'Imagem-base PNG ou JPEG',{name,mimeType:mime,buffer});
  try{await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();}catch(error){throw Error(`${error.message}\nUpload: ${JSON.stringify({mime,size:buffer.length,alerts:await page.getByRole('alert').allTextContents(),selection:(await stored(page))?.selection})}`,{cause:error});}
  await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  return buffer;
@@ -114,7 +122,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await openOriginal(page,origin);
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha uma imagem para este post original.');
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Post B fora do pedido.*Versão 2/}).click();
  await waiting;release();
  const proposal=page.locator('.studio-image-consent');await proposal.waitFor();
@@ -123,7 +131,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  if(await confirm.isEnabled())await confirm.click();
  await page.waitForLoadState('networkidle');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
@@ -143,7 +151,7 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
  });
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
  await page.evaluate(()=>window.__releasePreviewEncoding());
@@ -182,9 +190,9 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
   return route.fulfill({json:{versions}});
  });
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
- await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
+ await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await openDrawer(page,'Bases');
  const saved=page.getByRole('button',{name:/Post criado durante a leitura anterior.*Versão 1/});await saved.waitFor();
  const oldRead=page.waitForResponse(response=>response.headers()['x-compor-old-read']==='true');release();await oldRead;
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
@@ -196,7 +204,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
 test('a conversa gera a arte integral de um rascunho sem exigir salvamento prévio',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,versions,flow,errors,external}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Primeira arte pronta.'}:consent('draft');
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
  await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
  const before=await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.headline==='Curso de planilhas'));assert.equal(before.selection.baseVersion,0);
@@ -217,15 +225,15 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  };
  await openOriginal(page,origin);
  const source=await attachImage(page,{mime:'image/png',name:'original.png'});
- await page.getByRole('tab',{name:'Referências',exact:true}).click();await page.getByLabel('Adicionar PNG ou JPEG',{exact:true}).setInputFiles({name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('tab',{name:'Estúdio',exact:true}).click();
+ await openDrawer(page,'Bases');await chooseFiles(page,'Adicionar PNG ou JPEG',{name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await closeDrawer(page);
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('heading',{name:'Editar a arte em uma nova versão',exact:true}).waitFor();
  assert.equal(calls.some(call=>call.path==='/api/agent/image'),false);
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
  await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 2/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 2/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'reabrir versões e recarregar não regenera a imagem');assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -240,8 +248,37 @@ test('critério proposto mostra contraste e tensão, e só o criador registra um
  const proposed=await eventually(()=>stored(page),value=>value?.direction.criteria.length===1);assert.equal(proposed.direction.decisions.length,0);assert.equal(proposed.direction.criteria[0].provenance,'hypothesis');
  await page.getByRole('button',{name:'Usar este critério',exact:true}).click();
  const chosen=await eventually(()=>stored(page),value=>value?.direction.decisions.length===1);assert.equal(chosen.direction.decisions[0].choice,'accept');assert.equal(chosen.direction.criteria[0].provenance,'hypothesis','decisão criativa não inventa evidência de público');
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('tab',{name:'Direção',exact:true}).click();
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await openDrawer(page,'Marca');
  await page.getByRole('button',{name:'Usar este critério',exact:true,pressed:true}).waitFor();
  await page.getByRole('button',{name:'Reabrir decisão',exact:true}).click();
  const reopened=await eventually(()=>stored(page),value=>value?.direction.decisions.length===2);assert.deepEqual(reopened.direction.decisions.map(decision=>decision.choice),['accept','reopen']);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
+});
+
+test('nome confirmado pelo chat permanece no menu e a segunda renomeação usa a revisão atual após trocar de projeto',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,projects,projectReads,flow,errors,external}=await app(t);
+ const renamed='Nome confirmado pelo chat',finalName='Nome final do projeto',otherTitle='Outro projeto';
+ projects.push({id:id(190),title:otherTitle,revision:7});
+ flow.chat=body=>action('compor_renomear_projeto',{projectId,requestId:id(191),revision:body.context.revision,title:renamed},'rename-first');
+ flow.action=body=>{assert.equal(body.actionBinding,'rename-first');assert.equal(body.result.status,'completed');return{status:'completed',text:'Primeiro nome confirmado.'};};
+ const trigger=title=>page.getByRole('heading',{level:1}).getByRole('button',{name:title,exact:true});
+ await openOriginal(page,origin);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Renomeie este projeto com o título confirmado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true}).waitFor();
+ assert.equal(calls.filter(call=>call.path==='/api/projects').length,0,'o chat aguarda confirmação antes da renomeação persistida');
+ await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Primeiro nome confirmado.',{exact:true}).waitFor();
+ await trigger(renamed).waitFor();const readsBeforeSwitch=projectReads.count;
+ await trigger(renamed).click();const menu=page.getByRole('dialog',{name:'Projetos',exact:true});
+ assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),1,'a lista do menu recebe o título confirmado pelo agente');
+ assert.equal(await menu.getByRole('button',{name:'Projeto integrado',exact:true}).count(),0);
+ await menu.getByRole('button',{name:otherTitle,exact:true}).click();await trigger(otherTitle).waitFor();
+ await trigger(otherTitle).click();await menu.getByRole('button',{name:renamed,exact:true}).click();await trigger(renamed).waitFor();
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado','voltar pelo menu reabre a seleção do projeto original');
+ await trigger(renamed).click();await menu.getByLabel('Renomear',{exact:true}).fill(finalName);await menu.getByRole('button',{name:'Salvar nome',exact:true}).click();await trigger(finalName).waitFor();
+ assert.equal(projectReads.count,readsBeforeSwitch,'a troca usa a lista atualizada em memória, sem depender de refetch para corrigir o título ou a revisão');
+ assert.deepEqual(calls.filter(call=>call.path==='/api/projects').map(call=>call.body),[
+  {projectId,title:renamed,expectedRevision:1},
+  {projectId,title:finalName,expectedRevision:2},
+ ]);
+ await trigger(finalName).click();assert.equal(await menu.getByRole('button',{name:finalName,exact:true}).count(),1);assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),0);
+ assert.equal(projects.find(project=>project.id===projectId).revision,3);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

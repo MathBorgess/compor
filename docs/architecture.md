@@ -1,6 +1,6 @@
 # Arquitetura implementada do Compor
 
-Mapa do código em 05/11/2026, atualizado a pedido de Matheus. É o ponto de entrada para desenvolvimento. O [AGENTS.md](../AGENTS.md) registra as regras de contribuição; os [ADRs](adr/README.md) preservam decisões e seu estado. Este mapa descreve implementação, não comprova deploy ou aprovação formal de propostas antigas.
+Mapa do código em 06/11/2026, atualizado a pedido de Matheus. É o ponto de entrada para desenvolvimento. O [AGENTS.md](../AGENTS.md) registra as regras de contribuição; os [ADRs](adr/README.md) preservam decisões e seu estado. Este mapa descreve implementação, não comprova deploy ou aprovação formal de propostas antigas.
 
 ## Camadas e fluxo
 
@@ -14,6 +14,7 @@ flowchart LR
   Function --> UI
   UI -->|confirma operação de imagem| HTTP
   HTTP --> Images[Images API e armazenamento privado]
+  HTTP --> Phoenix[Phoenix determinístico: exploração sintética]
   HTTP --> DB[(Supabase: Auth, Postgres, Storage)]
   Client[Cliente MCP externo] --> Remote[MCP remoto autenticado]
   Remote --> DB
@@ -61,9 +62,13 @@ Os pacotes compartilhados continuam em JavaScript e publicam declarações `.d.t
 
 `page.tsx` escolhe o estúdio por padrão; `COMPOR_STUDIO_WEB_ENABLED=false` mantém o caminho legado como rollback explícito. A entrada oferece Google. `workspace.tsx` verifica sessão e carrega o estúdio por importação dinâmica após autenticação. O símbolo usa os ativos da marca e respeita movimento reduzido.
 
+`studio-app.tsx` preserva a composição do PR 17: chat de 380 px à esquerda no layout B, recolhido no C, menu de projetos no topo e gavetas Bases/Marca sobre o quadro. A conversa começa diretamente após login; o briefing vivo ocupa o quadro enquanto não há arte. A exploração guiada por cartões é opcional, reabrível e reutiliza campos conhecidos, sem questionário obrigatório antes de gerar. Exemplos aparecem como esboços e sugestões de catálogo. A renomeação pelo chat e pelo menu atualiza também a lista de projetos no componente pai e sua revisão, evitando conflito ao voltar ao projeto. Ver [ADR 0020](adr/0020-layout-pr17-e-conversa-adaptativa.md).
+
 `studio-app.tsx` compõe conversa, quadro, referências e versões. `studio-state.ts` e `studio-domain.ts` definem o estado validado; `studio-state-writer.ts` coordena persistência com revisão esperada. `studio-storage.ts` conserva estado e imagens locais por conta e projeto no IndexedDB. Chave OpenAI não entra nesse estado.
 
 Briefing, persona e referências são progressivos. Critérios preservam origem, exemplos, contraexemplos e decisões separadas. Atualizar título, preço ou data instrui uma próxima geração; não altera pixels da imagem já salva. Uma cópia local JPEG para transporte acima do limite é uma escolha explícita, com formato, dimensões e tamanho apresentados antes da confirmação. O original permanece intacto.
+
+`/api/studio/decision` calcula exploração auxiliar de catálogo com o módulo TS puro `lib/phoenix`. A rota exige sessão verificada, origem e propriedade do projeto, limita o corpo a 8 KiB e retorna `referenceSummary` validável com origem sintética. O Next inclui todas as dependências no bundle: não há subprocesso, leitura de skills, import do servidor stdio, busca externa ou geração nessa rota. Os scores são heurísticas, não evidência humana ou calibração para aquela audiência. A [proveniência](../apps/web/lib/phoenix/PROVENANCE.md) e o [ADR 0019](adr/0019-phoenix-deterministico-no-bundle-web.md) registram o porte e seus limites.
 
 O site Astro é uma saída estática independente. A página Next usa renderização sob demanda; dados privados não são convertidos em conteúdo estático nem cache compartilhado para melhorar métricas. Ver [ADR 0014](adr/0014-frontend-next-typescript.md).
 
@@ -125,7 +130,7 @@ Não rode browser e Lighthouse concorrentes ao medir performance. Os [gates](qua
 
 `scripts/stage_vercel_web.py` prepara o bundle da Vercel a partir de um commit Git imutável. Copia somente fontes permitidas, inclui a configuração TypeScript e confina dependências locais em `vendor`. O pacote de deliberação leva licença e proveniência da origem. A preparação recusa destinos dentro do repositório, arquivos sensíveis e caminhos de dependência fora desse grafo. Ela não executa deploy.
 
-Na redação deste mapa, a execução do novo workflow no GitHub Actions ainda não foi observada. Build, tipos e lint locais no macOS não comprovam o resultado do runner Linux. Os registros de verificação devem identificar o commit, ambiente e escopo de cada execução.
+O workflow já executou no GitHub Actions; os ajustes necessários ao runner estão no [registro de portabilidade](quality/ci-portability-2026-11-05.md). Isso não concede aprovação a commits posteriores. Build, tipos e lint locais no macOS não comprovam o resultado do runner Linux. Os registros de verificação devem identificar o commit, ambiente e escopo de cada execução.
 
 ## Limites e histórico
 

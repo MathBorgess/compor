@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { sessionSchema } from "./studio-ui-types";
+import { parseSessionState } from "../lib/session-state";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
 import "./entry.css";
@@ -10,8 +10,15 @@ import "./studio-shell.css";
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
+const LegacyWorkspace = dynamic(() => import("./legacy-workspace"));
 
-export default function Workspace({ loginAvailable }: { loginAvailable: boolean }) {
+export default function Workspace({ loginAvailable, legacy = false }: { loginAvailable: boolean; legacy?: boolean }) {
+  return legacy
+    ? <LegacyWorkspace loginAvailable={loginAvailable} />
+    : <StudioWorkspace loginAvailable={loginAvailable} />;
+}
+
+function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -76,7 +83,7 @@ export default function Workspace({ loginAvailable }: { loginAvailable: boolean 
           response.ok ? response.json() : { state: "unavailable" },
         )
         .then((input: unknown) => {
-          const data = sessionSchema.parse(input);
+          const data = parseSessionState(input);
           if (currentGeneration !== generation) return;
           if (
             data.state === "connected" &&

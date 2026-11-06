@@ -1,0 +1,866 @@
+{
+  "sourceCommit": "1384a88390901eb3cf773a04f2268e174634f0de",
+  "source": "prototypes/compor-mcp/src/phoenix_engine/services/decision_api.ts",
+  "cases": [
+    {
+      "route": {
+        "briefing": "Aula curta de planilhas para organizar a rotina.",
+        "target_format": "single_feed",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "board_affinities": [],
+        "user_id": "synthetic-fixture",
+        "source": "deterministic_mock"
+      },
+      "rankInput": {
+        "briefing": "Aula curta de planilhas para organizar a rotina.",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "user_tower_vec": [
+          0,
+          -0.19164716102671545,
+          -0.034844938368493714,
+          0.10844598165704677,
+          0,
+          -0.4231171087602808,
+          0.20729182723297793,
+          0.2499590987046029,
+          0.136179708113603,
+          0.2542258258517654,
+          0,
+          0.09777916378914053,
+          -0.43271724484139645,
+          0,
+          0.3040043092353278,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.19271384281350606,
+          0.12906849620166552,
+          0.2051584636593967,
+          0,
+          0.17031352529090296,
+          -0.20800294842417166,
+          0.055467452913112454,
+          -0.10631261808346552,
+          0,
+          -0.22933658415998415,
+          0,
+          -0.24142564441027792
+        ],
+        "candidate": {
+          "candidate_id": "synthetic-fixture",
+          "board": "behance/editorial",
+          "metadata_sid": [
+            "format",
+            "hero_product_d2c",
+            "offer",
+            "clean"
+          ],
+          "visual_description": "Composição editorial com grid e tipografia clara.",
+          "candidate_vec": [
+            0.1408718003379816,
+            -0.3290474155496028,
+            0,
+            0,
+            0.008317154263497039,
+            0.3779106968476481,
+            -0.19493330305071258,
+            -0.1616646859967243,
+            0.39662429394051646,
+            -0.035347905619862535,
+            0.21052796729476958,
+            0,
+            0.3373645698130998,
+            0,
+            0.39246571680876796,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.3737521197158995,
+            0,
+            0,
+            0.1564664645820386,
+            0,
+            0,
+            0,
+            -0.17310077310903274
+          ]
+        }
+      },
+      "expected": {
+        "embedding": [
+          0,
+          -0.19164716102671545,
+          -0.034844938368493714,
+          0.10844598165704677,
+          0,
+          -0.4231171087602808,
+          0.20729182723297793,
+          0.2499590987046029,
+          0.136179708113603,
+          0.2542258258517654,
+          0,
+          0.09777916378914053,
+          -0.43271724484139645,
+          0,
+          0.3040043092353278,
+          0,
+          0,
+          0,
+          0,
+          0,
+          0.19271384281350606,
+          0.12906849620166552,
+          0.2051584636593967,
+          0,
+          0.17031352529090296,
+          -0.20800294842417166,
+          0.055467452913112454,
+          -0.10631261808346552,
+          0,
+          -0.22933658415998415,
+          0,
+          -0.24142564441027792
+        ],
+        "route": {
+          "board_allocations": [
+            {
+              "board": "behance/typography",
+              "role": "hook_cover",
+              "weight": 0.32,
+              "synthetic_query": "impacto tipográfico headline capa contraste focal — Aula curta de planilhas para organizar a rotina. [single_feed]",
+              "rationale": "Board especializado em tipografia expressiva e gancho visual de capa."
+            },
+            {
+              "board": "creativemarket/magazine-templates",
+              "role": "structural_grid",
+              "weight": 0.28,
+              "synthetic_query": "grid modular colunas diagramação escaneável — Aula curta de planilhas para organizar a rotina. [single_feed]",
+              "rationale": "Board forte em arquitetura de informação, grids editoriais e cadência estrutural."
+            },
+            {
+              "board": "dribbble/design-inspiration",
+              "role": "ui_component",
+              "weight": 0.2,
+              "synthetic_query": "componentes UI cards bento interface — Aula curta de planilhas para organizar a rotina. [single_feed]",
+              "rationale": "Board focado em componentes modulares, Bento grids e acabamento de interface."
+            },
+            {
+              "board": "canva/feed",
+              "role": "wildcard_exploration",
+              "weight": 0.2,
+              "synthetic_query": "exploração direção de arte composição — Aula curta de planilhas para organizar a rotina. [single_feed]",
+              "rationale": "Pool /feed de exploração limitado à cota máxima de 20%."
+            }
+          ],
+          "required_sid_tags": [],
+          "excluded_sid_tags": [],
+          "router_excluded_sid_tags": []
+        },
+        "rank": {
+          "p_use_as_layout_grid": 0.7727,
+          "p_use_as_typography_hook": 0.5827,
+          "p_use_color_and_vibe": 0.6787,
+          "p_high_conversion_clarity": 0.768,
+          "p_dwell_engagement": 0.6627,
+          "p_reject_too_generic": 0.1603,
+          "p_reject_style_mismatch": 0.1142,
+          "composition_guideline": "Estruturar layout com mecânica hero_product_d2c, hierarquia tipográfica offer e direção cromática clean inspirada em behance/editorial."
+        },
+        "score": [
+          {
+            "id": "one",
+            "raw_score": 27.231054080595303,
+            "metadata_sid": [
+              "format",
+              "hero_product_d2c",
+              "offer",
+              "clean"
+            ],
+            "diversity_multiplier": 1,
+            "final_score": 27.2311
+          },
+          {
+            "id": "two",
+            "raw_score": 27.231054080595303,
+            "metadata_sid": [
+              "format",
+              "hero_product_d2c",
+              "offer",
+              "clean"
+            ],
+            "diversity_multiplier": 0.65,
+            "final_score": 17.7002
+          }
+        ]
+      }
+    },
+    {
+      "route": {
+        "briefing": "Carrossel de infográfico LinkedIn para líderes B2B com grid editorial.",
+        "target_format": "carousel",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [
+            "roxo"
+          ],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "board_affinities": [],
+        "user_id": "synthetic-fixture",
+        "source": "deterministic_mock"
+      },
+      "rankInput": {
+        "briefing": "Carrossel de infográfico LinkedIn para líderes B2B com grid editorial.",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [
+            "roxo"
+          ],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "user_tower_vec": [
+          -0.10766285880187848,
+          -0.008415028044284753,
+          -0.11558288519649942,
+          0.1358779528327156,
+          -0.10271284230524037,
+          -0.4940116463644814,
+          0,
+          0,
+          0,
+          -0.1527080089212851,
+          0.37620125374449487,
+          0.04801516001738947,
+          -0.08439778126767945,
+          0,
+          -0.12449291489044799,
+          -0.06707272352944613,
+          0.01039503464294001,
+          0.25443084792719783,
+          0,
+          -0.23908579678761976,
+          0.12870042891259034,
+          0.0212850709355438,
+          0,
+          0,
+          0.11855289509448226,
+          -0.147757992424647,
+          -0.23364077864131788,
+          0.14528298417632796,
+          0,
+          0,
+          0.40763385849814676,
+          -0.3014560046452598
+        ],
+        "candidate": {
+          "candidate_id": "synthetic-fixture",
+          "board": "behance/editorial",
+          "metadata_sid": [
+            "linkedin_infographic",
+            "swiss_grid",
+            "editorial",
+            "clean"
+          ],
+          "visual_description": "Composição editorial com grid e tipografia clara.",
+          "candidate_vec": [
+            -0.18449144525324257,
+            0,
+            0,
+            0,
+            -0.33590166584038644,
+            0,
+            -0.1590443493562436,
+            0,
+            0.5157278101791792,
+            -0.4037605882323837,
+            0,
+            0,
+            -0.24641271193594005,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.26677038865353925,
+            0.37661701927558483,
+            0,
+            0,
+            0,
+            -0.3537146329682857
+          ]
+        }
+      },
+      "expected": {
+        "embedding": [
+          -0.10766285880187848,
+          -0.008415028044284753,
+          -0.11558288519649942,
+          0.1358779528327156,
+          -0.10271284230524037,
+          -0.4940116463644814,
+          0,
+          0,
+          0,
+          -0.1527080089212851,
+          0.37620125374449487,
+          0.04801516001738947,
+          -0.08439778126767945,
+          0,
+          -0.12449291489044799,
+          -0.06707272352944613,
+          0.01039503464294001,
+          0.25443084792719783,
+          0,
+          -0.23908579678761976,
+          0.12870042891259034,
+          0.0212850709355438,
+          0,
+          0,
+          0.11855289509448226,
+          -0.147757992424647,
+          -0.23364077864131788,
+          0.14528298417632796,
+          0,
+          0,
+          0.40763385849814676,
+          -0.3014560046452598
+        ],
+        "route": {
+          "board_allocations": [
+            {
+              "board": "behance/typography",
+              "role": "hook_cover",
+              "weight": 0.32,
+              "synthetic_query": "impacto tipográfico headline capa contraste focal | grid editorial carrossel linkedin infografico — Carrossel de infográfico LinkedIn para líderes B2B com grid editorial. [carousel]",
+              "rationale": "Board especializado em tipografia expressiva e gancho visual de capa."
+            },
+            {
+              "board": "hubspot/marketing-infographics",
+              "role": "structural_grid",
+              "weight": 0.28,
+              "synthetic_query": "grid modular colunas diagramação escaneável | grid editorial carrossel linkedin infografico — Carrossel de infográfico LinkedIn para líderes B2B com grid editorial. [carousel]",
+              "rationale": "Board forte em arquitetura de informação, grids editoriais e cadência estrutural."
+            },
+            {
+              "board": "dribbble/design-inspiration",
+              "role": "ui_component",
+              "weight": 0.2,
+              "synthetic_query": "componentes UI cards bento interface | grid editorial carrossel linkedin infografico — Carrossel de infográfico LinkedIn para líderes B2B com grid editorial. [carousel]",
+              "rationale": "Board focado em componentes modulares, Bento grids e acabamento de interface."
+            },
+            {
+              "board": "canva/feed",
+              "role": "wildcard_exploration",
+              "weight": 0.2,
+              "synthetic_query": "exploração direção de arte composição | grid editorial carrossel linkedin infografico — Carrossel de infográfico LinkedIn para líderes B2B com grid editorial. [carousel]",
+              "rationale": "Pool /feed de exploração limitado à cota máxima de 20%."
+            }
+          ],
+          "required_sid_tags": [],
+          "excluded_sid_tags": [
+            "roxo"
+          ],
+          "router_excluded_sid_tags": []
+        },
+        "rank": {
+          "p_use_as_layout_grid": 0.8481,
+          "p_use_as_typography_hook": 0.6581,
+          "p_use_color_and_vibe": 0.7477,
+          "p_high_conversion_clarity": 0.7113,
+          "p_dwell_engagement": 0.7381,
+          "p_reject_too_generic": 0.128,
+          "p_reject_style_mismatch": 0.0884,
+          "composition_guideline": "Estruturar layout com mecânica swiss_grid, hierarquia tipográfica editorial e direção cromática clean inspirada em behance/editorial."
+        },
+        "score": [
+          {
+            "id": "one",
+            "raw_score": 30.689946169370984,
+            "metadata_sid": [
+              "linkedin_infographic",
+              "swiss_grid",
+              "editorial",
+              "clean"
+            ],
+            "diversity_multiplier": 1,
+            "final_score": 30.6899
+          },
+          {
+            "id": "two",
+            "raw_score": 30.689946169370984,
+            "metadata_sid": [
+              "linkedin_infographic",
+              "swiss_grid",
+              "editorial",
+              "clean"
+            ],
+            "diversity_multiplier": 0.65,
+            "final_score": 19.9485
+          }
+        ]
+      }
+    },
+    {
+      "route": {
+        "briefing": "Story 9:16 com pergunta e convite para conhecer a aula.",
+        "target_format": "story",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "board_affinities": [],
+        "user_id": "synthetic-fixture",
+        "source": "deterministic_mock"
+      },
+      "rankInput": {
+        "briefing": "Story 9:16 com pergunta e convite para conhecer a aula.",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "user_tower_vec": [
+          0,
+          -0.1807944240158237,
+          0,
+          0.1841486804910709,
+          0.18683208567126866,
+          -0.1740859110653293,
+          -0.012746174605939364,
+          0.20695762452275182,
+          0.1284680230019675,
+          0,
+          -0.1096841867405832,
+          0.09224205306929781,
+          -0.15194781832869783,
+          0,
+          0.13048057688711578,
+          0,
+          0.22171635301383943,
+          0.2857826516910609,
+          0,
+          0.2405001892752237,
+          0.08620439141385286,
+          -0.36963906357224063,
+          -0.17274420847523042,
+          0,
+          0.18481953178612032,
+          0.23244997373463047,
+          -0.19421144991681247,
+          0,
+          0,
+          -0.4501412189781733,
+          -0.07111023727524049,
+          -0.22775401466928444
+        ],
+        "candidate": {
+          "candidate_id": "synthetic-fixture",
+          "board": "behance/editorial",
+          "metadata_sid": [
+            "story_interactive_9:16",
+            "bold_display_hook",
+            "portrait",
+            "contrast"
+          ],
+          "visual_description": "Composição editorial com grid e tipografia clara.",
+          "candidate_vec": [
+            0,
+            0,
+            0.27588828398736187,
+            0,
+            0,
+            -0.11642576187972413,
+            -0.27951243221708094,
+            0,
+            0.18619061530181563,
+            -0.2079355046801299,
+            0,
+            0.11551972482229438,
+            0,
+            0,
+            0,
+            0,
+            0,
+            0.2777003581022214,
+            0.309411655112263,
+            0,
+            -0.45030041754259065,
+            -0.3429350262371641,
+            -0.3411229521223046,
+            0.08063729811124865,
+            0,
+            0,
+            0,
+            -0.3533544523976063,
+            0,
+            0,
+            0,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "embedding": [
+          0,
+          -0.1807944240158237,
+          0,
+          0.1841486804910709,
+          0.18683208567126866,
+          -0.1740859110653293,
+          -0.012746174605939364,
+          0.20695762452275182,
+          0.1284680230019675,
+          0,
+          -0.1096841867405832,
+          0.09224205306929781,
+          -0.15194781832869783,
+          0,
+          0.13048057688711578,
+          0,
+          0.22171635301383943,
+          0.2857826516910609,
+          0,
+          0.2405001892752237,
+          0.08620439141385286,
+          -0.36963906357224063,
+          -0.17274420847523042,
+          0,
+          0.18481953178612032,
+          0.23244997373463047,
+          -0.19421144991681247,
+          0,
+          0,
+          -0.4501412189781733,
+          -0.07111023727524049,
+          -0.22775401466928444
+        ],
+        "route": {
+          "board_allocations": [
+            {
+              "board": "behance/typography",
+              "role": "hook_cover",
+              "weight": 0.32,
+              "synthetic_query": "impacto tipográfico headline capa contraste focal | story 9:16 — Story 9:16 com pergunta e convite para conhecer a aula. [story]",
+              "rationale": "Board especializado em tipografia expressiva e gancho visual de capa."
+            },
+            {
+              "board": "creativemarket/magazine-templates",
+              "role": "structural_grid",
+              "weight": 0.28,
+              "synthetic_query": "grid modular colunas diagramação escaneável | story 9:16 — Story 9:16 com pergunta e convite para conhecer a aula. [story]",
+              "rationale": "Board forte em arquitetura de informação, grids editoriais e cadência estrutural."
+            },
+            {
+              "board": "latermedia/instagram-stories",
+              "role": "ui_component",
+              "weight": 0.2,
+              "synthetic_query": "componentes UI cards bento interface | story 9:16 — Story 9:16 com pergunta e convite para conhecer a aula. [story]",
+              "rationale": "Board focado em componentes modulares, Bento grids e acabamento de interface."
+            },
+            {
+              "board": "canva/feed",
+              "role": "wildcard_exploration",
+              "weight": 0.2,
+              "synthetic_query": "exploração direção de arte composição | story 9:16 — Story 9:16 com pergunta e convite para conhecer a aula. [story]",
+              "rationale": "Pool /feed de exploração limitado à cota máxima de 20%."
+            }
+          ],
+          "required_sid_tags": [],
+          "excluded_sid_tags": [],
+          "router_excluded_sid_tags": []
+        },
+        "rank": {
+          "p_use_as_layout_grid": 0.8348,
+          "p_use_as_typography_hook": 0.8248,
+          "p_use_color_and_vibe": 0.7355,
+          "p_high_conversion_clarity": 0.6984,
+          "p_dwell_engagement": 0.7248,
+          "p_reject_too_generic": 0.1337,
+          "p_reject_style_mismatch": 0.0929,
+          "composition_guideline": "Estruturar layout com mecânica bold_display_hook, hierarquia tipográfica portrait e direção cromática contrast inspirada em behance/editorial."
+        },
+        "score": [
+          {
+            "id": "one",
+            "raw_score": 31.537619691759353,
+            "metadata_sid": [
+              "story_interactive_9:16",
+              "bold_display_hook",
+              "portrait",
+              "contrast"
+            ],
+            "diversity_multiplier": 1,
+            "final_score": 31.5376
+          },
+          {
+            "id": "two",
+            "raw_score": 31.537619691759353,
+            "metadata_sid": [
+              "story_interactive_9:16",
+              "bold_display_hook",
+              "portrait",
+              "contrast"
+            ],
+            "diversity_multiplier": 0.65,
+            "final_score": 20.4995
+          }
+        ]
+      }
+    },
+    {
+      "route": {
+        "briefing": "Anuncio de oferta de produto com CTA e alto contraste, sem gradiente.",
+        "target_format": "single_feed",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [
+            "gradiente"
+          ],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "board_affinities": [],
+        "user_id": "synthetic-fixture",
+        "source": "deterministic_mock"
+      },
+      "rankInput": {
+        "briefing": "Anuncio de oferta de produto com CTA e alto contraste, sem gradiente.",
+        "user_taste": {
+          "user_id": "synthetic-fixture",
+          "preferred_boards_by_goal": {},
+          "visual_dna_rules": [],
+          "negative_constraints": [
+            "gradiente"
+          ],
+          "updated_at": "2026-11-06T00:00:00.000Z"
+        },
+        "user_tower_vec": [
+          -0.11584930756283171,
+          -0.19193798857940758,
+          0.10183297158609407,
+          0.15704017247406074,
+          0.2482893801593529,
+          -0.38387597715881516,
+          0.0028604767299464516,
+          -0.130151691212564,
+          0,
+          0.3186571077160359,
+          -0.29520119853047483,
+          0,
+          0,
+          -0.2039519908451827,
+          0.23341490116363126,
+          0.19193798857940758,
+          0,
+          0.10726787737299233,
+          0.10783997271898162,
+          0.20223570480721484,
+          0.22397532795480793,
+          0.06550491711577398,
+          0.31121986821817504,
+          0.21453575474598469,
+          0,
+          0,
+          -0.20023337109625233,
+          0,
+          0.08152358680347416,
+          -0.16390531662593227,
+          0,
+          0.17935189096764317
+        ],
+        "candidate": {
+          "candidate_id": "synthetic-fixture",
+          "board": "behance/editorial",
+          "metadata_sid": [
+            "ad_conversion_1:1",
+            "high_contrast_cta",
+            "product",
+            "contrast"
+          ],
+          "visual_description": "Composição editorial com grid e tipografia clara.",
+          "candidate_vec": [
+            0,
+            -0.12503123486706558,
+            0,
+            0,
+            0,
+            -0.3147337981136478,
+            -0.29557192303823554,
+            0,
+            -0.2639548291638052,
+            0.3013204855608592,
+            0,
+            0,
+            0,
+            0,
+            0,
+            -0.35114136075693136,
+            0,
+            0,
+            0.32718901691266594,
+            0,
+            -0.2697033916864289,
+            -0.29461382928446495,
+            -0.24000248531953972,
+            -0.21317586021396243,
+            0,
+            -0.05940181273377829,
+            0,
+            -0.1940139851385501,
+            -0.28024242297790564,
+            0,
+            0.1576064224952666,
+            0
+          ]
+        }
+      },
+      "expected": {
+        "embedding": [
+          -0.11584930756283171,
+          -0.19193798857940758,
+          0.10183297158609407,
+          0.15704017247406074,
+          0.2482893801593529,
+          -0.38387597715881516,
+          0.0028604767299464516,
+          -0.130151691212564,
+          0,
+          0.3186571077160359,
+          -0.29520119853047483,
+          0,
+          0,
+          -0.2039519908451827,
+          0.23341490116363126,
+          0.19193798857940758,
+          0,
+          0.10726787737299233,
+          0.10783997271898162,
+          0.20223570480721484,
+          0.22397532795480793,
+          0.06550491711577398,
+          0.31121986821817504,
+          0.21453575474598469,
+          0,
+          0,
+          -0.20023337109625233,
+          0,
+          0.08152358680347416,
+          -0.16390531662593227,
+          0,
+          0.17935189096764317
+        ],
+        "route": {
+          "board_allocations": [
+            {
+              "board": "behance/typography",
+              "role": "hook_cover",
+              "weight": 0.32,
+              "synthetic_query": "impacto tipográfico headline capa contraste focal | anuncio oferta cta produto contraste — Anuncio de oferta de produto com CTA e alto contraste, sem gradiente. [single_feed]",
+              "rationale": "Board especializado em tipografia expressiva e gancho visual de capa."
+            },
+            {
+              "board": "creativemarket/magazine-templates",
+              "role": "structural_grid",
+              "weight": 0.28,
+              "synthetic_query": "grid modular colunas diagramação escaneável | anuncio oferta cta produto contraste — Anuncio de oferta de produto com CTA e alto contraste, sem gradiente. [single_feed]",
+              "rationale": "Board forte em arquitetura de informação, grids editoriais e cadência estrutural."
+            },
+            {
+              "board": "kittldesign/ads-designs",
+              "role": "conversion_cta",
+              "weight": 0.2,
+              "synthetic_query": "conversão CTA destaque de produto oferta | anuncio oferta cta produto contraste — Anuncio de oferta de produto com CTA e alto contraste, sem gradiente. [single_feed]",
+              "rationale": "Board focado em clareza comercial, destaque de produto e CTA de conversão."
+            },
+            {
+              "board": "canva/feed",
+              "role": "wildcard_exploration",
+              "weight": 0.2,
+              "synthetic_query": "exploração direção de arte composição | anuncio oferta cta produto contraste — Anuncio de oferta de produto com CTA e alto contraste, sem gradiente. [single_feed]",
+              "rationale": "Pool /feed de exploração limitado à cota máxima de 20%."
+            }
+          ],
+          "required_sid_tags": [],
+          "excluded_sid_tags": [
+            "gradiente"
+          ],
+          "router_excluded_sid_tags": []
+        },
+        "rank": {
+          "p_use_as_layout_grid": 0.7823,
+          "p_use_as_typography_hook": 0.5923,
+          "p_use_color_and_vibe": 0.6876,
+          "p_high_conversion_clarity": 0.7774,
+          "p_dwell_engagement": 0.6723,
+          "p_reject_too_generic": 0.1561,
+          "p_reject_style_mismatch": 0.1109,
+          "composition_guideline": "Estruturar layout com mecânica high_contrast_cta, hierarquia tipográfica product e direção cromática contrast inspirada em behance/editorial."
+        },
+        "score": [
+          {
+            "id": "one",
+            "raw_score": 27.924548400261997,
+            "metadata_sid": [
+              "ad_conversion_1:1",
+              "high_contrast_cta",
+              "product",
+              "contrast"
+            ],
+            "diversity_multiplier": 1,
+            "final_score": 27.9245
+          },
+          {
+            "id": "two",
+            "raw_score": 27.924548400261997,
+            "metadata_sid": [
+              "ad_conversion_1:1",
+              "high_contrast_cta",
+              "product",
+              "contrast"
+            ],
+            "diversity_multiplier": 0.65,
+            "final_score": 18.151
+          }
+        ]
+      }
+    }
+  ]
+}

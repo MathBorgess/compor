@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
-import { sessionSchema } from "./studio-ui-types";
+import { parseSessionState } from "../lib/session-state";
 import Projects from './projects';
 
 export default function Workspace({ loginAvailable }: { loginAvailable: boolean }) {
@@ -51,7 +51,7 @@ export default function Workspace({ loginAvailable }: { loginAvailable: boolean 
       fetch('/auth/session', { cache: 'no-store', signal: controller.signal })
       .then(response => response.ok ? response.json() : { state: 'unavailable' })
       .then((input: unknown) => {
-        const data = sessionSchema.parse(input);
+        const data = parseSessionState(input);
         if (currentGeneration !== generation) return;
         if (data.state === 'connected' && typeof data.userId === 'string' && data.userId) {
           if (openAIKeyOwner.current && openAIKeyOwner.current !== data.userId) clearOpenAIKey();

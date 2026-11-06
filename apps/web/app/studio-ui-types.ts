@@ -7,7 +7,6 @@ export const projectResponseSchema = z.object({ project: projectSchema });
 export const contentSchema = pieceContentSchema;
 export const versionSchema = z.object({ project_id: z.string(), piece_id: z.string(), version: z.number().int(), content: contentSchema, metadata:z.object({revision:z.number(),approval:approvalSchema}).optional(), created_at: z.string().optional() });
 export const versionsSchema = z.object({ versions: z.array(versionSchema) });
-export const sessionSchema = z.object({ state: z.string(), userId: z.string().optional() });
 export const markerSchema = z.object({ assetId: z.string().nullable() });
 export const storedImageSchema = z.object({ status: z.string(), assetId: z.string().optional() });
 export const legacyDraftSchema = z.object({ pieceId: z.string(), expectedVersion: z.number().int(), sourceVersion: z.number().int().optional(), content: contentSchema, dirty: z.boolean().default(false), conflict: z.boolean().optional(), unknown: z.boolean().optional() });

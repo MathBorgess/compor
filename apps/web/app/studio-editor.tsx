@@ -17,7 +17,8 @@ export default function StudioEditor({
   onRemoveMark,
   onPreview,
   onApprove,
-}: {draft: StudioDraft | null;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: Exclude<keyof PieceContent, "captionOrigin">,value: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onPreview?: (blob: Blob) => void;onApprove?: () => void}) {
+  onViewArt,
+}: {draft: StudioDraft | null;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: Exclude<keyof PieceContent, "captionOrigin">,value: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onPreview?: (blob: Blob) => void;onApprove?: () => void;onViewArt?: () => void}) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState<Region | null>(null),
     [note, setNote] = useState(""),
@@ -106,6 +107,7 @@ export default function StudioEditor({
           onClick={() => {
             setMode("select");
             setRegion(null);
+            onViewArt?.();
           }}
         >
           Ver arte

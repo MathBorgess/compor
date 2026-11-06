@@ -96,6 +96,27 @@ class StageTest(unittest.TestCase):
             outputs.append(result['manifest_sha256'])
         self.assertEqual(outputs[0], outputs[1])
 
+    def test_stage_contains_the_server_runtime_without_the_stdio_prototype(self):
+        output = self.base / 'phoenix-bundle'
+        self.stage(output)
+        app = output / 'apps/web'
+        for filename in ['phoenix-worker.ts', 'studio-decision-route.ts', 'studio-decision-contract.ts',
+                         'phoenix/catalog.ts', 'phoenix/deterministic.ts', 'phoenix/formulas.ts',
+                         'phoenix/hyperparams.ts', 'phoenix/models.ts', 'phoenix/source-manifest.json', 'phoenix/PROVENANCE.md']:
+            self.assertEqual((app / 'lib' / filename).read_bytes(), (self.root / 'apps/web/lib' / filename).read_bytes())
+        self.assertTrue((app / 'app/api/studio/decision/route.ts').is_file())
+        self.assertFalse((output / 'prototypes').exists())
+        self.assertEqual(json.loads((app / 'package.json').read_text())['scripts']['build'], 'next build')
+
+    def test_rejects_missing_phoenix_dependency_before_creating_bundle(self):
+        (self.root / 'apps/web/lib/phoenix/deterministic.ts').unlink()
+        self.commit = self.snapshot()
+        output = self.base / 'bundle'
+        run = self.stage(output, check=False)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn('missing required source files', run.stderr)
+        self.assertFalse(output.exists())
+
     def test_rejects_existing_or_non_absolute_destination(self):
         for output in [self.base, 'relative-output']:
             run = self.stage(output, check=False)
