@@ -2,7 +2,9 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createExplorationImageRoute, ExplorationCredentialsRejected } from '../lib/exploration-image-route.ts';
 import { decodeExplorationImage } from '../lib/exploration-image-runtime.ts';
+import { POST as explorationPost } from '../app/api/studio/explorations/route.ts';
 import { createHash } from 'node:crypto';
+import { createExplorationPrompt } from '@compor/agile-deliberation/exploration';
 
 const project='00000000-0000-4000-8000-000000000001', requestId='00000000-0000-4000-8000-000000000002';
 const actor={userId:'00000000-0000-4000-8000-000000000003',token:'token'};
@@ -22,7 +24,7 @@ function setup(generate=async()=>new Uint8Array([1,2,3])) {
     },
     async finish(_actor,_project,id,state){records.get(id).state=state;},
     async reject(_actor,_project,id,secret){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='rejected';},
-    async put(){},async list(){return [];},async read(){return new Response();},
+    async plan(){},async put(){},async list(){return [];},async read(){return new Response();},
   };
   const route=createExplorationImageRoute({appOrigin:'http://localhost:3000',resolveActor:async()=>actor,ownsProject:async()=>true,store,generate:async(...args)=>{calls++;return generate(...args);}});
   return {route,records,calls:()=>calls};
@@ -74,6 +76,58 @@ test('somente resposta interna específica de recusa do fornecedor é definitiva
 });
 test('origem incorreta não chama geração',async()=>{
   const f=setup(); assert.equal((await f.route.post(request(requestId,'http://other.test'))).status,403); assert.equal(f.calls(),0);
+});
+test('aceita contexto Unicode válido e escapes JSON até o limite de contrato',async()=>{
+ for(const prompt of ['漢'.repeat(8000),'😀'.repeat(4000),'\u0001'.repeat(8000)]) {
+  const f=setup(async(_actor,_key,actual)=>{assert.equal(actual,prompt);return new Uint8Array([1]);});
+  const body=JSON.stringify({projectId:project,requestId,prompt,plan:{composition:'視'.repeat(300),contrast:'🎨'.repeat(150)},batch:{id:'00000000-0000-4000-8000-000000000005',position:1}});
+  assert.ok(Buffer.byteLength(body)>16384);assert.ok(Buffer.byteLength(body)<65536);
+  const result=await f.route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key},body}));
+  assert.equal(result.status,200);assert.equal(f.calls(),1);
+ }
+});
+test('prompt gerado de briefing multibyte real é aceito e enviado uma vez',async()=>{
+ const f=setup();const {prompt,composition,contrast}=createExplorationPrompt({offer:'漢'.repeat(4000),audience:'字'.repeat(2000),goal:'人'.repeat(2000),direction:'新'.repeat(4000),accepted:[],rejected:[],feedback:[],sequence:0});
+ const body=JSON.stringify({projectId:project,requestId,prompt,plan:{composition,contrast},batch:{id:'00000000-0000-4000-8000-000000000005',position:1}});
+ assert.ok(prompt.length<=8000);assert.ok(Buffer.byteLength(body)>16384);
+ const result=await f.route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':requestId},body}));
+ assert.equal(result.status,200);assert.equal(f.calls(),1);
+});
+test('antes da reserva sinaliza falha correlacionada e preserva limite do corpo',async()=>{
+ const f=setup();let cancelled=false;
+ const stream=new ReadableStream({start(controller){controller.enqueue(new Uint8Array(65536));controller.enqueue(new Uint8Array(1));},cancel(){cancelled=true;}});
+ const headers={origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':requestId};
+ const result=await f.route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers,body:stream,duplex:'half'}));
+ assert.equal(result.status,413);assert.deepEqual(await result.json(),{status:'not_started',requestId,retryAutomatically:false});assert.equal(cancelled,true);assert.equal(f.records.size,0);assert.equal(f.calls(),0);
+ const status=await f.route.status(new Request('http://localhost:3000/api/studio/explorations/status',{method:'POST',headers,body:' '.repeat(16385)}));assert.equal(status.status,400);
+});
+test('aceita corpo válido no limite exato de 64 KiB',async()=>{
+ const f=setup();const json=JSON.stringify({projectId:project,requestId,prompt:'Ideia'}),body=json+' '.repeat(65536-Buffer.byteLength(json));
+ assert.equal(Buffer.byteLength(body),65536);
+ const response=await f.route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':requestId},body}));
+ assert.equal(response.status,200);assert.equal(f.calls(),1);
+});
+test('rejeita UTF-8 ou texto Unicode malformado e ID divergente antes da reserva',async()=>{
+ const f=setup();const headers={origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':requestId};
+ for(const body of [new Uint8Array([0xc3,0x28]),JSON.stringify({projectId:project,requestId,prompt:'\ud800'}),JSON.stringify({projectId:project,requestId,prompt:'texto',plan:{composition:'\udc00',contrast:'claro'}}),JSON.stringify({projectId:project,requestId:'00000000-0000-4000-8000-000000000099',prompt:'texto'})]) {
+  const result=await f.route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers,body}));
+  assert.equal(result.status,400);assert.deepEqual(await result.json(),{status:'not_started',requestId,retryAutomatically:false});
+ }
+ assert.equal(f.records.size,0);assert.equal(f.calls(),0);
+});
+test('falha em reserve é sempre unknown mesmo com cabeçalho correlacionado',async()=>{
+ let calls=0;
+ const store={reserve:async()=>{calls++;throw Error('response lost');},put:async()=>{},finish:async()=>{},reject:async()=>{},list:async()=>[],read:async()=>new Response()};
+ const route=createExplorationImageRoute({appOrigin:'http://localhost:3000',resolveActor:async()=>actor,ownsProject:async()=>true,store,generate:async()=>{throw Error('unexpected');}});
+ const result=await route.post(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{origin:'http://localhost:3000','content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':requestId},body:JSON.stringify({projectId:project,requestId,prompt:'texto'})}));
+ assert.equal(result.status,503);assert.deepEqual(await result.json(),{status:'unknown',requestId,retryAutomatically:false});assert.equal(calls,1);
+});
+test('runtime indisponível sinaliza que esta chamada não iniciou a reserva',async()=>{
+ const previous=process.env.COMPOR_PRIVATE_IMAGES_ENABLED;process.env.COMPOR_PRIVATE_IMAGES_ENABLED='false';
+ try {
+  const result=await explorationPost(new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{'x-compor-exploration-request-id':requestId}}));
+  assert.equal(result.status,503);assert.deepEqual(await result.json(),{status:'not_started',requestId,retryAutomatically:false});
+ } finally {if(previous===undefined)delete process.env.COMPOR_PRIVATE_IMAGES_ENABLED;else process.env.COMPOR_PRIVATE_IMAGES_ENABLED=previous;}
 });
 test('pausa durável não envia imagem e retomada valida origem e titularidade',async()=>{
  let generated=0,resumed=0;

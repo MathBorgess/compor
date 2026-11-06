@@ -190,7 +190,7 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore,
     registerDeliberationTools(server);
     if (typeof exploration === 'function') {
       server.registerTool('generate_exploration_image', {
-        description: 'Gera uma referência visual para projeto autorizado. A chave conectada é enviada no transporte pelo cliente, nunca nos argumentos. Resultado incerto não deve ser repetido automaticamente. Após rejected, corrija a chave e aguarde um pedido explícito antes de tentar novamente.',
+        description: 'Gera uma referência visual para projeto autorizado. A chave conectada é enviada no transporte pelo cliente, nunca nos argumentos. Resultado incerto não deve ser repetido automaticamente. Após rejected, corrija a chave e aguarde um pedido explícito antes de tentar novamente. not_started só confirma que esta chamada não iniciou a reserva; não prova o histórico de um requestId reutilizado. Aguarde um pedido explícito para retomar.',
         inputSchema: z.strictObject({projectId:uuid,requestId:uuid,prompt:z.string().trim().min(1).max(8000)}),
         annotations: {destructiveHint:false,openWorldHint:true},
       }, async args => {
@@ -200,7 +200,7 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore,
           const value=await exploration({actor,token:match[1]},args,key);
           const result=z.discriminatedUnion('status',[
             z.strictObject({status:z.literal('completed'),requestId:uuid,imageId:uuid}),
-            z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected']),requestId:uuid,retryAutomatically:z.literal(false)}),
+            z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected','not_started']),requestId:uuid,retryAutomatically:z.literal(false)}),
           ]).parse(value);
           if(result.requestId.toLowerCase()!==args.requestId.toLowerCase())throw Error();
           if(result.status==='completed' && result.imageId.toLowerCase()!==args.requestId.toLowerCase())throw Error();

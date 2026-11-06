@@ -10,7 +10,7 @@ import { markBeforeDispatch } from "../lib/exploration-pending";
 import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
 import { referenceSignalsResponseSchema,currentReferenceFeedback } from "../lib/reference-exploration-contract";
 
-const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected"]), requestId: z.string().uuid(), retryAutomatically: z.boolean().optional() });
+const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().uuid(), retryAutomatically: z.boolean().optional() });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
@@ -57,6 +57,7 @@ export function useExplorationLoop(props: LoopProps) {
     let dispatched = false;
     const pendingKey = `compor-exploration-pending:${props.userId}`;
     const rejectedKey = `compor-exploration-rejected:${props.userId}`;
+    const notStartedKey = `compor-exploration-not-started:${props.userId}`;
     const sequenceKey = (projectId: string) => `compor-exploration-sequence:${props.userId}:${projectId}`;
     const batchKey = (projectId: string) => `compor-exploration-batch:${props.userId}:${projectId}`;
     let progress:BatchProgress|null=null;
@@ -76,6 +77,7 @@ export function useExplorationLoop(props: LoopProps) {
         await navigator.locks.request(`compor-exploration:${props.userId}`, { signal: cancel.signal }, async () => {
           if (!active) return;
           if (localStorage.getItem(rejectedKey) !== null) { stop("A chave foi recusada. Corrija a conexão e retome a exploração."); return; }
+          if (localStorage.getItem(notStartedKey) !== null) { stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto."); return; }
           progress=readBatchProgress(localStorage,batchKey(props.projectId),sequenceKey(props.projectId),()=>crypto.randomUUID());
           const prior = localStorage.getItem(pendingKey);
           if (prior !== null) {
@@ -87,6 +89,7 @@ export function useExplorationLoop(props: LoopProps) {
             if (match?.state === "rejected") {
               // Persist the pause before removing the receipt: reload or another
               // tab must not restart the loop after a confirmed rejection.
+              if (localStorage.getItem(pendingKey) !== prior) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(rejectedKey, "1");
               localStorage.removeItem(pendingKey);
               stop("A chave foi recusada. Corrija a conexão e retome a exploração.");
@@ -160,10 +163,18 @@ export function useExplorationLoop(props: LoopProps) {
             if (!markBeforeDispatch(localStorage,pendingKey,marker,()=>active && !cancel.signal.aborted && current.current.enabled && current.current.isAuthenticated() && current.current.getApiKey() === apiKey)) return;
             setPhase('generating');setCountdown(null);setStatus(`Explorando caminho visual ${sequence + 1}…`);
             dispatched = true;
-            const response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", "x-compor-openai-key": apiKey }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
+            const response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", "x-compor-openai-key": apiKey, "x-compor-exploration-request-id": requestId }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
             const result = responseSchema.parse(await response.json());
             dispatched = false;
+            if ([400,403,404,413,503].includes(response.status) && result.status === "not_started" && result.requestId === requestId && result.retryAutomatically === false) {
+              if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              localStorage.setItem(notStartedKey, "1");
+              localStorage.removeItem(pendingKey);
+              stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto.");
+              return;
+            }
             if ((response.status === 401 || response.status === 409) && result.status === "rejected" && result.requestId === requestId && result.retryAutomatically === false) {
+              if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(rejectedKey, "1");
               localStorage.removeItem(pendingKey);
               stop("A chave foi recusada. Corrija a conexão e retome a exploração.");
@@ -207,7 +218,7 @@ export function useExplorationLoop(props: LoopProps) {
 
   async function resume() {
     if(resumeInFlight.current)return;
-    try { localStorage.removeItem(`compor-exploration-rejected:${props.userId}`); }
+    try { localStorage.removeItem(`compor-exploration-rejected:${props.userId}`); localStorage.removeItem(`compor-exploration-not-started:${props.userId}`); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.'); return; }
     if(awaitingFeedback) {
       resumeInFlight.current=true;setResuming(true);setResumeError(null);

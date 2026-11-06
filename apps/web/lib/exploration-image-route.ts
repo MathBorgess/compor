@@ -33,11 +33,13 @@ type Dependencies = {
   generate:(actor:Actor, key:string, prompt:string)=>Promise<Uint8Array>;
 };
 
-async function parseBody(request:Request):Promise<unknown> {
+const GENERATION_BODY_LIMIT=65536;
+class BodyTooLarge extends Error {}
+async function parseBody(request:Request,limit=16384):Promise<unknown> {
   if (!request.body) throw Error('missing');
   const reader=request.body.getReader(), chunks:Uint8Array[]=[]; let length=0;
   try {
-    for (;;) { const {value,done}=await reader.read(); if(done)break; length+=value.byteLength; if(length>16384)throw Error('large'); chunks.push(value); }
+    for (;;) { const {value,done}=await reader.read(); if(done)break; length+=value.byteLength; if(length>limit)throw new BodyTooLarge(); chunks.push(value); }
     return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));
   } finally { await reader.cancel().catch(()=>{}); }
 }
@@ -50,16 +52,25 @@ export function createExplorationImageRoute(deps:Dependencies) {
   }
   return {
     async post(request:Request) {
-      if(request.headers.get('origin')!==deps.appOrigin)return reply({error:'invalid_origin'},403);
-      if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return reply({error:'invalid_request'},400);
+      // This correlation is used only before attempting a reservation. A
+      // timeout or any failure once reserve is called remains unknown.
+      const correlation=id.safeParse(request.headers.get('x-compor-exploration-request-id'));
+      const notStarted=(error:string,status:number)=>correlation.success
+        ? reply({status:'not_started',requestId:correlation.data,retryAutomatically:false},status)
+        : reply({error},status);
+      if(request.headers.get('origin')!==deps.appOrigin)return notStarted('invalid_origin',403);
+      if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return notStarted('invalid_request',400);
       const key=request.headers.get('x-compor-openai-key')??'';
-      if(!/^sk-[^\s]{20,300}$/.test(key))return reply({error:'invalid_request'},400);
+      if(!/^sk-[^\s]{20,300}$/.test(key))return notStarted('invalid_request',400);
       let data:z.infer<typeof input>;
-      try { data=input.parse(await parseBody(request)); if(data.prompt.includes(key))throw Error('key in prompt'); }
-      catch { return reply({error:'invalid_request'},400); }
+      try {
+        data=input.parse(await parseBody(request,GENERATION_BODY_LIMIT));
+        if((correlation.success && correlation.data!==data.requestId) || data.prompt.includes(key) || !data.prompt.isWellFormed() || (data.plan && (!data.plan.composition.isWellFormed() || !data.plan.contrast.isWellFormed())))throw Error('invalid request');
+      }
+      catch(error) { return notStarted('invalid_request',error instanceof BodyTooLarge?413:400); }
       let actor:Actor|null;
-      try { actor=await actorFor(data.projectId); } catch { return reply({error:'unavailable'},503); }
-      if(!actor)return reply({error:'not_found'},404);
+      try { actor=await actorFor(data.projectId); } catch { return notStarted('unavailable',503); }
+      if(!actor)return notStarted('not_found',404);
       const digest=createHash('sha256').update(data.prompt).update(data.plan?JSON.stringify(data.plan):'').update(data.batch?JSON.stringify(data.batch):'').digest('hex');
       const rejectionSecret=randomBytes(32);
       const rejectionDigest=createHash('sha256').update(rejectionSecret).digest('hex');

@@ -23,8 +23,9 @@ test('recusa confirmada pausa até retomada explícita, inclusive após resposta
   let logs='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'',SUPABASE_PUBLISHABLE_KEY:''}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{logs=(logs+chunk).slice(-5000);});
   let browser;t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(fixture,{recursive:true,force:true});}}});
   await waitForApp({url:`${origin}/exploration-rejection-test`,child,signal:t.signal,diagnostics:()=>logs});browser=await chromium.launch({executablePath:browserPath,headless:true});
-  for(const mode of ['confirmed','lost','mismatched']) {
-    const context=await browser.newContext();const posts=[],keys=[];
+  for(const mode of ['confirmed','lost','mismatched','replaced']) {
+    const context=await browser.newContext();const posts=[],keys=[];let release,received;
+    const held=new Promise(resolve=>{release=resolve;}),arrived=new Promise(resolve=>{received=resolve;});
     await context.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));
     await context.route('**/api/studio/explorations**',async route=>{
       const request=route.request(),path=new URL(request.url()).pathname;
@@ -33,18 +34,20 @@ test('recusa confirmada pausa até retomada explícita, inclusive após resposta
       if(request.method()==='GET')return route.fulfill({json:{images:posts.length?[{id:posts[0].requestId,project_id:projectId,state:mode==='lost'?'rejected':'unknown'}]:[]}});
       const body=request.postDataJSON();posts.push(body);keys.push(request.headers()['x-compor-openai-key']);
       if(posts.length>1)return route.fulfill({status:502,json:{status:'unknown',requestId:body.requestId,retryAutomatically:false}});
+      received();if(mode==='replaced')await held;
       if(mode==='lost')return route.abort('failed');
       return route.fulfill({status:401,json:{status:'rejected',requestId:mode==='mismatched'?'00000000-0000-4000-8000-000000000099':body.requestId,retryAutomatically:false}});
     });
-    const page=await context.newPage();await page.goto(`${origin}/exploration-rejection-test`);
+    const page=await context.newPage();await page.goto(`${origin}/exploration-rejection-test`);await arrived;
+    if(mode==='replaced'){await page.evaluate(key=>localStorage.setItem(key,'outra tentativa'),marker);release();}
     if(mode==='lost') {
       await page.getByText(/Não foi possível confirmar a exploração/).waitFor();
       assert.notEqual(await page.evaluate(key=>localStorage.getItem(key),marker),null);
       await page.reload();
     }
-    if(mode==='mismatched') {
+    if(mode==='mismatched' || mode==='replaced') {
       await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();
-      assert.notEqual(await page.evaluate(key=>localStorage.getItem(key),marker),null);
+      const pending=await page.evaluate(key=>localStorage.getItem(key),marker);assert.notEqual(pending,null);if(mode==='replaced')assert.equal(pending,'outra tentativa');
       assert.equal(await page.evaluate(key=>localStorage.getItem(key),pause),null);
       assert.equal(posts.length,1,'resposta com ID divergente nunca libera a pendência');
     } else {
