@@ -40,6 +40,7 @@ async function app(t){
    return route.fulfill({status:202,json:{status:'action_required',action:{name:'compor_novo_post',args:{projectId,requestId:id(80),revision:body.context.revision}},actionBinding:'synthetic-binding'}});
   }
   if(url.pathname==='/api/studio/action'){calls.push({path:url.pathname,body:request.postDataJSON()});return route.fulfill({json:{status:'completed',text:'Novo post preparado no navegador.'}});}
+  if(url.pathname==='/api/studio/decision')return route.fulfill({json:{ok:true}});
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
@@ -80,21 +81,20 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await eventually(()=>stored(page),value=>value?.marks?.length===1&&value.marks[0].kind==='area');
  assert.equal(await markList.getByText('Destacar este título',{exact:true}).count(),0);
  await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
- await page.getByRole('tab',{name:'Moodboard',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  const files=await page.evaluate(async()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
  await page.getByLabel('Adicionar PNG ou JPEG',{exact:true}).setInputFiles([{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
  await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
  await page.getByRole('button',{name:'Remover referência',exact:true}).first().click();
  await eventually(()=>stored(page),value=>value?.references?.length===1);
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
  await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
  await page.getByLabel('Título',{exact:true}).fill('Alteração local da base antiga');
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'editing a saved version requires saving before approval');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  await page.getByRole('button',{name:/Atual existente.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Atual existente');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Alteração local da base antiga');
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Inicie um novo post para outra ideia');
@@ -123,7 +123,7 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.screenshot({path:'/tmp/compor-studio-visual-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,'page itself must not overflow; board may scroll internally');
- const thirdTab=await page.getByRole('tab',{name:'Fatos e textos',exact:true}).boundingBox();assert.ok(thirdTab.x+thirdTab.width<=390,'the account status does not crowd the mobile tab strip');
+ const marca=await page.getByRole('button',{name:'Marca',exact:true}).boundingBox();assert.ok(marca.x>=0&&marca.x+marca.width<=390,'the Marca chip stays inside the mobile width');
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile.png',fullPage:true});
  await page.getByLabel('Título',{exact:true}).scrollIntoViewIfNeeded();
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');
@@ -133,8 +133,8 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
  await page.getByLabel('Título',{exact:true}).waitFor();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
- await page.getByRole('tab',{name:'Moodboard',exact:true}).click();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
- await page.getByRole('tab',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await page.keyboard.press('Escape');
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
  await page.getByRole('img',{name:'Prévia da arte em 1080 por 1350 pixels',exact:true}).waitFor();
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();const file=await(await download).path();const bytes=await readFile(file);

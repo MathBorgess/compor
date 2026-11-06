@@ -58,6 +58,10 @@ const skills = [
   { id: 'criar-piloto', name: 'Criar piloto', description: 'Orientar criação de arte e legenda revisáveis.', file: 'criar-piloto.md' },
 ] as const;
 
+/** Fixed local catalog. Exported so the web app can load the same skills without copying them. */
+export const comporSkillCatalog = skills;
+export const comporSkillVersion = skillVersion;
+
 export interface ComporServerOptions {
   guidance?: GuidanceVariant;
   referenceStore?: EphemeralReferenceStore;

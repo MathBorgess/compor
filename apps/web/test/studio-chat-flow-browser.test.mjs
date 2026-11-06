@@ -38,13 +38,14 @@ async function app(t){
   if(url.pathname==='/api/agent/image'){const body=request.postDataJSON();calls.push({path:url.pathname,body});return route.fulfill({json:{status:'accepted',assetId:id(90)}});}
   if(url.pathname==='/api/images'){calls.push({path:url.pathname,query:Object.fromEntries(url.searchParams)});return route.fulfill({contentType:'image/png',body:png});}
   if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
+  if(url.pathname==='/api/studio/decision')return route.fulfill({json:{ok:true}});
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
  return {page,origin,calls,versions,flow,errors,external};
 }
 async function openOriginal(page,origin,{key=true}={}){
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Versões',exact:true}).click();await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:/^Bases/}).click();await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
 }
@@ -104,7 +105,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await openOriginal(page,origin);
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha uma imagem para este post original.');
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  await page.getByRole('button',{name:/Post B fora do pedido.*Versão 2/}).click();
  await waiting;release();
  const proposal=page.locator('.studio-image-consent');await proposal.waitFor();
@@ -113,7 +114,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  if(await confirm.isEnabled())await confirm.click();
  await page.waitForLoadState('networkidle');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
@@ -132,7 +133,7 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
  });
  await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
  await page.evaluate(()=>window.__releasePreviewEncoding());
@@ -176,7 +177,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
  await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
  await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
- await page.getByRole('tab',{name:'Histórico',exact:true}).click();
+ await page.getByRole('button',{name:/^Bases/}).click();
  const saved=page.getByRole('button',{name:/Post criado durante a leitura anterior.*Versão 1/});await saved.waitFor();
  const oldRead=page.waitForResponse(response=>response.headers()['x-compor-old-read']==='true');release();await oldRead;
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));

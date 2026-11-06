@@ -13,6 +13,7 @@ export default function StudioEditor({
   onRemoveMark,
   onPreview,
   onApprove,
+  onViewArt,
 }) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState(null),
@@ -117,6 +118,11 @@ export default function StudioEditor({
         >
           Marcar área
         </button>
+        {onViewArt ? (
+          <button type="button" onClick={onViewArt}>
+            Ver arte
+          </button>
+        ) : null}
         <span>
           {draft.approval?.status === "approved" ? "Aprovado" : "Rascunho"}
         </span>

@@ -42,6 +42,7 @@ export default function StudioApp({
     [notice, setNotice] = useState(""),
     [uncertain, setUncertain] = useState(false);
   const seq = useRef(0);
+  const focusCreate = useRef(false);
   async function refresh() {
     const n = ++seq.current;
     setState("loading");
@@ -65,6 +66,16 @@ export default function StudioApp({
       seq.current++;
     };
   }, [userId]);
+  useEffect(() => {
+    if (selected || !focusCreate.current || state !== "ready") return;
+    focusCreate.current = false;
+    document.getElementById("studio-project-name")?.focus();
+  }, [selected, state]);
+  function requestCreate() {
+    focusCreate.current = true;
+    setSelected(null);
+    refresh();
+  }
   async function create(event) {
     event.preventDefault();
     if (state !== "ready" || uncertain || !projectName.trim()) return;
@@ -96,6 +107,14 @@ export default function StudioApp({
         userId={userId}
         isAuthenticated={isAuthenticated}
         project={selected}
+        projects={projects}
+        onOpenProject={setSelected}
+        onProjectRenamed={(project) =>
+          setProjects((items) =>
+            items.map((item) => (item.id === project.id ? { ...item, ...project } : item)),
+          )
+        }
+        onCreateNew={requestCreate}
         onBack={() => {setSelected(null);refresh();}}
         hasApiKey={hasApiKey}
         getApiKey={getApiKey}
@@ -172,6 +191,10 @@ export default function StudioApp({
 function ProjectStudio({
   userId,
   project,
+  projects = [],
+  onOpenProject,
+  onProjectRenamed,
+  onCreateNew,
   onBack,
   hasApiKey,
   getApiKey,
@@ -193,7 +216,9 @@ function ProjectStudio({
     [proposal, setProposal] = useState(null),
     [dialog, setDialog] = useState(null),
     [projectDetails, setProjectDetails] = useState(project),
-    [compact, setCompact] = useState(false);
+    [compact, setCompact] = useState(false),
+    [drawer, setDrawer] = useState(null),
+    [viewingArt, setViewingArt] = useState(false);
   const stateRef = useRef(null),
     versionRef = useRef([]),
     toolsRef = useRef(null),
@@ -212,6 +237,21 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
+  function calibrate(decision) {
+    const briefing = [projectDetails.title, s?.brief?.offer, s?.brief?.direction]
+      .filter(Boolean)
+      .join(". ");
+    fetch("/api/studio/decision", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        decision,
+        projectId: project.id,
+        title: projectDetails.title,
+        briefing,
+      }),
+    }).catch(() => {});
+  }
   async function refreshVersions() {
     const readSequence=++versionsReadSequence.current;
     const response = await fetch(
@@ -366,6 +406,7 @@ function ProjectStudio({
   function nextStage(value) {
     setStage(value);
     setNotice("");
+    if (value !== "studio") setViewingArt(false);
   }
   function newPost(pieceId = crypto.randomUUID()) {
     local.change((value) =>
@@ -375,6 +416,8 @@ function ProjectStudio({
     );
     setBase(null);
     setPreview(null);
+    setDrawer(null);
+    setViewingArt(false);
     setTab("post");
     setStage("studio");
   }
@@ -394,6 +437,8 @@ function ProjectStudio({
             : { status: "unapproved" },
       }),
     );
+    setDrawer(null);
+    setViewingArt(false);
     setTab("post");
     setStage("studio");
   }
@@ -669,6 +714,53 @@ function ProjectStudio({
         );
     }
   }
+  async function renameProject(title) {
+    const expectedRevision = projectDetails.revision;
+    if (!Number.isInteger(expectedRevision) || expectedRevision < 1) {
+      setNotice(
+        "Não foi possível confirmar a revisão do nome. Atualize os projetos antes de repetir.",
+      );
+      return false;
+    }
+    try {
+      const response = await fetch("/api/projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          projectId: project.id,
+          title,
+          expectedRevision,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok || data.status !== "renamed") {
+        setNotice(
+          "Não foi possível confirmar a alteração do nome. Atualize os projetos antes de repetir.",
+        );
+        return false;
+      }
+      if (active.current) {
+        setProjectDetails(data.project);
+        onProjectRenamed?.(data.project);
+      }
+      return true;
+    } catch {
+      setNotice(
+        "Não foi possível confirmar a alteração do nome. Atualize os projetos antes de repetir.",
+      );
+      return false;
+    }
+  }
+  function downloadPreview() {
+    calibrate("baixar");
+    if (!preview) return;
+    const url = URL.createObjectURL(preview);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = "compor-post-1080x1350.png";
+    anchor.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   if (local.loading || !s)
     return (
       <StudioShell stage="projects" statusText="Conta conectada">
@@ -692,10 +784,20 @@ function ProjectStudio({
         )
       }
       onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
+      onViewArt={
+        draft
+          ? () => {
+              setDrawer(null);
+              setViewingArt(true);
+              calibrate("ver-arte");
+            }
+          : undefined
+      }
       onPreview={(blob) => {
         const current=getCurrentDraft(local.get());
         if(current?.pieceId!==draft?.pieceId||current?.baseVersion!==draft?.baseVersion||JSON.stringify(current?.content)!==JSON.stringify(draft?.content))return;
         setPreview(blob);
+        setViewingArt(false);
         setStage("review");
       }}
       onApprove={async () => {
@@ -778,7 +880,11 @@ function ProjectStudio({
   return (
     <StudioShell
       stage={stage}
+      projectId={project.id}
       projectTitle={projectDetails.title}
+      projects={projects}
+      onOpenProject={onOpenProject}
+      onRenameProject={renameProject}
       activeTab={tab}
       statusText="Conta conectada"
       canOpenStudio
@@ -792,7 +898,18 @@ function ProjectStudio({
               : "Rascunho"
       }
       onTabChange={setTab}
-      onNewProject={onBack}
+      onNewProject={onCreateNew || onBack}
+      onLayoutChange={(mode) => calibrate(mode === "c" ? "layout-c" : "layout-b")}
+      drawer={drawer}
+      onDrawerChange={(next) => {
+        setDrawer(next);
+        if (next) calibrate(next);
+      }}
+      basesCount={s.references.length}
+      onDownload={downloadPreview}
+      downloadDisabled={!preview}
+      viewingArt={viewingArt}
+      onCloseArt={() => setViewingArt(false)}
       onBack={onBack}
       onNavigate={(value) =>
         value === "projects" ? onBack() : nextStage(value)
@@ -801,12 +918,14 @@ function ProjectStudio({
       headerActions={
         <>
           <button
+            type="button"
             className="studio-button-secondary"
             onClick={() => nextStage("connect")}
           >
             {hasApiKey ? "IA conectada" : "Conectar IA"}
           </button>
           <button
+            type="button"
             className="studio-button"
             disabled={!draft || saving}
             onClick={() => saveCurrent()}
@@ -815,60 +934,11 @@ function ProjectStudio({
           </button>
         </>
       }
-      canvas={
-        tab === "history" ? (
-          <div className="studio-history">
-            <h2>Histórico do projeto</h2>
-            <button className="studio-button" onClick={()=>newPost()}>Novo post</button>
-            <button
-              onClick={() =>
-                refreshVersions().catch(() =>
-                  setNotice("Não foi possível atualizar as versões."),
-                )
-              }
-            >
-              Atualizar versões
-            </button>
-            <h3>Rascunhos neste navegador</h3>
-            {s.drafts.map((item) => (
-              <button
-                key={`${item.pieceId}:${item.baseVersion}`}
-                onClick={() => {
-                  local.change((value) =>
-                    selectDraft(value, {
-                      pieceId: item.pieceId,
-                      baseVersion: item.baseVersion,
-                    }),
-                  );
-                  setTab("post");
-                  setStage("studio");
-                }}
-              >
-                <strong>{item.content.headline || "Post sem título"}</strong>
-                <span>
-                  {item.baseVersion
-                    ? `Base: versão ${item.baseVersion}`
-                    : "Novo post"}
-                  {item.dirty ? " · alterações locais" : ""}
-                </span>
-              </button>
-            ))}
-            <h3>Versões salvas</h3>
-            {versions.map((version) => (
-              <button
-                key={`${version.piece_id}:${version.version}`}
-                onClick={() => openVersion(version)}
-              >
-                <strong>{version.content.headline || "Post sem título"}</strong>
-                <span>Versão {version.version}{version.version===Math.max(...versions.filter(item=>item.piece_id===version.piece_id).map(item=>item.version))?" · atual":""}</span>
-                {version.metadata?.approval.status==="approved"&&<small>{version.metadata.approval.kind==="inherited"?`Aprovação herdada da versão ${version.metadata.approval.sourceVersion}`:"Aprovação explícita"}</small>}
-              </button>
-            ))}
-          </div>
-        ) : tab === "moodboard" ? (
+      bases={(
+        <div className="studio-drawer-sections">
           <div className="studio-moodboard">
-            <h2>Referências da sua criação</h2>
-            <p>Estas imagens permanecem neste navegador.</p>
+            <h2>Bases</h2>
+            <p>Referências deste navegador e versões que servem de base.</p>
             <label>
               Adicionar PNG ou JPEG
               <input
@@ -886,52 +956,110 @@ function ProjectStudio({
                 <figure key={ref.id}>
                   <img src={ref.url} alt={ref.name} />
                   <figcaption>{ref.name}</figcaption>
-                  <button onClick={() => removeFile(ref.id)}>
+                  <button type="button" onClick={() => removeFile(ref.id)}>
                     Remover referência
                   </button>
                 </figure>
               ))}
             </div>
           </div>
-        ) : tab === "facts" ? (
-          <div>
-            <h2>Fatos e direção</h2>
-            <dl>
-              {Object.entries(s.brief).map(([key, value]) => (
-                <div key={key}>
-                  <dt>
-                    {
-                      {
-                        offer: "Oferta",
-                        audience: "Público",
-                        action: "Ação esperada",
-                        direction: "Direção criativa",
-                      }[key]
-                    }
-                  </dt>
-                  <dd>{value || "Ainda não informado"}</dd>
-                </div>
-              ))}
-            </dl>
-            <PersonaStep
-              value={s.persona}
-              onChange={(value) =>
-                local.change((state) => updatePersona(state, value))
+          <div className="studio-history">
+            <h2>Versões</h2>
+            <button type="button" className="studio-button" onClick={() => newPost()}>Novo post</button>
+            <button
+              type="button"
+              onClick={() =>
+                refreshVersions().catch(() =>
+                  setNotice("Não foi possível atualizar as versões."),
+                )
               }
-              onContinue={() => setTab("post")}
-            />
+            >
+              Atualizar versões
+            </button>
+            <h3>Rascunhos neste navegador</h3>
+            {s.drafts.map((item) => (
+              <button
+                type="button"
+                key={`${item.pieceId}:${item.baseVersion}`}
+                onClick={() => {
+                  local.change((value) =>
+                    selectDraft(value, {
+                      pieceId: item.pieceId,
+                      baseVersion: item.baseVersion,
+                    }),
+                  );
+                  setDrawer(null);
+                  setTab("post");
+                  setStage("studio");
+                }}
+              >
+                <strong>{item.content.headline || "Post sem título"}</strong>
+                <span>
+                  {item.baseVersion
+                    ? `Base: versão ${item.baseVersion}`
+                    : "Novo post"}
+                  {item.dirty ? " · alterações locais" : ""}
+                </span>
+              </button>
+            ))}
+            <h3>Versões salvas</h3>
+            {versions.map((version) => (
+              <button
+                type="button"
+                key={`${version.piece_id}:${version.version}`}
+                onClick={() => openVersion(version)}
+              >
+                <strong>{version.content.headline || "Post sem título"}</strong>
+                <span>Versão {version.version}{version.version===Math.max(...versions.filter(item=>item.piece_id===version.piece_id).map(item=>item.version))?" · atual":""}</span>
+                {version.metadata?.approval.status==="approved"&&<small>{version.metadata.approval.kind==="inherited"?`Aprovação herdada da versão ${version.metadata.approval.sourceVersion}`:"Aprovação explícita"}</small>}
+              </button>
+            ))}
           </div>
-        ) : (
+        </div>
+      )}
+      marca={(
+        <div>
+          <h2>Marca</h2>
+          <p>Fatos, direção e quem vai comprar.</p>
+          <dl>
+            {Object.entries(s.brief).map(([key, value]) => (
+              <div key={key}>
+                <dt>
+                  {
+                    {
+                      offer: "Oferta",
+                      audience: "Público",
+                      action: "Ação esperada",
+                      direction: "Direção criativa",
+                    }[key]
+                  }
+                </dt>
+                <dd>{value || "Ainda não informado"}</dd>
+              </div>
+            ))}
+          </dl>
+          <PersonaStep
+            value={s.persona}
+            onChange={(value) =>
+              local.change((state) => updatePersona(state, value))
+            }
+            onContinue={() => setDrawer(null)}
+          />
+        </div>
+      )}
+      canvas={(
           <CreativeBoard
             title={draft ? "Post atual" : "Sua criação"}
             surfaceWidth={compact ? 352 : 772}
             surfaceHeight={compact ? 1760 : 1100}
-            onCurrentPost={() => setTab("post")}
+            onCurrentPost={() => {
+              setDrawer(null);
+              setTab("post");
+            }}
           >
             {editor}
           </CreativeBoard>
-        )
-      }
+      )}
       chat={chat}
       overlays={
         <>
@@ -1114,17 +1242,9 @@ function ProjectStudio({
             />
           )}
           <button
+            type="button"
             className="studio-button"
-            onClick={() => {
-              if (preview) {
-                const url = URL.createObjectURL(preview),
-                  a = document.createElement("a");
-                a.href = url;
-                a.download = "compor-post-1080x1350.png";
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }
-            }}
+            onClick={downloadPreview}
             disabled={!preview}
           >
             Baixar PNG

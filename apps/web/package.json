@@ -4,9 +4,9 @@
   "version": "0.0.0",
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "sh -c 'if [ -f ../../prototypes/compor-mcp/package.json ]; then npm --prefix ../../prototypes/compor-mcp run build; fi' && next build",
     "start": "next start",
-    "test": "node --test --test-concurrency=1 test/*.test.mjs"
+    "test": "npm --prefix ../../prototypes/compor-mcp run build && node --test --test-concurrency=1 test/*.test.mjs"
   },
   "dependencies": {
     "@compor/agents-api": "file:../../packages/agents-api",
