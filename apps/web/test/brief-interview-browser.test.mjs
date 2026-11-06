@@ -145,7 +145,7 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
   const gate = new Promise(resolve => { release = resolve; });
   await page.route('**/api/studio/chat', async route => {
     await gate;
-    await route.fulfill({status:202,json:{status:'completed',text:'**Direção visual**\n\n- Azul\n- Amarelo\n\n[Link seguro](https://example.com/) [Link perigoso](javascript:alert(1))\n\n![imagem externa](https://tracking.example/pixel.png)\n\n<script>alert(1)</script>'}});
+    await route.fulfill({status:202,json:{status:'completed',text:'**Direção visual**\n\n- Azul\n- Amarelo\n\n[Link seguro](https://example.com/) [Contato](mailto:contato@example.com) [Link perigoso](javascript:alert(1)) [Link relativo](/privado) [Link em arquivo](file:///etc/passwd)\n\n![imagem externa](https://tracking.example/pixel.png)\n\n<script>alert(1)</script>\n\n<img src="https://tracking.example/raw.png" onerror="alert(1)">\n\n<a href="javascript:alert(1)">HTML bruto</a>'}});
   });
   await openProject(page, origin);
   await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
@@ -159,7 +159,12 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
   await message.locator('strong').getByText('Direção visual').waitFor();
   assert.deepEqual(await message.locator('li').allTextContents(),['Azul','Amarelo']);
   assert.equal(await message.getByRole('link',{name:'Link seguro'}).getAttribute('href'),'https://example.com/');
+  assert.equal(await message.getByRole('link',{name:'Link seguro'}).getAttribute('rel'),'noopener noreferrer');
+  assert.equal(await message.getByRole('link',{name:'Contato'}).getAttribute('href'),'mailto:contato@example.com');
   assert.equal(await message.getByRole('link',{name:'Link perigoso'}).count(),0);
+  assert.equal(await message.getByRole('link',{name:'Link relativo'}).count(),0);
+  assert.equal(await message.getByRole('link',{name:'Link em arquivo'}).count(),0);
+  assert.equal(await message.getByRole('link',{name:'HTML bruto'}).count(),0);
   assert.equal(await message.locator('script, img').count(),0);
   assert.equal(await status.count(),0);
   assert.deepEqual(external,[]);

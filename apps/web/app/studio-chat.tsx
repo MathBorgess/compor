@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
-import ReactMarkdown from "react-markdown";
+import Markdown from "markdown-to-jsx";
 import {
   prepareAdjustment,
   settleAdjustment,
@@ -804,18 +804,21 @@ export default function StudioChat({
             </span>
             {item.role === 'assistant' ? (
               <div className="studio-message-markdown">
-                <ReactMarkdown
-                  urlTransform={(value) => {
-                    try {
-                      const url = new URL(value);
-                      return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : '';
-                    } catch { return ''; }
+                <Markdown
+                  options={{
+                    disableParsingRawHTML: true,
+                    sanitizer: (value) => {
+                      try {
+                        const url = new URL(value);
+                        return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
+                      } catch { return null; }
+                    },
+                    overrides: {
+                      a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
+                      img: ({alt}: {alt?: string}) => <span>{alt}</span>,
+                    },
                   }}
-                  components={{
-                    a: ({href, children}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
-                    img: ({alt}) => <span>{alt}</span>,
-                  }}
-                >{item.text}</ReactMarkdown>
+                >{item.text}</Markdown>
               </div>
             ) : <p>{item.text}</p>}
           </article>

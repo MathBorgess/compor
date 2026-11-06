@@ -90,6 +90,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci --ignore-scripts --prefix apps/web
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
+      - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
       - run: npm run quality:typecheck
       - name: Install the browser used by tests
         working-directory: apps/web

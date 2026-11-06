@@ -70,7 +70,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | `npm run quality:test` | Node 24 | Testes de rejeição de páginas inválidas e limites excedidos |
 | `npm run quality:maintenance` | Instalação da raiz | `quality-results/maintainability/complexity.json` |
 | `npm run quality:unit` | Instalação dos pacotes `private-images`, `remote-mcp`, `agile-deliberation`, `agents-api` e do protótipo, Python 3, `psql`, `cwebp`/`dwebp` no `PATH` e histórico Git completo | Resultados dos testes de pacotes e migrações |
-| `npm run quality:browser` | Instalação web e `remote-mcp`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
+| `npm run quality:browser` | Instalação web, `remote-mcp` e `agile-deliberation`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
 | `npm run quality:build` | Instalação web | Build Next de produção |
 | `npm run quality:performance` | Build de produção, instalação da raiz e browser definido | Bundle, cinco relatórios HTML e JSON, resumo e log do servidor |
 

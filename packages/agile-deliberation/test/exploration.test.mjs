@@ -18,3 +18,24 @@ test('não gera proposta sem contexto ou com credencial no contexto',()=>{
  assert.throws(()=>createExplorationPrompt({...input,offer:`sk-${'x'.repeat(30)}`}));
  assert.throws(()=>createExplorationPrompt({...input,sequence:-1}));
 });
+test('aceita briefing multilinha e longo sem perder conteúdo que cabe no prompt',()=>{
+ const offer=`Uma oficina para iniciantes.\n${'Detalhe sobre a oferta. '.repeat(60)}\nÚltima informação.`;
+ const {prompt}=createExplorationPrompt({...input,offer});
+ assert.ok(offer.length>1000);
+ assert.ok(prompt.includes(JSON.stringify(offer)));
+ assert.ok(!prompt.includes('[trecho omitido]'));
+});
+test('limita o contexto ao orçamento preservando decisões e sinalizando trechos omitidos',()=>{
+ const long='Linha "citada" com uma barra \\ e contexto.\n'.repeat(110);
+ const feedback=Array.from({length:8},()=>({action:'comment',comment:'Comentário',composition:'Plano',contrast:'Contraste'}));
+ const result=createExplorationPrompt({...input,offer:long,audience:long,goal:long,direction:long,feedback});
+ assert.ok(result.prompt.length<=8000);
+ assert.match(result.prompt,/\[trecho omitido\]/);
+ assert.ok(result.prompt.includes('Materiais táteis'));
+ assert.ok(result.prompt.includes('Estética luxuosa'));
+ assert.ok(result.prompt.includes('Comentário'));
+});
+test('valida credenciais e controles em todo o texto, mesmo em contexto que seria truncado',()=>{
+ assert.throws(()=>createExplorationPrompt({...input,offer:`${'x'.repeat(9000)} sk-${'x'.repeat(30)}`}));
+ assert.throws(()=>createExplorationPrompt({...input,offer:'Texto\u0000inválido'}));
+});

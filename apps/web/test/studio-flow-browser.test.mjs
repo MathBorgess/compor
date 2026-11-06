@@ -16,7 +16,20 @@ async function eventually(fn,predicate,timeout=5000){const until=Date.now()+time
 async function stored(page,userId=alice){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{return await new Promise((resolve,reject)=>{const request=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));request.onsuccess=()=>resolve(request.result?.state??null);request.onerror=()=>reject(request.error);});}finally{db.close();}},{userId,projectId});}
 async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
 async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
-async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
+async function openEditor(page){
+ const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});
+ await title.or(open).first().waitFor();
+ if(await open.isVisible()){
+  // The floating conversation may cover the briefing; use its visible control
+  // to reveal the editor action, as a person can, and restore it afterwards.
+  const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});
+  const wasOpen=await collapse.isVisible();
+  if(wasOpen)await collapse.click();
+  await open.click();await title.waitFor();
+  if(wasOpen)await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ }
+ await title.waitFor();
+}
 async function chooseFiles(page,label,files){const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 
 async function app(t){
