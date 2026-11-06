@@ -199,7 +199,12 @@ export function useExplorationLoop(props: LoopProps) {
               return;
             }
             if (!response.ok || result.status !== "completed" || result.requestId !== requestId) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
-            progress=recordBatchCompletion(progress,pending,Date.now());
+            const completedAt=Date.now();
+            progress=recordBatchCompletion(progress,pending,completedAt);
+            // A third image can finish after leaving the references screen.
+            // Its newly created wait must start counting only when the loop
+            // becomes active again, just like an already-running wait.
+            if(!active || !current.current.enabled)progress=freezeBatchWait(progress,completedAt);
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
             localStorage.removeItem(pendingKey);

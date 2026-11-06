@@ -14,7 +14,7 @@ const source=`'use client';
 import {useState,StrictMode} from 'react';
 import {useExplorationLoop} from '../use-exploration-loop';
 import {createStudioState,updateBrief} from '../../lib/studio-state';
-function Demo(){const [connected,setConnected]=useState(true),[enabled,setEnabled]=useState(true);const [state,setState]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'}));const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>connected,enabled});return <><button onClick={()=>setState(value=>updateBrief(value,{offer:'Oficina de gravura'}))}>Mudar briefing</button><button onClick={()=>setConnected(false)}>Desconectar</button><button onClick={()=>setConnected(true)}>Reconectar</button><button onClick={()=>setEnabled(false)}>Sair da exploração</button><button onClick={loop.pause}>Pausar</button><button onClick={loop.resume}>Retomar</button><output>{loop.status}</output>{loop.awaitingFeedback && <p>Aguardando decisão sobre duas rodadas</p>}</>};export default function Page(){return <StrictMode><Demo/></StrictMode>};`;
+function Demo(){const [connected,setConnected]=useState(true),[enabled,setEnabled]=useState(true);const [state,setState]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'}));const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>connected,enabled});return <><button onClick={()=>setState(value=>updateBrief(value,{offer:'Oficina de gravura'}))}>Mudar briefing</button><button onClick={()=>setConnected(false)}>Desconectar</button><button onClick={()=>setConnected(true)}>Reconectar</button><button onClick={()=>setEnabled(false)}>Sair da exploração</button><button onClick={()=>setEnabled(true)}>Voltar à exploração</button><button onClick={loop.pause}>Pausar</button><button onClick={loop.resume}>Retomar</button><output>{loop.status}</output>{loop.awaitingFeedback && <p>Aguardando decisão sobre duas rodadas</p>}</>};export default function Page(){return <StrictMode><Demo/></StrictMode>};`;
 async function referenceSignals(context){await context.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));}
 async function until(fn, predicate, timeout=6000){const end=Date.now()+timeout;for(;;){const result=await fn();if(predicate(result))return result;if(Date.now()>end)throw Error('estado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 
@@ -117,6 +117,29 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await leaving.getByRole('button',{name:'Sair da exploração'}).click();finish();
   await until(()=>leaving.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`),value=>value===null);
   await leaving.waitForTimeout(500);assert.equal(departed.length,1,'sair permite concluir a operação enviada e não inicia outra');await h.close();
+
+  const late=await browser.newContext();await referenceSignals(late);const latePosts=[];let finishThird;const thirdHeld=new Promise(resolve=>{finishThird=resolve;});
+  await late.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
+  await late.route('**/api/studio/explorations**',async route=>{
+    const path=new URL(route.request().url()).pathname;
+    if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
+    if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+    if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
+    const body=route.request().postDataJSON();latePosts.push(body);
+    if(latePosts.length===3)await thirdHeld;
+    return route.fulfill({status:latePosts.length===4?502:200,json:{status:latePosts.length===4?'unknown':'completed',requestId:body.requestId}});
+  });
+  const returning=await late.newPage();await returning.goto(`${origin}/exploration-loop-test`);await until(()=>latePosts.length,n=>n===3);
+  await returning.getByRole('button',{name:'Sair da exploração'}).click();await returning.getByText('Exploração disponível na tela de referências.').waitFor();finishThird();
+  await until(()=>returning.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`),value=>value===null);
+  const batchKey=`compor-exploration-batch:${userId}:${projectId}`;
+  const frozen=JSON.parse(await returning.evaluate(key=>localStorage.getItem(key),batchKey));
+  assert.equal(frozen.nextAt,null);assert.equal(frozen.remainingMs,15000,'terceira resposta concluída fora da tela preserva espera inteira');
+  await returning.evaluate(()=>window.advanceTestClock(30000));await returning.getByRole('button',{name:'Voltar à exploração'}).click();
+  await returning.getByText(/próximo lote em/i).waitFor();assert.equal(latePosts.length,3,'tempo fora da tela não inicia o próximo lote');
+  await returning.evaluate(()=>window.advanceTestClock(12000));await returning.waitForTimeout(1000);assert.equal(latePosts.length,3,'a espera continua visível até passar o intervalo');
+  await returning.evaluate(()=>window.advanceTestClock(4000));await returning.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
+  assert.equal(latePosts.length,4);assert.equal(latePosts[3].batch.position,1);await late.close();
 
   const i=await browser.newContext();await referenceSignals(i);const unattended=[];
   await i.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
