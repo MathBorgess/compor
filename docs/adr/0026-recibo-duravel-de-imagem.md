@@ -1,0 +1,19 @@
+# ADR 0026 — Recibo durável de imagem de peça
+
+- Estado: recorded
+- Data: 06/11/2026
+- Contexto: recuperação de uma geração confirmada quando o retorno HTTP ou o download privado se perde.
+
+## Decisão
+
+Uma linha SQL marcada como concluída ou enviada não é, isoladamente, prova de que o servidor executou a operação: funções e armazenamento usam a identidade da pessoa e podem ser invocados pelo titular. Para novas chamadas do estúdio, o servidor usa a chave HMAC já configurada para assinar, em domínio separado, um recibo vinculado a conta, projeto, pedido, tentativa, execução, peça, versão, asset e hash dos bytes. A assinatura só é emitida no mesmo fluxo que observou geração e armazenamento bem-sucedidos e aceitação do envio do resultado; deve ser persistida antes de responder ao navegador. Uma falha ou resposta ambígua durante essa persistência mantém o resultado desconhecido e não autoriza repetição automática. Uma falha do preflight retorna envelope específico associado a pedido, tentativa e nonce da chamada; ela prova apenas que aquela chamada não chegou à execução. O navegador ainda exige a cerca de reconciliação no servidor antes de liberar o marcador; um 503 genérico não é prova de recusa.
+
+O banco guarda um token opaco sem tratar seu conteúdo como autoridade. Na recuperação, a consulta restringe a conta, o projeto e o pedido à tentativa imutável, exige a tentativa encerrada e um único vínculo de reserva/execução/resultados e objeto; o servidor verifica a assinatura e todos os identificadores. O navegador baixa o asset privado, confere o hash e só aplica a imagem se puder preservá-la sem sobrescrever um arquivo local existente. Falha, dados incompatíveis, ausência de prova ou múltiplas reservas mantêm o bloqueio. A recuperação exige tanto turno quanto tentativa em estado `completed`; se um deles falhar, for cancelado ou estiver `unknown`, mesmo um recibo válido permanece não verificável pelo fluxo atual. Se o destino já contiver uma imagem, inclusive a mesma imagem recuperada manualmente, o fluxo conserva o bloqueio: a equivalência entre abas não foi demonstrada. Uma falha após gravar os bytes e antes de persistir o recibo local também pode deixar esse bloqueio. As leituras e remoções de marcadores em `localStorage` não são operações atômicas entre abas. O titular pode inserir um recibo inválido e impedir a própria recuperação, mas não produzir uma assinatura válida para uma operação não observada pelo servidor.
+
+Essa prova não transforma dados históricos ou status SQL em prova de origem do fornecedor, não garante cobrança ou execução exatamente uma vez e não cobre perda após aceitação pelo fornecedor mas antes da persistência do recibo. O fluxo legado sem o identificador de pedido não recebe esse recibo. Tentativas anteriores sem prova continuam bloqueadas até haver reconciliação confiável; não emita uma prova retroativa apenas com base em estados graváveis pelo cliente.
+
+## Implantação e reversão
+
+A migração `20261106000026` deve ser validada e aplicada ao banco correto antes do código que depende dela. Verifique histórico e esquema efetivo, ensaie a ordem num ambiente isolado e preserve operações em andamento. Código novo falha de forma conservadora quando o contrato de recibo não está disponível; clientes antigos não passam a ter recibos retroativos. Planeje a reversão preservando estados e evidências, sem converter resultados incertos em concluídos.
+
+Os recibos dependem da chave `COMPOR_AGENT_HMAC_SECRET`: sua rotação sem disponibilidade controlada da chave anterior impede verificar recibos pendentes. A política de rotação deve preservar a possibilidade de verificação ou tratar esses casos como não resolvidos, sem liberar a cerca. Não há, por esta decisão, autorização para criar ou alterar credenciais, aplicar migrações ou publicar em produção. Testes simulados e PGlite não demonstram comportamento de produção nem corrida entre transações reais.

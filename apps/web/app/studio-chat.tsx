@@ -14,7 +14,7 @@ import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
 import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, referenceFingerprint, referenceRoundKey } from '../lib/studio-reference-round.ts';
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
-import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
+import { imageRejectedBeforeDispatch,imagePreflightRejected,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
@@ -33,6 +33,12 @@ function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageRece
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;
  return value;
 }
+function recoveredImageFor(input:unknown):{requestId:string;pieceId:string;version:number;assetId:string;contentSha256:string}|null {
+ if(!input || typeof input!=='object' || Array.isArray(input))return null;
+ if(Object.keys(input).sort().join(',')!=='assetId,contentSha256,pieceId,requestId,status,version')return null;
+ if(!('status' in input) || input.status!=='image_completed' || !('requestId' in input) || !uuid(input.requestId) || !('pieceId' in input) || !uuid(input.pieceId) || !('assetId' in input) || !uuid(input.assetId) || !('version' in input) || typeof input.version!=='number' || !Number.isSafeInteger(input.version) || input.version<1 || input.version>2147483647 || !('contentSha256' in input) || typeof input.contentSha256!=='string' || !/^[0-9a-f]{64}$/.test(input.contentSha256))return null;
+ return {requestId:input.requestId,pieceId:input.pieceId,version:input.version,assetId:input.assetId,contentSha256:input.contentSha256};
+}
 function inspectionSummary(data:ChatResponse):Inspection{
  const status=data.status==='accepted'?'unknown':data.status;
  const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
@@ -48,6 +54,7 @@ export default function StudioChat({
   hasApiKey,
   getApiKey,
   onUseImage,
+  onRecoverImage,
   prepareImageVersion,
   loadReference,
   loadBase,
@@ -55,7 +62,7 @@ export default function StudioChat({
   connection,
   explorationRecovery,
   developerMode = false,
-}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
+}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;onRecoverImage?:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
   const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
@@ -199,7 +206,7 @@ export default function StudioChat({
     });
     const input:unknown = await response.json();
     const envelope = errorResponseSchema.parse(input);
-    if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
+    if (path === "/api/agent/image" && (imageRejectedBeforeDispatch(response.status,envelope.error) || imagePreflightRejected(response.status,input,{requestId:body.requestId,attemptId:body.attemptId,dispatchId:body.dispatchId})))
       return {status:"failed",error:"image_invalid_request"};
     if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
       return {status:"failed",error:`image_${envelope.status}`};
@@ -561,16 +568,44 @@ export default function StudioChat({
     const requestId=closedImageAttempt;
     if(!requestId||busy)return;
     setBusy(true);
+    let localRecoveryUnavailable=false;
     try {
+      const requireCurrent=()=>{
+        const current=getState();
+        if(!mounted.current||activeMarker.current!==marker||current.userId!==state.userId||current.projectId!==state.projectId||localStorage.getItem(imageSubmissionMarker)!==requestId)throw Error('scope or marker changed');
+        const saved=sessionStorage.getItem(marker);
+        if(saved!==null){const parsed=chatMarkerSchema.safeParse(JSON.parse(saved));if(!parsed.success||parsed.data.requestId!==null)throw Error('conversation changed');}
+      };
       const response=await fetch('/api/agent/image/reconcile-closed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,requestId})});
+      requireCurrent();
       const result:unknown=await response.json();
-      if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='confirmed')throw Error('unverified');
-      if(!mounted.current||activeMarker.current!==marker)return;
-      if(localStorage.getItem(imageSubmissionMarker)!==requestId)throw Error('marker changed');
+      requireCurrent();
+      if(!response.ok)throw Error('unverified');
+      const recovered=recoveredImageFor(result);
+      if(recovered){
+        if(recovered.requestId!==requestId)throw Error('unverified');
+        const {fetchPrivateImage}=await import('../lib/private-image-fetch.ts');
+        requireCurrent();
+        const image=await fetchPrivateImage(new URLSearchParams({projectId:state.projectId,pieceId:recovered.pieceId,version:String(recovered.version),assetId:recovered.assetId}));
+        requireCurrent();
+        const bytes=await image.arrayBuffer();requireCurrent();
+        const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));requireCurrent();
+        if([...digest].map(value=>value.toString(16).padStart(2,'0')).join('')!==recovered.contentSha256)throw Error('image mismatch');
+        if(typeof onRecoverImage!=='function' || await onRecoverImage({blob:image,pieceId:recovered.pieceId,version:recovered.version})!==true){localRecoveryUnavailable=true;throw Error('image application unconfirmed');}
+        requireCurrent();
+        const receipt:ImageReceipt={userId:state.userId,projectId:state.projectId,requestId,pieceId:recovered.pieceId,version:recovered.version,assetId:recovered.assetId};
+        const previousReceipt=receiptRef.current;receiptRef.current=receipt;
+        try {remember(null);} catch(error) {receiptRef.current=previousReceipt;throw error;}
+        requireCurrent();
+        localStorage.removeItem(imageSubmissionMarker);setClosedImageAttempt(null);setImageReceipt(receipt);
+        setNotice('A imagem confirmada foi recuperada para a versão original.');
+        return;
+      }
+      if(!result||typeof result!=='object'||!('status' in result)||result.status!=='confirmed')throw Error('unverified');
       localStorage.removeItem(imageSubmissionMarker);setClosedImageAttempt(null);
       setNotice('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
     } catch {
-      if(mounted.current&&activeMarker.current===marker)setNotice('Não foi possível confirmar o envio. A tentativa continua preservada.');
+      if(mounted.current&&activeMarker.current===marker)setNotice(localRecoveryUnavailable?'Não foi possível preservar a imagem recuperada sem substituir um arquivo local. Revise a versão e o armazenamento; a tentativa continua preservada.':'Não foi possível confirmar o envio. A tentativa continua preservada.');
     } finally {if(mounted.current&&activeMarker.current===marker)setBusy(false);}
   }
   async function declineImage() {
@@ -696,7 +731,9 @@ export default function StudioChat({
           if (localStorage.getItem(imageSubmissionMarker) !== action.requestId) throw Error();
         } catch { throw Error("Não foi possível preservar o estado da geração. Nenhuma imagem foi enviada."); }
         data = await api("/api/agent/image", {
+          dispatchId: crypto.randomUUID(),
           projectId: state.projectId,
+          requestId: action.requestId,
           pieceId: target.pieceId,
           version: target.version,
           attemptId: action.attemptId,

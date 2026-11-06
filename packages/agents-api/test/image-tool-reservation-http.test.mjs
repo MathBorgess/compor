@@ -74,3 +74,18 @@ test('claim distingue espera e bloqueio conhecidos antes do envio ao provedor', 
     assert.deepEqual(await store.claimExecution({actor,reservationId}),{state});
   }
 });
+
+test('recibos opacos são limitados, vinculados e não transformam candidato em prova confiável',async()=>{
+ const requestId='88888888-8888-4888-8888-888888888888',executionId='66666666-6666-4666-8666-666666666666',assetId='77777777-7777-4777-8777-777777777777',proof='v7.cGF5bG9hZA.c2ln';
+ const calls=[];let response=true;
+ const store=createImageToolReservationStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetch:async(url,init)=>{calls.push({path:url.pathname,body:JSON.parse(init.body)});return Response.json(response);}});
+ await store.storeImageReceipt({actor,projectId,requestId,attemptId,executionId,proof});
+ assert.deepEqual(calls[0],{path:'/rest/v1/rpc/store_image_execution_receipt',body:{p_project_id:projectId,p_request_id:requestId,p_attempt_id:attemptId,p_execution_id:executionId,p_proof:proof}});
+ response={status:'candidate',requestId,attemptId,pieceId,version:1,executionId,assetId,proof};
+ assert.deepEqual(await store.getImageReceiptCandidate({actor,projectId,requestId}),response);
+ for(const invalid of [{...response,requestId:pieceId},{...response,version:0},{...response,proof:'v7.malformed'}, {...response,extra:true}, {status:'confirmed'}]) {
+  response=invalid;await assert.rejects(store.getImageReceiptCandidate({actor,projectId,requestId}),/receipt unavailable/);
+ }
+ response={status:'unverified'};assert.deepEqual(await store.getImageReceiptCandidate({actor,projectId,requestId}),response);
+ response=false;await assert.rejects(store.storeImageReceipt({actor,projectId,requestId,attemptId,executionId,proof}),/receipt unavailable/);
+});

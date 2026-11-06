@@ -5,11 +5,14 @@ export interface ClaimScope {userId:string;projectId:string;attemptId:string}
 export interface SessionClaim extends ClaimScope {sessionId:string}
 export interface ActionClaim extends SessionClaim {turnId:string;callId:string;proposalDigest:string}
 export interface ApprovedActionClaim extends ActionClaim {pieceId:string;version:number;artworkDigest:string}
+export interface ImageReceiptClaim extends ClaimScope {requestId:string;pieceId:string;version:number;executionId:string;assetId:string;contentSha256:string}
 export interface SessionBindings {
  issue(input:SessionClaim):string;
  verify(input:ClaimScope & {token:string}):SessionClaim|null;
  issueRecovery(input:SessionClaim):string;
  verifyRecovery(input:ClaimScope & {token:string}):SessionClaim|null;
+ issueImageReceipt(input:ImageReceiptClaim):string;
+ verifyImageReceipt(input:Omit<ImageReceiptClaim,'contentSha256'> & {token:string;contentSha256?:string}):ImageReceiptClaim|null;
  recoveryAttemptKey(input:ClaimScope):string;
  issueAction(input:SessionClaim & {turnId:string;callId:string;prompt?:string;proposal?:ImageProposal}):string;
  verifyAction(input:ClaimScope & {token:string}):ActionClaim|null;

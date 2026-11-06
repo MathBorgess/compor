@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import { imageProposalDigest, artworkInputDigest } from '../src/artwork-input.mjs';
 import { createImageToolExecution, createImageToolApproval } from '../src/image-tool-execution.mjs';
 
@@ -29,7 +30,7 @@ function fixture(options = {}) {
   return {fn,input,calls};
 }
 test('atendimento único vincula sessão, declaração e asset e devolve tool_result', async()=>{
- const {fn,input,calls}=fixture(); const result=await fn(input); assert.equal(result.status,'completed'); assert.equal(result.toolResult.success,true); assert.equal(JSON.parse(result.toolResult.output).assetId,assetId); assert.deepEqual(calls,['lookup','reserve','consent','claim','image','storage','complete']); assert.ok(!JSON.stringify(result).includes(key));
+ const {fn,input,calls}=fixture(); const result=await fn(input); assert.equal(result.status,'completed'); assert.equal(result.contentSha256,createHash('sha256').update('image').digest('hex')); assert.equal(result.toolResult.success,true); assert.equal(JSON.parse(result.toolResult.output).assetId,assetId); assert.deepEqual(calls,['lookup','reserve','consent','claim','image','storage','complete']); assert.ok(!JSON.stringify(result).includes(key));
  const second=await fn(input); assert.equal(second.status,'unknown'); assert.equal(calls.filter(x=>x==='image').length,1);
 });
 

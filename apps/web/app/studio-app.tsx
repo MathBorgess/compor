@@ -391,6 +391,29 @@ function ProjectStudio({
     }
   }
 
+  async function recoverImage({ blob, pieceId, version }:ImageSelection):Promise<boolean> {
+    try {
+      const matchesScope = () => {
+        if (!active.current || !isAuthenticated()) return false;
+        const current = local.get();
+        return current.userId === userId && current.projectId === project.id;
+      };
+      if (!matchesScope() || !local.storage.current) return false;
+      const result = await local.storage.current.putDraftAssetIfAbsent({
+        userId, projectId: project.id, pieceId, baseVersion: version, kind: "base", file: blob,
+      });
+      if (result !== "stored" || !matchesScope()) return false;
+      baseLoadGeneration.current++;
+      const current = getCurrentDraft(local.get());
+      if (current?.pieceId === pieceId && current.baseVersion === version) setBase(blob);
+      else setNotice("A imagem recuperada foi preservada na versão de origem.");
+      return true;
+    } catch {
+      if (active.current) setNotice("Não foi possível preservar a imagem recuperada neste navegador.");
+      return false;
+    }
+  }
+
   useEffect(() => {
     setPreview(null);
   }, [
@@ -903,6 +926,7 @@ function ProjectStudio({
       hasApiKey={hasApiKey}
       getApiKey={getApiKey}
       onUseImage={useBase}
+      onRecoverImage={recoverImage}
       prepareImageVersion={saveCurrent}
       initialMessage={s.messages.length === 0 ? initialObjective : ""}
       connection={<><details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa e as explorações usam sua API e geram consumo.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details><details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details></>}
