@@ -55,6 +55,30 @@ const decisions = {
     text: "Baixar o PNG retrato. Esta é a única ação amarela.",
     sid: ["format", "high_contrast_cta", "export", "yellow"],
   },
+  produto: {
+    skill: "entender-intencao",
+    text: "Delimitar o produto que a pessoa compra antes de sugerir opções.",
+    sid: ["format", "hero_product_d2c", "offer", "clean"],
+    research: true,
+  },
+  persona: {
+    skill: "entender-intencao",
+    text: "Delimitar quem compra o infoproduto antes de sugerir personas.",
+    sid: ["format", "bold_display_hook", "audience", "editorial"],
+    research: true,
+  },
+  objetivo: {
+    skill: "traduzir-direcao",
+    text: "Delimitar a ação esperada depois do post antes de sugerir objetivos.",
+    sid: ["format", "high_contrast_cta", "action", "contrast"],
+    research: true,
+  },
+  personalidade: {
+    skill: "traduzir-direcao",
+    text: "Delimitar o tom de voz antes de sugerir personalidades.",
+    sid: ["format", "kinetic_retro_type", "tone", "paper"],
+    research: true,
+  },
 };
 
 function actor(projectId) {
@@ -164,10 +188,16 @@ export async function calibrateDecision(input) {
       },
     );
     const structured = discovery.structuredContent ?? {};
+    const found = Array.isArray(structured.candidates) ? structured.candidates : [];
     pieces.discoverVisualReferences = {
       isError: Boolean(discovery.isError),
       status: structured.status ?? null,
-      candidateCount: Array.isArray(structured.candidates) ? structured.candidates.length : null,
+      candidateCount: found.length,
+      references: found.slice(0, 2).map((item) => ({
+        id: item.candidate_id,
+        board: item.board,
+        description: String(item.visual_description || item.composition_guideline || "").slice(0, 180),
+      })),
     };
   }
   if (spec.direction) {

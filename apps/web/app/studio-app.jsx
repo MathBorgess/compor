@@ -21,6 +21,15 @@ import {
   recordActionReceipt,
 } from "../lib/studio-state.mjs";
 import { createStudioTools } from "../lib/studio-tools.mjs";
+import { BriefCanvas, BriefChat } from "./brief-interview";
+import {
+  answerPrompt,
+  artFacts,
+  informedText,
+  nextPrompt,
+  recordFromStudio,
+  skipPrompt,
+} from "../lib/brief-interview.mjs";
 import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
 import StudioAssets from "./studio-assets";
@@ -205,7 +214,7 @@ function ProjectStudio({
 }) {
   const local = useStudioState({ userId, projectId: project.id }),
     s = local.state;
-  const [stage, setStage] = useState("brief"),
+  const [stage, setStage] = useState("studio"),
     [tab, setTab] = useState("post"),
     [versions, setVersions] = useState([]),
     [notice, setNotice] = useState(""),
@@ -218,7 +227,14 @@ function ProjectStudio({
     [projectDetails, setProjectDetails] = useState(project),
     [compact, setCompact] = useState(false),
     [drawer, setDrawer] = useState(null),
-    [viewingArt, setViewingArt] = useState(false);
+    [viewingArt, setViewingArt] = useState(false),
+    [briefRecord, setBriefRecord] = useState(null),
+    [discardedOptions, setDiscardedOptions] = useState({}),
+    [calibrating, setCalibrating] = useState(false),
+    [calibrated, setCalibrated] = useState(false),
+    [decisionRefs, setDecisionRefs] = useState([]),
+    [briefAnswer, setBriefAnswer] = useState("");
+  const briefHydrated = useRef(false);
   const stateRef = useRef(null),
     versionRef = useRef([]),
     toolsRef = useRef(null),
@@ -237,6 +253,58 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
+  const interviewRecord = briefRecord ?? (s ? recordFromStudio(s) : {});
+  const interviewPrompt = nextPrompt(interviewRecord);
+  const showInterview = Boolean(s && !draft && interviewPrompt);
+  useEffect(() => {
+    if (!s || briefHydrated.current) return;
+    briefHydrated.current = true;
+    let stored = null;
+    try {
+      stored = JSON.parse(
+        sessionStorage.getItem(`compor-brief-interview:${userId}:${project.id}`) || "null",
+      );
+    } catch {}
+    setBriefRecord({
+      ...recordFromStudio(s),
+      ...(stored && typeof stored === "object" ? stored : {}),
+    });
+  }, [Boolean(s), project.id, userId]);
+  useEffect(() => {
+    if (!showInterview || interviewPrompt?.kind !== "decision") {
+      setCalibrating(false);
+      return;
+    }
+    let live = true;
+    setCalibrating(true);
+    setCalibrated(false);
+    setDecisionRefs([]);
+    fetch("/api/studio/decision", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        decision: interviewPrompt.id,
+        projectId: project.id,
+        title: projectDetails.title,
+        briefing: `${interviewPrompt.limit} ${interviewPrompt.question}`,
+      }),
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data) => {
+        if (!live) return;
+        setCalibrating(false);
+        setCalibrated(Boolean(data?.ok));
+        setDecisionRefs(
+          data?.returned?.comporMcp?.discoverVisualReferences?.references ?? [],
+        );
+      })
+      .catch(() => {
+        if (live) setCalibrating(false);
+      });
+    return () => {
+      live = false;
+    };
+  }, [showInterview, interviewPrompt?.id, project.id]);
   function calibrate(decision) {
     const briefing = [projectDetails.title, s?.brief?.offer, s?.brief?.direction]
       .filter(Boolean)
@@ -286,17 +354,10 @@ function ProjectStudio({
         `compor-studio-stage:${userId}:${project.id}`,
       );
       if (
-        [
-          "brief",
-          "persona",
-          "connect",
-          "confirm",
-          "studio",
-          "review",
-          "export",
-        ].includes(saved)
+        ["connect", "studio", "review", "export"].includes(saved)
       )
         setStage(saved);
+      else if (["brief", "persona", "confirm"].includes(saved)) setStage("studio");
     } catch {}
   }, [Boolean(s)]);
   useEffect(() => {
@@ -751,6 +812,57 @@ function ProjectStudio({
       return false;
     }
   }
+  function rememberBrief(next) {
+    setBriefRecord(next);
+    try {
+      sessionStorage.setItem(
+        `compor-brief-interview:${userId}:${project.id}`,
+        JSON.stringify(next),
+      );
+    } catch {}
+    const offer = informedText(next.produto);
+    const action = informedText(next.objetivo);
+    const direction = informedText(next.personalidade);
+    const facts = informedText(next.fatos);
+    const persona = informedText(next.persona);
+    if (offer) local.change((value) => updateBrief(value, { offer }));
+    if (action) local.change((value) => updateBrief(value, { action }));
+    if (direction) local.change((value) => updateBrief(value, { direction }));
+    if (facts) local.change((value) => updateBrief(value, { audience: facts }));
+    if (persona) local.change((value) => updatePersona(value, { audience: persona }));
+    if (!nextPrompt(next) && !getCurrentDraft(local.get())) {
+      const art = artFacts(next);
+      local.change((value) => createPost(value, { pieceId: crypto.randomUUID() }));
+      if (art.headline)
+        local.change((value) => editDraft(value, { field: "headline", value: art.headline }));
+      if (art.price)
+        local.change((value) => editDraft(value, { field: "price", value: art.price }));
+      if (art.date)
+        local.change((value) => editDraft(value, { field: "date", value: art.date }));
+    }
+  }
+  function chooseBriefOption(option) {
+    if (!interviewPrompt?.options) return;
+    setDiscardedOptions((current) => ({
+      ...current,
+      [interviewPrompt.id]: interviewPrompt.options.filter((item) => item.id !== option.id),
+    }));
+    rememberBrief(answerPrompt(interviewRecord, interviewPrompt.id, option.text));
+    setBriefAnswer("");
+  }
+  function submitBriefAnswer() {
+    if (!interviewPrompt || !briefAnswer.trim()) return;
+    setDiscardedOptions((current) => ({
+      ...current,
+      [interviewPrompt.id]: interviewPrompt.options ?? [],
+    }));
+    rememberBrief(answerPrompt(interviewRecord, interviewPrompt.id, briefAnswer));
+    setBriefAnswer("");
+  }
+  function skipBriefPrompt() {
+    if (!interviewPrompt || interviewPrompt.required) return;
+    rememberBrief(skipPrompt(interviewRecord, interviewPrompt.id));
+  }
   function downloadPreview() {
     calibrate("baixar");
     if (!preview) return;
@@ -1047,7 +1159,17 @@ function ProjectStudio({
           />
         </div>
       )}
-      canvas={(
+      canvas={showInterview ? (
+        <BriefCanvas
+          prompt={interviewPrompt}
+          record={interviewRecord}
+          discarded={discardedOptions[interviewPrompt.id] ?? []}
+          references={decisionRefs}
+          calibrating={calibrating}
+          calibrated={calibrated}
+          onChoose={chooseBriefOption}
+        />
+      ) : (
           <CreativeBoard
             title={draft ? "Post atual" : "Sua criação"}
             surfaceWidth={compact ? 352 : 772}
@@ -1060,7 +1182,16 @@ function ProjectStudio({
             {editor}
           </CreativeBoard>
       )}
-      chat={chat}
+      chat={showInterview ? (
+        <BriefChat
+          prompt={interviewPrompt}
+          calibrating={calibrating}
+          value={briefAnswer}
+          onChange={setBriefAnswer}
+          onSubmit={submitBriefAnswer}
+          onSkip={skipBriefPrompt}
+        />
+      ) : chat}
       overlays={
         <>
           {dialog && (

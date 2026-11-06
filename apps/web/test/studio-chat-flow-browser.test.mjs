@@ -171,10 +171,11 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
   return route.fulfill({json:{versions}});
  });
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
- await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).click();
- await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Escolher Aula curta',exact:true}).click();
+ await page.getByRole('button',{name:'Escolher Pessoas interessadas em aprender',exact:true}).click();
+ await page.getByRole('button',{name:'Escolher Pedir para conhecer',exact:true}).click();
+ await page.getByRole('button',{name:'Seguir sem personalidade',exact:true}).click();
+ for (const name of ['fatos','referências','preço','data']) await page.getByRole('button',{name:`Pular ${name}`,exact:true}).click();
  await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  await page.getByRole('button',{name:/^Bases/}).click();

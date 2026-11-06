@@ -50,15 +50,16 @@ async function app(t){
 test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls}=await app(t);
  await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await page.getByLabel('O que você oferece?',{exact:true}).fill('Aula fictícia');
- await page.getByLabel('Qual direção você imagina?',{exact:true}).fill('Cores claras e formas');
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('heading',{name:'Conhecendo quem vai comprar',exact:true}).waitFor();
- await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
- await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
+ await page.getByText('O que você quer divulgar?',{exact:true}).waitFor();
+ await page.screenshot({path:'/tmp/compor-interview-options.png',fullPage:false});
+ await page.getByRole('button',{name:'Escolher Aula curta',exact:true}).click();
+ await page.getByRole('button',{name:'Escolher Pessoas interessadas em aprender',exact:true}).click();
+ await page.getByRole('button',{name:'Escolher Pedir para conhecer',exact:true}).click();
+ await page.getByRole('button',{name:'Seguir sem personalidade',exact:true}).click();
+ for (const name of ['fatos','referências','preço','data']) await page.getByRole('button',{name:`Pular ${name}`,exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('button',{name:'Abrir estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Estúdio',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'an unsaved post cannot be approved');
  await page.getByLabel('Título',{exact:true}).fill('Meu primeiro post sintético');
  await page.getByLabel('Legenda',{exact:true}).fill('Somente uma legenda de teste');
@@ -148,13 +149,13 @@ test('Workspace entrega jornada local, marcações, moodboard e PNG retrato sem 
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await page.getByLabel('O que você oferece?',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
  let release;session.hold=new Promise(resolve=>{release=resolve;});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);session.userId=bob;release();session.hold=null;
- await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('O que você oferece?',{exact:true}).waitFor();assert.equal(await page.getByLabel('O que você oferece?',{exact:true}).inputValue(),'');
- await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByText('O que você quer divulgar?',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
- session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  assert.deepEqual(errors,['Failed to load resource: the server responded with a status of 503 (Service Unavailable)']);
 });

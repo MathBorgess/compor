@@ -28,4 +28,7 @@ test("cada decisão de layout passa pelo Phoenix e pelas peças do compor-mcp", 
   const marca = await calibrateDecision({ decision: "marca", projectId: "p1", briefing: "Marca em creme e azul." });
   assert.equal(marca.returned.comporMcp.composeCreativeDirection.isError, false);
   assert.equal(marca.returned.comporMcp.skill.id, "traduzir-direcao");
+  const produto = await calibrateDecision({ decision: "produto", projectId: "p1", briefing: "Delimitar o produto antes de gerar." });
+  assert.equal(produto.returned.comporMcp.discoverVisualReferences.status, "ok");
+  assert.ok(produto.returned.comporMcp.discoverVisualReferences.references.length > 0);
 });

@@ -1,9 +1,9 @@
 import { spawn } from "node:child_process";
-import { fileURLToPath } from "node:url";
+import { join } from "node:path";
 
 export const runtime = "nodejs";
 
-const worker = fileURLToPath(new URL("../../../../lib/phoenix-worker.mjs", import.meta.url));
+const worker = join(process.cwd(), "lib/phoenix-worker.mjs");
 
 export async function POST(request) {
   const body = await request.text();
