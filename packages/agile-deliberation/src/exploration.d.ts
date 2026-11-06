@@ -1,6 +1,7 @@
 export interface ExplorationPromptInput {
   offer: string;
   audience: string;
+  briefAudience?: string;
   goal: string;
   direction: string;
   accepted: string[];

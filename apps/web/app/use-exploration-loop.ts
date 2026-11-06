@@ -155,7 +155,7 @@ export function useExplorationLoop(props: LoopProps) {
             const accepted = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "accept").slice(0,4).map(item => item.statement.slice(0,160));
             const rejected = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "reject").slice(0,4).map(item => item.statement.slice(0,160));
             const feedback=[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)];
-            const { prompt,composition,contrast } = createExplorationPrompt({ offer: state.brief.offer, audience: state.persona.audience, goal: state.brief.action, direction: state.brief.direction, accepted, rejected, feedback, sequence });
+            const { prompt,composition,contrast } = createExplorationPrompt({ offer: state.brief.offer, audience: state.persona.audience, briefAudience: state.brief.audience, goal: state.brief.action, direction: state.brief.direction, accepted, rejected, feedback, sequence });
             const requestId = crypto.randomUUID();
             const batch={id:progress.batchId,position:progress.completed+1};
             const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};

@@ -72,6 +72,8 @@ Briefing, persona e referências são progressivos. Critérios preservam origem,
 
 A busca visual opcional consulta boards externos após autorização explícita e devolve pins com origem e prévia, sem enviar o texto do briefing ao Pinterest. A seleção de uma imagem adiciona cópia identificada ao contexto visual; não representa aprovação estética. O agente registra comentários literais associados a uma referência selecionada ou a uma imagem gerada apresentada e identificada de forma inequívoca. Sinais externos e gerados persistem em rotas separadas sob RLS. O Phoenix usa escolhas/rejeições recentes para ajustar boards; o planejador das próximas imagens recebe uma amostra limitada de sinais e comentários, com descrições de composição disponíveis. Isso é uma heurística, sem calibração estatística ou evidência de resposta do público. Ver [ADR 0022](adr/0022-busca-visual-e-sinais.md).
 
+O planejador inclui separadamente o campo de público do briefing e o público da persona, além da oferta, ação esperada e direção. A leitura do registro de entrevista também mapeia o campo do briefing ao item “fatos”; seu conteúdo não é automaticamente uma descrição de público. Os campos não são sincronizados, e uma diferença entre eles não é resolvida por suposição. Hipóteses não comprovam resposta de público real; decisões aceitas e rejeitadas continuam orientando a proposta.
+
 O site Astro é uma saída estática independente. A página Next usa renderização sob demanda; dados privados não são convertidos em conteúdo estático nem cache compartilhado para melhorar métricas. Ver [ADR 0014](adr/0014-frontend-next-typescript.md).
 
 ## Backend e dados
