@@ -15,7 +15,7 @@ const receipt='Imagem gerada e adicionada a este post · versão 2.';
 const failure='A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.';
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 
-test('receipt confirma aplicação aguardada sem alterar o agente; escopo e falha não regeneram imagem',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('receipt confirma aplicação aguardada sem alterar o agente; escopo e falha não regeneram imagem',{skip:!existsSync(browserPath),timeout:120000},async t=>{
  const fixture=await mkdtemp(new URL('../app/studio-image-receipt-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
  await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
 import {useEffect,useRef,useState} from 'react';import StudioChat from '../studio-chat';
@@ -26,12 +26,12 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],turnStatus='completed';
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
-  if(url.pathname==='/api/studio/chat'){assert.equal(body.op,'poll');return route.fulfill({status:202,json:++polls===1?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}:{status:'completed',text:staleText}});}
+  if(url.pathname==='/api/studio/chat'){assert.equal(body.op,'poll');return route.fulfill({status:202,json:++polls===1?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}:turnStatus==='completed'?{status:'completed',text:staleText}:{status:turnStatus}});}
   if(url.pathname==='/api/agent/image'){const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});}
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:png});
   throw Error('unexpected API');
@@ -44,6 +44,34 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  const beforeReload=calls.length;await page.reload();await page.getByText(receipt,{exact:true}).waitFor();assert.equal(calls.length,beforeReload,'reload conserva só metadados e não consulta nem gera');
  await page.getByRole('button',{name:'Outra conta',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0);await page.getByRole('button',{name:'Outro projeto',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0);
  await page.evaluate(({marker,saved,projectId})=>sessionStorage.setItem(marker,JSON.stringify({...saved,imageReceipt:{...saved.imageReceipt,projectId}})),{marker,saved,projectId:id(11)});await page.getByRole('button',{name:'Escopo original',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0,'metadados copiados de outro escopo são rejeitados');
+ const submission=`compor-image-submission:${userId}`;
+ await page.evaluate(({marker,saved,submission,requestId})=>{sessionStorage.setItem(marker,JSON.stringify(saved));localStorage.setItem(submission,requestId);},{marker,saved,submission,requestId});
+ await page.reload();await page.getByText(receipt,{exact:true}).waitFor();assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),null,'receipt terminal recupera fence deixado pela versão anterior');
+ await page.evaluate(({submission,other})=>localStorage.setItem(submission,other),{submission,other:id(15)});await page.reload();await page.getByText(receipt,{exact:true}).waitFor();assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),id(15),'receipt não libera outra tentativa');
+ for(const foreign of [{projectId:id(11)},{userId:id(10)}]){
+  await page.evaluate(({marker,saved,submission,requestId,foreign})=>{sessionStorage.setItem(marker,JSON.stringify({...saved,imageReceipt:{...saved.imageReceipt,...foreign}}));localStorage.setItem(submission,requestId);},{marker,saved,submission,requestId,foreign});
+  await page.reload();await page.getByRole('button',{name:'Post de origem',exact:true}).waitFor();await page.waitForTimeout(300);assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),requestId,'receipt de outro projeto ou conta não libera fence');
+ }
+ await page.evaluate(({submission,requestId})=>{sessionStorage.clear();localStorage.clear();localStorage.setItem(submission,requestId);},{submission,requestId});polls=1;turnStatus='failed';await page.reload();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText('A solicitação terminou com falha. Seu trabalho foi preservado.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),requestId,'turno failed sem receipt não libera resultado de imagem desconhecido');
+ for(const outcome of ['failed','unknown']){
+  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;turnStatus=outcome;await page.reload();
+  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.waitForFunction(()=>typeof window.__releaseImage==='function');
+  assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),requestId,'imagem em aplicação mantém fence');await page.evaluate(()=>window.__releaseImage());
+  if(outcome==='failed')await page.getByText('A solicitação terminou com falha. Seu trabalho foi preservado.',{exact:true}).waitFor();
+  else await page.getByText('O resultado ainda não foi confirmado. Consulte a mesma tentativa antes de enviar outro pedido.',{exact:true}).waitFor();
+  await page.getByText(receipt,{exact:true}).waitFor();
+  assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),outcome==='failed'?null:requestId,`${outcome} respeita o estado confirmado da conversa`);
+  const stored=JSON.parse(await page.evaluate(key=>sessionStorage.getItem(key),marker));assert.equal(stored.requestId,outcome==='failed'?null:requestId);
+  if(outcome==='unknown'){await page.reload();await page.getByText(receipt,{exact:true}).waitFor();assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),requestId,'reload não libera turno desconhecido');}
+ }
+ await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;turnStatus='failed';await page.reload();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.waitForFunction(()=>typeof window.__releaseImage==='function');
+ await page.evaluate(({submission,other})=>localStorage.setItem(submission,other),{submission,other:id(15)});await page.evaluate(()=>window.__releaseImage());
+ await page.getByText('A solicitação terminou com falha. Seu trabalho foi preservado.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),submission),id(15),'receipt não remove marcador trocado enquanto o resultado era aplicado');
+ turnStatus='completed';
  for(const mode of['false','throw']){
   await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;await page.reload();await page.evaluate(mode=>{window.__receiptMode=mode;},mode);const start=calls.length;
   await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(failure,{exact:true}).waitFor();

@@ -122,14 +122,19 @@ export default function StudioChat({
   }, [busy]);
   const imageSubmissionMarker = `compor-image-submission:${state.userId}`;
   const imageRejectedMarker = `compor-image-not-dispatched:${state.userId}:${state.projectId}`;
+  function releaseConfirmedImageFence(requestId:string,receipt:unknown) {
+    const confirmed=imageReceiptFor(receipt,state.userId,state.projectId);
+    if(confirmed?.requestId===requestId && localStorage.getItem(imageSubmissionMarker)===requestId)
+      localStorage.removeItem(imageSubmissionMarker);
+    const submitted=localStorage.getItem(imageSubmissionMarker);
+    setClosedImageAttempt(uuid(submitted)?submitted:null);
+  }
   useEffect(() => {
     mounted.current = true;
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
     activeMarker.current=marker;receiptRef.current=null;setImageReceipt(null);
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     try {
-      const submitted=localStorage.getItem(imageSubmissionMarker);
-      setClosedImageAttempt(uuid(submitted)?submitted:null);
       const parsed = chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker) ?? "null"));
       const value = parsed.success ? parsed.data : null;
       legacyPending.current=Boolean(value?.requestId && value.imageProtocolVersion !== 1);
@@ -139,6 +144,10 @@ export default function StudioChat({
       setLastCompleted(uuid(value?.previousAttemptKey)?value.previousAttemptKey:null);
       imageContext.current=value?.imageContext??null;
       receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
+      // Repair a marker left by an older client after a terminal turn. A
+      // pending turn or a receipt from another scope never releases the fence.
+      if(value?.requestId===null && receiptRef.current)releaseConfirmedImageFence(receiptRef.current.requestId,receiptRef.current);
+      else { const submitted=localStorage.getItem(imageSubmissionMarker);setClosedImageAttempt(uuid(submitted)?submitted:null); }
     } catch {}
     return () => {
       mounted.current = false;
@@ -347,6 +356,7 @@ export default function StudioChat({
     if (data.status === "failed") {
       if(automatic) { try { completeReferenceRecord(requestId); } catch {} }
       settle(requestId, "failed");
+      try { releaseConfirmedImageFence(requestId,receiptRef.current); } catch { /* An unconfirmed fence remains conservative. */ }
       setPending(null);
       remember(null);
       setBusy(false);
