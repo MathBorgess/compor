@@ -26,17 +26,17 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0;
- await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
+ await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
   if(url.pathname==='/api/studio/chat'){assert.equal(body.op,'poll');return route.fulfill({status:202,json:++polls===1?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}:{status:'completed',text:staleText}});}
-  if(url.pathname==='/api/agent/image')return route.fulfill({status:202,json:{status:'accepted',assetId}});
+  if(url.pathname==='/api/agent/image'){const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});}
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:png});
   throw Error('unexpected API');
  });
- await page.goto(`${origin}/${basename(fixture)}`);await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.waitForFunction(()=>typeof window.__releaseImage==='function');
+ await page.goto(`${origin}/${basename(fixture)}`);await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.waitForFunction(()=>typeof window.__releaseImage==='function');
  assert.equal(await page.getByText(receipt,{exact:true}).count(),0,'a resposta da API não basta antes da aplicação local');assert.equal(polls,1);
  await page.getByRole('button',{name:'Outro post',exact:true}).click();await page.evaluate(()=>window.__releaseImage());await page.getByText(staleText,{exact:true}).waitFor();assert.equal(await page.getByText(receipt,{exact:true}).count(),0,'o receipt da origem não pertence ao post aberto depois');
  await page.getByRole('button',{name:'Post de origem',exact:true}).click();await page.getByText(receipt,{exact:true}).waitFor();assert.equal(await page.getByText(staleText,{exact:true}).count(),1,'a resposta original não foi reescrita');
@@ -45,10 +45,24 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  await page.getByRole('button',{name:'Outra conta',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0);await page.getByRole('button',{name:'Outro projeto',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0);
  await page.evaluate(({marker,saved,projectId})=>sessionStorage.setItem(marker,JSON.stringify({...saved,imageReceipt:{...saved.imageReceipt,projectId}})),{marker,saved,projectId:id(11)});await page.getByRole('button',{name:'Escopo original',exact:true}).click();assert.equal(await page.getByText(receipt,{exact:true}).count(),0,'metadados copiados de outro escopo são rejeitados');
  for(const mode of['false','throw']){
-  await page.evaluate(()=>sessionStorage.clear());polls=0;await page.reload();await page.evaluate(mode=>{window.__receiptMode=mode;},mode);const start=calls.length;
-  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText(failure,{exact:true}).waitFor();
+  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;await page.reload();await page.evaluate(mode=>{window.__receiptMode=mode;},mode);const start=calls.length;
+  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(failure,{exact:true}).waitFor();
   assert.equal(await page.getByText(receipt,{exact:true}).count(),0);assert.equal(polls,1,'aplicação incerta não avança o fluxo');assert.equal(calls.slice(start).filter(c=>c.path==='/api/agent/image').length,1);assert.equal(await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).count(),0);
   assert.equal(JSON.parse(await page.evaluate(marker=>sessionStorage.getItem(marker),marker)).imageReceipt,undefined);await page.waitForTimeout(2200);assert.equal(calls.length,start+3,'falha de aplicação não repete geração, fetch ou poll');
+  polls=0;await page.reload();await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText('Esta tentativa precisa ser verificada antes de continuar.').waitFor();await page.getByRole('button',{name:'Verificar envio anterior',exact:true}).waitFor();
+  assert.equal(calls.slice(start).filter(c=>c.path==='/api/agent/image').length,1,'recarregar e consultar a proposta não repetem uma geração incerta');
  }
+ await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['busy'];await page.reload();await page.evaluate(()=>{window.__receiptMode='ok';delete window.__releaseImage;});const beforeBusy=calls.length;
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Aguardando a exploração atual terminar/).waitFor();
+ await page.waitForFunction(()=>typeof window.__releaseImage==='function');await page.evaluate(()=>window.__releaseImage());await page.getByText(receipt,{exact:true}).waitFor();
+ assert.equal(calls.slice(beforeBusy).filter(c=>c.path==='/api/agent/image').length,2,'ocupação confirmada aguarda e repete a reserva sem gerar duas imagens');
+ await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['blocked'];await page.reload();const beforeBlocked=calls.length;
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Uma geração anterior tem resultado incerto/).waitFor();
+ assert.equal(await page.evaluate(user=>localStorage.getItem(`compor-image-submission:${user}`),userId),null,'bloqueio anterior não marca esta requisição como enviada');
+ await page.waitForTimeout(1800);assert.equal(calls.slice(beforeBlocked).filter(c=>c.path==='/api/agent/image').length,1,'resultado desconhecido anterior não é repetido automaticamente');
+ await page.evaluate(({marker,requestId,pieceId})=>{localStorage.clear();sessionStorage.clear();sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageContext:{pieceId,baseVersion:2}}));},{marker,requestId,pieceId});
+ polls=0;await page.reload();const beforeLegacy=calls.length;await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.getByText(/Esta tentativa começou antes da proteção de reenvio/).waitFor();
+ assert.equal(calls.slice(beforeLegacy).filter(c=>c.path==='/api/agent/image').length,0,'tentativa antiga ambígua não pode disparar uma nova geração');
  assert.equal(await page.evaluate(()=>JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)])).then(value=>value.includes('sk-synthetic')),false);assert.doesNotMatch(await page.locator('body').innerText(),/synthetic private error|sk-synthetic/);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

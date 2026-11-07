@@ -38,18 +38,49 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   page.on('pageerror', error => errors.push(error.message));
   await page.goto(`${origin}/studio-visual-test`);
   await page.getByRole('heading', { name: 'Vamos encontrar a sua direção.' }).waitFor();
+  const launcher = page.getByRole('button', { name: 'Abrir conversa', exact: true });
+  assert.equal(await launcher.getAttribute('aria-expanded'), 'false');
+  assert.equal(await page.getByRole('complementary', { name: 'Conversa com a IA' }).count(), 0);
+  const fullCanvas = await page.locator('.studio-canvas-column').boundingBox();
+  assert.equal(Math.round(fullCanvas.width), 1440, 'o quadro ocupa a área principal com a conversa recolhida');
+  const launcherBounds = await launcher.boundingBox();
+  await launcher.click();
+  await page.waitForFunction(() => document.activeElement?.id === 'test-message');
   await page.evaluate(() => document.fonts.ready);
   const geometry = await page.evaluate(() => {
     const chat = document.querySelector('.studio-conversation').getBoundingClientRect();
     const canvas = document.querySelector('.studio-canvas-column').getBoundingClientRect();
-    return { sidebar: document.querySelector('.studio-sidebar'), history: document.querySelector('[role="tab"]'), chat: Math.round(chat.width), chatLeft: chat.x < canvas.x, font: getComputedStyle(document.querySelector('.compor-studio')).fontFamily, layout: document.querySelector('.compor-studio').dataset.layout, images: Array.from(document.querySelectorAll('.compor-studio img')).map(image => ({ src: image.getAttribute('src'), loaded: image.complete && image.naturalWidth > 0 })) };
+    return { sidebar: document.querySelector('.studio-sidebar'), history: document.querySelector('[role="tab"]'), chat: Math.round(chat.width), chatCenter: chat.x + chat.width / 2, chatLeft: chat.x < canvas.x, font: getComputedStyle(document.querySelector('.compor-studio')).fontFamily, layout: document.querySelector('.compor-studio').dataset.layout, images: Array.from(document.querySelectorAll('.compor-studio img')).map(image => ({ src: image.getAttribute('src'), loaded: image.complete && image.naturalWidth > 0 })) };
   });
   assert.equal(geometry.sidebar, null);
   assert.equal(geometry.history, null);
-  assert.equal(geometry.chat, 380);
-  assert.equal(geometry.chatLeft, true);
+  assert.equal(geometry.chat, Math.round(launcherBounds.width));
+  assert.ok(Math.abs(geometry.chatCenter - (launcherBounds.x + launcherBounds.width / 2)) < 1, 'painel expandido permanece alinhado à barra');
+  assert.equal(geometry.chatLeft, false);
+  await page.locator('.studio-chat-messages').evaluate(element => {
+    for (let index = 0; index < 30; index++) {
+      const message = document.createElement('p');
+      message.className = 'studio-message';
+      message.textContent = `Mensagem longa ${index}`;
+      element.append(message);
+    }
+  });
+  const longChat = await page.evaluate(() => {
+    const messages = document.querySelector('.studio-chat-messages');
+    const composer = document.querySelector('.studio-chat-composer').getBoundingClientRect();
+    return { scrollable: messages.scrollHeight > messages.clientHeight, bottom: composer.bottom, viewport: window.innerHeight };
+  });
+  assert.equal(longChat.scrollable, true, 'a conversa longa rola dentro do painel');
+  assert.ok(longChat.bottom <= longChat.viewport, 'a caixa de mensagem permanece na tela');
   assert.equal(geometry.layout, 'b');
   assert.match(geometry.font, /Compor DM Sans/);
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const motion = await page.evaluate(() => {
+    const icon = document.createElement('img'); icon.className = 'studio-batch-spinner'; document.body.append(icon);
+    const animation = getComputedStyle(icon).animationName; icon.remove(); return animation;
+  });
+  assert.equal(motion, 'none', 'o contador permanece sem animação quando a pessoa pede movimento reduzido');
+  await page.emulateMedia({ reducedMotion: 'no-preference' });
   assert.ok(geometry.images.every(image => image.loaded && image.src.startsWith('/studio/')));
   for (const name of ['brand-symbol.svg', 'brand-wordmark.svg', 'dot.svg', 'compor-avatar.svg']) assert.ok((await readFile(new URL(`../public/studio/${name}`, import.meta.url))).length > 100);
   const yellow = 'rgb(246, 213, 80)';
@@ -75,7 +106,7 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   assert.equal(await page.getByRole('button', { name: 'Bases (3)', exact: true }).evaluate(button => button === document.activeElement), true);
   await page.getByRole('button', { name: 'Marca', exact: true }).click();
   await page.getByRole('dialog', { name: 'Marca' }).waitFor();
-  await page.mouse.click(during.x + 40, during.y + 80);
+  await page.mouse.click(during.x + 500, during.y + 80);
   assert.equal(await page.getByRole('dialog', { name: 'Marca' }).count(), 0);
   await page.getByRole('button', { name: 'Planilhas para a rotina', exact: true }).click();
   await page.getByRole('button', { name: 'Outro projeto', exact: true }).click();
@@ -94,6 +125,21 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   assert.equal(await page.locator('.compor-studio').getAttribute('data-layout'), 'c');
   const collapsedWidth = await page.locator('.studio-canvas-column').evaluate(element => element.getBoundingClientRect().width);
   assert.ok(collapsedWidth > 1200);
+  await page.evaluate(() => {
+    window.originalAnimationFrame = window.requestAnimationFrame;
+    window.delayedFrames = [];
+    window.requestAnimationFrame = callback => { window.delayedFrames.push(callback); return 1; };
+  });
+  await launcher.click();
+  const collapseButton = page.getByRole('button', {name:'Recolher conversa',exact:true});
+  await collapseButton.focus();
+  await page.evaluate(() => {
+    window.requestAnimationFrame = window.originalAnimationFrame;
+    for (const callback of window.delayedFrames) callback(performance.now());
+  });
+  assert.equal(await collapseButton.evaluate(element => element === document.activeElement), true, 'a abertura não toma o foco já escolhido');
+  await collapseButton.click();
+  await launcher.waitFor();
   await page.screenshot({ path: '/tmp/compor-layout-c.png', fullPage: false });
   await page.reload();
   await page.getByRole('button', { name: 'Abrir conversa', exact: true }).waitFor();
@@ -109,8 +155,30 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   assert.equal(await page.locator('.compor-studio').getAttribute('data-layout'), 'c');
   await page.setViewportSize({ width: 390, height: 844 });
   assert.ok(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth));
+  const mobileCanvas = await page.locator('.studio-canvas-column').boundingBox();
+  assert.equal(Math.round(mobileCanvas.width), 390);
+  await page.getByRole('button', { name: 'Abrir conversa', exact: true }).click();
+  const mobileChat = await page.evaluate(() => ({
+    chat: document.querySelector('.studio-conversation').getBoundingClientRect().toJSON(),
+    composerBottom: document.querySelector('.studio-chat-composer').getBoundingClientRect().bottom,
+    viewport: window.innerHeight,
+  }));
+  assert.ok(mobileChat.chat.x >= 0 && mobileChat.chat.right <= 390 && mobileChat.chat.top >= 0 && mobileChat.chat.bottom <= 844, 'o painel flutuante cabe no viewport');
+  assert.ok(mobileChat.composerBottom <= mobileChat.viewport, 'o compositor continua visível no celular');
+  await page.getByLabel('Sua mensagem').fill('Rascunho preservado');
+  await page.keyboard.press('Escape');
+  await page.waitForFunction(() => document.activeElement?.getAttribute('aria-label') === 'Abrir conversa');
+  assert.equal(await page.getByRole('button', { name: 'Abrir conversa', exact: true }).evaluate(button => button === document.activeElement), true);
+  await page.getByRole('button', { name: 'Abrir conversa', exact: true }).click();
+  assert.equal(await page.getByLabel('Sua mensagem').inputValue(), 'Rascunho preservado');
+  await page.getByRole('button', { name: 'Recolher conversa', exact: true }).click();
+  await page.setViewportSize({ width: 742, height: 720 });
+  assert.equal(Math.round((await page.locator('.studio-canvas-column').boundingBox()).width), 742);
+  await page.getByRole('button', { name: 'Abrir conversa', exact: true }).click();
+  const compactPanel = await page.getByRole('complementary', { name: 'Conversa com a IA' }).boundingBox();
+  assert.ok(compactPanel.x >= 0 && compactPanel.x + compactPanel.width <= 742 && compactPanel.y >= 0 && compactPanel.y + compactPanel.height <= 720);
   const marca = await page.getByRole('button', { name: 'Marca', exact: true }).boundingBox();
-  assert.ok(marca.x >= 0 && marca.x + marca.width <= 390);
+  assert.ok(marca.x >= 0 && marca.x + marca.width <= 742);
   await page.screenshot({ path: '/tmp/compor-layout-mobile.png', fullPage: false });
   assert.deepEqual(errors, []);
 });

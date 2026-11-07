@@ -31,3 +31,37 @@ export function budgetFailures(bundle, lighthouse, budgets) {
     return value > limit ? [`${name}: ${value.toFixed(2)} exceeds ${limit}`] : [];
   });
 }
+
+// Diagnostic only: never change a gate based on missing breakdowns. Restrict
+// paths to local Next chunks so logs cannot include query strings or URLs from
+// a third-party report. Lighthouse's raw reports remain available as artifacts.
+export function summarizeDiagnostics(result, origin) {
+  const number = value => Number.isFinite(value) && value >= 0 && value <= Number.MAX_SAFE_INTEGER / 10 ? Math.round(value * 10) / 10 : null;
+  const items = id => {
+    const value = result?.audits?.[id]?.details?.items;
+    return Array.isArray(value) ? value : [];
+  };
+  const path = value => {
+    try {
+      const url = new URL(value);
+      if (url.origin !== origin) return 'other';
+      if (url.pathname === '/') return 'document';
+      return /^\/_next\/static\/chunks\/[a-zA-Z0-9._-]+\.js$/.test(url.pathname) ? url.pathname : 'other';
+    } catch { return 'other'; }
+  };
+  return {
+    benchmarkIndex: number(result?.environment?.benchmarkIndex),
+    totalBlockingTimeMs: number(result?.audits?.['total-blocking-time']?.numericValue),
+    mainThread: items('mainthread-work-breakdown').flatMap(item =>
+      typeof item?.group === 'string' && /^[a-zA-Z]+$/.test(item.group) && number(item.duration) !== null
+        ? [{ group: item.group, durationMs: number(item.duration) }] : []).slice(0, 12),
+    scripts: items('bootup-time').flatMap(item => {
+      const totalMs = number(item?.total);
+      return totalMs === null ? [] : [{ path: path(item.url), totalMs, scriptingMs: number(item.scripting), parseCompileMs: number(item.scriptParseCompile) }];
+    }).slice(0, 10),
+    longTasks: items('long-tasks').flatMap(item => {
+      const durationMs = number(item?.duration), startTimeMs = number(item?.startTime);
+      return durationMs === null || startTimeMs === null ? [] : [{ path: path(item.url), startTimeMs, durationMs }];
+    }).sort((a, b) => b.durationMs - a.durationMs).slice(0, 10),
+  };
+}

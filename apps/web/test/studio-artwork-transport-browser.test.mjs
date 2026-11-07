@@ -79,7 +79,7 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
  const calls=[],errors=[],external=[];let generated=false;
  page.on('pageerror',error=>errors.push(error.message));
  page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
- await page.addInitScript(({marker,requestId,pieceId})=>sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageContext:{pieceId,baseVersion:1}})),{marker,requestId,pieceId});
+ await page.addInitScript(({marker,requestId,pieceId})=>sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId,baseVersion:1}})),{marker,requestId,pieceId});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;
   calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
@@ -88,7 +88,6 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:Buffer.from(png,'base64')});
   throw Error('unexpected API');
  });
- const confirm=()=>page.getByRole('button',{name:'Confirmar geração de imagem',exact:true});
  const prepare=()=>page.getByRole('button',{name:'Preparar cópia para edição',exact:true});
  async function openProposal(){
   generated=false;
@@ -96,20 +95,13 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
   await page.getByTestId('source-size').waitFor();
   await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
   await prepare().waitFor();
-  assert.equal(await confirm().isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).count(),0);
  }
  await openProposal();
  const before=await page.evaluate(()=>({hash:window.__transport.originalHash,size:window.__transport.originalSize}));
  assert.ok(before.size>2*1024*1024&&before.size<=8*1024*1024,'o PNG válido ocupa a faixa que impedia editar resultados gerados');
- const callsBeforePrepare=calls.length;
  await prepare().click();
- await page.getByText('Cópias preparadas. Revise as alterações antes de confirmar a geração.',{exact:true}).waitFor();
- assert.equal(await confirm().isEnabled(),true);
- assert.equal(calls.length,callsBeforePrepare,'preparar cópia não chama agente, API de imagens nem armazenamento');
- const disclosure=await page.locator('.studio-image-consent').innerText();
- assert.match(disclosure,/PNG/);assert.match(disclosure,/JPEG/);assert.match(disclosure,/1024\s*×\s*1280/);
  assert.equal(await page.evaluate(()=>window.__transport.digest(window.__transport.images.get('00000000-0000-4000-8000-000000000004:1'))),before.hash);
- await confirm().click();
  await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const paid=calls.filter(call=>call.path==='/api/agent/image');assert.equal(paid.length,1);
  const payload=paid[0].body;

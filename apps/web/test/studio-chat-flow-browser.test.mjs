@@ -14,6 +14,7 @@ const content=headline=>({headline,price:'R$ 20',date:'20/11',caption:'Legenda s
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 async function eventually(fn,predicate,timeout=6000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('estado esperado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
+async function assetBytes(page,pieceId,version){return page.evaluate(async ({userId,projectId,pieceId,version})=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{const row=await new Promise((resolve,reject)=>{const key=JSON.stringify([JSON.stringify([userId,projectId]),pieceId,version,'base']);const r=db.transaction('draftAssets').objectStore('draftAssets').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});return row?Array.from(new Uint8Array(await row.file.arrayBuffer())):null;}finally{db.close();}},{userId,projectId,pieceId,version});}
 async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
 async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
 async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
@@ -31,6 +32,13 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
+  if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
+  if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
+  if (url.pathname === '/api/studio/references/signals') {
+   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   return route.fulfill({json:{signals:[]}});
+  }
+    if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
   if(url.pathname==='/api/projects'){
    if(request.method()==='GET'){projectReads.count++;return route.fulfill({json:{projects}});}
    assert.equal(request.method(),'PATCH');const body=request.postDataJSON();calls.push({path:url.pathname,body});const index=projects.findIndex(project=>project.id===body.projectId),previous=projects[index];
@@ -54,7 +62,7 @@ async function app(t){
  return {page,origin,calls,projects,projectReads,versions,flow,errors,external};
 }
 async function openOriginal(page,origin,{key=true}={}){
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
 }
@@ -69,7 +77,7 @@ async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={})
 const action=(name,args,binding)=>({status:'action_required',action:{name,args},actionBinding:binding});
 const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
 
-test('chat cria e salva versões com confirmação; imagem usa snapshot novo e recusa não chama Images',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('chat cria e salva versões com confirmação; imagem usa snapshot novo automaticamente',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,calls,versions,flow,errors,external}=await app(t);let submits=0;
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Imagem integrada concluída.'}:++submits===1?action('compor_novo_post',{projectId,requestId:newPiece,revision:body.context.revision},'new'):consent('decline');
  flow.action=body=>{
@@ -87,15 +95,11 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo e r
  await openOriginal(page,origin);await page.getByLabel('Sua mensagem',{exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`,{cause:error});}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await eventually(()=>page.getByLabel('Título',{exact:true}).inputValue(),value=>value==='Título novo refinado');await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1,'segunda versão também espera confirmação');
- await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByRole('heading',{name:'Gerar a arte completa'}).waitFor();
- const proposal=page.locator('.studio-image-consent');assert.match(await proposal.innerText(),/Título novo refinado · versão 2/);const saves=calls.filter(call=>call.path==='/api/pieces');assert.deepEqual(saves.map(call=>[call.body.pieceId,call.body.baseVersion,call.body.expectedVersion]),[[newPiece,0,0],[newPiece,1,1]]);
- await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
  await page.getByText('Imagem gerada e adicionada a este post · versão 3.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
- const beforeDecline=calls.length;await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha outra imagem para eu revisar.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('button',{name:'Recusar geração',exact:true}).click();await page.getByText('Proposta recusada sem gerar outra imagem.',{exact:true}).waitFor();
- const declined=calls.slice(beforeDecline);assert.equal(declined.some(call=>call.path==='/api/agent/image'),false);assert.equal(declined.some(call=>call.path==='/api/images'),false);const receipt=declined.find(call=>call.path==='/api/studio/action');assert.equal(receipt.body.actionBinding,'decline-binding-decline');assert.deepEqual(receipt.body.result,{status:'declined'});
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -127,13 +131,11 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await waiting;release();
  const proposal=page.locator('.studio-image-consent');await proposal.waitFor();
  assert.match(await proposal.innerText(),/Original preservado · versão 1/,'a proposta identifica a origem capturada, sem adotar a seleção feita durante a espera');
- const confirm=page.getByRole('button',{name:'Confirmar geração de imagem',exact:true});
- if(await confirm.isEnabled())await confirm.click();
  await page.waitForLoadState('networkidle');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
  await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
- await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();
+ await page.getByRole('button',{name:'Consultar a mesma proposta',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
  await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,2);assert.equal(versions.find(version=>version.piece_id===originalPiece&&version.version===1).content.headline,'Original preservado');
@@ -205,12 +207,13 @@ test('a conversa gera a arte integral de um rascunho sem exigir salvamento prév
  const {page,origin,calls,versions,flow,errors,external}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Primeira arte pronta.'}:consent('draft');
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
- await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
+ assert.equal(await page.getByLabel('Preço',{exact:true}).count(),0);assert.equal(await page.getByLabel('Data',{exact:true}).count(),0);
+ await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
  const before=await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.headline==='Curso de planilhas'));assert.equal(before.selection.baseVersion,0);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('heading',{name:'Gerar a arte completa',exact:true}).waitFor();
- assert.equal(calls.some(call=>call.path==='/api/pieces'||call.path==='/api/agent/image'),false,'a proposta não salva nem gera antes da confirmação');
- await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Primeira arte pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('Primeira arte pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.pieceId,before.selection.pieceId);assert.equal(generation[0].body.version,1);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Curso de planilhas',price:'R$ 49',date:'12/12'},source:null,images:[]});
  assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1);assert.equal(versions.find(version=>version.piece_id===before.selection.pieceId).content.caption,'');
  const after=await eventually(()=>stored(page),state=>state?.selection?.baseVersion===1);assert.equal(after.selection.pieceId,before.selection.pieceId);assert.equal(JSON.stringify(after).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
@@ -226,9 +229,7 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  await openOriginal(page,origin);
  const source=await attachImage(page,{mime:'image/png',name:'original.png'});
  await openDrawer(page,'Bases');await chooseFiles(page,'Adicionar PNG ou JPEG',{name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await closeDrawer(page);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByRole('heading',{name:'Editar a arte em uma nova versão',exact:true}).waitFor();
- assert.equal(calls.some(call=>call.path==='/api/agent/image'),false);
- await page.getByRole('button',{name:'Confirmar geração de imagem',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
@@ -281,4 +282,83 @@ test('nome confirmado pelo chat permanece no menu e a segunda renomeação usa a
  ]);
  await trigger(finalName).click();assert.equal(await menu.getByRole('button',{name:finalName,exact:true}).count(),1);assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),0);
  assert.equal(projects.find(project=>project.id===projectId).revision,3);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,errors}=await app(t);
+ await page.route('**/api/pieces',async route=>{
+  if(route.request().method()!=='POST')return route.fallback();
+  const body=route.request().postDataJSON();
+  const version={project_id:projectId,piece_id:body.pieceId,version:1,content:body.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
+  versions.push(version);return route.fulfill({json:{status:'saved',version}});
+ });
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo persistido');
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
+ const state=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);assert.equal(state.drafts.find(d=>d.baseVersion===1).content.headline,'Conteúdo persistido');assert.deepEqual(errors,[]);
+});
+
+test('409 recupera versão idêntica e imagem-base sem perder edição durante consulta',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,calls,errors,flow}=await app(t);let release,entered;
+ const gate=new Promise(resolve=>{release=resolve;}),waiting=new Promise(resolve=>{entered=resolve;});
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
+ const image=await attachImage(page,{mime:'image/png',name:'original.png'});
+ const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Conteúdo já salvo'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
+ versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
+ await page.route('**/api/pieces?*',async route=>{entered();await gate;return route.fulfill({json:{versions}});});
+ await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await waiting;await page.getByLabel('Título',{exact:true}).fill('Edição posterior preservada');release();
+ await page.getByText('Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',{exact:true}).waitFor();
+ const after=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);const recovered=after.drafts.find(d=>d.baseVersion===1&&d.pieceId===draft.pieceId);assert.equal(recovered.content.headline,'Edição posterior preservada');assert.equal(recovered.dirty,true);assert.equal(versions.find(v=>v.piece_id===draft.pieceId).content.headline,'Conteúdo já salvo');
+ assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image,'a versão recuperada recebe os bytes da imagem-base original');
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
+ assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,0);
+ // A subsequent simulated edit must transport the recovered bytes, not just
+ // show a cached preview from the previous selection.
+ await page.unroute('**/api/pieces');
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte recuperada editada.'}:{...consent('recovered'),proposal:{prompt:'Ajuste a arte preservada.',operation:'edit',baseImageId:draft.pieceId,referenceIds:[]}};
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('Arte recuperada editada.',{exact:true}).waitFor();
+ const generation=calls.filter(c=>c.path==='/api/agent/image');assert.equal(generation.length,1);assert.deepEqual(generation[0].body.artworkInput.source,{pieceId:draft.pieceId,version:1});assert.equal(generation[0].body.artworkInput.images[0].data,image.toString('base64'));assert.deepEqual(errors,[]);
+});
+
+test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Minha edição');
+ const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Minha edição'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
+ versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:{...draft.content,headline:'Outra edição'},created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
+ await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',{exact:true}).waitFor();
+ const after=await stored(page);assert.equal(after.selection.baseVersion,0);assert.equal(after.drafts.find(d=>d.pieceId===draft.pieceId&&d.baseVersion===0).content.headline,'Minha edição');assert.deepEqual(errors,[]);
+});
+
+test('falha ao copiar imagem para versão recuperada não troca a seleção nem perde a origem',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
+ const image=await attachImage(page,{mime:'image/png',name:'original.png'});
+ const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Arte preservada'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
+ versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
+ await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
+ await page.evaluate(()=>{const add=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return add.apply(this,args);};});
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',{exact:true}).waitFor();
+ assert.equal((await stored(page)).selection.baseVersion,0);assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,0)),image);assert.equal(await assetBytes(page,draft.pieceId,1),null);assert.deepEqual(errors,[]);
+});
+
+test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na geração',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,versions,flow,errors}=await app(t);
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte com local pronta.'}:consent('custom-field');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.waitForFunction(()=>typeof window.__studioNative?.compor_adicionar_campo?.execute==='function');
+ const before=await eventually(()=>stored(page),state=>state?.selection?.baseVersion===0),fieldId=id(75);
+ const args={projectId,requestId:fieldId,revision:before.revision,pieceId:before.selection.pieceId,baseVersion:0,label:'Local'};
+ const result=await eventually(()=>page.evaluate(async args=>{try{return await window.__studioNative.compor_adicionar_campo.execute(args);}catch(error){if(error.message!=='action_unavailable')throw error;return null;}},args),value=>value?.status==='completed');assert.equal(result.status,'completed');
+ assert.equal(await page.getByLabel('Local',{exact:true}).inputValue(),'','sugestão não inventa um valor');
+ await page.getByLabel('Local',{exact:true}).fill('Ateliê central');
+ await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.fields?.[0]?.value==='Ateliê central'));
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post com o local informado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('Arte com local pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
+ const field={id:fieldId,label:'Local',value:'Ateliê central',origin:'user'};
+ assert.deepEqual(versions.find(version=>version.piece_id===before.selection.pieceId).content.fields,[field]);
+ assert.deepEqual(calls.find(call=>call.path==='/api/agent/image').body.artworkInput.literalText.fields,[field]);
+ assert.deepEqual(errors,[]);
 });

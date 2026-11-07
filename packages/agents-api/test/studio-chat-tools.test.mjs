@@ -19,3 +19,27 @@ test('afirmações de persona preservam procedência e exigem HTTPS para fonte p
  for(const source of [undefined,'javascript:alert(1)','http://site.test','https://user:secret@site.test'])assert.throws(()=>parseStudioAction('compor_registrar_afirmacao_persona',{...value,provenance:'public_source',source}));
  assert.equal(parseStudioAction('compor_registrar_afirmacao_persona',{...value,provenance:'public_source',source:'https://site.test/page'}).source,'https://site.test/page');
 });
+test('feedback visual exige referência e trecho literal limitado, sem aceitar segredo',()=>{
+ const value={...scope,revision:1,referenceId:'33333333-3333-4333-8333-333333333333',action:'selected',quote:'Gostei da composição.'};
+ assert.deepEqual(parseStudioAction('compor_registrar_feedback_visual',value),value);
+ assert.throws(()=>parseStudioAction('compor_registrar_feedback_visual',{...value,referenceId:'desconhecida'}));
+ assert.throws(()=>parseStudioAction('compor_registrar_feedback_visual',{...value,quote:''}));
+ assert.throws(()=>parseStudioAction('compor_registrar_feedback_visual',{...value,quote:'sk-nao-registrar'}));
+});
+
+test('comentário sobre imagem gerada exige número válido e trecho literal',()=>{
+ const value={...scope,revision:1,ordinal:42,quote:'Gostei do contraste'};
+ assert.deepEqual(parseStudioAction('compor_comentar_imagem_gerada',value),value);
+ assert.throws(()=>parseStudioAction('compor_comentar_imagem_gerada',{...value,ordinal:0}));
+ assert.throws(()=>parseStudioAction('compor_comentar_imagem_gerada',{...value,ordinal:2147483648}));
+ assert.throws(()=>parseStudioAction('compor_comentar_imagem_gerada',{...value,quote:'sk-nao-registrar'}));
+ assert.ok(AGENT_STUDIO_TOOLS.some(tool=>tool.name==='compor_comentar_imagem_gerada'));
+});
+
+test('IA pode estruturar um campo vazio, sem fornecer um valor inventado',()=>{
+ const value={...scope,revision:1,pieceId:'33333333-3333-4333-8333-333333333333',baseVersion:0,label:'Local'};
+ assert.deepEqual(parseStudioAction('compor_adicionar_campo',value),value);
+ assert.throws(()=>parseStudioAction('compor_adicionar_campo',{...value,label:' '}));
+ assert.throws(()=>parseStudioAction('compor_adicionar_campo',{...value,value:'local inventado'}));
+ assert.ok(AGENT_STUDIO_TOOLS.some(tool=>tool.name==='compor_adicionar_campo'));
+});

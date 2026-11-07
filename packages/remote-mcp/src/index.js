@@ -78,9 +78,16 @@ export function createSupabaseProjectStore({ url, anonKey, fetchImpl = fetch }) 
   };
 }
 
+const creativeText = max => z.string().max(max).refine(value => !/[\u0000-\u001f\u007f]|sk-[^\s]+/i.test(value));
+const creativeFieldSchema = z.strictObject({
+  id: z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),
+  label: creativeText(80).refine(value => value.trim().length > 0),
+  value: creativeText(500), origin: z.enum(['user', 'agent']),
+});
 const pieceContentSchema = z.strictObject({
   headline: z.string().max(500), price: z.string().max(100), date: z.string().max(100),
   caption: z.string().max(4000), captionOrigin: z.enum(['user', 'agent']),
+  fields: z.array(creativeFieldSchema).max(20).refine(fields => new Set(fields.map(field => field.id.toLowerCase())).size === fields.length).optional(),
 });
 const uuid = z.string().uuid();
 const pieceVersionSchema = z.strictObject({
@@ -166,7 +173,7 @@ export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
 }
 
 /** Stateless HTTP boundary. `authenticate` is a trusted server-side adapter, never tool input. */
-export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore } = {}) {
+export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore, exploration, explorationRead, explorationResume } = {}) {
   return async function handle(request) {
     const header = request.headers.get('authorization') ?? '';
     const match = /^Bearer ([^\s]{1,8192})$/i.exec(header);
@@ -181,6 +188,53 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore 
     if (!bounded) return tooLarge();
     const server = new McpServer({ name: 'compor-remote', version: '0.1.0' });
     registerDeliberationTools(server);
+    if (typeof exploration === 'function') {
+      server.registerTool('generate_exploration_image', {
+        description: 'Gera uma referência visual para projeto autorizado. A chave conectada é enviada no transporte pelo cliente, nunca nos argumentos. Resultado incerto não deve ser repetido automaticamente. Após rejected, corrija a chave e aguarde um pedido explícito antes de tentar novamente. not_started só confirma que esta chamada não iniciou a reserva; não prova o histórico de um requestId reutilizado. Aguarde um pedido explícito para retomar.',
+        inputSchema: z.strictObject({projectId:uuid,requestId:uuid,prompt:z.string().trim().min(1).max(8000)}),
+        annotations: {destructiveHint:false,openWorldHint:true},
+      }, async args => {
+        const key=request.headers.get('x-compor-openai-key') ?? '';
+        if (!/^sk-[^\s]{20,300}$/.test(key) || /sk-[^\s]+/i.test(args.prompt)) return {isError:true,content:[{type:'text',text:'Chave de sessão ausente ou entrada inválida.'}]};
+        try {
+          const value=await exploration({actor,token:match[1]},args,key);
+          const result=z.discriminatedUnion('status',[
+            z.strictObject({status:z.literal('completed'),requestId:uuid,imageId:uuid}),
+            z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected','not_started']),requestId:uuid,retryAutomatically:z.literal(false)}),
+          ]).parse(value);
+          if(result.requestId.toLowerCase()!==args.requestId.toLowerCase())throw Error();
+          if(result.status==='completed' && result.imageId.toLowerCase()!==args.requestId.toLowerCase())throw Error();
+          return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+        } catch {
+          const result={status:'unknown',requestId:args.requestId,retryAutomatically:false};
+          return {content:[{type:'text',text:JSON.stringify(result)}],structuredContent:result};
+        }
+      });
+    }
+    if (typeof explorationResume === 'function') {
+      server.registerTool('resume_exploration', {
+        description:'Retoma a exploração pausada depois que a pessoa pedir mais propostas. Não use apenas porque ela selecionou ou comentou uma imagem.',
+        inputSchema:z.strictObject({projectId:uuid}), annotations:{destructiveHint:false,openWorldHint:false},
+      },async args=>{
+        try {
+          const status=z.enum(['resumed','not_paused','blocked']).parse(await explorationResume({actor,token:match[1]},args));
+          return {content:[{type:'text',text:JSON.stringify({status})}],structuredContent:{status}};
+        } catch {return {isError:true,content:[{type:'text',text:'Não foi possível retomar a exploração.'}]};}
+      });
+    }
+    if (typeof explorationRead === 'function') {
+      server.registerTool('get_exploration_image', {
+        description: 'Lê uma imagem de exploração privada de um projeto autorizado, sem gerar novamente.',
+        inputSchema: {projectId:uuid,imageId:uuid},
+        annotations: {readOnlyHint:true,destructiveHint:false,openWorldHint:false},
+      }, async args => {
+        try {
+          const image=await explorationRead({actor,token:match[1]},args);
+          if (!(image instanceof Uint8Array) || image.length<8 || image.length>8*1024*1024 || !Buffer.from(image.subarray(0,8)).equals(Buffer.from([137,80,78,71,13,10,26,10]))) throw Error();
+          return {content:[{type:'image',data:Buffer.from(image).toString('base64'),mimeType:'image/png'}]};
+        } catch { return {isError:true,content:[{type:'text',text:'Não foi possível acessar esta imagem.'}]}; }
+      });
+    }
     server.registerTool('prepare_brief', {
       description: 'Organiza fatos fornecidos e aponta campos ausentes. Não inventa, persiste ou confirma dados.',
       inputSchema: {

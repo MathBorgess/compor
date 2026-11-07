@@ -1,8 +1,10 @@
 "use client";
 import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
 import { composeStudioPng } from "../lib/studio-compose.ts";
+import "./studio-editor-fields.css";
 
-import type { StudioDraft, StudioMark, PieceContent } from "../lib/studio-domain";
+import { creativeFieldSchema, type Brief, type StudioDraft, type StudioMark, type CreativeField } from "../lib/studio-domain";
+import { suggestedArtworkFields, type OptionalArtworkField } from "../lib/studio-editor-fields.ts";
 import { errorMessage } from "./studio-ui-types";
 type Region = {x: number;y: number;width: number;height: number};
 export type NewMark = Region & {kind: "area"; note: string};
@@ -10,20 +12,25 @@ const elementLabels: Record<string, string> = { headline: "título", price: "pre
 
 export default function StudioEditor({
   draft,
+  brief,
   marks = [],
   base = null,
   onEdit,
+  onSetField,
+  onRemoveField,
   onMark,
   onRemoveMark,
   onPreview,
   onApprove,
   onViewArt,
-}: {draft: StudioDraft | null;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: Exclude<keyof PieceContent, "captionOrigin">,value: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onPreview?: (blob: Blob) => void;onApprove?: () => void;onViewArt?: () => void}) {
+}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onPreview?: (blob: Blob) => void;onApprove?: () => void;onViewArt?: () => void}) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState<Region | null>(null),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
     [busy, setBusy] = useState(false),
+    [addedFields, setAddedFields] = useState<OptionalArtworkField[]>([]),
+    [newFieldLabel, setNewFieldLabel] = useState(""),
     [image, setImage] = useState<{blob:Blob;url:string} | null>(null);
   const url = base && image?.blob === base ? image.url : null;
   const frame = useRef<HTMLDivElement>(null),
@@ -32,11 +39,13 @@ export default function StudioEditor({
   const approvalHint = useId();
   useEffect(() => {
     setRegion(null);
+    setAddedFields([]);
+    setNewFieldLabel("");
     setNote("");
     setError("");
     generation.current++;
   }, [draft?.pieceId, draft?.baseVersion]);
-  useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date]);
+  useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date,JSON.stringify(draft?.content.fields)]);
   useEffect(() => {
     if (!base) {
       setImage(null);
@@ -53,6 +62,7 @@ export default function StudioEditor({
         <p>Crie um post ou abra uma versão no histórico.</p>
       </div>
     );
+  const visibleFields = new Set([...suggestedArtworkFields(brief, draft.content), ...addedFields]);
   function point(event: PointerEvent<HTMLDivElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
     return {
@@ -184,24 +194,57 @@ export default function StudioEditor({
             onChange={(e) => onEdit?.("headline", e.target.value)}
           />
         </label>
-        <div className="studio-field-pair">
-          <label>
+        {visibleFields.size > 0 && <div className="studio-field-pair">
+          {visibleFields.has("price") && <label>
             Preço
             <input
               value={draft.content.price}
               maxLength={100}
+              onFocus={() => setAddedFields(fields => fields.includes("price") ? fields : [...fields, "price"])}
               onChange={(e) => onEdit?.("price", e.target.value)}
             />
-          </label>
-          <label>
+          </label>}
+          {visibleFields.has("date") && <label>
             Data
             <input
               value={draft.content.date}
               maxLength={100}
+              onFocus={() => setAddedFields(fields => fields.includes("date") ? fields : [...fields, "date"])}
               onChange={(e) => onEdit?.("date", e.target.value)}
             />
+          </label>}
+        </div>}
+        {visibleFields.size < 2 && <details className="studio-optional-fields">
+          <summary>Adicionar outras informações</summary>
+          <div className="studio-optional-actions">
+            {!visibleFields.has("price") && <button type="button" className="studio-button-secondary" onClick={() => setAddedFields(fields => [...fields, "price"])}>Adicionar preço</button>}
+            {!visibleFields.has("date") && <button type="button" className="studio-button-secondary" onClick={() => setAddedFields(fields => [...fields, "date"])}>Adicionar data</button>}
+          </div>
+        </details>}
+        {(draft.content.fields ?? []).map(field => <div className="studio-custom-field" key={field.id}>
+          <label>{field.label}
+            <input value={field.value} maxLength={500} onChange={event => {
+              const next={...field,value:event.target.value,origin:"user" as const};
+              if (!creativeFieldSchema.safeParse(next).success) {setError("Não foi possível usar esse texto no campo.");return;}
+              setError("");onSetField?.(next);
+            }} />
           </label>
-        </div>
+          <button type="button" className="studio-button-secondary" aria-label={`Remover ${field.label}`} onClick={() => onRemoveField?.(field.id)}>Remover</button>
+        </div>)}
+        {(draft.content.fields?.length ?? 0) < 20 && <details className="studio-optional-fields">
+          <summary>Adicionar outro campo</summary>
+          <div className="studio-optional-actions">
+            <label>Nome do campo<input value={newFieldLabel} maxLength={80} onChange={event => setNewFieldLabel(event.target.value)} /></label>
+            <button type="button" className="studio-button-secondary" disabled={!newFieldLabel.trim()} onClick={() => {
+              const label = newFieldLabel.trim();
+              if (!label) return;
+              const field={id:crypto.randomUUID(),label,value:"",origin:"user" as const};
+              if (!creativeFieldSchema.safeParse(field).success) {setError("Não foi possível usar esse nome de campo.");return;}
+              setError("");onSetField?.(field);
+              setNewFieldLabel("");
+            }}>Adicionar campo</button>
+          </div>
+        </details>}
         <label>
           Legenda
           <textarea

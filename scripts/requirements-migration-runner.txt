@@ -1,0 +1,7 @@
+# CPython 3.12, macOS arm64 and Linux x86_64 wheels; no source builds.
+pglast==7.22 \
+    --hash=sha256:6ebf802548bd6eb27d886cd7a654eccb307bad41dc66571ba26f13c165bb925c \
+    --hash=sha256:24285a069961bac538ac2a450e4ccdffa5cc300b54ef167b2a792f67dcb5d1ed
+psycopg2-binary==2.9.11 \
+    --hash=sha256:f090b7ddd13ca842ebfe301cd587a76a4cf0913b1e429eb92c1be5dbeb1a19bc \
+    --hash=sha256:fa0f693d3c68ae925966f0b14b8edda71696608039f4ed61b1fe9ffa468d16db

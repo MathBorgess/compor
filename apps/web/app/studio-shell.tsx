@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { Project } from "./studio-ui-types";
+import AccountMenu from "./account-menu";
 import "./studio-shell.css";
 
 const assets = "/studio/";
@@ -23,11 +24,16 @@ export type StudioShellProps = {
   onReview?: () => void;
   canOpenStudio?: boolean;
   userLabel?: string;
+  accountLabel?: string;
+  localAccount?: boolean;
+  onSignOut?: () => void | Promise<void>;
   statusText?: string;
   versionStatus?: string;
   children?: ReactNode;
   canvas?: ReactNode;
   chat?: ReactNode;
+  conversationFocus?: boolean;
+  chatMessageCount?: number;
   headerActions?: ReactNode;
   footer?: ReactNode;
   overlays?: ReactNode;
@@ -55,7 +61,7 @@ const stageTitles: Partial<Record<StudioStage, string>> = {
 };
 
 function layoutKey(projectId: string) {
-  return projectId ? `compor-studio-chat-layout:${projectId}` : "";
+  return projectId ? `compor-studio-chat-layout:v2:${projectId}` : "";
 }
 
 export default function StudioShell({
@@ -72,11 +78,16 @@ export default function StudioShell({
   onReview,
   canOpenStudio = false,
   userLabel = "",
+  accountLabel = "",
+  localAccount = false,
+  onSignOut,
   statusText = "",
   versionStatus = "Rascunho",
   children,
   canvas,
   chat,
+  conversationFocus = false,
+  chatMessageCount = 0,
   headerActions,
   footer,
   overlays,
@@ -99,6 +110,23 @@ export default function StudioShell({
   const basesTrigger = useRef<HTMLButtonElement>(null);
   const marcaTrigger = useRef<HTMLButtonElement>(null);
   const barRef = useRef<HTMLElement>(null);
+  const chatTrigger = useRef<HTMLButtonElement>(null);
+  const chatPanel = useRef<HTMLElement>(null);
+  const resizeDrag = useRef<{pointerId:number;startY:number;startHeight:number}|null>(null);
+  const [chatHeight,setChatHeight] = useState<number|null>(null);
+  const [availableHeight,setAvailableHeight] = useState(620);
+  const [renderedChatHeight,setRenderedChatHeight] = useState<number|null>(null);
+  const lastMessageCount = useRef(chatMessageCount);
+  const [unread, setUnread] = useState(false);
+  useEffect(() => {
+    const update=()=>setAvailableHeight(Math.max(120,Math.floor((window.visualViewport?.height ?? window.innerHeight)-32)));
+    update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
+    return ()=>{window.removeEventListener('resize',update);window.visualViewport?.removeEventListener('resize',update);};
+  },[]);
+  const minimumChatHeight=Math.min(180,availableHeight);
+  const maximumChatHeight=availableHeight;
+  const currentChatHeight=Math.min(maximumChatHeight,Math.max(minimumChatHeight,chatHeight ?? Math.min(620,Math.round((availableHeight+32)*0.48))));
+  const resizeChat=(height:number)=>setChatHeight(Math.min(maximumChatHeight,Math.max(minimumChatHeight,Math.round(height))));
   const layoutListener = useRef(onLayoutChange);
   layoutListener.current = onLayoutChange;
   const isStudio = stage === "studio";
@@ -108,17 +136,18 @@ export default function StudioShell({
   const [renameValue, setRenameValue] = useState(projectTitle);
   const [barHeight, setBarHeight] = useState(64);
   const [internalDrawer, setInternalDrawer] = useState<StudioDrawer>(null);
-  const [persistedCollapsed, setPersistedCollapsed] = useState(false);
+  const [persistedCollapsed, setPersistedCollapsed] = useState(true);
   const controlledDrawer = onDrawerChange != null;
   const activeDrawer = controlledDrawer ? (drawer ?? null) : internalDrawer;
   const layoutC = showChat && (persistedCollapsed || Boolean(viewingArt));
-  const initials = userLabel
-    .trim()
-    .split(/\s+/)
-    .slice(0, 2)
-    .map((word) => word[0])
-    .join("")
-    .toLocaleUpperCase("pt-BR");
+  useEffect(() => {
+    const panel=chatPanel.current;
+    if(!showChat||layoutC||!panel)return;
+    const update=()=>setRenderedChatHeight(panel.offsetHeight || null);
+    update();const observer=new ResizeObserver(update);observer.observe(panel);
+    return ()=>observer.disconnect();
+  },[showChat,layoutC]);
+  const displayedChatHeight=Math.min(maximumChatHeight,Math.max(minimumChatHeight,renderedChatHeight ?? currentChatHeight));
   const barTitle = projectTitle || stageTitles[stage] || "Estúdio";
   const canOpenMenu = Boolean(
     projectTitle || onNewProject || onRenameProject || onNavigate || projects.length,
@@ -153,13 +182,18 @@ export default function StudioShell({
     setRenameValue(projectTitle);
   }, [projectTitle]);
   useEffect(() => {
+    if (layoutC && chatMessageCount > lastMessageCount.current) setUnread(true);
+    if (!layoutC) setUnread(false);
+    lastMessageCount.current = chatMessageCount;
+  }, [chatMessageCount, layoutC]);
+  useEffect(() => {
     const key = layoutKey(projectId);
-    let stored = false;
+    let stored = true;
     if (key) {
       try {
-        stored = sessionStorage.getItem(key) === "collapsed";
+        stored = sessionStorage.getItem(key) !== "open";
       } catch {
-        stored = false;
+        stored = true;
       }
     }
     persistCollapse(stored || Boolean(viewingArt));
@@ -197,11 +231,16 @@ export default function StudioShell({
         updateDrawer(null);
         return;
       }
+      if (showChat && !layoutC) {
+        persistCollapse(true);
+        requestAnimationFrame(() => chatTrigger.current?.focus());
+        return;
+      }
       if (viewingArt) onCloseArt?.();
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [menuOpen, activeDrawer, viewingArt, projectId]);
+  }, [menuOpen, activeDrawer, viewingArt, projectId, showChat, layoutC]);
 
   const fallbackActions =
     headerActions ||
@@ -219,6 +258,7 @@ export default function StudioShell({
     <div
       className="compor-studio"
       data-stage={stage}
+      data-conversation-focus={conversationFocus ? "true" : "false"}
       data-layout={layoutC ? "c" : "b"}
       data-art={viewingArt ? "open" : "closed"}
       style={{ "--studio-bar": `${barHeight}px` } as CSSProperties}
@@ -374,12 +414,7 @@ export default function StudioShell({
             </button>
           ) : null}
           <div className="studio-account">
-            {initials ? (
-              <span className="studio-initials" aria-hidden="true">
-                {initials}
-              </span>
-            ) : null}
-            <span>{userLabel || "Conta"}</span>
+            <AccountMenu label={accountLabel || userLabel || "Conta"} local={localAccount} onSignOut={onSignOut} />
             {statusText ? (
               <span className="studio-save-status" role="status">
                 {statusText}
@@ -390,13 +425,14 @@ export default function StudioShell({
       </header>
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         {showChat ? (
-          <div className="studio-chat-slot">
-            <aside className="studio-conversation" aria-label="Conversa com a IA">
+          <div className="studio-chat-slot" style={chatHeight===null?undefined:{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
+            <aside ref={chatPanel} id="studio-floating-chat" tabIndex={-1} className="studio-conversation" aria-label="Conversa com a IA">
+              <div className="studio-chat-resize" role="slider" tabIndex={0} aria-label="Altura da conversa" aria-orientation="vertical" aria-valuemin={minimumChatHeight} aria-valuemax={maximumChatHeight} aria-valuenow={displayedChatHeight} aria-valuetext={`${displayedChatHeight} pixels`} onPointerDown={event=>{resizeDrag.current={pointerId:event.pointerId,startY:event.clientY,startHeight:chatPanel.current?.offsetHeight ?? displayedChatHeight};event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{const drag=resizeDrag.current;if(drag?.pointerId===event.pointerId)resizeChat(drag.startHeight+drag.startY-event.clientY);}} onPointerUp={event=>{if(resizeDrag.current?.pointerId===event.pointerId)resizeDrag.current=null;}} onPointerCancel={()=>{resizeDrag.current=null;}} onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowRight')resizeChat(displayedChatHeight+32);else if(event.key==='ArrowDown'||event.key==='ArrowLeft')resizeChat(displayedChatHeight-32);else if(event.key==='Home')resizeChat(minimumChatHeight);else if(event.key==='End')resizeChat(maximumChatHeight);else return;event.preventDefault();}} />
               <button
                 type="button"
                 className="studio-collapse"
                 aria-label="Recolher conversa"
-                onClick={() => persistCollapse(true)}
+                onClick={() => { persistCollapse(true); requestAnimationFrame(() => chatTrigger.current?.focus()); }}
               >
                 Recolher
               </button>
@@ -408,18 +444,29 @@ export default function StudioShell({
           {isStudio ? (canvas ?? children) : children}
         </main>
       </div>
-      {layoutC ? (
-        <div className="studio-floating-bar">
+      {showChat ? (
+        <div className="studio-floating-bar" hidden={!layoutC}>
           <button
+            ref={chatTrigger}
             type="button"
             className="studio-floating-input"
             aria-label="Abrir conversa"
+            aria-expanded={!layoutC}
+            aria-controls="studio-floating-chat"
             onClick={() => {
               persistCollapse(false);
               onCloseArt?.();
+              requestAnimationFrame(() => {
+                if (document.activeElement !== chatTrigger.current && document.activeElement !== document.body) return;
+                const input = chatPanel.current?.querySelector<HTMLTextAreaElement>("textarea:not([disabled])");
+                if (input) input.focus(); else chatPanel.current?.focus();
+              });
             }}
           >
-            Escreva uma mensagem…
+            <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
+            <span className="studio-floating-placeholder">Escreva uma mensagem…</span>
+            {unread && <span className="studio-chat-unread" aria-live="polite">Nova mensagem</span>}
+            <span className="studio-floating-arrow" aria-hidden="true">↑</span>
           </button>
         </div>
       ) : null}

@@ -5,7 +5,8 @@ export const projectSchema = z.object({ id: z.string(), title: z.string(), revis
 export const projectsSchema = z.object({ projects: z.array(projectSchema) });
 export const projectResponseSchema = z.object({ project: projectSchema });
 export const contentSchema = pieceContentSchema;
-export const versionSchema = z.object({ project_id: z.string(), piece_id: z.string(), version: z.number().int(), content: contentSchema, metadata:z.object({revision:z.number(),approval:approvalSchema}).optional(), created_at: z.string().optional() });
+const persistedUnapprovedSchema = z.strictObject({status:z.literal('unapproved'),kind:z.null(),sourceVersion:z.null(),at:z.null()}).transform(() => ({status:'unapproved'} as const));
+export const versionSchema = z.object({ project_id: z.string(), piece_id: z.string(), version: z.number().int(), content: contentSchema, metadata:z.object({revision:z.number(),baseVersion:z.number().nullable().optional(),approval:z.union([approvalSchema,persistedUnapprovedSchema])}).optional(), created_at: z.string().optional() });
 export const versionsSchema = z.object({ versions: z.array(versionSchema) });
 export const markerSchema = z.object({ assetId: z.string().nullable() });
 export const storedImageSchema = z.object({ status: z.string(), assetId: z.string().optional() });

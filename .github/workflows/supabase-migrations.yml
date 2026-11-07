@@ -1,0 +1,213 @@
+name: Supabase migrations
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      operation:
+        description: 'Operação: migrate ou inicialização única da baseline'
+        required: true
+        type: choice
+        default: migrate
+        options: [migrate, bootstrap]
+
+permissions:
+  contents: read
+
+# One production target. Queue rather than cancel migrations in progress.
+# Each run checks out current main after entering the group, so a delayed run
+# cannot apply an older snapshot after a newer one.
+concurrency:
+  group: compor-supabase-production-migrations
+  cancel-in-progress: false
+  queue: max
+
+jobs:
+  preflight:
+    name: Confirm migration automation is enabled
+    runs-on: ubuntu-24.04
+    timeout-minutes: 2
+    steps:
+      - name: Require main and the reviewed production baseline
+        env:
+          MIGRATIONS_READY: ${{ vars.SUPABASE_MIGRATIONS_ENABLED }}
+          BOOTSTRAP_READY: ${{ vars.SUPABASE_MIGRATIONS_BOOTSTRAP_ENABLED }}
+          PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          VERIFIED_PROJECT_REF: ${{ vars.SUPABASE_MIGRATIONS_VERIFIED_PROJECT_REF }}
+          OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || 'migrate' }}
+        run: |
+          set -eu
+          if [ "$GITHUB_REF" != 'refs/heads/main' ]; then
+            echo '::error::Executar apenas na branch main.'
+            exit 1
+          fi
+          case "$OPERATION" in
+            migrate)
+              if [ "$MIGRATIONS_READY" != 'true' ]; then
+                echo '::error::Automação de migrations desativada.'; exit 1
+              fi ;;
+            bootstrap)
+              if [ "$GITHUB_EVENT_NAME" != 'workflow_dispatch' ] || [ "$BOOTSTRAP_READY" != 'true' ]; then
+                echo '::error::Bootstrap exige execução manual e habilitação explícita.'; exit 1
+              fi ;;
+            *) echo '::error::Operação inválida.'; exit 1 ;;
+          esac
+          if ! printf '%s' "$PROJECT_REF" | grep -Eq '^[a-z0-9]{20}$' || [ "$PROJECT_REF" != "$VERIFIED_PROJECT_REF" ]; then
+            echo '::error::O projeto não corresponde ao projeto verificado.'
+            exit 1
+          fi
+
+  migrate:
+    name: Apply migrations or initialize baseline
+    needs: preflight
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    environment: production
+    steps:
+      - name: Check out current main
+        uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v4.2.2
+        with:
+          ref: refs/heads/main
+          persist-credentials: false
+
+      - name: Reject stale workflow and migration snapshots
+        run: |
+          set -eu
+          actual=$(git rev-parse HEAD)
+          if [ "$actual" != "$GITHUB_SHA" ]; then
+            echo '::error::A main mudou após o evento; inicie uma nova execução manual na main.'
+            exit 1
+          fi
+          printf '%s\n' "$actual"
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Install pinned atomic migration runner dependencies
+        run: |
+          set -eu
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), "Python 3.12 is required"'
+          python3 -m venv "$RUNNER_TEMP/compor-migration-venv"
+          "$RUNNER_TEMP/compor-migration-venv/bin/python" -I -m pip install \
+            --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps \
+            -r scripts/requirements-migration-runner.txt
+          "$RUNNER_TEMP/compor-migration-venv/bin/python" -I scripts/tests/test_atomic_migration_parser.py
+
+      - name: Acquire durable latch and apply pending migrations
+        env:
+          SUPABASE_DB_PASSWORD: ${{ secrets.SUPABASE_DB_PASSWORD }}
+          SUPABASE_PROJECT_REF: ${{ vars.SUPABASE_PROJECT_REF }}
+          SUPABASE_DB_HOST: ${{ vars.SUPABASE_DB_HOST }}
+          VERIFIED_PROJECT_REF: ${{ vars.SUPABASE_MIGRATIONS_VERIFIED_PROJECT_REF }}
+          BOOTSTRAP_READY: ${{ vars.SUPABASE_MIGRATIONS_BOOTSTRAP_ENABLED }}
+          OPERATION: ${{ github.event_name == 'workflow_dispatch' && inputs.operation || 'migrate' }}
+        run: |
+          set -eu
+          case "$OPERATION" in
+            migrate) ;;
+            bootstrap)
+              if [ "$GITHUB_EVENT_NAME" != 'workflow_dispatch' ] || [ "$BOOTSTRAP_READY" != 'true' ]; then
+                echo '::error::Bootstrap exige execução manual e habilitação explícita.'; exit 1
+              fi ;;
+            *) echo '::error::Operação inválida.'; exit 1 ;;
+          esac
+          if [ -z "$SUPABASE_DB_PASSWORD" ]; then
+            echo '::error::Secret SUPABASE_DB_PASSWORD ausente no ambiente production.'
+            exit 1
+          fi
+          unset compor_db_password
+          compor_db_password="$SUPABASE_DB_PASSWORD"
+          unset SUPABASE_DB_PASSWORD
+          if ! printf '%s' "$SUPABASE_PROJECT_REF" | grep -Eq '^[a-z0-9]{20}$' || [ "$SUPABASE_PROJECT_REF" != "$VERIFIED_PROJECT_REF" ]; then
+            echo '::error::Configure SUPABASE_PROJECT_REF com o projeto de produção verificado.'
+            exit 1
+          fi
+          if ! printf '%s' "$SUPABASE_DB_HOST" | grep -Eq '^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)*$'; then
+            echo '::error::Host de banco inválido.'
+            exit 1
+          fi
+          case "$SUPABASE_DB_HOST" in
+            "db.$SUPABASE_PROJECT_REF.supabase.co") database_user=postgres ;;
+            *.pooler.supabase.com) database_user="postgres.$SUPABASE_PROJECT_REF" ;;
+            *) echo '::error::Host não pertence ao projeto ou ao pooler Supabase.'; exit 1 ;;
+          esac
+          database_host="$SUPABASE_DB_HOST"
+          run_token="$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
+          if ! printf '%s' "$run_token" | grep -Eq '^[0-9]+-[0-9]+$'; then
+            echo '::error::Identificador da execução inválido.'
+            exit 1
+          fi
+          command -v psql >/dev/null
+          umask 077
+          ca_file=$(mktemp "$RUNNER_TEMP/compor-ca.XXXXXXXX")
+          workdir=$(mktemp -d "$RUNNER_TEMP/compor-migrations.XXXXXXXX")
+          trap 'rm -f "$ca_file"; rm -rf "$workdir"' EXIT
+          # Canonicalize a single certificate: do not trust additional PEM blocks.
+          openssl x509 -in supabase/certs/supabase-root-2021.crt -out "$ca_file" || exit 1
+          expected='sha256 Fingerprint=80:70:25:AD:50:D4:ED:21:9D:2C:9C:7D:29:9C:00:4F:82:4E:B0:0C:F7:F6:5A:FE:F6:07:D0:7B:72:E6:CA:FA'
+          actual=$(openssl x509 -in "$ca_file" -noout -fingerprint -sha256) || exit 1
+          if [ "$actual" != "$expected" ]; then
+            echo '::error::Certificado CA ausente ou inesperado; conexão cancelada.'
+            exit 1
+          fi
+          export PGSSLMODE=verify-full
+          export PGSSLROOTCERT="$ca_file"
+          export PGGSSENCMODE=disable
+          # Retain the repository configuration and exact reviewed migrations.
+          # No roles, seeds, Vault files or other configuration are executed.
+          if [ -n "$(find supabase/migrations -type l -print -quit)" ]; then
+            echo '::error::Migration simbólica não permitida.'
+            exit 1
+          fi
+          mkdir -p "$workdir/supabase"
+          cp -R supabase/migrations "$workdir/supabase/migrations"
+          diff -rq supabase/migrations "$workdir/supabase/migrations"
+          cp supabase/config.toml "$workdir/supabase/config.toml"
+          cmp supabase/config.toml "$workdir/supabase/config.toml"
+          python3 -I -c 'import pathlib,sys,tomllib; c=tomllib.loads(pathlib.Path(sys.argv[1]).read_text()); sys.exit(0 if c.get("db",{}).get("migrations",{}).get("enabled") is True and not c.get("remotes") else "db.migrations.enabled must be true and remotes absent")' "$workdir/supabase/config.toml"
+          mkdir -p "$workdir/compor-home/config"
+          cd "$workdir"
+          # Both clients receive the same host, port, role, database and CA.
+          # No password appears in command arguments or a database URI.
+          source_dir="$GITHUB_WORKSPACE"
+          clear_pg_environment() {
+            for key in ${!PG@}; do unset "$key"; done
+          }
+          database_psql() (
+            clear_pg_environment
+            export PGHOST="$database_host" PGPORT=5432 PGUSER="$database_user" PGDATABASE=postgres
+            export PGPASSWORD="$compor_db_password" PGSSLMODE=verify-full PGSSLROOTCERT="$ca_file" PGGSSENCMODE=disable
+            exec psql -X -v ON_ERROR_STOP=1 -v run_token="$run_token" "$@"
+          )
+          (
+            clear_pg_environment
+            for key in ${!SUPABASE_@}; do unset "$key"; done
+            exec "$RUNNER_TEMP/compor-migration-venv/bin/python" -I "$source_dir/scripts/run_atomic_migrations.py" --check "$workdir/supabase/migrations"
+          )
+          if [ "$OPERATION" = 'bootstrap' ]; then
+            # Isolated Python does not add the script directory automatically.
+            # Only the SHA-checked checkout is added, never the runner's cwd.
+            (
+              clear_pg_environment
+              for key in ${!SUPABASE_@}; do unset "$key"; done
+              exec "$RUNNER_TEMP/compor-migration-venv/bin/python" -I -c 'import runpy,sys; d=sys.argv[1]; commit=sys.argv[2]; sys.path.insert(0,d); sys.argv=[d+"/prepare_migration_baseline.py",commit]; runpy.run_path(sys.argv[0],run_name="__main__")' "$source_dir/scripts" "$GITHUB_SHA"
+            ) > "$workdir/baseline.sql"
+            database_psql -f "$workdir/baseline.sql"
+            exit 0
+          fi
+          # Acknowledged COMMIT is required before the runner starts. A failure,
+          # cancellation or lost acknowledgement leaves the latch held.
+          database_psql -f "$source_dir/supabase/automation/migration-latch-acquire.sql"
+          (
+            clear_pg_environment
+            for key in ${!SUPABASE_@}; do unset "$key"; done
+            export HOME="$workdir/compor-home" XDG_CONFIG_HOME="$workdir/compor-home/config"
+            export PGHOST="$database_host" PGPORT=5432 PGUSER="$database_user" PGDATABASE=postgres
+            export PGPASSWORD="$compor_db_password" PGSSLMODE=verify-full PGSSLROOTCERT="$ca_file" PGGSSENCMODE=disable
+            exec "$RUNNER_TEMP/compor-migration-venv/bin/python" -I "$source_dir/scripts/run_atomic_migrations.py" "$workdir/supabase/migrations"
+          )
+          # Never release from an EXIT trap. A lost release acknowledgement
+          # follows an acknowledged database COMMIT and requires inspection.
+          database_psql -f "$source_dir/supabase/automation/migration-latch-release.sql"
+          unset compor_db_password

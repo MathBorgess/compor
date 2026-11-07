@@ -12,16 +12,20 @@ const StudioApp = dynamic(() => import("./studio-app"), {
 });
 const LegacyWorkspace = dynamic(() => import("./legacy-workspace"));
 
-export default function Workspace({ loginAvailable, legacy = false }: { loginAvailable: boolean; legacy?: boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, legacy = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; legacy?: boolean; developerMode?: boolean }) {
   return legacy
     ? <LegacyWorkspace loginAvailable={loginAvailable} />
-    : <StudioWorkspace loginAvailable={loginAvailable} />;
+    : <StudioWorkspace loginAvailable={loginAvailable} localAuth={localAuth} developerMode={developerMode} />;
 }
 
-function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
+function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAvailable: boolean; localAuth: boolean; developerMode: boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
+  const [account, setAccount] = useState<{label:string;local:boolean}|null>(null);
+  const [signOutError, setSignOutError] = useState(false);
+  const sessionEpoch = useRef(0);
+  const signingOut = useRef(false);
   const openAIKey = useRef("");
   const openAIKeyInput = useRef<HTMLInputElement>(null);
   const [hasOpenAIKey, setHasOpenAIKey] = useState(false);
@@ -69,7 +73,9 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
     let controller: AbortController | undefined;
     let generation = 0;
     const checkSession = () => {
+      if (signingOut.current) return;
       const currentGeneration = ++generation;
+      const currentEpoch = ++sessionEpoch.current;
       controller?.abort();
       controller = new AbortController();
       draftKey.current = null;
@@ -84,7 +90,7 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
         )
         .then((input: unknown) => {
           const data = parseSessionState(input);
-          if (currentGeneration !== generation) return;
+          if (currentGeneration !== generation || currentEpoch !== sessionEpoch.current) return;
           if (
             data.state === "connected" &&
             typeof data.userId === "string" &&
@@ -96,6 +102,8 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
             )
               clearOpenAIKey();
             setAuthenticatedUser(data.userId);
+            setAccount(data.account ?? {label:"Conta conectada",local:localAuth});
+            setSignOutError(false);
             const identity = `user:${data.userId}`;
             activeIdentity.current = identity;
             try {
@@ -150,6 +158,7 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
           } else if (data.state === "signed-out") {
             clearOpenAIKey();
             setAuthenticatedUser(null);
+            setAccount(null);
             try {
               sessionStorage.removeItem("compor-claim-pending");
               const seenAccount =
@@ -173,15 +182,17 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
           } else {
             clearOpenAIKey();
             setAuthenticatedUser(null);
+            setAccount(null);
             draftKey.current = null;
             setObjective("");
             setAuthState("unavailable");
           }
         })
         .catch((error) => {
-          if (currentGeneration === generation && error.name !== "AbortError") {
+          if (currentGeneration === generation && currentEpoch === sessionEpoch.current && error.name !== "AbortError") {
             clearOpenAIKey();
             setAuthenticatedUser(null);
+            setAccount(null);
             setAuthState("unavailable");
           }
         });
@@ -194,6 +205,7 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
     document.addEventListener("visibilitychange", checkVisible);
     return () => {
       generation++;
+      sessionEpoch.current++;
       controller?.abort();
       window.removeEventListener("focus", checkSession);
       document.removeEventListener("visibilitychange", checkVisible);
@@ -220,6 +232,30 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
       setStorageError(true);
     }
   };
+  const signOut = async () => {
+    if(signingOut.current)return;
+    signingOut.current=true;
+    sessionEpoch.current++;
+    activeIdentity.current=null;
+    clearOpenAIKey();
+    setAuthState("checking");
+    try {
+      const response=await fetch('/auth/sign-out',{method:'POST',cache:'no-store'});
+      const result:unknown=await response.json();
+      if(!response.ok || parseSessionState(result).state!=='signed-out')throw Error('sign_out_unavailable');
+      setAuthenticatedUser(null);
+      setAccount(null);
+      setObjective("");
+      setSignOutError(false);
+      setAuthState("signed-out");
+    } catch {
+      setAuthenticatedUser(null);
+      setAccount(null);
+      setObjective("");
+      setSignOutError(true);
+      setAuthState("unavailable");
+    } finally { signingOut.current=false; }
+  };
   if (authenticatedUser && ["connected", "checking"].includes(authState))
     return (
       <>
@@ -232,8 +268,12 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
           data-testid="studio-auth-boundary"
         >
           <StudioApp
+            developerMode={developerMode}
             key={authenticatedUser}
             userId={authenticatedUser}
+            accountLabel={account?.label ?? "Conta conectada"}
+            localAccount={account?.local ?? localAuth}
+            onSignOut={signOut}
             initialObjective={objective}
             isAuthenticated={() =>
               activeIdentity.current === `user:${authenticatedUser}`
@@ -320,15 +360,15 @@ function StudioWorkspace({ loginAvailable }: { loginAvailable: boolean }) {
                 authState === "checking"
               }
             >
-              Entrar com Google
+              {localAuth ? "Entrar no ambiente local" : "Entrar com Google"}
             </button>
           </form>
-          <p className="entry-note">Uma conta Google para entrar e retomar seus projetos.</p>
+          <p className="entry-note">{localAuth ? "Sessão anônima de desenvolvimento no banco local." : "Uma conta Google para entrar e retomar seus projetos."}</p>
           {authState === "checking" && (
             <p className="entry-status" role="status">Verificando sua conta…</p>
           )}
           {(authState === "unavailable" || authState === "offline") && (
-            <p className="entry-alert" role="status">Login temporariamente indisponível.</p>
+            <p className="entry-alert" role="status">{signOutError ? "Não foi possível confirmar a saída. Tente novamente." : "Login temporariamente indisponível."}</p>
           )}
           {authState === "unavailable" && (
             <button className="entry-retry" type="button" onClick={() => window.location.reload()}>

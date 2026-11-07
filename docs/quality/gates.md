@@ -12,6 +12,8 @@ O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull r
 
 As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs não recebem secrets e não fazem deploy. O token tem somente `contents: read`. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
 
+O job de contratos executa explicitamente os testes offline do parser de migrations, do gerador de baseline e do workflow. Eles ficam em `scripts/tests/` e não são encontrados pelo `unittest discover` de `scripts`; o job usa um venv Python 3.12 e instala os wheels fixados por hash em `scripts/requirements-migration-tests.txt`. Isso não executa a migração nem valida o alvo de produção.
+
 Os testes de sanitização do protótipo exigem `cwebp` e `dwebp` no `PATH`; o job instala e verifica ambos antes da suíte. O [pacote `webp` do Ubuntu 24.04](https://packages.ubuntu.com/noble/amd64/webp/filelist) fornece esses executáveis. Ausência dos codecs continua sendo falha, sem ignorar testes de pixels, transparência ou remoção de metadados.
 
 Nos preparos de migração, `READ_COMMIT` identifica os bytes em um commit publicado; `SOURCE_COMMIT` e `SOURCES` preservam os IDs históricos registrados na auditoria. Os hashes e as guardas continuam obrigatórios. Uma regressão executa os preparos em um checkout sem os commits locais antigos e exige os mesmos oito arquivos SQL/proof, byte a byte. Os [hashes preservados e a falha que motivou a separação](migration-pins-2026-11-05.md) estão registrados.
@@ -70,7 +72,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | `npm run quality:test` | Node 24 | Testes de rejeição de páginas inválidas e limites excedidos |
 | `npm run quality:maintenance` | Instalação da raiz | `quality-results/maintainability/complexity.json` |
 | `npm run quality:unit` | Instalação dos pacotes `private-images`, `remote-mcp`, `agile-deliberation`, `agents-api` e do protótipo, Python 3, `psql`, `cwebp`/`dwebp` no `PATH` e histórico Git completo | Resultados dos testes de pacotes e migrações |
-| `npm run quality:browser` | Instalação web e `remote-mcp`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
+| `npm run quality:browser` | Instalação web, `remote-mcp` e `agile-deliberation`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
 | `npm run quality:build` | Instalação web | Build Next de produção |
 | `npm run quality:performance` | Build de produção, instalação da raiz e browser definido | Bundle, cinco relatórios HTML e JSON, resumo e log do servidor |
 

@@ -1,0 +1,4 @@
+.studio-optional-fields summary { color: var(--studio-cobalt); cursor: pointer; font-weight: 600; }
+.studio-optional-fields .studio-optional-actions { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.studio-custom-field { display: flex; align-items: end; gap: 8px; }
+.studio-custom-field label { flex: 1; min-width: 0; }

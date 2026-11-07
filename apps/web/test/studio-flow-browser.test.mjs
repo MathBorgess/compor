@@ -16,7 +16,20 @@ async function eventually(fn,predicate,timeout=5000){const until=Date.now()+time
 async function stored(page,userId=alice){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{return await new Promise((resolve,reject)=>{const request=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));request.onsuccess=()=>resolve(request.result?.state??null);request.onerror=()=>reject(request.error);});}finally{db.close();}},{userId,projectId});}
 async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
 async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
-async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
+async function openEditor(page){
+ const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});
+ await title.or(open).first().waitFor();
+ if(await open.isVisible()){
+  // The floating conversation may cover the briefing; use its visible control
+  // to reveal the editor action, as a person can, and restore it afterwards.
+  const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});
+  const wasOpen=await collapse.isVisible();
+  if(wasOpen)await collapse.click();
+  await open.click();await title.waitFor();
+  if(wasOpen)await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ }
+ await title.waitFor();
+}
 async function chooseFiles(page,label,files){const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 
 async function app(t){
@@ -43,6 +56,13 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session'){if(session.hold)await session.hold;return route.fulfill({status:session.state==='unavailable'?503:200,json:{state:session.state,userId:session.userId}});}
+  if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
+  if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
+  if (url.pathname === '/api/studio/references/signals') {
+   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   return route.fulfill({json:{signals:[]}});
+  }
+    if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
   if(url.pathname==='/api/projects')return route.fulfill({json:{projects:[{id:projectId,title:'Projeto sintético'}]}});
   if(url.pathname==='/api/pieces'){
    if(request.method()==='GET')return route.fulfill({json:{versions}});
@@ -61,7 +81,7 @@ async function app(t){
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
- await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await openEditor(page);
  await openDrawer(page,'Marca');
  await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
@@ -120,7 +140,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.getByText('Novo post preparado no navegador.',{exact:true}).waitFor();await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
  await page.getByLabel('Título',{exact:true}).fill('Rascunho que permanece local');
- await page.getByLabel('Preço',{exact:true}).fill('R$ 15');await page.getByLabel('Data',{exact:true}).fill('20/11');
+ await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 15');await page.getByLabel('Data',{exact:true}).fill('20/11');
  await eventually(()=>stored(page),value=>value?.drafts?.some(d=>d.content.headline==='Rascunho que permanece local'));
  let release;session.hold=new Promise(resolve=>{release=resolve;});
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));

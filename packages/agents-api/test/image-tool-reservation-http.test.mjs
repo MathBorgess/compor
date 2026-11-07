@@ -67,3 +67,10 @@ test('desconexão na reserva do claim mantém resultado desconhecido sem repeti�
   await assert.rejects(store.claimExecution({ actor, reservationId }), error => error.message === 'reservation status unknown');
   assert.equal(count, 1);
 });
+
+test('claim distingue espera e bloqueio conhecidos antes do envio ao provedor', async () => {
+  for (const state of ['busy','blocked']) {
+    const store=createImageToolReservationStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetch:async()=>Response.json([{execution_id:null,asset_id:null,state,is_new:false}])});
+    assert.deepEqual(await store.claimExecution({actor,reservationId}),{state});
+  }
+});

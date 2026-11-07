@@ -30,6 +30,8 @@ export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,se
   let storedAssetId, usageRecorded;
   try {
    const execution=await execute({...context,actionBinding:proof,apiKey:data.apiKey,artworkInput,explicitApproval:true});
+   if (execution?.status === 'invalid_prompt') return reply({error:'invalid_request'},400);
+   if (execution?.status === 'busy' || execution?.status === 'blocked') return reply({status:execution.status},200);
    if('usageRecorded' in execution && typeof execution.usageRecorded==='boolean')usageRecorded=execution.usageRecorded;
    if(execution?.status==='unknown' && uuid(execution.assetId))return reply({error:'result_unknown',retryAutomatically:false,assetId:execution.assetId,...(usageRecorded===undefined?{}:{usageRecorded})},502);
    if(execution?.status!=='completed' || !uuid(execution.executionId))return reply({error:'result_unknown',retryAutomatically:false},502);

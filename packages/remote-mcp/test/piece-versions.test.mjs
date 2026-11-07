@@ -37,13 +37,21 @@ test('salvar versão pela fronteira MCP preserva histórico, conflito e isolamen
     assert.equal((await save(alice, 0)).version.version, 1);
     assert.equal((await save(bob, 1)).status, 'not_found');
     assert.equal((await save(alice, 1, { ...content, headline: 'Nova oficina' })).version.version, 2);
-    assert.deepEqual(await save(alice, 1), { status: 'conflict', currentVersion: 2 });
+    const field = { id:'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa', label:'Inscrições', value:'Abertas', origin:'agent' };
+    assert.deepEqual((await save(alice, 2, { ...content, fields:[field] })).version.content.fields, [field]);
+    assert.deepEqual(await save(alice, 1), { status: 'conflict', currentVersion: 3 });
     const args = { projectId: project, pieceId: piece };
     assert.deepEqual((await bob.callTool({ name: 'list_piece_versions', arguments: args })).structuredContent.versions, []);
     const history = (await alice.callTool({ name: 'list_piece_versions', arguments: args })).structuredContent.versions;
-    assert.equal(history.length, 2);
+    assert.equal(history.length, 3);
     assert.deepEqual(history[0].content, content);
     assert.equal(history[1].content.caption, content.caption);
+    assert.deepEqual(history[2].content.fields, [field]);
+    for (const fields of [[field,{...field,id:field.id.toUpperCase()}], [{...field,label:'  '}], [{...field,value:'sk-example'}], [{...field,unexpected:true}]]) {
+      const result=await alice.callTool({name:'save_piece_version',arguments:{projectId:project,pieceId:piece,expectedVersion:3,content:{...content,fields}}});
+      assert.equal(result.isError,true);
+    }
+    assert.equal(versions.length,3);
   } finally { await alice.close(); await bob.close(); }
 });
 

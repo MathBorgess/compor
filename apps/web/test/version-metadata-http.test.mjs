@@ -50,3 +50,11 @@ test('normaliza timestamps reais do PostgREST na listagem, aprovação e salvame
  let state=selectVersion(createStudioState({userId,projectId}),{pieceId,version:3,latestVersion:3,content,approval:listed.metadata.approval});
  state=approveDraft(state,{at:canonical,eventId:'44444444-4444-4444-8444-444444444444'});assert.equal(state.drafts[0].approval.at,canonical);
 });
+
+test('versões com campos dinâmicos mantêm valores e versões legadas seguem legíveis',async()=>{
+ const fields=[{id:'44444444-4444-4444-8444-444444444444',label:'Local',value:'Ateliê central',origin:'user'}];
+ const dynamicContent={...content,fields};const row={...version,content:dynamicContent};
+ const store=createProjectPieceStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetchImpl:async url=>Response.json(url.pathname.includes('list_project')?[version,row]:{status:'saved',version:row})});
+ const rows=await store.listProject(context,projectId);assert.equal(rows[0].content.fields,undefined);assert.deepEqual(rows[1].content.fields,fields);
+ const saved=await store.save(context,{projectId,pieceId,baseVersion:1,expectedVersion:2,content:dynamicContent});assert.deepEqual(saved.version.content.fields,fields);
+});

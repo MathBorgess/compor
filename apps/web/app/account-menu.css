@@ -1,0 +1,10 @@
+.studio-account-menu { position:relative; min-width:0; font-size:13px; }
+.studio-account-menu summary { display:flex; align-items:center; min-height:40px; padding:8px 12px; border:1px solid var(--studio-line); border-radius:10px; background:white; color:var(--studio-ink); cursor:pointer; list-style:none; }
+.studio-account-menu summary::-webkit-details-marker { display:none; }
+.studio-account-menu summary:focus-visible,.studio-account-menu button:focus-visible { outline:3px solid var(--studio-cobalt); outline-offset:2px; }
+.studio-account-label { overflow:hidden; max-width:min(210px,35vw); text-overflow:ellipsis; white-space:nowrap; }
+.studio-account-popover { position:absolute; z-index:60; right:0; top:calc(100% + 6px); width:min(280px,calc(100vw - 32px)); padding:10px; border:1px solid var(--studio-line); border-radius:12px; background:white; box-shadow:0 12px 30px #2c2d2f26; }
+.studio-account-popover p { margin:4px 4px 10px; color:var(--studio-muted); line-height:1.4; }
+.studio-account-popover button { display:block; width:100%; min-height:40px; padding:8px 12px; border:1px solid var(--studio-line); border-radius:8px; background:white; color:var(--studio-ink); text-align:left; font:inherit; cursor:pointer; }
+.studio-account-popover button:hover { background:var(--studio-cream); }
+.studio-account-popover button:disabled { opacity:.6; cursor:wait; }

@@ -8,7 +8,8 @@ export interface ProjectStore {
   list(context: ProjectContext): Promise<Project[]>;
 }
 export function createSupabaseProjectStore(options: { url: string; anonKey: string; fetchImpl?: typeof fetch }): ProjectStore;
-export interface PieceContent { headline: string; price: string; date: string; caption: string; captionOrigin: 'user' | 'agent' }
+export interface CreativeField { id: string; label: string; value: string; origin: 'user' | 'agent' }
+export interface PieceContent { headline: string; price: string; date: string; caption: string; captionOrigin: 'user' | 'agent'; fields?: CreativeField[] }
 export interface PieceVersion { project_id: string; piece_id: string; version: number; content: PieceContent; created_at: string }
 export interface PieceIdentity { projectId: string; pieceId: string }
 export interface PieceSummary { pieceId: string; latestVersion: number; headline: string; createdAt: string }
@@ -18,4 +19,6 @@ export interface PieceStore {
   list(context: ProjectContext, input: PieceIdentity): Promise<PieceVersion[]>;
 }
 export function createSupabasePieceStore(options: { url: string; anonKey: string; fetchImpl?: typeof fetch }): PieceStore;
-export function createRemoteMcpHandler(options?: { authenticate?: Authenticate; projectStore?: ProjectStore; pieceStore?: PieceStore }): (request: Request) => Promise<Response>;
+export type ExplorationInput = {projectId:string;requestId:string;prompt:string};
+export type ExplorationResult = {status:'completed';requestId:string;imageId:string} | {status:'running'|'unknown'|'busy'|'blocked'|'awaiting_feedback'|'rejected'|'not_started';requestId:string;retryAutomatically:false};
+export function createRemoteMcpHandler(options?: { authenticate?: Authenticate; projectStore?: ProjectStore; pieceStore?: PieceStore; exploration?:(context:ProjectContext,input:ExplorationInput,key:string)=>Promise<ExplorationResult>; explorationRead?:(context:ProjectContext,input:{projectId:string;imageId:string})=>Promise<Uint8Array>; explorationResume?:(context:ProjectContext,input:{projectId:string})=>Promise<'resumed'|'not_paused'|'blocked'> }): (request: Request) => Promise<Response>;

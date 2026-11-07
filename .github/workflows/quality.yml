@@ -68,6 +68,17 @@ jobs:
           psql --version
           cwebp -version
           dwebp -version
+      - name: Verify migration automation contracts
+        run: |
+          set -eu
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), "Python 3.12 is required"'
+          python3 -m venv "$RUNNER_TEMP/compor-migration-tests"
+          "$RUNNER_TEMP/compor-migration-tests/bin/python" -I -m pip install \
+            --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps \
+            -r scripts/requirements-migration-tests.txt
+          "$RUNNER_TEMP/compor-migration-tests/bin/python" -I scripts/tests/test_atomic_migration_parser.py
+          "$RUNNER_TEMP/compor-migration-tests/bin/python" -I scripts/tests/test_prepare_migration_baseline.py
+          "$RUNNER_TEMP/compor-migration-tests/bin/python" -I scripts/tests/test_migration_workflow.py
       - run: npm ci --ignore-scripts --prefix packages/private-images
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
       - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
@@ -90,6 +101,7 @@ jobs:
           cache-dependency-path: apps/web/package-lock.json
       - run: npm ci --ignore-scripts --prefix apps/web
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
+      - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
       - run: npm run quality:typecheck
       - name: Install the browser used by tests
         working-directory: apps/web

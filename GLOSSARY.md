@@ -60,6 +60,14 @@ _Avoid_: Arte final
 Imagem ou frase apresentada pela pessoa para orientar a exploração de uma direção criativa.
 _Avoid_: Preferência permanente, peça aprovada
 
+**Referência candidata**:
+Imagem ou projeto de outra fonte apresentado pelo Compor para a pessoa considerar durante a exploração, com origem identificada. Sua apresentação não significa que a pessoa a escolheu nem autorizou seu uso em uma geração.
+_Avoid_: Preferência confirmada, peça gerada
+
+**Imagem exploratória**:
+Imagem gerada para discutir ou comparar possibilidades criativas. Sua existência ou escolha não representa, por si só, aprovação de uma peça.
+_Avoid_: Referência externa, peça aprovada
+
 **Rótulo de referência**:
 Indicação escolhida ou criada pela pessoa sobre o significado de uma referência criativa, com definição editável e instruções que orientam a análise do agente. Uma referência pode acrescentar instruções próprias; o uso de rótulos pode ser estudado para melhorar o Compor quando autorizado.
 _Avoid_: Preferência permanente inferida, autorização de uso genérica
@@ -119,7 +127,7 @@ Conjunto restaurável do trabalho que preserva base, campanha, rotas, variantes,
 _Avoid_: Exportação pública, imagem final
 
 **Preferência**:
-Orientação estética ou composicional da pessoa, aplicada no contexto escolhido. Pode ser declarada ou inferida a partir de sinais identificados; uma inferência automática, mesmo ambígua, pode alterar uma preferência confirmada, com aviso e possibilidade de desfazer. A origem, o escopo e a versão anterior precisam ser preservados.
+Orientação estética ou composicional da pessoa, aplicada no contexto escolhido. Pode ser declarada ou inferida a partir de sinais identificados; sua origem, escopo e versão anterior devem poder ser consultados e corrigidos quando a pessoa solicitar.
 _Avoid_: Correção textual única sem relação estética
 
 **Perfil de gosto de longo prazo**:
@@ -135,8 +143,10 @@ Evento ou comentário da própria pessoa sobre referência, texto ou imagem, ass
 _Avoid_: Aprovação final da peça, publicação
 
 **Mudança de preferência**:
-Alteração de uma preferência no escopo escolhido, com valor anterior, novo valor, evidência, origem e versão identificados. Uma mudança automática deve ser informada à pessoa; desfazer restaura o valor anterior e registra a correção.
+Alteração de uma preferência no escopo escolhido, com valor anterior, novo valor, evidência, origem e versão identificados. A pessoa pode consultar e corrigir a mudança quando solicitar; não há aviso proativo obrigatório.
 _Avoid_: Aprovação tácita, correção apagada
+
+A decisão de Matheus em 06/11/2026 substitui a exigência anterior de aviso proativo sobre alterações automáticas; a consulta e a correção permanecem disponíveis sob pedido.
 
 **Autorização de perfil ao mantenedor**:
 Permissão específica, contínua e revogável para enviar o resumo individual ao mantenedor. A revogação interrompe novos envios; dados já recebidos permanecem até decisão de descarte. Textos e imagens integrais exigem autorização separada.
