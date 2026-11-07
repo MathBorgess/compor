@@ -65,13 +65,18 @@ jobs:
           fi
           printf '%s\n' "$actual"
 
-      - name: Set up Supabase CLI
-        uses: supabase/setup-cli@689adcfb80d947100a1eab127289b97d1fb07b13 # v3.2.0
-        with:
-          version: 3.0.0
-
       - name: Install PostgreSQL client
         run: sudo apt-get update && sudo apt-get install --yes postgresql-client
+
+      - name: Install pinned atomic migration runner dependencies
+        run: |
+          set -eu
+          python3 -c 'import sys; assert sys.version_info[:2] == (3, 12), "Python 3.12 is required"'
+          python3 -m venv "$RUNNER_TEMP/compor-migration-venv"
+          "$RUNNER_TEMP/compor-migration-venv/bin/python" -I -m pip install \
+            --disable-pip-version-check --require-hashes --only-binary=:all: --no-deps \
+            -r scripts/requirements-migration-runner.txt
+          "$RUNNER_TEMP/compor-migration-venv/bin/python" -I scripts/tests/test_atomic_migration_parser.py
 
       - name: Acquire durable latch and apply pending migrations
         env:
@@ -101,6 +106,7 @@ jobs:
             *.pooler.supabase.com) database_user="postgres.$SUPABASE_PROJECT_REF" ;;
             *) echo '::error::Host não pertence ao projeto ou ao pooler Supabase.'; exit 1 ;;
           esac
+          database_host="$SUPABASE_DB_HOST"
           run_token="$GITHUB_RUN_ID-$GITHUB_RUN_ATTEMPT"
           if ! printf '%s' "$run_token" | grep -Eq '^[0-9]+-[0-9]+$'; then
             echo '::error::Identificador da execução inválido.'
@@ -123,7 +129,7 @@ jobs:
           export PGSSLROOTCERT="$ca_file"
           export PGGSSENCMODE=disable
           # Retain the repository configuration and exact reviewed migrations.
-          # No roles or seed files are copied; db push explicitly skips Vault.
+          # No roles, seeds, Vault files or other configuration are executed.
           if [ -n "$(find supabase/migrations -type l -print -quit)" ]; then
             echo '::error::Migration simbólica não permitida.'
             exit 1
@@ -139,28 +145,28 @@ jobs:
           # Both clients receive the same host, port, role, database and CA.
           # No password appears in command arguments or a database URI.
           source_dir="$GITHUB_WORKSPACE"
-          database_url="postgresql://$database_user@$SUPABASE_DB_HOST:5432/postgres"
           clear_pg_environment() {
             for key in ${!PG@}; do unset "$key"; done
           }
           database_psql() (
             clear_pg_environment
-            export PGHOST="$SUPABASE_DB_HOST" PGPORT=5432 PGUSER="$database_user" PGDATABASE=postgres
+            export PGHOST="$database_host" PGPORT=5432 PGUSER="$database_user" PGDATABASE=postgres
             export PGPASSWORD="$compor_db_password" PGSSLMODE=verify-full PGSSLROOTCERT="$ca_file" PGGSSENCMODE=disable
             exec psql -X -v ON_ERROR_STOP=1 -v run_token="$run_token" "$@"
           )
-          # Acknowledged COMMIT is required before the CLI starts. A failure,
+          "$RUNNER_TEMP/compor-migration-venv/bin/python" -I "$source_dir/scripts/run_atomic_migrations.py" --check "$workdir/supabase/migrations"
+          # Acknowledged COMMIT is required before the runner starts. A failure,
           # cancellation or lost acknowledgement leaves the latch held.
           database_psql -f "$source_dir/supabase/automation/migration-latch-acquire.sql"
           (
             clear_pg_environment
-            # V3 config can otherwise be overridden by inherited SUPABASE_*.
             for key in ${!SUPABASE_@}; do unset "$key"; done
             export HOME="$workdir/compor-home" XDG_CONFIG_HOME="$workdir/compor-home/config"
+            export PGHOST="$database_host" PGPORT=5432 PGUSER="$database_user" PGDATABASE=postgres
             export PGPASSWORD="$compor_db_password" PGSSLMODE=verify-full PGSSLROOTCERT="$ca_file" PGGSSENCMODE=disable
-            exec supabase db push --remote="$database_url" --skip-vault --yes
+            exec "$RUNNER_TEMP/compor-migration-venv/bin/python" -I "$source_dir/scripts/run_atomic_migrations.py" "$workdir/supabase/migrations"
           )
           # Never release from an EXIT trap. A lost release acknowledgement
-          # follows a successful CLI exit and requires operator inspection.
+          # follows an acknowledged database COMMIT and requires inspection.
           database_psql -f "$source_dir/supabase/automation/migration-latch-release.sql"
           unset compor_db_password

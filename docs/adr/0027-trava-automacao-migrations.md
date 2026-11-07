@@ -1,6 +1,8 @@
 # ADR 0027 — Trava durável da automação de migrations
 
-> Atualização de 06/11/2026: Matheus solicitou habilitar a automação para todo push na `main` e autoriza sua implementação. O bloqueio incondicional descrito abaixo foi removido; a habilitação explícita, a identificação do alvo e a reconciliação de histórico, esquema, backup e bootstrap continuam necessários. A mudança de código não prova que o destino está pronto.
+> Atualização de 06/11/2026: Matheus solicitou habilitar a automação para todo push na `main` e autoriza sua implementação. O bloqueio incondicional descrito abaixo foi removido; a habilitação explícita, a identificação do alvo e a reconciliação de histórico, esquema e bootstrap continuam necessários. A mudança de código não prova que o destino está pronto.
+
+> Atualização posterior de 06/11/2026: a aplicação pela CLI foi substituída pelo runner transacional do [ADR 0028](0028-migracoes-atomicas-em-lote.md). Matheus orientou não criar backup nesta operação. A trava durável e a reconciliação permanecem necessárias; o texto da decisão original abaixo preserva a proposta anterior.
 
 - Estado: recorded; bloqueio incondicional substituído pela atualização acima.
 - Data: 06/11/2026.

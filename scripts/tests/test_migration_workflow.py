@@ -25,28 +25,36 @@ assert 'PGHOSTADDR' not in os.environ
 assert all('synthetic-secret' not in s for s in sys.argv)
 with open(os.environ['FAKE_LOG'],'a') as f:f.write(('acquire' if 'acquire' in sys.argv[-1] else 'release')+'\\n')
 ''');psql.chmod(0o755)
- cli=d/'bin'/'supabase';cli.write_text('''#!/usr/bin/env python3
+ runner=d/'compor-migration-venv'/'bin'/'python';runner.parent.mkdir(parents=True);runner.write_text('''#!/usr/bin/env python3
 import os,sys,pathlib
+assert sys.argv[1]=='-I' and sys.argv[2].endswith('/scripts/run_atomic_migrations.py')
+if '--check' in sys.argv:
+ assert 'PGPASSWORD' not in os.environ and 'SUPABASE_DB_PASSWORD' not in os.environ
+ assert pathlib.Path(sys.argv[-1]).is_dir()
+ with open(os.environ['FAKE_LOG'],'a') as f:f.write('validate\\n')
+ sys.exit(0)
 assert os.environ['PGPASSWORD']=='synthetic-secret' and os.environ['PGSSLMODE']=='verify-full'
 assert not any(k.startswith('SUPABASE_') for k in os.environ)
 assert os.environ['HOME'].startswith(os.environ['RUNNER_TEMP'])
 assert os.environ['XDG_CONFIG_HOME'].startswith(os.environ['HOME'])
+assert os.environ['PGHOST'] in ['db.abcdefghijklmnopqrst.supabase.co','aws-0-us-east-1.pooler.supabase.com']
+assert os.environ['PGUSER'] in ['postgres','postgres.abcdefghijklmnopqrst']
+assert os.environ['PGDATABASE']=='postgres' and os.environ['PGPORT']=='5432'
 assert 'PGHOSTADDR' not in os.environ
 assert all('synthetic-secret' not in s for s in sys.argv)
-assert sys.argv[1:3]==['db','push'] and '--skip-vault' in sys.argv
 assert pathlib.Path('supabase/config.toml').exists() and not pathlib.Path('supabase/.env').exists()
-with open(os.environ['FAKE_LOG'],'a') as f:f.write('cli\\n')
-sys.exit(int(os.environ.get('FAIL_CLI','0')))
-''');cli.chmod(0o755)
+with open(os.environ['FAKE_LOG'],'a') as f:f.write('runner\\n')
+sys.exit(int(os.environ.get('FAIL_RUNNER','0')))
+''');runner.chmod(0o755)
  env=os.environ.copy();env.update(PATH=str(d/'bin')+':'+env['PATH'],RUNNER_TEMP=tmp,FAKE_LOG=str(log),GITHUB_WORKSPACE=str(root),GITHUB_RUN_ID='101',GITHUB_RUN_ATTEMPT='1',SUPABASE_DB_PASSWORD='synthetic-secret',SUPABASE_PROJECT_REF='abcdefghijklmnopqrst',VERIFIED_PROJECT_REF='abcdefghijklmnopqrst',SUPABASE_DB_HOST='db.abcdefghijklmnopqrst.supabase.co',SUPABASE_DB_MIGRATIONS_ENABLED='false',PGHOSTADDR='203.0.113.1')
  for ref,enabled,checked in [('refs/heads/dev','true','abcdefghijklmnopqrst'),('refs/heads/main','','abcdefghijklmnopqrst'),('refs/heads/main','true','aaaaaaaaaaaaaaaaaaaa')]:
   x=subprocess.run(['bash','-e','-c',pre],cwd=root,env={**env,'GITHUB_REF':ref,'MIGRATIONS_READY':enabled,'PROJECT_REF':'abcdefghijklmnopqrst','VERIFIED_PROJECT_REF':checked},capture_output=True,text=True)
   assert x.returncode and not log.exists()
  x=subprocess.run(['bash','-e','-c',pre],cwd=root,env={**env,'GITHUB_REF':'refs/heads/main','MIGRATIONS_READY':'true','PROJECT_REF':'abcdefghijklmnopqrst','VERIFIED_PROJECT_REF':'abcdefghijklmnopqrst'},capture_output=True,text=True)
  assert x.returncode==0 and not log.exists()
- for host,fail,expected in [('db.abcdefghijklmnopqrst.supabase.co','0',['acquire','cli','release']),('aws-0-us-east-1.pooler.supabase.com','1',['acquire','cli']),('db.aaaaaaaaaaaaaaaaaaaa.supabase.co','0',[])]:
+ for host,fail,expected in [('db.abcdefghijklmnopqrst.supabase.co','0',['validate','acquire','runner','release']),('aws-0-us-east-1.pooler.supabase.com','1',['validate','acquire','runner']),('db.aaaaaaaaaaaaaaaaaaaa.supabase.co','0',[])]:
   if log.exists():log.unlink()
-  x=subprocess.run(['bash','-e','-c',migrate],cwd=root,env={**env,'SUPABASE_DB_HOST':host,'FAIL_CLI':fail},capture_output=True,text=True)
+  x=subprocess.run(['bash','-e','-c',migrate],cwd=root,env={**env,'SUPABASE_DB_HOST':host,'FAIL_RUNNER':fail},capture_output=True,text=True)
   assert (x.returncode==0)==(fail=='0' and bool(expected)),(host,x.stdout,x.stderr)
   assert (log.read_text().splitlines() if log.exists() else [])==expected
   assert 'synthetic-secret' not in x.stdout+x.stderr
