@@ -12,6 +12,8 @@ O parser PostgreSQL valida o conjunto antes de conectar, recusa comandos transac
 
 O runner retorna sucesso somente depois de receber confirmação de `COMMIT`. Perder a resposta durante ou após o commit deixa o resultado desconhecido; não se libera a trava durável nem se repete até consultar o histórico e o esquema. Também é possível perder a confirmação da liberação após commit confirmado: nesse caso a trava pode estar livre ou ocupada e deve ser inspecionada.
 
+A operação `bootstrap` do workflow é exclusivamente manual na `main` e exige `SUPABASE_MIGRATIONS_BOOTSTRAP_ENABLED=true`, além das verificações de destino e TLS usadas na aplicação. Ela gera o SQL da baseline a partir do commit exato e o executa com `psql -X` e `ON_ERROR_STOP=1`; não é disparada por push nem cria backup. Depois do resultado confirmado, desative ou remova a variável. Se o resultado for desconhecido, inspecione namespaces, histórico e auditoria antes de qualquer repetição.
+
 ## Evidência e limites
 
 A CLI Supabase 3.0.0 aplica arquivos individualmente: em ensaio sintético PostgreSQL 17, uma falha na migration 21 deixou 17–20 confirmadas. No mesmo tipo de banco sintético, a execução transacional do lote desfez as alterações e registros 17–21 na falha, preservou dados anteriores, aplicou nove migrations no sucesso, aplicou zero no rerun e recusou histórico divergente e concorrência. O scanner `pglast` 7.22 reproduziu os arrays `statements` da CLI 3 byte a byte para os 26 arquivos conhecidos.

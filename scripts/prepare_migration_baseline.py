@@ -57,8 +57,8 @@ def prepare(commit: str) -> str:
     if bootstrap.count('BEGIN;\n') != 1 or bootstrap.count('COMMIT;\n') != 1:
         raise ValueError('unexpected latch bootstrap structure')
     bootstrap = bootstrap.replace('BEGIN;\n', '', 1).replace('COMMIT;\n', '', 1)
-    header = r'''\set ON_ERROR_STOP on
--- SQL identity checks do not identify the Supabase project. Independently
+    header = r'''-- For psql use -v ON_ERROR_STOP=1. SQL identity checks do not identify the
+-- Supabase project. Independently
 -- verify the project, pooler endpoint and TLS before running this file.
 BEGIN;
 SET LOCAL search_path = pg_catalog;
