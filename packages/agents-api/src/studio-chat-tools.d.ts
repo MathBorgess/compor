@@ -16,6 +16,8 @@ export interface ActionInputByName {
  compor_renomear_projeto: Scope & {title:string};
  compor_propor_imagem: Scope & {prompt:string};
 }
+/** Longest project title the agent may propose and the provisional cut of the idea. Manual renames and the database accept 200. */
+export const SHORT_PROJECT_TITLE_LENGTH:48;
 export type StudioActionName=keyof ActionInputByName;
 export type StudioAction=ActionInputByName[StudioActionName];
 export interface StudioTool {readonly name:StudioActionName;readonly description:string;readonly inputSchema:JsonSchema & {properties:Readonly<Record<string,JsonSchema>>;required:readonly string[]};readonly annotations:{readOnlyHint:boolean;consequentialHint:boolean}}

@@ -14,6 +14,8 @@ import { useExplorationLoop } from "./use-exploration-loop";
 import { selectedExplorationKey } from "../lib/exploration-batch";
 import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
 import { recordReferenceRound } from "../lib/studio-reference-round";
+import { submitOnEnter } from "../lib/submit-on-enter";
+import { provisionalTitle } from "../lib/project-title";
 import {
   updateBrief,
   updatePersona,
@@ -122,7 +124,7 @@ export default function StudioApp({
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: projectName.trim().slice(0, 120) }),
+        body: JSON.stringify({ title: provisionalTitle(projectName) }),
       });
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
@@ -178,7 +180,7 @@ export default function StudioApp({
         <p>Comece com uma ideia, uma oferta ou uma dúvida. A conversa ajuda a encontrar o visual e a mensagem para quem vai receber seu post.</p>
         <form onSubmit={create}>
           <label htmlFor="studio-project-name">Sua ideia</label>
-          <textarea id="studio-project-name" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
+          <textarea id="studio-project-name" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} onKeyDown={submitOnEnter} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
           <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Abrindo conversa…" : "Começar conversa"}</button>
         </form>
         {notice && <p role="alert">{notice}</p>}
@@ -189,7 +191,7 @@ export default function StudioApp({
         <h2>Continue de onde parou</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <button className="studio-project-card" key={project.id} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong>{project.title}</strong><span>Retomar conversa</span></button>)}
+          {projects.map(project => <button className="studio-project-card" key={project.id} title={project.title} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong className="studio-truncate">{project.title}</strong><span>Retomar conversa</span></button>)}
         </div>
       </section>
     </StudioShell>
@@ -895,6 +897,7 @@ function ProjectStudio({
   const chat = (
     <StudioChat
       state={s}
+      projectTitle={projectDetails.title}
       developerMode={developerMode}
       getState={local.get}
       change={local.change}
@@ -1113,9 +1116,9 @@ function ProjectStudio({
               onClose={() => resolveConfirmation(false)}
             >
               <p>
-                {dialog.name === "compor_salvar_versao"
-                  ? "Uma nova versão será salva."
-                  : "O nome do projeto será atualizado."}
+                {"title" in dialog.args
+                  ? `O projeto passa a se chamar “${dialog.args.title}”.`
+                  : "Uma nova versão será salva."}
               </p>
               <button onClick={() => resolveConfirmation(true)}>
                 Confirmar
