@@ -49,10 +49,12 @@ test('remover todas as referências cancela a espera e resultado incerto não é
  await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,1);
 });
 
-test('abas concorrentes enviam uma única iniciativa para o mesmo conjunto',{skip:!existsSync(browserPath),timeout:20000},async t=>{
+test('abas concorrentes enviam uma única iniciativa para o mesmo conjunto',{skip:!existsSync(browserPath),timeout:30000},async t=>{
  const {page,calls,origin}=await setup(t);const other=await page.context().newPage();await Promise.all([page.goto(origin),other.goto(origin)]);
  await Promise.all([page.getByRole('button',{name:'Conectar'}).click(),other.getByRole('button',{name:'Conectar'}).click()]);
- await page.waitForTimeout(6000);assert.equal(calls.length,1);
+ // Two tabs share a slow CI runner, so wait for the first initiative instead of a fixed delay, then check that no second one follows.
+ const deadline=Date.now()+15000;while(calls.length===0&&Date.now()<deadline)await page.waitForTimeout(100);
+ await page.waitForTimeout(2000);assert.equal(calls.length,1);
 });
 test('resposta de seleção alterada durante o turno não aparece como atual',{skip:!existsSync(browserPath),timeout:25000},async t=>{
  const {page,calls,origin,hold,release}=await setup(t);hold();await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();
