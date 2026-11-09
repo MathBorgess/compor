@@ -211,6 +211,9 @@ jobs:
     needs: [static, unit, web, performance]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    permissions:
+      contents: read
+      actions: read
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -223,3 +226,10 @@ jobs:
         env:
           CHECKS: ${{ toJSON(needs) }}
         run: node scripts/quality/changed-areas.mjs gate
+      - name: Estimate billed minutes
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" | node scripts/quality/billed-minutes.mjs >> "$GITHUB_STEP_SUMMARY"

@@ -35,5 +35,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0029](0029-agente-opinativo-e-pergunta-unica.md) | accepted | Fatos como ordem, gosto como sugestão e uma pergunta por turno |
 | [0030](0030-variante-retoque-e-cards-no-canvas.md) | accepted | Variante e retoque no modelo de versões, com um card por variante |
 | [0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) | accepted | Faixa de contexto, público único e revisão simplificada |
+| [0032](0032-gates-por-area-e-falha-rapida.md) | accepted | Gates por área alterada, falha rápida e minutos cobrados |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

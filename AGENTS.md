@@ -41,7 +41,7 @@ O app usa **OpenAI Agents API gerenciada**. O Agents SDK aparece no protótipo e
 
 ## O que os gates cobram
 
-O workflow [Quality](.github/workflows/quality.yml) exige sucesso de todos os jobs no check **Quality gate**. Execute os checks correspondentes antes de concluir a alteração; a sequência de instalação está no [guia atual](docs/architecture.md#instalação-e-verificação).
+O workflow [Quality](.github/workflows/quality.yml) agrega os jobs no check **Quality gate**. Num PR, ele executa só as [áreas que a mudança pode afetar](docs/quality/gates.md#execução-por-área) e aceita um job pulado só quando a área dele não mudou; a `main` executa tudo. Execute os checks correspondentes antes de concluir a alteração; a sequência de instalação está no [guia atual](docs/architecture.md#instalação-e-verificação).
 
 | Regra cobrada automaticamente | Comando |
 | --- | --- |
