@@ -24,12 +24,20 @@ export type BriefCanvasProps = {
 };
 export type BriefChatProps = {
   prompt: BriefPrompt | null;
+  record?: BriefRecord;
   calibrating?: boolean;
   value: string;
   onChange: (value: string) => void;
   onSubmit: () => void;
   onSkip: () => void;
   onClose?: () => void;
+};
+
+const decisionLabels: Record<BriefDecisionId, string> = {
+  produto: "Produto",
+  persona: "Persona",
+  objetivo: "Objetivo",
+  personalidade: "Personalidade",
 };
 
 export function BriefCanvas({
@@ -91,8 +99,8 @@ export function BriefCanvas({
             {prompt.options.map((option) => (
               <article key={option.id} className="studio-brief-option">
                 <figure>
-                  <img src={previewImage(option)} alt={`Esboço de exploração: ${option.title}`} />
-                  <figcaption>exploração · esboço ilustrativo</figcaption>
+                  <img src={previewImage(option)} alt={`exploração · IA: ${option.title}`} />
+                  <figcaption>exploração · IA</figcaption>
                 </figure>
                 <h3>{option.title}</h3>
                 <p>{option.text}</p>
@@ -119,9 +127,11 @@ export function BriefCanvas({
   );
 }
 
-export function BriefChat({ prompt, calibrating = false, value, onChange, onSubmit, onSkip, onClose }: BriefChatProps) {
+export function BriefChat({ prompt, record = {}, calibrating = false, value, onChange, onSubmit, onSkip, onClose }: BriefChatProps) {
   const answerId = useId();
   if (!prompt) return null;
+  const activeIndex = briefDecisions.findIndex((item) => item.id === prompt.id);
+  const step = activeIndex >= 0 ? activeIndex + 1 : briefDecisions.length;
   return (
     <section className="studio-chat-panel" aria-label="Entrevista do brief">
       <header className="studio-chat-header">
@@ -135,6 +145,24 @@ export function BriefChat({ prompt, calibrating = false, value, onChange, onSubm
           </button>
         ) : null}
       </header>
+      <div className="studio-brief-progress">
+        <p>BRIEF · {step} DE {briefDecisions.length}</p>
+        <ol aria-label="Itens do brief">
+          {briefDecisions.map((item) => {
+            const entry = record[item.id];
+            const current = prompt.id === item.id;
+            const closed = Boolean(entry && !entry.skipped && !current);
+            const status = closed && entry?.origin === "informado" ? "informado" : current && calibrating ? "calibrando…" : "";
+            return (
+              <li key={item.id}>
+                <span aria-hidden="true">{closed ? "✓" : current ? "●" : "○"}</span>
+                {decisionLabels[item.id]}
+                {status ? <span className="studio-brief-badge">{status}</span> : null}
+              </li>
+            );
+          })}
+        </ol>
+      </div>
       <div className="studio-chat-messages">
         <div className="studio-message" data-role="assistant">
           <span className="studio-message-label">Compor</span>

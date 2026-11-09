@@ -115,6 +115,8 @@ test("a interface não apresenta Phoenix, nota ou validação", async () => {
   const interview = await readFile(new URL("../app/brief-interview.tsx", import.meta.url), "utf8");
   assert.match(interview, /role="status">calibrando…/);
   assert.match(interview, /calibrating \? "calibrando…"/);
+  assert.match(interview, /BRIEF · \{step\} DE \{briefDecisions\.length\}/);
+  assert.match(interview, /figcaption>exploração · IA</);
   assert.equal(showsMarketProof("Board especializado em tipografia expressiva e gancho visual de capa."), false);
   assert.equal(showsMarketProof("Phoenix validou com NDCG e score alto"), true);
 });

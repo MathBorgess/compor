@@ -281,6 +281,6 @@ export function recordFromStudio(state: unknown): BriefRecord {
 
 export function previewImage(option: BriefOption) {
   const title = option.title.replace(/[<>&"]/g, "");
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="400" viewBox="0 0 320 400"><rect width="320" height="400" fill="#F4F0E5"/><rect x="28" y="28" width="264" height="344" rx="12" fill="#ffffff" stroke="#123EAB" stroke-width="3"/><text x="44" y="88" fill="#123EAB" font-family="sans-serif" font-size="22" font-weight="700">${title}</text><text x="44" y="140" fill="#2C2D2F" font-family="sans-serif" font-size="16">Esboço de exploração</text></svg>`;
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="320" height="400" viewBox="0 0 320 400"><rect width="320" height="400" fill="#F4F0E5"/><rect x="28" y="28" width="264" height="344" rx="12" fill="#ffffff" stroke="#123EAB" stroke-width="3"/><text x="44" y="88" fill="#123EAB" font-family="sans-serif" font-size="22" font-weight="700">${title}</text><text x="44" y="140" fill="#2C2D2F" font-family="sans-serif" font-size="16">exploração · IA</text></svg>`;
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
