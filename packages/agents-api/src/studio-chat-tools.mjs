@@ -3,6 +3,7 @@ const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-
 const string = maxLength => ({ type: 'string', maxLength });
 const fields = (properties, required = Object.keys(properties)) => ({ type: 'object', properties, required, additionalProperties: false });
 const scopeProperties = { projectId: string(36), revision: { type: 'integer', minimum: 0 }, requestId: string(36) };
+export const SHORT_PROJECT_TITLE_LENGTH = 48;
 const commands = [
   ['compor_contexto', 'Consulta o projeto, a peça e a versão abertas e informa quais alterações ainda são locais.', {}, false, true],
   ['compor_editar_briefing', 'Atualiza um campo do briefing local e mostra a alteração na interface.', { field: { enum: ['offer', 'audience', 'action', 'direction'] }, value: string(4000) }, false],
@@ -16,7 +17,7 @@ const commands = [
   ['compor_adicionar_campo', 'Acrescenta ao rascunho um campo vazio relevante para o tipo de post. Nomeie apenas a informação necessária; não invente seu valor. A pessoa pode preenchê-lo ou removê-lo.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},label:string(80)}, false],
   ['compor_abrir_versao', 'Abre uma versão existente como base sem sobrescrever o rascunho anterior.', { pieceId: string(36), version: { type: 'integer', minimum: 1 } }, false],
   ['compor_salvar_versao', 'Solicita confirmação na interface antes de salvar uma versão nova no projeto.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},expectedLatestVersion:{type:'integer',minimum:0}}, true],
-  ['compor_renomear_projeto', 'Solicita confirmação na interface antes de alterar o nome persistido do projeto.', { title: string(200) }, true],
+  ['compor_renomear_projeto', 'Solicita confirmação na interface antes de alterar o nome persistido do projeto.', { title: string(SHORT_PROJECT_TITLE_LENGTH) }, true],
   ['compor_propor_imagem', 'Apresenta uma proposta de imagem para a conversa.', { prompt: string(4000) }, false],
 ];
 
