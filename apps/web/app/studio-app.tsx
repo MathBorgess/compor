@@ -15,6 +15,7 @@ import { selectedExplorationKey } from "../lib/exploration-batch";
 import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
 import { recordReferenceRound } from "../lib/studio-reference-round";
 import { submitOnEnter } from "../lib/submit-on-enter";
+import { provisionalTitle } from "../lib/project-title";
 import {
   updateBrief,
   updatePersona,
@@ -123,7 +124,7 @@ export default function StudioApp({
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: projectName.trim().slice(0, 120) }),
+        body: JSON.stringify({ title: provisionalTitle(projectName) }),
       });
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());

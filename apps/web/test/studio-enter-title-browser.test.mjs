@@ -70,10 +70,10 @@ async function connectKey(page){
 
 test('Enter envia a ideia e a mensagem uma única vez',{skip,timeout:90000},async t=>{
  const {page,idea,posts,chats,errors,external}=await studio(t,{createDelay:1000});
- await idea.fill('Oficina de cerâmica aos sábados');await idea.press('Enter');
+ await idea.fill('Quero divulgar minha oficina de cerâmica para iniciantes aos sábados');await idea.press('Enter');
  await page.getByRole('button',{name:'Abrindo conversa…',exact:true}).waitFor();await idea.press('Enter');
  const message=await connectKey(page);
- assert.equal(posts.length,1,'o Enter repetido durante a criação não cria outro projeto');
+ assert.deepEqual(posts,[{title:'Quero divulgar minha oficina de cerâmica para'}],'o Enter repetido durante a criação não cria outro projeto, e o título é o começo da ideia');
  await message.fill('Quero um post para iniciantes');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await message.press('Enter');
  assert.deepEqual(chats.map(chat=>chat.message),['Quero um post para iniciantes'],'o Enter envia a mensagem pelo mesmo caminho do botão, sem repetir com a caixa vazia');
