@@ -12,6 +12,10 @@ _Avoid_: Organization do GitHub, escopo de memória, equipe com papéis no Compo
 Espaço de trabalho recuperável que reúne material criativo, alternativas e decisões.
 _Avoid_: Conversa, arquivo exportado
 
+**Título do projeto**:
+Frase curta que identifica o projeto, próxima do nome de uma campanha.
+_Avoid_: Título da arte, primeira mensagem
+
 **Produto**:
 Oferta divulgada, com fatos, voz e limites próprios, que pode orientar diferentes campanhas.
 _Avoid_: Campanha, peça
@@ -41,8 +45,18 @@ Conceito de comunicação com argumento, composição, arte e legenda para a mes
 _Avoid_: Variante, troca de cor
 
 **Variante**:
-Alternativa derivada de uma rota pela mudança de uma dimensão escolhida, mantendo sua origem reconhecível.
-_Avoid_: Rota independente, nova campanha
+Alternativa derivada de uma rota ou de outra variante pela mudança declarada de uma dimensão criativa, como estilo, composição ou gancho, mantendo sua origem reconhecível. Começa sem aprovação.
+_Avoid_: Rota independente, nova campanha, versão major, retoque
+
+A decisão de Matheus em 09/11/2026 acrescentou que a dimensão alterada é declarada, que uma variante pode derivar de outra e que ela não herda aprovação. A definição anterior falava só da mudança de uma dimensão escolhida a partir de uma rota.
+
+**Retoque**:
+Correção de texto, grafia ou detalhe que preserva a dimensão criativa da versão de origem. Herda a aprovação dessa versão.
+_Avoid_: Ajuste, variante, versão major, pedido de mudança
+
+**Versão**:
+Estado salvo e numerado de uma peça, ligado à versão de origem. Depois da primeira, cada nova versão é uma variante ou um retoque.
+_Avoid_: Rascunho, imagem exploratória
 
 **Peça**:
 Unidade de comunicação composta por arte e legenda, sujeita à revisão e ao aceite do autor.
@@ -91,8 +105,10 @@ _Avoid_: Aplicação de sugestão, exportação, publicação
 A definição anterior descrevia somente aceite explícito. A decisão de 05/11/2026 ampliou o termo para incluir a aprovação herdada, mantendo a origem identificada.
 
 **Aprovação herdada**:
-Transferência automática do aceite da versão de origem para a nova versão derivada, com a origem identificada. Não representa uma nova revisão da pessoa sobre o resultado.
+Transferência automática do aceite da versão de origem para um retoque derivado dela, com a origem identificada. Não representa uma nova revisão da pessoa sobre o resultado. Uma variante não herda aprovação.
 _Avoid_: Revisão explícita nova, aprovação inferida do silêncio
+
+A decisão de Matheus em 09/11/2026 limitou a herança aos retoques. A definição anterior transferia o aceite para qualquer versão derivada.
 
 **Persona compradora**:
 Descrição revisável de quem pode comprar a oferta divulgada, sua situação, necessidades e referências, distinguindo relatos, fontes, hipóteses e informações desconhecidas.
@@ -101,6 +117,18 @@ _Avoid_: Biografia inventada, perfil da pessoa criadora, público comprovado sem
 **Pessoa criadora**:
 Pessoa que usa o Compor para divulgar uma oferta. Seu gosto e suas preferências não definem automaticamente quem compra seu infoproduto.
 _Avoid_: Persona compradora, audiência inferida do gosto do autor
+
+**Público**:
+Quem a pessoa criadora quer alcançar com a oferta. Orienta a campanha e é o ponto de partida da persona compradora.
+_Avoid_: Pessoa criadora, quem usa o Compor, fato da oferta, público comprovado
+
+**Fato da oferta**:
+Informação verificável sobre a oferta, como preço, data, condição ou característica, declarada pela pessoa criadora. O agente não altera nem inventa fatos, e uma afirmação contida numa opção sugerida só vira fato quando a pessoa a declara.
+_Avoid_: Sugestão de gosto, afirmação sugerida, critério criativo
+
+**Sugestão de gosto**:
+Indicação de estilo, composição ou direção dada pela pessoa criadora, por fala ou seleção, para o trabalho atual. O agente a pondera e pode contestá-la uma vez com motivos; se a pessoa insistir, o agente segue a indicação. Pode originar uma preferência.
+_Avoid_: Ordem, fato da oferta, decisão final, preferência confirmada
 
 **Critério criativo**:
 Definição revisável do que torna o visual ou a mensagem adequados a uma peça, com a perspectiva da pessoa criadora ou da persona compradora identificada. Exemplos e contraexemplos esclarecem seu significado e seus limites.
