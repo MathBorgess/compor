@@ -7,7 +7,8 @@ export function parseTasteReading(text){
  if(typeof text!=='string')return null;
  const raw=text.trim(),fenced=/^```(?:json)?\s*([\s\S]*?)\s*```$/i.exec(raw);
  let value;try{value=JSON.parse(fenced?fenced[1]:raw);}catch{return null;}
- if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='leitura,pergunta,recomendacao')return null;
+ // Extra keys from the model are ignored, not rendered: only the three fields reach the conversation.
+ if(!value||typeof value!=='object'||Array.isArray(value))return null;
  const reading={};
  for(const key of ['leitura','recomendacao','pergunta']){const field=typeof value[key]==='string'?value[key].trim():'';if(!field||field.length>FIELD_LIMIT)return null;reading[key]=field;}
  if(questions(reading.leitura)||questions(reading.recomendacao)||questions(reading.pergunta)!==1||!/\?["'”’»)\]}]*$/.test(reading.pergunta))return null;

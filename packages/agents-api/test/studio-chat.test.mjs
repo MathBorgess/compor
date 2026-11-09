@@ -324,6 +324,8 @@ test('resposta da seleção vira leitura, recomendação e uma única pergunta',
  assert.equal(first.status,'completed');assert.equal(first.text,composed);
  const fenced=await selectionReply('```json\n'+JSON.stringify(reading,null,1)+'\n```');
  assert.equal(fenced.first.status,'completed');assert.equal(fenced.first.text,composed);
+ const extra=await selectionReply(JSON.stringify({...reading,confianca:'Qual opção? Alta?'}));
+ assert.equal(extra.first.status,'completed');assert.equal(extra.first.text,composed);
 });
 test('resposta da seleção fora do formato encerra o turno como falha sem nova tentativa',async()=>{
  for(const answer of [JSON.stringify({...reading,pergunta:'Prefere a serifada? Ou a geométrica?'}),JSON.stringify({...reading,leitura:'Você gosta de tipografia editorial?'}),JSON.stringify({...reading,pergunta:'Posso seguir? Responda em seguida.'}),JSON.stringify({leitura:reading.leitura,pergunta:reading.pergunta}),JSON.stringify({...reading,recomendacao:'  '}),JSON.stringify({...reading,leitura:'a'.repeat(1201)}),'As referências são editoriais. Posso seguir pela serifada?']){
