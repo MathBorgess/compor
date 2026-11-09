@@ -31,6 +31,8 @@ As regras supõem que cada arquivo só afeta as áreas mapeadas. Quando um teste
 
 Cada teste tem um limite padrão: 90 s na suíte web e 60 s nos pacotes, no protótipo e em `scripts/quality`. Um limite explícito no próprio teste continua valendo. Quando um teste estoura o limite, ele falha, os hooks `t.after` fecham navegador e servidores e a suíte segue para o próximo teste.
 
+Um hook que espera `server.close` precisa fechar antes as conexões abertas com `server.closeAllConnections()`. Sem isso, uma conexão que o Chromium deixou aberta impede o fim do hook, o navegador nunca é fechado e a suíte fica parada até o limite do job.
+
 O `timeout-minutes` de cada job fica perto da maior duração bem-sucedida observada desde 05/11, com folga para cache frio: estático 5, contratos 6, web 20, performance 6 e gate 2. Nenhum job passa de 20 minutos. Uma execução completa termina em até 27 minutos de relógio: 5 do estático, 20 do job mais longo e 2 do gate. Um teste travado falha pelo tempo limite do teste, muito antes do job.
 
 ## Minutos do GitHub Actions
@@ -41,15 +43,41 @@ O último passo do Quality gate lê os jobs da própria execução pela API e es
 
 A estimativa não é a fatura, que continua sendo a fonte do valor cobrado. O gate ainda está em execução quando a estimativa é feita e conta como 1 minuto. Numa nova tentativa da mesma execução, os jobs reaproveitados aparecem com a duração original e aumentam a estimativa.
 
-Estimativas por execução, a partir das durações medianas desde 05/11. Não são medições desta configuração:
+Estimativas por execução. A coluna "Antes" vem das durações medianas desde 05/11, com a suíte web em série. A coluna "Com a suíte web paralela" é uma estimativa feita a partir de medições locais, explicada na próxima seção. Nenhuma das duas é medição desta configuração no CI:
 
-| Execução | Jobs cobrados | Minutos cobrados |
-| --- | --- | --- |
-| PR só com Markdown | Estático e gate | 2 |
-| PR só em `apps/web` | Estático, web, performance e gate | Cerca de 19 |
-| Push para `main` | Todos | Cerca de 23 a 24 |
+| Execução | Jobs cobrados | Antes | Com a suíte web paralela |
+| --- | --- | --- | --- |
+| PR só com Markdown | Estático e gate | 2 | 2 |
+| PR só em `apps/web` | Estático, web, performance e gate | Cerca de 19 | Cerca de 13 a 16 |
+| Push para `main` | Todos | Cerca de 23 a 24 | Cerca de 17 a 21 |
 
-A suíte web domina o custo: cerca de 15 dos 19 minutos de um PR web. Cerca de 75 execuções web cabem em 1.500 minutos por mês. Com `--test-concurrency=2`, a suíte falhou localmente, porque o `next dev` 16.4 trava `.next/dev` e cerca de 30 arquivos de teste iniciam `next dev` no mesmo diretório.
+A suíte web domina o custo. Em 09/11, o job web levou de 859 a 914 s no CI, e o passo `quality:browser` levou de 819 a 853 s. Os outros passos do job somam menos de 1 minuto. Com a suíte em série, cerca de 75 execuções web cabem em 1.500 minutos por mês. Com a estimativa da suíte paralela, cabem cerca de 95 a 115.
+
+## Suíte web paralela
+
+`npm run quality:browser` executa `apps/web/test/run.mjs`. O script usa a API `run()` do `node:test`, executa dois arquivos de teste por vez e mantém o limite de 90 s por teste. Cada arquivo continua num processo próprio, com servidores, navegador e dados próprios.
+
+O script começa pelos quatro arquivos mais lentos. Eles somam cerca de 60% do tempo da suíte e passam a maior parte desse tempo em esperas reais da interface. Os outros arquivos seguem em ordem alfabética. A lista dos mais lentos é mantida à mão. Uma lista desatualizada não quebra a suíte. Ela só deixa um arquivo lento terminar sozinho no fim.
+
+O `next dev` trava o próprio diretório de saída. Antes, com dois arquivos ao mesmo tempo, o segundo servidor desistia depois de 1 s. Agora cada processo de arquivo de teste carrega `test/next-dist-dir.mjs`. Esse módulo reserva `.next` ou `.next/test` e passa o diretório ao Next por `COMPOR_TEST_NEXT_DIST_DIR`. Sem essa variável, `next.config.mjs` usa `.next`. O `tsconfig.json` lista os tipos de `.next/test`. Sem essas linhas, o Next reescreveria o `tsconfig.json` durante os testes e reiniciaria o servidor. Depois de uma execução local, `next-env.d.ts` pode apontar para `.next/dev` ou para `.next/test/dev`. O Next já alterava esse arquivo durante os testes antes desta mudança.
+
+Medição local de 09/11, num Apple M1 Max com outra tarefa usando a máquina ao mesmo tempo:
+
+| Suíte | Execuções | Duração | Testes aprovados |
+| --- | --- | --- | --- |
+| Em série | 3 | Mediana 474 s (467 a 501 s) | 267 de 267 em duas; 266 de 267 em uma |
+| Paralela | 5 | Mediana 238 s (238 a 241 s) | 267 de 267 em quatro; 266 de 267 em uma |
+
+As duas formas usaram de 505 a 515 s de CPU. O ganho vem de sobrepor as esperas, não de fazer menos trabalho. A suíte paralela usou em média cerca de 2,1 núcleos, contra 1,1 em série, e até cerca de 3 GB de memória somada nos processos da suíte.
+
+Limites conhecidos:
+
+- O runner privado do GitHub tem 2 vCPUs, segundo a documentação do GitHub. Isso não foi medido aqui. No CI, os trechos que exigem CPU dos dois arquivos competem entre si, então o ganho deve ser menor que o local. A estimativa é de 8 a 10 minutos para o passo `quality:browser`, 9 a 11 minutos para o job e 9 a 12 minutos cobrados por execução web. Confira o resumo de minutos da primeira execução no CI.
+- Os dois servidores `next dev` observam a mesma pasta `app/`. As páginas de fixture que um teste cria aparecem também no outro servidor, mas só são compiladas quando pedidas.
+- As portas continuam escolhidas com `listen(0)` e liberadas antes de o `next dev` usá-las. Com dois arquivos ao mesmo tempo, a chance de colisão aumenta, mas continua pequena.
+- Iniciar um único `next dev` para toda a suíte foi avaliado e não foi feito. Com cache quente, cada início leva cerca de 1,2 s até a primeira resposta, e a suíte faz cerca de 45 inícios. Os arquivos usam ambientes diferentes: Supabase simulado por teste, certificados próprios e flags diferentes. Compartilhar o servidor exigiria reescrever o preparo de cerca de 28 arquivos e dividir estado de servidor entre eles.
+- O teste do fluxo do estúdio às vezes falha ao medir a posição do compositor ("the composer stays at the conversation bottom"). Isso aconteceu uma vez em série e uma vez em paralelo. É uma falha que já existia e não vem da concorrência.
+- Numa execução paralela anterior à ordem atual, o teste do orçamento de referências em `studio-storage.test.mjs` estourou o limite de 90 s. A causa não se repetiu em 55 execuções desse arquivo, sozinho ou ao lado de outro arquivo pesado. O hook corrigido faz um novo estouro falhar em 90 s, em vez de parar a suíte.
 
 ## Correção e manutenção
 
