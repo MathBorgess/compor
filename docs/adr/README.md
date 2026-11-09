@@ -36,5 +36,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0030](0030-variante-retoque-e-cards-no-canvas.md) | accepted | Variante e retoque no modelo de versões, com um card por variante |
 | [0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) | accepted | Faixa de contexto, público único e revisão simplificada |
 | [0032](0032-gates-por-area-e-falha-rapida.md) | accepted | Gates por área alterada, falha rápida e minutos cobrados |
+| [0033](0033-turbopack-e-analise-do-bundle.md) | accepted | Turbopack com análise do bundle antes e depois de mudanças no cliente |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

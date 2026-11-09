@@ -107,5 +107,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | `npm run quality:browser` | Instalação web, `remote-mcp` e `agile-deliberation`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
 | `npm run quality:build` | Instalação web | Build Next de produção |
 | `npm run quality:performance` | Build de produção, instalação da raiz e browser definido | Bundle, cinco relatórios HTML e JSON, resumo e log do servidor |
+| `(cd apps/web && npx --no-install next analyze --output --snapshot NOME)` | Instalação web | Snapshot do grafo de módulos do Turbopack em `apps/web/.next/diagnostics/analyze` |
+| `(cd apps/web && npx --no-install next analyze export --snapshot NOME) \| gzip > DESTINO.jsonl.gz` | Snapshot salvo; `set -o pipefail` e destino fora do repositório | Grafo em JSON Lines para comparar antes e depois, conforme o [ADR 0033](../adr/0033-turbopack-e-analise-do-bundle.md) |
 
 No CI, o navegador é instalado com `npx --no-install playwright-core install --no-shell chromium`, executado em `apps/web`. O diretório `~/.cache/ms-playwright` fica em cache pela versão do `playwright-core` no lockfile web. A imagem ubuntu-24.04 já tem as bibliotecas do Chromium. Lá, `--with-deps` só instalava fontes pelo apt e às vezes travava de 7 a 13 minutos. Numa máquina Linux nova, use `--with-deps`, como no [guia da arquitetura](../architecture.md#instalação-e-verificação). O caminho vem de `chromium.executablePath()` do pacote instalado.
