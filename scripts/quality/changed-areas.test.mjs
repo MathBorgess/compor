@@ -39,10 +39,10 @@ test('push, manual runs and an unknown diff run every area', () => {
   assert.deepEqual(selectAreas({ event: 'pull_request', paths: ['docs/x.md'] }), areas(false, false, false));
 });
 
-const off = { web: 'false', unit: 'false', site: 'false' };
+const off = { web: 'false', unit: 'false' };
 const needs = (overrides = {}, outputs = off) => ({
   static: { result: 'success', outputs },
-  unit: { result: 'skipped' }, web: { result: 'skipped' }, performance: { result: 'skipped' }, site: { result: 'skipped' },
+  unit: { result: 'skipped' }, web: { result: 'skipped' }, performance: { result: 'skipped' },
   ...overrides,
 });
 
@@ -50,18 +50,18 @@ test('the gate accepts a skipped job only when its area is off', () => {
   assert.deepEqual(gateFailures(needs()), []);
   assert.deepEqual(gateFailures(needs({ web: { result: 'success' }, performance: { result: 'success' } }, { ...off, web: 'true' })), []);
   assert.equal(gateFailures(needs({ web: { result: 'success' } }, { ...off, web: 'true' })).length, 1, 'performance skipped while web is on');
-  assert.equal(gateFailures(needs({}, { web: 'false', unit: 'false' })).length, 1, 'missing site output is not off');
-  assert.equal(gateFailures(needs({}, {})).length, 4, 'missing outputs');
+  assert.equal(gateFailures(needs({}, { web: 'false' })).length, 1, 'missing unit output is not off');
+  assert.equal(gateFailures(needs({}, {})).length, 3, 'missing outputs');
 });
 
 test('the gate fails on any failure, cancellation or missing job', () => {
   assert.equal(gateFailures(needs({ static: { result: 'failure', outputs: off } })).length, 1);
   assert.equal(gateFailures(needs({ unit: { result: 'failure' } })).length, 1);
   assert.equal(gateFailures(needs({ web: { result: 'cancelled' } })).length, 1);
-  const withoutSite = needs(); delete withoutSite.site;
-  assert.equal(gateFailures(withoutSite).length, 1);
+  const withoutPerformance = needs(); delete withoutPerformance.performance;
+  assert.equal(gateFailures(withoutPerformance).length, 1);
   assert.equal(gateFailures(needs({ extra: { result: 'skipped' } })).length, 1, 'a job without an area must succeed');
-  assert.equal(gateFailures({}).length, 5);
+  assert.equal(gateFailures({}).length, 4);
 });
 
 test('the CLI diffs both sides of a rename and writes job outputs', async t => {

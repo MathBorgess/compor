@@ -16,8 +16,9 @@ const RULES = [
   [/^(prototypes|supabase|scripts)\//, ['unit']],
 ];
 
-// The gate accepts a skipped job only when its area is off.
-export const JOB_AREAS = { unit: 'unit', web: 'web', performance: 'web', site: 'site' };
+// The gate accepts a skipped job only when its area is off. The static job
+// runs the site steps itself, so site has no job here.
+export const JOB_AREAS = { unit: 'unit', web: 'web', performance: 'web' };
 
 export function areasForPaths(paths) {
   const on = new Set();
