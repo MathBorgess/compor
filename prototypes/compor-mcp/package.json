@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "start": "node dist/stdio.js",
-    "test": "npm run build && node --test test/*.test.mjs",
+    "test": "npm run build && node --test --test-timeout=60000 test/*.test.mjs",
     "discover:boards": "npm run build && node scripts/discover-pinterest-boards.mjs"
   },
   "engines": {

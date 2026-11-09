@@ -19,7 +19,7 @@
     "node": ">=20"
   },
   "scripts": {
-    "test": "node --test test/*.test.mjs"
+    "test": "node --test --test-timeout=60000 test/*.test.mjs"
   },
   "devDependencies": {
     "@electric-sql/pglite": "0.5.15",

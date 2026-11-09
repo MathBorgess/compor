@@ -12,7 +12,7 @@
     "quality:browser": "node scripts/quality/test-browser.mjs",
     "quality:build": "npm --prefix apps/web run build",
     "quality:performance": "node scripts/quality/performance.mjs",
-    "quality:test": "node --test scripts/quality/*.test.mjs",
+    "quality:test": "node --test --test-timeout=60000 scripts/quality/*.test.mjs",
     "quality:typecheck": "npm --prefix apps/web run typecheck"
   },
   "devDependencies": {

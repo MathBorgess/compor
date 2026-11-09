@@ -22,7 +22,7 @@ jobs:
   static:
     name: Static checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -46,7 +46,7 @@ jobs:
   unit:
     name: Contracts and data isolation
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -89,7 +89,7 @@ jobs:
   web:
     name: Web types and behavior
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -122,7 +122,7 @@ jobs:
   site:
     name: Public site build
     runs-on: ubuntu-24.04
-    timeout-minutes: 15
+    timeout-minutes: 2
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -139,7 +139,7 @@ jobs:
   performance:
     name: Production performance
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 4
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:

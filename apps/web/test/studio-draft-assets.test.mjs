@@ -22,9 +22,9 @@ test('upgrade v1 para v2 preserva rascunhos e referências; bases e prévias fic
   const png=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),jpeg=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg'));
   const state=updateBrief(createPost(createStudioState(scope),{pieceId:id(3)}),{offer:'Rascunho antes do upgrade'});
   const name='compor-studio-upgrade';
-  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(name,1);request.onupgradeneeded=()=>{request.result.createObjectStore('states',{keyPath:'scope'});request.result.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(name,1);request.onupgradeneeded=()=>{request.result.createObjectStore('states',{keyPath:'scope'});request.result.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');};request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(Error('IndexedDB open blocked'));});
   const scopeKey=JSON.stringify([scope.userId,scope.projectId]);
-  await new Promise((resolve,reject)=>{const tx=db.transaction(['states','references'],'readwrite');tx.objectStore('states').put({scope:scopeKey,state});tx.objectStore('references').add({scope:scopeKey,key:JSON.stringify([scopeKey,id(4)]),metadata:{id:id(4),name:'original.png',mime:'image/png',size:png.size,width:128,height:160},file:png});tx.oncomplete=resolve;tx.onerror=reject;});db.close();
+  await new Promise((resolve,reject)=>{const tx=db.transaction(['states','references'],'readwrite');tx.objectStore('states').put({scope:scopeKey,state});tx.objectStore('references').add({scope:scopeKey,key:JSON.stringify([scopeKey,id(4)]),metadata:{id:id(4),name:'original.png',mime:'image/png',size:png.size,width:128,height:160},file:png});tx.oncomplete=resolve;tx.onerror=reject;tx.onabort=()=>reject(tx.error??Error('IndexedDB transaction aborted'));});db.close();
   const repo=createStudioStorage({name}),evidence={};
   evidence.oldState=(await repo.load(scope)).brief.offer===state.brief.offer;
   evidence.oldReference=(await repo.getReference(scope,id(4))).file.size===png.size;
@@ -80,8 +80,8 @@ test('limite global de quantidade recusa o 501º blob sem descartar arquivos ant
   const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
   const scope={userId:id(1),projectId:id(2)},address={pieceId:id(3),baseVersion:0,kind:'base'},name='compor-studio-count';
   const repo=createStudioStorage({name});await repo.putDraftAsset({...scope,...address,file});repo.close();
-  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(name);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
-  await new Promise((resolve,reject)=>{const tx=db.transaction('draftAssets','readwrite'),store=tx.objectStore('draftAssets');for(let n=0;n<499;n++){const projectId=id(n+100),scopeKey=JSON.stringify([scope.userId,projectId]);store.add({scope:scopeKey,key:JSON.stringify([scopeKey,address.pieceId,0,'base']),metadata:{...address,mime:file.type,size:file.size,width:1,height:1},file});}tx.oncomplete=resolve;tx.onerror=reject;});db.close();
+  const db=await new Promise((resolve,reject)=>{const request=indexedDB.open(name);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);request.onblocked=()=>reject(Error('IndexedDB open blocked'));});
+  await new Promise((resolve,reject)=>{const tx=db.transaction('draftAssets','readwrite'),store=tx.objectStore('draftAssets');for(let n=0;n<499;n++){const projectId=id(n+100),scopeKey=JSON.stringify([scope.userId,projectId]);store.add({scope:scopeKey,key:JSON.stringify([scopeKey,address.pieceId,0,'base']),metadata:{...address,mime:file.type,size:file.size,width:1,height:1},file});}tx.oncomplete=resolve;tx.onerror=reject;tx.onabort=()=>reject(tx.error??Error('IndexedDB transaction aborted'));});db.close();
   let errorCode;try{await repo.putDraftAsset({...scope,...address,kind:'preview',file});}catch(error){errorCode=error.code;}
   const previous=await repo.getDraftAsset(scope,address),missing=await repo.getDraftAsset(scope,{...address,kind:'preview'});
   await repo.removeDraftAsset({userId:scope.userId,projectId:id(100)},address);
