@@ -319,6 +319,34 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   assert.deepEqual(errors,[]);
 });
 
+test('pergunta do turno de seleção pausa a exploração até a pessoa responder ou pedir mais', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
+  const {page, origin, errors} = await app(t, {withReferences:true});
+  const selections=[],generations=[];
+  await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
+  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
+  await openProject(page, origin);
+  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
+  await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+  await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
+  const panel=page.getByRole('region',{name:'Buscar referências visuais'});
+  await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
+  await panel.getByRole('checkbox').check();
+  await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
+  await panel.getByRole('button',{name:'Selecionar: Tipografia'}).click();
+  const recovery=page.locator('.studio-exploration-recovery');
+  await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});
+  await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();
+  assert.equal(selections.length,1);
+  const held=generations.length;assert.ok(held>0,'a exploração já gerava antes da pergunta');
+  await page.waitForTimeout(17000);
+  assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
+  await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
+  await recovery.waitFor({state:'detached'});
+  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
+  assert.deepEqual(errors,[]);
+});
+
 test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, selectionSignals} = await app(t);
   await openProject(page, origin);
