@@ -270,6 +270,11 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
 .studio-batch-spinner { width: 24px; height: 24px; animation: studio-batch-spin 2s linear infinite; }
 @keyframes studio-batch-spin { to { transform: rotate(360deg); } }
 @media (prefers-reduced-motion: reduce) { .studio-batch-spinner { animation: none; } }
+.studio-brief-progress { display: grid; gap: 8px; padding: 4px 16px 12px; }
+.studio-brief-progress > p { margin: 0; font-size: 12px; font-weight: 700; letter-spacing: 0.04em; }
+.studio-brief-progress ol { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.studio-brief-progress li { display: flex; align-items: center; gap: 8px; min-height: 28px; }
+.studio-brief-badge { margin-left: auto; padding: 2px 8px; border-radius: 999px; background: #e7eefc; color: var(--studio-cobalt); font-size: 12px; }
 .studio-brief-options { display: grid; grid-template-columns: repeat(3, minmax(180px, 1fr)); gap: 12px; }
 .studio-brief-option { display: grid; gap: 8px; align-content: start; padding: 12px; }
 .studio-brief-option figure { margin: 0; }
