@@ -73,7 +73,7 @@ Passos:
 | #24 Revisão com imagem, título, legenda e PNG | Não começou | — |
 | #25 Faixa de contexto e público único | Não começou. Precisa de protótipo antes | — |
 | #26 Variantes viram cards no canvas | Não começou. É a última | — |
-| #33 Referências sugeridas e volta às referências | Só a issue. Depende de decisões de Matheus | — |
+| #33 Referências sugeridas e volta às referências | Só a issue. Matheus decidiu os quatro pontos em 09/11; estão na issue | — |
 
 As issues só fecham no merge para a `main`. Um PR para a branch de integração não fecha issue.
 
@@ -122,7 +122,7 @@ Armadilhas que já custaram uma execução de CI:
 2. Issue #24, Revisão.
 3. Protótipo descartável do layout das issues #25, #26 e #33. Matheus escolhe o layout por capturas de tela. Não integre o protótipo.
 4. Issue #25, Faixa de contexto e público único.
-5. Issue #33, depois das decisões de Matheus.
+5. Issue #33. As decisões de Matheus estão na issue. O PR inclui o ADR novo que diz o que muda nos ADRs 0022, 0024 e 0029.
 6. Issue #26, Variantes. A migration vai num commit próprio e por último.
 
 ## Fechamento
@@ -135,7 +135,6 @@ Armadilhas que já custaram uma execução de CI:
 
 ## Decisões pendentes de Matheus
 
-- **Issue #33.** Quatro decisões estão listadas na issue: a fonte das sugestões iniciais, o que conta como referência bem-sucedida, se a geração começa só com a ideia e onde fica a volta às referências.
 - **Caminho antigo da tela de criação** (`COMPOR_STUDIO_WEB_ENABLED=false`). Ele ocupa 15.684 bytes gzip que só ele usa (ADR 0033). Remover libera o espaço de que as próximas issues precisam, mas tira o interruptor que desliga o estúdio. A issue #27 prevê a remoção se o espaço for relevante. Confirme com Matheus antes.
 - **ADR 0034** está como `proposed`. Falta a revisão de Matheus.
 - **Títulos antigos.** Projetos criados antes da #23 têm títulos de até 120 caracteres e nunca recebem proposta de título curto.
