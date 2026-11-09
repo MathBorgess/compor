@@ -288,12 +288,13 @@ export default function StudioShell({
                     ref={menuTrigger}
                     type="button"
                     className="studio-project-trigger"
+                    title={barTitle}
                     aria-expanded={menuOpen}
                     aria-haspopup="dialog"
                     aria-controls="studio-project-menu"
                     onClick={() => setMenuOpen((open) => !open)}
                   >
-                    {barTitle}
+                    <span className="studio-truncate">{barTitle}</span>
                     <span aria-hidden="true">▾</span>
                   </button>
                 ) : (
@@ -325,6 +326,7 @@ export default function StudioShell({
                       <button
                         type="button"
                         key={project.id}
+                        title={project.title}
                         aria-current={project.id === projectId ? "true" : undefined}
                         onClick={() => {
                           setMenuOpen(false);

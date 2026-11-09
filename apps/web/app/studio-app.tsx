@@ -191,7 +191,7 @@ export default function StudioApp({
         <h2>Continue de onde parou</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <button className="studio-project-card" key={project.id} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong>{project.title}</strong><span>Retomar conversa</span></button>)}
+          {projects.map(project => <button className="studio-project-card" key={project.id} title={project.title} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong className="studio-truncate">{project.title}</strong><span>Retomar conversa</span></button>)}
         </div>
       </section>
     </StudioShell>

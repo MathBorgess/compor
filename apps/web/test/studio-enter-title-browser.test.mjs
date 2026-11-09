@@ -148,3 +148,23 @@ test('o agente propõe um título curto e a pessoa vê o nome antes de confirmar
  await message.fill('Agora a legenda');await message.press('Enter');await page.getByText('Seguimos.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
 });
+
+test('barra, cards e menu cortam o título com reticências e mantêm o nome completo acessível',{skip,timeout:90000},async t=>{
+ const title='Oficina de cerâmica para iniciantes aos sábados de manhã no ateliê do bairro, com vagas limitadas, material incluso e café no intervalo';
+ const {page,errors}=await studio(t,{projects:[{id:id(70),title,revision:1},{id:id(71),title:'Café',revision:1}]});
+ const cut=locator=>locator.evaluate(element=>{const style=getComputedStyle(element);return {ellipsis:style.textOverflow,wrap:style.whiteSpace,clipped:element.scrollWidth>element.clientWidth,text:element.textContent};});
+ const shown={ellipsis:'ellipsis',wrap:'nowrap',clipped:true,text:title};
+ const card=page.getByRole('button',{name:title});
+ assert.equal(await card.getAttribute('title'),title);assert.deepEqual(await cut(card.locator('strong')),shown,'card');
+ await card.click();
+ const trigger=page.getByRole('heading',{level:1}).getByRole('button',{name:title,exact:true});
+ assert.equal(await trigger.getAttribute('title'),title);assert.deepEqual(await cut(trigger.locator('.studio-truncate')),shown,'barra superior');
+ assert.ok((await trigger.boundingBox()).width<=1440*0.42+1,'o título não empurra as ações da barra');
+ await trigger.click();
+ const entry=page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
+ assert.equal(await entry.getAttribute('title'),title);assert.deepEqual(await cut(entry),shown,'menu de projetos');
+ await page.keyboard.press('Escape');await page.setViewportSize({width:390,height:844});
+ assert.deepEqual(await cut(trigger.locator('.studio-truncate')),shown,'barra superior no celular');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'o título longo não cria rolagem horizontal');
+ assert.deepEqual(errors,[]);
+});
