@@ -31,7 +31,7 @@ As regras supõem que cada arquivo só afeta as áreas mapeadas. Quando um teste
 
 Cada teste tem um limite padrão: 90 s na suíte web e 60 s nos pacotes, no protótipo e em `scripts/quality`. Um limite explícito no próprio teste continua valendo. Quando um teste estoura o limite, ele falha, os hooks `t.after` fecham navegador e servidores e a suíte segue para o próximo teste.
 
-O `timeout-minutes` de cada job é cerca de 1,5 vez a maior duração bem-sucedida observada desde 05/11: estático 3, contratos 6, web 20, performance 4 e gate 2. Nenhum job passa de 20 minutos. Uma execução completa termina em até 25 minutos de relógio: 3 do estático, 20 do job mais longo e 2 do gate.
+O `timeout-minutes` de cada job fica perto da maior duração bem-sucedida observada desde 05/11, com folga para cache frio: estático 5, contratos 6, web 20, performance 6 e gate 2. Nenhum job passa de 20 minutos. Uma execução completa termina em até 27 minutos de relógio: 5 do estático, 20 do job mais longo e 2 do gate. Um teste travado falha pelo tempo limite do teste, muito antes do job.
 
 ## Minutos do GitHub Actions
 

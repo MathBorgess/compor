@@ -22,7 +22,7 @@ jobs:
   static:
     name: Static checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 3
+    timeout-minutes: 5
     outputs:
       web: ${{ steps.areas.outputs.web }}
       unit: ${{ steps.areas.outputs.unit }}
@@ -154,7 +154,7 @@ jobs:
     needs: static
     if: needs.static.outputs.web != 'false'
     runs-on: ubuntu-24.04
-    timeout-minutes: 4
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
