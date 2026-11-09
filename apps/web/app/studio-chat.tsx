@@ -14,6 +14,7 @@ import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
 import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, referenceFingerprint, referenceRoundKey } from '../lib/studio-reference-round.ts';
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
+import { submitOnEnter } from "../lib/submit-on-enter.ts";
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
@@ -913,6 +914,7 @@ export default function StudioChat({
           disabled={busy}
           placeholder="Escreva uma mensagem…"
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={submitOnEnter}
         />
           <button
             className="studio-button"

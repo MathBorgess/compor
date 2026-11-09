@@ -1,0 +1,117 @@
+import test,{before,after} from 'node:test';
+import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import {spawn} from 'node:child_process';
+import {createServer} from 'node:net';
+import {chromium} from 'playwright-core';
+import {waitForApp,stopApp} from './wait-for-app.mjs';
+
+const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+const skip=!existsSync(browserPath);
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const userId=id(1);
+const apiKey=`sk-synthetic-${'x'.repeat(30)}`;
+let origin,server,browser;
+const stopping=new AbortController();
+
+before(async()=>{
+ if(skip)return;
+ const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));origin=`http://127.0.0.1:${port}`;
+ let startup='';const record=chunk=>{startup=(startup+chunk).slice(-6000);};
+ server=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin,COMPOR_STUDIO_WEB_ENABLED:'true'}});
+ server.stdout.on('data',record);server.stderr.on('data',record);
+ await waitForApp({url:origin,child:server,signal:stopping.signal,diagnostics:()=>startup,timeoutMs:60000});
+ browser=await chromium.launch({executablePath:browserPath,headless:true});
+});
+after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopApp(server);}});
+
+async function studio(t,{touch=false,projects=[],createDelay=0}={}){
+ const context=await browser.newContext({viewport:{width:1440,height:1000},hasTouch:touch});t.after(()=>context.close());
+ const page=await context.newPage();page.setDefaultTimeout(15000);
+ const posts=[],chats=[],renames=[],errors=[],external=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
+ page.on('pageerror',error=>errors.push(error.message));
+ await page.route('**/*',async route=>{
+  const request=route.request(),url=new URL(request.url());
+  if(url.origin!==origin){external.push(url.origin);return route.abort();}
+  if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
+  if(url.pathname==='/api/projects'){
+   if(request.method()==='GET')return route.fulfill({json:{projects}});
+   const body=request.postDataJSON();
+   if(request.method()==='POST'){
+    posts.push(body);await new Promise(resolve=>setTimeout(resolve,createDelay));
+    const project={id:id(60+posts.length),title:body.title,revision:1};projects.push(project);return route.fulfill({status:201,json:{project}});
+   }
+   renames.push(body);const index=projects.findIndex(project=>project.id===body.projectId);
+   const project={...projects[index],title:body.title,revision:projects[index].revision+1};projects[index]=project;return route.fulfill({json:{status:'renamed',project}});
+  }
+  if(url.pathname==='/api/pieces')return route.fulfill({json:{versions:[]}});
+  if(url.pathname==='/api/studio/chat'){const body=request.postDataJSON();if(body.op!=='poll')chats.push(body);return route.fulfill({status:202,json:await flow.chat(body)});}
+  if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
+  if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
+  if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
+  if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
+  if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
+  return route.continue();
+ });
+ await page.goto(origin);
+ const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
+ return {page,idea,posts,chats,renames,flow,errors,external,projects};
+}
+async function openChat(page){
+ const message=page.getByLabel('Sua mensagem',{exact:true});
+ await page.locator('#studio-chat-message:visible, .studio-floating-input:visible').first().waitFor();
+ if(!await message.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ await message.waitFor();return message;
+}
+async function connectKey(page){
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);
+ await page.getByRole('button',{name:'Estúdio',exact:true}).click();return openChat(page);
+}
+
+test('Enter envia a ideia e a mensagem uma única vez',{skip,timeout:90000},async t=>{
+ const {page,idea,posts,chats,errors,external}=await studio(t,{createDelay:1000});
+ await idea.fill('Oficina de cerâmica aos sábados');await idea.press('Enter');
+ await page.getByRole('button',{name:'Abrindo conversa…',exact:true}).waitFor();await idea.press('Enter');
+ const message=await connectKey(page);
+ assert.equal(posts.length,1,'o Enter repetido durante a criação não cria outro projeto');
+ await message.fill('Quero um post para iniciantes');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ await message.press('Enter');
+ assert.deepEqual(chats.map(chat=>chat.message),['Quero um post para iniciantes'],'o Enter envia a mensagem pelo mesmo caminho do botão, sem repetir com a caixa vazia');
+ assert.equal(await message.inputValue(),'');assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('Shift+Enter quebra linha sem enviar',{skip,timeout:90000},async t=>{
+ const {page,idea,posts,chats,errors}=await studio(t);
+ await idea.fill('Oficina de cerâmica');await idea.press('Shift+Enter');await idea.pressSequentially('aos sábados');
+ assert.equal(await idea.inputValue(),'Oficina de cerâmica\naos sábados');assert.equal(posts.length,0);
+ await idea.press('Enter');const message=await connectKey(page);assert.equal(posts.length,1);
+ await message.fill('Primeira linha');await message.press('Shift+Enter');await message.pressSequentially('Segunda linha');
+ assert.equal(await message.inputValue(),'Primeira linha\nSegunda linha');assert.equal(chats.length,0);
+ await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.message),['Primeira linha\nSegunda linha']);assert.deepEqual(errors,[]);
+});
+
+test('Enter que confirma um acento ou candidato da composição não envia',{skip,timeout:90000},async t=>{
+ const {page,idea,posts,chats,errors}=await studio(t);
+ const composing=[{key:'Enter',code:'Enter',isComposing:true},{key:'Enter',code:'Enter',keyCode:229}];
+ await idea.fill('Oficina de cerâmica');
+ for(const init of composing){await idea.dispatchEvent('keydown',init);assert.equal(await page.getByRole('button',{name:'Começar conversa',exact:true}).isEnabled(),true,JSON.stringify(init));}
+ assert.equal(posts.length,0);
+ await idea.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:13});const message=await connectKey(page);assert.equal(posts.length,1,'o mesmo evento fora da composição envia');
+ await message.fill('Café');
+ for(const init of composing){await message.dispatchEvent('keydown',init);assert.equal(await message.isEnabled(),true,JSON.stringify(init));assert.equal(await message.inputValue(),'Café');}
+ await message.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:13});await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.message),['Café']);assert.deepEqual(errors,[]);
+});
+
+test('em tela de toque o Enter quebra linha e o botão envia',{skip,timeout:90000},async t=>{
+ const {page,idea,posts,chats,errors}=await studio(t,{touch:true});
+ assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),true);
+ await idea.fill('Oficina');await idea.press('Enter');await idea.pressSequentially('de cerâmica');
+ assert.equal(await idea.inputValue(),'Oficina\nde cerâmica');assert.equal(posts.length,0);
+ await page.getByRole('button',{name:'Começar conversa',exact:true}).click();const message=await connectKey(page);assert.equal(posts.length,1);
+ await message.fill('Primeira linha');await message.press('Enter');await message.pressSequentially('Segunda linha');
+ assert.equal(await message.inputValue(),'Primeira linha\nSegunda linha');assert.equal(chats.length,0);
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.message),['Primeira linha\nSegunda linha']);assert.deepEqual(errors,[]);
+});
