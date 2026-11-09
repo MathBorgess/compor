@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
+import {sessionCookie} from './session-cookie.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const skip=!existsSync(browserPath);
@@ -27,6 +28,7 @@ after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopA
 
 async function studio(t,{touch=false,projects=[],createDelay=0}={}){
  const context=await browser.newContext({viewport:{width:1440,height:1000},hasTouch:touch});t.after(()=>context.close());
+ await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage();page.setDefaultTimeout(15000);
  const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
  page.on('pageerror',error=>errors.push(error.message));
