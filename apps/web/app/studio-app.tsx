@@ -897,6 +897,7 @@ function ProjectStudio({
   const chat = (
     <StudioChat
       state={s}
+      projectTitle={projectDetails.title}
       developerMode={developerMode}
       getState={local.get}
       change={local.change}
@@ -1115,9 +1116,9 @@ function ProjectStudio({
               onClose={() => resolveConfirmation(false)}
             >
               <p>
-                {dialog.name === "compor_salvar_versao"
-                  ? "Uma nova versão será salva."
-                  : "O nome do projeto será atualizado."}
+                {"title" in dialog.args
+                  ? `O projeto passa a se chamar “${dialog.args.title}”.`
+                  : "Uma nova versão será salva."}
               </p>
               <button onClick={() => resolveConfirmation(true)}>
                 Confirmar

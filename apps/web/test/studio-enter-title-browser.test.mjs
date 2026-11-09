@@ -28,7 +28,7 @@ after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopA
 async function studio(t,{touch=false,projects=[],createDelay=0}={}){
  const context=await browser.newContext({viewport:{width:1440,height:1000},hasTouch:touch});t.after(()=>context.close());
  const page=await context.newPage();page.setDefaultTimeout(15000);
- const posts=[],chats=[],renames=[],errors=[],external=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
+ const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
@@ -46,6 +46,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0}={}){
   }
   if(url.pathname==='/api/pieces')return route.fulfill({json:{versions:[]}});
   if(url.pathname==='/api/studio/chat'){const body=request.postDataJSON();if(body.op!=='poll')chats.push(body);return route.fulfill({status:202,json:await flow.chat(body)});}
+  if(url.pathname==='/api/studio/action'){const body=request.postDataJSON();actions.push(body);return route.fulfill({status:202,json:await flow.action(body)});}
   if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
   if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
@@ -55,7 +56,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0}={}){
  });
  await page.goto(origin);
  const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
- return {page,idea,posts,chats,renames,flow,errors,external,projects};
+ return {page,idea,posts,chats,actions,renames,flow,errors,external,projects};
 }
 async function openChat(page){
  const message=page.getByLabel('Sua mensagem',{exact:true});
@@ -114,4 +115,36 @@ test('em tela de toque o Enter quebra linha e o botão envia',{skip,timeout:9000
  assert.equal(await message.inputValue(),'Primeira linha\nSegunda linha');assert.equal(chats.length,0);
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(chat=>chat.message),['Primeira linha\nSegunda linha']);assert.deepEqual(errors,[]);
+});
+
+const longIdea='Quero divulgar minha oficina de cerâmica para iniciantes aos sábados';
+const projectTrigger=(page,name)=>page.getByRole('heading',{level:1}).getByRole('button',name?{name,exact:true}:{});
+
+test('o agente sabe que o título é provisório até a pessoa renomear o projeto',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,renames,errors}=await studio(t);
+ await idea.fill(longIdea);await idea.press('Enter');
+ const message=await connectKey(page);assert.equal(await message.inputValue(),longIdea);
+ await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill('Cerâmica aos sábados');await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await projectTrigger(page,'Cerâmica aos sábados').waitFor();
+ await message.fill('Quero um tom acolhedor');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,false],'depois da renomeação pela pessoa o agente não propõe outro título');
+ assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(errors,[]);
+});
+
+test('o agente propõe um título curto e a pessoa vê o nome antes de confirmar',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,actions,renames,flow,errors,projects}=await studio(t);
+ await idea.fill(longIdea);await idea.press('Enter');
+ const message=await connectKey(page);await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ flow.chat=body=>({status:'action_required',action:{name:'compor_renomear_projeto',args:{projectId:projects[0].id,requestId:id(91),revision:body.context.revision,title:'Cerâmica aos sábados'}},actionBinding:'rename-binding'});
+ flow.action=()=>({status:'completed',text:'Título atualizado.'});
+ await message.fill('Para iniciantes');await message.press('Enter');
+ const dialog=page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true});
+ await dialog.getByText('O projeto passa a se chamar “Cerâmica aos sábados”.',{exact:true}).waitFor();assert.equal(renames.length,0);
+ await dialog.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Título atualizado.',{exact:true}).waitFor();
+ await projectTrigger(page,'Cerâmica aos sábados').waitFor();
+ assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(actions.map(action=>[action.actionBinding,action.result.status]),[['rename-binding','completed']]);
+ flow.chat=()=>({status:'completed',text:'Seguimos.'});
+ await message.fill('Agora a legenda');await message.press('Enter');await page.getByText('Seguimos.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
 });

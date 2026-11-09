@@ -15,6 +15,7 @@ import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, refer
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
 import { submitOnEnter } from "../lib/submit-on-enter.ts";
+import { isProvisionalTitle } from "../lib/project-title.ts";
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
@@ -42,6 +43,7 @@ function inspectionSummary(data:ChatResponse):Inspection{
 
 export default function StudioChat({
   state,
+  projectTitle,
   getState,
   change,
   flush,
@@ -56,7 +58,7 @@ export default function StudioChat({
   connection,
   explorationRecovery,
   developerMode = false,
-}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
+}: { state:StudioState;projectTitle:string;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
   const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
@@ -505,6 +507,7 @@ export default function StudioChat({
               mark.baseVersion === draft?.baseVersion,
           ),
           references: next.references,
+          projectTitleProvisional: isProvisionalTitle(projectTitle, next.messages),
         };
       submitted = true;
       const data = await api("/api/studio/chat", {

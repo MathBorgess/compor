@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {provisionalTitle} from '../lib/project-title.ts';
+import {provisionalTitle,isProvisionalTitle} from '../lib/project-title.ts';
 
 test('título provisório é o começo da ideia cortado numa palavra inteira',()=>{
  assert.equal(provisionalTitle('Oficina de cerâmica aos sábados'),'Oficina de cerâmica aos sábados');
@@ -15,4 +15,11 @@ test('título provisório tem no máximo 48 caracteres e não acrescenta reticê
 });
 test('primeira palavra maior que 48 caracteres é cortada no limite',()=>{
  assert.equal(provisionalTitle(`${'y'.repeat(60)} fim`),'y'.repeat(48));
+});
+test('título segue provisório enquanto for o recorte da primeira mensagem da pessoa',()=>{
+ const messages=[{role:'system',text:'Seleção de referências'},{role:'user',text:'Quero divulgar minha oficina de cerâmica para iniciantes aos sábados'},{role:'assistant',text:'Para quem?'},{role:'user',text:'Iniciantes'}];
+ assert.equal(isProvisionalTitle('Quero divulgar minha oficina de cerâmica para',messages),true);
+ assert.equal(isProvisionalTitle('Cerâmica aos sábados',messages),false,'um título renomeado deixa de ser provisório');
+ assert.equal(isProvisionalTitle('Iniciantes',messages),false,'só a primeira mensagem da pessoa conta');
+ assert.equal(isProvisionalTitle('Seleção de referências',messages.slice(0,1)),false,'sem mensagem da pessoa não há título provisório');
 });

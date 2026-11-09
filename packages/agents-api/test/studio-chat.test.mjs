@@ -373,3 +373,12 @@ test('turno de leitura sem ferramentas não encaminha ações inesperadas ao est
  f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_novo_post',turn_id:'turn_one',call_id:'call_new',arguments:{projectId,requestId,revision:1}}]});
  const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.status,'unknown');assert.equal('actionBinding' in result,false);
 });
+test('contexto diz ao agente se o título do projeto ainda é provisório e quando renomear',async()=>{
+ const f=fixture();
+ const invalid=await f.chat(request({...body,context:{...body.context,projectTitleProvisional:'sim'}}));assert.equal(invalid.status,400);
+ const r=await f.chat(request({...body,context:{...body.context,projectTitleProvisional:true}}));assert.equal(r.status,202);
+ const create=f.calls.find(c=>c.url?.endsWith('/sessions'));
+ assert.equal(JSON.parse(create.body.input[0].content[0].text).context.projectTitleProvisional,true);
+ assert.match(create.body.agent.instructions,/Depois da sua primeira resposta, enquanto projectTitleProvisional for verdadeiro, proponha uma vez com compor_renomear_projeto um título de até 48 caracteres, curto e próximo do nome de uma campanha/);
+ assert.match(create.body.agent.instructions,/Quando projectTitleProvisional for falso, nunca renomeie o projeto por iniciativa própria\. Renomeie sempre que a pessoa pedir/);
+});
