@@ -4,6 +4,8 @@
 - Data: 06/11/2026
 - Fonte: revisão de Matheus da interface local neste chat.
 
+> Em 09/11/2026, o [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) substituiu o recolhimento do contexto do pedido por uma faixa sempre visível. Conexão e controles de exploração continuam recolhidos.
+
 ## Decisão
 
 Referências do Pinterest aparecem antes das imagens exploratórias na área principal. A própria imagem permite selecioná-la para a conversa e a Direção; isso não é aceitação estética. O feedback e as decisões são expressos na conversa, sem avaliações ou comentários nos cartões. As imagens do lote recente aparecem primeiro; anteriores continuam recuperáveis, identificadas por ordinal estável.

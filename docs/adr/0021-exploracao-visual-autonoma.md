@@ -5,6 +5,8 @@
 - Fonte: decisões de Matheus na revisão local do Compor em 06/11/2026.
 
 > A cadência indefinida de lotes foi substituída em 06/11/2026 pelo [ADR 0024](0024-exploracao-limitada-e-pecas-flexiveis.md). O histórico abaixo preserva a decisão e a evidência anteriores.
+>
+> Em 09/11/2026, o [ADR 0029](0029-agente-opinativo-e-pergunta-unica.md) substituiu a forma do turno após a seleção, que deixa de apresentar opções e passa a ter uma leitura do gosto, uma recomendação e uma única pergunta.
 
 ## Contexto
 
