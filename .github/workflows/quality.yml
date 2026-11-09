@@ -22,19 +22,38 @@ jobs:
   static:
     name: Static checks
     runs-on: ubuntu-24.04
-    timeout-minutes: 10
+    timeout-minutes: 5
+    outputs:
+      web: ${{ steps.areas.outputs.web }}
+      unit: ${{ steps.areas.outputs.unit }}
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
+          fetch-depth: 0
           persist-credentials: false
       - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
         with:
           node-version: '24'
           cache: npm
+          cache-dependency-path: |
+            package-lock.json
+            apps/site/package-lock.json
+      - name: Select the areas this change can affect
+        id: areas
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: node scripts/quality/changed-areas.mjs
       - run: npm ci --ignore-scripts
       - run: npm run quality:maintenance
       - run: npm run quality:lint
       - run: npm run quality:test
+      - name: Check and build the public site
+        if: steps.areas.outputs.site != 'false'
+        run: |
+          npm ci --ignore-scripts --prefix apps/site
+          npm run check --prefix apps/site
+          npm run build --prefix apps/site
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: always()
         with:
@@ -45,8 +64,10 @@ jobs:
 
   unit:
     name: Contracts and data isolation
+    needs: static
+    if: needs.static.outputs.unit != 'false'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -88,8 +109,10 @@ jobs:
 
   web:
     name: Web types and behavior
+    needs: static
+    if: needs.static.outputs.web != 'false'
     runs-on: ubuntu-24.04
-    timeout-minutes: 30
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -103,10 +126,17 @@ jobs:
       - run: npm ci --ignore-scripts --prefix packages/remote-mcp
       - run: npm ci --ignore-scripts --prefix packages/agile-deliberation
       - run: npm run quality:typecheck
+      - name: Read the Playwright version
+        id: playwright
+        run: node -p "'version=' + require('./apps/web/package-lock.json').packages['node_modules/playwright-core'].version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Install the browser used by tests
         working-directory: apps/web
         run: |
-          npx --no-install playwright-core install --with-deps chromium
+          npx --no-install playwright-core install --no-shell chromium
           node --input-type=module -e "import {chromium} from 'playwright-core'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'BROWSER_EXECUTABLE_PATH=' + chromium.executablePath() + '\n');"
       - run: npm run quality:browser
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -119,27 +149,12 @@ jobs:
           if-no-files-found: warn
           retention-days: 5
 
-  site:
-    name: Public site build
-    runs-on: ubuntu-24.04
-    timeout-minutes: 15
-    steps:
-      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
-        with:
-          persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: apps/site/package-lock.json
-      - run: npm ci --ignore-scripts --prefix apps/site
-      - run: npm run check --prefix apps/site
-      - run: npm run build --prefix apps/site
-
   performance:
     name: Production performance
+    needs: static
+    if: needs.static.outputs.web != 'false'
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 6
     steps:
       - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
         with:
@@ -153,10 +168,17 @@ jobs:
             apps/web/package-lock.json
       - run: npm ci --ignore-scripts
       - run: npm ci --ignore-scripts --prefix apps/web
+      - name: Read the Playwright version
+        id: playwright
+        run: node -p "'version=' + require('./apps/web/package-lock.json').packages['node_modules/playwright-core'].version" >> "$GITHUB_OUTPUT"
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-chromium-${{ runner.os }}-${{ steps.playwright.outputs.version }}
       - name: Install the browser used by Lighthouse
         working-directory: apps/web
         run: |
-          npx --no-install playwright-core install --with-deps chromium
+          npx --no-install playwright-core install --no-shell chromium
           node --input-type=module -e "import {chromium} from 'playwright-core'; import {appendFileSync} from 'node:fs'; appendFileSync(process.env.GITHUB_ENV, 'BROWSER_EXECUTABLE_PATH=' + chromium.executablePath() + '\n');"
       - name: Allow the Lighthouse browser to create its sandbox
         shell: bash
@@ -186,12 +208,28 @@ jobs:
   quality:
     name: Quality gate
     if: always()
-    needs: [static, unit, web, site, performance]
+    needs: [static, unit, web, performance]
     runs-on: ubuntu-24.04
     timeout-minutes: 2
+    permissions:
+      contents: read
+      actions: read
     steps:
-      - name: Require every check to pass
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+          sparse-checkout: scripts/quality
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        with:
+          node-version: '24'
+      - name: Require every check the change can affect to pass
         env:
           CHECKS: ${{ toJSON(needs) }}
-        run: |
-          node -e 'const checks=JSON.parse(process.env.CHECKS); for(const [name,check] of Object.entries(checks)){console.log(name+": "+check.result); if(check.result!=="success") process.exitCode=1;}'
+        run: node scripts/quality/changed-areas.mjs gate
+      - name: Estimate billed minutes
+        if: always()
+        continue-on-error: true
+        timeout-minutes: 1
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api "repos/$GITHUB_REPOSITORY/actions/runs/$GITHUB_RUN_ID/attempts/$GITHUB_RUN_ATTEMPT/jobs?per_page=100" | node scripts/quality/billed-minutes.mjs >> "$GITHUB_STEP_SUMMARY"
