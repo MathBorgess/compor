@@ -17,8 +17,8 @@ A causa da tarefa longa anterior foi identificada por perfil local antes dessa m
 | [42684506557](https://github.com/MathBorgess/compor/actions/runs/42684506557) | `83b35f6` | 0; 0; 0; 0; 0 | 0 | 651 | 0,008 | 295.451 | aprovado | aprovado |
 | [42684554468](https://github.com/MathBorgess/compor/actions/runs/42684554468) | `70c9257` | 0; 0; 0; 0; 0 | 0 | 667 | 0,008 | 295.647 | aprovado | falhou num teste web |
 | [42684647757](https://github.com/MathBorgess/compor/actions/runs/42684647757) | `c728c14` | 0; 0; 0; 599; 0 | 0 | 664 | 0,008 | 295.959 | aprovado | falhou em testes web |
-| [42722045907](https://github.com/MathBorgess/compor/actions/runs/42722045907) | `d25de70` | 8; 0; 0; 0; 0 | 0 | 659 | 0,008 | 295.647 | aprovado | em andamento quando este registro foi escrito |
-| [42722139689](https://github.com/MathBorgess/compor/actions/runs/42722139689) | `c2c4f6c` | 0; 0; 0; 0; 0 | 0 | 668 | 0,008 | 295.959 | aprovado | em andamento quando este registro foi escrito |
+| [42722045907](https://github.com/MathBorgess/compor/actions/runs/42722045907) | `d25de70` | 8; 0; 0; 0; 0 | 0 | 659 | 0,008 | 295.647 | aprovado | aprovado |
+| [42722139689](https://github.com/MathBorgess/compor/actions/runs/42722139689) | `c2c4f6c` | 0; 0; 0; 0; 0 | 0 | 668 | 0,008 | 295.959 | aprovado | aprovado |
 
 As duas falhas do Quality gate vieram do job de comportamento web, não do job de performance. Uma era uma medição de layout feita durante uma animação. A outra era um arquivo de testes novo que não enviava o cookie de sessão. As duas foram corrigidas nos commits `d25de70` e `c2c4f6c`.
 

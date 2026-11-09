@@ -1,6 +1,6 @@
 # Handoff — feedback do estúdio
 
-Escrito em 09/11/2026, 23:55 UTC, pelo agente Claude Code. O próximo agente é do Codex.
+Escrito em 09/11/2026 pelo agente Claude Code e atualizado depois dos merges dos PRs #29 e #30. O próximo agente é do Codex.
 
 Este arquivo existe só enquanto a branch `compor/feedback-estudio` estiver aberta. Remova-o no PR final para a `main`.
 
@@ -12,57 +12,13 @@ Todo o trabalho entra na branch de integração `compor/feedback-estudio`. A `ma
 
 ## Faça primeiro
 
-Estes passos estavam em andamento quando este arquivo foi escrito.
+Estes passos são os próximos, nesta ordem.
 
-### 1. Integrar os PRs #29 e #30
+### 1. Corrigir os achados da revisão dos PRs #29 e #30
 
-Os dois PRs estavam com o CI rodando. Os jobs estático, contratos e performance já tinham passado. Faltava o job "Web types and behavior".
+Os PRs #29 (issue #22) e #30 (issue #23) foram integrados em 09/11 com o Quality gate verde, nos merges `bd4c720` e `e9a448d`. Não há PR aberto.
 
-| PR | Issue | Branch | Commit | Base atual |
-| --- | --- | --- | --- | --- |
-| [#29](https://github.com/MathBorgess/compor/pull/29) | #22 Agente opinativo | `feat/22-agente-opinativo` | `d25de70` | `compor/feedback-estudio` |
-| [#30](https://github.com/MathBorgess/compor/pull/30) | #23 Enter e título curto | `feat/23-enter-titulo` | `c2c4f6c` | `feat/22-agente-opinativo` |
-
-O #30 está empilhado sobre o #29. Faça nesta ordem:
-
-```bash
-gh pr checks 29 --repo MathBorgess/compor
-```
-
-```bash
-gh pr checks 30 --repo MathBorgess/compor
-```
-
-Se o check **Quality gate** estiver verde nos dois:
-
-```bash
-gh pr merge 29 --repo MathBorgess/compor --merge
-```
-
-```bash
-gh pr edit 30 --repo MathBorgess/compor --base compor/feedback-estudio
-```
-
-```bash
-gh pr merge 30 --repo MathBorgess/compor --merge
-```
-
-Use merge commit, não squash. O squash quebra a pilha.
-
-Se um check falhar, leia o log antes de qualquer nova execução:
-
-```bash
-gh api --allow-escape-sequences repos/MathBorgess/compor/actions/jobs/<id-do-job>/logs | sed 's/\x1b\[[0-9;]*m//g' | grep -E "✖|ℹ (tests|pass|fail)"
-```
-
-As falhas anteriores destes PRs já foram corrigidas:
-
-- No #29, o teste `studio-flow-browser.test.mjs` media o compositor durante a animação de 180 ms da conversa. O commit `d25de70` espera a animação terminar.
-- No #30, os sete testes de `studio-enter-title-browser.test.mjs` não enviavam o cookie de sessão. O commit `c2c4f6c` envia o cookie.
-
-### 2. Corrigir os achados da revisão dos PRs #29 e #30
-
-Uma revisão independente não achou bloqueador. Ela achou quatro pontos que merecem correção. Nenhum foi corrigido ainda. Faça um PR para cada feature, depois dos merges acima.
+Uma revisão independente não achou bloqueador. Ela achou quatro pontos que merecem correção. Nenhum foi corrigido ainda. Faça um PR para cada feature.
 
 **#22, agente opinativo:**
 
@@ -80,7 +36,7 @@ Pontos menores, para decidir se valem um PR:
 - `use-exploration-loop.ts`: `resumedQuestion` vive só em memória. Depois de "Gerar mais propostas", recarregar a página volta a segurar a exploração na mesma pergunta.
 - Nenhum ADR registra o limite de 48 caracteres da ferramenta, o campo `projectTitleProvisional` nem a renomeação por iniciativa do agente. Só `docs/architecture.md` trata disso.
 
-### 3. Publicar a suíte web paralela
+### 2. Publicar a suíte web paralela
 
 A branch `ci/web-rapido` está no remoto, sem PR. Ela foi rebaseada sobre `feat/23-enter-titulo` (`c2c4f6c`).
 
@@ -97,7 +53,7 @@ O que não foi medido: a suíte paralela no CI. O runner privado tem 2 vCPUs, en
 
 Passos:
 
-1. Depois dos merges do passo 1, rebaseie `ci/web-rapido` sobre `origin/compor/feedback-estudio`.
+1. Rebaseie `ci/web-rapido` sobre `origin/compor/feedback-estudio`.
 2. Em `docs/quality/gates.md`, na seção "Suíte web paralela", atualize o item que cita a falha "the composer stays at the conversation bottom". Ela foi corrigida em `d25de70`.
 3. Abra o PR para `compor/feedback-estudio`.
 4. Compare o tempo do job web com o anterior e registre o número medido em `docs/quality/gates.md`.
@@ -111,8 +67,8 @@ Passos:
 | Gates por área, limites de tempo, minutos cobrados (ADR 0032) | Integrado | PR #28 |
 | Skills do Next da Vercel para Claude e Codex | Integrado | PR #31 |
 | #27 TBT: entrada sem sessão em HTML sem runtime (ADRs 0033, 0034) | Integrado | PR #32 |
-| #22 Agente opinativo | CI rodando | PR #29 |
-| #23 Enter envia e título curto | CI rodando | PR #30 |
+| #22 Agente opinativo | Integrado. Quatro correções da revisão pendentes | PR #29 |
+| #23 Enter envia e título curto | Integrado. Correções da revisão pendentes | PR #30 |
 | Suíte web com dois arquivos por vez | Branch no remoto, sem PR | `ci/web-rapido` |
 | #24 Revisão com imagem, título, legenda e PNG | Não começou | — |
 | #25 Faixa de contexto e público único | Não começou. Precisa de protótipo antes | — |
@@ -146,6 +102,12 @@ As issues #2, #14 e #19 estão fora deste trabalho.
 5. Para rodar um arquivo de teste de navegador sozinho, entre em `apps/web` e use `node --import tsx --test --test-timeout=90000 test/<arquivo>.test.mjs`.
 6. Abra o PR para `compor/feedback-estudio`. Um PR só de Markdown custa cerca de 2 minutos de CI. Um PR em `apps/web` custa cerca de 19.
 
+Quando um job do CI falhar, leia o log antes de qualquer nova execução:
+
+```bash
+gh api --allow-escape-sequences repos/MathBorgess/compor/actions/jobs/<id-do-job>/logs | sed 's/\x1b\[[0-9;]*m//g' | grep -E "✖|ℹ (tests|pass|fail)"
+```
+
 Armadilhas que já custaram uma execução de CI:
 
 - **Pacotes copiados.** O `.npmrc` usa `install-links=true`. Os pacotes `@compor/*` são copiados para `apps/web/node_modules`, não ligados. Depois de mudar um pacote em `packages/` ou trocar de branch, rode `npm ci --prefix apps/web`. Sem isso, os testes de navegador usam o pacote antigo.
@@ -156,7 +118,7 @@ Armadilhas que já custaram uma execução de CI:
 
 ## Ordem do que falta
 
-1. Os três passos de "Faça primeiro".
+1. Os dois passos de "Faça primeiro".
 2. Issue #24, Revisão.
 3. Protótipo descartável do layout das issues #25, #26 e #33. Matheus escolhe o layout por capturas de tela. Não integre o protótipo.
 4. Issue #25, Faixa de contexto e público único.
