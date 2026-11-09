@@ -32,6 +32,6 @@ As seis skills do Next publicadas pela Vercel ficam no projeto, em `.claude/skil
 
 O analisador informa bytes comprimidos atribuídos por módulo, não transferência medida nem economia prevista. Seus totais não equivalem ao gzip por arquivo do gate: 347.426 bytes atribuídos contra 294.602 medidos pelo gate no mesmo build.
 
-O analisador não mede tempo de execução. A tarefa longa da entrada vinha da inicialização do App Router e do React. Uma página sem componentes de cliente manteve a mesma tarefa, e reduzir bytes não removeria esse custo. A entrada é tratada em registro próprio.
+O analisador não mede tempo de execução. A tarefa longa da entrada vinha da inicialização do App Router e do React. Uma página sem componentes de cliente manteve a mesma tarefa, e reduzir bytes não removeria esse custo. O [ADR 0034](0034-entrada-leve-sem-runtime.md) trata a entrada.
 
 Um snapshot local não substitui o job de performance no CI Linux. O caminho legado (`COMPOR_STUDIO_WEB_ENABLED=false`) tem 15.684 bytes atribuídos que só ele usa; removê-lo é decisão de produto, fora deste registro.

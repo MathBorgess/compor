@@ -34,6 +34,7 @@ apps/
   web/
     app/                 páginas, TSX e handlers HTTP do Next
     lib/                 domínio TS, schemas e adaptadores locais/servidor
+    proxy.ts             entrada sem sessão em HTML sem JavaScript
     public/studio/       fontes e ativos oficiais da interface
     test/                contratos HTTP, estado e navegação
   site/                  site público Astro estático
@@ -61,6 +62,8 @@ Os pacotes compartilhados continuam em JavaScript e publicam declarações `.d.t
 ## Frontend
 
 `page.tsx` escolhe o estúdio por padrão; `COMPOR_STUDIO_WEB_ENABLED=false` mantém o caminho legado como rollback explícito. A entrada oferece Google. `workspace.tsx` verifica sessão e carrega o estúdio por importação dinâmica após autenticação. O símbolo usa os ativos da marca e respeita movimento reduzido.
+
+Na primeira visita sem cookie de sessão do Supabase, com login configurado e estúdio ligado, `proxy.ts` responde `GET /` sem passar pelo App Router. `lib/light-entry.ts` gera HTML sem script externo, com a cópia de `lib/entry-content.ts` e os mesmos arquivos CSS, importados como texto por uma regra do Turbopack. Um script inline grava o rascunho com as chaves que `workspace.tsx` reivindica depois do login. Com cookie, sem login configurado, com login local ou com o caminho legado, `/` segue para `page.tsx`. Ver [ADR 0034](adr/0034-entrada-leve-sem-runtime.md) e, sobre o bundle, o [ADR 0033](adr/0033-turbopack-e-analise-do-bundle.md).
 
 `studio-app.tsx` apresenta referências e imagens exploratórias como conteúdo principal. A conversa fica em um painel flutuante recolhível, com histórico rolável, rascunho preservado e controle por teclado; a área principal reserva espaço para o botão de abertura. Conexão, contexto e controles de exploração ficam recolhidos, enquanto a recuperação de uma tentativa incerta continua acessível. A inspeção técnica de um turno concluído só aparece com `COMPOR_DEVELOPER_MODE=true` em desenvolvimento; não altera a recuperação de pendências. A renomeação pelo chat e pelo menu atualiza também a lista de projetos no componente pai e sua revisão. O [ADR 0023](adr/0023-referencias-e-conversa-flutuante.md) registra a revisão de hierarquia; os ADRs 0020 e 0021 preservam decisões anteriores.
 
@@ -148,7 +151,7 @@ O workflow usa o secret `SUPABASE_DB_PASSWORD` no ambiente GitHub `production`, 
 
 A inicialização única da baseline nativa e da trava pode ser solicitada em Actions → Supabase migrations → Run workflow, selecionando `bootstrap` na `main`. Ela exige a variável de repositório `SUPABASE_MIGRATIONS_BOOTSTRAP_ENABLED=true`, o mesmo destino verificado e o secret do ambiente `production`. O SQL gerado do commit exato exige auditoria legada correspondente e recusa namespaces nativos ou da trava preexistentes. Push normal e a opção padrão `migrate` nunca executam o bootstrap. Após a inicialização confirmada, remova a variável ou defina-a como `false`; falha ou resposta incerta exige inspecionar o banco antes de repetir. Essa operação não cria backup.
 
-`scripts/stage_vercel_web.py` prepara o bundle da Vercel a partir de um commit Git imutável. Copia somente fontes permitidas, inclui a configuração TypeScript e confina dependências locais em `vendor`. O pacote de deliberação leva licença e proveniência da origem. A preparação recusa destinos dentro do repositório, arquivos sensíveis e caminhos de dependência fora desse grafo. Ela não executa deploy.
+`scripts/stage_vercel_web.py` prepara o bundle da Vercel a partir de um commit Git imutável. Copia somente fontes permitidas, inclui a configuração TypeScript e `proxy.ts` e confina dependências locais em `vendor`. O pacote de deliberação leva licença e proveniência da origem. A preparação recusa destinos dentro do repositório, arquivos sensíveis e caminhos de dependência fora desse grafo. Ela não executa deploy.
 
 O workflow já executou no GitHub Actions; os ajustes necessários ao runner estão no [registro de portabilidade](quality/ci-portability-2026-11-05.md). Isso não concede aprovação a commits posteriores. Build, tipos e lint locais no macOS não comprovam o resultado do runner Linux. Os registros de verificação devem identificar o commit, ambiente e escopo de cada execução.
 
