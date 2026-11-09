@@ -37,9 +37,11 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
   }
   // Durable, domain-separated provenance proof. The Supabase caller can write
   // a row, so recovery must not trust its contents without this signature.
-  function issueRecovery({ userId, projectId, attemptId, sessionId }) {
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId)) throw new Error('invalid recovery context');
-    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId })).toString('base64url');
+  // `origin` signs which reply contract the session was opened with; proofs
+  // issued before it existed have none and keep their original contract.
+  function issueRecovery({ userId, projectId, attemptId, sessionId, origin }) {
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection')) throw new Error('invalid recovery context');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}) })).toString('base64url');
     return `v4.${payload}.${createHmac('sha256', signingKey).update(`v4.${payload}`).digest('base64url')}`;
   }
   function verifyRecovery({ token, userId, projectId, attemptId }) {
@@ -53,8 +55,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       const bytes = Buffer.from(p[1], 'base64url');
       if (bytes.toString('base64url') !== p[1]) return null;
       const value = JSON.parse(bytes.toString('utf8'));
-      if (!value || Object.keys(value).length !== 4 || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
-      return { userId, projectId, attemptId, sessionId: value.sessionId };
+      const signedOrigin = value && Object.hasOwn(value, 'origin');
+      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
+      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}) };
     } catch { return null; }
   }
   // Stable per original attempt, but unlinkable without the server secret.
