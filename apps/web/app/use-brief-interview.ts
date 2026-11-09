@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { answerWithReuse, briefDecisions, briefRecordSchema, nextPrompt, recordFromStudio, skipPrompt, type BriefOption, type BriefPromptId, type BriefRecord } from "../lib/brief-interview";
+import { answerWithReuse, briefDecisions, briefPatch, briefRecordSchema, chooseOption, nextPrompt, recordFromStudio, skipPrompt, type BriefOption, type BriefPromptId, type BriefRecord } from "../lib/brief-interview";
 import { referenceSummarySchema, type ExplorationReference } from "../lib/studio-decision-contract";
 import { updateBrief, updatePersona } from "../lib/studio-state";
 import type { StudioState } from "../lib/studio-domain";
@@ -22,18 +22,28 @@ export function useBriefInterview({ state, change, userId, projectId }: Props) {
   const [notice, setNotice] = useState("");
   const storageKey = `compor-brief-interview:${userId}:${projectId}`;
   const current = recordFromStudio(state);
-  const record: BriefRecord = { ...saved };
+  const stored: BriefRecord = { ...saved };
+  const record: BriefRecord = { ...stored };
   for (const item of briefDecisions) {
     if (!record[item.id]?.skipped) delete record[item.id];
   }
   Object.assign(record, current);
+  for (const item of briefDecisions) {
+    const previous = stored[item.id];
+    const live = record[item.id];
+    if (!previous?.claims?.length || !live || live.skipped || previous.skipped) continue;
+    const preference = previous.direction ?? previous.text;
+    if (live.text !== preference && live.text !== previous.text && !previous.claims.some((claim) => claim.text === live.text)) continue;
+    record[item.id] = { ...live, ...(previous.direction ? { direction: previous.direction } : {}), claims: previous.claims };
+  }
   const prompt = opened ? nextPrompt(record) : null;
   const decision = prompt?.kind === "decision" ? prompt.id : null;
   const briefing = state ? [state.brief.offer, state.brief.direction, state.brief.action, state.persona.audience].filter(Boolean).join("\n").slice(0, 1000) : "";
   const discarded: Partial<Record<BriefPromptId, readonly BriefOption[]>> = {};
   for (const item of briefDecisions) {
-    if (item.options.some(option => option.text === record[item.id]?.text)) {
-      discarded[item.id] = item.options.filter(option => option.text !== record[item.id]?.text);
+    const selected = record[item.id]?.direction ?? record[item.id]?.text;
+    if (item.options.some((option) => option.direction === selected || option.text === selected)) {
+      discarded[item.id] = item.options.filter((option) => option.direction !== selected && option.text !== selected);
     }
   }
 
@@ -68,12 +78,13 @@ export function useBriefInterview({ state, change, userId, projectId }: Props) {
 
   function remember(next: BriefRecord) {
     const applied = change(value => {
-      const patch: Partial<StudioState["brief"]> = {};
-      if (next.produto && !next.produto.skipped) patch.offer = next.produto.text;
-      if (next.objetivo && !next.objetivo.skipped) patch.action = next.objetivo.text;
-      if (next.personalidade && !next.personalidade.skipped) patch.direction = next.personalidade.text;
-      let updated = Object.keys(patch).length ? updateBrief(value, patch) : value;
-      if (next.persona && !next.persona.skipped) updated = updatePersona(updated, { audience: next.persona.text });
+      const patch = briefPatch(next);
+      const brief: Partial<StudioState["brief"]> = {};
+      if (patch.offer) brief.offer = patch.offer;
+      if (patch.action) brief.action = patch.action;
+      if (patch.direction) brief.direction = patch.direction;
+      let updated = Object.keys(brief).length ? updateBrief(value, brief) : value;
+      if (patch.persona) updated = updatePersona(updated, { audience: patch.persona });
       return updated;
     });
     if (!applied) throw Error("studio_unavailable");
@@ -94,7 +105,11 @@ export function useBriefInterview({ state, change, userId, projectId }: Props) {
     setAnswer,
     start: () => { setNotice(""); setOpened(true); },
     close: () => { setOpened(false); setAnswer(""); },
-    choose: (option: BriefOption) => submit(option.text),
+    choose: (option: BriefOption) => {
+      if (!prompt || prompt.kind !== "decision") return;
+      try { remember(chooseOption(record, prompt.id, option)); }
+      catch { setNotice("Não foi possível guardar a escolha. Use até 2.000 caracteres para a persona e não inclua chaves de API."); }
+    },
     submit: () => submit(answer),
     skip: () => { if (prompt && !prompt.required) remember(skipPrompt(record, prompt.id)); },
   };

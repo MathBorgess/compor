@@ -5,6 +5,7 @@ import {
   adjustmentQuestion,
   briefDecisions,
   previewImage,
+  showsMarketProof,
   type BriefDecisionId,
   type BriefOption,
   type BriefPrompt,
@@ -51,8 +52,17 @@ export function BriefCanvas({
           <article key={item.id} className="studio-decision-card">
             <h3>{item.id}</h3>
             <p>
-              {record[item.id]?.text} <span>{record[item.id]?.origin}</span>
+              {record[item.id]?.direction ?? record[item.id]?.text} <span>{record[item.id]?.origin}</span>
             </p>
+            {record[item.id]?.claims?.length ? (
+              <ul>
+                {record[item.id]?.claims?.map((claim) => (
+                  <li key={claim.id}>
+                    {claim.text} <span>{claim.origin}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : null}
             {discarded[item.id]?.length ? (
               <details>
                 <summary>Opções descartadas</summary>
@@ -87,7 +97,10 @@ export function BriefCanvas({
                 <h3>{option.title}</h3>
                 <p>{option.text}</p>
                 <ul className="studio-brief-refs">
-                  {references.slice(0, 2).map((item) => (
+                  {references
+                    .slice(0, 2)
+                    .filter((item) => item.board && !showsMarketProof(`${item.description} ${item.board}`))
+                    .map((item) => (
                     <li key={item.id}>
                       {item.description}
                       <span>Fonte: catálogo de sugestões · {item.board}</span>

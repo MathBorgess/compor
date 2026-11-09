@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { answerPrompt, answerWithReuse, artFacts, briefRecordSchema, nextPrompt, recordFromStudio, skipPrompt } from "../lib/brief-interview.ts";
+import { readdir, readFile } from "node:fs/promises";
+import { join } from "node:path";
+import { answerPrompt, answerWithReuse, artFacts, briefDecisions, briefPatch, briefRecordSchema, chooseOption, confirmMentionedClaims, nextPrompt, recordFromStudio, showsMarketProof, skipPrompt } from "../lib/brief-interview.ts";
 
 test("a entrevista reaproveita o brief e pergunta opcionais somente quando solicitados", () => {
   let record = recordFromStudio({ brief: { offer: "Aula de planilhas", action: "Conhecer a aula" }, persona: { audience: "Quem estuda após o trabalho" } });
@@ -66,4 +68,53 @@ test("o registro rejeita credenciais copiadas e respeita o limite da persona", (
   assert.equal(reused.record.produto.text, answer);
   assert.equal(reused.record.persona, undefined);
   assert.equal(nextPrompt(reused.record).id, "persona");
+});
+
+test("Escolher não promove alegações embutidas na opção", () => {
+  const option = briefDecisions.find((item) => item.id === "produto").options[0];
+  const chosen = chooseOption({}, "produto", option);
+  assert.equal(chosen.produto.direction, "Aula curta");
+  assert.equal(chosen.produto.text, "Aula curta");
+  assert.equal(chosen.produto.origin, "informado");
+  assert.ok(chosen.produto.claims.length >= 2);
+  assert.ok(chosen.produto.claims.every((claim) => claim.origin === "sugerido"));
+  assert.deepEqual(artFacts(chosen), { headline: "", price: "", date: "" });
+  assert.deepEqual(briefPatch(chosen), { offer: "Aula curta", action: "", direction: "", persona: "" });
+  const confirmed = confirmMentionedClaims(chosen, "A rotina fica organizada.");
+  assert.equal(confirmed.produto.claims.find((claim) => claim.kind === "result").origin, "informado");
+  assert.equal(confirmed.produto.claims.find((claim) => claim.kind === "offer").origin, "sugerido");
+  assert.equal(briefPatch(confirmed).offer, "Aula curta");
+  assert.deepEqual(artFacts(confirmed), { headline: "", price: "", date: "" });
+  const offerConfirmed = confirmMentionedClaims(chosen, "Uma aula curta para organizar a rotina.");
+  assert.equal(offerConfirmed.produto.claims.find((claim) => claim.kind === "offer").origin, "informado");
+  assert.equal(artFacts(offerConfirmed).headline, "");
+  assert.equal(briefPatch(offerConfirmed).offer.includes("organizada"), false);
+  assert.equal(JSON.stringify(artFacts(offerConfirmed)).includes("organizada"), false);
+});
+
+async function uiSources(dir) {
+  const found = [];
+  for (const entry of await readdir(dir, { withFileTypes: true })) {
+    const path = join(dir, entry.name);
+    if (entry.isDirectory()) found.push(...(await uiSources(path)));
+    else if (/\.(tsx|css)$/.test(entry.name)) found.push(path);
+  }
+  return found;
+}
+
+test("a interface não apresenta Phoenix, nota ou validação", async () => {
+  const forbidden = /\b(Phoenix|validado|comprovado|NDCG|ndcg|probabilidade|probabilidades|calibrado)\b|\bscores?\b/i;
+  const hits = [];
+  for (const path of await uiSources(new URL("../app/", import.meta.url).pathname)) {
+    const lines = (await readFile(path, "utf8")).split("\n");
+    lines.forEach((line, index) => {
+      if (forbidden.test(line)) hits.push(`${path}:${index + 1}:${line.trim()}`);
+    });
+  }
+  assert.deepEqual(hits, []);
+  const interview = await readFile(new URL("../app/brief-interview.tsx", import.meta.url), "utf8");
+  assert.match(interview, /role="status">calibrando…/);
+  assert.match(interview, /calibrating \? "calibrando…"/);
+  assert.equal(showsMarketProof("Board especializado em tipografia expressiva e gancho visual de capa."), false);
+  assert.equal(showsMarketProof("Phoenix validou com NDCG e score alto"), true);
 });
