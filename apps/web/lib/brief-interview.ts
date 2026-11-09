@@ -179,14 +179,31 @@ export function chooseOption(record: BriefRecord, id: BriefDecisionId, option: B
   });
 }
 
+function clauses(text: string) {
+  const parts = text.match(/[^!?.\n;]+[!?.\n;]?/g) ?? [];
+  return parts.map((piece) => piece.trim()).filter(Boolean).map((body) => ({ body, question: body.endsWith("?") }));
+}
+
+/** A claim becomes informed only when a clause states it without denying or asking. */
+export function affirmsClaim(message: string, claim: string) {
+  const needle = normalize(claim);
+  if (needle.length < 8) return false;
+  return clauses(message).some((clause) => {
+    if (clause.question) return false;
+    const body = normalize(clause.body);
+    if (!body.includes(needle)) return false;
+    const outside = body.replace(needle, " ");
+    return !/\b(?:nao|nunca|jamais|nem|discordo|falso|errado|duvido)\b/.test(outside);
+  });
+}
+
 export function confirmMentionedClaims(record: BriefRecord, text: string): BriefRecord {
-  const haystack = normalize(text);
   let changed = false;
   const next: BriefRecord = { ...record };
   for (const [id, field] of Object.entries(record) as [BriefPromptId, BriefEntry][]) {
     if (!field?.claims?.length) continue;
     const claims = field.claims.map((claim) => {
-      if (claim.origin === "sugerido" && claim.text.length >= 8 && haystack.includes(normalize(claim.text))) {
+      if (claim.origin === "sugerido" && affirmsClaim(text, claim.text)) {
         changed = true;
         return { ...claim, origin: "informado" as const };
       }

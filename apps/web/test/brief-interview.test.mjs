@@ -85,6 +85,11 @@ test("Escolher não promove alegações embutidas na opção", () => {
   assert.equal(confirmed.produto.claims.find((claim) => claim.kind === "offer").origin, "sugerido");
   assert.equal(briefPatch(confirmed).offer, "Aula curta");
   assert.deepEqual(artFacts(confirmed), { headline: "", price: "", date: "" });
+  const rejected = answerWithReuse(chosen, "persona", "Pessoas ocupadas. Não é verdade que a rotina fica organizada.");
+  assert.equal(rejected.record.persona.text, "Pessoas ocupadas. Não é verdade que a rotina fica organizada.");
+  assert.equal(rejected.record.produto.claims.find((claim) => claim.kind === "result").origin, "sugerido");
+  const asked = confirmMentionedClaims(chosen, "A rotina fica organizada?");
+  assert.equal(asked.produto.claims.find((claim) => claim.kind === "result").origin, "sugerido");
   const offerConfirmed = confirmMentionedClaims(chosen, "Uma aula curta para organizar a rotina.");
   assert.equal(offerConfirmed.produto.claims.find((claim) => claim.kind === "offer").origin, "informado");
   assert.equal(artFacts(offerConfirmed).headline, "");
