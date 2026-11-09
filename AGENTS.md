@@ -6,6 +6,8 @@ Estas instruções foram solicitadas por Matheus em 05/11/2026 para orientar alt
 
 Comece pelo [mapa atual da arquitetura](docs/architecture.md), pelo [índice de ADRs](docs/adr/README.md) e pelos [gates de qualidade](docs/quality/gates.md). Leia o contrato e os testes da camada afetada. Documentos datados preservam decisões anteriores; não trate uma proposta histórica como descrição do código atual.
 
+**Bundle do Turbopack.** Ao acrescentar uma dependência de cliente ou mover código para o navegador, rode `next analyze` antes e depois e otimize conforme o [guia de package bundling](https://nextjs.org/docs/app/guides/package-bundling) e o [ADR 0033](docs/adr/0033-turbopack-e-analise-do-bundle.md). Para o bundle, use a skill `next-bundle-optimizer` (`.claude/skills/` ou `.agents/skills/`); as outras skills do Next, sua origem e restrições estão em [vercel-next-skills](docs/third-party/vercel-next-skills.md). O codemod `agents-md`, upgrades do Next e ligar `cacheComponents` ou `partialPrefetching` são decisões de Matheus.
+
 O app usa **OpenAI Agents API gerenciada**. O Agents SDK aparece no protótipo e em experimentos; não é o runtime do estúdio web. O MCP remoto e o protótipo stdio têm identidades e capacidades distintas.
 
 ## Onde colocar cada mudança

@@ -19,7 +19,7 @@ class StageTest(unittest.TestCase):
         self.root.mkdir()
         specs = ['apps/web/app', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
                  'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc',
-                 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts']
+                 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts']
         specs += [path for name in PACKAGES for path in (f'packages/{name}/package.json', f'packages/{name}/src')]
         specs += ['third_party/google-research/agile_deliberation/LICENSE', 'third_party/google-research/agile_deliberation/provenance.json']
         files = subprocess.check_output(['git', 'ls-files', '-z', '--', *specs], cwd=ROOT).split(b'\0')
@@ -81,7 +81,7 @@ class StageTest(unittest.TestCase):
                         self.assertTrue(target.is_relative_to(app.resolve()))
                         self.assertEqual(json.loads((target / 'package.json').read_text())['name'], dependency)
                         self.assertEqual(lock['packages'][f'node_modules/@compor/{package_name}']['dependencies'][dependency], value)
-            for filename in ['tsconfig.json', 'next-env.d.ts', '.npmrc']:
+            for filename in ['tsconfig.json', 'next-env.d.ts', '.npmrc', 'proxy.ts', 'next.config.mjs', 'lib/css-text.d.ts']:
                 self.assertEqual((app / filename).read_bytes(), (self.root / 'apps/web' / filename).read_bytes())
             for package_name in ('agents-api', 'remote-mcp'):
                 self.assertEqual(lock['packages'][f'node_modules/@compor/{package_name}']['dependencies']['@compor/agile-deliberation'], 'file:../agile-deliberation')
@@ -144,6 +144,15 @@ class StageTest(unittest.TestCase):
 
     def test_requires_typescript_configuration_in_immutable_source(self):
         (self.root / 'apps/web/tsconfig.json').unlink()
+        self.commit = self.snapshot()
+        output = self.base / 'bundle'
+        run = self.stage(output, check=False)
+        self.assertNotEqual(run.returncode, 0)
+        self.assertIn('missing required source files', run.stderr)
+        self.assertFalse(output.exists())
+
+    def test_requires_the_proxy_that_serves_the_signed_out_entry(self):
+        (self.root / 'apps/web/proxy.ts').unlink()
         self.commit = self.snapshot()
         output = self.base / 'bundle'
         run = self.stage(output, check=False)

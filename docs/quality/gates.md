@@ -7,7 +7,7 @@ O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull r
 | Static checks | Sempre | ESLint sem erros ou avisos e testes de `scripts/quality` aprovados. Com a área `site` ligada, também `astro check` e build do site | TypeScript/TSX do app web, JavaScript dos pacotes, scripts de qualidade e site público com seus headers |
 | Contracts and data isolation | `unit` | Todas as suítes dos pacotes e dos scripts Python aprovadas | Autorização, isolamento, idempotência, persistência, recuperação e contratos com fornecedores simulados |
 | Web types and behavior | `web` | TypeScript estrito, Chromium instalado e toda a suíte web aprovada | Navegação, interação e estados do app com fixtures locais |
-| Production performance | `web` | Build Next de produção e todos os limites abaixo aprovados | Entrada `/` sem sessão, com configuração pública sintética |
+| Production performance | `web` | Build Next de produção e todos os limites abaixo aprovados | Entrada `/` sem sessão, servida sem JavaScript pelo proxy, com configuração pública sintética |
 
 As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs não recebem secrets e não fazem deploy. O token tem `contents: read`. Só o Quality gate recebe também `actions: read`, para ler a duração dos jobs. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
 
@@ -71,7 +71,7 @@ Os valores usados pelo gate estão em [budgets.json](../../scripts/quality/budge
 
 | Medida | Limite inclusivo | O que é contado |
 | --- | --- | --- |
-| JavaScript inicial | 250.000 bytes gzip | Soma dos scripts externos únicos presentes no HTML de `/` |
+| JavaScript inicial | 250.000 bytes gzip | Soma dos scripts externos únicos presentes no HTML de `/`; zero na entrada sem sessão |
 | JavaScript de todos os chunks | 300.000 bytes gzip | Soma de todos os arquivos `.js` em `.next/static` |
 | Largest Contentful Paint | 2.500 ms | Mediana de cinco navegações mobile simuladas |
 | Total Blocking Time | 200 ms | Mediana das mesmas cinco navegações |
@@ -79,7 +79,7 @@ Os valores usados pelo gate estão em [budgets.json](../../scripts/quality/budge
 
 Os tamanhos usam gzip de cada arquivo, sem headers HTTP. Não equivalem aos bytes transferidos por uma CDN com Brotli. O limite total inclui chunks de outras rotas e os carregados sob demanda. Ele impede que mover código para um import dinâmico esconda crescimento ilimitado do cliente.
 
-O script inicia um servidor de produção em uma porta local disponível e um perfil temporário do Chromium. Lighthouse usa emulação mobile, throttling simulado e reset de armazenamento. Cada relatório guarda a configuração efetiva, versão e avisos. A coleta registra a resposta HTTP da página e recusa redirecionamento para outra rota, erro do Lighthouse, erro no console ou métrica ausente. Não aceita uma página de erro como uma página rápida.
+O script inicia um servidor de produção em uma porta local disponível e um perfil temporário do Chromium. Lighthouse usa emulação mobile, throttling simulado e reset de armazenamento. Cada relatório guarda a configuração efetiva, versão e avisos. A coleta registra a resposta HTTP da página e recusa redirecionamento para outra rota, erro do Lighthouse, erro no console ou métrica ausente. Não aceita uma página de erro como uma página rápida. O HTML auditado precisa ter o `main.compor-entry` e o formulário que posta em `/auth/sign-in`. Ele pode não ter script externo, como a entrada sem sessão do [ADR 0034](../adr/0034-entrada-leve-sem-runtime.md), mas todo script presente precisa ser um chunk local em `/_next/static`.
 
 Os limites de LCP e CLS usam os valores de referência publicados pelo Google. O limite de TBT usa a faixa mobile do Lighthouse. A mediana de laboratório não substitui o percentil 75 observado em usuários reais. [LCP](https://web.dev/articles/lcp), [CLS](https://web.dev/articles/cls), [TBT](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time).
 
@@ -87,9 +87,9 @@ Os relatórios incluem acessibilidade e boas práticas para diagnóstico, sem im
 
 ## Limites da cobertura
 
-O benchmark não autentica no Google, não consulta um projeto Supabase e não chama o GPT Image. Ele não mede latência de rede real, geração de imagem, interação autenticada, INP de campo ou acessibilidade completa. Os contratos usam fornecedores simulados para verificar chamadas, autorização e recuperação sem custos externos.
+O benchmark não autentica no Google, não consulta um projeto Supabase e não chama o GPT Image. Ele não mede latência de rede real, geração de imagem, interação autenticada, INP de campo ou acessibilidade completa. O App Router que uma pessoa conectada carrega fica fora do Lighthouse e do limite de JavaScript inicial; só o limite total cobre esse código. Os contratos usam fornecedores simulados para verificar chamadas, autorização e recuperação sem custos externos.
 
-A escolha entre SSR e conteúdo estático depende dos dados da rota. No ponto de partida, o Next renderiza `/` sob demanda e o Astro gera o site público estaticamente. O gate valida o build e o resultado observado, sem exigir que dados de sessão sejam convertidos em conteúdo estático.
+A escolha entre SSR e conteúdo estático depende dos dados da rota. Sem cookie de sessão, `proxy.ts` responde `/` com HTML sem JavaScript. Com sessão, o Next renderiza `/` sob demanda. O Astro gera o site público estaticamente. O gate valida o build e o resultado observado, sem exigir que dados de sessão sejam convertidos em conteúdo estático.
 
 O orçamento torna visível o custo de novas dependências. Componentes pesados opcionais podem usar [lazy loading do Next](https://nextjs.org/docs/app/guides/lazy-loading). Imagens públicas podem usar [`next/image`](https://nextjs.org/docs/app/api-reference/components/image) quando o formato e a entrega permitirem. As imagens privadas geradas têm regras próprias de acesso e integridade. O workflow não reescreve esses fluxos automaticamente.
 
@@ -107,5 +107,7 @@ O orçamento torna visível o custo de novas dependências. Componentes pesados 
 | `npm run quality:browser` | Instalação web, `remote-mcp` e `agile-deliberation`, `BROWSER_EXECUTABLE_PATH` definido | Suíte web completa |
 | `npm run quality:build` | Instalação web | Build Next de produção |
 | `npm run quality:performance` | Build de produção, instalação da raiz e browser definido | Bundle, cinco relatórios HTML e JSON, resumo e log do servidor |
+| `(cd apps/web && npx --no-install next analyze --output --snapshot NOME)` | Instalação web | Snapshot do grafo de módulos do Turbopack em `apps/web/.next/diagnostics/analyze` |
+| `(cd apps/web && npx --no-install next analyze export --snapshot NOME) \| gzip > DESTINO.jsonl.gz` | Snapshot salvo; `set -o pipefail` e destino fora do repositório | Grafo em JSON Lines para comparar antes e depois, conforme o [ADR 0033](../adr/0033-turbopack-e-analise-do-bundle.md) |
 
 No CI, o navegador é instalado com `npx --no-install playwright-core install --no-shell chromium`, executado em `apps/web`. O diretório `~/.cache/ms-playwright` fica em cache pela versão do `playwright-core` no lockfile web. A imagem ubuntu-24.04 já tem as bibliotecas do Chromium. Lá, `--with-deps` só instalava fontes pelo apt e às vezes travava de 7 a 13 minutos. Numa máquina Linux nova, use `--with-deps`, como no [guia da arquitetura](../architecture.md#instalação-e-verificação). O caminho vem de `chromium.executablePath()` do pacote instalado.

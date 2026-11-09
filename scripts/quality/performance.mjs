@@ -8,7 +8,7 @@ import { gzipSync } from 'node:zlib';
 import { cpus, loadavg, platform, arch } from 'node:os';
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
-import { summarizeRuns, budgetFailures, summarizeDiagnostics } from './performance-report.mjs';
+import { summarizeRuns, budgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const app = resolve(root, 'apps/web');
@@ -58,13 +58,8 @@ try {
     if (Date.now() > deadline) throw Error('Production server did not become ready.');
     await new Promise(resolve => setTimeout(resolve, 100));
   }
-  if (!html.includes('Compor')) throw Error('The audited route is not the Compor entry.');
-  const scripts = [...new Set([...html.matchAll(/<script\b[^>]*\bsrc="([^"]+)"/g)].map(match => match[1].replaceAll('&amp;', '&')))];
-  if (!scripts.length) throw Error('The entry did not contain any JavaScript to measure.');
   const initialFiles = [];
-  for (const source of scripts) {
-    const url = new URL(source, origin);
-    if (url.origin !== origin || !url.pathname.startsWith('/_next/static/') || !url.pathname.endsWith('.js')) throw Error(`Unexpected initial script: ${url.pathname}`);
+  for (const url of entryScripts(html, origin)) {
     const file = resolve(app, '.next', url.pathname.slice('/_next/'.length));
     const bytes = await readFile(file);
     initialFiles.push({ file: relative(app, file), bytes: bytes.length, gzipBytes: gzipSync(bytes).length });

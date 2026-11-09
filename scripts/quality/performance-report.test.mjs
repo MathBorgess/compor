@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeRuns, budgetFailures, summarizeDiagnostics } from './performance-report.mjs';
+import { summarizeRuns, budgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
 
 const run = (lcp = 1000) => ({ finalDisplayedUrl: 'http://127.0.0.1:3000/', audits: {
   'network-requests': { details: { items: [{ url: 'http://127.0.0.1:3000/', resourceType: 'Document', statusCode: 200, finished: true }] } },
@@ -75,4 +75,16 @@ test('diagnostics keep local chunk timings while excluding private URLs and malf
   assert.equal(capped.at(-1).durationMs, 5);
   assert.deepEqual(summarizeDiagnostics({}, 'http://127.0.0.1:3000').longTasks, []);
   assert.deepEqual(summarizeDiagnostics({}, 'http://127.0.0.1:3000').scripts, []);
+});
+
+test('the audited entry may load no script, but only the Compor entry and only local Next chunks pass', () => {
+  const origin = 'http://127.0.0.1:3000';
+  const entry = body => `<html><body><main class="compor-entry" aria-labelledby="entry-title"><form action="/auth/sign-in" method="post"><button>Entrar</button></form></main>${body}</body></html>`;
+  assert.deepEqual(entryScripts(entry('<script>sessionStorage.length</script>'), origin), []);
+  assert.deepEqual(entryScripts(entry('<script src="/_next/static/chunks/a.js" async=""></script><script src="/_next/static/chunks/a.js"></script><script src=\'/_next/static/chunks/b.js?v=1&amp;x=2\'></script>'), origin).map(url => url.href),
+    [`${origin}/_next/static/chunks/a.js`, `${origin}/_next/static/chunks/b.js?v=1&x=2`]);
+  for (const script of ['<script src="https://cdn.example/a.js"></script>', '<script src=/api/a.js></script>', '<script type="module" src="/_next/static/chunks/a.css"></script>', '<SCRIPT SRC="/a.js"></SCRIPT>'])
+    assert.throws(() => entryScripts(entry(script), origin), /Unexpected initial script/, script);
+  assert.throws(() => entryScripts('<html><body><h1>Compor</h1></body></html>', origin), /not the Compor entry/);
+  assert.throws(() => entryScripts('<main class="compor-entry"><form action="/login"></form></main>', origin), /not the Compor entry/);
 });

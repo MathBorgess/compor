@@ -1,9 +1,10 @@
 import "./brand-symbol.css";
+import { brandImages } from "../lib/entry-content";
 
 export default function BrandSymbol({ motion = "still" }: { motion?: "still" | "arriving" | "working" }) {
   return (
     <span className="compor-brand-symbol" data-motion={motion} aria-hidden="true">
-      <img src="/studio/brand-symbol.svg" alt="" width="30" height="30.4667" />
+      <img src={brandImages.symbol.src} alt="" width={brandImages.symbol.width} height={brandImages.symbol.height} />
     </span>
   );
 }

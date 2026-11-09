@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {stopApp, waitForApp} from './wait-for-app.mjs';
+import {sessionCookie} from './session-cookie.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const userId = '00000000-0000-4000-8000-000000000001';
@@ -28,6 +29,7 @@ async function app(t, {withReferences = false} = {}) {
   browser = await chromium.launch({executablePath: browserPath, headless: true});
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
   page.setDefaultTimeout(6000);
+  await page.context().addCookies([sessionCookie(origin)]);
   const errors = [], calls = [], external = [], selectionSignals = [];
   const paging = {nextBeforeOrdinal:null, older:[]};
   const images = [
