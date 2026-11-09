@@ -5,6 +5,7 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
+import { sessionCookie } from './session-cookie.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const userId = '00000000-0000-4000-8000-000000000001';
@@ -45,6 +46,7 @@ test('entrada Studio oferece Google, preserva rascunho anterior e permite recupe
       assert.equal(route.request().method(), 'POST');
       loginCount++;
       session = 'connected';
+      await page.context().addCookies([sessionCookie(origin)]);
       return route.fulfill({ status: 303, headers: { location: origin }, body: '' });
     }
     if (url.pathname === '/api/projects') return route.fulfill({ json: { projects: [] } });

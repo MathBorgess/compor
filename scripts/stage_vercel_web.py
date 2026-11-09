@@ -72,7 +72,7 @@ def main():
         raise ValueError('output must be outside the repository')
     specs = ['apps/web/app', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
              'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc', 'apps/web/vercel.json',
-             'apps/web/tsconfig.json', 'apps/web/next-env.d.ts']
+             'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts']
     for name in PACKAGES:
         specs += [f'packages/{name}/package.json', f'packages/{name}/src']
     specs += list(UPSTREAM_FILES)
@@ -100,7 +100,7 @@ def main():
         entries.append((destination, oid))
     names = {name for name, _ in entries}
     required = {'apps/web/package.json', 'apps/web/package-lock.json', 'apps/web/next.config.mjs',
-                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
+                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
     if not required.issubset(names) or not any(name.startswith('apps/web/app/') for name in names):
         raise ValueError('missing required source files')
     output.mkdir(mode=0o700)

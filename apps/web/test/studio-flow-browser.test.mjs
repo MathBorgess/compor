@@ -6,6 +6,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
+import {sessionCookie} from './session-cookie.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -40,6 +41,7 @@ async function app(t){
  await waitForApp({url:origin,child,signal:t.signal});
  browser=await chromium.launch({executablePath:browserPath,headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+ await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage(),errors=[],external=[],calls=[],revokedImages=[];
  page.setDefaultTimeout(6000);
  await page.exposeFunction('reportRevokedImage',image=>revokedImages.push(image));
