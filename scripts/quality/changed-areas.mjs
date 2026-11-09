@@ -8,6 +8,9 @@ const RULES = [
   [/^\.github\//, AREAS],
   [/^(package\.json|package-lock\.json|eslint\.config\.mjs)$/, AREAS],
   [/^(docs\/.*|[^/]+)\.md$/, []],
+  // Agent skills and their lockfile are instructions for agents; no build or test reads them.
+  [/^\.(claude|agents)\/skills\//, []],
+  [/^skills-lock\.json$/, []],
   // prototypes/compor-mcp/test/phoenix-calibration.test.mjs reads JSON under docs/evals.
   [/^docs\//, ['unit']],
   [/^apps\/web\//, ['web']],

@@ -16,6 +16,8 @@ test('documentation and root Markdown turn on no area', () => {
 test('each source tree turns on the areas it can affect', () => {
   assert.deepEqual(areasForPaths(['apps/web/app/page.tsx']), areas(true, false, false));
   assert.deepEqual(areasForPaths(['apps/web/lib/phoenix/PROVENANCE.md']), areas(true, false, false));
+  assert.deepEqual(areasForPaths(['.claude/skills/next-dev-loop/SKILL.md', '.agents/skills/next-dev-loop/SKILL.md', 'skills-lock.json']), areas(false, false, false));
+  assert.deepEqual(areasForPaths(['.claude/settings.json']), areas(true, true, true));
   assert.deepEqual(areasForPaths(['packages/agents-api/src/index.mjs']), areas(true, true, false));
   assert.deepEqual(areasForPaths(['third_party/agile-deliberation/LICENSE']), areas(true, true, false));
   assert.deepEqual(areasForPaths(['prototypes/compor-mcp/src/stdio.ts']), areas(false, true, false));
