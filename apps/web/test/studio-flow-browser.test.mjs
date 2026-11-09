@@ -156,6 +156,8 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const storageText=await page.evaluate(async()=>{const db=await new Promise(resolve=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);});const records=await new Promise(resolve=>{const r=db.transaction('states').objectStore('states').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return JSON.stringify([records,Object.entries(localStorage),Object.entries(sessionStorage)]);});
  assert.equal(storageText.includes(key),false);
  const conversation=page.getByRole('complementary',{name:'Conversa com a IA',exact:true});
+ // Reopening the conversation replays its 180 ms expand animation; measure the settled layout, not two frames of it.
+ await conversation.evaluate(element=>Promise.all(element.getAnimations().map(animation=>animation.finished)));
  const chatBounds=await conversation.boundingBox(),composerBounds=await page.locator('form.studio-chat-composer').boundingBox();
  assert.ok(Math.abs(chatBounds.y+chatBounds.height-composerBounds.y-composerBounds.height)<=2,'the composer stays at the conversation bottom');
  const connectionButton=page.getByRole('button',{name:'IA conectada',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');

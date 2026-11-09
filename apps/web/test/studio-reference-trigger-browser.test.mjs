@@ -31,7 +31,7 @@ async function setup(t){
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const context=await browser.newContext(),page=await context.newPage();page.setDefaultTimeout(7000);const calls=[],pinSignals=[];let answer='completed',release;
  await context.route('**/api/studio/**/signals',async route=>route.fulfill({json:{signals:route.request().url().includes('/references/')?pinSignals:[]}}));
- await page.context().route('**/api/studio/chat',async route=>{const body=route.request().postDataJSON();calls.push(body);if(answer==='unknown')return route.abort('failed');if(answer==='hold')await new Promise(resolve=>{release=resolve;});return route.fulfill({json:{status:'completed',text:'As referências parecem editoriais. Prefere uma direção sóbria ou expressiva? Recomendo a primeira.'}});});
+ await page.context().route('**/api/studio/chat',async route=>{const body=route.request().postDataJSON();calls.push(body);if(answer==='unknown')return route.abort('failed');if(answer==='hold')await new Promise(resolve=>{release=resolve;});return route.fulfill({json:{status:'completed',text:'As referências parecem editoriais.\n\n**Recomendação:** Uma direção sóbria, porque combina com a oferta.\n\nPosso seguir pela direção sóbria?'}});});
  return {page,calls,origin,pinSignals,unknown:()=>{answer='unknown';},hold:()=>{answer='hold';},release:()=>{answer='completed';release?.();}};
 }
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
