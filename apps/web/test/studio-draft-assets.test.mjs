@@ -8,7 +8,7 @@ import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 async function browser(t){
  const server=createServer(async(request,response)=>{const path=request.url;if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(path)){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${path}`,import.meta.url)));}else response.end('<!doctype html><title>Local draft asset test</title>');});
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const instance=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>instance.close());const page=await instance.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);return page;
 }
 
