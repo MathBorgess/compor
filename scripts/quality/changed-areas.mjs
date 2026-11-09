@@ -7,8 +7,9 @@ export const AREAS = ['web', 'unit', 'site'];
 const RULES = [
   [/^\.github\//, AREAS],
   [/^(package\.json|package-lock\.json|eslint\.config\.mjs)$/, AREAS],
-  [/^docs\//, []],
-  [/^[^/]+\.md$/, []],
+  [/^(docs\/.*|[^/]+)\.md$/, []],
+  // prototypes/compor-mcp/test/phoenix-calibration.test.mjs reads JSON under docs/evals.
+  [/^docs\//, ['unit']],
   [/^apps\/web\//, ['web']],
   [/^apps\/site\//, ['site']],
   [/^(packages|third_party)\//, ['web', 'unit']],

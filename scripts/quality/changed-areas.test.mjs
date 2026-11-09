@@ -24,6 +24,8 @@ test('each source tree turns on the areas it can affect', () => {
   assert.deepEqual(areasForPaths(['scripts/quality/budgets.json']), areas(true, true, false));
   assert.deepEqual(areasForPaths(['apps/site/src/pages/index.astro']), areas(false, false, true));
   assert.deepEqual(areasForPaths(['apps/site/src/pages/index.astro', 'docs/x.md', 'supabase/tests/rls.sql']), areas(false, true, true));
+  assert.deepEqual(areasForPaths(['docs/evals/2026-10-29-phoenix-calibracao/result-after-unknown-sid.json']), areas(false, true, false));
+  assert.deepEqual(areasForPaths(['docs/design/2026-10-23-variacoes/a.png']), areas(false, true, false));
 });
 
 test('workflow, root tooling and unknown paths turn on every area', () => {
