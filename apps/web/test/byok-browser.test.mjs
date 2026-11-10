@@ -5,18 +5,20 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
-import { sessionCookie } from './session-cookie.mjs';
+import { sessionCookie, sessionCookieHeaders } from './session-cookie.mjs';
 import { connectOwnOpenAiKey } from './openai-credentials.mjs';
+import { waitForApp } from './wait-for-app.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('chave permanece só em memória e é limpa ao trocar de conta, desconectar ou sair', { skip: !existsSync(browserPath), timeout: 90000 }, async t => {
   const socket = createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port; await new Promise(resolve => socket.close(resolve));
   const origin = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: 'ignore', env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin } });
+  let startup = '';
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: ['ignore', 'pipe', 'pipe'], env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin } });
+  for (const stream of [child.stdout, child.stderr]) stream.on('data', value => { startup = (startup + value.toString()).slice(-6000); });
   t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
-  const deadline = Date.now() + 30000;
-  while (true) { try { if ((await fetch(origin)).ok) break; } catch {} if (Date.now() > deadline) throw new Error('aplicação indisponível'); await new Promise(resolve => setTimeout(resolve, 200)); }
+  await waitForApp({ url: origin, child, signal: t.signal, headers: sessionCookieHeaders(origin), nextApp: true, diagnostics: () => startup });
   const browser = await chromium.launch({ executablePath: browserPath, headless: true }); t.after(() => browser.close());
   const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
   page.setDefaultTimeout(10000);

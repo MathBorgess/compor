@@ -155,7 +155,7 @@ npm run quality:performance
 npm run quality:maintenance
 ```
 
-Não rode browser e Lighthouse concorrentes ao medir performance. Os [gates](quality/gates.md) definem escopo, orçamentos e limites. O [ADR 0018](adr/0018-gates-qualidade-e-performance.md) distingue bloqueios automáticos, diagnósticos e revisão. O workflow Quality não faz deploy nem usa credenciais de geração. O empacotamento de deploy precisa acompanhar o grafo de dependências e a configuração TypeScript; build do checkout não comprova build do bundle de deploy.
+Não rode browser e Lighthouse concorrentes ao medir performance. Os [gates](quality/gates.md) definem escopo, orçamentos e limites. O [ADR 0018](adr/0018-gates-qualidade-e-performance.md) distingue bloqueios automáticos, diagnósticos e revisão. O workflow Quality executa nos PRs e manualmente; por decisão de Matheus em 10/11/2026, não repete os checks no push da `main`. A execução manual mantém todas as áreas. Quality não faz deploy nem usa credenciais de geração. O empacotamento de deploy precisa acompanhar o grafo de dependências e a configuração TypeScript; build do checkout não comprova build do bundle de deploy.
 
 O workflow separado [Supabase migrations](../.github/workflows/supabase-migrations.yml) é acionado em todo push na `main` ou manualmente na `main`. O preflight exige habilitação explícita e referências de projeto correspondentes. A trava transacional durável exige bootstrap separado, descrito no [ADR 0027](adr/0027-trava-automacao-migrations.md). Testes locais não comprovam identidade, histórico ou esquema do ambiente de produção.
 
