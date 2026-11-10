@@ -61,7 +61,11 @@ export async function searchReferences({query,signals,history=[],fetchApi=fetch}
   const seen=new Set<string>();
   const ranked=[...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
   const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
-  const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
+  const choices=new Map<string,ReferenceSignal['action']>();
+  for(const signal of currentSignals(signals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
+    if(signal.action!=='comment'&&!choices.has(signal.originUrl))choices.set(signal.originUrl,signal.action);
+  }
+  const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
     const historyRank=(historyOrder.get(a.originUrl)??Infinity)-(historyOrder.get(b.originUrl)??Infinity);
     if(historyRank)return historyRank;
     const score=(title:string)=>{const text=title.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();return terms.reduce((sum,term)=>sum+Number(text.includes(term)),0);};

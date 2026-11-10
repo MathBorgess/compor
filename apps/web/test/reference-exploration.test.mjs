@@ -30,6 +30,15 @@ test('histórico próprio ordena aprovações antes de seleções recentes e ded
   assert.deepEqual(result.references.map(item=>item.title),['Histórico aprovado','Escolha recente']);
   assert.equal(Object.hasOwn(result.references[0],'approvedVersions'),false,'a resposta de busca mantém o contrato anterior');
 });
+test('um pin recusado não retorna pelo RSS e uma seleção posterior permite apresentá-lo',async()=>{
+  const rejected={...signal,id:'00000000-0000-4000-8000-000000000006',action:'rejected',supersedes:signal.id,createdAt:'2026-11-09T12:00:00.000Z'};
+  const selected={...signal,id:'00000000-0000-4000-8000-000000000007',supersedes:rejected.id,createdAt:'2026-11-09T12:01:00.000Z'};
+  const fetchApi=async()=>new Response(feed);
+  const hidden=await searchReferences({query:'tipografia',signals:[signal,rejected],fetchApi});
+  assert.deepEqual(hidden.references,[]);assert.equal(hidden.status,'empty');
+  const restored=await searchReferences({query:'tipografia',signals:[signal,rejected,selected],fetchApi});
+  assert.equal(restored.references[0]?.originUrl,originUrl);
+});
 test('consulta de histórico só lê a conta autenticada, sem autorização para busca externa',async()=>{
   let reads=0,searches=0;
   const route=createReferenceHistoryRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[],insert:async()=>signal,history:async()=>{reads++;return [];}}),search:async()=>{searches++;throw Error('external call');}});
