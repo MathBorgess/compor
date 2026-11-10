@@ -37,8 +37,8 @@ export function createReferenceSignalStore({config,actor,fetchApi=fetch}:{config
     if(saved.projectId!==signal.projectId||saved.id!==signal.id||saved.originUrl!==signal.originUrl||saved.board!==signal.board||saved.action!==signal.action||saved.comment!==signal.comment||saved.supersedes!==signal.supersedes||!sameReference)throw Error('invalid signal response');
     return saved;
   }
-  async function history(){
-    const response=await fetchApi(new URL('/rest/v1/rpc/list_reference_history',config.service),{method:'POST',headers:{...headers,'content-type':'application/json'},body:'{}',redirect:'error',signal:AbortSignal.timeout(5000)});
+  async function history(projectId:string){
+    const response=await fetchApi(new URL('/rest/v1/rpc/list_reference_history',config.service),{method:'POST',headers:{...headers,'content-type':'application/json'},body:JSON.stringify({p_project_id:projectId}),redirect:'error',signal:AbortSignal.timeout(5000)});
     if(!response.ok)throw Error('history unavailable');
     return z.array(referenceHistoryEntrySchema).max(100).parse(await response.json());
   }

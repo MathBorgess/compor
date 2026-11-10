@@ -5,7 +5,7 @@ import { searchReferences } from './reference-exploration.ts';
 
 const searchInput=z.strictObject({projectId:z.uuid(),query:z.string().trim().min(1).max(1000),consentExternalSearch:z.literal(true)});
 const signalInput=referenceSignalInputSchema;
-type Store={list:(projectId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:()=>Promise<ReferenceHistoryEntry[]>};
+type Store={list:(projectId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:(projectId:string)=>Promise<ReferenceHistoryEntry[]>};
 type Dependencies={appOrigin:string;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:(actor:Actor)=>Store;search?:typeof searchReferences};
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 async function json(request:Request) {
@@ -27,8 +27,8 @@ export function createReferenceSearchRoute(deps:Dependencies) {
     try {
       const actor=await authorize(request,deps,input.projectId);if(!actor)return reply({error:'not_found'},404);
       const store=deps.store(actor);
-      const [signals,history]=await Promise.all([store.list(),store.history?store.history():Promise.resolve([])]);
-      const result=await (deps.search??searchReferences)({query:input.query,signals,history});
+      const [signals,history]=await Promise.all([store.list(input.projectId),store.history?store.history(input.projectId):Promise.resolve([])]);
+      const result=await (deps.search??searchReferences)({projectId:input.projectId,query:input.query,signals,history});
       return reply(result);
     } catch {return reply({status:'unavailable',references:[]},503);}
   };
@@ -39,7 +39,7 @@ export function createReferenceHistoryRoute(deps:Dependencies) {
     try {
       const actor=await authorize(request,deps,input.projectId);if(!actor)return reply({error:'not_found'},404);
       const store=deps.store(actor);if(!store.history)throw Error('history unavailable');
-      return reply(referenceHistoryResponseSchema.parse({references:await store.history()}));
+      return reply(referenceHistoryResponseSchema.parse({references:await store.history(input.projectId)}));
     }catch{return reply({error:'unavailable'},503);}
   };
 }

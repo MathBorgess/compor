@@ -45,9 +45,10 @@ async function readBounded(response:Response):Promise<string> {
   finally { await reader.cancel().catch(()=>{}); }
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
-export async function searchReferences({query,signals,history=[],fetchApi=fetch}:{query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];fetchApi?:typeof fetch}) {
+export async function searchReferences({projectId,query,signals,history=[],fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];fetchApi?:typeof fetch}) {
+  const projectSignals=signals.filter(signal=>signal.projectId===projectId);
   const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
-  const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(signals)});
+  const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(projectSignals)});
   const boards=[...new Set(routed.board_allocations.map(item=>item.board).filter(board=>!board.endsWith('/feed')))];
   const responses=await Promise.all(boards.map(async board=>{
     try {
@@ -62,7 +63,7 @@ export async function searchReferences({query,signals,history=[],fetchApi=fetch}
   const ranked=[...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
   const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
   const choices=new Map<string,ReferenceSignal['action']>();
-  for(const signal of currentSignals(signals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
+  for(const signal of currentSignals(projectSignals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
     if(signal.action!=='comment'&&!choices.has(signal.originUrl))choices.set(signal.originUrl,signal.action);
   }
   const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{

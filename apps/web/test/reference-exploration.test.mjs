@@ -19,14 +19,14 @@ test('usa sinais explícitos vigentes sem contar múltiplas vezes a mesma refer�
   assert.deepEqual(boardAffinities([signal,correction,comment]),[{board,positive_actions:0,total_impressions:1,affinity_score:1/3}]);
 });
 test('busca restrita a boards do catálogo e não envia briefing ao provedor',async()=>{
-  const urls=[];const result=await searchReferences({query:'tipografia informação privada',signals:[],fetchApi:async url=>{urls.push(String(url));return new Response(feed,{status:200});}});
+  const urls=[];const result=await searchReferences({projectId,query:'tipografia informação privada',signals:[],fetchApi:async url=>{urls.push(String(url));return new Response(feed,{status:200});}});
   assert.equal(result.status,'ok');assert.ok(result.references.length>0);assert.ok(urls.length>0);
   assert.ok(urls.every(url=>url.startsWith('https://www.pinterest.com/')&&!url.includes('privada')&&!url.includes('?')));
 });
 test('histórico próprio ordena aprovações antes de seleções recentes e deduplica o feed',async()=>{
   const prior={id:'12345',title:'Histórico aprovado',board,originUrl,previewUrl,approvedVersions:2,selectedAt:'2026-11-06T12:00:00.000Z'};
   const recent={...prior,id:'67890',originUrl:'https://www.pinterest.com/pin/67890/',title:'Escolha recente',approvedVersions:0,selectedAt:'2026-11-09T12:00:00.000Z'};
-  const result=await searchReferences({query:'tipografia',signals:[],history:[recent,prior],fetchApi:async()=>new Response(feed)});
+  const result=await searchReferences({projectId,query:'tipografia',signals:[],history:[recent,prior],fetchApi:async()=>new Response(feed)});
   assert.deepEqual(result.references.map(item=>item.title),['Histórico aprovado','Escolha recente']);
   assert.equal(Object.hasOwn(result.references[0],'approvedVersions'),false,'a resposta de busca mantém o contrato anterior');
 });
@@ -34,14 +34,28 @@ test('um pin recusado não retorna pelo RSS e uma seleção posterior permite ap
   const rejected={...signal,id:'00000000-0000-4000-8000-000000000006',action:'rejected',supersedes:signal.id,createdAt:'2026-11-09T12:00:00.000Z'};
   const selected={...signal,id:'00000000-0000-4000-8000-000000000007',supersedes:rejected.id,createdAt:'2026-11-09T12:01:00.000Z'};
   const fetchApi=async()=>new Response(feed);
-  const hidden=await searchReferences({query:'tipografia',signals:[signal,rejected],fetchApi});
+  const hidden=await searchReferences({projectId,query:'tipografia',signals:[signal,rejected],fetchApi});
   assert.deepEqual(hidden.references,[]);assert.equal(hidden.status,'empty');
-  const restored=await searchReferences({query:'tipografia',signals:[signal,rejected,selected],fetchApi});
+  const restored=await searchReferences({projectId,query:'tipografia',signals:[signal,rejected,selected],fetchApi});
   assert.equal(restored.references[0]?.originUrl,originUrl);
+});
+test('recusa do projeto B não veta histórico aprovado em A nem feed em C',async()=>{
+  const projectB=otherProject,projectC='00000000-0000-4000-8000-000000000020';
+  const history=[{id:'12345',title:'Escolha aprovada em A',board,originUrl,previewUrl,approvedVersions:1,selectedAt:signal.createdAt}];
+  const rejected={...signal,id:'00000000-0000-4000-8000-000000000006',projectId:projectB,action:'rejected',createdAt:'2026-11-09T12:00:00.000Z'};
+  const selected={...rejected,id:'00000000-0000-4000-8000-000000000007',action:'selected',supersedes:rejected.id,createdAt:'2026-11-09T12:01:00.000Z'};
+  const comment={...rejected,id:'00000000-0000-4000-8000-000000000008',action:'comment',comment:'Serve como contraponto',createdAt:'2026-11-09T12:02:00.000Z'};
+  const options={query:'tipografia',signals:[signal,rejected,comment],history,fetchApi:async()=>new Response(feed)};
+  assert.equal((await searchReferences({...options,projectId:projectC})).references[0]?.title,'Escolha aprovada em A');
+  assert.deepEqual((await searchReferences({...options,projectId:projectB})).references,[]);
+  assert.equal((await searchReferences({...options,projectId:projectB,signals:[...options.signals,selected]})).references[0]?.originUrl,originUrl);
+  const rejectA={...rejected,projectId,id:'00000000-0000-4000-8000-000000000009',supersedes:signal.id};
+  assert.equal((await searchReferences({...options,projectId:projectC,signals:[...options.signals,rejectA]})).references[0]?.title,'Escolha aprovada em A','recusa posterior em A não apaga aprovação histórica para C');
+  assert.equal((await searchReferences({...options,projectId:projectC,history:[]})).references[0]?.originUrl,originUrl,'RSS obedece o mesmo escopo local');
 });
 test('consulta de histórico só lê a conta autenticada, sem autorização para busca externa',async()=>{
   let reads=0,searches=0;
-  const route=createReferenceHistoryRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[],insert:async()=>signal,history:async()=>{reads++;return [];}}),search:async()=>{searches++;throw Error('external call');}});
+  const route=createReferenceHistoryRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[],insert:async()=>signal,history:async currentProject=>{assert.equal(currentProject,projectId);reads++;return [];}}),search:async()=>{searches++;throw Error('external call');}});
   assert.equal((await route(request({projectId:otherProject}))).status,404);
   assert.equal(reads,0);
   assert.deepEqual(await(await route(request({projectId}))).json(),{references:[]});
@@ -65,6 +79,14 @@ test('bloqueia busca sem consentimento ou projeto de outra pessoa',async()=>{
   assert.equal(searches,0);
   assert.equal((await route(request({projectId,query:'curso',consentExternalSearch:true}))).status,200);
   assert.equal(searches,1);
+});
+test('busca consulta decisões do projeto atual e histórico da conta no mesmo escopo de veto',async()=>{
+  let query;
+  const route=createReferenceSearchRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async()=>true,
+    store:()=>({list:async currentProject=>{assert.equal(currentProject,projectId);return [signal];},insert:async()=>signal,history:async currentProject=>{assert.equal(currentProject,projectId);return [];}}),
+    search:async input=>{query=input;return {status:'ok',references:[]};}});
+  assert.equal((await route(request({projectId,query:'tipografia',consentExternalSearch:true}))).status,200);
+  assert.equal(query.projectId,projectId);assert.deepEqual(query.signals,[signal]);
 });
 test('consulta e correção respeitam projeto, origem e tipo de sinal',async()=>{
   const recorded=[];const deps={appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[signal],insert:async input=>{recorded.push(input);return {...input,createdAt:'2026-11-06T12:02:00.000Z'};}})};
@@ -105,9 +127,9 @@ test('leitura do histórico usa RPC da conta e rejeita URL de prévia fora da fo
   const {createReferenceSignalStore}=await import('../lib/reference-signal-store.ts');
   let body=[{id:'12345',title:'Tipografia',board,originUrl,previewUrl,approvedVersions:1,selectedAt:signal.createdAt}],call;
   const store=createReferenceSignalStore({config:{service:'https://db.example',app:origin,key:'public'},actor:{userId:projectId,token:'jwt'},fetchApi:async(url,options)=>{call={url:new URL(url),options};return Response.json(body);}});
-  assert.equal((await store.history())[0].approvedVersions,1);assert.equal(call.url.pathname,'/rest/v1/rpc/list_reference_history');
-  assert.equal(call.options.headers.authorization,'Bearer jwt');assert.equal(call.options.body,'{}');
-  body=[{...body[0],previewUrl:'https://other.example/private.png'}];await assert.rejects(()=>store.history());
+  assert.equal((await store.history(projectId))[0].approvedVersions,1);assert.equal(call.url.pathname,'/rest/v1/rpc/list_reference_history');
+  assert.equal(call.options.headers.authorization,'Bearer jwt');assert.deepEqual(JSON.parse(call.options.body),{p_project_id:projectId});
+  body=[{...body[0],previewUrl:'https://other.example/private.png'}];await assert.rejects(()=>store.history(projectId));
 });
 
 test('aceita identificador opaco usado no feed público sem ampliar hosts',()=>{
