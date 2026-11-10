@@ -10,6 +10,8 @@ import { useStudioState } from "./use-studio-state";
 import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
+import { recordReferenceSelection } from "../lib/reference-selection";
+import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import { useExplorationLoop } from "./use-exploration-loop";
 import { selectedExplorationKey } from "../lib/exploration-batch";
@@ -224,6 +226,7 @@ function ProjectStudio({
   const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [editorRequested, setEditorRequested] = useState(false);
+  const [referencesRequested,setReferencesRequested] = useState(false);
   const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
     [versions, setVersions] = useState<PieceVersion[]>([]),
@@ -257,8 +260,10 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
-  const showBrief = !editorRequested && !base && !draft?.baseVersion && !draft?.content.headline && !draft?.content.price && !draft?.content.date && !draft?.content.caption && !draft?.content.fields?.length;
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, enabled: stageRestored && stage === "studio" && showBrief });
+  const hasPost = Boolean(editorRequested || base || draft?.baseVersion || draft?.content.headline || draft?.content.price || draft?.content.date || draft?.content.caption || draft?.content.fields?.length);
+  const showBrief = referencesRequested || !hasPost;
+  const idea = s?.messages.find(message=>message.role==='user')?.text || initialObjective;
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
   async function signOutSafely() {
     exploration.pause();
     try { if (!session.loading) await session.flush(); }
@@ -402,6 +407,7 @@ function ProjectStudio({
   }
   function newPost(pieceId:string = crypto.randomUUID()) {
     setEditorRequested(false);
+    setReferencesRequested(false);
     local.change((value) =>
       value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
         ? selectDraft(value, { pieceId, baseVersion: 0 })
@@ -413,6 +419,7 @@ function ProjectStudio({
     setStage("studio");
   }
   function openVersion(version:PieceVersion) {
+    setReferencesRequested(false);
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
       .reduce((n, v) => Math.max(n, v.version), 0);
@@ -758,8 +765,9 @@ function ProjectStudio({
     try { recordReferenceRound(local.get()); } catch {}
   }
   async function useExploredReference(reference:ExploredReference,file:File) {
+    if(!isAuthenticated())throw Error('studio_unavailable');
     if (local.get().references.some(item => item.source && 'originUrl' in item.source && item.source.originUrl === reference.originUrl)) return;
-    await storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file);
+    await recordReferenceSelection({userId,projectId:project.id,reference,commit:()=>storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)});
   }
   async function useGeneratedReference(imageId:string,file:File,ordinal?:number) {
     const alreadySelected=local.get().references.some(item => item.source && 'kind' in item.source && item.source.kind === 'generated' && item.source.projectId === project.id && item.source.imageId === imageId);
@@ -845,6 +853,11 @@ function ProjectStudio({
               pieceId: selected.pieceId,
               version: selected.baseVersion,
               expectedRevision: version.metadata?.revision ?? 0,
+              references:local.get().references.flatMap((reference):ApprovedReference[]=>{
+                const source=reference.source;
+                if(!source)return [];
+                return 'kind' in source ? [{kind:'generated',projectId:source.projectId,imageId:source.imageId}] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
+              }),
             }),
           });
           const data = approvedVersionSchema.parse(await response.json());
@@ -998,6 +1011,8 @@ function ProjectStudio({
                     }),
                   );
                   setDrawer(null);
+                  setReferencesRequested(false);
+                  setEditorRequested(true);
                   setStage("studio");
                 }}
               >
@@ -1074,10 +1089,10 @@ function ProjectStudio({
       </>}
       canvas={
         showBrief ? <div className="studio-brief">
-          <ReferenceExploration key={`references:${project.id}`} projectId={project.id} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} />
+          <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary" type="button" onClick={()=>{setReferencesRequested(false);setEditorRequested(true);}}>{hasPost?'Voltar ao post':'Definir textos da arte'}</button></div>
+          <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
           <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
-          <button className="studio-button-secondary" type="button" onClick={() => setEditorRequested(true)}>Definir textos da arte</button>
-        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} actions={<button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button>} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
           <label>
             Imagem-base PNG ou JPEG
             <input type="file" accept="image/png,image/jpeg" onChange={event => {

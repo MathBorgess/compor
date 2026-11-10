@@ -370,3 +370,53 @@ test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na ger
  assert.deepEqual(calls.find(call=>call.path==='/api/agent/image').body.artworkInput.literalText.fields,[field]);
  assert.deepEqual(errors,[]);
 });
+
+test('escolher mais referências preserva post e conversa e cada escolha inicia um único turno',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,versions,flow,errors}=await app(t);
+ const reference={id:'pin33',title:'Referência adicional',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/pin33/',previewUrl:'https://i.pinimg.com/236x/pin33.png'};
+ const selected=[],selectionTurns=[];
+ await page.route('https://i.pinimg.com/**',route=>route.fulfill({contentType:'image/png',body:png}));
+ await page.route('**/api/studio/references/history',route=>route.fulfill({json:{references:[]}}));
+ await page.route('**/api/studio/references/search',route=>route.fulfill({json:{status:'ok',references:[reference]}}));
+ await page.route('**/api/studio/references/preview',route=>route.fulfill({contentType:'image/png',body:png}));
+ await page.route('**/api/studio/references/signals',route=>{
+  const body=route.request().postDataJSON();if(!body.action)return route.fulfill({json:{signals:[]}});
+  selected.push(body);return route.fulfill({status:201,json:{signal:{...body,createdAt:'2026-11-09T12:00:00.000Z'}}});
+ });
+ await page.route(url=>url.pathname==='/api/studio/explorations'&&url.origin===origin,route=>{
+  if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
+  const body=route.request().postDataJSON();return route.fulfill({status:202,json:{status:'unknown',requestId:body.requestId}});
+ });
+ flow.chat=body=>{
+  if(body.op==='reference_selection'){selectionTurns.push(body);return {status:'completed',text:'Leitura editorial.\n\n**Recomendação:** Usar contraste.\n\nPosso seguir com contraste?'};}
+  return {status:'completed',text:'Contexto preservado na conversa.'};
+ };
+ await openOriginal(page,origin);await attachImage(page);
+ await page.getByLabel('Legenda',{exact:true}).fill('Legenda preservada ao procurar referências.');
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero comunicar uma oficina');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Contexto preservado na conversa.',{exact:true}).waitFor();
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Rascunho de conversa não enviado');
+ const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
+ const originalVersions=structuredClone(versions);
+ await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('heading',{name:'Referências para sua ideia',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
+ assert.equal(await page.getByLabel('Legenda',{exact:true}).inputValue(),'Legenda preservada ao procurar referências.');
+ await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).inputValue(),'Rascunho de conversa não enviado');
+ assert.deepEqual(await stored(page),before);assert.deepEqual(versions,originalVersions);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('');
+ await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
+ await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
+ await page.getByText('Posso seguir com contraste?',{exact:true}).waitFor({timeout:15000});
+ assert.equal(selected.length,1);assert.equal(selectionTurns.length,1);assert.equal(selected[0].action,'selected');
+ await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('button',{name:'Selecionada: Referência adicional'}).waitFor();
+ assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Remover referência',exact:true}).click();await closeDrawer(page);
+ await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
+ await eventually(()=>selectionTurns.length,count=>count===2,15000);
+ assert.equal(selected.length,2);assert.notEqual(selected[0].id,selected[1].id);
+ assert.deepEqual(errors,[]);
+});
