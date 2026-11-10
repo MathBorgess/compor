@@ -35,6 +35,7 @@ export type StudioShellProps = {
   conversationFocus?: boolean;
   chatMessageCount?: number;
   headerActions?: ReactNode;
+  context?: ReactNode;
   footer?: ReactNode;
   overlays?: ReactNode;
   bases?: ReactNode;
@@ -86,6 +87,7 @@ export default function StudioShell({
   conversationFocus = false,
   chatMessageCount = 0,
   headerActions,
+  context,
   footer,
   overlays,
   bases = null,
@@ -409,6 +411,7 @@ export default function StudioShell({
           </div>
         </div>
       </header>
+      {isStudio ? context : null}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         {showChat ? (
           <div className="studio-chat-slot" style={chatHeight===null?undefined:{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>

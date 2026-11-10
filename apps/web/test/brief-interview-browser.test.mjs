@@ -98,9 +98,9 @@ async function openProject(page, origin) {
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, external} = await app(t);
   await openProject(page, origin);
-  const summary = page.getByRole('region', {name: 'O que estamos construindo', exact: true});
+  const summary = page.getByRole('region', {name: 'Contexto do projeto', exact: true});
   await page.getByRole('region', {name: 'Buscar referências visuais', exact: true}).waitFor();
-  await summary.getByText('Conte sua ideia na conversa. Os pontos importantes aparecem aqui.', {exact: true}).waitFor();
+  await summary.getByText('O que vamos divulgar?', {exact: true}).waitFor();
   assert.equal(await page.getByLabel('Entrevista do brief', {exact: true}).count(), 0);
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
@@ -114,7 +114,7 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   await page.reload();
   await page.getByRole('button', {name: /Direção opcional/}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await page.getByRole('region', {name: 'O que estamos construindo', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
+  await page.getByRole('region', {name: 'Contexto do projeto', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
   assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);

@@ -20,7 +20,7 @@ export interface BriefDecision {
   question: string; limit: string; options: readonly BriefOption[];
 }
 export interface BriefOptionalPrompt {
-  id: Exclude<BriefPromptId, BriefDecisionId>; required?: false; field?: "audience";
+  id: Exclude<BriefPromptId, BriefDecisionId>; required?: false; field?: "facts";
   skip: string; question: string;
 }
 export type BriefPrompt = ({ kind: "decision" } & BriefDecision) | ({ kind: "optional" } & BriefOptionalPrompt);
@@ -132,7 +132,7 @@ export const briefDecisions: readonly BriefDecision[] = [
 ];
 
 export const optionalPrompts: readonly BriefOptionalPrompt[] = [
-  { id: "fatos", field: "audience", skip: "fatos", question: "Tem algum fato que precisa entrar?" },
+  { id: "fatos", field: "facts", skip: "fatos", question: "Tem algum fato que precisa entrar?" },
   { id: "referencias", skip: "referências", question: "Tem uma referência para guardar?" },
   { id: "preco", skip: "preço", question: "Quer informar um preço?" },
   { id: "data", skip: "data", question: "Quer informar uma data?" },
@@ -286,9 +286,12 @@ export function recordFromStudio(state: unknown): BriefRecord {
   if (!object(state)) return record;
   const brief = object(state.brief) ? state.brief : {};
   const persona = object(state.persona) ? state.persona : {};
+  const briefAudience=typeof brief.audience==='string'?brief.audience.trim():'';
+  const personaAudience=typeof persona.audience==='string'?persona.audience.trim():'';
+  const audience=briefAudience && personaAudience && briefAudience!==personaAudience?'':briefAudience||personaAudience;
   const entries: [BriefPromptId, unknown][] = [
-    ["produto", brief.offer], ["persona", persona.audience], ["objetivo", brief.action],
-    ["personalidade", brief.direction], ["fatos", brief.audience],
+    ["produto", brief.offer], ["persona", audience], ["objetivo", brief.action],
+    ["personalidade", brief.direction],
   ];
   for (const [id, text] of entries) {
     if (validBriefText(text, id) && text.trim()) record[id] = { text, origin: "informado" };

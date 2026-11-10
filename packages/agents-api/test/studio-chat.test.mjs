@@ -47,6 +47,27 @@ test('submit cria uma sessão assíncrona e repetição consulta sem nova geraç
  r=await f.chat(request(body));assert.equal((await r.json()).status,'running');assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  f.set({status:'idle',turnState:'completed'});r=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal((await r.json()).text,'Atualização concluída na aba.');
 });
+test('o contexto conserva estados dos fatos e deixa a escolha do público divergente para a pessoa',async()=>{
+ const f=fixture(),facts=[{id:request2,label:'Preço',value:'R$ 180',status:'confirmed'},{id:attemptId,label:'Data',value:'18/11',status:'pending'},{id:requestId,label:'Local',value:'Endereço reservado',status:'omitted'}];
+ const context={...body.context,brief:{offer:'Oficina',audience:'Descrição do briefing'},persona:{audience:'Descrição da persona'},audienceResolution:{status:'conflict',brief:'Descrição do briefing',persona:'Descrição da persona'},offerFacts:facts};
+ assert.equal((await f.chat(request({...body,context}))).status,202);
+ const create=f.calls.find(call=>call.method==='POST'&&call.url.endsWith('/sessions'));
+ const forwarded=JSON.parse(create.body.input[0].content[0].text).context;
+ assert.deepEqual(forwarded.offerFacts,facts);assert.deepEqual(forwarded.audienceResolution,context.audienceResolution);
+ assert.match(create.body.agent.instructions,/não escolha, una ou substitua os valores por suposição/);assert.match(create.body.agent.instructions,/Não apresente fatos pendentes como confirmados nem inclua os omitidos/);
+});
+test('o servidor recusa fatos e resoluções adulterados antes de reservar ou chamar o fornecedor',async()=>{
+ const fact={id:request2,label:'Preço',value:'R$ 180',status:'confirmed'};
+ const base={...body.context,brief:{audience:'Público escolhido'},persona:{audience:'Público escolhido'}};
+ const invalid=[
+  {offerFacts:[{...fact,status:'inferred'}]}, {offerFacts:[fact,fact]}, {offerFacts:[{...fact,value:'sk-synthetic-key'}]}, {offerFacts:[{...fact,source:'invented'}]},
+  {offerFacts:[{...fact,label:'Nome\nextra'}]}, {offerFacts:Array.from({length:21},(_,index)=>({...fact,id:`00000000-0000-4000-8000-${String(index).padStart(12,'0')}`}))},
+  {audienceResolution:{status:'resolved',value:'Outro público'}}, {audienceResolution:{status:'conflict',brief:'Público escolhido',persona:'Público escolhido'}},
+  {audienceResolution:{status:'resolved',value:'Público escolhido',inferred:true}},
+ ];
+ for(const patch of invalid){const f=fixture();assert.equal((await f.chat(request({...body,context:{...base,...patch}}))).status,400);assert.equal(f.records.size,0);assert.deepEqual(f.calls,[]);}
+ const f=fixture();assert.equal((await f.chat(request({...body,context:{...base,audienceResolution:{status:'resolved',value:'Público escolhido'},offerFacts:[]}}))).status,202);
+});
 test('próxima mensagem reutiliza sessão Terra ociosa e nunca direciona turno ativo',async()=>{
  const f=fixture();await f.chat(request(body));const busy=await f.chat(request({...body,requestId:request2}));assert.equal(busy.status,409);
  f.set({status:'idle',turnState:'completed'});await f.chat(request({op:'poll',apiKey,projectId,requestId}));

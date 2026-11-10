@@ -12,7 +12,7 @@ const origins = [
   ['unknown', 'Ainda não sei'],
 ];
 
-export default function PersonaStep({ value, onChange, onContinue, onBack, disabled = false }: { value?: Persona; onChange: (persona: Persona) => void; onContinue: (persona: Persona) => void; onBack?: () => void; disabled?: boolean }) {
+export default function PersonaStep({ value, onChange, onContinue, onBack, disabled = false, showAudience = true }: { value?: Persona; onChange: (persona: Persona) => void; onContinue: (persona: Persona) => void; onBack?: () => void; disabled?: boolean;showAudience?:boolean }) {
   const id = useId();
   const persona = { ...empty, ...value, claims: value?.claims ?? [] };
   const edit = <K extends keyof Persona>(field: K, content: Persona[K]) => onChange({ ...persona, [field]: content });
@@ -29,8 +29,7 @@ export default function PersonaStep({ value, onChange, onContinue, onBack, disab
     <p>Pense em quem pode comprar seu infoproduto. Você pode seguir mesmo sem saber tudo.</p>
     <fieldset className="persona-fields" disabled={disabled}>
       <legend className="sr-only">O que você conhece sobre a pessoa compradora</legend>
-      <label htmlFor={`${id}-audience`}>Quem você quer alcançar?</label>
-      <textarea id={`${id}-audience`} value={persona.audience} maxLength={2000} onChange={event => edit('audience', event.target.value)} placeholder="Descreva o público que imagina alcançar." />
+      {showAudience ? <><label htmlFor={`${id}-audience`}>Quem você quer alcançar?</label><textarea id={`${id}-audience`} value={persona.audience} maxLength={4000} onChange={event => edit('audience', event.target.value)} placeholder="Descreva o público que imagina alcançar." /></> : <p>O público é editado na faixa de contexto do projeto.</p>}
       <label htmlFor={`${id}-situation`}>Em que situação essa pessoa está?</label>
       <textarea id={`${id}-situation`} value={persona.situation} maxLength={2000} onChange={event => edit('situation', event.target.value)} placeholder="Conte um contexto ou episódio que você conhece." />
       <label htmlFor={`${id}-need`}>O que ela quer conseguir?</label>

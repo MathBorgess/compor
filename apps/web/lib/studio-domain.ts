@@ -37,6 +37,8 @@ export const personaSchema=z.strictObject({audience:z.string(),situation:z.strin
 export type Persona=z.infer<typeof personaSchema>;
 export const briefSchema=z.strictObject({offer:z.string(),audience:z.string(),action:z.string(),direction:z.string()});
 export type Brief=z.infer<typeof briefSchema>;
+export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value)),status:z.enum(['confirmed','pending','omitted'])});
+export type OfferFact=z.infer<typeof offerFactSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
 export type RequestStatus=z.infer<typeof requestStatusSchema>;
 export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema});
@@ -53,7 +55,7 @@ export const actionResultSchema=z.strictObject({status:z.enum(['completed','decl
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
-export const studioStateSchema=z.strictObject({schemaVersion:z.literal(1),userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),brief:briefSchema,persona:personaSchema,selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
+export const studioStateSchema=z.strictObject({schemaVersion:z.literal(1),userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;
 export type StudioScope=Pick<StudioState,'userId'|'projectId'>;
 export interface StoredImage {file:Blob;metadata?:unknown}

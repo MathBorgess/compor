@@ -18,6 +18,10 @@ A tela de revisão mostra o editor inteiro, o envio de imagem-base, o salvamento
 
 **Faixa de contexto.** Oferta, fatos, público e direção ficam numa faixa sempre visível no estúdio, editável no lugar. Cada fato mostra se está confirmado, pendente ou omitido. A gaveta Marca continua para os detalhes da persona e para os critérios com exemplos e contraexemplos. Conexão e controles de exploração continuam recolhidos. O layout exato, faixa no topo ou coluna lateral, sai de um protótipo descartável que também considera os cards do [ADR 0030](0030-variante-retoque-e-cards-no-canvas.md), no computador e no celular.
 
+**Escolha do layout em 09/11/2026.** Na continuação desta sessão do Codex, Matheus orientou “Não me peça nada” e delegou as escolhas a um subagente com personalidade de diretor de publicidade e crítico de Agent Experience, voltado a pessoas leigas em IA. O diretor comparou as alternativas no computador e no celular e escolheu a **faixa no topo**: preserva mais largura para as artes e mantém o mesmo modelo de navegação nos dois tamanhos. Esta revisão delegada substitui a espera anterior pela escolha pessoal de Matheus, sem afirmar que houve teste com pessoas reais.
+
+As [capturas do topo no computador](../quality/layout-2026-11-09/top-desktop.png), [topo no celular](../quality/layout-2026-11-09/top-mobile.png), [coluna no computador](../quality/layout-2026-11-09/side-desktop.png) e [coluna no celular](../quality/layout-2026-11-09/side-mobile.png) conservam os dois protótipos descartáveis. As telas usam dados e artes sintéticos. O HTML do protótipo não integra o aplicativo. A faixa implementada usa quatro grupos acionáveis: oferta, público, direção e fatos; corpo de 14 px, apoio de pelo menos 12 px, alvos de 44 px e rolagem vertical no celular. A conversa não substitui a edição desses campos.
+
 **Revisão.** A tela de revisão mostra a imagem, o título do projeto, a legenda com "Copiar legenda" e o botão "Baixar PNG". O download compõe o PNG no clique, sem passo prévio, e o nome do arquivo usa o título e a versão. O formato continua PNG, e PDF fica fora.
 
 Saem da revisão:

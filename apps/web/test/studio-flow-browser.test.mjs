@@ -86,8 +86,9 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
  await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await openEditor(page);
- await openDrawer(page,'Marca');
- await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
+ const publicField=page.getByRole('region',{name:'Contexto do projeto',exact:true}).locator('summary').nth(1);await publicField.click();
+ await page.getByLabel('Público do projeto',{exact:true}).fill('Pessoas interessadas em aprender');await publicField.click();
+ await openDrawer(page,'Marca');assert.equal(await page.getByLabel('Quem você quer alcançar?',{exact:true}).count(),0);
  await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);

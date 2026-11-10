@@ -6,6 +6,7 @@ import { createExplorationPrompt } from "@compor/agile-deliberation/exploration"
 import { criterionChoice } from "../lib/studio-direction";
 import { pendingSelectionQuestion } from "../lib/studio-state";
 import type { StudioState } from "../lib/studio-domain";
+import {audienceResolution} from '../lib/studio-context.ts';
 import { generatedSignalsSchema,currentGeneratedFeedback } from "../lib/generated-feedback-contract";
 import { markBeforeDispatch } from "../lib/exploration-pending";
 import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
@@ -48,7 +49,8 @@ export function useExplorationLoop(props: LoopProps) {
   const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;
   waitsForAnswer.current = awaitingAnswer;
-  const ready = Boolean(props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+  const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
+  const ready = !audienceConflict && Boolean(props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
 
   useEffect(() => {
     try {
@@ -169,7 +171,9 @@ export function useExplorationLoop(props: LoopProps) {
             const accepted = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "accept").slice(0,4).map(item => item.statement.slice(0,160));
             const rejected = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "reject").slice(0,4).map(item => item.statement.slice(0,160));
             const feedback=[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)];
-            const { prompt,composition,contrast } = createExplorationPrompt({ offer: state.brief.offer, audience: state.persona.audience, briefAudience: state.brief.audience, goal: state.brief.action, direction: state.brief.direction, accepted, rejected, feedback, sequence });
+            const audience=audienceResolution(latestState);
+            if(audience.status==='conflict')return;
+            const { prompt,composition,contrast } = createExplorationPrompt({ offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });
             const requestId = crypto.randomUUID();
             const batch={id:progress.batchId,position:progress.completed+1};
             const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};
@@ -255,6 +259,6 @@ export function useExplorationLoop(props: LoopProps) {
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
-  const running = props.enabled && !awaitingAnswer;
-  return { status: awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  const running = props.enabled && !awaitingAnswer && !audienceConflict;
+  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }
