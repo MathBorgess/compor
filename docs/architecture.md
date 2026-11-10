@@ -161,6 +161,8 @@ O workflow já executou no GitHub Actions; os ajustes necessários ao runner est
 
 ## Limites e histórico
 
+O histórico de referências da [issue #33](https://github.com/MathBorgess/compor/issues/33) usa `reference_signals.reference_data` para metadados de pins escolhidos e `piece_version_reference_links` para ligar seleções reais às versões aprovadas. `POST /api/studio/references/history` lê somente a conta autenticada, sem acesso externo. A busca prioriza esse histórico, com versões explicitamente aprovadas antes de escolhas recentes. `PATCH /api/pieces` aceita fontes opcionais do contexto; com elas, `approve_piece_version_with_references` valida seleções próprias e aprova com vínculos na mesma transação. A aprovação antiga continua compatível e não cria vínculos por inferência. URLs externas continuam dados não confiáveis e imagens não são hospedadas. A migration só chega à produção no merge final. Ver [ADR 0037](adr/0037-referencias-sugeridas-e-retorno-ao-post.md).
+
 Evidências reais anteriores estão em [estúdio marco 0](compor/estudio-web-marco0.md) e [isolamento e proteção](compor/isolamento-e-protecao-dados-marco0.md), com seus escopos e pendências. Testes novos com fixtures não herdam a prova de uma execução anterior. A metodologia não comprova qualidade criativa nem representa audiência real.
 
 O [ADR 0011](adr/0011-agents-api-e-mcp-remoto.md) permanece com status histórico `proposed`. Este mapa registra a Agents API observada na implementação, sem alterar aquela aprovação. A [arquitetura v0](arquitetura-v0.md) preserva a direção de 27/10/2026; os contratos atuais e suas diferenças estão neste guia e nos ADRs posteriores.

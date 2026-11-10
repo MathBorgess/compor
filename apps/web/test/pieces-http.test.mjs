@@ -55,6 +55,10 @@ test('base explícita e aprovação usam contratos distintos sem aceitar aprova�
  const patch=body=>new Request('https://compor.test/api/pieces',{method:'PATCH',headers:{origin:'https://compor.test','content-type':'application/json'},body:JSON.stringify(body)});
  assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0}))).status,409);
  assert.deepEqual(approved,{projectId,pieceId,version:2,expectedRevision:0});
+ const references=[{kind:'pinterest',originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'},{kind:'generated',projectId,imageId:pieceId}];
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,references}))).status,409);
+ assert.deepEqual(approved.references,references);
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,references:[{...references[0],approvedVersions:100}]}))).status,400);
  assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,approvedBy:userId}))).status,400);
 });
 

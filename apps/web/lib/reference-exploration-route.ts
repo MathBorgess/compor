@@ -1,12 +1,11 @@
 import { z } from 'zod';
 import type { Actor } from './agent-auth.ts';
-import { boardSlugSchema } from './phoenix/catalog.ts';
-import { pinOriginSchema, referenceSignalSchema, type ReferenceSignal } from './reference-exploration-contract.ts';
+import { referenceHistoryResponseSchema, referenceSignalInputSchema, referenceSignalSchema, type ReferenceSignal, type ReferenceHistoryEntry } from './reference-exploration-contract.ts';
 import { searchReferences } from './reference-exploration.ts';
 
 const searchInput=z.strictObject({projectId:z.uuid(),query:z.string().trim().min(1).max(1000),consentExternalSearch:z.literal(true)});
-const signalInput=z.strictObject({id:z.uuid(),projectId:z.uuid(),originUrl:pinOriginSchema,board:boardSlugSchema,action:z.enum(['selected','rejected','comment']),comment:z.string().trim().max(1000),supersedes:z.uuid().nullable()}).superRefine((value,ctx)=>{if(value.action==='comment'&&!value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});});
-type Store={list:(projectId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>};
+const signalInput=referenceSignalInputSchema;
+type Store={list:(projectId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:()=>Promise<ReferenceHistoryEntry[]>};
 type Dependencies={appOrigin:string;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:(actor:Actor)=>Store;search?:typeof searchReferences};
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 async function json(request:Request) {
@@ -27,10 +26,21 @@ export function createReferenceSearchRoute(deps:Dependencies) {
     let input:z.infer<typeof searchInput>;try{input=searchInput.parse(await json(request));}catch{return reply({error:'invalid_request'},400);}
     try {
       const actor=await authorize(request,deps,input.projectId);if(!actor)return reply({error:'not_found'},404);
-      const signals=await deps.store(actor).list();
-      const result=await (deps.search??searchReferences)({query:input.query,signals});
+      const store=deps.store(actor);
+      const [signals,history]=await Promise.all([store.list(),store.history?store.history():Promise.resolve([])]);
+      const result=await (deps.search??searchReferences)({query:input.query,signals,history});
       return reply(result);
     } catch {return reply({status:'unavailable',references:[]},503);}
+  };
+}
+export function createReferenceHistoryRoute(deps:Dependencies) {
+  return async(request:Request)=>{
+    let input:{projectId:string};try{input=z.strictObject({projectId:z.uuid()}).parse(await json(request));}catch{return reply({error:'invalid_request'},400);}
+    try {
+      const actor=await authorize(request,deps,input.projectId);if(!actor)return reply({error:'not_found'},404);
+      const store=deps.store(actor);if(!store.history)throw Error('history unavailable');
+      return reply(referenceHistoryResponseSchema.parse({references:await store.history()}));
+    }catch{return reply({error:'unavailable'},503);}
   };
 }
 export function createReferenceSignalsRoute(deps:Dependencies) {

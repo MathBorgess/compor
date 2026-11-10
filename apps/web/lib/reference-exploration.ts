@@ -1,6 +1,6 @@
 import { createPhoenixHyperparams } from './phoenix/hyperparams.ts';
 import { deterministicRouteBoards } from './phoenix/deterministic.ts';
-import { exploredReferenceSchema, type ExploredReference, type ReferenceSignal } from './reference-exploration-contract.ts';
+import { exploredReferenceSchema, type ExploredReference, type ReferenceSignal, type ReferenceHistoryEntry } from './reference-exploration-contract.ts';
 import type { BoardAffinityEntry, UserTasteProfile } from './phoenix/models.ts';
 
 const MAX_FEED_BYTES = 1024 * 1024;
@@ -45,7 +45,7 @@ async function readBounded(response:Response):Promise<string> {
   finally { await reader.cancel().catch(()=>{}); }
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
-export async function searchReferences({query,signals,fetchApi=fetch}:{query:string;signals:ReferenceSignal[];fetchApi?:typeof fetch}) {
+export async function searchReferences({query,signals,history=[],fetchApi=fetch}:{query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];fetchApi?:typeof fetch}) {
   const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
   const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(signals)});
   const boards=[...new Set(routed.board_allocations.map(item=>item.board).filter(board=>!board.endsWith('/feed')))];
@@ -59,7 +59,11 @@ export async function searchReferences({query,signals,fetchApi=fetch}:{query:str
   const normalized=query.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
   const terms=normalized.split(/[^a-z0-9]+/).filter(term=>term.length>=3);
   const seen=new Set<string>();
-  const references=responses.flatMap(item=>item.items).filter(item=>{if(seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
+  const ranked=[...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
+  const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
+  const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
+    const historyRank=(historyOrder.get(a.originUrl)??Infinity)-(historyOrder.get(b.originUrl)??Infinity);
+    if(historyRank)return historyRank;
     const score=(title:string)=>{const text=title.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();return terms.reduce((sum,term)=>sum+Number(text.includes(term)),0);};
     return score(b.title)-score(a.title);
   }).slice(0,12);

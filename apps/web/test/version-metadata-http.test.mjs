@@ -19,6 +19,10 @@ test('save v2 mantém base e revisão esperada; aprovação é consultada do ser
  response={status:'approved',version:{...version,metadata:{...version.metadata,revision:1,approval:{status:'approved',kind:'explicit',sourceVersion:3,at:'2026-11-05T00:00:00.000Z'}}}};
  assert.equal((await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0})).status,'approved');
  assert.equal(call.url.pathname,'/rest/v1/rpc/approve_piece_version');
+ const references=[{kind:'pinterest',originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}];
+ assert.equal((await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0,references})).status,'approved');
+ assert.equal(call.url.pathname,'/rest/v1/rpc/approve_piece_version_with_references');
+ assert.deepEqual(JSON.parse(call.options.body),{p_project_id:projectId,p_piece_id:pieceId,p_version:3,p_expected_revision:0,p_references:references});
  response={status:'approved',version:{...version,project_id:'outra-conta'}};await assert.rejects(()=>store.approve(context,{projectId,pieceId,version:3,expectedRevision:0}));
 });
 

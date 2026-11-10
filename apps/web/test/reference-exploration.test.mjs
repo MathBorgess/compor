@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {parseReferenceFeed,boardAffinities,searchReferences} from '../lib/reference-exploration.ts';
-import {createReferenceSearchRoute,createReferenceSignalsRoute} from '../lib/reference-exploration-route.ts';
+import {createReferenceSearchRoute,createReferenceSignalsRoute,createReferenceHistoryRoute} from '../lib/reference-exploration-route.ts';
 const projectId='00000000-0000-4000-8000-000000000001',otherProject='00000000-0000-4000-8000-000000000002';
 const board='behance/typography', originUrl='https://www.pinterest.com/pin/12345/',previewUrl='https://i.pinimg.com/236x/aa/bb/image.jpg';
 const signal={id:'00000000-0000-4000-8000-000000000003',projectId,originUrl,board,action:'selected',comment:'',supersedes:null,createdAt:'2026-11-06T12:00:00.000Z'};
@@ -22,6 +22,31 @@ test('busca restrita a boards do catálogo e não envia briefing ao provedor',as
   const urls=[];const result=await searchReferences({query:'tipografia informação privada',signals:[],fetchApi:async url=>{urls.push(String(url));return new Response(feed,{status:200});}});
   assert.equal(result.status,'ok');assert.ok(result.references.length>0);assert.ok(urls.length>0);
   assert.ok(urls.every(url=>url.startsWith('https://www.pinterest.com/')&&!url.includes('privada')&&!url.includes('?')));
+});
+test('histórico próprio ordena aprovações antes de seleções recentes e deduplica o feed',async()=>{
+  const prior={id:'12345',title:'Histórico aprovado',board,originUrl,previewUrl,approvedVersions:2,selectedAt:'2026-11-06T12:00:00.000Z'};
+  const recent={...prior,id:'67890',originUrl:'https://www.pinterest.com/pin/67890/',title:'Escolha recente',approvedVersions:0,selectedAt:'2026-11-09T12:00:00.000Z'};
+  const result=await searchReferences({query:'tipografia',signals:[],history:[recent,prior],fetchApi:async()=>new Response(feed)});
+  assert.deepEqual(result.references.map(item=>item.title),['Histórico aprovado','Escolha recente']);
+  assert.equal(Object.hasOwn(result.references[0],'approvedVersions'),false,'a resposta de busca mantém o contrato anterior');
+});
+test('consulta de histórico só lê a conta autenticada, sem autorização para busca externa',async()=>{
+  let reads=0,searches=0;
+  const route=createReferenceHistoryRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[],insert:async()=>signal,history:async()=>{reads++;return [];}}),search:async()=>{searches++;throw Error('external call');}});
+  assert.equal((await route(request({projectId:otherProject}))).status,404);
+  assert.equal(reads,0);
+  assert.deepEqual(await(await route(request({projectId}))).json(),{references:[]});
+  assert.equal(reads,1);assert.equal(searches,0);
+});
+test('metadados de seleção precisam corresponder ao pin escolhido',async()=>{
+  const reference={id:'12345',title:'Tipografia',board,originUrl,previewUrl};
+  let writes=0;
+  const route=createReferenceSignalsRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async()=>true,store:()=>({list:async()=>[],insert:async input=>{writes++;return {...input,createdAt:signal.createdAt};}})});
+  const {createdAt,...input}=signal;
+  assert.equal((await route(request({...input,reference:{...reference,id:'unrelated'}}))).status,400);
+  assert.equal((await route(request({...input,action:'rejected',reference}))).status,400);
+  assert.equal(writes,0);
+  assert.equal((await route(request({...input,reference}))).status,201);assert.equal(writes,1);
 });
 test('bloqueia busca sem consentimento ou projeto de outra pessoa',async()=>{
   let searches=0;const deps={appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[],insert:async()=>signal}),search:async()=>{searches++;return {status:'ok',references:[]};}};
@@ -54,6 +79,26 @@ test('armazenamento consulta a conta autenticada e valida o projeto retornado',a
   assert.equal(calls[0].options.headers.authorization,'Bearer jwt');
   await assert.rejects(store.list(otherProject),/invalid project response/);
   assert.equal(new URL(calls[1].url).searchParams.get('project_id'),`eq.${otherProject}`);
+});
+test('repetir a seleção consulta o mesmo id e só aceita conteúdo idêntico',async()=>{
+  const {createReferenceSignalStore}=await import('../lib/reference-signal-store.ts');
+  const reference={id:'12345',title:'Tipografia',board,originUrl,previewUrl};
+  const row={id:signal.id,project_id:projectId,origin_url:originUrl,board,action:'selected',comment:'',supersedes:null,created_at:signal.createdAt,reference_data:reference};
+  const calls=[];
+  const store=createReferenceSignalStore({config:{service:'https://db.example',app:origin,key:'public'},actor:{userId:projectId,token:'jwt'},fetchApi:async(url,options)=>{calls.push({url:new URL(url),options});return options.method==='POST'?new Response('{}',{status:409}):Response.json([row]);}});
+  const {createdAt,...input}=signal;
+  assert.deepEqual(await store.insert({...input,reference}),{...signal,reference});
+  assert.equal(calls[1].url.searchParams.get('id'),`eq.${signal.id}`);assert.equal(calls[1].url.searchParams.get('owner_id'),`eq.${projectId}`);
+  assert.equal(calls[1].options.headers.authorization,'Bearer jwt');
+  await assert.rejects(()=>store.insert({...input,reference:{...reference,title:'Outra seleção'}}),/invalid signal response/);
+});
+test('leitura do histórico usa RPC da conta e rejeita URL de prévia fora da fonte',async()=>{
+  const {createReferenceSignalStore}=await import('../lib/reference-signal-store.ts');
+  let body=[{id:'12345',title:'Tipografia',board,originUrl,previewUrl,approvedVersions:1,selectedAt:signal.createdAt}],call;
+  const store=createReferenceSignalStore({config:{service:'https://db.example',app:origin,key:'public'},actor:{userId:projectId,token:'jwt'},fetchApi:async(url,options)=>{call={url:new URL(url),options};return Response.json(body);}});
+  assert.equal((await store.history())[0].approvedVersions,1);assert.equal(call.url.pathname,'/rest/v1/rpc/list_reference_history');
+  assert.equal(call.options.headers.authorization,'Bearer jwt');assert.equal(call.options.body,'{}');
+  body=[{...body[0],previewUrl:'https://other.example/private.png'}];await assert.rejects(()=>store.history());
 });
 
 test('aceita identificador opaco usado no feed público sem ampliar hosts',()=>{
