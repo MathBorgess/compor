@@ -121,6 +121,8 @@ O MCP remoto também oferece geração e leitura de imagens exploratórias. A ch
 
 ## Instalação e verificação
 
+A [validação da preparação do Vault em 10/11](quality/default-openai-vault-2026-11-10.md) registra autenticação, separação de credenciais, SQL restrito, estados de interface, 357 testes web e o scan dos módulos privados nos bundles. O segredo informado é `COMPOR_CIN_OPENAI`; configuração remota e ativação continuam etapas distintas.
+
 O [fechamento do feedback do Estúdio em 10/11](quality/feedback-estudio-final-2026-11-10.md) reúne os gates das issues #22–#27 e #33, as capturas aprovadas, o pacote de release e a liberação em produção ainda pendente.
 
 Use Node 24, Python 3, cliente `psql`, `cwebp`/`dwebp` no `PATH` e histórico Git completo para reproduzir os jobs. No Ubuntu, o pacote `webp` fornece os dois binários de imagem. O repositório contém pacotes com dependências `file:`; instalar somente a raiz não instala todos eles. A partir da raiz:
