@@ -43,7 +43,7 @@ O último passo do Quality gate lê os jobs da própria execução pela API e es
 
 A estimativa não é a fatura, que continua sendo a fonte do valor cobrado. O gate ainda está em execução quando a estimativa é feita e conta como 1 minuto. Numa nova tentativa da mesma execução, os jobs reaproveitados aparecem com a duração original e aumentam a estimativa.
 
-Estimativas por execução. A coluna "Antes" vem das durações medianas desde 05/11, com a suíte web em série. A coluna "Com a suíte web paralela" é uma estimativa feita a partir de medições locais, explicada na próxima seção. Nenhuma das duas é medição desta configuração no CI:
+Estimativas anteriores à primeira execução paralela aprovada no CI. A coluna "Antes" vem das durações medianas desde 05/11, com a suíte web em série. A coluna "Com a suíte web paralela" foi estimada a partir de medições locais. O [registro da validação no CI](web-parallel-ci-2026-11-09.md) conserva as medições posteriores; a tabela abaixo não é faturamento:
 
 | Execução | Jobs cobrados | Antes | Com a suíte web paralela |
 | --- | --- | --- | --- |
@@ -51,7 +51,7 @@ Estimativas por execução. A coluna "Antes" vem das durações medianas desde 0
 | PR só em `apps/web` | Estático, web, performance e gate | Cerca de 19 | Cerca de 13 a 16 |
 | Push para `main` | Todos | Cerca de 23 a 24 | Cerca de 17 a 21 |
 
-A suíte web domina o custo. Em 09/11, o job web levou de 859 a 914 s no CI, e o passo `quality:browser` levou de 819 a 853 s. Os outros passos do job somam menos de 1 minuto. Com a suíte em série, cerca de 75 execuções web cabem em 1.500 minutos por mês. Com a estimativa da suíte paralela, cabem cerca de 95 a 115.
+A suíte web domina o custo. Na primeira execução paralela aprovada, 295/295 testes passaram em 475,66 s, e a janela dos logs do job web foi de 519,07 s. Na execução serial comparada, 287/287 testes levaram 872,14 s, com janela de 914,65 s para o job. São execuções e contagens diferentes; o [registro](web-parallel-ci-2026-11-09.md) explica o método, a falha inicial e a correção. A capacidade mensal depende também das áreas executadas e do arredondamento de cada job.
 
 ## Suíte web paralela
 
@@ -61,7 +61,7 @@ O script começa pelos quatro arquivos mais lentos. Eles somam cerca de 60% do t
 
 O `next dev` trava o próprio diretório de saída. Antes, com dois arquivos ao mesmo tempo, o segundo servidor desistia depois de 1 s. Agora cada processo de arquivo de teste carrega `test/next-dist-dir.mjs`. Esse módulo reserva `.next` ou `.next/test` e passa o diretório ao Next por `COMPOR_TEST_NEXT_DIST_DIR`. Sem essa variável, `next.config.mjs` usa `.next`. O `tsconfig.json` lista os tipos de `.next/test`. Sem essas linhas, o Next reescreveria o `tsconfig.json` durante os testes e reiniciaria o servidor. Depois de uma execução local, `next-env.d.ts` pode apontar para `.next/dev` ou para `.next/test/dev`. O Next já alterava esse arquivo durante os testes antes desta mudança.
 
-O preparo das fixtures autenticadas verifica a rota real com o mesmo cookie sintético do navegador, consome o HTML e os scripts e estilos locais em `/_next/static`. O HTTP 200 da entrada leve do ADR 0034 não comprova que o App Router está pronto. O prazo de startup continua em 30 s, com até 2 s por requisição, e também cobre o corpo e os chunks. Uma falha de asset espera a conclusão da mesma onda de requisições antes de tentar novamente. Os limites de 6 s das ações dessas fixtures e de 90 s por teste não mudam. O preparo não executa o JavaScript nem consulta serviços externos.
+O preparo das fixtures autenticadas verifica a rota real com o mesmo cookie sintético do navegador, consome o HTML e os scripts e estilos locais em `/_next/static`. O HTTP 200 da entrada leve do ADR 0034 não comprova que o App Router está pronto. O prazo de startup continua em 30 s, com até 2 s por requisição, e também cobre o corpo e os chunks. Uma falha de asset espera a conclusão da mesma onda de requisições antes de tentar novamente. Os limites de 6 s das ações dessas fixtures e o padrão de 90 s por teste não mudam. O preparo não executa o JavaScript nem consulta serviços externos.
 
 Medição local de 09/11, num Apple M1 Max com outra tarefa usando a máquina ao mesmo tempo:
 
@@ -72,9 +72,11 @@ Medição local de 09/11, num Apple M1 Max com outra tarefa usando a máquina ao
 
 As duas formas usaram de 505 a 515 s de CPU. O ganho vem de sobrepor as esperas, não de fazer menos trabalho. A suíte paralela usou em média cerca de 2,1 núcleos, contra 1,1 em série, e até cerca de 3 GB de memória somada nos processos da suíte.
 
+A primeira validação paralela aprovada no CI está no [registro de 09/11](web-parallel-ci-2026-11-09.md): Quality gate verde, 295/295 testes, sem pulos e sem aumento dos limites. A redução observada da janela do job foi de 43,25% em relação à execução serial 44; não é uma comparação causal controlada.
+
 Limites conhecidos:
 
-- O runner privado do GitHub tem 2 vCPUs, segundo a documentação do GitHub. Isso não foi medido aqui. No CI, os trechos que exigem CPU dos dois arquivos competem entre si, então o ganho deve ser menor que o local. A estimativa é de 8 a 10 minutos para o passo `quality:browser`, 9 a 11 minutos para o job e 9 a 12 minutos cobrados por execução web. Confira o resumo de minutos da primeira execução no CI.
+- O runner privado do GitHub tem 2 vCPUs, segundo a documentação do GitHub; sua capacidade não foi medida neste registro. Os trechos que exigem CPU dos dois arquivos competem entre si. A primeira execução aprovada levou cerca de 7 min 56 s na suíte e 8 min 39 s na janela dos logs do job; isso não substitui a estimativa de minutos cobrados nem a fatura.
 - Os dois servidores `next dev` observam a mesma pasta `app/`. As páginas de fixture que um teste cria aparecem também no outro servidor, mas só são compiladas quando pedidas.
 - As portas continuam escolhidas com `listen(0)` e liberadas antes de o `next dev` usá-las. Com dois arquivos ao mesmo tempo, a chance de colisão aumenta, mas continua pequena.
 - Iniciar um único `next dev` para toda a suíte foi avaliado e não foi feito. Com cache quente, cada início leva cerca de 1,2 s até a primeira resposta, e a suíte faz cerca de 45 inícios. Os arquivos usam ambientes diferentes: Supabase simulado por teste, certificados próprios e flags diferentes. Compartilhar o servidor exigiria reescrever o preparo de cerca de 28 arquivos e dividir estado de servidor entre eles.
