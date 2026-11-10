@@ -6,7 +6,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
-import {sessionCookie} from './session-cookie.mjs';
+import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -38,7 +38,7 @@ async function app(t){
  const origin=`http://127.0.0.1:${port}`;
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});
  let browser;t.after(async()=>{try{await browser?.close();}finally{await stopApp(child);}});
- await waitForApp({url:origin,child,signal:t.signal});
+ await waitForApp({url:origin,child,signal:t.signal,headers:sessionCookieHeaders(origin),nextApp:true});
  browser=await chromium.launch({executablePath:browserPath,headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
  await context.addCookies([sessionCookie(origin)]);

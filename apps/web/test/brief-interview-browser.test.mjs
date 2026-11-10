@@ -5,7 +5,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {stopApp, waitForApp} from './wait-for-app.mjs';
-import {sessionCookie} from './session-cookie.mjs';
+import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const userId = '00000000-0000-4000-8000-000000000001';
@@ -25,7 +25,7 @@ async function app(t, {withReferences = false} = {}) {
   for (const stream of [child.stdout, child.stderr]) stream.on('data', value => { startup = (startup + value.toString()).slice(-6000); });
   let browser;
   t.after(async () => { try { await browser?.close(); } finally { await stopApp(child); } });
-  await waitForApp({url: origin, child, signal: t.signal, diagnostics: () => startup});
+  await waitForApp({url: origin, child, signal: t.signal,headers:sessionCookieHeaders(origin),nextApp:true, diagnostics: () => startup});
   browser = await chromium.launch({executablePath: browserPath, headless: true});
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
   page.setDefaultTimeout(6000);
