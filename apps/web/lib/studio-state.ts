@@ -1,6 +1,7 @@
 import {referenceSourceSchema,studioStateSchema, type StudioState, type StudioDraft, type PieceContent, type CreativeField, type Approval, type DraftContext, type StudioReference, type StudioMark, type AdjustmentContext, type Adjustment, type AdjustmentResult, type ActionResult, type ActionReceipt, type StudioMessage, type StudioEvent, type CreativeCriterion, type CreativeDecision, type Persona, type Brief, type RequestStatus} from './studio-domain.ts';
 export type * from './studio-domain.ts';
 import { parseDirection, proposeCriterion, decideCriterion } from './studio-direction.ts';
+import { audienceResolution } from './studio-context.ts';
 export const STUDIO_SCHEMA_VERSION = 1;
 export const REFERENCE_SELECTION_EVENT = 'A seleção de referências ficou estável.';
 export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, actionReceipts: 200, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
@@ -42,10 +43,10 @@ export function parseStudioState(input: unknown): StudioState {
   const shape = studioStateSchema.safeParse(input);
   if (!shape.success) fail();
   const value = shape.data;
-  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events'],['actionReceipts','direction','projectTitleProvisional']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
+  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events'],['actionReceipts','direction','projectTitleProvisional','offerFacts']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
   if (!keys(value.brief, ['offer','audience','action','direction']) || !Object.values(value.brief).every(item => text(item, 4000))) fail();
   const persona = value.persona;
-  if (!keys(persona, ['audience','situation','need','culturalReferences','claims']) || !(['audience','situation','need'] as const).every(key => text(persona[key], 2000)) || !text(persona.culturalReferences, 4000) || !Array.isArray(persona.claims) || persona.claims.length > 100 || !unique(persona.claims) || !persona.claims.every(item => keys(item, ['id','text','provenance','source']) && uuid(item.id) && text(item.text, 2000) && text(item.source, 2000) && ['hypothesis','creator_report','buyer_report','public_source','unknown'].includes(item.provenance))) fail();
+  if (!keys(persona, ['audience','situation','need','culturalReferences','claims']) || !text(persona.audience,4000) || !(['situation','need'] as const).every(key => text(persona[key], 2000)) || !text(persona.culturalReferences, 4000) || !Array.isArray(persona.claims) || persona.claims.length > 100 || !unique(persona.claims) || !persona.claims.every(item => keys(item, ['id','text','provenance','source']) && uuid(item.id) && text(item.text, 2000) && text(item.source, 2000) && ['hypothesis','creator_report','buyer_report','public_source','unknown'].includes(item.provenance))) fail();
   for (const [field, limit] of [["drafts",100],["messages",200],["marks",200],["references",20],["adjustments",100],["events",500]] as const) if (!Array.isArray(value[field]) || value[field].length > limit) fail();
   if (!value.drafts.every(item => keys(item, ['pieceId','baseVersion','expectedLatestVersion','content','dirty','approval']) && contextValid({pieceId:item.pieceId,baseVersion:item.baseVersion,expectedLatestVersion:item.expectedLatestVersion}) && contentValid(item.content) && typeof item.dirty === 'boolean' && approvalForBase(item.approval,item.baseVersion)) || !unique(value.drafts, item => `${item.pieceId}:${item.baseVersion}`)) fail();
   if (value.selection !== null && (!keys(value.selection, ['pieceId','baseVersion']) || !value.drafts.some(item => sameDraft(item, value.selection??{})))) fail();
@@ -56,7 +57,8 @@ export function parseStudioState(input: unknown): StudioState {
   if (!unique(value.events) || !value.events.every((item,index) => keys(item, ['id','type','requestId','sequence']) && uuid(item.id) && ['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit'].includes(item.type) && (item.requestId === null || uuid(item.requestId) && value.adjustments.some(request=>request.id===item.requestId)) && item.sequence === index + 1)) fail();
   const actionReceipts=Object.hasOwn(value,'actionReceipts')?value.actionReceipts:[];
   if(!Array.isArray(actionReceipts)||actionReceipts.length>STUDIO_LIMITS.actionReceipts||!unique(actionReceipts,item=>item.requestId)||!actionReceipts.every(item=>actionReceiptValid(item,value.projectId)))fail();
-  const normalized={...value,actionReceipts,direction:parseDirection(value.direction)};
+  const audience=audienceResolution(value);
+  const normalized={...value,...(audience.status==='resolved'?{brief:{...value.brief,audience:audience.value},persona:{...value.persona,audience:audience.value}}:{}),actionReceipts,direction:parseDirection(value.direction)};
   if (new TextEncoder().encode(JSON.stringify(normalized)).byteLength > STUDIO_LIMITS.stateBytes) throw new StudioStateError('studio_state_limit');
   return freeze(clone(normalized));
 }
@@ -93,8 +95,9 @@ export function recordActionReceipt(state: StudioState,receipt: ActionReceipt) {
   }else if(parsed.actionReceipts.length>=STUDIO_LIMITS.actionReceipts)throw new StudioStateError('studio_action_receipt_limit');
   return change(state,next=>{const existing=next.actionReceipts.find(item=>item.requestId===receipt.requestId);if(existing)existing.result=clone(receipt.result);else next.actionReceipts.push(clone(receipt));});
 }
-export const updateBrief = (state: StudioState, patch: Partial<Brief>) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.brief,key))) fail(); Object.assign(next.brief,patch); });
-export const updatePersona = (state: StudioState, patch: Partial<Persona>) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.persona,key))) fail(); Object.assign(next.persona,clone(patch)); });
+export const updateBrief = (state: StudioState, patch: Partial<Brief>) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.brief,key))) fail(); Object.assign(next.brief,patch); if(Object.hasOwn(patch,'audience'))next.persona.audience=next.brief.audience; });
+export const updatePersona = (state: StudioState, patch: Partial<Persona>) => change(state, next => { if (!plain(patch) || !Object.keys(patch).length || !Object.keys(patch).every(key => Object.hasOwn(next.persona,key))) fail(); Object.assign(next.persona,clone(patch)); if(Object.hasOwn(patch,'audience'))next.brief.audience=next.persona.audience; });
+export const updateOfferFacts = (state: StudioState, facts: NonNullable<StudioState['offerFacts']>) => change(state,next=>{next.offerFacts=clone(facts);});
 export const addCreativeCriterion = (state: StudioState, criterion: CreativeCriterion) => change(state, next => { next.direction=proposeCriterion(next.direction,criterion); });
 export const recordCreativeDecision = (state: StudioState, decision: CreativeDecision) => change(state, next => { next.direction=decideCriterion(next.direction,decision); });
 export function createPost(state: StudioState, {pieceId}: {pieceId:string}) { parseStudioState(state); if(!uuid(pieceId))fail();if(state.drafts.some(item=>item.pieceId===pieceId))return state;return change(state, next => { next.drafts.push({pieceId,baseVersion:0,expectedLatestVersion:0,content:blankContent(),dirty:false,approval:noApproval()}); next.selection={pieceId,baseVersion:0}; }); }

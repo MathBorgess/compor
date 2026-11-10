@@ -16,6 +16,8 @@ import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, refer
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
 import { submitOnEnter } from "../lib/submit-on-enter.ts";
+import {audienceResolution} from '../lib/studio-context.ts';
+import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
@@ -497,6 +499,8 @@ export default function StudioChat({
           approval: draft?.approval ?? null,
           baseImageId: baseId,
           brief: next.brief,
+          offerFacts: next.offerFacts ?? [],
+          audienceResolution: audienceResolution(next),
           persona: next.persona,
           direction: next.direction,
           readiness: {level, evidence, gaps, limitations},
@@ -510,7 +514,7 @@ export default function StudioChat({
           ),
           references: next.references,
           projectTitleProvisional: next.projectTitleProvisional && projectRevision===1,
-        };
+        } satisfies StudioContext;
       submitted = true;
       const data = await api("/api/studio/chat", {
         projectId: state.projectId,

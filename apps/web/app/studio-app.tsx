@@ -7,7 +7,7 @@ const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
 import StudioReview from "./studio-review";
 import { useStudioState } from "./use-studio-state";
-import BriefSummary from "./brief-summary";
+import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import ExplorationGallery from "./exploration-gallery";
@@ -20,6 +20,7 @@ import { provisionalTitle } from "../lib/project-title";
 import {
   updateBrief,
   updatePersona,
+  updateOfferFacts,
   addCreativeCriterion,
   recordCreativeDecision,
   createPost,
@@ -55,7 +56,6 @@ type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;p
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
-const briefLabels:Record<string,string>={offer:'Oferta',audience:'Público',action:'Ação esperada',direction:'Direção criativa'};
 
 export default function StudioApp({
   userId,
@@ -970,6 +970,7 @@ function ProjectStudio({
       viewingArt={viewingArt}
       onCloseArt={() => setViewingArt(false)}
       conversationFocus={showBrief}
+      context={<ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/>}
       chatMessageCount={s.messages.length}
       bases={<>
           <ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
@@ -1060,20 +1061,8 @@ function ProjectStudio({
       </>}
       marca={<>
           <div>
-            <h2>Fatos e direção</h2>
-            <dl>
-              {Object.entries(s.brief).map(([key, value]) => (
-                <div key={key}>
-                  <dt>
-                    {
-                      briefLabels[key]
-                    }
-                  </dt>
-                  <dd>{value || "Ainda não informado"}</dd>
-                </div>
-              ))}
-            </dl>
             <PersonaStep
+              showAudience={false}
               value={s.persona}
               onChange={(value) =>
                 local.change((state) => updatePersona(state, value))
@@ -1087,7 +1076,6 @@ function ProjectStudio({
         showBrief ? <div className="studio-brief">
           <ReferenceExploration key={`references:${project.id}`} projectId={project.id} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} />
           <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
-          <BriefSummary state={s} />
           <button className="studio-button-secondary" type="button" onClick={() => setEditorRequested(true)}>Definir textos da arte</button>
         </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
           <label>

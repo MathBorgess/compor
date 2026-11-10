@@ -3,6 +3,7 @@ export interface ExplorationPromptInput {
   offer: string;
   audience: string;
   briefAudience?: string;
+  facts?: {label:string;value:string;status:'confirmed'|'pending'|'omitted'}[];
   goal: string;
   direction: string;
   accepted: string[];
