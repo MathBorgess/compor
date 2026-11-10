@@ -2,4 +2,4 @@
 
 .studio-post-workspace{display:grid;gap:20px;min-width:0}.studio-variant-card>button{min-height:44px;box-sizing:border-box;border:1px solid var(--studio-line,#dedfd9);border-radius:8px;background:#fff;color:var(--studio-ink,#2c2d2f)}
 
-.studio-post-workspace-header{display:flex;justify-content:flex-end;align-items:center;min-width:0}.studio-post-workspace-header>button{min-height:44px;box-sizing:border-box}
+.studio-post-workspace-header{display:flex;justify-content:flex-end;align-items:center;min-width:0}.compor-studio .studio-post-workspace-header>.studio-button-secondary{min-height:44px;box-sizing:border-box}
