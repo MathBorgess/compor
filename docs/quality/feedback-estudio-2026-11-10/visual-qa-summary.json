@@ -1,0 +1,179 @@
+{
+  "schemaVersion": 1,
+  "kind": "Synthetic local Next UI QA, not production or real provider validation",
+  "imagesUnedited": true,
+  "captures": [
+    {
+      "file": "26-editor-desktop.png",
+      "sourceCommit": "7fada14be92059d4655408744fec767bd63de48f",
+      "scope": "geometry-only",
+      "sha256": "8f94cc9e27cac0c4bcbf035fba9f7cdbe032c639a7be0258e5fe6273e77e44b5",
+      "bytes": 147274
+    },
+    {
+      "file": "26-editor-mobile.png",
+      "sourceCommit": "7fada14be92059d4655408744fec767bd63de48f",
+      "scope": "geometry-only",
+      "sha256": "049da865f7c4b67b01bfdc7a5b66b8d606d15d8e10ffd187ee78dfd50be3d46a",
+      "bytes": 65908
+    },
+    {
+      "file": "33-references-mobile-consent.png",
+      "sourceCommit": "141e7dc4bc79e306da608d76fcd5f4107f903ad4",
+      "scope": "full-journey-before-consent",
+      "sha256": "f38cf541f8ccb1b65343eff32e9778915a549a5f64fe432c76a07498304ed8e5",
+      "bytes": 68122
+    },
+    {
+      "file": "33-references-mobile-allowed.png",
+      "sourceCommit": "141e7dc4bc79e306da608d76fcd5f4107f903ad4",
+      "scope": "full-journey-after-consent",
+      "sha256": "162037b1fe98d7cd69dbe5fea01a8697d80f1dda9784bb18e5b83512e976c0ca",
+      "bytes": 64246
+    }
+  ],
+  "geometry": {
+    "sourceCommit": "7fada14be92059d4655408744fec767bd63de48f",
+    "scope": "Editor/cards/reference CTA geometry only; no journey rerun",
+    "passed": true,
+    "target": "Three opening buttons, three version selectors and the single reference CTA measure at least 44 px; CTA fully visible after context",
+    "measurements": [
+      {
+        "viewport": "desktop",
+        "width": 1440,
+        "height": 960,
+        "variantControlHeightsPx": [
+          44,
+          44,
+          44,
+          44,
+          44,
+          44
+        ],
+        "referenceAction": {
+          "width": 207.05,
+          "height": 44,
+          "top": 217.38,
+          "bottom": 261.38,
+          "atLeast44": true,
+          "fullyVisible": true,
+          "afterContext": true
+        },
+        "noDocumentHorizontalOverflow": true
+      },
+      {
+        "viewport": "mobile",
+        "width": 390,
+        "height": 844,
+        "variantControlHeightsPx": [
+          44,
+          44,
+          44,
+          44,
+          44,
+          44
+        ],
+        "referenceAction": {
+          "width": 207.05,
+          "height": 44,
+          "top": 474.55,
+          "bottom": 518.55,
+          "atLeast44": true,
+          "fullyVisible": true,
+          "afterContext": true
+        },
+        "noDocumentHorizontalOverflow": true
+      }
+    ],
+    "pageErrors": 0,
+    "unexpectedApi": 0,
+    "blockedNetwork": 0
+  },
+  "journey": {
+    "sourceCommit": "141e7dc4bc79e306da608d76fcd5f4107f903ad4",
+    "scope": "Complete desktop/mobile references consent, selection and return to editor",
+    "passedInBothViewports": true,
+    "overallOldReportStatus": "Geometry gate failed because reference CTA was 40 px; the functional journey completed in both viewports before the CSS-only correction",
+    "checked": [
+      "draft/content/dirty flag/selection",
+      "saved conversation and unsent chat text",
+      "marks/creative direction/brief/persona/facts/project idea",
+      "hashes of five draft PNG assets",
+      "one consent per session across returns",
+      "one selected signal and one preview; no duplicate selection"
+    ],
+    "callsByViewport": [
+      {
+        "viewport": "desktop",
+        "previewCount": 1,
+        "chatCount": 0,
+        "paidCount": 0
+      },
+      {
+        "viewport": "mobile",
+        "previewCount": 1,
+        "chatCount": 0,
+        "paidCount": 0
+      }
+    ],
+    "pageErrors": 0,
+    "unexpectedApi": 0,
+    "blockedNetwork": 0
+  },
+  "productionSourceIdentity": {
+    "geometryAppTree": "d082f477b80decb011b26abe9545306348d153c8",
+    "journeyStudioAppBlob": "23eef395d69f0e328b52ddab531e8ba598cacd6f",
+    "geometryStudioAppBlob": "23eef395d69f0e328b52ddab531e8ba598cacd6f",
+    "differenceBetweenJourneyAndGeometry": [
+      "apps/web/app/studio-variant-cards.css"
+    ]
+  },
+  "review": {
+    "reviewer": "Delegated AX director",
+    "result": "Visual scope accepted after inspecting geometry images and JSON",
+    "accepted": [
+      "desktop legibility/hierarchy",
+      "fact state represented with text and color",
+      "selected variant distinguishable",
+      "mobile reference CTA before cards",
+      "targeted 44 px geometry and no horizontal overflow"
+    ],
+    "scopeLimit": "Other legacy controls were not all adjusted to 44 px; mobile context remains heavy but legible and outside this change."
+  },
+  "limitations": [
+    "Synthetic account, API responses and artwork; no real login, model or paid calls.",
+    "Geometry and journey are separate scopes from separate source commits; callback host blob is identical.",
+    "Visual geometry and functional journey remain separate from final cumulative automated validation; signed-out Lighthouse does not validate production, real login or providers."
+  ],
+  "finalCumulativeValidation": {
+    "sourceCommit": "0f0a08d43a4473fe2d6096715976448477b54f8f",
+    "lint": "passed",
+    "typecheck": "passed",
+    "unit": "passed",
+    "web": {
+      "passed": 336,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 347.978680009,
+      "workerSourcesIsolated": true,
+      "cpuAffinityLimitedToTwo": false
+    },
+    "focusedSql": {
+      "passed": 2,
+      "durationSeconds": 4.002442886,
+      "separateFromQualityUnit": true
+    },
+    "build": "passed",
+    "bundleAnalysis": "passed",
+    "performance": {
+      "status": "passed",
+      "runs": 5,
+      "scope": "Signed-out entry, synthetic public configuration; not authenticated/provider latency",
+      "totalClientJavascriptGzipBytes": 288022,
+      "initialJavascriptGzipBytes": 0,
+      "lcpMedianMs": 639.37135,
+      "tbtMsAllRuns": 0,
+      "clsMedian": 0.008014568990844923
+    }
+  }
+}

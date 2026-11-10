@@ -99,10 +99,37 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
  await page.getByText('Imagem gerada e adicionada a este post · versão 3.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
- const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');
+ const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),1,'Novo post mostra só os cards da nova peça');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
  assert.deepEqual(explorationPosts,[],'novo post explícito, refino e salvamento permanecem no editor sem iniciar descoberta');
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+test('dimensão da proposta prepara variante sem aprovação e conserva a imagem anterior no canvas',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,calls,versions,flow,errors}=await app(t);
+ const proposal=consent('variant');proposal.proposal.changedDimension='style';
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Variante sintética pronta.'}:proposal;
+ versions[0].metadata={baseVersion:null,revision:1,approval:{status:'approved',kind:'explicit',sourceVersion:1,at:'2026-11-06T12:00:00.000Z'}};
+ await page.route('**/api/pieces',async route=>{
+  if(route.request().method()!=='POST')return route.fallback();
+  const body=route.request().postDataJSON();calls.push({path:'/api/pieces',body});
+  const version={project_id:projectId,piece_id:body.pieceId,version:body.expectedVersion+1,content:body.content,metadata:{baseVersion:body.baseVersion,revision:0,approval:{status:'unapproved'},operation:body.operation,changedDimension:body.changedDimension??null}};
+  versions.push(version);return route.fulfill({json:{status:'saved',version}});
+ });
+ await openOriginal(page,origin);await attachImage(page);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero outra direção de estilo.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('Variante sintética pronta.',{exact:true}).waitFor();
+ const save=calls.find(call=>call.path==='/api/pieces');assert.equal(save.body.changedDimension,'style');assert.equal(save.body.operation,'create');
+ const state=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===2);
+ assert.deepEqual(state.drafts.find(draft=>draft.pieceId===originalPiece&&draft.baseVersion===2).approval,{status:'unapproved'});
+ await page.getByRole('img',{name:'Arte da versão 1',exact:true}).waitFor();await page.getByRole('img',{name:'Arte da versão 2',exact:true}).waitFor();
+ assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),2);
+ assert.equal(versions[0].metadata.approval.status,'approved');
+ const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});if(await collapse.isVisible())await collapse.click();
+ await page.screenshot({path:'/tmp/compor-studio-variants-desktop.png',fullPage:true});
+ await page.setViewportSize({width:390,height:844});
+ assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,'cards de variantes cabem no celular sem rolagem da página');
+ await page.screenshot({path:'/tmp/compor-studio-variants-mobile.png',fullPage:true});
+ assert.deepEqual(errors,[]);
 });
 
 test('efeito WebMCP persistido não se repete após refresh e recriação do executor sem chave',{skip:!existsSync(browserPath),timeout:60000},async t=>{
@@ -340,6 +367,21 @@ test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!ex
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',{exact:true}).waitFor();
  const after=await stored(page);assert.equal(after.selection.baseVersion,0);assert.equal(after.drafts.find(d=>d.pieceId===draft.pieceId&&d.baseVersion===0).content.headline,'Minha edição');assert.deepEqual(errors,[]);
+});
+test('409 com variante de outra aba não adota classificação nem copia a arte antiga',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.getByLabel('Título',{exact:true}).fill('Mesmo texto em outra direção');
+ const image=await attachImage(page,{mime:'image/png',name:'origem.png'});
+ const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Mesmo texto em outra direção'));
+ const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
+ versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,metadata:{baseVersion:null,revision:0,approval:{status:'unapproved'},operation:'create',changedDimension:'style'}});
+ await page.route('**/api/pieces',route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
+ await page.getByRole('button',{name:'Salvar versão',exact:true}).click();
+ await page.getByText('Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',{exact:true}).waitFor();
+ assert.equal((await stored(page)).selection.baseVersion,0);
+ assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,0)),image);
+ assert.equal(await assetBytes(page,draft.pieceId,1),null,'nenhuma cópia da origem mascara a arte da variante salva pela outra aba');
+ assert.deepEqual(errors,[]);
 });
 
 test('falha ao copiar imagem para versão recuperada não troca a seleção nem perde a origem',{skip:!existsSync(browserPath),timeout:60000},async t=>{
