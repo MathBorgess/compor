@@ -42,9 +42,6 @@ export type StudioShellProps = {
   basesCount?: number;
   drawer?: StudioDrawer;
   onDrawerChange?: (drawer: StudioDrawer) => void;
-  onDownload?: () => void;
-  downloadDisabled?: boolean;
-  yellowDownload?: boolean;
   viewingArt?: boolean;
   onCloseArt?: () => void;
   onLayoutChange?: (layout: StudioLayout) => void;
@@ -96,9 +93,6 @@ export default function StudioShell({
   basesCount = 0,
   drawer = undefined,
   onDrawerChange,
-  onDownload,
-  downloadDisabled = false,
-  yellowDownload = true,
   viewingArt = false,
   onCloseArt,
   onLayoutChange,
@@ -404,16 +398,6 @@ export default function StudioShell({
                 Marca
               </button>
             </>
-          ) : null}
-          {onDownload ? (
-            <button
-              type="button"
-              className={yellowDownload ? "studio-button studio-button-yellow" : "studio-button studio-button-secondary"}
-              disabled={downloadDisabled}
-              onClick={onDownload}
-            >
-              Baixar
-            </button>
           ) : null}
           <div className="studio-account">
             <AccountMenu label={accountLabel || userLabel || "Conta"} local={localAccount} onSignOut={onSignOut} />

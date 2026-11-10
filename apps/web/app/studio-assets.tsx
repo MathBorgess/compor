@@ -2,6 +2,7 @@
 import {useEffect,useId,useRef,useState} from 'react';
 import AssetRecovery from './asset-recovery';
 import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
+import {composeStudioPng} from '../lib/studio-compose.ts';
 
 import { uuid, markerSchema, storedImageSchema, type ImageSelection } from './studio-ui-types';
 type AssetScope={userId:string;projectId:string;pieceId:string;version:number};
@@ -54,12 +55,16 @@ function ScopedAssets({userId,projectId,pieceId,version,canSave,preview,onUseIma
  }
  async function save(){
   if(!png||!authorized||!canSave||uploadLock.current||['loading','validating','pending','unknown','unavailable'].includes(upload.state))return;
-  if(png.size>MAX_UPLOAD){setUpload({state:'too_large',assetId:null});return;}
-  if(png.type!=='image/png'||!png.size){setUpload({state:'invalid',assetId:null});return;}
+  if(png.type==='image/png'&&png.size>MAX_UPLOAD){setUpload({state:'too_large',assetId:null});return;}
+  if(!['image/png','image/jpeg'].includes(png.type)||!png.size){setUpload({state:'invalid',assetId:null});return;}
   uploadLock.current=true;setUpload({state:'validating',assetId:null});
   let assetId:string|undefined,dispatched=false;
   try{
-   const bytes=new Uint8Array(await png.slice(0,8).arrayBuffer());
+   let prepared:Blob;
+   try{prepared=await composeStudioPng({base:png});}
+   catch{if(mounted.current)setUpload({state:'invalid',assetId:null});return;}
+   if(prepared.size>MAX_UPLOAD){if(mounted.current)setUpload({state:'too_large',assetId:null});return;}
+   const bytes=new Uint8Array(await prepared.slice(0,8).arrayBuffer());
    if(![137,80,78,71,13,10,26,10].every((value,index)=>bytes[index]===value)){if(mounted.current)setUpload({state:'invalid',assetId:null});return;}
    if(!mounted.current||current.current.png!==png||!current.current.authorized||!current.current.canSave){if(mounted.current)setUpload({state:'idle',assetId:null});return;}
    // Another mounted view may already have submitted this scope. Never
@@ -69,7 +74,7 @@ function ScopedAssets({userId,projectId,pieceId,version,canSave,preview,onUseIma
    if(sessionStorage.getItem(markerKey)!==marker)throw Error('storage unavailable');
    setUpload({state:'pending',assetId});dispatched=true;
    const query=new URLSearchParams({projectId,pieceId,version:String(version),assetId});
-   const response=await fetch(`/api/images?${query}`,{method:'POST',headers:{'content-type':'image/png'},body:png,cache:'no-store'});
+   const response=await fetch(`/api/images?${query}`,{method:'POST',headers:{'content-type':'image/png'},body:prepared,cache:'no-store'});
    const result=storedImageSchema.safeParse(await response.json().catch(()=>null));
    const stored=response.status===201&&result.success&&result.data.status==='stored'&&result.data.assetId===assetId;
    const rejected=[400,401,403,404,413].includes(response.status);

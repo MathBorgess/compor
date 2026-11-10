@@ -70,10 +70,8 @@ async function openOriginal(page,origin,{key=true}={}){
 }
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
  if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');
- await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name,mimeType:mime,buffer});
  try{await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();}catch(error){throw Error(`${error.message}\nUpload: ${JSON.stringify({mime,size:buffer.length,alerts:await page.getByRole('alert').allTextContents(),selection:(await stored(page))?.selection})}`,{cause:error});}
- await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  return buffer;
 }
 const action=(name,args,binding)=>({status:'action_required',action:{name,args},actionBinding:binding});
@@ -144,7 +142,7 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
-test('codificação pendente de uma prévia não publica a arte no post aberto depois',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+test('download pendente não exporta a arte no post aberto depois',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,versions,calls,errors}=await app(t);
  versions.push({project_id:projectId,piece_id:newPiece,version:2,content:content('Post B preservado')});
  await openOriginal(page,origin,{key:false});
@@ -153,8 +151,11 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
   const original=HTMLCanvasElement.prototype.toBlob;
   HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
  });
- await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
+ const downloads=[];page.on('download',file=>downloads.push(file));
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
+ await page.getByRole('button',{name:'Estúdio',exact:true}).click();
  await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
@@ -163,7 +164,7 @@ test('codificação pendente de uma prévia não publica a arte no post aberto d
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'a prévia da instância desmontada não muda a navegação nem se associa a B');
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
- assert.equal(calls.length,0);assert.deepEqual(errors,[]);
+ assert.equal(downloads.length,0);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
 
 test('trocar a imagem durante a codificação descarta a prévia anterior e conserva a nova arte',{skip:!existsSync(browserPath),timeout:60000},async t=>{
@@ -173,15 +174,20 @@ test('trocar a imagem durante a codificação descarta a prévia anterior e cons
   const original=HTMLCanvasElement.prototype.toBlob;
   HTMLCanvasElement.prototype.toBlob=function(callback,...args){window.__releasePreviewEncoding=()=>original.call(this,blob=>{callback(blob);window.__previewEncodingDone=true;},...args);};
  });
- await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
+ const downloads=[];page.on('download',file=>downloads.push(file));
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  await attachImage(page,{mime:'image/png',name:'replacement.png',buffer:png});
  await page.evaluate(()=>window.__releasePreviewEncoding());
  await page.waitForFunction(()=>window.__previewEncodingDone===true);
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  assert.equal(await page.getByRole('heading',{name:'Revise seu post',exact:true}).count(),0,'a imagem substituída não se torna a prévia da arte atual');
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
- assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isEnabled(),true);
+ assert.equal(downloads.length,0,'a preparação antiga não inicia o download depois da troca');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isEnabled(),true);
  assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
 
