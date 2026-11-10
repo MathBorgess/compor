@@ -18,6 +18,7 @@ export default function Page(){const [state]=useState(()=>updateBrief(createStud
 const pendingKey=`compor-exploration-pending:${userId}`,pauseKey=`compor-exploration-not-started:${userId}`;
 
 test('resposta anterior à reserva exige correlação, preserva outros marcadores e aguarda retomada', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+ let phase='fixture';const trace=[];t.after(()=>{if(phase!=='completed')t.diagnostic(JSON.stringify({phase,trace,logs}));});
  assert.equal(existsSync(fixture),false);await mkdir(fixture);await writeFile(new URL('page.tsx',fixture),source);
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let logs='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'',SUPABASE_PUBLISHABLE_KEY:''}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{logs=(logs+chunk).slice(-5000);});
@@ -38,14 +39,14 @@ test('resposta anterior à reserva exige correlação, preserva outros marcadore
    const status=typeof mode==='number'?mode:mode==='wrong_status'?409:503;
    return route.fulfill({status,json:{status:mode==='unknown'?'unknown':'not_started',requestId:mode==='wrong_id'?'00000000-0000-4000-8000-000000000099':body.requestId,retryAutomatically:mode==='wrong_flag'}});
   });
-  const page=await context.newPage();await page.goto(`${origin}/exploration-preflight-test`);await arrived;
+  const page=await context.newPage();page.on('pageerror',error=>trace.push({mode,error:error.message,stack:error.stack}));page.on('console',message=>{if(message.type()==='error')trace.push({mode,console:message.text()});});phase=`${mode}: opening`;await page.goto(`${origin}/exploration-preflight-test`);phase=`${mode}: waiting first dispatch`;try{await new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error(`No initial dispatch in mode ${mode}`)),6000);arrived.then(()=>{clearTimeout(timer);resolve();},error=>{clearTimeout(timer);reject(error);});});}catch(error){trace.push({mode,body:await page.locator('body').innerText()});throw error;}phase=`${mode}: received first dispatch`;
   if(mode==='replaced'){await page.evaluate(key=>localStorage.setItem(key,'outra tentativa'),pendingKey);release();}
   if(typeof mode==='number') {
    await page.getByText(/Não foi possível iniciar a exploração/).waitFor();
    assert.equal(await page.evaluate(key=>localStorage.getItem(key),pendingKey),null);
    assert.equal(await page.evaluate(key=>localStorage.getItem(key),pauseKey),'1');
-   await page.reload();await page.getByText(/Não foi possível iniciar a exploração/).waitFor();assert.equal(posts.length,1);
-   await page.getByRole('button',{name:'Retomar'}).click();await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();
+   phase=`${mode}: reload`;await page.reload();await page.getByText(/Não foi possível iniciar a exploração/).waitFor();assert.equal(posts.length,1);
+   phase=`${mode}: resume`;await page.getByRole('button',{name:'Retomar'}).click();await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();
    assert.equal(posts.length,2);assert.notEqual(posts[0].requestId,posts[1].requestId);
   } else {
    await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();
@@ -53,6 +54,7 @@ test('resposta anterior à reserva exige correlação, preserva outros marcadore
    assert.notEqual(pending,null);if(mode==='replaced')assert.equal(pending,'outra tentativa');
    assert.equal(await page.evaluate(key=>localStorage.getItem(key),pauseKey),null);assert.equal(posts.length,1,'resposta ambígua ou marcador substituído não autoriza repetição');
   }
-  await context.close();
+  trace.push({mode,posts:posts.length,status:await page.locator('output').innerText()});phase=`${mode}: closing`;await context.close();
  }
+ phase='completed';
 });
