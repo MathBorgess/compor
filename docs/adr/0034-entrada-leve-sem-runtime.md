@@ -1,8 +1,8 @@
 # ADR 0034 — Entrada sem sessão sem o runtime do App Router
 
-- Estado: proposed
+- Estado: accepted
 - Data: 09/11/2026
-- Fonte: pedido de Matheus em 09/11/2026, "Production performance continua dando erro… garanta que vai passar sem estourar budget", na issue #27. O desenho foi definido na sessão de trabalho dessa issue e aguarda a revisão de Matheus no PR.
+- Fonte: pedido de Matheus em 09/11/2026, "Production performance continua dando erro… garanta que vai passar sem estourar budget", na issue #27. O desenho foi definido na sessão de trabalho dessa issue e ficou inicialmente como `proposed`. A revisão delegada descrita abaixo o aceitou, preservando seus limites.
 
 ## Contexto
 
@@ -43,3 +43,11 @@ A entrada leve não consulta a sessão ao receber foco, como `workspace.tsx` faz
 A regra `*.css?text` só existe no Turbopack. O teste de navegador compara estrutura e caixas das duas entradas em 390 px com movimento reduzido. Ele não cobre o estado "Verificando sua conta…" nem o login local, que a entrada leve nunca mostra.
 
 Os números acima são locais e não comprovam o CI Linux. A issue #27 ainda exige três execuções seguidas do CI registradas em `docs/quality`. O proxy roda no runtime Node; seu comportamento no deploy da Vercel não foi verificado.
+
+## Revisão delegada em 09/11/2026
+
+Matheus orientou nesta sessão do Codex: “Não me peça nada. As Escolhas devem ser feitas por um sub-agente com personalidade de diretor de publicidade e crítico de sistemas AX, Agent Experience”, com foco em praticidade e eficiência para pessoas leigas em IA. O subagente com esse papel revisou esta decisão e a aceitou. Isso registra uma revisão delegada, não uma revisão pessoal do documento por Matheus.
+
+A entrada tem uma tarefa simples: entrar e retomar o trabalho. Entregar a mesma tela sem inicializar o editor reduz o trabalho inicial sem acrescentar uma decisão para a pessoa. A preservação do rascunho e os erros de login continuam explícitos. Aceita-se o limite de que um login feito em outra aba só se reflete ao recarregar ou entrar; ele não perde trabalho nem bloqueia essa tarefa.
+
+A medição continua cobrindo a entrada sem sessão, e o orçamento total continua contando os chunks do estúdio. Não se amplia o método, não se promete o desempenho do estúdio autenticado ou da geração e não se presume validação de deploy. O [ADR 0036](0036-remocao-da-interface-legada.md) retira a condição do seletor de legado descrita acima; as demais condições continuam.

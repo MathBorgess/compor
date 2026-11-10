@@ -37,7 +37,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) | accepted | Faixa de contexto, público único e revisão simplificada |
 | [0032](0032-gates-por-area-e-falha-rapida.md) | accepted | Gates por área alterada, falha rápida e minutos cobrados |
 | [0033](0033-turbopack-e-analise-do-bundle.md) | accepted | Turbopack com análise do bundle antes e depois de mudanças no cliente |
-| [0034](0034-entrada-leve-sem-runtime.md) | proposed | Entrada sem sessão em HTML sem JavaScript e gate que aceita zero scripts |
+| [0034](0034-entrada-leve-sem-runtime.md) | accepted | Entrada sem sessão em HTML sem JavaScript e gate que aceita zero scripts |
 | [0035](0035-titulo-provisorio-e-falha-de-ferramenta.md) | recorded | Título provisório explícito e encerramento de ferramenta inválida |
 
 | [0036](0036-remocao-da-interface-legada.md) | accepted | Remoção autorizada da interface legada e do seletor por variável |
