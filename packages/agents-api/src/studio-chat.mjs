@@ -321,7 +321,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(body.result.status==='completed'&&['compor_salvar_versao','compor_renomear_projeto'].includes(signed.name)){
     d.phase='action_durable';if(typeof verifyDurableResult!=='function'||await verifyDurableResult({actor:scope.actor,projectId:scope.projectId,name:signed.name,args,result:body.result})!==true)return unknownReply(d);
    }
-   d.phase='action_claim';const claim=await store.claimAction({...scope,turnId:signed.turnId,callId:signed.callId,actionDigest:signed.argsDigest,resultDigest:studioBindings.digest(body.result)});
+   d.phase='action_claim';const claim=await store.claimAction({...scope,turnId:signed.turnId,callId:signed.callId,actionDigest:studioBindings.digest(args),resultDigest:studioBindings.digest(body.result)});
    if(claim.status!=='claimed')return claim.status==='conflict'?reply({status:'conflict',retryAutomatically:false},409):unknownReply(d);
    if(body.result.status==='unknown'){d.phase='action_local_unknown';await store.finishAction({...scope,submissionId:claim.id,state:'unknown'});await state(scope,record,'unknown');return unknownReply(d);}
    let response;

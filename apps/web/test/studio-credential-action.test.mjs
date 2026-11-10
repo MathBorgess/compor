@@ -111,3 +111,19 @@ test('a proof that expires during provider lookup cannot send a result',async t=
  assert.equal(response.status,403);assert.deepEqual(await response.json(),{error:'invalid_binding'});
  assert.equal(events(f).length,0);assert.equal(f.records.get(requestId).state,'action_required');
 });
+
+test('the action claim compares stable argument digests across historical and credential-bound proofs',async()=>{
+ const f=fixture(),pending=await pendingAction(f),claims=new Map(),digests=[];
+ // Mirror claim_studio_action: the same call with different digests is a conflict.
+ f.store.claimAction=async c=>{digests.push(c.actionDigest);const known=claims.get(c.callId);if(known)return known.actionDigest===c.actionDigest&&known.resultDigest===c.resultDigest?{status:'existing',id:known.id}:{status:'conflict'};claims.set(c.callId,{id:request2,actionDigest:c.actionDigest,resultDigest:c.resultDigest});return{status:'claimed',id:request2};};
+ const byok=credentials('byok'),result={status:'completed',revision:2};
+ const first=await f.withBindings(byok).action(request(actionInput(pending,result)));
+ assert.equal(first.status,202);assert.equal((await first.json()).status,'running');
+ const reissued=byok.studioBindings.issue({userId,projectId,requestId,attemptId,sessionId:'sess_one',turnId:'turn_one',callId:'call_one',name:'compor_editar_briefing',args:editArgs()});
+ assert.notEqual(reissued,pending.actionBinding,'the new proof uses the credential-bound domain');
+ const repeated=await f.withBindings(byok).action(request({apiKey,projectId,requestId,actionBinding:reissued,result}));
+ assert.equal(repeated.status,202);assert.equal((await repeated.json()).status,'unknown','a repeated ACK is not a conflict and is not resent');
+ assert.equal(digests.length,2);assert.equal(digests[0],digests[1]);
+ assert.equal(digests[0],createStudioBindings({secret:Buffer.alloc(32,7)}).digest(editArgs()),'BYOK keeps the historical claim digest');
+ assert.equal(events(f).length,1);
+});
