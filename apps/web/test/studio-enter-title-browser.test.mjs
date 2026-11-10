@@ -68,7 +68,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
 }
 async function openChat(page){
  const message=page.getByLabel('Sua mensagem',{exact:true});
- await page.locator('#studio-chat-message:visible, .studio-floating-input:visible').first().waitFor();
+ await page.locator('#studio-chat-message:visible, .studio-floating-input:visible, .studio-reference-switcher button[aria-label="Abrir conversa"]:visible').first().waitFor();
  if(!await message.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await message.waitFor();return message;
 }

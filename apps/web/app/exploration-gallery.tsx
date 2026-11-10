@@ -24,7 +24,7 @@ function mergeImages(incoming: ImageRecord[], previous: ImageRecord[]) {
   return [...byId.values()].sort((a, b) => (b.ordinal ?? 0) - (a.ordinal ?? 0));
 }
 
-export default function ExplorationGallery({ projectId, completed, selectedIds, onUseReference, phase = "idle", countdown = null }: { projectId: string; completed: number; selectedIds: string[]; onUseReference: (imageId: string, file: File, ordinal?: number) => Promise<void>; phase?: "idle" | "generating" | "waiting" | "blocked"; countdown?: number | null }) {
+export default function ExplorationGallery({ projectId, completed, selectedIds, onUseReference, onRemoveReference, phase = "idle", countdown = null }: { projectId: string; completed: number; selectedIds: string[]; onUseReference: (imageId: string, file: File, ordinal?: number) => Promise<void>; onRemoveReference?: (imageId: string) => Promise<void>; phase?: "idle" | "generating" | "waiting" | "blocked"; countdown?: number | null }) {
   const [images, setImages] = useState<ImageRecord[] | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,6 +35,18 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   const [selecting, setSelecting] = useState<string | null>(null);
   const selectionLock = useRef(false);
   const [refresh, setRefresh] = useState(0);
+  // Selecting disables the image button; keep focus on the same figure.
+  const pendingFocus = useRef<{ imageId: string; target: "remove" | "select" } | null>(null), root = useRef<HTMLElement>(null);
+  const selectedKey = selectedIds.join(",");
+  useEffect(() => {
+    const pending = pendingFocus.current;
+    if (!pending || (pending.target === "remove") !== selectedIds.includes(pending.imageId)) return;
+    pendingFocus.current = null;
+    const active = document.activeElement;
+    if (active && active !== document.body && document.contains(active) && !(active instanceof HTMLButtonElement && active.disabled)) return;
+    const figure = Array.from(root.current?.querySelectorAll<HTMLElement>("[data-image-id]") ?? []).find(element => element.dataset.imageId === pending.imageId);
+    figure?.querySelector<HTMLButtonElement>(pending.target === "remove" ? ".reference-remove" : ".reference-image-select")?.focus();
+  }, [selectedKey]);
   useEffect(() => {
     const controller = new AbortController();
     async function load() {
@@ -86,6 +98,7 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
       if (!response.ok) throw Error("unavailable");
       const blob = await response.blob();
       if (blob.type !== "image/png" || !blob.size || blob.size > 8 * 1024 * 1024) throw Error("invalid image");
+      pendingFocus.current = { imageId, target: "remove" };
       await onUseReference(imageId, new File([blob], `exploracao-${imageId}.png`, { type: "image/png" }), ordinal);
       setNotice("Imagem adicionada à conversa e à Direção neste navegador.");
     } catch {
@@ -103,15 +116,16 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   const shownKey=JSON.stringify(shown);
   useEffect(()=>{try{rememberShownExplorations(projectId,JSON.parse(shownKey));}catch{}},[projectId,shownKey]);
   function imageCard(item: ImageRecord) {
-    const label = item.ordinal ? String(item.ordinal) : item.id;
-    return <figure key={item.id}>
-      {item.state === "completed" ? <button type="button" className="reference-image-select" aria-pressed={selectedIds.includes(item.id)} aria-label={`${selectedIds.includes(item.id) ? "Imagem usada" : "Usar imagem"} ${label} na conversa e na Direção`} disabled={Boolean(selecting) || selectedIds.includes(item.id)} onClick={() => useImage(item.id, item.ordinal)}><img src={`/api/studio/explorations/image?${new URLSearchParams({ projectId, imageId: item.id })}`} alt="" /><span>{selecting === item.id ? "Adicionando…" : selectedIds.includes(item.id) ? "Selecionada" : "Usar na conversa"}</span></button> : <p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p>}
-      <figcaption>Imagem {label}</figcaption>
+    const label = item.ordinal ? String(item.ordinal) : item.id, selected = selectedIds.includes(item.id);
+    return <figure key={item.id} data-image-id={item.id} data-selected={selected ? "true" : undefined}>
+      {item.state === "completed" ? <button type="button" className="reference-image-select" aria-pressed={selectedIds.includes(item.id)} aria-label={`${selectedIds.includes(item.id) ? "Imagem usada" : "Usar imagem"} ${label} na conversa e na Direção`} disabled={Boolean(selecting) || selectedIds.includes(item.id)} onClick={() => useImage(item.id, item.ordinal)}><img src={`/api/studio/explorations/image?${new URLSearchParams({ projectId, imageId: item.id })}`} alt="" /><span>{selecting === item.id ? "Adicionando…" : selected ? "✓ Selecionada" : "Usar na conversa"}</span></button> : <p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p>}
+      <figcaption><span className="reference-source" data-origin="generated">Gerada pelo Compor</span> Imagem {label}</figcaption>
+      {selected && onRemoveReference && <button type="button" className="reference-remove" aria-label={`Remover da seleção: imagem ${label}`} disabled={Boolean(selecting)} onClick={() => { pendingFocus.current = { imageId: item.id, target: "select" }; void onRemoveReference(item.id); }}>Remover da seleção</button>}
     </figure>;
   }
-  return <section className="studio-exploration-gallery" aria-label="Explorações de imagem">
+  return <section ref={root} className="studio-exploration-gallery" aria-label="Explorações de imagem">
     <h2>Explorações de imagem</h2>
-    <p>Consulte as imagens criadas para experimentar caminhos visuais.</p>
+    <p>Imagens geradas pelo Compor para experimentar caminhos visuais. Use as que chamarem sua atenção como referência.</p>
     {phase === "generating" && <p role="status">Gerando uma imagem do lote…</p>}
     {phase === "waiting" && countdown !== null && <div className="studio-batch-wait" role="timer" aria-label={`Próximo lote em ${countdown} segundos`}><img className="studio-batch-spinner" src="/studio/compor-avatar.svg" alt="" /><span aria-hidden="true">Próximo lote em {countdown}s</span></div>}
     <button className="studio-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)} disabled={loading}>

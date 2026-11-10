@@ -13,8 +13,9 @@ export function createStudioBindings({secret,now=Date.now}={}) {
   const payload=Buffer.from(JSON.stringify({userId,projectId,requestId,attemptId,sessionId,turnId,callId,name,argsDigest:digest(args),issuedAt,expiresAt})).toString('base64url');
   return `s1.${payload}.${createHmac('sha256',key).update(`s1.${payload}`).digest('base64url')}`;
  }
- function verify({token,userId,projectId,requestId}){
+ function verify(input){
   try{
+   const {token,userId,projectId,requestId}=input;
    if(typeof token!=='string'||token.length>3072||![userId,projectId,requestId].every(uuid))return null;
    const p=token.split('.');if(p.length!==3||p[0]!=='s1'||!p.slice(1).every(x=>/^[A-Za-z0-9_-]+$/.test(x)))return null;
    const sig=Buffer.from(p[2],'base64url'),expected=createHmac('sha256',key).update(`s1.${p[1]}`).digest();
@@ -22,6 +23,9 @@ export function createStudioBindings({secret,now=Date.now}={}) {
    const raw=Buffer.from(p[1],'base64url');if(raw.toString('base64url')!==p[1])return null;
    const v=JSON.parse(raw.toString()),clock=now();
    if(Object.keys(v).length!==11||v.userId!==userId||v.projectId!==projectId||v.requestId!==requestId||!uuid(v.attemptId)||!identifier(v.sessionId,'sess')||!identifier(v.turnId,'turn')||!isAgentCallId(v.callId)||typeof v.name!=='string'||!/^[a-z_]{1,80}$/.test(v.name)||!/^[0-9a-f]{64}$/.test(v.argsDigest)||!Number.isSafeInteger(v.issuedAt)||v.expiresAt!==v.issuedAt+10*60*1000||clock<v.issuedAt||clock>=v.expiresAt)return null;
+   // Argument checks must use the signing domain of this proof. A credential
+   // wrapper may intentionally expose another digest for stable idempotency.
+   if(Object.hasOwn(input,'args')&&digest(input.args)!==v.argsDigest)return null;
    return v;
   }catch{return null;}
  }

@@ -4,6 +4,7 @@ import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties
 import type { Project } from "./studio-ui-types";
 import AccountMenu from "./account-menu";
 import "./studio-shell.css";
+import "./studio-reference-workspace.css";
 
 const assets = "/studio/";
 export type StudioTab = "post" | "moodboard" | "direction" | "facts" | "history";
@@ -115,6 +116,40 @@ export default function StudioShell({
   const [fixedChatHeight,setFixedChatHeight] = useState(0);
   const lastMessageCount = useRef(chatMessageCount);
   const [unread, setUnread] = useState(false);
+  const [compactReferences, setCompactReferences] = useState(false);
+  // Two quick breakpoint changes can cancel out inside one React batch; this
+  // counter still re-runs the focus effect after each media query change.
+  const [breakpointChanges, setBreakpointChanges] = useState(0);
+  const [referenceChatCollapsed, setReferenceChatCollapsed] = useState(false);
+  const [compactChatOpen, setCompactChatOpen] = useState(false);
+  const breakpointFocus = useRef<{element: Element; compact: boolean; projectId: string | undefined} | null>(null);
+  // CSS for the new width can hide the focused control before the media query
+  // listener runs, leaving focus on the body. Remember the last focus inside the
+  // shell; it is used only when focus is on the body, and the effect below acts
+  // only on areas that the compact conversation view hides.
+  const lastFocus = useRef<Element | null>(null);
+  useEffect(() => {
+    const root = barRef.current?.closest(".compor-studio");
+    if (!root) return;
+    const focusIn = (event: Event) => { lastFocus.current = event.target instanceof Element ? event.target : null; };
+    root.addEventListener("focusin", focusIn);
+    return () => { root.removeEventListener("focusin", focusIn); lastFocus.current = null; };
+  }, [projectId]);
+  useLayoutEffect(() => {
+    const media = window.matchMedia("(max-width: 1000px)");
+    const update = () => {
+      const active = document.activeElement;
+      const element = active && active !== document.body ? active : lastFocus.current;
+      breakpointFocus.current = element && element.isConnected && barRef.current?.closest(".compor-studio")?.contains(element)
+        ? {element, compact: media.matches, projectId} : null;
+      setCompactReferences(media.matches);
+      setBreakpointChanges(count => count + 1);
+    };
+    breakpointFocus.current = null;
+    setCompactReferences(media.matches);
+    media.addEventListener("change", update);
+    return () => { media.removeEventListener("change", update); breakpointFocus.current = null; };
+  }, [projectId]);
   useLayoutEffect(() => {
     const update=()=>setAvailableHeight(Math.max(1,Math.floor((window.visualViewport?.height ?? window.innerHeight)-32)));
     update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
@@ -136,6 +171,7 @@ export default function StudioShell({
   const isStudio = stage === "studio";
   const showChrome = bases != null || marca != null;
   const showChat = Boolean(chat) && isStudio;
+  const referenceWorkspace = showChat && conversationFocus;
   const [menuOpen, setMenuOpen] = useState(false);
   const [renameValue, setRenameValue] = useState(projectTitle);
   const [barHeight, setBarHeight] = useState(64);
@@ -143,7 +179,9 @@ export default function StudioShell({
   const [persistedCollapsed, setPersistedCollapsed] = useState(true);
   const controlledDrawer = onDrawerChange != null;
   const activeDrawer = controlledDrawer ? (drawer ?? null) : internalDrawer;
-  const layoutC = showChat && (persistedCollapsed || Boolean(viewingArt));
+  const layoutC = showChat && (Boolean(viewingArt) || (referenceWorkspace
+    ? compactReferences ? !compactChatOpen : referenceChatCollapsed
+    : persistedCollapsed));
   useLayoutEffect(() => {
     const panel=chatPanel.current;
     if(!showChat||!panel)return;
@@ -178,6 +216,38 @@ export default function StudioShell({
     }
     layoutListener.current?.(collapsed ? "c" : "b");
   }
+  function setChatCollapsed(collapsed: boolean) {
+    if (referenceWorkspace) {
+      if (compactReferences) setCompactChatOpen(!collapsed);
+      else setReferenceChatCollapsed(collapsed);
+      layoutListener.current?.(collapsed ? "c" : "b");
+    } else persistCollapse(collapsed);
+  }
+  function openChat() {
+    setChatCollapsed(false);
+    onCloseArt?.();
+    requestAnimationFrame(() => {
+      if (document.activeElement !== chatTrigger.current && document.activeElement !== document.body) return;
+      const input = chatPanel.current?.querySelector<HTMLTextAreaElement>("textarea:not([disabled])");
+      if (input) input.focus(); else chatPanel.current?.focus();
+    });
+  }
+  useEffect(() => {
+    setReferenceChatCollapsed(false);
+    setCompactChatOpen(false);
+  }, [projectId]);
+  useLayoutEffect(() => {
+    // Layout observers can flush styles and blur a hidden control before this
+    // effect. Preserve its pre-breakpoint target without replacing newer focus.
+    const active = document.activeElement;
+    const snapshot = breakpointFocus.current;
+    breakpointFocus.current = null;
+    const previous = snapshot?.compact === compactReferences && snapshot.projectId === projectId && snapshot.element.isConnected ? snapshot.element : null;
+    const focused = active && active !== document.body ? active : previous;
+    if (!barRef.current?.closest(".compor-studio")?.contains(focused)) return;
+    if (referenceWorkspace && layoutC && chatPanel.current?.contains(focused)) chatTrigger.current?.focus();
+    if (referenceWorkspace && compactReferences && !layoutC && focused?.closest("#studio-main, .studio-context, .studio-topbar-end")) chatTrigger.current?.focus();
+  }, [referenceWorkspace, compactReferences, layoutC, projectId, breakpointChanges]);
   function updateDrawer(next: StudioDrawer) {
     if (!controlledDrawer) setInternalDrawer(next);
     onDrawerChange?.(next);
@@ -245,7 +315,7 @@ export default function StudioShell({
         return;
       }
       if (showChat && !layoutC) {
-        persistCollapse(true);
+        setChatCollapsed(true);
         requestAnimationFrame(() => chatTrigger.current?.focus());
         return;
       }
@@ -253,7 +323,7 @@ export default function StudioShell({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [menuOpen, activeDrawer, viewingArt, projectId, showChat, layoutC]);
+  }, [menuOpen, activeDrawer, viewingArt, projectId, showChat, layoutC, referenceWorkspace, compactReferences]);
 
   const fallbackActions =
     headerActions ||
@@ -272,11 +342,13 @@ export default function StudioShell({
       className="compor-studio"
       data-stage={stage}
       data-conversation-focus={conversationFocus ? "true" : "false"}
+      data-chat-presentation={referenceWorkspace ? "sidebar" : "floating"}
+      data-reference-compact={referenceWorkspace && compactReferences ? "true" : "false"}
       data-layout={layoutC ? "c" : "b"}
       data-art={viewingArt ? "open" : "closed"}
-      style={{ "--studio-bar": `${barHeight}px` } as CSSProperties}
+      style={{ "--studio-bar": `${barHeight}px`, "--studio-viewport-height": `${availableHeight + 32}px` } as CSSProperties}
     >
-      <a className="studio-skip" href="#studio-main">
+      <a className="studio-skip" href={referenceWorkspace && compactReferences && !layoutC ? "#studio-floating-chat" : "#studio-main"}>
         Ir para o conteúdo
       </a>
       <header className="studio-topbar" ref={barRef}>
@@ -429,16 +501,29 @@ export default function StudioShell({
         </div>
       </header>
       {isStudio ? context : null}
+      {referenceWorkspace && (compactReferences || layoutC) ? (
+        <nav className="studio-reference-switcher" aria-label="Áreas da criação">
+          {compactReferences ? <button type="button" aria-controls="studio-main" aria-pressed={layoutC} onClick={() => setChatCollapsed(true)}>Referências</button> : <span>Conversa recolhida</span>}
+          <button ref={chatTrigger} type="button" aria-label="Abrir conversa" aria-controls="studio-floating-chat" aria-expanded={!layoutC} onClick={openChat}>
+            <img src="/studio/compor-avatar.svg" alt="" width="20" height="20" />
+            Conversa
+            {unread && <span className="studio-chat-unread" aria-live="polite">Nova mensagem</span>}
+          </button>
+        </nav>
+      ) : null}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
+        <main id="studio-main" tabIndex={-1} className={isStudio ? "studio-canvas-column" : "studio-page-content"} hidden={referenceWorkspace && compactReferences && !layoutC}>
+          {isStudio ? (canvas ?? children) : children}
+        </main>
         {showChat ? (
-          <div className="studio-chat-slot" style={{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
+          <div className="studio-chat-slot" style={referenceWorkspace ? undefined : {height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
             <aside ref={chatPanel} id="studio-floating-chat" tabIndex={-1} className="studio-conversation" aria-label="Conversa com a IA">
-              <div className="studio-chat-resize" role="slider" tabIndex={0} aria-label="Altura da conversa" aria-orientation="vertical" aria-valuemin={minimumChatHeight} aria-valuemax={maximumChatHeight} aria-valuenow={displayedChatHeight} aria-valuetext={`${displayedChatHeight} pixels`} onPointerDown={event=>{resizeDrag.current={pointerId:event.pointerId,startY:event.clientY,startHeight:chatPanel.current?.offsetHeight ?? displayedChatHeight};event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{const drag=resizeDrag.current;if(drag?.pointerId===event.pointerId)resizeChat(drag.startHeight+drag.startY-event.clientY);}} onPointerUp={event=>{if(resizeDrag.current?.pointerId===event.pointerId)resizeDrag.current=null;}} onPointerCancel={()=>{resizeDrag.current=null;}} onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowRight')resizeChat(displayedChatHeight+32);else if(event.key==='ArrowDown'||event.key==='ArrowLeft')resizeChat(displayedChatHeight-32);else if(event.key==='Home')resizeChat(minimumChatHeight);else if(event.key==='End')resizeChat(maximumChatHeight);else return;event.preventDefault();}} />
+              {!referenceWorkspace && <div className="studio-chat-resize" role="slider" tabIndex={0} aria-label="Altura da conversa" aria-orientation="vertical" aria-valuemin={minimumChatHeight} aria-valuemax={maximumChatHeight} aria-valuenow={displayedChatHeight} aria-valuetext={`${displayedChatHeight} pixels`} onPointerDown={event=>{resizeDrag.current={pointerId:event.pointerId,startY:event.clientY,startHeight:chatPanel.current?.offsetHeight ?? displayedChatHeight};event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{const drag=resizeDrag.current;if(drag?.pointerId===event.pointerId)resizeChat(drag.startHeight+drag.startY-event.clientY);}} onPointerUp={event=>{if(resizeDrag.current?.pointerId===event.pointerId)resizeDrag.current=null;}} onPointerCancel={()=>{resizeDrag.current=null;}} onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowRight')resizeChat(displayedChatHeight+32);else if(event.key==='ArrowDown'||event.key==='ArrowLeft')resizeChat(displayedChatHeight-32);else if(event.key==='Home')resizeChat(minimumChatHeight);else if(event.key==='End')resizeChat(maximumChatHeight);else return;event.preventDefault();}} />}
               <button
                 type="button"
                 className="studio-collapse"
                 aria-label="Recolher conversa"
-                onClick={() => { persistCollapse(true); requestAnimationFrame(() => chatTrigger.current?.focus()); }}
+                onClick={() => { setChatCollapsed(true); requestAnimationFrame(() => chatTrigger.current?.focus()); }}
               >
                 Recolher
               </button>
@@ -446,11 +531,8 @@ export default function StudioShell({
             </aside>
           </div>
         ) : null}
-        <main id="studio-main" tabIndex={-1} className={isStudio ? "studio-canvas-column" : "studio-page-content"}>
-          {isStudio ? (canvas ?? children) : children}
-        </main>
       </div>
-      {showChat ? (
+      {showChat && !referenceWorkspace ? (
         <div className="studio-floating-bar" hidden={!layoutC}>
           <button
             ref={chatTrigger}
@@ -459,15 +541,7 @@ export default function StudioShell({
             aria-label="Abrir conversa"
             aria-expanded={!layoutC}
             aria-controls="studio-floating-chat"
-            onClick={() => {
-              persistCollapse(false);
-              onCloseArt?.();
-              requestAnimationFrame(() => {
-                if (document.activeElement !== chatTrigger.current && document.activeElement !== document.body) return;
-                const input = chatPanel.current?.querySelector<HTMLTextAreaElement>("textarea:not([disabled])");
-                if (input) input.focus(); else chatPanel.current?.focus();
-              });
-            }}
+            onClick={openChat}
           >
             <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
             <span className="studio-floating-placeholder">Escreva uma mensagem…</span>

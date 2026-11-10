@@ -7,7 +7,8 @@ const usageSchema=z.object({input_tokens:z.number().nullable().optional(),output
 const traceSchema=z.object({functionCalls:z.number().optional(),outputs:z.number().optional(),omittedItems:z.number().optional(),items:z.array(z.object({type:z.string(),schemaValid:z.boolean().optional(),errorClass:z.string().optional()})).optional()});
 const common=z.object({error:z.string().optional(),errorCode:z.string().optional(),failurePhase:z.string().optional(),requestId:z.string().optional(),usage:usageSchema.nullable().optional(),itemTrace:traceSchema.optional(),assetId:z.string().optional()});
 export const chatResponseSchema=z.discriminatedUnion('status',[
- common.extend({status:z.literal('completed'),text:z.string().optional()}),
+ // reply stays unknown here: lib/studio-quick-replies validates it and falls back to text.
+ common.extend({status:z.literal('completed'),text:z.string().optional(),reply:z.unknown().optional()}),
  common.extend({status:z.literal('consent_required'),prompt:z.string(),proposal:z.unknown().optional(),attemptId:z.string(),actionBinding:z.string(),declineBinding:z.string().optional()}),
  common.extend({status:z.literal('action_required'),action:z.object({name:z.string(),args:z.unknown()}),actionBinding:z.string()}),
  common.extend({status:z.enum(['running','failed','unknown','accepted'])}),

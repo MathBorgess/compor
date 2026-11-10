@@ -312,7 +312,7 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
 .studio-exploration-status p + p { margin-top: 4px; color: var(--studio-muted); }
 .studio-exploration-status button { margin-top: 6px; }
 .studio-exploration-recovery { display: grid; gap: 8px; padding: 10px; border-radius: 10px; background: var(--studio-blue-tint); }
-.compor-studio :is(.reference-exploration, .studio-exploration-gallery, .studio-exploration-status, .studio-exploration-recovery, .studio-inline-key, .studio-chat-panel) button:not(.studio-button):not(.studio-button-secondary) { min-height: 40px; padding: 9px 14px; border: 1px solid var(--studio-line); border-radius: 10px; background: white; color: var(--studio-cobalt); font: inherit; font-weight: 500; }
+.compor-studio :is(.reference-exploration, .studio-exploration-gallery, .studio-exploration-status, .studio-exploration-recovery, .studio-inline-key, .studio-chat-panel) button:not(.studio-button):not(.studio-button-secondary):not(.studio-quick-reply) { min-height: 40px; padding: 9px 14px; border: 1px solid var(--studio-line); border-radius: 10px; background: white; color: var(--studio-cobalt); font: inherit; font-weight: 500; }
 .compor-studio :is(.reference-exploration, .studio-exploration-gallery) button.reference-image-select { position: relative; display: block; width: 100%; padding: 0; overflow: hidden; background: var(--studio-cream); }
 .compor-studio button.reference-image-select[aria-pressed='true'] { border: 3px solid var(--studio-cobalt); opacity: 1; cursor: default; }
 .reference-image-select span { position: absolute; right: 8px; bottom: 8px; padding: 6px 10px; border-radius: 999px; background: white; color: var(--studio-cobalt); box-shadow: 0 2px 8px #2c2d2f22; font-size: 12px; }
@@ -326,4 +326,34 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
   .studio-inline-key:not([open]), .studio-exploration-status:not([open]) { padding-block: 3px; }
   .studio-chat-context:not([open]) { margin-bottom: 0; }
   .studio-chat-composer textarea { font-size: 16px; }
+}
+
+/* A taste reading keeps the assistant bubble and adds a closed set of answers. */
+.studio-taste-card { display: grid; gap: 10px; }
+.studio-taste-card .studio-message-label { margin-bottom: 0; }
+.studio-taste-recommendation { padding: 10px 12px; border-left: 3px solid var(--studio-cobalt); border-radius: 0 8px 8px 0; background: white; }
+.studio-taste-recommendation h3 { margin: 0 0 4px; color: var(--studio-cobalt); font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; }
+.studio-taste-question { margin: 0; color: var(--studio-ink); font-weight: 600; }
+.studio-quick-replies { display: grid; gap: 8px; }
+/* The chat panel's generic button rule excludes this class; modifiers below win by plain specificity. */
+button.studio-quick-reply {
+  display: grid; gap: 2px; width: 100%; min-height: 44px; padding: 9px 12px;
+  border: 1px solid var(--studio-line); border-radius: 10px; background: white; color: var(--studio-ink);
+  font: inherit; text-align: left; cursor: pointer;
+}
+.studio-quick-reply-label { font-size: 14px; font-weight: 600; }
+.studio-quick-reply-description { color: var(--studio-muted); font-size: 12px; line-height: 1.4; }
+.studio-quick-reply[data-intent='agree'] { border-color: var(--studio-cobalt); }
+.studio-quick-reply[data-intent='agree'] .studio-quick-reply-label { color: var(--studio-cobalt); }
+.studio-quick-reply[data-intent='adjust'] { border-style: dashed; }
+.studio-quick-reply:not(:disabled):hover { border-color: var(--studio-cobalt); background: var(--studio-blue-tint); }
+.studio-quick-reply:focus-visible { outline: 2px solid var(--studio-cobalt); outline-offset: 2px; }
+/* Past answers stay readable: inactive options fade, the chosen one does not. */
+.compor-studio button.studio-quick-reply:disabled, button.studio-quick-reply:disabled { cursor: default; opacity: .55; }
+.compor-studio button.studio-quick-reply[data-chosen='true'], button.studio-quick-reply[data-chosen='true'] { border: 2px solid var(--studio-cobalt); background: var(--studio-blue-tint); opacity: 1; }
+.studio-quick-reply-status { margin: 0; color: var(--studio-muted); font-size: 12px; line-height: 1.45; }
+.studio-quick-reply-status:focus { outline: none; }
+.studio-quick-reply-status:focus-visible { outline: 2px solid var(--studio-cobalt); outline-offset: 2px; }
+@media (forced-colors: active) {
+  .studio-quick-reply[data-chosen='true'] { outline: 2px solid Highlight; }
 }

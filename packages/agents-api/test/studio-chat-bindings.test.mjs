@@ -8,3 +8,11 @@ test('prova de ação vincula conta, projeto, pedido, argumentos e prazo sem con
  assert.equal(token.includes('Conteúdo local'),false);const value=b.verify({token,userId,projectId,requestId});assert.equal(value.argsDigest,b.digest(args));assert.notEqual(value.argsDigest,b.digest({value:'Outro'}));
  assert.equal(b.verify({token,userId:projectId,projectId,requestId}),null);assert.equal(b.verify({token:token+'x',userId,projectId,requestId}),null);clock+=600000;assert.equal(b.verify({token,userId,projectId,requestId}),null);
 });
+
+test('verificação opcional de argumentos usa a chave da prova e recusa valores diferentes ou ausentes',()=>{
+ const b=createStudioBindings({secret:Buffer.alloc(32,7)}),args={value:'Conteúdo local'},scope={userId,projectId,requestId};
+ const token=b.issue({...scope,attemptId,sessionId:'sess_one',turnId:'turn_one',callId:'call_one',name:'compor_editar_briefing',args});
+ assert.ok(b.verify({...scope,token}));assert.ok(b.verify({...scope,token,args}));
+ for(const invalid of [{value:'Outro'},null,undefined])assert.equal(b.verify({...scope,token,args:invalid}),null);
+ assert.equal(b.verify(null),null);
+});

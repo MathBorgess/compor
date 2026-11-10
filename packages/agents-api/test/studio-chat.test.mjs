@@ -445,3 +445,111 @@ test('um título com exatamente 48 caracteres continua sendo uma proposta assina
  const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
  assert.equal(pending.status,'action_required');assert.equal(pending.action.args.title,title);assert.ok(pending.actionBinding);
 });
+
+const options={sintese:'Tipografia serifada com respiro editorial',alternativas:[{rotulo:'Mais sóbrio',descricao:'Tons neutros, tipografia leve e mais espaço vazio.'},{rotulo:'Agressivo',descricao:'Cores saturadas, contraste alto e tipografia pesada.'}]};
+test('leitura da seleção preserva estrutura versionada e opções de uma lista fechada',async()=>{
+ const {first,again}=await selectionReply(JSON.stringify({...reading,opcoes:options}));
+ assert.equal(first.status,'completed');assert.equal(first.text,composed,'o texto continua sendo o fallback compatível');
+ assert.deepEqual(first.reply,{version:1,kind:'taste_reading',reading:reading.leitura,recommendation:reading.recomendacao,question:reading.pergunta,synthesis:options.sintese,options:[
+  {id:'agree',intent:'agree',label:'Concordo'},
+  {id:'prefer_1',intent:'prefer',label:'Mais sóbrio',description:'Tons neutros, tipografia leve e mais espaço vazio.'},
+  {id:'prefer_2',intent:'prefer',label:'Agressivo',description:'Cores saturadas, contraste alto e tipografia pesada.'},
+  {id:'adjust',intent:'adjust',label:'Quero ajustar'},
+ ]});
+ assert.deepEqual(again.reply,first.reply,'a consulta repetida devolve a mesma estrutura');
+ const plain=await selectionReply(JSON.stringify(reading));
+ assert.deepEqual(plain.first.reply.options.map(option=>option.id),['agree','adjust'],'sem alternativas, só as opções do aplicativo');
+ assert.equal('synthesis' in plain.first.reply,false);
+});
+test('opções inválidas do modelo são descartadas sem invalidar a leitura nem virar ação',async()=>{
+ const invalid=[
+  {...options,alternativas:[...options.alternativas,{rotulo:'Terceira',descricao:'Uma terceira direção.'}]},
+  {...options,alternativas:[{rotulo:'Mais sóbrio?',descricao:'Pergunta disfarçada.'}]},
+  {...options,alternativas:[{rotulo:'Veja https://exemplo.com',descricao:'Link.'}]},
+  {...options,alternativas:[{rotulo:'**Negrito**',descricao:'Markdown.'}]},
+  {...options,alternativas:[{rotulo:'<b>HTML</b>',descricao:'Marcação.'}]},
+  {...options,alternativas:[{rotulo:'Gerar',descricao:'x'.repeat(141)}]},
+  {...options,alternativas:[{rotulo:'Concordo',descricao:'Duplica a opção do aplicativo.'}]},
+  {...options,alternativas:[{rotulo:'Mais sóbrio',descricao:'Uma.'},{rotulo:'mais sóbrio',descricao:'Duplicada.'}]},
+  {...options,alternativas:[{rotulo:'Sem descrição'}]},
+  {...options,alternativas:'Mais sóbrio'},
+  {...options,sintese:'Posso seguir?'},
+  {...options,sintese:'a'.repeat(81)},
+  {...options,alternativas:[{rotulo:'Quebra\nde linha',descricao:'Controle.'}]},
+  'opções em texto',
+  ['lista'],
+ ];
+ for(const opcoes of invalid){
+  const {first}=await selectionReply(JSON.stringify({...reading,opcoes}));
+  assert.equal(first.status,'completed',JSON.stringify(opcoes));assert.equal(first.text,composed);
+  assert.deepEqual(first.reply.options.map(option=>option.id),['agree','adjust'],JSON.stringify(opcoes));
+  assert.equal('synthesis' in first.reply,false,JSON.stringify(opcoes));
+ }
+ const secret=await selectionReply(JSON.stringify({...reading,opcoes:{...options,sintese:'Chave sk-abcdefghijklmnopqrstuvwxyz'}}));
+ assert.equal(secret.first.status,'unknown','texto com formato de chave nunca chega à interface');assert.equal('reply' in secret.first,false);
+ const {first}=await selectionReply(JSON.stringify({...reading,opcoes:options,acoes:[{tool:'generate_image'}],html:'<script>x</script>'}));
+ assert.equal(JSON.stringify(first).includes('generate_image'),false);assert.equal(JSON.stringify(first).includes('<script>'),false);
+});
+test('instruções da seleção mantêm três campos de texto e descrevem só o objeto opcional',async()=>{
+ const f=fixture();await f.chat(request(selection));const create=f.calls.find(call=>call.url?.endsWith('/sessions'));
+ assert.match(create.body.agent.instructions,/somente com um objeto JSON com exatamente três campos de texto: leitura.*recomendacao.*pergunta, uma única pergunta/);
+ assert.match(create.body.agent.instructions,/um único campo opcional opcoes.*sintese.*alternativas lista no máximo 2 direções de gosto/);
+ assert.match(create.body.agent.instructions,/Não inclua concordância, ajuste livre, geração de imagem, aprovação ou aceite nas alternativas/);
+ assert.deepEqual(create.body.agent.tools,[]);
+});
+test('turno comum não devolve estrutura de leitura mesmo que o texto pareça JSON',async()=>{
+ const f=fixture();await f.chat(request(body));f.set({status:'idle',turnState:'completed',answer:JSON.stringify({...reading,opcoes:options})});
+ const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(result.status,'completed');assert.equal('reply' in result,false);assert.equal(result.text,JSON.stringify({...reading,opcoes:options}));
+});
+
+const quick={...body,message:'Concordo com a recomendação: Tipografia serifada com respiro editorial.',quickReply:{version:1,intent:'agree'}};
+test('resposta rápida abre turno só de texto, sem ferramentas e com a intenção explícita',async()=>{
+ for(const intent of ['agree','prefer']){
+  const f=fixture(),input={...quick,quickReply:{version:1,intent}};
+  const r=await f.chat(request(input));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
+  const create=f.calls.find(call=>call.url?.endsWith('/sessions'));
+  assert.deepEqual(create.body.agent.tools,[],'escolha de gosto não autoriza imagem nem outras ações');
+  assert.match(create.body.agent.instructions,/resposta rápida da pessoa à recomendação de gosto mais recente/);
+  assert.match(create.body.agent.instructions,/nunca um pedido de imagem, aprovação, aceite comercial ou outra ação/);
+  assert.match(create.body.agent.instructions,/Neste turno você só pode responder em texto e não possui ferramentas/);
+  const payload=JSON.parse(create.body.input[0].content[0].text);
+  assert.equal(payload.origin,'user');assert.equal(payload.message,quick.message);assert.deepEqual(payload.quickReply,{version:1,intent});
+  await f.chat(request(input));assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,1,'repetição consulta a mesma tentativa');
+ }
+ const plain=fixture();await plain.chat(request(body));
+ const create=plain.calls.find(call=>call.url?.endsWith('/sessions'));
+ assert.equal(create.body.agent.tools.length,AGENT_STUDIO_TOOLS.length,'mensagem livre mantém as ferramentas');
+ assert.equal('quickReply' in JSON.parse(create.body.input[0].content[0].text),false);
+ assert.doesNotMatch(create.body.agent.instructions,/resposta rápida/);
+});
+test('resposta rápida inválida, automática ou reaproveitando sessão é recusada antes do provedor',async()=>{
+ const invalid=[
+  {...quick,quickReply:{version:2,intent:'agree'}},
+  {...quick,quickReply:{version:1,intent:'adjust'}},
+  {...quick,quickReply:{version:1,intent:'generate'}},
+  {...quick,quickReply:{version:1,intent:'agree',optionId:'agree'}},
+  {...quick,quickReply:'agree'},
+  {...quick,quickReply:null},
+  {...quick,previousAttemptKey:request2},
+  {...selection,quickReply:{version:1,intent:'agree'}},
+ ];
+ for(const input of invalid){
+  const f=fixture(),r=await f.chat(request(input));
+  assert.equal(r.status,400,JSON.stringify(input.quickReply));assert.deepEqual(await r.json(),{error:'invalid_request'});
+  assert.equal(f.calls.length,0,'nenhuma chamada ao provedor');assert.equal(f.records.size,0,'nenhuma reserva');
+ }
+});
+test('a mesma tentativa com ou sem resposta rápida conflita em vez de reaproveitar o resultado',async()=>{
+ const f=fixture();assert.equal((await f.chat(request(body))).status,202);
+ const conflict=await f.chat(request({...body,quickReply:{version:1,intent:'agree'}}));
+ assert.equal(conflict.status,409);assert.deepEqual(await conflict.json(),{status:'conflict',retryAutomatically:false});
+ assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,1);
+});
+test('sessão de resposta rápida concluída não é reutilizada por uma mensagem com ferramentas',async()=>{
+ const f=fixture({sessionTools:[]});seedPrevious(f,AGENT_MODEL);
+ assert.equal((await f.chat(request({...body,requestId:request2,previousAttemptKey:requestId}))).status,202);
+ assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0,'nenhuma mensagem foi enviada à sessão sem ferramentas');
+ const create=f.calls.find(call=>call.method==='POST'&&call.url?.endsWith('/sessions'));
+ assert.equal(create.body.agent.tools.length,AGENT_STUDIO_TOOLS.length);
+});
