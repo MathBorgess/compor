@@ -157,7 +157,9 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   assert.equal(await page.locator('.studio-context').isVisible(),false);
   assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);
   await page.setViewportSize({width:1440,height:960});
+  await page.getByRole('button',{name:'Salvar versão',exact:true}).waitFor({state:'visible'});
   await page.getByRole('button',{name:'Salvar versão',exact:true}).focus();
+  assert.equal(await page.getByRole('button',{name:'Salvar versão',exact:true}).evaluate(element=>element===document.activeElement),true);
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
   assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);

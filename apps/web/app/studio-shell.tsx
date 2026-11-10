@@ -119,13 +119,20 @@ export default function StudioShell({
   const [compactReferences, setCompactReferences] = useState(false);
   const [referenceChatCollapsed, setReferenceChatCollapsed] = useState(false);
   const [compactChatOpen, setCompactChatOpen] = useState(false);
+  const breakpointFocus = useRef<{element: Element; compact: boolean; projectId: string | undefined} | null>(null);
   useLayoutEffect(() => {
     const media = window.matchMedia("(max-width: 1000px)");
-    const update = () => setCompactReferences(media.matches);
-    update();
+    const update = () => {
+      const element = document.activeElement;
+      breakpointFocus.current = element && barRef.current?.closest(".compor-studio")?.contains(element)
+        ? {element, compact: media.matches, projectId} : null;
+      setCompactReferences(media.matches);
+    };
+    breakpointFocus.current = null;
+    setCompactReferences(media.matches);
     media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
+    return () => { media.removeEventListener("change", update); breakpointFocus.current = null; };
+  }, [projectId]);
   useLayoutEffect(() => {
     const update=()=>setAvailableHeight(Math.max(1,Math.floor((window.visualViewport?.height ?? window.innerHeight)-32)));
     update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
@@ -213,10 +220,17 @@ export default function StudioShell({
     setCompactChatOpen(false);
   }, [projectId]);
   useLayoutEffect(() => {
-    // A breakpoint must not leave keyboard focus in either now-hidden area.
-    if (referenceWorkspace && layoutC && chatPanel.current?.contains(document.activeElement)) chatTrigger.current?.focus();
-    if (referenceWorkspace && compactReferences && !layoutC && document.activeElement?.closest("#studio-main, .studio-context, .studio-topbar-end")) chatTrigger.current?.focus();
-  }, [referenceWorkspace, compactReferences, layoutC]);
+    // Layout observers can flush styles and blur a hidden control before this
+    // effect. Preserve its pre-breakpoint target without replacing newer focus.
+    const active = document.activeElement;
+    const snapshot = breakpointFocus.current;
+    breakpointFocus.current = null;
+    const previous = snapshot?.compact === compactReferences && snapshot.projectId === projectId && snapshot.element.isConnected ? snapshot.element : null;
+    const focused = active && active !== document.body ? active : previous;
+    if (!barRef.current?.closest(".compor-studio")?.contains(focused)) return;
+    if (referenceWorkspace && layoutC && chatPanel.current?.contains(focused)) chatTrigger.current?.focus();
+    if (referenceWorkspace && compactReferences && !layoutC && focused?.closest("#studio-main, .studio-context, .studio-topbar-end")) chatTrigger.current?.focus();
+  }, [referenceWorkspace, compactReferences, layoutC, projectId]);
   function updateDrawer(next: StudioDrawer) {
     if (!controlledDrawer) setInternalDrawer(next);
     onDrawerChange?.(next);
