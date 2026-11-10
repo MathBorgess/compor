@@ -136,6 +136,8 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   for(let index=0;index<3;index++){await open.click();await page.getByRole('button',{name:'Referências',exact:true}).click();}
   await open.click();assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Preservar meu comentário');
   await page.setViewportSize({width:1440,height:960});
+  // The breakpoint reaches React through a media query listener after the resize; wait for it without a longer timeout.
+  await page.locator('#studio-main').waitFor({state:'visible'});
   assert.equal(await page.locator('#studio-main').isVisible(),true);
   assert.equal(await page.locator('.studio-chat-panel').count(),1);
   await page.getByRole('button',{name:'Referência 1',exact:true}).focus();
@@ -150,10 +152,14 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   await page.getByRole('button',{name:'Referências',exact:true}).click();
   assert.equal(await page.getByLabel('Oferta',{exact:true}).inputValue(),'Uma oficina para criar com as mãos');
   await open.click();
+  // Opening moves focus to the composer on the next frame; let it settle before resizing.
+  await page.waitForFunction(()=>document.activeElement?.id==='test-message');
   await page.setViewportSize({width:1440,height:960});
   await page.getByLabel('Oferta',{exact:true}).focus();
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
+  // Focus moves in the breakpoint callback; the compact layout attribute follows on the next React render.
+  await page.locator('.studio-context').waitFor({state:'hidden'});await page.locator('.studio-topbar-end').waitFor({state:'hidden'});
   assert.equal(await page.locator('.studio-context').isVisible(),false);
   assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);
   await page.setViewportSize({width:1440,height:960});
@@ -162,6 +168,7 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   assert.equal(await page.getByRole('button',{name:'Salvar versão',exact:true}).evaluate(element=>element===document.activeElement),true);
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
+  await page.locator('.studio-topbar-end').waitFor({state:'hidden'});
   assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);
   assert.deepEqual(errors,[]);
 });

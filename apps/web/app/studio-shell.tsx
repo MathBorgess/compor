@@ -117,16 +117,33 @@ export default function StudioShell({
   const lastMessageCount = useRef(chatMessageCount);
   const [unread, setUnread] = useState(false);
   const [compactReferences, setCompactReferences] = useState(false);
+  // Two quick breakpoint changes can cancel out inside one React batch; this
+  // counter still re-runs the focus effect after each media query change.
+  const [breakpointChanges, setBreakpointChanges] = useState(0);
   const [referenceChatCollapsed, setReferenceChatCollapsed] = useState(false);
   const [compactChatOpen, setCompactChatOpen] = useState(false);
   const breakpointFocus = useRef<{element: Element; compact: boolean; projectId: string | undefined} | null>(null);
+  // CSS for the new width can hide the focused control before the media query
+  // listener runs, leaving focus on the body. Remember the last focus inside the
+  // shell; it is used only when focus is on the body, and the effect below acts
+  // only on areas that the compact conversation view hides.
+  const lastFocus = useRef<Element | null>(null);
+  useEffect(() => {
+    const root = barRef.current?.closest(".compor-studio");
+    if (!root) return;
+    const focusIn = (event: Event) => { lastFocus.current = event.target instanceof Element ? event.target : null; };
+    root.addEventListener("focusin", focusIn);
+    return () => { root.removeEventListener("focusin", focusIn); lastFocus.current = null; };
+  }, [projectId]);
   useLayoutEffect(() => {
     const media = window.matchMedia("(max-width: 1000px)");
     const update = () => {
-      const element = document.activeElement;
-      breakpointFocus.current = element && barRef.current?.closest(".compor-studio")?.contains(element)
+      const active = document.activeElement;
+      const element = active && active !== document.body ? active : lastFocus.current;
+      breakpointFocus.current = element && element.isConnected && barRef.current?.closest(".compor-studio")?.contains(element)
         ? {element, compact: media.matches, projectId} : null;
       setCompactReferences(media.matches);
+      setBreakpointChanges(count => count + 1);
     };
     breakpointFocus.current = null;
     setCompactReferences(media.matches);
@@ -230,7 +247,7 @@ export default function StudioShell({
     if (!barRef.current?.closest(".compor-studio")?.contains(focused)) return;
     if (referenceWorkspace && layoutC && chatPanel.current?.contains(focused)) chatTrigger.current?.focus();
     if (referenceWorkspace && compactReferences && !layoutC && focused?.closest("#studio-main, .studio-context, .studio-topbar-end")) chatTrigger.current?.focus();
-  }, [referenceWorkspace, compactReferences, layoutC, projectId]);
+  }, [referenceWorkspace, compactReferences, layoutC, projectId, breakpointChanges]);
   function updateDrawer(next: StudioDrawer) {
     if (!controlledDrawer) setInternalDrawer(next);
     onDrawerChange?.(next);
