@@ -10,7 +10,16 @@ export const pinPreviewSchema = z.string().max(1000).refine(value => {
 export const exploredReferenceSchema = z.strictObject({ id: z.string().regex(/^[A-Za-z0-9_-]{1,160}$/), title: z.string().trim().min(1).max(300), board: boardSlugSchema, originUrl: pinOriginSchema, previewUrl: pinPreviewSchema });
 export type ExploredReference = z.infer<typeof exploredReferenceSchema>;
 export const referenceSearchResponseSchema = z.strictObject({ status: z.enum(['ok','empty','unavailable']), references: z.array(exploredReferenceSchema).max(12) });
-export const referenceSignalSchema = z.strictObject({ id:z.uuid(), projectId:z.uuid(), originUrl:pinOriginSchema, board:boardSlugSchema, action:z.enum(['selected','rejected','comment']), comment:z.string().trim().max(1000), supersedes:z.uuid().nullable(), createdAt:z.iso.datetime({offset:true}) }).superRefine((value,ctx)=>{if(value.action==='comment' && !value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});});
+export const referenceHistoryEntrySchema = exploredReferenceSchema.extend({approvedVersions:z.number().int().min(0).max(2147483647),selectedAt:z.iso.datetime({offset:true})});
+export type ReferenceHistoryEntry = z.infer<typeof referenceHistoryEntrySchema>;
+export const referenceHistoryResponseSchema = z.strictObject({references:z.array(referenceHistoryEntrySchema).max(100)});
+const signalShape = {id:z.uuid(),projectId:z.uuid(),originUrl:pinOriginSchema,board:boardSlugSchema,action:z.enum(['selected','rejected','comment']),comment:z.string().trim().max(1000),supersedes:z.uuid().nullable(),reference:exploredReferenceSchema.optional()};
+function validSignal(value:z.infer<z.ZodObject<typeof signalShape>>,ctx:z.RefinementCtx) {
+  if(value.action==='comment' && !value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});
+  if(value.reference && (value.action!=='selected'||value.reference.originUrl!==value.originUrl||value.reference.board!==value.board||value.reference.originUrl!==`https://www.pinterest.com/pin/${value.reference.id}/`))ctx.addIssue({code:'custom',message:'Referência não corresponde à seleção'});
+}
+export const referenceSignalInputSchema=z.strictObject(signalShape).superRefine(validSignal);
+export const referenceSignalSchema=z.strictObject({...signalShape,createdAt:z.iso.datetime({offset:true})}).superRefine(validSignal);
 export type ReferenceSignal = z.infer<typeof referenceSignalSchema>;
 export const referenceSignalsResponseSchema = z.strictObject({ signals: z.array(referenceSignalSchema).max(500) });
 export function currentReferenceFeedback(signals:ReferenceSignal[]) {
