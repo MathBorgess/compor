@@ -143,6 +143,37 @@
   "limitations": [
     "Synthetic account, API responses and artwork; no real login, model or paid calls.",
     "Geometry and journey are separate scopes from separate source commits; callback host blob is identical.",
-    "Full cumulative tests, production build, bundle analysis and Lighthouse for the final26head remain separate required checks."
-  ]
+    "Visual geometry and functional journey remain separate from final cumulative automated validation; signed-out Lighthouse does not validate production, real login or providers."
+  ],
+  "finalCumulativeValidation": {
+    "sourceCommit": "0f0a08d43a4473fe2d6096715976448477b54f8f",
+    "lint": "passed",
+    "typecheck": "passed",
+    "unit": "passed",
+    "web": {
+      "passed": 336,
+      "failed": 0,
+      "skipped": 0,
+      "durationSeconds": 347.978680009,
+      "workerSourcesIsolated": true,
+      "cpuAffinityLimitedToTwo": false
+    },
+    "focusedSql": {
+      "passed": 2,
+      "durationSeconds": 4.002442886,
+      "separateFromQualityUnit": true
+    },
+    "build": "passed",
+    "bundleAnalysis": "passed",
+    "performance": {
+      "status": "passed",
+      "runs": 5,
+      "scope": "Signed-out entry, synthetic public configuration; not authenticated/provider latency",
+      "totalClientJavascriptGzipBytes": 288022,
+      "initialJavascriptGzipBytes": 0,
+      "lcpMedianMs": 639.37135,
+      "tbtMsAllRuns": 0,
+      "clsMedian": 0.008014568990844923
+    }
+  }
 }
