@@ -9,6 +9,16 @@ assert 'paths' not in doc['on']['push'] and 'paths-ignore' not in doc['on']['pus
 operation=doc['on']['workflow_dispatch']['inputs']['operation']
 assert operation['default']=='migrate' and operation['options']==['migrate','bootstrap']
 assert doc['concurrency']['cancel-in-progress']=='false' and doc['concurrency']['queue']=='max'
+deploy=doc['jobs']['deploy']
+assert deploy['needs']=='migrate' and deploy['environment']=='production'
+assert deploy['if']=="github.event_name != 'workflow_dispatch' || inputs.operation == 'migrate'"
+assert deploy['steps'][0]['with']['ref']=='${{ github.sha }}'
+assert deploy['steps'][0]['with']['persist-credentials']=='false'
+assert deploy['env']['VERCEL_CLI_VERSION']=='65.14.0'
+assert 'VERCEL_TOKEN' not in deploy['env']
+assert all('VERCEL_TOKEN' not in step.get('env',{}) for step in deploy['steps'][:-1])
+assert deploy['steps'][-1]['env']['VERCEL_TOKEN']=='${{ secrets.VERCEL_TOKEN }}'
+assert '--token' not in deploy['steps'][-1]['run']
 pre=doc['jobs']['preflight']['steps'][0]['run']; migrate=doc['jobs']['migrate']['steps'][-1]['run']
 subprocess.run(['bash','-n'],input=pre,text=True,check=True);subprocess.run(['bash','-n'],input=migrate,text=True,check=True)
 sha_guard=doc['jobs']['migrate']['steps'][1]['run']
