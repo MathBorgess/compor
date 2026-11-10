@@ -1,7 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createServer} from 'node:http';
-import {readFile,mkdir} from 'node:fs/promises';
+import {readFile} from 'node:fs/promises';
+import {tmpdir} from 'node:os';
+import {join} from 'node:path';
 import {fileURLToPath} from 'node:url';
 import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
@@ -47,12 +49,11 @@ test('faixa do contexto edita por teclado, pede a escolha de público e distingu
   await strip.locator('details[open] summary').click();
   await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('heading',{name:'Seu post preservado',exact:true}).waitFor();assert.equal(await strip.isVisible(),true);
   await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();assert.equal(await strip.isVisible(),true);assert.equal(JSON.parse(await page.getByTestId('state').textContent()).brief.offer,'Oficina com argila natural');
-  await mkdir('/workspace/scratch/context-strip',{recursive:true});
   for(const [width,name] of [[1440,'desktop'],[390,'mobile']]){
     await page.setViewportSize({width,height:960});
     assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth+1));
     assert.ok(await strip.locator('summary').evaluateAll(elements=>elements.every(element=>element.getBoundingClientRect().height>=44)));
-    await page.screenshot({path:`/workspace/scratch/context-strip/${name}.png`,fullPage:true});
+    await page.screenshot({path:join(tmpdir(),`compor-studio-visual-context-strip-${name}.png`),fullPage:true});
   }
   assert.deepEqual(errors,[]);
 });
