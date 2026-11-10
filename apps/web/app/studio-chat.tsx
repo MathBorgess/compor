@@ -4,16 +4,20 @@ import Markdown from "markdown-to-jsx";
 import {
   prepareAdjustment,
   settleAdjustment,
+  resolveProjectTitle,
   getCurrentDraft,
   REFERENCE_SELECTION_EVENT,
 } from "../lib/studio-state.ts";
-import { parseImageProposal } from "@compor/agents-api/image-proposal";
+import { parseImageProposal, type ImageProposal } from "@compor/agents-api/image-proposal";
 import { prepareArtworkTransport, artworkSourceFingerprint, ArtworkTransportRequiredError } from "../lib/studio-artwork-input.ts";
 import { sameCreativeFields } from "../lib/studio-state.ts";
 import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
 import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, referenceFingerprint, referenceRoundKey } from '../lib/studio-reference-round.ts';
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
+import { submitOnEnter } from "../lib/submit-on-enter.ts";
+import {offerContext} from '../lib/studio-context.ts';
+import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
@@ -22,7 +26,7 @@ import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { chatResponseSchema, errorResponseSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
-const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
+const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
 async function contextDigest(state:StudioState) {
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
@@ -41,6 +45,7 @@ function inspectionSummary(data:ChatResponse):Inspection{
 
 export default function StudioChat({
   state,
+  projectRevision,
   getState,
   change,
   flush,
@@ -55,7 +60,7 @@ export default function StudioChat({
   connection,
   explorationRecovery,
   developerMode = false,
-}: { state:StudioState;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
   const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
@@ -322,6 +327,7 @@ export default function StudioChat({
         data.action.name,
         data.action.args,
       );
+      if(data.action.name==='compor_renomear_projeto')change(resolveProjectTitle);
       await flush();
       if(result.status==="completed"){
         const args = data.action.args;
@@ -347,6 +353,7 @@ export default function StudioChat({
     if (data.status === "failed") {
       if(automatic) { try { completeReferenceRecord(requestId); } catch {} }
       settle(requestId, "failed");
+      if(data.failurePhase!=='before_submission')previous.current=null;
       setPending(null);
       remember(null);
       setBusy(false);
@@ -429,7 +436,7 @@ export default function StudioChat({
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch}));
         remember(requestId);setPending(requestId);availability.current.pending=requestId;
         const draft=getCurrentDraft(next);
-        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references};
+        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
         const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:before.messages.filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
         await handle(data,requestId);
@@ -492,6 +499,7 @@ export default function StudioChat({
           approval: draft?.approval ?? null,
           baseImageId: baseId,
           brief: next.brief,
+          ...offerContext(next),
           persona: next.persona,
           direction: next.direction,
           readiness: {level, evidence, gaps, limitations},
@@ -504,7 +512,8 @@ export default function StudioChat({
               mark.baseVersion === draft?.baseVersion,
           ),
           references: next.references,
-        };
+          projectTitleProvisional: next.projectTitleProvisional && projectRevision===1,
+        } satisfies StudioContext;
       submitted = true;
       const data = await api("/api/studio/chat", {
         projectId: state.projectId,
@@ -659,7 +668,7 @@ export default function StudioChat({
       }
       setImageAction(null);
       if (typeof prepareImageVersion === "function") {
-        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion});
+        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion,operation:action.proposal.operation,...(action.proposal.changedDimension?{changedDimension:action.proposal.changedDimension}:{})});
         if (!saved || saved.status !== "completed" || saved.pieceId !== draft.pieceId || typeof saved.version!=="number" || !Number.isSafeInteger(saved.version) || saved.version <= draft.baseVersion) throw Error("Não foi possível preparar a nova versão. Confira o histórico antes de tentar novamente.");
         target = {pieceId: saved.pieceId, version: saved.version};
         if (!isCurrentScope()) return;
@@ -913,6 +922,7 @@ export default function StudioChat({
           disabled={busy}
           placeholder="Escreva uma mensagem…"
           onChange={(e) => setMessage(e.target.value)}
+          onKeyDown={submitOnEnter}
         />
           <button
             className="studio-button"

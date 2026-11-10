@@ -6,6 +6,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
+import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -35,11 +36,12 @@ async function chooseFiles(page,label,files){const [chooser]=await Promise.all([
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
  const origin=`http://127.0.0.1:${port}`;
- const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,COMPOR_STUDIO_WEB_ENABLED:'true',SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});
+ const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_publictest',APP_ORIGIN:origin}});
  let browser;t.after(async()=>{try{await browser?.close();}finally{await stopApp(child);}});
- await waitForApp({url:origin,child,signal:t.signal});
+ await waitForApp({url:origin,child,signal:t.signal,headers:sessionCookieHeaders(origin),nextApp:true});
  browser=await chromium.launch({executablePath:browserPath,headless:true});
  const context=await browser.newContext({viewport:{width:1440,height:1000},acceptDownloads:true});
+ await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage(),errors=[],external=[],calls=[],revokedImages=[];
  page.setDefaultTimeout(6000);
  await page.exposeFunction('reportRevokedImage',image=>revokedImages.push(image));
@@ -73,6 +75,7 @@ async function app(t){
    return route.fulfill({status:202,json:{status:'action_required',action:{name:'compor_novo_post',args:{projectId,requestId:id(80),revision:body.context.revision}},actionBinding:'synthetic-binding'}});
   }
   if(url.pathname==='/api/studio/action'){calls.push({path:url.pathname,body:request.postDataJSON()});return route.fulfill({json:{status:'completed',text:'Novo post preparado no navegador.'}});}
+  if(url.pathname==='/api/image-assets'){calls.push({path:url.pathname,method:request.method()});return route.fulfill({json:{assets:[],nextCursor:null}});}
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
@@ -83,18 +86,19 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
  await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await openEditor(page);
- await openDrawer(page,'Marca');
- await page.getByLabel('Quem você quer alcançar?',{exact:true}).fill('Pessoas interessadas em aprender');
+ const publicField=page.getByRole('region',{name:'Contexto do projeto',exact:true}).locator('summary').nth(1);await publicField.click();
+ await page.getByLabel('Público do projeto',{exact:true}).fill('Pessoas interessadas em aprender');await publicField.click();
+ await openDrawer(page,'Marca');assert.equal(await page.getByLabel('Quem você quer alcançar?',{exact:true}).count(),0);
  await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
  await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
  await page.getByRole('button',{name:'Continuar',exact:true}).click();
  const files=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
- assert.equal(await page.getByRole('button',{name:'Preparar PNG',exact:true}).isDisabled(),true,'an empty draft cannot export placeholder artwork');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isDisabled(),true,'an empty draft cannot export placeholder artwork');
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
- await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'an unsaved post cannot be approved');
  await page.getByLabel('Título',{exact:true}).fill('Meu primeiro post sintético');
  await page.getByLabel('Legenda',{exact:true}).fill('Somente uma legenda de teste');
@@ -154,6 +158,8 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const storageText=await page.evaluate(async()=>{const db=await new Promise(resolve=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);});const records=await new Promise(resolve=>{const r=db.transaction('states').objectStore('states').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return JSON.stringify([records,Object.entries(localStorage),Object.entries(sessionStorage)]);});
  assert.equal(storageText.includes(key),false);
  const conversation=page.getByRole('complementary',{name:'Conversa com a IA',exact:true});
+ // Reopening the conversation replays its 180 ms expand animation; measure the settled layout, not two frames of it.
+ await conversation.evaluate(element=>Promise.all(element.getAnimations().map(animation=>animation.finished)));
  const chatBounds=await conversation.boundingBox(),composerBounds=await page.locator('form.studio-chat-composer').boundingBox();
  assert.ok(Math.abs(chatBounds.y+chatBounds.height-composerBounds.y-composerBounds.height)<=2,'the composer stays at the conversation bottom');
  const connectionButton=page.getByRole('button',{name:'IA conectada',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');
@@ -173,18 +179,30 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
  await openDrawer(page,'Bases');await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
  await closeDrawer(page);
- await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
- await page.getByRole('button',{name:'Preparar PNG',exact:true}).click();
+ await page.getByLabel('Legenda',{exact:true}).fill('Legenda pronta para copiar.');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();
- const download=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();const file=await(await download).path();const bytes=await readFile(file);
+ await page.getByRole('region',{name:'Arte e legenda do projeto',exact:true}).getByRole('heading',{name:'Projeto sintético',exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Título',{exact:true}).count(),0);
+ assert.equal(await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).count(),0);
+ for(const name of ['Preparar PNG','Salvar PNG final no projeto','Aprovar esta versão','Baixar'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,`${name} is outside the review`);
+ await page.context().grantPermissions(['clipboard-read','clipboard-write'],{origin});
+ await page.getByRole('button',{name:'Copiar legenda',exact:true}).click();
+ await page.getByText('Legenda copiada.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(()=>navigator.clipboard.readText()),'Legenda pronta para copiar.');
+ const download=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();const result=await download;const bytes=await readFile(await result.path());
+ assert.equal(result.suggestedFilename(),'Projeto sintético-v0.png');
  assert.deepEqual(bytes,Buffer.from(files.png,'base64'),'export preserves every pixel and PNG byte despite title, price and date instructions');
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'base.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')});
- await page.getByRole('button',{name:'Preparar PNG',exact:true}).waitFor();
- assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isDisabled(),true,'new base invalidates the earlier preview');
+ await page.getByRole('button',{name:'Revisar post',exact:true}).click();
+ const converted=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
+ assert.deepEqual([...(await readFile(await(await converted).path())).subarray(0,8)],[137,80,78,71,13,10,26,10],'a replacement JPEG is composed at download time');
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);assert.equal(calls.filter(call=>call.path==='/api/studio/action').length,1);
- assert.equal(calls.some(call=>call.path.includes('/image')),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+ assert.equal(calls.some(call=>call.path==='/api/studio/explorations'),false,'novo post explicitamente pedido abre o editor sem iniciar exploração');
+ assert.equal(calls.some(call=>['/api/agent/image','/api/images'].includes(call.path)),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
 });
 

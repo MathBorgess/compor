@@ -4,6 +4,8 @@
 - Data: 06/11/2026
 - Fonte: decisão de Matheus neste chat de integrar as decisões anteriores com o [PR 17](https://github.com/MathBorgess/compor/pull/17), na main e em produção.
 
+> Em 09/11/2026, o [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) passou fatos e direção para uma faixa sempre visível no estúdio. Os painéis sobre o quadro continuam para os detalhes da persona e os critérios.
+
 ## Contexto
 
 O PR 17 introduziu o layout B/C, menu de projetos, painéis Bases/Marca e cartões de exploração. Sua entrevista anterior à criação precisa coexistir com a entrada direta na conversa e a deliberação adaptativa aceita no ADR 0012. Migrar o PR sem conciliação também restauraria arquivos JavaScript no app Next e um runtime Phoenix fora do bundle de publicação.

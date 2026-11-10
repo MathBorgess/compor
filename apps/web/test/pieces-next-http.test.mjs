@@ -23,7 +23,7 @@ test('rota Next valida propriedade e encaminha versão com token da pessoa', asy
     if (req.headers.authorization !== 'Bearer mock-user-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: user, aud: 'authenticated' }));
     if (req.url.startsWith('/rest/v1/projects?')) return res.end(JSON.stringify(req.url.includes(other) ? [] : [{ id: project, owner_id: user }]));
-    if (req.url === '/rest/v1/rpc/list_project_piece_versions_v2') return res.end(JSON.stringify([{ project_id: project, piece_id: piece, version: 1, content, created_at: '2026-11-03T00:00:00Z', metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} }]));
+    if (req.url === '/rest/v1/rpc/list_project_piece_versions_v3') return res.end(JSON.stringify([{ project_id: project, piece_id: piece, version: 1, content, created_at: '2026-11-03T00:00:00Z', metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} }]));
     if (req.url === '/rest/v1/rpc/approve_piece_version') {
       let raw='';for await(const chunk of req)raw+=chunk;
       assert.deepEqual(JSON.parse(raw),{p_project_id:project,p_piece_id:piece,p_version:1,p_expected_revision:0});

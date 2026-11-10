@@ -5,6 +5,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {stopApp, waitForApp} from './wait-for-app.mjs';
+import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const userId = '00000000-0000-4000-8000-000000000001';
@@ -19,16 +20,17 @@ async function app(t, {withReferences = false} = {}) {
   let startup = '';
   const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], {
     stdio: ['ignore', 'pipe', 'pipe'],
-    env: {...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test', APP_ORIGIN: origin, COMPOR_STUDIO_WEB_ENABLED: 'true'},
+    env: {...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_test', APP_ORIGIN: origin},
   });
   for (const stream of [child.stdout, child.stderr]) stream.on('data', value => { startup = (startup + value.toString()).slice(-6000); });
   let browser;
   t.after(async () => { try { await browser?.close(); } finally { await stopApp(child); } });
-  await waitForApp({url: origin, child, signal: t.signal, diagnostics: () => startup});
+  await waitForApp({url: origin, child, signal: t.signal,headers:sessionCookieHeaders(origin),nextApp:true, diagnostics: () => startup});
   browser = await chromium.launch({executablePath: browserPath, headless: true});
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
   page.setDefaultTimeout(6000);
-  const errors = [], calls = [], external = [], selectionSignals = [];
+  await page.context().addCookies([sessionCookie(origin)]);
+  const errors = [], calls = [], external = [], selectionSignals = [], referenceSelectionSignals=[];
   const paging = {nextBeforeOrdinal:null, older:[]};
   const images = [
     {id: '00000000-0000-4000-8000-000000000091', project_id: projectId, state: 'completed', created_at: '2026-11-06T12:00:00Z', ordinal: 1, batch_id: '00000000-0000-4000-8000-000000000093', batch_position: 1},
@@ -44,6 +46,11 @@ async function app(t, {withReferences = false} = {}) {
     if (url.pathname === '/auth/session') return route.fulfill({json: {state: 'connected', userId}});
     if (url.pathname === '/api/projects') return route.fulfill({json: {projects: [{id: projectId, title: 'Direção opcional'}]}});
     if (url.pathname === '/api/pieces' && request.method() === 'GET') return route.fulfill({json: {versions: []}});
+    if (url.pathname === '/api/studio/references/history')return route.fulfill({json:{references:[]}});
+    if (url.pathname === '/api/studio/references/signals' && request.postDataJSON().action === 'selected') {
+      const body=request.postDataJSON();referenceSelectionSignals.push(body);
+      return route.fulfill({status:201,json:{signal:{...body,createdAt:'2026-11-09T12:00:00.000Z'}}});
+    }
     if (withReferences && url.pathname === '/api/studio/references/search') {
       calls.push({path:url.pathname,body:request.postDataJSON()});
       return route.fulfill({json:{status:'ok',references:[{id:'e1_example',title:'Tipografia',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/e1_example/',previewUrl:'https://i.pinimg.com/236x/image.png'}]}});
@@ -83,7 +90,7 @@ async function app(t, {withReferences = false} = {}) {
     }
     return route.continue();
   });
-  return {page, origin, calls, errors, external, images, paging, selectionSignals};
+  return {page, origin, calls, errors, external, images, paging, selectionSignals, referenceSelectionSignals};
 }
 
 async function openProject(page, origin) {
@@ -96,9 +103,9 @@ async function openProject(page, origin) {
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, external} = await app(t);
   await openProject(page, origin);
-  const summary = page.getByRole('region', {name: 'O que estamos construindo', exact: true});
+  const summary = page.getByRole('region', {name: 'Contexto do projeto', exact: true});
   await page.getByRole('region', {name: 'Buscar referências visuais', exact: true}).waitFor();
-  await summary.getByText('Conte sua ideia na conversa. Os pontos importantes aparecem aqui.', {exact: true}).waitFor();
+  await summary.getByText('O que vamos divulgar?', {exact: true}).waitFor();
   assert.equal(await page.getByLabel('Entrevista do brief', {exact: true}).count(), 0);
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
@@ -112,7 +119,7 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   await page.reload();
   await page.getByRole('button', {name: /Direção opcional/}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await page.getByRole('region', {name: 'O que estamos construindo', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
+  await page.getByRole('region', {name: 'Contexto do projeto', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
   assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);
@@ -297,12 +304,12 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await openProject(page, origin);
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
-  await panel.getByRole('checkbox').check();
+  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('link',{name:'Ver origem no Pinterest'}).waitFor();
   assert.equal(await panel.getByRole('button',{name:'Me interessa'}).count(),0);
   assert.equal(await panel.getByRole('button',{name:'Não combina'}).count(),0);
-  await panel.getByRole('button',{name:'Selecionar: Tipografia'}).click();
+  await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
   await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
@@ -314,6 +321,34 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   assert.equal(call.body.context.references[0].source.originUrl,'https://www.pinterest.com/pin/e1_example/');
   assert.equal(call.body.context.references[0].source.board,'behance/typography');
   assert.equal(call.body.context.references[0].source.title,'Tipografia');
+  assert.deepEqual(errors,[]);
+});
+
+test('pergunta do turno de seleção pausa a exploração até a pessoa responder ou pedir mais', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
+  const {page, origin, errors} = await app(t, {withReferences:true});
+  const selections=[],generations=[];
+  await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
+  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
+  await openProject(page, origin);
+  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
+  await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+  await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
+  const panel=page.getByRole('region',{name:'Buscar referências visuais'});
+  await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
+  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
+  await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
+  await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
+  const recovery=page.locator('.studio-exploration-recovery');
+  await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});
+  await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();
+  assert.equal(selections.length,1);
+  const held=generations.length;assert.ok(held>0,'a exploração já gerava antes da pergunta');
+  await page.waitForTimeout(17000);
+  assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
+  await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
+  await recovery.waitFor({state:'detached'});
+  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   assert.deepEqual(errors,[]);
 });
 

@@ -3,6 +3,7 @@ const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-
 const string = maxLength => ({ type: 'string', maxLength });
 const fields = (properties, required = Object.keys(properties)) => ({ type: 'object', properties, required, additionalProperties: false });
 const scopeProperties = { projectId: string(36), revision: { type: 'integer', minimum: 0 }, requestId: string(36) };
+export const SHORT_PROJECT_TITLE_LENGTH = 48;
 const commands = [
   ['compor_contexto', 'Consulta o projeto, a peça e a versão abertas e informa quais alterações ainda são locais.', {}, false, true],
   ['compor_editar_briefing', 'Atualiza um campo do briefing local e mostra a alteração na interface.', { field: { enum: ['offer', 'audience', 'action', 'direction'] }, value: string(4000) }, false],
@@ -16,7 +17,7 @@ const commands = [
   ['compor_adicionar_campo', 'Acrescenta ao rascunho um campo vazio relevante para o tipo de post. Nomeie apenas a informação necessária; não invente seu valor. A pessoa pode preenchê-lo ou removê-lo.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},label:string(80)}, false],
   ['compor_abrir_versao', 'Abre uma versão existente como base sem sobrescrever o rascunho anterior.', { pieceId: string(36), version: { type: 'integer', minimum: 1 } }, false],
   ['compor_salvar_versao', 'Solicita confirmação na interface antes de salvar uma versão nova no projeto.', {pieceId:string(36),baseVersion:{type:'integer',minimum:0},expectedLatestVersion:{type:'integer',minimum:0}}, true],
-  ['compor_renomear_projeto', 'Solicita confirmação na interface antes de alterar o nome persistido do projeto.', { title: string(200) }, true],
+  ['compor_renomear_projeto', 'Solicita confirmação na interface antes de alterar o nome persistido do projeto.', { title: string(SHORT_PROJECT_TITLE_LENGTH) }, true],
   ['compor_propor_imagem', 'Apresenta uma proposta de imagem para a conversa.', { prompt: string(4000) }, false],
 ];
 
@@ -61,4 +62,4 @@ export function parseStudioAction(name,value) {
  if(!tool)throw Error('invalid_action');
  return parse(tool,value);
 }
-export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma arte integral com imagem e textos. operation=create produz nova composição; operation=edit exige baseImageId da imagem selecionada. referenceIds identifica referências visuais fornecidas no contexto. Inclua no prompt a direção e os textos desejados. A chave conectada autoriza a geração guiada durante a sessão, sem confirmação por imagem. O resultado generated_and_stored com assetId confirma geração e armazenamento na versão indicada; a aplicação no navegador é uma etapa separada.',parameters:IMAGE_PROPOSAL_SCHEMA}]);
+export const AGENT_STUDIO_TOOLS=Object.freeze([...STUDIO_TOOLS.filter(tool=>tool.name!=='compor_propor_imagem').map(tool=>({type:'function',name:tool.name,description:tool.description,parameters:tool.inputSchema})),{type:'function',name:'generate_image',description:'Prepara uma arte integral com imagem e textos. operation=create produz nova composição; operation=edit exige baseImageId da imagem selecionada. referenceIds identifica referências visuais fornecidas no contexto. Declare changedDimension (style, composition ou hook) quando mudar a dimensão criativa: isso abre uma variante sem aprovação. Omita changedDimension nos retoques; operation create/edit não decide a classificação. Inclua no prompt a direção e os textos desejados. A chave conectada autoriza a geração guiada durante a sessão, sem confirmação por imagem. O resultado generated_and_stored com assetId confirma geração e armazenamento na versão indicada; a aplicação no navegador é uma etapa separada.',parameters:IMAGE_PROPOSAL_SCHEMA}]);

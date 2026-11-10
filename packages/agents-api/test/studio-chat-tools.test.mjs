@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {parseStudioAction,AGENT_STUDIO_TOOLS} from '../src/studio-chat-tools.mjs';
+import {parseStudioAction,AGENT_STUDIO_TOOLS,SHORT_PROJECT_TITLE_LENGTH} from '../src/studio-chat-tools.mjs';
 const scope={projectId:'11111111-1111-4111-8111-111111111111',requestId:'22222222-2222-4222-8222-222222222222'};
 test('contexto permite descobrir revisão; mutações exigem revisão e campos próprios',()=>{
  assert.deepEqual(parseStudioAction('compor_contexto',scope),scope);
@@ -42,4 +42,13 @@ test('IA pode estruturar um campo vazio, sem fornecer um valor inventado',()=>{
  assert.throws(()=>parseStudioAction('compor_adicionar_campo',{...value,label:' '}));
  assert.throws(()=>parseStudioAction('compor_adicionar_campo',{...value,value:'local inventado'}));
  assert.ok(AGENT_STUDIO_TOOLS.some(tool=>tool.name==='compor_adicionar_campo'));
+});
+
+test('agente renomeia o projeto com título curto de até 48 caracteres',()=>{
+ const value={...scope,revision:1,title:'a'.repeat(48)};
+ assert.equal(SHORT_PROJECT_TITLE_LENGTH,48);
+ assert.deepEqual(parseStudioAction('compor_renomear_projeto',value),value);
+ assert.throws(()=>parseStudioAction('compor_renomear_projeto',{...value,title:'a'.repeat(49)}),/invalid_action/);
+ assert.throws(()=>parseStudioAction('compor_renomear_projeto',{...value,title:'  '}),/invalid_action/);
+ assert.equal(AGENT_STUDIO_TOOLS.find(tool=>tool.name==='compor_renomear_projeto').parameters.properties.title.maxLength,48,'o modelo vê o limite no esquema da ferramenta');
 });

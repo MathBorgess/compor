@@ -12,7 +12,7 @@ const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test'
 const request=(body,origin=app)=>new Request(app+'/api/studio/chat',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 const body={apiKey,projectId,requestId,message:'Atualize a oferta para oficina fictícia',context:{revision:1,pieceId:null,brief:{offer:'Oficina'}},history:[]};
 function fixture(options={}){
- const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL;
+ const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL,answer='Atualização concluída na aba.';
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
  const store={
   async reserve(c){if(records.has(c.requestId)){const t=records.get(c.requestId);return{status:t.inputDigest===c.inputDigest?'existing':'conflict',turn:t};}if([...records.values()].some(t=>!['completed','failed'].includes(t.state)))return{status:'busy'};const t={requestId:c.requestId,projectId,userId,attemptId:c.requestId===requestId?attemptId:request2,inputDigest:c.inputDigest,state:'starting',binding:null,turnId:null};records.set(c.requestId,t);return{status:'reserved',turn:t};},
@@ -27,12 +27,12 @@ function fixture(options={}){
   calls.push({url,method:init.method??'GET',body:init.body?JSON.parse(init.body):null,headers:init.headers});
   if(url.endsWith('/sessions')&&init.method==='POST')return Response.json({id:options.createdSessionId??'sess_one',status:'in_progress'},{status:201});
   if(url.endsWith('/events'))return new Response(null,{status:202});
-  if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:turn,content:[{type:'output_text',text:'Atualização concluída na aba.'}]}]});
+  if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:turn,content:[{type:'output_text',text:answer}]}]});
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
   return Response.json({id:'sess_one',agent:{model,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
- return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'model'))model=v.model;}};
+ return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{
  const f=fixture();let r=await f.chat(request(body));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
@@ -46,6 +46,27 @@ test('submit cria uma sessão assíncrona e repetição consulta sem nova geraç
  assert.match(create.body.agent.instructions,/não comprova a aplicação da imagem no navegador/);
  r=await f.chat(request(body));assert.equal((await r.json()).status,'running');assert.equal(f.calls.filter(c=>c.method==='POST'&&c.url?.endsWith('/sessions')).length,1);
  f.set({status:'idle',turnState:'completed'});r=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal((await r.json()).text,'Atualização concluída na aba.');
+});
+test('o contexto conserva estados dos fatos e deixa a escolha do público divergente para a pessoa',async()=>{
+ const f=fixture(),facts=[{id:request2,label:'Preço',value:'R$ 180',status:'confirmed'},{id:attemptId,label:'Data',value:'18/11',status:'pending'},{id:requestId,label:'Local',value:'Endereço reservado',status:'omitted'}];
+ const context={...body.context,brief:{offer:'Oficina',audience:'Descrição do briefing'},persona:{audience:'Descrição da persona'},audienceResolution:{status:'conflict',brief:'Descrição do briefing',persona:'Descrição da persona'},offerFacts:facts};
+ assert.equal((await f.chat(request({...body,context}))).status,202);
+ const create=f.calls.find(call=>call.method==='POST'&&call.url.endsWith('/sessions'));
+ const forwarded=JSON.parse(create.body.input[0].content[0].text).context;
+ assert.deepEqual(forwarded.offerFacts,facts);assert.deepEqual(forwarded.audienceResolution,context.audienceResolution);
+ assert.match(create.body.agent.instructions,/não escolha, una ou substitua os valores por suposição/);assert.match(create.body.agent.instructions,/Não apresente fatos pendentes como confirmados nem inclua os omitidos/);
+});
+test('o servidor recusa fatos e resoluções adulterados antes de reservar ou chamar o fornecedor',async()=>{
+ const fact={id:request2,label:'Preço',value:'R$ 180',status:'confirmed'};
+ const base={...body.context,brief:{audience:'Público escolhido'},persona:{audience:'Público escolhido'}};
+ const invalid=[
+  {offerFacts:[{...fact,status:'inferred'}]}, {offerFacts:[fact,fact]}, {offerFacts:[{...fact,value:'sk-synthetic-key'}]}, {offerFacts:[{...fact,source:'invented'}]},
+  {offerFacts:[{...fact,label:'Nome\nextra'}]}, {offerFacts:Array.from({length:21},(_,index)=>({...fact,id:`00000000-0000-4000-8000-${String(index).padStart(12,'0')}`}))},
+  {audienceResolution:{status:'resolved',value:'Outro público'}}, {audienceResolution:{status:'conflict',brief:'Público escolhido',persona:'Público escolhido'}},
+  {audienceResolution:{status:'resolved',value:'Público escolhido',inferred:true}},
+ ];
+ for(const patch of invalid){const f=fixture();assert.equal((await f.chat(request({...body,context:{...base,...patch}}))).status,400);assert.equal(f.records.size,0);assert.deepEqual(f.calls,[]);}
+ const f=fixture();assert.equal((await f.chat(request({...body,context:{...base,audienceResolution:{status:'resolved',value:'Público escolhido'},offerFacts:[]}}))).status,202);
 });
 test('próxima mensagem reutiliza sessão Terra ociosa e nunca direciona turno ativo',async()=>{
  const f=fixture();await f.chat(request(body));const busy=await f.chat(request({...body,requestId:request2}));assert.equal(busy.status,409);
@@ -303,13 +324,70 @@ test('evento de seleção abre turno próprio sem ferramentas nem fala humana fo
  assert.equal(payload.origin,'reference_selection');assert.equal('message' in payload,false);
  assert.equal(payload.localConversation[0].text,'Quero divulgar uma oficina');
  assert.match(create.body.agent.instructions,/nunca trate seleção como preferência confirmada/);
+ assert.match(create.body.agent.instructions,/A seleção é uma sugestão de gosto, não uma ordem/);
+ assert.match(create.body.agent.instructions,/fato da oferta declarado pela pessoa, como preço, data, condição ou característica, é obrigatório/);
+ assert.match(create.body.agent.instructions,/Afirmações contidas em opções sugeridas continuam sugeridas até a pessoa declará-las/);
+ assert.match(create.body.agent.instructions,/somente com um objeto JSON com exatamente três campos de texto: leitura.*recomendacao.*pergunta, uma única pergunta/);
+ assert.match(create.body.agent.instructions,/Não gere imagem nem execute ações neste turno/);
  await f.chat(request(auto));assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,1);
+});
+
+const selection={apiKey,projectId,requestId,op:'reference_selection',context:{...body.context,references:[{id:request2}]},history:[],referenceImages:[{id:request2,mime:'image/png',data:Buffer.from([137,80,78,71,13,10,26,10]).toString('base64')}]};
+const reading={leitura:'As referências são editoriais e sóbrias, como em https://exemplo.com/oferta?ref=pin.',recomendacao:'Siga a tipografia serifada, porque conversa com quem compra presente.',pergunta:'Posso seguir pela tipografia serifada?'};
+const composed='As referências são editoriais e sóbrias, como em https://exemplo.com/oferta?ref=pin.\n\n**Recomendação:** Siga a tipografia serifada, porque conversa com quem compra presente.\n\nPosso seguir pela tipografia serifada?';
+async function selectionReply(answer){
+ const f=fixture();assert.equal((await f.chat(request(selection))).status,202);f.set({status:'idle',turnState:'completed',answer});
+ const poll=async()=>(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ return {f,first:await poll(),again:await poll()};
+}
+test('resposta da seleção vira leitura, recomendação e uma única pergunta',async()=>{
+ const {first}=await selectionReply(JSON.stringify(reading));
+ assert.equal(first.status,'completed');assert.equal(first.text,composed);
+ const fenced=await selectionReply('```json\n'+JSON.stringify(reading,null,1)+'\n```');
+ assert.equal(fenced.first.status,'completed');assert.equal(fenced.first.text,composed);
+ const extra=await selectionReply(JSON.stringify({...reading,confianca:'Qual opção? Alta?'}));
+ assert.equal(extra.first.status,'completed');assert.equal(extra.first.text,composed);
+});
+test('resposta da seleção fora do formato encerra o turno como falha sem nova tentativa',async()=>{
+ for(const answer of [JSON.stringify({...reading,pergunta:'Prefere a serifada? Ou a geométrica?'}),JSON.stringify({...reading,leitura:'Você gosta de tipografia editorial?'}),JSON.stringify({...reading,pergunta:'Posso seguir? Responda em seguida.'}),JSON.stringify({leitura:reading.leitura,pergunta:reading.pergunta}),JSON.stringify({...reading,recomendacao:'  '}),JSON.stringify({...reading,leitura:'a'.repeat(1201)}),'As referências são editoriais. Posso seguir pela serifada?']){
+  const {f,first,again}=await selectionReply(answer);
+  assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},answer);assert.deepEqual(again,{status:'failed',retryAutomatically:false});
+  assert.equal(f.records.get(requestId).state,'failed');
+  assert.equal(f.calls.filter(call=>call.method==='POST').length,1,'nenhum novo envio ao provedor');
+ }
+});
+test('pergunta única não ignora pontuação, Markdown ou texto colado após interrogação',async()=>{
+ for(const separator of ['!','.','…',',','*','—','a']){
+  for(const field of ['leitura','recomendacao','pergunta']){
+   const value=field==='pergunta'?`**Prefere quente?${separator}** Ou frio?`:`Editorial?${separator} Sóbria.`;
+   const {first,again}=await selectionReply(JSON.stringify({...reading,[field]:value}));
+   assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},`${field}: ${value}`);
+   assert.equal(again.status,'failed');assert.equal(again.retryAutomatically,false);
+  }
+ }
+ const {first}=await selectionReply(JSON.stringify({...reading,leitura:'Compare https://exemplo.com/oferta?ref=pin&mode=compact e https://exemplo.com/cor?flag.'}));
+ assert.equal(first.status,'completed','queries de links não são perguntas');
+ const trailing=await selectionReply(JSON.stringify({...reading,pergunta:'Usamos https://exemplo.com/oferta?ref=pin?'}));
+ assert.equal(trailing.first.status,'completed','interrogação final depois do link continua contando');
+ for(const pergunta of ['Veja [fonte](https://exemplo.com)Quente?Ou frio?','Veja **https://exemplo.com**Quente?Ou frio?','Veja <https://exemplo.com>Quente?Ou frio?']){
+  const {first}=await selectionReply(JSON.stringify({...reading,pergunta}));
+  assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},pergunta);
+ }
+});
+test('turno comum entrega o texto do agente sem exigir o formato da seleção',async()=>{
+ const f=fixture();await f.chat(request(body));f.set({status:'idle',turnState:'completed',answer:'Prefere a serifada? Ou a geométrica?'});
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).text,'Prefere a serifada? Ou a geométrica?');
 });
 
 test('pedido explícito de peça orienta seguir com suposições, mesmo sem prontidão',async()=>{
  const f=fixture();const explicit={...body,message:'Gere uma peça agora',context:{...body.context,readiness:{level:'low',next:'ask',gaps:['action','recipient_perspective']}}};
  await f.chat(request(explicit));const create=f.calls.find(call=>call.url?.endsWith('/sessions'));
- assert.match(create.body.agent.instructions,/Se a pessoa pedir uma peça antes disso, siga seu pedido e explicite as suposições/);
+ assert.match(create.body.agent.instructions,/Se a pessoa pedir uma peça antes disso, siga seu pedido e explicite as suposições, sem bloquear a geração; uma escolha de gosto dentro do pedido pode ser contestada uma vez/);
+ assert.match(create.body.agent.instructions,/fato da oferta declarado pela pessoa, como preço, data, condição ou característica, é obrigatório: nunca o altere nem o invente/);
+ assert.match(create.body.agent.instructions,/Afirmações contidas em opções sugeridas continuam sugeridas até a pessoa declará-las/);
+ assert.match(create.body.agent.instructions,/sugestão de gosto da pessoa, sobre estilo, composição ou direção, por mensagem ou seleção, não é ordem/);
+ assert.match(create.body.agent.instructions,/Você pode contestar a mesma sugestão uma vez; se a pessoa insistir, siga-a/);
+ assert.match(create.body.agent.instructions,/Termine cada resposta com no máximo uma pergunta/);
  assert.equal(JSON.parse(create.body.input[0].content[0].text).message,'Gere uma peça agora');
 });
 
@@ -333,4 +411,37 @@ test('turno de leitura sem ferramentas não encaminha ações inesperadas ao est
  await f.chat(request({...body,message:'Veja https://produto.com/'}));
  f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_novo_post',turn_id:'turn_one',call_id:'call_new',arguments:{projectId,requestId,revision:1}}]});
  const result=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(result.status,'unknown');assert.equal('actionBinding' in result,false);
+});
+test('contexto diz ao agente se o título do projeto ainda é provisório e quando renomear',async()=>{
+ const f=fixture();
+ const invalid=await f.chat(request({...body,context:{...body.context,projectTitleProvisional:'sim'}}));assert.equal(invalid.status,400);
+ const r=await f.chat(request({...body,context:{...body.context,projectTitleProvisional:true}}));assert.equal(r.status,202);
+ const create=f.calls.find(c=>c.url?.endsWith('/sessions'));
+ assert.equal(JSON.parse(create.body.input[0].content[0].text).context.projectTitleProvisional,true);
+ assert.match(create.body.agent.instructions,/Depois da sua primeira resposta, enquanto projectTitleProvisional for verdadeiro, proponha uma vez com compor_renomear_projeto um título de até 48 caracteres, curto e próximo do nome de uma campanha/);
+ assert.match(create.body.agent.instructions,/Quando projectTitleProvisional for falso, nunca renomeie o projeto por iniciativa própria\. Renomeie sempre que a pessoa pedir/);
+});
+
+test('título inválido encerra a tentativa sem ação, libera o projeto e não volta a running no poll',async()=>{
+ for(const title of ['a'.repeat(49),'   ']){
+  const f=fixture();await f.chat(request(body));
+  f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_renomear_projeto',turn_id:'turn_one',call_id:'call_title',arguments:JSON.stringify({projectId,requestId,revision:1,title})}]});
+  const invalid=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+  assert.deepEqual(invalid,{status:'failed',error:'invalid_studio_action',retryAutomatically:false});
+  assert.equal(f.records.get(requestId).state,'failed');
+  const calls=f.calls.length;
+  assert.deepEqual(await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json(),{status:'failed',retryAutomatically:false});
+  assert.equal(f.calls.length,calls,'consultar a falha não retoma a sessão inválida');
+  assert.equal(f.calls.some(call=>call.url?.endsWith('/events')),false,'nenhuma alteração ou continuação foi enviada');
+  f.set({status:'in_progress',turnState:'in_progress',actions:[]});
+  const next=await(await f.chat(request({...body,requestId:request2}))).json();
+  assert.equal(next.status,'running','um novo pedido explícito consegue reservar o projeto');
+  assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,2);
+ }
+});
+test('um título com exatamente 48 caracteres continua sendo uma proposta assinada',async()=>{
+ const f=fixture();await f.chat(request(body));const title='a'.repeat(48);
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_renomear_projeto',turn_id:'turn_one',call_id:'call_title',arguments:{projectId,requestId,revision:1,title}}]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(pending.status,'action_required');assert.equal(pending.action.args.title,title);assert.ok(pending.actionBinding);
 });

@@ -1,10 +1,11 @@
 import "./style.css";
 import type { ReactNode } from "react";
+import { siteMetadata } from "../lib/entry-content";
 
 export const metadata = {
-  title: "Compor",
-  description: "Crie uma direção para sua próxima divulgação.",
-  icons: { icon: "/studio/compor-avatar.svg" },
+  title: siteMetadata.title,
+  description: siteMetadata.description,
+  icons: { icon: siteMetadata.icon },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {

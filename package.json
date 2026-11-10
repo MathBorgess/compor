@@ -6,13 +6,13 @@
     "node": ">=22.13.1"
   },
   "scripts": {
-    "quality:lint": "eslint apps/web/app apps/web/lib packages/*/src scripts/quality --max-warnings=0",
+    "quality:lint": "eslint apps/web/app apps/web/lib apps/web/proxy.ts packages/*/src scripts/quality --max-warnings=0",
     "quality:maintenance": "node scripts/quality/maintainability.mjs",
     "quality:unit": "node scripts/quality/test-packages.mjs",
     "quality:browser": "node scripts/quality/test-browser.mjs",
     "quality:build": "npm --prefix apps/web run build",
     "quality:performance": "node scripts/quality/performance.mjs",
-    "quality:test": "node --test scripts/quality/*.test.mjs",
+    "quality:test": "node --test --test-timeout=60000 scripts/quality/*.test.mjs",
     "quality:typecheck": "npm --prefix apps/web run typecheck"
   },
   "devDependencies": {

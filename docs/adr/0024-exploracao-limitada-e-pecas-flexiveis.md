@@ -4,6 +4,8 @@
 - Data: 06/11/2026
 - Fonte: validação local conduzida com Matheus no chat Codex em 06/11/2026.
 
+> Em 09/11/2026, o [ADR 0029](0029-agente-opinativo-e-pergunta-unica.md) determinou que a exploração espera a resposta da pessoa depois da pergunta do turno de seleção. O limite de duas rodadas sem interação continua valendo nos demais casos.
+
 ## Decisão
 
 A exploração visual fica ativa somente na tela de referências. Gera três imagens sequenciais por lote e, enquanto houver um próximo lote permitido, apresenta a espera de 15 segundos. No máximo duas rodadas completas podem transcorrer sem a pessoa selecionar ou comentar propostas. Ao atingir esse limite, o Compor apresenta a questão no chat e aguarda uma ação explícita para gerar mais; não reinicia apenas porque a pessoa fechou ou reabriu a tela. Sair da exploração interrompe novas solicitações. Uma operação já enviada pode concluir, e um resultado incerto não permite repetição automática. A pausa e a saída não eliminam resultados anteriores.

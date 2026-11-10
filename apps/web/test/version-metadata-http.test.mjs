@@ -19,6 +19,10 @@ test('save v2 mantém base e revisão esperada; aprovação é consultada do ser
  response={status:'approved',version:{...version,metadata:{...version.metadata,revision:1,approval:{status:'approved',kind:'explicit',sourceVersion:3,at:'2026-11-05T00:00:00.000Z'}}}};
  assert.equal((await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0})).status,'approved');
  assert.equal(call.url.pathname,'/rest/v1/rpc/approve_piece_version');
+ const references=[{kind:'pinterest',originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}];
+ assert.equal((await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0,references})).status,'approved');
+ assert.equal(call.url.pathname,'/rest/v1/rpc/approve_piece_version_with_references');
+ assert.deepEqual(JSON.parse(call.options.body),{p_project_id:projectId,p_piece_id:pieceId,p_version:3,p_expected_revision:0,p_references:references});
  response={status:'approved',version:{...version,project_id:'outra-conta'}};await assert.rejects(()=>store.approve(context,{projectId,pieceId,version:3,expectedRevision:0}));
 });
 
@@ -57,4 +61,37 @@ test('versões com campos dinâmicos mantêm valores e versões legadas seguem l
  const store=createProjectPieceStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetchImpl:async url=>Response.json(url.pathname.includes('list_project')?[version,row]:{status:'saved',version:row})});
  const rows=await store.listProject(context,projectId);assert.equal(rows[0].content.fields,undefined);assert.deepEqual(rows[1].content.fields,fields);
  const saved=await store.save(context,{projectId,pieceId,baseVersion:1,expectedVersion:2,content:dynamicContent});assert.deepEqual(saved.version.content.fields,fields);
+});
+test('salvar imagem transmite dimensão e recusa uma variante que herda aprovação',async()=>{
+ let call;
+ const row={...version,metadata:{...version.metadata,changedDimension:'style',operation:'edit',approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
+ const store=createProjectPieceStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetchImpl:async(url,options)=>{call={url,options};return Response.json({status:'saved',version:row});}});
+ const input={projectId,pieceId,expectedVersion:2,baseVersion:1,content,operation:'edit',changedDimension:'style'};
+ assert.equal((await store.save(context,input)).version.metadata.changedDimension,'style');
+ assert.equal(call.url.pathname,'/rest/v1/rpc/save_piece_version_v3');
+ assert.equal(JSON.parse(call.options.body).p_changed_dimension,'style');
+ row.metadata.approval=version.metadata.approval;await assert.rejects(()=>store.save(context,input),/invalid image metadata/);
+});
+
+
+test('aprovação com referências aceita resposta legada e recarrega a dimensão da variante',async()=>{
+ const calls=[],references=[{kind:'pinterest',originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}];
+ const variant={...version,metadata:{...version.metadata,changedDimension:'composition',operation:'edit',approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
+ const explicit={status:'approved',kind:'explicit',sourceVersion:3,at:'2026-11-10T00:00:00.000Z'};
+ const store=createProjectPieceStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetchImpl:async(url,options)=>{
+  calls.push({path:url.pathname,body:JSON.parse(options.body)});
+  if(url.pathname.endsWith('/save_piece_version_v3'))return Response.json({status:'saved',version:variant});
+  if(url.pathname.endsWith('/approve_piece_version_with_references'))return Response.json({status:'approved',version:{...variant,metadata:{baseVersion:1,revision:1,approval:explicit}}});
+  return Response.json([{...version,version:1,metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}}, {...variant,metadata:{...variant.metadata,revision:1,approval:explicit}}]);
+ }});
+ const saved=await store.save(context,{projectId,pieceId,expectedVersion:2,baseVersion:1,content,operation:'edit',changedDimension:'composition'});
+ assert.equal(saved.version.metadata.approval.status,'unapproved');
+ const approved=await store.approve(context,{projectId,pieceId,version:3,expectedRevision:0,references});
+ assert.equal(approved.version.metadata.changedDimension,undefined,'a RPC anterior mantém a forma de resposta');
+ const listed=await store.listProject(context,projectId);
+ const {groupVariants}=await import('../lib/studio-variants.ts');
+ assert.deepEqual(groupVariants(listed,pieceId).map(group=>[group.latest.version,group.dimension]),[[1,null],[3,'composition']]);
+ assert.equal(listed[1].metadata.approval.kind,'explicit');
+ assert.deepEqual(calls.map(call=>call.path.split('/').at(-1)),['save_piece_version_v3','approve_piece_version_with_references','list_project_piece_versions_v3']);
+ assert.deepEqual(calls[1].body.p_references,references,'as fontes próprias continuam no contrato de aprovação da variante');
 });

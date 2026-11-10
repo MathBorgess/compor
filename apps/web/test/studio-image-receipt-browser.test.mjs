@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {isolateFixtureHmr} from './fixture-hmr.mjs';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const userId=id(1),projectId=id(2),requestId=id(3),pieceId=id(4),assetId=id(5),otherPiece=id(6),marker=`compor-studio-chat:${userId}:${projectId}`;
@@ -26,12 +27,19 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
+ const completedPollStarted=Promise.withResolvers(),releaseCompletedPoll=Promise.withResolvers(),completedPollDelivered=Promise.withResolvers();
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{releaseCompletedPoll.resolve();await browser.close();});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],holdCompletedPoll=false;
+ await isolateFixtureHmr(page,`/${basename(fixture)}`);
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
-  if(url.pathname==='/api/studio/chat'){assert.equal(body.op,'poll');return route.fulfill({status:202,json:++polls===1?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}:{status:'completed',text:staleText}});}
+  if(url.pathname==='/api/studio/chat'){
+   assert.equal(body.op,'poll');const first=++polls===1,held=!first&&holdCompletedPoll;
+   if(held){holdCompletedPoll=false;completedPollStarted.resolve();await releaseCompletedPoll.promise;}
+   await route.fulfill({status:202,json:first?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}:{status:'completed',text:staleText}});
+   if(held)completedPollDelivered.resolve();return;
+  }
   if(url.pathname==='/api/agent/image'){const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});}
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:png});
   throw Error('unexpected API');
@@ -52,10 +60,14 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
   polls=0;await page.reload();await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText('Esta tentativa precisa ser verificada antes de continuar.').waitFor();await page.getByRole('button',{name:'Verificar envio anterior',exact:true}).waitFor();
   assert.equal(calls.slice(start).filter(c=>c.path==='/api/agent/image').length,1,'recarregar e consultar a proposta não repetem uma geração incerta');
  }
- await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['busy'];await page.reload();await page.evaluate(()=>{window.__receiptMode='ok';delete window.__releaseImage;});const beforeBusy=calls.length;
+ await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['busy'];holdCompletedPoll=true;await page.reload();await page.evaluate(()=>{window.__receiptMode='ok';delete window.__releaseImage;});const beforeBusy=calls.length;
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Aguardando a exploração atual terminar/).waitFor();
  await page.waitForFunction(()=>typeof window.__releaseImage==='function');await page.evaluate(()=>window.__releaseImage());await page.getByText(receipt,{exact:true}).waitFor();
  assert.equal(calls.slice(beforeBusy).filter(c=>c.path==='/api/agent/image').length,2,'ocupação confirmada aguarda e repete a reserva sem gerar duas imagens');
+ await completedPollStarted.promise;assert.equal(polls,2);assert.equal(JSON.parse(await page.evaluate(marker=>sessionStorage.getItem(marker),marker)).requestId,requestId,'o receipt aparece antes da conclusão do poll');
+ releaseCompletedPoll.resolve();await completedPollDelivered.promise;
+ await page.waitForFunction(marker=>JSON.parse(sessionStorage.getItem(marker)??'null')?.requestId===null,marker);
+ await page.getByText(staleText,{exact:true}).waitFor();assert.equal(polls,2,'o cenário só termina depois do poll final e da persistência terminal');
  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['blocked'];await page.reload();const beforeBlocked=calls.length;
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Uma geração anterior tem resultado incerto/).waitFor();
  assert.equal(await page.evaluate(user=>localStorage.getItem(`compor-image-submission:${user}`),userId),null,'bloqueio anterior não marca esta requisição como enviada');

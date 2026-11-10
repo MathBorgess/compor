@@ -9,12 +9,14 @@ import { stopApp, waitForApp } from './wait-for-app.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const fixture=new URL('../app/exploration-loop-test/',import.meta.url);
-const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000003';
+const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000003',pieceId='00000000-0000-4000-8000-000000000004';
 const source=`'use client';
 import {useState,StrictMode} from 'react';
 import {useExplorationLoop} from '../use-exploration-loop';
-import {createStudioState,updateBrief} from '../../lib/studio-state';
-function Demo(){const [connected,setConnected]=useState(true),[enabled,setEnabled]=useState(true);const [state,setState]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'}));const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>connected,enabled});return <><button onClick={()=>setState(value=>updateBrief(value,{offer:'Oficina de gravura'}))}>Mudar briefing</button><button onClick={()=>setConnected(false)}>Desconectar</button><button onClick={()=>setConnected(true)}>Reconectar</button><button onClick={()=>setEnabled(false)}>Sair da exploração</button><button onClick={()=>setEnabled(true)}>Voltar à exploração</button><button onClick={loop.pause}>Pausar</button><button onClick={loop.resume}>Retomar</button><output>{loop.status}</output>{loop.awaitingFeedback && <p>Aguardando decisão sobre duas rodadas</p>}</>};export default function Page(){return <StrictMode><Demo/></StrictMode>};`;
+import {createStudioState,updateBrief,createPost,prepareAdjustment,settleAdjustment,addMessage,REFERENCE_SELECTION_EVENT} from '../../lib/studio-state';
+const at=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
+function ask(value){const requestId=uid(),asked=prepareAdjustment(createPost(value,{pieceId:'${pieceId}'}),{requestId,messageId:uid(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at(),eventId:uid()});return settleAdjustment(asked,{requestId,status:'completed',result:{messageId:uid(),text:'Posso seguir pela tipografia serifada?'},createdAt:at(),eventId:uid()});}
+function Demo(){const [connected,setConnected]=useState(true),[enabled,setEnabled]=useState(true);const [state,setState]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'}));const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>connected,enabled});return <><button onClick={()=>setState(value=>updateBrief(value,{offer:'Oficina de gravura'}))}>Mudar briefing</button><button onClick={()=>setConnected(false)}>Desconectar</button><button onClick={()=>setConnected(true)}>Reconectar</button><button onClick={()=>setEnabled(false)}>Sair da exploração</button><button onClick={()=>setEnabled(true)}>Voltar à exploração</button><button onClick={loop.pause}>Pausar</button><button onClick={loop.resume}>Retomar</button><button onClick={()=>setState(ask)}>Pergunta da seleção</button><button onClick={()=>setState(value=>addMessage(value,{id:uid(),role:'user',text:'Pode seguir',createdAt:at()}))}>Responder no chat</button><output>{loop.status}</output>{loop.awaitingFeedback && <p>Aguardando decisão sobre duas rodadas</p>}</>};export default function Page(){return <StrictMode><Demo/></StrictMode>};`;
 async function referenceSignals(context){await context.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));}
 async function until(fn, predicate, timeout=6000){const end=Date.now()+timeout;for(;;){const result=await fn();if(predicate(result))return result;if(Date.now()>end)throw Error('estado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 
@@ -231,4 +233,83 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   });
   const offlineGate=await n.newPage();await offlineGate.goto(`${origin}/exploration-loop-test`);
   await offlineGate.getByText(/Não foi possível confirmar a exploração/).waitFor();assert.equal(forbiddenPosts,0,'falha de leitura do gate bloqueia novas gerações');await n.close();
+
+  const o=await browser.newContext();await referenceSignals(o);const answered=[];let gates=0,comments=[];
+  await o.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
+  await o.route('**/api/studio/explorations**',async route=>{
+    const path=new URL(route.request().url()).pathname;
+    if(path.endsWith('/status')){gates++;return route.fulfill({json:{status:'active'}});}
+    if(path.endsWith('/signals'))return route.fulfill({json:{signals:comments}});
+    if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
+    const body=route.request().postDataJSON();answered.push(body);
+    return route.fulfill({status:answered.length===7?502:200,json:{status:answered.length===7?'unknown':'completed',requestId:body.requestId}});
+  });
+  const asking=await o.newPage(),idle=async()=>{for(let turn=0;turn<3;turn++){await asking.waitForTimeout(800);await asking.evaluate(()=>window.advanceTestClock(16000));}await asking.waitForTimeout(2000);};
+  await asking.goto(`${origin}/exploration-loop-test`);await asking.getByText(/próximo lote em/i).waitFor();assert.equal(answered.length,3);
+  await asking.getByRole('button',{name:'Pergunta da seleção'}).click();await asking.getByText('A exploração aguarda sua resposta no chat.').waitFor();
+  await idle();assert.equal(answered.length,3,'a pergunta do turno de seleção segura o próximo lote');
+  comments=[{id:crypto.randomUUID(),projectId,imageId:answered[0].requestId,action:'comment',comment:'Gostei desta composição',supersedes:null,createdAt:new Date().toISOString(),plan:null}];
+  let observed=gates;await asking.getByRole('button',{name:'Responder no chat'}).click();await until(()=>gates,n=>n>observed);
+  await asking.evaluate(()=>window.advanceTestClock(16000));await until(()=>answered.length,n=>n===6,15000);
+  await asking.getByText(/próximo lote em/i).waitFor();assert.equal(answered.length,6,'mensagem no chat retoma a exploração');
+  await asking.getByRole('button',{name:'Pergunta da seleção'}).click();await asking.getByText('A exploração aguarda sua resposta no chat.').waitFor();
+  await idle();assert.equal(answered.length,6,'nova pergunta volta a segurar o lote');
+  observed=gates;await asking.getByRole('button',{name:'Retomar'}).click();await until(()=>gates,n=>n>observed);
+  await asking.evaluate(()=>window.advanceTestClock(16000));await asking.getByText(/resultado da exploração não foi confirmado/i).waitFor({timeout:10000});
+  assert.equal(answered.length,7,'pedido explícito retoma a exploração');await o.close();
+});
+
+const questionFixture=new URL('../app/selection-question-test/',import.meta.url);
+const questionSource=`'use client';
+import {useState,useEffect} from 'react';
+import {useExplorationLoop} from '../use-exploration-loop';
+import {createStudioState,updateBrief,createPost,prepareAdjustment,settleAdjustment,addMessage,addReference,removeReference,parseStudioState,REFERENCE_SELECTION_EVENT,type StudioState} from '../../lib/studio-state';
+const at=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
+const initial=()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'});
+function ask(value:StudioState){
+ value=createPost(value,{pieceId:'${pieceId}'});
+ if(!value.references.length)value=addReference(value,{id:uid(),name:'ref.png',mime:'image/png',size:20,width:1,height:1});
+ const requestId=uid(),pending=prepareAdjustment(value,{requestId,messageId:uid(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at(),eventId:uid()});
+ return settleAdjustment(pending,{requestId,status:'completed',result:{messageId:uid(),text:'Posso seguir pela tipografia serifada?'},createdAt:at(),eventId:uid()});
+}
+function auto(value:StudioState){return prepareAdjustment(removeReference(updateBrief(value,{offer:'Novo briefing'}),value.references[0].id),{requestId:uid(),messageId:uid(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at(),eventId:uid()});}
+function fail(value:StudioState){return settleAdjustment(value,{requestId:value.adjustments[value.adjustments.length-1].id,status:'failed',eventId:uid()});}
+export default function Page(){
+ const [state,setState]=useState(initial),[loaded,setLoaded]=useState(false);
+ useEffect(()=>{const saved=sessionStorage.getItem('question-test-state');setState(saved?parseStudioState(JSON.parse(saved)):ask(initial()));setLoaded(true);},[]);
+ useEffect(()=>{if(loaded)sessionStorage.setItem('question-test-state',JSON.stringify(state));},[state,loaded]);
+ const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:true,getApiKey:()=> 'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',isAuthenticated:()=>true,enabled:loaded});
+ return <><button onClick={()=>setState(auto)}>Atualizar contexto</button><button onClick={()=>setState(fail)}>Falhar turno</button><button onClick={()=>setState(value=>addMessage(value,{id:uid(),role:'user',text:'Pode seguir',createdAt:at()}))}>Responder</button><button onClick={()=>setState(ask)}>Perguntar novamente</button><button onClick={loop.resume}>Retomar</button><output>{loop.status}</output></>;
+}`;
+
+test('pergunta da seleção resiste a turno automático e recarga, e a retomada vale só para a mesma pergunta',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ assert.equal(existsSync(questionFixture),false);await mkdir(questionFixture);await writeFile(new URL('page.tsx',questionFixture),questionSource);
+ const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
+ let logs='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'',SUPABASE_PUBLISHABLE_KEY:''}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{logs=(logs+chunk).slice(-5000);});
+ let browser;t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(questionFixture,{recursive:true,force:true});}}});
+ await waitForApp({url:`${origin}/selection-question-test`,child,signal:t.signal,diagnostics:()=>logs});browser=await chromium.launch({executablePath:browserPath,headless:true});
+ const context=await browser.newContext();await referenceSignals(context);const posts=[];
+ await context.addInitScript(()=>{const real=Date.now.bind(Date);let offset=0;Date.now=()=>real()+offset;window.advanceTestClock=amount=>{offset+=amount;};});
+ await context.route('**/api/studio/explorations**',async route=>{
+  const path=new URL(route.request().url()).pathname;
+  if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
+  if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+  if(path.endsWith('/resume'))return route.fulfill({json:{status:'resumed'}});
+  if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
+  const body=route.request().postDataJSON();posts.push(body);
+  return route.fulfill({status:posts.length>3?502:200,json:{status:posts.length>3?'unknown':'completed',requestId:body.requestId}});
+ });
+ const page=await context.newPage(),waiting=()=>page.getByText('A exploração aguarda sua resposta no chat.').waitFor();
+ const staysPaused=async count=>{await waiting();await page.evaluate(()=>window.advanceTestClock(16000));await page.waitForTimeout(1200);assert.equal(posts.length,count);};
+ await page.goto(`${origin}/selection-question-test`);await staysPaused(0);
+ await page.getByRole('button',{name:'Atualizar contexto',exact:true}).click();await staysPaused(0);
+ await page.getByRole('button',{name:'Falhar turno',exact:true}).click();await page.reload();await staysPaused(0);
+ await page.getByRole('button',{name:'Responder',exact:true}).click();await page.getByText(/próximo lote em/i).waitFor();assert.equal(posts.length,3,'mensagem da pessoa libera a exploração');
+ await page.getByRole('button',{name:'Perguntar novamente',exact:true}).click();await staysPaused(3);
+ await page.getByRole('button',{name:'Retomar',exact:true}).click();await page.getByText(/próximo lote em/i).waitFor();
+ await page.reload();await page.getByText(/próximo lote em/i).waitFor();assert.equal(posts.length,3,'recarga preserva a retomada explícita da pergunta');
+ await page.getByRole('button',{name:'Perguntar novamente',exact:true}).click();await staysPaused(3);
+ await page.getByRole('button',{name:'Retomar',exact:true}).click();await page.getByText(/próximo lote em/i).waitFor();await page.evaluate(()=>window.advanceTestClock(16000));
+ await page.getByText(/resultado da exploração não foi confirmado/i).waitFor();assert.equal(posts.length,4,'nova pergunta exige uma nova resposta ou retomada explícita');
+ await context.close();
 });

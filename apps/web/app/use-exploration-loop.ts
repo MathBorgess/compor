@@ -4,7 +4,9 @@ import { useEffect, useRef, useState } from "react";
 import { z } from "zod";
 import { createExplorationPrompt } from "@compor/agile-deliberation/exploration";
 import { criterionChoice } from "../lib/studio-direction";
+import { pendingSelectionQuestion } from "../lib/studio-state";
 import type { StudioState } from "../lib/studio-domain";
+import {audienceResolution} from '../lib/studio-context.ts';
 import { generatedSignalsSchema,currentGeneratedFeedback } from "../lib/generated-feedback-contract";
 import { markBeforeDispatch } from "../lib/exploration-pending";
 import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
@@ -15,7 +17,7 @@ const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])})
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
 
-type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean };
+type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -40,8 +42,22 @@ export function useExplorationLoop(props: LoopProps) {
   const stopCurrent = useRef<(() => void) | null>(null);
   const resumeRequested = useRef(false);
   const resumeInFlight = useRef(false);
+  const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
+  const [resumedQuestion, setResumedQuestion] = useState<{key:string;id:string}|null>(null);
+  const question = props.state ? pendingSelectionQuestion(props.state) : null;
+  const awaitingAnswer = question !== null && (resumedQuestion?.key !== questionKey || resumedQuestion.id !== question);
+  const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;
-  const ready = Boolean(props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+  waitsForAnswer.current = awaitingAnswer;
+  const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
+  const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+
+  useEffect(() => {
+    try {
+      const id=localStorage.getItem(questionKey);
+      setResumedQuestion(id ? {key:questionKey,id} : null);
+    } catch { setResumedQuestion(null); }
+  },[questionKey]);
 
   useEffect(() => {
     const key=`compor-exploration-batch:${props.userId}:${props.projectId}`;
@@ -51,7 +67,7 @@ export function useExplorationLoop(props: LoopProps) {
   },[props.userId,props.projectId]);
 
   useEffect(() => {
-    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback) return;
+    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer) return;
     const cancel = new AbortController();
     let active = true;
     let dispatched = false;
@@ -66,8 +82,8 @@ export function useExplorationLoop(props: LoopProps) {
         try { progress=freezeBatchWait(progress,Date.now());localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress)); } catch { /* Preserve stop even when storage fails. */ }
       }
       active = false;
-      // Leaving exploration lets an already dispatched request settle and reconcile its receipt.
-      if (!dispatched || current.current.enabled) cancel.abort();
+      // Leaving exploration or waiting for the person's answer lets an already dispatched request settle and reconcile its receipt.
+      if (!dispatched || (current.current.enabled && !waitsForAnswer.current)) cancel.abort();
     };
     stopCurrent.current = cancelCurrent;
     const stop = (message: string) => { if (active) { setStatus(message); setBlocked(true); setPhase('blocked'); setCountdown(null); } };
@@ -155,7 +171,9 @@ export function useExplorationLoop(props: LoopProps) {
             const accepted = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "accept").slice(0,4).map(item => item.statement.slice(0,160));
             const rejected = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "reject").slice(0,4).map(item => item.statement.slice(0,160));
             const feedback=[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)];
-            const { prompt,composition,contrast } = createExplorationPrompt({ offer: state.brief.offer, audience: state.persona.audience, briefAudience: state.brief.audience, goal: state.brief.action, direction: state.brief.direction, accepted, rejected, feedback, sequence });
+            const audience=audienceResolution(latestState);
+            if(audience.status==='conflict')return;
+            const { prompt,composition,contrast } = createExplorationPrompt({ idea:current.current.idea??'', offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });
             const requestId = crypto.randomUUID();
             const batch={id:progress.batchId,position:progress.completed+1};
             const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};
@@ -208,7 +226,7 @@ export function useExplorationLoop(props: LoopProps) {
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
             localStorage.removeItem(pendingKey);
-            if (active) setCompleted(value => value + 1);
+            setCompleted(value => value + 1);
           }
         });
       } catch {
@@ -219,7 +237,7 @@ export function useExplorationLoop(props: LoopProps) {
     window.addEventListener("pagehide", onPageHide);
     void run();
     return () => { cancelCurrent(); if (stopCurrent.current === cancelCurrent) stopCurrent.current = null; window.removeEventListener("pagehide", onPageHide); };
-  }, [props.userId, props.projectId, props.hasApiKey, props.enabled, ready, paused, blocked, awaitingFeedback]);
+  }, [props.userId, props.projectId, props.hasApiKey, props.enabled, ready, paused, blocked, awaitingFeedback, awaitingAnswer]);
 
   async function resume() {
     if(resumeInFlight.current)return;
@@ -237,7 +255,10 @@ export function useExplorationLoop(props: LoopProps) {
         return;
       } finally { resumeInFlight.current=false;setResuming(false); }
     }
-    resumeRequested.current=true;setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
+    try { if(question)localStorage.setItem(questionKey,question); }
+    catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
+    resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
-  return { status: awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, resuming, resumeError, completed, phase: props.enabled ? phase : 'idle' as const, countdown: props.enabled ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  const running = props.enabled && !awaitingAnswer && !audienceConflict;
+  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }

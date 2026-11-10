@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,setCreativeField,removeCreativeField,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion} from '../lib/studio-state.ts';
+import {createStudioState,parseStudioState,updateBrief,updatePersona,createPost,selectVersion,selectDraft,getCurrentDraft,editDraft,setCreativeField,removeCreativeField,addMessage,addMark,addReference,removeReference,prepareAdjustment,settleAdjustment,approveDraft,recordSavedVersion,pendingSelectionQuestion,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
 
 const id = n => `00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const at='2026-11-05T12:00:00.000Z';
@@ -225,4 +225,31 @@ test('campos dinâmicos com chaves reordenadas pelo banco não criam rascunho su
  const returned={captionOrigin:sent.captionOrigin,caption:sent.caption,date:sent.date,price:sent.price,headline:sent.headline,fields:[{value:'20/11',origin:'user',label:'Data da oficina',id:id(60)}]};
  const state=recordSavedVersion(before,{pieceId:id(3),baseVersion:2,version:6,content:returned,eventId:id(61)});
  assert.equal(getCurrentDraft(state).dirty,false);assert.equal(getCurrentDraft(state).content.fields[0].value,'20/11');
+});
+
+test('pergunta do turno de seleção aguarda uma mensagem da pessoa ou nova imagem selecionada',()=>{
+ const reply=(state,request,origin,instruction)=>settleAdjustment(prepareAdjustment(state,{requestId:id(request),messageId:id(request+1),instruction,origin,createdAt:at,eventId:id(request+2)}),{requestId:id(request),status:'completed',result:{messageId:id(request+3),text:'Leitura.\n\n**Recomendação:** Serifada.\n\nPosso seguir pela serifada?'},createdAt:at,eventId:id(request+4)});
+ const asked=reply(addReference(selected(),reference),40,'system',REFERENCE_SELECTION_EVENT);
+ assert.equal(pendingSelectionQuestion(asked),id(43));
+ assert.equal(pendingSelectionQuestion(prepareAdjustment(asked,{requestId:id(50),messageId:id(51),instruction:'Pode seguir',createdAt:at,eventId:id(52)})),null,'mensagem da pessoa responde');
+ assert.equal(pendingSelectionQuestion(addReference(asked,{...reference,id:id(60)})),null,'nova imagem selecionada responde');
+ assert.equal(pendingSelectionQuestion(reply(asked,50,'user','Pode seguir')),null,'resposta a uma mensagem da pessoa não pausa a exploração');
+ assert.equal(pendingSelectionQuestion(selected()),null);
+});
+
+test('editar briefing, remover referência ou falhar turno automático não responde a pergunta anterior',()=>{
+ const request={requestId:id(40),messageId:id(41),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at,eventId:id(42)};
+ const asked=settleAdjustment(prepareAdjustment(addReference(selected(),reference),request),{requestId:id(40),status:'completed',result:{messageId:id(43),text:'Posso seguir pela serifada?'},createdAt:at,eventId:id(44)});
+ const edited=updateBrief(asked,{offer:'Outra oficina'});
+ const changed=removeReference(edited,reference.id);
+ const pending=prepareAdjustment(changed,{...request,requestId:id(50),messageId:id(51),eventId:id(52)});
+ assert.equal(pendingSelectionQuestion(edited),id(43));
+ assert.equal(pendingSelectionQuestion(changed),id(43));
+ assert.equal(pendingSelectionQuestion(pending),id(43),'turno automático em andamento preserva espera');
+ const failed=settleAdjustment(pending,{requestId:id(50),status:'failed',eventId:id(53)});
+ assert.equal(pendingSelectionQuestion(parseStudioState(JSON.parse(JSON.stringify(failed)))),id(43),'falha e recarga preservam espera');
+ const next=settleAdjustment(prepareAdjustment(failed,{...request,requestId:id(60),messageId:id(61),eventId:id(62)}),{requestId:id(60),status:'completed',result:{messageId:id(63),text:'Posso seguir pelo contraste?'},createdAt:at,eventId:id(64)});
+ assert.equal(pendingSelectionQuestion(next),id(63),'nova pergunta substitui a anterior');
+ assert.equal(pendingSelectionQuestion(addMessage(failed,{id:id(70),role:'assistant',text:'Aviso técnico.',createdAt:at})),id(43),'outra mensagem automática não responde');
+ assert.equal(pendingSelectionQuestion(addMessage(failed,{id:id(71),role:'user',text:'Pode seguir.',createdAt:at})),null);
 });

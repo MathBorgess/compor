@@ -1,0 +1,49 @@
+# ADR 0030 — Variante, retoque e cards no canvas
+
+- Estado: accepted
+- Data: 09/11/2026
+- Fonte: revisão do estúdio web por Matheus e decisões dele numa sessão do Claude Code em 09/11/2026.
+
+## Contexto
+
+Matheus pediu que "toda versão que teve um major, mudando estilo" vire um novo card no canvas, mantendo a versão anterior visível para a pessoa explorar e ver a evolução.
+
+Hoje toda geração ou edição salva a versão seguinte da mesma peça. O quadro mostra só a versão selecionada, e a troca de versão fica na gaveta Bases. A proposta de imagem distingue `create` de `edit`, mas isso não é salvo. Cada versão nova herda a aprovação da anterior.
+
+## Decisão
+
+**Termos.** Uma variante é uma versão que muda uma dimensão criativa declarada. Um retoque corrige texto, grafia ou detalhe e mantém a dimensão. As definições estão no [glossário](../../GLOSSARY.md). O termo "ajuste" foi evitado porque `Adjustment` já nomeia, no código, qualquer pedido enviado ao agente.
+
+**Quem classifica.** O agente declara a dimensão alterada ao propor a imagem, dentro de um conjunto fechado: estilo, composição ou gancho. Sem dimensão declarada, a versão é um retoque. A operação `create` ou `edit` não decide a classificação, porque uma edição pode mudar o estilo e uma geração nova pode mantê-lo.
+
+**Modelo.** Variantes continuam na mesma peça. `piece_version_metadata` ganha duas colunas opcionais, `changed_dimension` e `operation`. A coluna `base_version` já liga cada versão à sua origem. Um card reúne uma variante e os retoques que descendem dela, e a primeira versão abre o primeiro card. Versões antigas, sem dimensão registrada, contam como retoques do primeiro card. Nenhuma classificação retroativa é inferida. A numeração linear, a recuperação de conflito do [ADR 0024](0024-exploracao-limitada-e-pecas-flexiveis.md) e o "Novo post" continuam como estão.
+
+**Aprovação.** Um retoque herda a aprovação da sua origem. Uma variante começa sem aprovação, porque traz um visual que a pessoa ainda não aprovou. Isso muda o comportamento atual, em que toda versão nova herda a aprovação.
+
+**Imagens.** Cada card mostra a imagem da sua versão mais recente. Hoje só a versão selecionada carrega imagem local. A implementação passa a carregar a imagem por versão e usa a recuperação do armazenamento privado quando ela não estiver no navegador.
+
+## Implantação
+
+A migration só acrescenta colunas e uma versão nova da função de salvamento. `save_piece_version_v2` continua funcionando para o app já publicado. Como o workflow aplica migrations em todo push na `main`, a migration entra na `main` no merge final da branch `compor/feedback-estudio`, logo antes do deploy.
+
+## Limites
+
+Testes com fornecedor simulado e banco local verificam classificação, agrupamento, aprovação e compatibilidade da função antiga. Eles não mostram se a dimensão declarada pelo agente coincide com o que a pessoa percebe como mudança de estilo. Isso entra no teste de comportamento final. O desenho dos cards sai do protótipo descrito no [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md). A regra do [ADR 0023](0023-referencias-e-conversa-flutuante.md) de não pôr avaliações ou comentários nos cartões continua valendo.
+
+## Contratos de implementação
+
+A proposta usa `changedDimension` opcional, com `style`, `composition` ou `hook`. O servidor valida o conjunto fechado e a serialização inclui a dimensão no digest da proposta. `operation` continua `create` ou `edit`; nenhuma dessas operações, sozinha, abre uma variante.
+
+`save_piece_version_v3` recebe `p_operation` e `p_changed_dimension`, salva com a mesma precondição de versão da v2 e registra os dois campos na mesma transação. Uma dimensão declarada zera a aprovação da versão nova. Sem dimensão, a aprovação segue a origem. A v2 e a listagem v2 mantêm o JSON anterior; a listagem v3 acrescenta `operation` e `changedDimension`, nulos para dados antigos. Clientes atuais continuam lendo metadados antigos sem esses campos.
+
+Os cards agrupam retoques pela cadeia de `baseVersion`, inclusive quando uma variante deriva de outra. Cada card mostra a imagem da sua versão mais recente e oferece suas versões anteriores. O primeiro card recebe o histórico antigo, sem inferir dimensões. Um novo post continua sendo outra peça. Um salvamento recuperado de conflito também precisa corresponder à dimensão e à operação solicitadas; conteúdo igual não basta para adotar uma classificação diferente.
+
+O carregamento de imagens é feito por conta, projeto, peça e versão, quando o card se aproxima da tela. A cópia local tem prioridade. Se estiver ausente, a pessoa pode consultar as imagens privadas daquela versão e inspecionar a candidata antes de usá-la. A listagem atual marca todas como origem desconhecida, portanto nenhuma é aplicada automaticamente. Uma variante em preparação não copia a arte antiga para fingir que a proposta nova já foi gerada.
+
+## Extensão delegada do contrato na integração
+
+Na revisão delegada de 10/11/2026, o diretor AX aceitou acrescentar também `list_project_piece_versions_v3`, além de `save_piece_version_v3`. Essa extensão do critério da issue #26 preserva integralmente `save_piece_version_v2`, `list_project_piece_versions_v2` e seus formatos estritos de resposta, e permite recuperar os metadados dos cards com uma leitura única. Os campos novos aparecem nos contratos v3, sem classificar retroativamente o histórico antigo.
+
+A migration continua aditiva, em commit próprio e por último. Ela só chega à produção no merge final da branch de integração para a `main`.
+
+Na avaliação das capturas cumulativas reais, o diretor AX decidiu manter a ação única “Escolher mais referências” no cabeçalho local do post, antes dos cards e fora do zoom. Assim, os três cards empilhados no mobile não escondem o retorno à descoberta após várias telas. O callback e os dados preservados na ida e volta não mudam. Os botões de abrir variante, os seletores de versão e essa ação têm alvo mínimo de 44 px, a confirmar pela medição final; a tipografia e a rolagem são preservadas.

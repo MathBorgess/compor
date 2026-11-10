@@ -6,6 +6,9 @@ import type {StudioStore} from './studio-chat-store.js';
 import type {StudioBindings} from './studio-chat-bindings.js';
 import type {StudioEventName,StudioEventMetadata} from './studio-telemetry.js';
 import type {ActionInputByName} from './studio-chat-tools.js';
+export interface StudioOfferFact {id:string;label:string;value:string;status:'confirmed'|'pending'|'omitted'}
+export type StudioAudienceResolution={status:'resolved';value:string}|{status:'conflict';brief:string;persona:string};
+export interface StudioContext {revision:number;projectTitleProvisional?:boolean;offerFacts?:StudioOfferFact[];audienceResolution?:StudioAudienceResolution;[key:string]:unknown}
 export type DurableAction=(ProjectScope & {name:'compor_renomear_projeto';args:ActionInputByName['compor_renomear_projeto'];result:{status:'completed';title:string}})|(ProjectScope & {name:'compor_salvar_versao';args:ActionInputByName['compor_salvar_versao'];result:{status:'completed';pieceId:string;version:number}});
 export interface StudioChatOptions {appOrigin:string;resolveActor:ResolveActor;ownsProject:OwnsProject;ownsVersion?:OwnsVersion;verifyDurableResult?:(input:DurableAction)=>Promise<boolean>;store:StudioStore;attempts:AttemptStore;usage?:UsageStore;bindings:SessionBindings;studioBindings:StudioBindings;onEvent?:(name:StudioEventName,metadata:StudioEventMetadata)=>void|Promise<void>;fetch?:typeof fetch;readPages?:(message:string)=>Promise<Array<{url:string;status:'available'|'unavailable'|'not_requested';content?:string}>>;now?:()=>number}
 export function createStudioChatHandlers(options:StudioChatOptions):{chat:RequestHandler;action:RequestHandler};

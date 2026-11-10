@@ -2,23 +2,17 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
+import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
+import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content";
 import "./entry.css";
 import "./studio-shell.css";
 
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
-const LegacyWorkspace = dynamic(() => import("./legacy-workspace"));
-
-export default function Workspace({ loginAvailable, localAuth = false, legacy = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; legacy?: boolean; developerMode?: boolean }) {
-  return legacy
-    ? <LegacyWorkspace loginAvailable={loginAvailable} />
-    : <StudioWorkspace loginAvailable={loginAvailable} localAuth={localAuth} developerMode={developerMode} />;
-}
-
-function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAvailable: boolean; localAuth: boolean; developerMode: boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -96,6 +90,7 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
             typeof data.userId === "string" &&
             data.userId
           ) {
+            try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
             if (
               openAIKeyOwner.current &&
               openAIKeyOwner.current !== data.userId
@@ -109,15 +104,15 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
             try {
               const key = `compor-objective:user:${data.userId}`;
               const seenAccount =
-                sessionStorage.getItem("compor-has-authenticated") === "1";
+                sessionStorage.getItem(entryDraftStorage.seenAccount) === "1";
               const claimSource = sessionStorage.getItem(
-                "compor-claim-pending",
+                entryDraftStorage.claimPending,
               );
               const claim =
                 claimSource === "anonymous" ||
                 (claimSource === "guest" && !seenAccount);
               const sourceKey = claim
-                ? `compor-objective:${claimSource}`
+                ? entryDraftStorage.draft[claimSource]
                 : null;
               const existing = sessionStorage.getItem(key);
               const guest = sourceKey
@@ -140,10 +135,10 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
                   );
                 sessionStorage.setItem(pending, guest);
               }
-              sessionStorage.setItem("compor-has-authenticated", "1");
+              sessionStorage.setItem(entryDraftStorage.seenAccount, "1");
               if (claimSource === "anonymous" && claim && sourceKey)
                 sessionStorage.removeItem(sourceKey);
-              sessionStorage.removeItem("compor-claim-pending");
+              sessionStorage.removeItem(entryDraftStorage.claimPending);
               draftKey.current = key;
               pendingKey.current = pending;
               setHasPendingDraft(sessionStorage.getItem(pending) !== null);
@@ -156,16 +151,17 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
             }
             setAuthState("connected");
           } else if (data.state === "signed-out") {
+            try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
             clearOpenAIKey();
             setAuthenticatedUser(null);
             setAccount(null);
             try {
-              sessionStorage.removeItem("compor-claim-pending");
+              sessionStorage.removeItem(entryDraftStorage.claimPending);
               const seenAccount =
-                sessionStorage.getItem("compor-has-authenticated") === "1";
+                sessionStorage.getItem(entryDraftStorage.seenAccount) === "1";
               draftKey.current = seenAccount
-                ? "compor-objective:anonymous"
-                : "compor-objective:guest";
+                ? entryDraftStorage.draft.anonymous
+                : entryDraftStorage.draft.guest;
               activeIdentity.current = seenAccount ? "signed-out" : "guest";
               setObjective(
                 memoryDrafts.current.get(activeIdentity.current) ??
@@ -237,6 +233,7 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
     signingOut.current=true;
     sessionEpoch.current++;
     activeIdentity.current=null;
+    try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
     clearOpenAIKey();
     setAuthState("checking");
     try {
@@ -300,12 +297,14 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
               <label>
                 Chave OpenAI
                 <input
-                  ref={openAIKeyInput}
+                  ref={element => {
+                    openAIKeyInput.current = element;
+                    if (element) element.value = authState === "connected" && openAIKeyOwner.current === authenticatedUser ? openAIKey.current : "";
+                  }}
                   type="password"
                   autoComplete="off"
                   spellCheck={false}
                   maxLength={300}
-                  defaultValue={openAIKey.current}
                   onChange={(event) => {
                     openAIKey.current = event.target.value;
                     openAIKeyOwner.current = authenticatedUser;
@@ -323,13 +322,11 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
       <div className="entry-content">
         <div className="entry-brand" aria-label="Compor">
           <BrandSymbol motion={authState === "checking" ? "working" : "arriving"} />
-          <img src="/studio/brand-wordmark.svg" alt="Compor" width="100" height="20.0997" />
+          <img src={brandImages.wordmark.src} alt={brandImages.wordmark.alt} width={brandImages.wordmark.width} height={brandImages.wordmark.height} />
         </div>
         <section className="entry-panel" aria-labelledby="entry-title">
-          <h1 id="entry-title">Bom ter você por aqui.</h1>
-          <p className="entry-description">
-            Traga uma ideia. Encontre a direção do seu próximo post em uma conversa.
-          </p>
+          <h1 id="entry-title">{entryCopy.title}</h1>
+          <p className="entry-description">{entryCopy.description}</p>
           <form
             action="/auth/sign-in"
             method="post"
@@ -338,8 +335,8 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
                 if (draftKey.current) {
                   sessionStorage.setItem(draftKey.current, objective);
                   sessionStorage.setItem(
-                    "compor-claim-pending",
-                    draftKey.current === "compor-objective:guest"
+                    entryDraftStorage.claimPending,
+                    draftKey.current === entryDraftStorage.draft.guest
                       ? "guest"
                       : "anonymous",
                   );
@@ -360,10 +357,10 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
                 authState === "checking"
               }
             >
-              {localAuth ? "Entrar no ambiente local" : "Entrar com Google"}
+              {localAuth ? "Entrar no ambiente local" : entryCopy.googleButton}
             </button>
           </form>
-          <p className="entry-note">{localAuth ? "Sessão anônima de desenvolvimento no banco local." : "Uma conta Google para entrar e retomar seus projetos."}</p>
+          <p className="entry-note">{localAuth ? "Sessão anônima de desenvolvimento no banco local." : entryCopy.googleNote}</p>
           {authState === "checking" && (
             <p className="entry-status" role="status">Verificando sua conta…</p>
           )}
@@ -376,24 +373,19 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
             </button>
           )}
           {loginError && (
-            <p className="entry-alert" role="alert">
-              Não foi possível concluir o login. Tente novamente.
-            </p>
+            <p className="entry-alert" role="alert">{entryCopy.loginError}</p>
           )}
           {storageError && (
-            <p className="entry-alert" role="alert">
-              Não foi possível preservar seu rascunho. Copie o texto antes de
-              continuar.
-            </p>
+            <p className="entry-alert" role="alert">{entryCopy.storageError}</p>
           )}
           {objective && (
             <details className="entry-draft" open={storageError}>
-              <summary>Seu rascunho anterior está preservado</summary>
+              <summary>{entryCopy.draftSummary}</summary>
               <p>{objective}</p>
             </details>
           )}
         </section>
-        <p className="entry-byline">Compor por We MathAI</p>
+        <p className="entry-byline">{entryCopy.byline}</p>
       </div>
     </main>
   );

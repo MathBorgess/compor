@@ -1,3 +1,15 @@
+// The signed-out entry may ship no external script (ADR 0034). Zero scripts passes only on the
+// Compor entry markup, and every script it does load must be a local Next chunk.
+export function entryScripts(html, origin) {
+  if (!/<main\b[^>]*\bclass="compor-entry"/.test(html) || !/<form\b[^>]*\baction="\/auth\/sign-in"/.test(html)) throw Error('The audited route is not the Compor entry.');
+  const sources = [...html.matchAll(/<script\b[^>]*?\bsrc\s*=\s*(?:"([^"]*)"|'([^']*)'|([^\s>]+))/gi)].map(match => (match[1] ?? match[2] ?? match[3]).replaceAll('&amp;', '&'));
+  return [...new Set(sources)].map(source => {
+    const url = new URL(source, origin);
+    if (url.origin !== origin || !url.pathname.startsWith('/_next/static/') || !url.pathname.endsWith('.js')) throw Error(`Unexpected initial script: ${url.pathname}`);
+    return url;
+  });
+}
+
 export function summarizeRuns(results) {
   if (!Array.isArray(results) || results.length < 3) throw Error('At least three completed Lighthouse runs are required.');
   const audits = {

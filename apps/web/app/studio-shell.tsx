@@ -35,6 +35,7 @@ export type StudioShellProps = {
   conversationFocus?: boolean;
   chatMessageCount?: number;
   headerActions?: ReactNode;
+  context?: ReactNode;
   footer?: ReactNode;
   overlays?: ReactNode;
   bases?: ReactNode;
@@ -42,9 +43,6 @@ export type StudioShellProps = {
   basesCount?: number;
   drawer?: StudioDrawer;
   onDrawerChange?: (drawer: StudioDrawer) => void;
-  onDownload?: () => void;
-  downloadDisabled?: boolean;
-  yellowDownload?: boolean;
   viewingArt?: boolean;
   onCloseArt?: () => void;
   onLayoutChange?: (layout: StudioLayout) => void;
@@ -89,6 +87,7 @@ export default function StudioShell({
   conversationFocus = false,
   chatMessageCount = 0,
   headerActions,
+  context,
   footer,
   overlays,
   bases = null,
@@ -96,9 +95,6 @@ export default function StudioShell({
   basesCount = 0,
   drawer = undefined,
   onDrawerChange,
-  onDownload,
-  downloadDisabled = false,
-  yellowDownload = true,
   viewingArt = false,
   onCloseArt,
   onLayoutChange,
@@ -288,12 +284,13 @@ export default function StudioShell({
                     ref={menuTrigger}
                     type="button"
                     className="studio-project-trigger"
+                    title={barTitle}
                     aria-expanded={menuOpen}
                     aria-haspopup="dialog"
                     aria-controls="studio-project-menu"
                     onClick={() => setMenuOpen((open) => !open)}
                   >
-                    {barTitle}
+                    <span className="studio-truncate">{barTitle}</span>
                     <span aria-hidden="true">▾</span>
                   </button>
                 ) : (
@@ -325,6 +322,7 @@ export default function StudioShell({
                       <button
                         type="button"
                         key={project.id}
+                        title={project.title}
                         aria-current={project.id === projectId ? "true" : undefined}
                         onClick={() => {
                           setMenuOpen(false);
@@ -352,7 +350,7 @@ export default function StudioShell({
                     onSubmit={(event) => {
                       event.preventDefault();
                       const title = renameValue.trim();
-                      if (!title || title === projectTitle) return;
+                      if (!title) return;
                       Promise.resolve(onRenameProject(title)).then((saved) => {
                         if (saved !== false) setMenuOpen(false);
                       });
@@ -403,16 +401,6 @@ export default function StudioShell({
               </button>
             </>
           ) : null}
-          {onDownload ? (
-            <button
-              type="button"
-              className={yellowDownload ? "studio-button studio-button-yellow" : "studio-button studio-button-secondary"}
-              disabled={downloadDisabled}
-              onClick={onDownload}
-            >
-              Baixar
-            </button>
-          ) : null}
           <div className="studio-account">
             <AccountMenu label={accountLabel || userLabel || "Conta"} local={localAccount} onSignOut={onSignOut} />
             {statusText ? (
@@ -423,6 +411,7 @@ export default function StudioShell({
           </div>
         </div>
       </header>
+      {isStudio ? context : null}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         {showChat ? (
           <div className="studio-chat-slot" style={chatHeight===null?undefined:{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
@@ -517,10 +506,11 @@ export function CreativeBoard({
   title = "Vamos encontrar a sua direção.",
   description = "Explore as ideias e versões do projeto.",
   children,
+  actions,
   onCurrentPost,
   surfaceWidth = 1500,
   surfaceHeight = 1060,
-}: {title?: string;description?: string;children?: ReactNode;onCurrentPost?: () => void;surfaceWidth?: number;surfaceHeight?: number}) {
+}: {title?: string;description?: string;children?: ReactNode;actions?:ReactNode;onCurrentPost?: () => void;surfaceWidth?: number;surfaceHeight?: number}) {
   const [zoom, setZoom] = useState(1);
   const viewport = useRef<HTMLDivElement>(null);
   function fit() {
@@ -545,7 +535,7 @@ export function CreativeBoard({
           <h2>{title}</h2>
           {description && <p>{description}</p>}
         </div>
-        <span className="studio-badge">Quadro criativo</span>
+        {actions ?? <span className="studio-badge">Quadro criativo</span>}
       </div>
       <div
         ref={viewport}

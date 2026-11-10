@@ -35,7 +35,7 @@ test('lista versões com metadata pelo RPC autorizado e rejeita projeto divergen
   assert.equal(response.status, 200);
   assert.deepEqual((await response.json()).versions, [row]);
   assert.equal(upstream.options.headers.authorization, 'Bearer fake-user-token');
-  assert.equal(upstream.url.pathname,'/rest/v1/rpc/list_project_piece_versions_v2');
+  assert.equal(upstream.url.pathname,'/rest/v1/rpc/list_project_piece_versions_v3');
   assert.deepEqual(JSON.parse(upstream.options.body),{p_project_id:projectId});
   row.project_id = 'outra-pessoa';
   const denied = await routes.GET(new Request(`https://compor.test/api/pieces?projectId=${projectId}`));
@@ -51,10 +51,18 @@ test('base explícita e aprovação usam contratos distintos sem aceitar aprova�
  }});
  assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content}))).status,200);
  assert.deepEqual(saved,{projectId,pieceId,expectedVersion:3,baseVersion:1,content});
+ assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content,operation:'edit',changedDimension:'style'}))).status,200);
+ assert.deepEqual(saved,{projectId,pieceId,expectedVersion:3,baseVersion:1,content,operation:'edit',changedDimension:'style'});
+ for(const changedDimension of ['major','estilo',null])assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content,operation:'edit',changedDimension}))).status,400);
+ assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content,changedDimension:'style'}))).status,400);
  assert.equal((await routes.POST(request({projectId,pieceId,expectedVersion:3,baseVersion:1,content,approval:{status:'approved'}}))).status,400);
  const patch=body=>new Request('https://compor.test/api/pieces',{method:'PATCH',headers:{origin:'https://compor.test','content-type':'application/json'},body:JSON.stringify(body)});
  assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0}))).status,409);
  assert.deepEqual(approved,{projectId,pieceId,version:2,expectedRevision:0});
+ const references=[{kind:'pinterest',originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'},{kind:'generated',projectId,imageId:pieceId}];
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,references}))).status,409);
+ assert.deepEqual(approved.references,references);
+ assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,references:[{...references[0],approvedVersions:100}]}))).status,400);
  assert.equal((await routes.PATCH(patch({operation:'approve',projectId,pieceId,version:2,expectedRevision:0,approvedBy:userId}))).status,400);
 });
 
