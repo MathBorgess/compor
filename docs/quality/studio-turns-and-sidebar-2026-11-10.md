@@ -30,9 +30,21 @@ O build contém 16 chunks JavaScript, somando 290.818 bytes gzip com `gzipSync` 
 
 - `quality:unit` agregado foi tentado, mas não passou: faltam no snapshot scripts/fixtures de outros pacotes, como `supabase/tests/rls_two_identities_capture.sh`, e o histórico completo necessário aos testes de preparação de migrations. Os resultados focados acima não substituem o gate agregado no checkout completo do CI.
 - Os contratos de navegador não foram reexecutados nesta integração. As tentativas dos dois marcos já falharam ao iniciar o Chromium por `socket() failed: Operation not permitted`, antes das interações. Não há aprovação local da geometria, screenshots, teclado virtual ou leitores de tela.
-- `quality:browser` completo e `quality:performance` permanecem pendentes em ambiente compatível. A suíte nova inclui desktop, 1024 px, 768 px, 390 px, 320 px, viewport visual reduzido, contexto expandido, alternâncias e retorno ao editor.
+- A suíte de navegador precisa passar no CI. Ela inclui desktop, 1024 px, 768 px, 390 px, 320 px, viewport visual reduzido, contexto expandido, alternâncias e retorno ao editor. O resultado posterior do primeiro CI está abaixo.
 - Não houve teste real com conta nova, login Google, chave padrão no Vault ou OpenAI. O defeito de digest foi reproduzido e corrigido em testes simulados; isso não comprova sozinho a causa de todo 403 observado em produção nem qualidade criativa.
 
 Antes de aprovar o código, conferir os checks do SHA exato do PR e revisar a interface em navegador funcional. Merge, deploy, configuração remota e chamadas pagas não fazem parte desta revisão.
 
 Os [resultados isolados da correção de ações](studio-action-digest-2026-11-10.md) e os limites da UI no ADR 0041 descrevem etapas anteriores à integração, não uma validação do produto em produção.
+
+## Primeiro CI e ajustes para revalidação
+
+O [Quality 63](https://github.com/MathBorgess/compor/actions/runs/42840566897), no PR 48 com head `b5f00ad7c1ee73c15f2d7582e8944d6e193e8b83`, aprovou estáticos, contratos/isolamento completos e performance. Lighthouse mediu LCP mediano de 647 ms, TBT de 0 e CLS de 0,008; bundle de 290.818 bytes gzip. O navegador executou 374 testes, com 372 aprovados, dois reprovados e nenhum skip. O Quality gate reprovou.
+
+As duas falhas levaram aos ajustes seguintes, sem reduzir asserções, aumentar timeouts ou mudar gates:
+
+- O helper de edição no teste de troca de identidade restaura a conversa somente se ela realmente ficou oculta após entrar no editor. A preferência do editor é independente da sidebar; reabrir uma conversa já aberta fazia o teste esperar um controle inexistente. A espera explícita pela conversa visível e as asserções de isolamento permanecem.
+- A ocultação compacta do contexto e das ações exige um atributo controlado pelo estado React do breakpoint. Assim o CSS não esconde um campo focado antes que o layout effect consiga devolver o foco a um controle visível. O teste continua exigindo foco no botão de conversa ao reduzir a largura com o campo Oferta ativo.
+- As três screenshots da sidebar usam o prefixo já coletado pelo workflow, para permitir revisão das imagens no artefato do próximo CI.
+
+O próximo resultado deve ser conferido no SHA exato da branch; os ajustes não convertem a execução anterior em aprovação.

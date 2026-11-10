@@ -22,13 +22,17 @@ async function openEditor(page){
  const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});
  await title.or(open).first().waitFor();
  if(await open.isVisible()){
-  // The floating conversation may cover the briefing; use its visible control
-  // to reveal the editor action, as a person can, and restore it afterwards.
+  // Reveal the editor action and restore the conversation only if needed.
+  // Entering the editor can restore its independent open preference.
   const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});
   const wasOpen=await collapse.isVisible();
   if(wasOpen)await collapse.click();
   await open.click();await title.waitFor();
-  if(wasOpen)await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+  if(wasOpen){
+   const conversation=page.getByRole('complementary',{name:'Conversa com a IA',exact:true});
+   if(!await conversation.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+   await conversation.waitFor();
+  }
  }
  await title.waitFor();
 }

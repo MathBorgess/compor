@@ -83,7 +83,7 @@ test('referências e conversa ocupam colunas sem sobreposição; seleção, rasc
   assert.ok(scroll>0);
   await page.locator('.studio-chat-messages').evaluate(element=>element.scrollTop=element.scrollHeight);
   assert.equal(await page.locator('#studio-main').evaluate(element=>element.scrollTop),scroll);
-  await page.screenshot({path:'/tmp/compor-reference-sidebar-desktop.png'});
+  await page.screenshot({path:'/tmp/compor-studio-visual-reference-sidebar-desktop.png'});
   await page.getByRole('button',{name:'Recolher conversa'}).click();
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
   assert.equal(Math.round((await page.locator('#studio-main').boundingBox()).width),1440);
@@ -105,7 +105,7 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   await page.getByRole('button',{name:'Referência 1',exact:true}).click();
   await page.locator('#studio-main').evaluate(element=>element.scrollTop=250);
   const scroll=await page.locator('#studio-main').evaluate(element=>element.scrollTop);
-  await page.screenshot({path:'/tmp/compor-reference-sidebar-mobile-references.png'});
+  await page.screenshot({path:'/tmp/compor-studio-visual-reference-sidebar-mobile-references.png'});
   await page.getByRole('button',{name:'Simular resposta'}).click();
   await page.getByText('Nova mensagem',{exact:true}).waitFor();
   await open.click();
@@ -127,7 +127,7 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   await page.waitForFunction(()=>document.querySelector('.studio-chat-composer').getBoundingClientRect().bottom<=380);
   await page.evaluate(()=>{delete window.visualViewport.height;window.visualViewport.dispatchEvent(new Event('resize'));});
   assert.ok((await geometry(page)).composer.bottom<=844);
-  await page.screenshot({path:'/tmp/compor-reference-sidebar-mobile-chat.png'});
+  await page.screenshot({path:'/tmp/compor-studio-visual-reference-sidebar-mobile-chat.png'});
   await page.keyboard.press('Escape');
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
   assert.equal(await page.locator('#studio-main').isVisible(),true);
@@ -154,6 +154,13 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
   await page.getByLabel('Oferta',{exact:true}).focus();
   await page.setViewportSize({width:390,height:844});
   await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
+  assert.equal(await page.locator('.studio-context').isVisible(),false);
+  assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);
+  await page.setViewportSize({width:1440,height:960});
+  await page.getByRole('button',{name:'Salvar versão',exact:true}).focus();
+  await page.setViewportSize({width:390,height:844});
+  await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Abrir conversa');
+  assert.equal(await page.locator('.studio-topbar-end').isVisible(),false);
   assert.deepEqual(errors,[]);
 });
 

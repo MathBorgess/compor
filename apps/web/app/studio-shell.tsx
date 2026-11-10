@@ -312,6 +312,7 @@ export default function StudioShell({
       data-stage={stage}
       data-conversation-focus={conversationFocus ? "true" : "false"}
       data-chat-presentation={referenceWorkspace ? "sidebar" : "floating"}
+      data-reference-compact={referenceWorkspace && compactReferences ? "true" : "false"}
       data-layout={layoutC ? "c" : "b"}
       data-art={viewingArt ? "open" : "closed"}
       style={{ "--studio-bar": `${barHeight}px`, "--studio-viewport-height": `${availableHeight + 32}px` } as CSSProperties}

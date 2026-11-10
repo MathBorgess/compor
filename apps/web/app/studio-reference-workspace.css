@@ -50,7 +50,9 @@
 @media (max-width: 1000px) {
   /* The conversation view prioritizes the composer when a virtual keyboard is open.
      Project actions and editable context remain available in the References view. */
-  .compor-studio[data-chat-presentation='sidebar'][data-layout='b'] :is(.studio-topbar-end, .studio-context) { display: none; }
+  /* Wait for the React breakpoint update so its layout effect can move focus
+     before a focused context field becomes hidden. */
+  .compor-studio[data-chat-presentation='sidebar'][data-reference-compact='true'][data-layout='b'] :is(.studio-topbar-end, .studio-context) { display: none; }
   .compor-studio[data-chat-presentation='sidebar'] .studio-context { min-height: 0; max-height: 35%; overflow: auto; }
   .compor-studio[data-chat-presentation='sidebar'] .studio-body { min-height: 200px; }
   .compor-studio[data-chat-presentation='sidebar'] .studio-body[data-chat='open'] { grid-template-columns: minmax(0, 1fr); }
