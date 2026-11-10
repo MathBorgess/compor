@@ -15,6 +15,7 @@ import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
+import ReferenceSelectionTray from "./reference-selection-tray";
 import { useExplorationLoop } from "./use-exploration-loop";
 import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
@@ -45,6 +46,7 @@ import {
   recordSavedVersion,
   recordActionReceipt,
   resolveProjectTitle,
+  STUDIO_LIMITS,
 } from "../lib/studio-state.ts";
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat from "./studio-chat";
@@ -846,6 +848,10 @@ function ProjectStudio({
         );
     }
   }
+  async function removeSelected(match:(reference:StudioReference)=>boolean) {
+    const selected=local.get()?.references.find(match);
+    if(selected)await removeFile(selected.id);
+  }
   if (local.loading || !s)
     return (
       <StudioShell stage="projects" accountLabel={accountLabel} localAccount={localAccount} onSignOut={onSignOut ? signOutSafely : undefined}>
@@ -1146,8 +1152,9 @@ function ProjectStudio({
       canvas={
         showBrief ? <div className="studio-brief">
           <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary" type="button" onClick={()=>{setReferencesRequested(false);setEditorRequested(true);}}>{hasPost?'Voltar ao post':'Definir textos da arte'}</button></div>
-          <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
-          <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
+          <ReferenceSelectionTray items={s.references.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} limit={STUDIO_LIMITS.references} onRemove={removeFile} />
+          <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={originUrl=>removeSelected(reference=>Boolean(reference.source&&'originUrl' in reference.source&&reference.source.originUrl===originUrl))} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
+          <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} onRemoveReference={imageId=>removeSelected(reference=>Boolean(reference.source&&'kind' in reference.source&&reference.source.kind==='generated'&&reference.source.imageId===imageId))} selectedIds={selectedGeneratedIds} />
         </div> : <div className="studio-post-workspace">
           <div className="studio-post-workspace-header"><button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button></div>
           {draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}
