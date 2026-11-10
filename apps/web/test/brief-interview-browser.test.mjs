@@ -98,8 +98,18 @@ async function app(t, {withReferences = false} = {}) {
 async function openProject(page, origin) {
   await page.goto(origin);
   await page.getByRole('button', {name: /Direção opcional/}).click();
-  await page.getByRole('button', {name: 'Abrir conversa', exact: true}).click();
+  await page.getByLabel('Sua mensagem', {exact: true}).waitFor({state:'attached'});
+  if (!await page.getByLabel('Sua mensagem', {exact: true}).isVisible()) await page.getByRole('button', {name: 'Abrir conversa', exact: true}).click();
   await page.getByLabel('Sua mensagem', {exact: true}).waitFor();
+}
+
+async function openEditorConversation(page) {
+  const references=page.getByRole('button',{name:'Referências',exact:true});
+  if(await references.isVisible())await references.click();
+  await page.getByRole('button',{name:'Definir textos da arte',exact:true}).click();
+  const message=page.getByLabel('Sua mensagem',{exact:true});
+  if(!await message.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+  await message.waitFor();
 }
 
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
@@ -195,10 +205,11 @@ test('duas rodadas sem resposta pedem decisão no chat e retomam somente por aç
   assert.equal(calls.filter(call=>call.path==='/api/studio/explorations' && call.body).length,0);
 });
 
-test('somente histórico rola e o envio permanece visível no painel compacto', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
+test('no editor, somente histórico rola e o envio permanece visível no painel compacto', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, errors} = await app(t);
   await page.setViewportSize({width: 742, height: 720});
   await openProject(page, origin);
+  await openEditorConversation(page);
   await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
   const geometry = await page.evaluate(() => {
     const panel = document.querySelector('.studio-conversation').getBoundingClientRect();
@@ -255,10 +266,11 @@ test('somente histórico rola e o envio permanece visível no painel compacto', 
   assert.deepEqual(errors, []);
 });
 
-test('detalhes podem ser recolhidos e a conversa ampliada por teclado ou ponteiro', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
+test('no editor, detalhes podem ser recolhidos e a conversa ampliada por teclado ou ponteiro', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page,origin,errors}=await app(t);
   await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:742,height:720});
   await openProject(page,origin);
+  await openEditorConversation(page);
   const details=page.locator('#studio-chat-details');
   const toggle=page.getByRole('button',{name:'Ocultar detalhes da conversa'});
   assert.equal(await details.isVisible(),true);await toggle.click();

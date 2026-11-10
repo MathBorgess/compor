@@ -1,0 +1,61 @@
+/* Reference selection is a workspace, not a dialog laid over the images. */
+.compor-studio[data-chat-presentation='sidebar'] {
+  height: min(100dvh, var(--studio-viewport-height, 100dvh));
+  min-height: 0;
+}
+.compor-studio[data-chat-presentation='sidebar'] > :not(.studio-body) { flex-shrink: 0; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-body[data-chat='open'] {
+  grid-template-columns: minmax(0, 1fr) clamp(340px, 30vw, 420px);
+}
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-slot {
+  position: relative;
+  z-index: auto;
+  inset: auto;
+  transform: none;
+  width: auto;
+  height: 100%;
+  overflow: hidden;
+}
+.compor-studio[data-chat-presentation='sidebar'] .studio-conversation {
+  border: 0;
+  border-left: 1px solid var(--studio-line);
+  border-radius: 0;
+  box-shadow: none;
+  animation: none;
+}
+.compor-studio[data-chat-presentation='sidebar'] .studio-canvas-column {
+  order: 0;
+  padding: 24px;
+  overscroll-behavior: contain;
+}
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-header {
+  min-height: 112px;
+  padding: 20px 16px 60px;
+}
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-header h2 { max-width: none; white-space: normal; font-size: 15px; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-header p { display: block; font-size: 12px; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-collapse,
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-details-toggle { top: 64px; min-height: 44px; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-details-toggle { left: 16px; right: auto; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-panel { overflow-y: auto; overscroll-behavior: contain; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-meta { flex: 0 1 auto; min-height: 0; max-height: 35%; overflow: auto; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-messages { overscroll-behavior: contain; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-composer { padding-block: 12px; padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-composer textarea { min-height: 44px; font-size: 16px; }
+.compor-studio[data-chat-presentation='sidebar'] .studio-chat-composer .studio-button { width: 44px; height: 44px; min-height: 44px; }
+.studio-reference-switcher { display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 8px 16px; border-bottom: 1px solid var(--studio-line); background: white; }
+.studio-reference-switcher > span { color: var(--studio-muted); font-size: 12px; }
+.studio-reference-switcher button { display: flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 16px; border: 1px solid var(--studio-line); border-radius: 10px; color: var(--studio-cobalt); background: white; font: inherit; font-weight: 500; }
+.studio-reference-switcher button[aria-pressed='true'], .studio-reference-switcher button[aria-expanded='true'] { background: var(--studio-blue-tint); border-color: var(--studio-cobalt); }
+@media (max-width: 1000px) {
+  /* The conversation view prioritizes the composer when a virtual keyboard is open.
+     Project actions and editable context remain available in the References view. */
+  .compor-studio[data-chat-presentation='sidebar'][data-layout='b'] :is(.studio-topbar-end, .studio-context) { display: none; }
+  .compor-studio[data-chat-presentation='sidebar'] .studio-context { min-height: 0; max-height: 35%; overflow: auto; }
+  .compor-studio[data-chat-presentation='sidebar'] .studio-body { min-height: 200px; }
+  .compor-studio[data-chat-presentation='sidebar'] .studio-body[data-chat='open'] { grid-template-columns: minmax(0, 1fr); }
+  .compor-studio[data-chat-presentation='sidebar'] .studio-canvas-column { padding: 20px 12px; }
+  .compor-studio[data-chat-presentation='sidebar'] .studio-conversation { border-left: 0; }
+  .studio-reference-switcher { justify-content: stretch; padding: 8px 12px; }
+  .studio-reference-switcher button { flex: 1; min-width: 0; flex-wrap: wrap; }
+}

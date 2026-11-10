@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
 import {createCredentialSessionBindings,createCredentialStudioBindings,createCredentialReconciliationBindings} from '../lib/openai-credential-bindings.ts';
+import {credentialSigningKey} from '../lib/openai-credential.ts';
 
 const secret=Buffer.alloc(32,7),key='sk-'+ 'a'.repeat(30),anotherKey='sk-'+ 'b'.repeat(30);
 const scope={userId:'11111111-1111-4111-8111-111111111111',projectId:'22222222-2222-4222-8222-222222222222',attemptId:'33333333-3333-4333-8333-333333333333'};
@@ -78,4 +79,25 @@ test('legacy image actions can finish under their historical proof protocol',()=
   assert.ok(legacy.verifyApprovedAction({...scope,pieceId,version:1,token:approved}));
   assert.ok(own.verifyApprovedAction({...scope,pieceId,version:1,token:approved}));
   assert.equal(bindings('default').verifyApprovedAction({...scope,pieceId,version:1,token:approved}),null);
+});
+
+test('studio argument verification follows each proof domain without changing stable IDs or content digests',()=>{
+ const input={...session,requestId:scope.attemptId,turnId:'turn_test',callId:'call_test',name:'compor_novo_post',args:{projectId:scope.projectId,revision:1}};
+ for(const source of ['byok','default']){
+  const own=createCredentialStudioBindings({secret,source,apiKey:key}),rotated=createCredentialStudioBindings({secret,source,apiKey:anotherKey});
+  const stable=createStudioBindings({secret:credentialSigningKey(secret,source)}),token=own.issue(input);
+  assert.ok(own.verify({...input,token}));
+  assert.equal(own.verify({...input,token,args:{...input.args,revision:2}}),null);
+  assert.equal(own.verify({...input,token,args:undefined}),null);
+  assert.equal(own.verify({...input,token:inner(token)}),null);
+  assert.equal(rotated.verify({...input,token}),null);
+  assert.equal(own.digest(input.args),stable.digest(input.args));
+  assert.equal(own.actionRequestId(scope),stable.actionRequestId(scope));
+  assert.equal(rotated.digest(input.args),own.digest(input.args));
+  assert.equal(rotated.actionRequestId(scope),own.actionRequestId(scope));
+ }
+ const old=createStudioBindings({secret}),token=old.issue(input),byok=createCredentialStudioBindings({secret,source:'byok',apiKey:key});
+ assert.ok(byok.verify({...input,token}));
+ assert.equal(byok.verify({...input,token,args:{...input.args,revision:2}}),null);
+ assert.equal(createCredentialStudioBindings({secret,source:'default',apiKey:key}).verify({...input,token}),null);
 });

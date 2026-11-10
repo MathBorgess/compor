@@ -86,7 +86,7 @@ async function app(t){
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
- await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('Sua mensagem',{exact:true}).waitFor({state:'attached'});if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await openEditor(page);
  const publicField=page.getByRole('region',{name:'Contexto do projeto',exact:true}).locator('summary').nth(1);await publicField.click();
  await page.getByLabel('Público do projeto',{exact:true}).fill('Pessoas interessadas em aprender');await publicField.click();

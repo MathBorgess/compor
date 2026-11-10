@@ -315,7 +315,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    d.phase='action_pending';if(session.id!==signed.sessionId||session.status!=='requires_action'||!Array.isArray(pending)||pending.length!==1)return unknownReply(d);
    d.phase='action_validate';
    const call=pending[0];let args=call.arguments;if(typeof args==='string')args=JSON.parse(args);
-   if(call.type!=='function_call'||call.turn_id!==signed.turnId||call.call_id!==signed.callId||call.name!==signed.name||studioBindings.digest(args)!==signed.argsDigest)return reply({error:'invalid_binding'},403);
+   if(call.type!=='function_call'||call.turn_id!==signed.turnId||call.call_id!==signed.callId||call.name!==signed.name||!studioBindings.verify({token:body.actionBinding,userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId,args}))return reply({error:'invalid_binding'},403);
    if(signed.name==='generate_image'&&body.result.status!=='declined')return reply({error:'image_confirmation_required'},403);
    if(signed.name!=='generate_image')parseStudioAction(signed.name,args);
    if(body.result.status==='completed'&&['compor_salvar_versao','compor_renomear_projeto'].includes(signed.name)){

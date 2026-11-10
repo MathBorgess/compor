@@ -67,9 +67,10 @@ async function app(t){
  return {page,origin,calls,projects,projectReads,versions,flow,errors,external,explorationPosts};
 }
 async function openOriginal(page,origin,{key=true}={}){
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByLabel('Sua mensagem',{exact:true}).waitFor({state:'attached'});if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
  if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
+ if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
 }
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
  if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');

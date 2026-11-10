@@ -4,6 +4,8 @@
 - Data: 06/11/2026
 - Fonte: revisão de Matheus da interface local neste chat.
 
+> Em 10/11/2026, o [ADR 0041](0041-referencias-com-conversa-lateral.md) registra a substituição do painel flutuante por conversa lateral na etapa de escolha de referências. O editor conserva o comportamento descrito abaixo.
+
 > Em 09/11/2026, o [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md) substituiu o recolhimento do contexto do pedido por uma faixa sempre visível. Conexão e controles de exploração continuam recolhidos.
 
 ## Decisão

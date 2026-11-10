@@ -82,6 +82,8 @@ export function createCredentialStudioBindings(options:Configuration):StudioBind
   const legacy=options.source==='byok'?createStudioBindings({secret:options.secret}):null;
   const stable=createStudioBindings({secret:credentialSigningKey(options.secret,options.source)??options.secret});
   const codec=tokenCodec(options);
+  // Content digests and local action IDs stay stable across credential rotation.
+  // verify({...,args}) checks arguments in the current or legacy proof domain.
   return {digest:stable.digest,actionRequestId:stable.actionRequestId,
     issue:value=>codec.issue(current.issue(value)),
     verify:value=>verifyProvider(value,codec.verify,current.verify,legacy?.verify??null),
