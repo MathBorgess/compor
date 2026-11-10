@@ -27,7 +27,11 @@ export function createReferenceSearchRoute(deps:Dependencies) {
     try {
       const actor=await authorize(request,deps,input.projectId);if(!actor)return reply({error:'not_found'},404);
       const store=deps.store(actor);
-      const [signals,history]=await Promise.all([store.list(input.projectId),store.history?store.history(input.projectId):Promise.resolve([])]);
+      const readHistory=async()=>{
+        try{return store.history?await store.history(input.projectId):[];}
+        catch{return [];}
+      };
+      const [signals,history]=await Promise.all([store.list(input.projectId),readHistory()]);
       const result=await (deps.search??searchReferences)({projectId:input.projectId,query:input.query,signals,history});
       return reply(result);
     } catch {return reply({status:'unavailable',references:[]},503);}

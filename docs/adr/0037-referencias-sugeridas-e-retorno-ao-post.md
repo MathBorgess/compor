@@ -28,6 +28,8 @@ Os IDs são capturados antes da aprovação, e uma versão já explicitamente ap
 
 Os vínculos são históricos, sem gravação direta pelo cliente, e sua leitura tem RLS da conta e do projeto. Reaprovar não multiplica o número de versões aprovadas. A RPC anterior, sem referências, continua disponível e não fabrica vínculos retroativos. Imagens geradas podem ser vinculadas à versão, mas não viram sugestões externas de Pinterest.
 
+Na busca externa, a leitura do histórico é opcional: sua indisponibilidade permite continuar pelo RSS sem inventar preferências. Essa tolerância ocorre só depois de validar origem, sessão e acesso ao projeto. A leitura das decisões atuais do projeto continua obrigatória, para que uma falha não faça uma referência recusada reaparecer. Falhas da busca ou do próprio RSS continuam indisponíveis, sem uma nova tentativa automática. A rota dedicada ao histórico também continua informando sua própria indisponibilidade.
+
 ## Supersessões
 
 - O [ADR 0022](0022-busca-visual-e-sinais.md) exigia consentimento a cada busca. A pessoa agora consente uma vez por sessão; todas as operações externas ainda dependem desse consentimento.

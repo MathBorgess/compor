@@ -88,6 +88,54 @@ test('busca consulta decisões do projeto atual e histórico da conta no mesmo e
   assert.equal((await route(request({projectId,query:'tipografia',consentExternalSearch:true}))).status,200);
   assert.equal(query.projectId,projectId);assert.deepEqual(query.signals,[signal]);
 });
+test('falha do histórico opcional mantém RSS e as recusas do projeto atual',async()=>{
+  const rejected={...signal,action:'rejected'};
+  const allowedOrigin='https://www.pinterest.com/pin/98765/';
+  const availableFeed=feed.replace('</channel>',`<item><title>Outra direção</title><link>${allowedOrigin}</link><description>${previewUrl}</description></item></channel>`);
+  let searches=0,feeds=0;
+  const route=createReferenceSearchRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async()=>true,
+    store:()=>({list:async currentProject=>{assert.equal(currentProject,projectId);return [rejected];},insert:async()=>signal,history:async currentProject=>{assert.equal(currentProject,projectId);throw Error('history unavailable');}}),
+    search:async options=>{searches++;return searchReferences({...options,fetchApi:async()=>{feeds++;return new Response(availableFeed);}});}});
+  const response=await route(request({projectId,query:'tipografia',consentExternalSearch:true}));
+  assert.equal(response.status,200);
+  const result=await response.json();
+  assert.equal(result.status,'ok');assert.deepEqual(result.references.map(item=>item.originUrl),[allowedOrigin]);
+  assert.equal(searches,1);assert.ok(feeds>0);
+});
+test('falha na leitura obrigatória das decisões impede a busca externa',async()=>{
+  let searches=0;
+  const route=createReferenceSearchRoute({appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async()=>true,
+    store:()=>({list:async()=>{throw Error('signals unavailable');},insert:async()=>signal,history:async()=>{throw Error('history unavailable');}}),
+    search:async()=>{searches++;return {status:'ok',references:[]};}});
+  const response=await route(request({projectId,query:'tipografia',consentExternalSearch:true}));
+  assert.equal(response.status,503);assert.deepEqual(await response.json(),{status:'unavailable',references:[]});assert.equal(searches,0);
+});
+test('tolerância ao histórico não contorna origem, sessão ou propriedade do projeto',async()=>{
+  const input={projectId,query:'tipografia',consentExternalSearch:true};
+  const connected=async()=>({userId:projectId,token:'token'});
+  for(const {actor=connected,owns=async()=>true,originHeader=origin,status} of [
+    {originHeader:'https://other.example',status:404},{actor:async()=>null,status:404},
+    {actor:async()=>({userId:projectId,token:''}),status:404},{owns:async()=>false,status:404},
+    {actor:async()=>{throw Error('session unavailable');},status:503},{owns:async()=>{throw Error('ownership unavailable');},status:503},
+  ]){
+    let reads=0,searches=0;
+    const route=createReferenceSearchRoute({appOrigin:origin,resolveActor:actor,ownsProject:owns,
+      store:()=>{reads++;throw Error('must authorize before reading');},search:async()=>{searches++;return {status:'ok',references:[]};}});
+    const incoming=request(input);incoming.headers.set('origin',originHeader);
+    assert.equal((await route(incoming)).status,status);assert.equal(reads,0);assert.equal(searches,0);
+  }
+});
+test('falhas do RSS continuam visíveis quando o histórico está indisponível',async()=>{
+  const deps={appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async()=>true,
+    store:()=>({list:async()=>[],insert:async()=>signal,history:async()=>{throw Error('history unavailable');}})};
+  let feeds=0;
+  const unavailable=createReferenceSearchRoute({...deps,search:options=>searchReferences({...options,fetchApi:async()=>{feeds++;throw Error('RSS unavailable');}})});
+  const result=await unavailable(request({projectId,query:'tipografia',consentExternalSearch:true}));
+  assert.equal(result.status,200);assert.deepEqual(await result.json(),{status:'unavailable',references:[]});assert.ok(feeds>0);
+  const failed=createReferenceSearchRoute({...deps,search:async()=>{throw Error('search unavailable');}});
+  const response=await failed(request({projectId,query:'tipografia',consentExternalSearch:true}));
+  assert.equal(response.status,503);assert.deepEqual(await response.json(),{status:'unavailable',references:[]});
+});
 test('consulta e correção respeitam projeto, origem e tipo de sinal',async()=>{
   const recorded=[];const deps={appOrigin:origin,resolveActor:async()=>({userId:projectId,token:'token'}),ownsProject:async(_,id)=>id===projectId,store:()=>({list:async()=>[signal],insert:async input=>{recorded.push(input);return {...input,createdAt:'2026-11-06T12:02:00.000Z'};}})};
   const route=createReferenceSignalsRoute(deps);
