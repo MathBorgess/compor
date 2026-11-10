@@ -39,3 +39,9 @@ A proposta usa `changedDimension` opcional, com `style`, `composition` ou `hook`
 Os cards agrupam retoques pela cadeia de `baseVersion`, inclusive quando uma variante deriva de outra. Cada card mostra a imagem da sua versão mais recente e oferece suas versões anteriores. O primeiro card recebe o histórico antigo, sem inferir dimensões. Um novo post continua sendo outra peça. Um salvamento recuperado de conflito também precisa corresponder à dimensão e à operação solicitadas; conteúdo igual não basta para adotar uma classificação diferente.
 
 O carregamento de imagens é feito por conta, projeto, peça e versão, quando o card se aproxima da tela. A cópia local tem prioridade. Se estiver ausente, a pessoa pode consultar as imagens privadas daquela versão e inspecionar a candidata antes de usá-la. A listagem atual marca todas como origem desconhecida, portanto nenhuma é aplicada automaticamente. Uma variante em preparação não copia a arte antiga para fingir que a proposta nova já foi gerada.
+
+## Extensão delegada do contrato na integração
+
+Na revisão delegada de 10/11/2026, o diretor AX aceitou acrescentar também `list_project_piece_versions_v3`, além de `save_piece_version_v3`. Essa extensão do critério da issue #26 preserva integralmente `save_piece_version_v2`, `list_project_piece_versions_v2` e seus formatos estritos de resposta, e permite recuperar os metadados dos cards com uma leitura única. Os campos novos aparecem nos contratos v3, sem classificar retroativamente o histórico antigo.
+
+A migration continua aditiva, em commit próprio e por último. Ela só chega à produção no merge final da branch de integração para a `main`.
