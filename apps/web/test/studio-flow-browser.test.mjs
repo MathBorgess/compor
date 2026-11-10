@@ -5,6 +5,7 @@ import {readFile} from 'node:fs/promises';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {connectOwnOpenAiKey} from './openai-credentials.mjs';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
 import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
@@ -58,6 +59,7 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session'){if(session.hold)await session.hold;return route.fulfill({status:session.state==='unavailable'?503:200,json:{state:session.state,userId:session.userId}});}
+  if(url.pathname==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
@@ -91,7 +93,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await openDrawer(page,'Marca');assert.equal(await page.getByLabel('Quem você quer alcançar?',{exact:true}).count(),0);
  await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
- await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
+ await connectOwnOpenAiKey(page,key);
  await page.getByRole('button',{name:'Continuar',exact:true}).click();
  const files=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
@@ -208,13 +210,13 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);
+ await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,key);
  let release;session.hold=new Promise(resolve=>{release=resolve;});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);session.userId=bob;release();session.hold=null;
  await page.getByRole('button',{name:/Projeto sintético/}).click();await openEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
  await page.getByRole('button',{name:'Conectar IA',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
- await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
+ await connectOwnOpenAiKey(page,key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
- await page.getByLabel('Chave OpenAI',{exact:true}).fill(key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
+ await connectOwnOpenAiKey(page,key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  assert.deepEqual(errors,[`Failed to load resource: the server responded with a status of 503 (Service Unavailable) (${origin}/auth/session)`]);
 });

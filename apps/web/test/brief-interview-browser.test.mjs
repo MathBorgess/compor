@@ -4,6 +4,7 @@ import {existsSync} from 'node:fs';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {connectOwnOpenAiKey} from './openai-credentials.mjs';
 import {stopApp, waitForApp} from './wait-for-app.mjs';
 import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
@@ -44,6 +45,7 @@ async function app(t, {withReferences = false} = {}) {
       external.push(url.origin); return route.abort();
     }
     if (url.pathname === '/auth/session') return route.fulfill({json: {state: 'connected', userId}});
+    if (url.pathname === '/api/ai/credential-status') return route.fulfill({json:{defaultAvailable:false}});
     if (url.pathname === '/api/projects') return route.fulfill({json: {projects: [{id: projectId, title: 'Direção opcional'}]}});
     if (url.pathname === '/api/pieces' && request.method() === 'GET') return route.fulfill({json: {versions: []}});
     if (url.pathname === '/api/studio/references/history')return route.fulfill({json:{references:[]}});
@@ -109,7 +111,7 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   assert.equal(await page.getByLabel('Entrevista do brief', {exact: true}).count(), 0);
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
-  await page.getByLabel('Chave OpenAI', {exact: true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
@@ -131,7 +133,7 @@ test('conexão e envio ficam acessíveis no celular', {skip: !existsSync(browser
   await openProject(page, origin);
   const input = page.getByLabel('Chave OpenAI', {exact: true});
   assert.equal(await input.isVisible(), true);
-  await input.fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Uma ideia para criar.');
   const send = page.getByRole('button', {name: 'Enviar →', exact: true});
   await send.scrollIntoViewIfNeeded();
@@ -155,7 +157,7 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
     await route.fulfill({status:202,json:{status:'completed',text:'**Direção visual**\n\n- Azul\n- Amarelo\n\n[Link seguro](https://example.com/) [Contato](mailto:contato@example.com) [Link perigoso](javascript:alert(1)) [Link relativo](/privado) [Link em arquivo](file:///etc/passwd)\n\n![imagem externa](https://tracking.example/pixel.png)\n\n<script>alert(1)</script>\n\n<img src="https://tracking.example/raw.png" onerror="alert(1)">\n\n<a href="javascript:alert(1)">HTML bruto</a>'}});
   });
   await openProject(page, origin);
-  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Mostre a direção.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   const status = page.getByRole('status').filter({hasText:'Compor está trabalhando…'});
@@ -186,7 +188,7 @@ test('duas rodadas sem resposta pedem decisão no chat e retomam somente por aç
   },{userId,projectId});
   await openProject(page,origin);
   await page.getByText(/Mostrei duas rodadas de propostas/).waitFor();
-  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByRole('button',{name:'Gerar mais propostas'}).waitFor();
   assert.equal(calls.filter(call=>call.path==='/api/studio/explorations' && call.body).length,0);
 });
@@ -205,21 +207,49 @@ test('somente histórico rola e o envio permanece visível no painel compacto', 
     const history = document.querySelector('.studio-chat-messages');
     return {panel: panel.toJSON(), input: input.toJSON(), send: send.toJSON(), metaOverflow: getComputedStyle(meta).overflowY, composerOverflow: getComputedStyle(composer).overflowY, historyOverflow: getComputedStyle(history).overflowY};
   });
+  t.diagnostic(JSON.stringify({viewport:"742x720",geometry}));
+  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-742x720.png`});
   assert.ok(geometry.input.top >= geometry.panel.top && geometry.input.bottom <= geometry.panel.bottom);
   assert.ok(geometry.send.top >= geometry.panel.top && geometry.send.bottom <= geometry.panel.bottom);
   assert.equal(geometry.metaOverflow, 'visible');
   assert.equal(geometry.composerOverflow, 'visible');
   assert.equal(geometry.historyOverflow, 'auto');
+  await page.getByLabel('Sua mensagem', {exact:true}).fill('Rascunho preservado na conexão');
+  await page.getByRole('button', {name:'Usar minha chave',exact:true}).click();
+  await page.getByLabel('Chave OpenAI', {exact:true}).waitFor();
   assert.equal(await page.getByLabel('Chave OpenAI', {exact:true}).evaluate(element => getComputedStyle(element).borderRadius), '10px');
+  await page.getByRole('button', {name:'Continuar sem IA por enquanto',exact:true}).click();
+  await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
+  assert.equal(await page.getByLabel('Sua mensagem', {exact:true}).inputValue(),'Rascunho preservado na conexão');
   await page.setViewportSize({width: 390, height: 400});
+  await page.waitForFunction(()=>Number(document.querySelector('[role="slider"]').getAttribute('aria-valuemax'))===Math.floor(window.innerHeight-32));
   const shortViewport = await page.evaluate(() => {
     const panel = document.querySelector('.studio-conversation').getBoundingClientRect();
     const input = document.querySelector('#studio-chat-message').getBoundingClientRect();
     const send = document.querySelector('form.studio-chat-composer button').getBoundingClientRect();
-    return {panel: panel.toJSON(), input: input.toJSON(), send: send.toJSON()};
+    const slider=document.querySelector('[role="slider"]');
+    return {panel: panel.toJSON(), input: input.toJSON(), send: send.toJSON(),aria:{min:Number(slider.getAttribute('aria-valuemin')),max:Number(slider.getAttribute('aria-valuemax')),now:Number(slider.getAttribute('aria-valuenow'))}};
   });
+  t.diagnostic(JSON.stringify({viewport:"390x400",geometry:shortViewport}));
+  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-390x400.png`});
   assert.ok(shortViewport.input.top >= shortViewport.panel.top && shortViewport.input.bottom <= shortViewport.panel.bottom, 'o campo permanece acessível com viewport baixo');
   assert.ok(shortViewport.send.top >= shortViewport.panel.top && shortViewport.send.bottom <= shortViewport.panel.bottom, 'o envio permanece acessível com viewport baixo');
+  const slider=page.getByRole('slider',{name:'Altura da conversa'});
+  assert.equal(shortViewport.aria.min,260);
+  assert.equal(shortViewport.aria.max,368);
+  assert.equal(shortViewport.aria.now,Math.round(shortViewport.panel.height));
+  await page.getByRole('button',{name:'Ocultar detalhes da conversa'}).click();
+  await page.waitForFunction(()=>document.querySelector('[role="slider"]').getAttribute('aria-valuemin')==='180');
+  const hidden=await page.locator('.studio-conversation').boundingBox();
+  assert.equal(hidden.height,shortViewport.panel.height,'ocultar detalhes não encolhe a altura escolhida');
+  await slider.focus();await page.keyboard.press('Home');
+  await page.waitForFunction(()=>document.querySelector('[role="slider"]').getAttribute('aria-valuenow')==='180');
+  const compact=await page.evaluate(()=>({panel:document.querySelector('.studio-conversation').getBoundingClientRect().toJSON(),composer:document.querySelector('.studio-chat-composer').getBoundingClientRect().toJSON()}));
+  assert.equal(compact.panel.height,180);
+  assert.ok(compact.composer.top>=compact.panel.top&&compact.composer.bottom<=compact.panel.bottom);
+  t.diagnostic(JSON.stringify({viewport:'390x400-details-hidden',geometry:compact}));
+  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-390x400-hidden.png`});
+
   assert.deepEqual(errors, []);
 });
 
@@ -273,7 +303,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
     return route.fulfill({status:202,json:{status:'completed',text:`Resposta Outra ideia 3 ${'detalhe '.repeat(300)}`}});
   });
   await openProject(page, origin);
-  await page.getByLabel('Chave OpenAI', {exact: true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   const field = page.getByLabel('Sua mensagem', {exact: true});
   for (let index = 0; index < 3; index++) {
     await field.fill(`Outra ideia ${index}`);
@@ -312,7 +342,7 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
-  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare essa referência.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare essa referência.',{exact:false}).waitFor();
@@ -330,7 +360,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
   await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
   await openProject(page, origin);
-  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
@@ -363,7 +393,7 @@ test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: 
   assert.match(selectionSignals[0].id,/^[0-9a-f-]{36}$/);
   assert.deepEqual({...selectionSignals[0],id:'id-validado'},{id:'id-validado',projectId,imageId:'00000000-0000-4000-8000-000000000091',action:'selected',comment:'',supersedes:null});
   assert.equal(await gallery.getByRole('button',{name:'Imagem usada 1 na conversa e na Direção'}).isDisabled(),true);
-  await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare esta exploração.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare esta exploração.',{exact:false}).waitFor();
@@ -424,13 +454,16 @@ test('recuperação incerta e reconexão não encobrem o compositor em viewport 
   const {page, origin, errors} = await app(t);
   await page.setViewportSize({width: 390, height: 400});
   await openProject(page, origin);
-  await page.getByLabel('Chave OpenAI', {exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
+  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByLabel('Sua mensagem', {exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
-  await page.locator('.studio-inline-key summary').click();
+  await page.getByRole('button',{name:'Gerenciar IA',exact:true}).click();
   await page.getByRole('button',{name:'Remover chave'}).click();
   await page.getByLabel('Chave OpenAI', {exact:true}).waitFor();
+  await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).click();
+  await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
+  await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
   const bounds=await page.evaluate(() => {
     const panel=document.querySelector('.studio-conversation').getBoundingClientRect();
     const input=document.querySelector('#studio-chat-message').getBoundingClientRect();

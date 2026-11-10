@@ -13,12 +13,13 @@ export const chatResponseSchema=z.discriminatedUnion('status',[
  common.extend({status:z.enum(['running','failed','unknown','accepted'])}),
 ]);
 export const errorResponseSchema=common.extend({status:z.string().optional()});
+export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.literal('failed'),error:z.literal('default_credential_unavailable'),failurePhase:z.literal('before_submission'),requestId:z.string().uuid(),retryAutomatically:z.literal(false)});
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
 export type Usage=z.infer<typeof usageSchema>;
 export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.number().int()});
 export type ImageContext=z.infer<typeof imageContextSchema>;
 export const receiptSchema=z.strictObject({userId:z.string(),projectId:z.string(),requestId:z.string(),pieceId:z.string(),version:z.number().int(),assetId:z.string()});
 export type ImageReceipt=z.infer<typeof receiptSchema>;
-export const chatMarkerSchema=z.object({requestId:z.string().nullable(),previousAttemptKey:z.string().nullable().optional(),imageContext:imageContextSchema.nullable().optional(),imageReceipt:receiptSchema.nullable().optional(),imageProtocolVersion:z.literal(1).optional()});
+export const chatMarkerSchema=z.object({requestId:z.string().nullable(),previousAttemptKey:z.string().nullable().optional(),credentialSource:z.enum(['default','byok']).optional(),imageContext:imageContextSchema.nullable().optional(),imageReceipt:receiptSchema.nullable().optional(),imageProtocolVersion:z.literal(1).optional()});
 export type ImageAction=Extract<ChatResponse,{status:'consent_required'}>&{proposal:ImageProposal;artworkInput:ArtworkInput|null;inputError:string;requestId:string;context:ImageContext&{headline:string};canPrepareTransport:boolean;conversions:readonly ArtworkConversion[];sourceFingerprint:string|null};
 export type Inspection={status:'completed'|'failed'|'running'|'action_required'|'consent_required'|'unknown'|'unavailable';authenticationRejected?:boolean;usage:{input_tokens:number|null;output_tokens:number|null}|null;technical:{functionCalls:number|null;outputs:number|null;omittedItems:number|null;validSchemas:number;invalidSchemas:number;errorClasses:string[]}|null};

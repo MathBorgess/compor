@@ -17,7 +17,7 @@ const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])})
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
 
-type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
+type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -49,6 +49,9 @@ export function useExplorationLoop(props: LoopProps) {
   const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;
   waitsForAnswer.current = awaitingAnswer;
+  const unresolvedChat = props.state?.adjustments.some(item => !["completed", "failed"].includes(item.status)) ?? false;
+  const waitsForChat = useRef(unresolvedChat);
+  waitsForChat.current = unresolvedChat;
   const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
   const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
 
@@ -67,7 +70,9 @@ export function useExplorationLoop(props: LoopProps) {
   },[props.userId,props.projectId]);
 
   useEffect(() => {
-    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer) return;
+    if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer || unresolvedChat) return;
+    const source = props.credentialSource ?? "byok", epoch = props.credentialEpoch ?? 0;
+    const sameCredential = () => (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
     const cancel = new AbortController();
     let active = true;
     let dispatched = false;
@@ -83,7 +88,7 @@ export function useExplorationLoop(props: LoopProps) {
       }
       active = false;
       // Leaving exploration or waiting for the person's answer lets an already dispatched request settle and reconcile its receipt.
-      if (!dispatched || (current.current.enabled && !waitsForAnswer.current)) cancel.abort();
+      if (!dispatched || (current.current.enabled && !waitsForAnswer.current && !waitsForChat.current)) cancel.abort();
     };
     stopCurrent.current = cancelCurrent;
     const stop = (message: string) => { if (active) { setStatus(message); setBlocked(true); setPhase('blocked'); setCountdown(null); } };
@@ -133,7 +138,7 @@ export function useExplorationLoop(props: LoopProps) {
             const { getState, getApiKey, isAuthenticated } = current.current;
             const state = getState();
             const apiKey = getApiKey();
-            if (!isAuthenticated() || !/^sk-[^\s]{20,300}$/.test(apiKey) || !state) return;
+            if (!isAuthenticated() || !current.current.hasApiKey || !sameCredential() || (source === "byok" && !/^sk-[^\s]{20,300}$/.test(apiKey)) || !state || state.adjustments.some(item => !["completed", "failed"].includes(item.status))) return;
             const gateResponse=await fetch('/api/studio/explorations/status',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:props.projectId}),signal:cancel.signal});
             if(!gateResponse.ok)throw Error('gate_unavailable');
             const gate=gateSchema.parse(await gateResponse.json());
@@ -178,10 +183,10 @@ export function useExplorationLoop(props: LoopProps) {
             const batch={id:progress.batchId,position:progress.completed+1};
             const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};
             const marker=JSON.stringify(pending);
-            if (!markBeforeDispatch(localStorage,pendingKey,marker,()=>active && !cancel.signal.aborted && current.current.enabled && current.current.isAuthenticated() && current.current.getApiKey() === apiKey)) return;
+            if (!markBeforeDispatch(localStorage,pendingKey,marker,()=>active && !cancel.signal.aborted && current.current.enabled && current.current.isAuthenticated() && current.current.hasApiKey && sameCredential() && current.current.getApiKey() === apiKey)) return;
             setPhase('generating');setCountdown(null);setStatus(`Explorando caminho visual ${sequence + 1}…`);
             dispatched = true;
-            const response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", "x-compor-openai-key": apiKey, "x-compor-exploration-request-id": requestId }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
+            const response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", ...(source === "byok" ? {"x-compor-openai-key": apiKey} : {}), "x-compor-exploration-request-id": requestId }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
             const result = responseSchema.parse(await response.json());
             dispatched = false;
             if ([400,403,404,413,503].includes(response.status) && result.status === "not_started" && result.requestId === requestId && result.retryAutomatically === false) {
@@ -237,7 +242,7 @@ export function useExplorationLoop(props: LoopProps) {
     window.addEventListener("pagehide", onPageHide);
     void run();
     return () => { cancelCurrent(); if (stopCurrent.current === cancelCurrent) stopCurrent.current = null; window.removeEventListener("pagehide", onPageHide); };
-  }, [props.userId, props.projectId, props.hasApiKey, props.enabled, ready, paused, blocked, awaitingFeedback, awaitingAnswer]);
+  }, [props.userId, props.projectId, props.hasApiKey, props.credentialSource, props.credentialEpoch, props.enabled, ready, paused, blocked, awaitingFeedback, awaitingAnswer, unresolvedChat]);
 
   async function resume() {
     if(resumeInFlight.current)return;
@@ -259,6 +264,6 @@ export function useExplorationLoop(props: LoopProps) {
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
-  const running = props.enabled && !awaitingAnswer && !audienceConflict;
-  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  const running = props.enabled && !awaitingAnswer && !audienceConflict && !unresolvedChat;
+  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }

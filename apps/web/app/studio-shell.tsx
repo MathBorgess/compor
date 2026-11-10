@@ -111,18 +111,26 @@ export default function StudioShell({
   const resizeDrag = useRef<{pointerId:number;startY:number;startHeight:number}|null>(null);
   const [chatHeight,setChatHeight] = useState<number|null>(null);
   const [availableHeight,setAvailableHeight] = useState(620);
-  const [renderedChatHeight,setRenderedChatHeight] = useState<number|null>(null);
+  const [chatDetailsVisible,setChatDetailsVisible] = useState(true);
+  const [fixedChatHeight,setFixedChatHeight] = useState(0);
   const lastMessageCount = useRef(chatMessageCount);
   const [unread, setUnread] = useState(false);
-  useEffect(() => {
-    const update=()=>setAvailableHeight(Math.max(120,Math.floor((window.visualViewport?.height ?? window.innerHeight)-32)));
+  useLayoutEffect(() => {
+    const update=()=>setAvailableHeight(Math.max(1,Math.floor((window.visualViewport?.height ?? window.innerHeight)-32)));
     update();window.addEventListener('resize',update);window.visualViewport?.addEventListener('resize',update);
     return ()=>{window.removeEventListener('resize',update);window.visualViewport?.removeEventListener('resize',update);};
   },[]);
-  const minimumChatHeight=Math.min(180,availableHeight);
+  const minimumChatHeight=Math.min(availableHeight,Math.max(fixedChatHeight,chatDetailsVisible && availableHeight+32<=550 ? 260 : 180));
   const maximumChatHeight=availableHeight;
   const currentChatHeight=Math.min(maximumChatHeight,Math.max(minimumChatHeight,chatHeight ?? Math.min(620,Math.round((availableHeight+32)*0.48))));
   const resizeChat=(height:number)=>setChatHeight(Math.min(maximumChatHeight,Math.max(minimumChatHeight,Math.round(height))));
+  useLayoutEffect(() => {
+    setChatHeight(height => {
+      const selected=height ?? Math.min(620,Math.round((availableHeight+32)*0.48));
+      const next=Math.min(maximumChatHeight,Math.max(minimumChatHeight,selected));
+      return height===null && next===selected ? null : next;
+    });
+  },[minimumChatHeight,maximumChatHeight,availableHeight]);
   const layoutListener = useRef(onLayoutChange);
   layoutListener.current = onLayoutChange;
   const isStudio = stage === "studio";
@@ -136,14 +144,23 @@ export default function StudioShell({
   const controlledDrawer = onDrawerChange != null;
   const activeDrawer = controlledDrawer ? (drawer ?? null) : internalDrawer;
   const layoutC = showChat && (persistedCollapsed || Boolean(viewingArt));
-  useEffect(() => {
+  useLayoutEffect(() => {
     const panel=chatPanel.current;
-    if(!showChat||layoutC||!panel)return;
-    const update=()=>setRenderedChatHeight(panel.offsetHeight || null);
-    update();const observer=new ResizeObserver(update);observer.observe(panel);
-    return ()=>observer.disconnect();
-  },[showChat,layoutC]);
-  const displayedChatHeight=Math.min(maximumChatHeight,Math.max(minimumChatHeight,renderedChatHeight ?? currentChatHeight));
+    if(!showChat||!panel)return;
+    const header=panel.querySelector<HTMLElement>('.studio-chat-header');
+    const meta=panel.querySelector<HTMLElement>('.studio-chat-meta');
+    const composer=panel.querySelector<HTMLElement>('.studio-chat-composer');
+    if(!header||!meta||!composer)return;
+    const update=()=>{
+      setChatDetailsVisible(!meta.hidden);
+      setFixedChatHeight(Math.ceil(header.offsetHeight+meta.offsetHeight+composer.offsetHeight+18));
+    };
+    update();
+    const observer=new ResizeObserver(update);
+    for(const element of [header,meta,composer])observer.observe(element);
+    return()=>observer.disconnect();
+  },[showChat,projectId]);
+  const displayedChatHeight=currentChatHeight;
   const barTitle = projectTitle || stageTitles[stage] || "Estúdio";
   const canOpenMenu = Boolean(
     projectTitle || onNewProject || onRenameProject || onNavigate || projects.length,
@@ -414,7 +431,7 @@ export default function StudioShell({
       {isStudio ? context : null}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         {showChat ? (
-          <div className="studio-chat-slot" style={chatHeight===null?undefined:{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
+          <div className="studio-chat-slot" style={{height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
             <aside ref={chatPanel} id="studio-floating-chat" tabIndex={-1} className="studio-conversation" aria-label="Conversa com a IA">
               <div className="studio-chat-resize" role="slider" tabIndex={0} aria-label="Altura da conversa" aria-orientation="vertical" aria-valuemin={minimumChatHeight} aria-valuemax={maximumChatHeight} aria-valuenow={displayedChatHeight} aria-valuetext={`${displayedChatHeight} pixels`} onPointerDown={event=>{resizeDrag.current={pointerId:event.pointerId,startY:event.clientY,startHeight:chatPanel.current?.offsetHeight ?? displayedChatHeight};event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{const drag=resizeDrag.current;if(drag?.pointerId===event.pointerId)resizeChat(drag.startHeight+drag.startY-event.clientY);}} onPointerUp={event=>{if(resizeDrag.current?.pointerId===event.pointerId)resizeDrag.current=null;}} onPointerCancel={()=>{resizeDrag.current=null;}} onKeyDown={event=>{if(event.key==='ArrowUp'||event.key==='ArrowRight')resizeChat(displayedChatHeight+32);else if(event.key==='ArrowDown'||event.key==='ArrowLeft')resizeChat(displayedChatHeight-32);else if(event.key==='Home')resizeChat(minimumChatHeight);else if(event.key==='End')resizeChat(maximumChatHeight);else return;event.preventDefault();}} />
               <button

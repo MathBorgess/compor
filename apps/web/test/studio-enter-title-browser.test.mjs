@@ -4,6 +4,7 @@ import {existsSync} from 'node:fs';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {connectOwnOpenAiKey} from './openai-credentials.mjs';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
 import {sessionCookie} from './session-cookie.mjs';
 
@@ -37,6 +38,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   const request=route.request(),url=new URL(request.url());
   if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
+  if(url.pathname==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
   if(url.pathname==='/api/projects'){
    if(request.method()==='GET')return route.fulfill({json:{projects}});
    const body=request.postDataJSON();
@@ -71,7 +73,7 @@ async function openChat(page){
  await message.waitFor();return message;
 }
 async function connectKey(page){
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);
  await page.getByRole('button',{name:'Estúdio',exact:true}).click();return openChat(page);
 }
 

@@ -4,6 +4,7 @@ import {existsSync} from 'node:fs';
 import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {connectOwnOpenAiKey} from './openai-credentials.mjs';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
 import {sessionCookie,sessionCookieHeaders} from './session-cookie.mjs';
 
@@ -35,6 +36,7 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
+  if(url.pathname==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
@@ -66,7 +68,7 @@ async function app(t){
 }
 async function openOriginal(page,origin,{key=true}={}){
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
- if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
+ if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
  await page.getByLabel('Título',{exact:true}).waitFor();
 }
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
@@ -246,7 +248,7 @@ test('a conversa gera a arte integral de um rascunho sem exigir salvamento prév
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
  assert.equal(await page.getByLabel('Preço',{exact:true}).count(),0);assert.equal(await page.getByLabel('Data',{exact:true}).count(),0);
  await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
  const before=await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.headline==='Curso de planilhas'));assert.equal(before.selection.baseVersion,0);
  await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
@@ -354,7 +356,7 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
  await page.unroute('**/api/pieces');
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte recuperada editada.'}:{...consent('recovered'),proposal:{prompt:'Ajuste a arte preservada.',operation:'edit',baseImageId:draft.pieceId,referenceIds:[]}};
  await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();
  await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Arte recuperada editada.',{exact:true}).waitFor();
  const generation=calls.filter(c=>c.path==='/api/agent/image');assert.equal(generation.length,1);assert.deepEqual(generation[0].body.artworkInput.source,{pieceId:draft.pieceId,version:1});assert.equal(generation[0].body.artworkInput.images[0].data,image.toString('base64'));assert.deepEqual(errors,[]);
@@ -406,7 +408,7 @@ test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na ger
  assert.equal(await page.getByLabel('Local',{exact:true}).inputValue(),'','sugestão não inventa um valor');
  await page.getByLabel('Local',{exact:true}).fill('Ateliê central');
  await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.fields?.[0]?.value==='Ateliê central'));
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).fill(apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
  await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post com o local informado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Arte com local pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
  const field={id:fieldId,label:'Local',value:'Ateliê central',origin:'user'};
