@@ -45,3 +45,5 @@ O carregamento de imagens é feito por conta, projeto, peça e versão, quando o
 Na revisão delegada de 10/11/2026, o diretor AX aceitou acrescentar também `list_project_piece_versions_v3`, além de `save_piece_version_v3`. Essa extensão do critério da issue #26 preserva integralmente `save_piece_version_v2`, `list_project_piece_versions_v2` e seus formatos estritos de resposta, e permite recuperar os metadados dos cards com uma leitura única. Os campos novos aparecem nos contratos v3, sem classificar retroativamente o histórico antigo.
 
 A migration continua aditiva, em commit próprio e por último. Ela só chega à produção no merge final da branch de integração para a `main`.
+
+Na avaliação das capturas cumulativas reais, o diretor AX decidiu manter a ação única “Escolher mais referências” no cabeçalho local do post, antes dos cards e fora do zoom. Assim, os três cards empilhados no mobile não escondem o retorno à descoberta após várias telas. O callback e os dados preservados na ida e volta não mudam. Os botões de abrir variante, os seletores de versão e essa ação têm alvo mínimo de 44 px, a confirmar pela medição final; a tipografia e a rolagem são preservadas.
