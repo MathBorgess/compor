@@ -21,3 +21,9 @@ Esta decisão substitui somente a independência entre deploy e migrations descr
 Banco e Vercel não compartilham uma transação. Se o banco confirmar e a publicação falhar, o banco permanece atualizado e a versão anterior da aplicação pode continuar ativa. Migrations precisam preservar essa compatibilidade; não há rollback automático do banco. Falha ou resposta incerta da promoção exige consultar o deployment e seus aliases antes de repetir. Credenciais e proteções efetivamente configuradas no GitHub e na Vercel determinam se a execução remota pode concluir.
 
 O smoke usa somente a entrada pública, sem sessão, modelo ou geração; não comprova login, isolamento entre contas reais ou qualidade criativa. Quality continua nos PRs e manualmente, sem ser repetido pelo push da `main`.
+
+## Substituição posterior em 10/11/2026
+
+Matheus substituiu o deploy por Action pelo setup `npx skills use vercel/ci@setup`. O job de deploy e seu helper exclusivo foram removidos; os jobs e contratos de migrations permanecem. A primeira execução do caminho anterior confirmou as migrations, mas parou antes de criar qualquer build por ausência de `VERCEL_TOKEN`. Não houve ativação por esse workflow.
+
+A skill de Vercel CI foi executada e exige repositório privado vinculado a um projeto Vercel, além de CI habilitado antes de publicar a branch de setup. O repositório é privado, mas a equipe retornou `linkedProjects: []`; as ferramentas conectadas não habilitam CI nem vinculam o projeto existente. O setup ficou bloqueado nessa pré-condição, sem mudanças Turborepo ou publicação fictícia. Vercel CI executa checks; não prova leitura do Vault nem substitui sozinho as migrations com credenciais. A coordenação automática de publicação descrita acima deixa de estar ativa até a configuração do caminho substituto.
