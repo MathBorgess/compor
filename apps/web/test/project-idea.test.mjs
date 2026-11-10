@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createStudioState,parseStudioState,addMessage,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
+import {createStudioState,parseStudioState,addMessage,updateBrief,updateOfferFacts,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
 import {studioProjectIdea} from '../lib/studio-project-idea.ts';
 const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000002';
 test('ideia pertence ao projeto e continua disponível antes da primeira mensagem',()=>{
@@ -20,4 +20,12 @@ test('estado antigo não inventa ideia e ignora o marcador da seleção ao recup
 });
 test('ideia local valida tipo, limite e credencial antes de persistir',()=>{
  for(const projectIdea of [123,'x'.repeat(4001),`sk-${'x'.repeat(30)}`])assert.throws(()=>createStudioState({userId,projectId,projectIdea}));
+});
+test('ideia, título provisório e fatos persistem juntos com público canônico',()=>{
+ let state=createStudioState({userId,projectId,projectIdea:'Oficina de cerâmica',projectTitleProvisional:true});
+ state=updateBrief(state,{audience:'Pessoas iniciantes'});
+ state=updateOfferFacts(state,[{id:crypto.randomUUID(),label:'Material',value:'Incluído',status:'confirmed'}]);
+ const restored=parseStudioState(JSON.parse(JSON.stringify(state)));
+ assert.equal(restored.projectTitleProvisional,true);assert.equal(studioProjectIdea(restored),'Oficina de cerâmica');
+ assert.equal(restored.brief.audience,restored.persona.audience);assert.deepEqual(restored.offerFacts,state.offerFacts);
 });

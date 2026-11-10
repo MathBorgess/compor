@@ -12,6 +12,8 @@ O editor oferece “Escolher mais referências”. A ida e a volta preservam ras
 
 As sugestões priorizam referências escolhidas pela própria conta em outros projetos. Entre elas, vêm primeiro as ligadas a versões explicitamente aprovadas. “Bem-sucedida” significa esse vínculo registrado; não demonstra resultado de audiência, qualidade criativa ou preferência de outra conta.
 
+A composição cumulativa mantém a faixa de contexto no topo do [ADR 0031](0031-faixa-de-contexto-publico-unico-e-revisao.md). A ideia inicial persiste por conta e projeto em `projectIdea`, junto do estado de título provisório e dos fatos da oferta. Ela não se transforma em fato confirmado, não preenche outro projeto e não resolve um conflito de público por suposição. Tanto a conversa da pessoa quanto o turno automático de seleção recebem fatos e resolução de público; editar um fato invalida o contexto de uma leitura pendente.
+
 ## Histórico e aprovação no servidor
 
 O sinal `selected` pode incluir os metadados validados do pin: identificador, título, board, origem e URL da prévia. Eles precisam corresponder ao pin do sinal. O banco armazena somente metadados, sem hospedar a imagem externa. Repetir a operação com o mesmo UUID só é aceito quando os dados persistidos são idênticos. Os sinais antigos continuam legíveis; quando não há metadados suficientes para um card, o servidor não inventa uma prévia.

@@ -29,6 +29,13 @@ test('a ideia basta para a primeira proposta e não se transforma em fato de ofe
  assert.ok(prompt.length<=8000);
  assert.throws(()=>createExplorationPrompt({...input,idea:`${'x'.repeat(9000)} sk-secret`}));
 });
+test('ideia inicial preserva fatos e público único e não libera conflito antigo',()=>{
+ const initial={...input,idea:'Apresentar meu ateliê',offer:'',direction:'',facts:[{label:'Material',value:'Incluído',status:'confirmed'}]};
+ const {prompt}=createExplorationPrompt(initial);
+ assert.ok(prompt.includes('"ideia":"Apresentar meu ateliê"'));assert.ok(prompt.includes('"publico":"Pessoas iniciantes"'));
+ assert.ok(prompt.includes('"value":"Incluído","status":"confirmed"'));assert.equal(prompt.includes('publico_da_persona'),false);
+ assert.throws(()=>createExplorationPrompt({...initial,briefAudience:'Outro público'}),/exploration_audience_conflict/);
+});
 test('o planejador recebe um público e exige escolha quando entradas legadas divergem',()=>{
  const brief='Pessoas que trabalham à noite',persona='Pessoas que estudam pela manhã';
  assert.throws(()=>createExplorationPrompt({...input,briefAudience:brief,audience:persona}),/exploration_audience_conflict/);
