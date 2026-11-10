@@ -29,8 +29,9 @@ async function app(t){
  browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(6000);
  await page.context().addCookies([sessionCookie(origin)]);
  await page.addInitScript(()=>{const tools=Object.create(null);Object.defineProperty(window,'__studioNative',{value:tools});Object.defineProperty(document,'modelContext',{configurable:true,value:{registerTool:async(definition,{signal}={})=>{tools[definition.name]=definition;signal?.addEventListener('abort',()=>{if(tools[definition.name]===definition)delete tools[definition.name];},{once:true});}}});});
- const calls=[],external=[],errors=[],flow={},projectReads={count:0};const projects=[{id:projectId,title:'Projeto integrado',revision:1}],versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
+ const calls=[],external=[],errors=[],explorationPosts=[],flow={},projectReads={count:0};const projects=[{id:projectId,title:'Projeto integrado',revision:1}],versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
  page.on('pageerror',error=>errors.push(error.message));
+ page.on('request',request=>{if(new URL(request.url()).pathname==='/api/studio/explorations'&&request.method()==='POST')explorationPosts.push(request.postDataJSON().requestId);});
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
@@ -61,7 +62,7 @@ async function app(t){
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
- return {page,origin,calls,projects,projectReads,versions,flow,errors,external};
+ return {page,origin,calls,projects,projectReads,versions,flow,errors,external,explorationPosts};
 }
 async function openOriginal(page,origin,{key=true}={}){
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
@@ -78,7 +79,7 @@ const action=(name,args,binding)=>({status:'action_required',action:{name,args},
 const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
 
 test('chat cria e salva versões com confirmação; imagem usa snapshot novo automaticamente',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- const {page,origin,calls,versions,flow,errors,external}=await app(t);let submits=0;
+ const {page,origin,calls,versions,flow,errors,external,explorationPosts}=await app(t);let submits=0;
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Imagem integrada concluída.'}:++submits===1?action('compor_novo_post',{projectId,requestId:newPiece,revision:body.context.revision},'new'):consent('decline');
  flow.action=body=>{
   const scope={projectId,revision:body.result.revision};
@@ -100,6 +101,7 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
+ assert.deepEqual(explorationPosts,[],'novo post explícito, refino e salvamento permanecem no editor sem iniciar descoberta');
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -368,5 +370,55 @@ test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na ger
  const field={id:fieldId,label:'Local',value:'Ateliê central',origin:'user'};
  assert.deepEqual(versions.find(version=>version.piece_id===before.selection.pieceId).content.fields,[field]);
  assert.deepEqual(calls.find(call=>call.path==='/api/agent/image').body.artworkInput.literalText.fields,[field]);
+ assert.deepEqual(errors,[]);
+});
+
+test('escolher mais referências preserva post e conversa e cada escolha inicia um único turno',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,versions,flow,errors}=await app(t);
+ const reference={id:'pin33',title:'Referência adicional',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/pin33/',previewUrl:'https://i.pinimg.com/236x/pin33.png'};
+ const selected=[],selectionTurns=[];
+ await page.route('https://i.pinimg.com/**',route=>route.fulfill({contentType:'image/png',body:png}));
+ await page.route('**/api/studio/references/history',route=>route.fulfill({json:{references:[]}}));
+ await page.route('**/api/studio/references/search',route=>route.fulfill({json:{status:'ok',references:[reference]}}));
+ await page.route('**/api/studio/references/preview',route=>route.fulfill({contentType:'image/png',body:png}));
+ await page.route('**/api/studio/references/signals',route=>{
+  const body=route.request().postDataJSON();if(!body.action)return route.fulfill({json:{signals:[]}});
+  selected.push(body);return route.fulfill({status:201,json:{signal:{...body,createdAt:'2026-11-09T12:00:00.000Z'}}});
+ });
+ await page.route(url=>url.pathname==='/api/studio/explorations'&&url.origin===origin,route=>{
+  if(route.request().method()==='GET')return route.fulfill({json:{images:[]}});
+  const body=route.request().postDataJSON();return route.fulfill({status:202,json:{status:'unknown',requestId:body.requestId}});
+ });
+ flow.chat=body=>{
+  if(body.op==='reference_selection'){selectionTurns.push(body);return {status:'completed',text:'Leitura editorial.\n\n**Recomendação:** Usar contraste.\n\nPosso seguir com contraste?'};}
+  return {status:'completed',text:'Contexto preservado na conversa.'};
+ };
+ await openOriginal(page,origin);await attachImage(page);
+ await page.getByLabel(/^Legenda/).fill('Legenda preservada ao procurar referências.');
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero comunicar uma oficina');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Contexto preservado na conversa.',{exact:true}).waitFor();
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('Rascunho de conversa não enviado');
+ const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
+ const originalVersions=structuredClone(versions);
+ await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('heading',{name:'Referências para sua ideia',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
+ assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');
+ await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).inputValue(),'Rascunho de conversa não enviado');
+ assert.deepEqual(await stored(page),before);assert.deepEqual(versions,originalVersions);
+ await page.getByLabel('Sua mensagem',{exact:true}).fill('');
+ await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
+ await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
+ await page.getByText('Posso seguir com contraste?',{exact:true}).waitFor({timeout:15000});
+ assert.equal(selected.length,1);assert.equal(selectionTurns.length,1);assert.equal(selected[0].action,'selected');
+ await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('button',{name:'Selecionada: Referência adicional'}).waitFor();
+ assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Remover referência',exact:true}).click();await closeDrawer(page);
+ await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
+ await eventually(()=>selectionTurns.length,count=>count===2,15000);
+ assert.equal(selected.length,2);assert.notEqual(selected[0].id,selected[1].id);
  assert.deepEqual(errors,[]);
 });

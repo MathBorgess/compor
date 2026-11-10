@@ -201,6 +201,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const converted=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  assert.deepEqual([...(await readFile(await(await converted).path())).subarray(0,8)],[137,80,78,71,13,10,26,10],'a replacement JPEG is composed at download time');
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);assert.equal(calls.filter(call=>call.path==='/api/studio/action').length,1);
+ assert.equal(calls.some(call=>call.path==='/api/studio/explorations'),false,'novo post explicitamente pedido abre o editor sem iniciar exploração');
  assert.equal(calls.some(call=>['/api/agent/image','/api/images'].includes(call.path)),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
 });

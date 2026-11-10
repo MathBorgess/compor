@@ -48,8 +48,8 @@ export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }:Stor
       if (result.status === 'saved' && (result.version.version !== expectedVersion + 1 || result.version.metadata.baseVersion !== (baseVersion || null))) throw Error('invalid response');
       return result;
     },
-    async approve(context:StoreContext, { projectId, pieceId, version, expectedRevision }:ApprovePieceInput) {
-      const result = mutation(await rpc('approve_piece_version', context, { p_project_id: projectId, p_piece_id: pieceId, p_version: version, p_expected_revision: expectedRevision }), projectId, pieceId, 'approved');
+    async approve(context:StoreContext, { projectId, pieceId, version, expectedRevision, references }:ApprovePieceInput) {
+      const result = mutation(await rpc(references===undefined?'approve_piece_version':'approve_piece_version_with_references', context, { p_project_id: projectId, p_piece_id: pieceId, p_version: version, p_expected_revision: expectedRevision, ...(references===undefined?{}:{p_references:references}) }), projectId, pieceId, 'approved');
       if (result.status === 'approved' && (result.version.version !== version || result.version.metadata.revision !== expectedRevision + 1 || result.version.metadata.approval.kind !== 'explicit')) throw Error('invalid response');
       return result;
     },

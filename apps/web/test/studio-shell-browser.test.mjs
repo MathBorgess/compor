@@ -6,6 +6,7 @@ import { spawn } from 'node:child_process';
 import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
 import { stopApp, waitForApp } from './wait-for-app.mjs';
+import { isolateFixtureHmr } from './fixture-hmr.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const fixture = new URL('../app/studio-visual-test/', import.meta.url);
@@ -34,8 +35,14 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   await waitForApp({url: `${origin}/studio-visual-test`, child: server, signal: t.signal, diagnostics: () => serverLog});
   browser = await chromium.launch({ executablePath: browserPath, headless: true });
   const page = await browser.newPage({ viewport: { width: 1440, height: 960 } });
-  const errors = [];
-  page.on('pageerror', error => errors.push(error.message));
+  let phase = 'opening fixture';
+  const errors = [], hmrFrames = [];
+  page.on('websocket', socket => socket.on('framereceived', frame => {
+    if (!socket.url().includes('/_next/')) return;
+    try { const value = JSON.parse(String(frame.payload)); hmrFrames.push(value.type ?? value.action ?? 'unknown'); if (hmrFrames.length > 20) hmrFrames.shift(); } catch {}
+  }));
+  page.on('pageerror', error => { errors.push(error.message); t.diagnostic(`Erro em ${phase}; HMR=${hmrFrames.join(',')}: ${error.stack || error.message}`); });
+  await isolateFixtureHmr(page, '/studio-visual-test');
   await page.goto(`${origin}/studio-visual-test`);
   await page.getByRole('heading', { name: 'Vamos encontrar a sua direção.' }).waitFor();
   const launcher = page.getByRole('button', { name: 'Abrir conversa', exact: true });
@@ -141,6 +148,7 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   await collapseButton.click();
   await launcher.waitFor();
   await page.screenshot({ path: '/tmp/compor-layout-c.png', fullPage: false });
+  phase = 'reloading fixture';
   await page.reload();
   await page.getByRole('button', { name: 'Abrir conversa', exact: true }).waitFor();
   assert.equal(await page.locator('.compor-studio').getAttribute('data-layout'), 'c');

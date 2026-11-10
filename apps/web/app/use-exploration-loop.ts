@@ -17,7 +17,7 @@ const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])})
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
 
-type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean };
+type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -50,7 +50,7 @@ export function useExplorationLoop(props: LoopProps) {
   current.current = props;
   waitsForAnswer.current = awaitingAnswer;
   const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
-  const ready = !audienceConflict && Boolean(props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+  const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
 
   useEffect(() => {
     try {
@@ -173,7 +173,7 @@ export function useExplorationLoop(props: LoopProps) {
             const feedback=[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)];
             const audience=audienceResolution(latestState);
             if(audience.status==='conflict')return;
-            const { prompt,composition,contrast } = createExplorationPrompt({ offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });
+            const { prompt,composition,contrast } = createExplorationPrompt({ idea:current.current.idea??'', offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });
             const requestId = crypto.randomUUID();
             const batch={id:progress.batchId,position:progress.completed+1};
             const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};

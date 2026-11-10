@@ -10,6 +10,8 @@ import { useStudioState } from "./use-studio-state";
 import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
+import { recordReferenceSelection } from "../lib/reference-selection";
+import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import { useExplorationLoop } from "./use-exploration-loop";
 import { selectedExplorationKey } from "../lib/exploration-batch";
@@ -17,6 +19,7 @@ import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visua
 import { recordReferenceRound } from "../lib/studio-reference-round";
 import { submitOnEnter } from "../lib/submit-on-enter";
 import { provisionalTitle } from "../lib/project-title";
+import { studioProjectIdea } from "../lib/studio-project-idea";
 import {
   updateBrief,
   updatePersona,
@@ -163,7 +166,7 @@ export default function StudioApp({
         getApiKey={getApiKey}
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
-        initialObjective={openingPrompt || initialObjective}
+        initialObjective={openingPrompt}
         initialTitleProvisional={Boolean(openingPrompt)}
       />
     );
@@ -221,9 +224,10 @@ function ProjectStudio({
   localAccount = false,
   onSignOut,
 }: ProjectStudioProps) {
-  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional }), s=session.state;
+  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [editorRequested, setEditorRequested] = useState(false);
+  const [referencesRequested,setReferencesRequested] = useState(false);
   const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
     [versions, setVersions] = useState<PieceVersion[]>([]),
@@ -257,8 +261,10 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
-  const showBrief = !editorRequested && !base && !draft?.baseVersion && !draft?.content.headline && !draft?.content.price && !draft?.content.date && !draft?.content.caption && !draft?.content.fields?.length;
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, enabled: stageRestored && stage === "studio" && showBrief });
+  const hasPost = Boolean(editorRequested || base || draft?.baseVersion || draft?.content.headline || draft?.content.price || draft?.content.date || draft?.content.caption || draft?.content.fields?.length);
+  const showBrief = referencesRequested || !hasPost;
+  const idea = studioProjectIdea(s,initialObjective);
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
   async function signOutSafely() {
     exploration.pause();
     try { if (!session.loading) await session.flush(); }
@@ -401,7 +407,8 @@ function ProjectStudio({
     if(value !== "studio") setViewingArt(false);
   }
   function newPost(pieceId:string = crypto.randomUUID()) {
-    setEditorRequested(false);
+    setEditorRequested(true);
+    setReferencesRequested(false);
     local.change((value) =>
       value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
         ? selectDraft(value, { pieceId, baseVersion: 0 })
@@ -413,6 +420,7 @@ function ProjectStudio({
     setStage("studio");
   }
   function openVersion(version:PieceVersion) {
+    setReferencesRequested(false);
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
       .reduce((n, v) => Math.max(n, v.version), 0);
@@ -758,8 +766,9 @@ function ProjectStudio({
     try { recordReferenceRound(local.get()); } catch {}
   }
   async function useExploredReference(reference:ExploredReference,file:File) {
+    if(!isAuthenticated())throw Error('studio_unavailable');
     if (local.get().references.some(item => item.source && 'originUrl' in item.source && item.source.originUrl === reference.originUrl)) return;
-    await storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file);
+    await recordReferenceSelection({userId,projectId:project.id,reference,commit:()=>storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)});
   }
   async function useGeneratedReference(imageId:string,file:File,ordinal?:number) {
     const alreadySelected=local.get().references.some(item => item.source && 'kind' in item.source && item.source.kind === 'generated' && item.source.projectId === project.id && item.source.imageId === imageId);
@@ -845,6 +854,11 @@ function ProjectStudio({
               pieceId: selected.pieceId,
               version: selected.baseVersion,
               expectedRevision: version.metadata?.revision ?? 0,
+              references:local.get().references.flatMap((reference):ApprovedReference[]=>{
+                const source=reference.source;
+                if(!source)return [];
+                return 'kind' in source ? [{kind:'generated',projectId:source.projectId,imageId:source.imageId}] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
+              }),
             }),
           });
           const data = approvedVersionSchema.parse(await response.json());
@@ -887,7 +901,7 @@ function ProjectStudio({
       getApiKey={getApiKey}
       onUseImage={useBase}
       prepareImageVersion={saveCurrent}
-      initialMessage={s.messages.length === 0 ? initialObjective : ""}
+      initialMessage={s.messages.length === 0 ? idea : ""}
       connection={<><details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa e as explorações usam sua API e geram consumo.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details><details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details></>}
       explorationRecovery={exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>}
       loadBase={async () => {
@@ -998,6 +1012,8 @@ function ProjectStudio({
                     }),
                   );
                   setDrawer(null);
+                  setReferencesRequested(false);
+                  setEditorRequested(true);
                   setStage("studio");
                 }}
               >
@@ -1074,10 +1090,10 @@ function ProjectStudio({
       </>}
       canvas={
         showBrief ? <div className="studio-brief">
-          <ReferenceExploration key={`references:${project.id}`} projectId={project.id} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} />
+          <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary" type="button" onClick={()=>{setReferencesRequested(false);setEditorRequested(true);}}>{hasPost?'Voltar ao post':'Definir textos da arte'}</button></div>
+          <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
           <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
-          <button className="studio-button-secondary" type="button" onClick={() => setEditorRequested(true)}>Definir textos da arte</button>
-        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} actions={<button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button>} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
           <label>
             Imagem-base PNG ou JPEG
             <input type="file" accept="image/png,image/jpeg" onChange={event => {

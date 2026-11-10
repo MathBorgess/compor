@@ -506,10 +506,11 @@ export function CreativeBoard({
   title = "Vamos encontrar a sua direção.",
   description = "Explore as ideias e versões do projeto.",
   children,
+  actions,
   onCurrentPost,
   surfaceWidth = 1500,
   surfaceHeight = 1060,
-}: {title?: string;description?: string;children?: ReactNode;onCurrentPost?: () => void;surfaceWidth?: number;surfaceHeight?: number}) {
+}: {title?: string;description?: string;children?: ReactNode;actions?:ReactNode;onCurrentPost?: () => void;surfaceWidth?: number;surfaceHeight?: number}) {
   const [zoom, setZoom] = useState(1);
   const viewport = useRef<HTMLDivElement>(null);
   function fit() {
@@ -534,7 +535,7 @@ export function CreativeBoard({
           <h2>{title}</h2>
           {description && <p>{description}</p>}
         </div>
-        <span className="studio-badge">Quadro criativo</span>
+        {actions ?? <span className="studio-badge">Quadro criativo</span>}
       </div>
       <div
         ref={viewport}

@@ -30,7 +30,7 @@ async function app(t, {withReferences = false} = {}) {
   const page = await browser.newPage({viewport: {width: 1440, height: 1000}});
   page.setDefaultTimeout(6000);
   await page.context().addCookies([sessionCookie(origin)]);
-  const errors = [], calls = [], external = [], selectionSignals = [];
+  const errors = [], calls = [], external = [], selectionSignals = [], referenceSelectionSignals=[];
   const paging = {nextBeforeOrdinal:null, older:[]};
   const images = [
     {id: '00000000-0000-4000-8000-000000000091', project_id: projectId, state: 'completed', created_at: '2026-11-06T12:00:00Z', ordinal: 1, batch_id: '00000000-0000-4000-8000-000000000093', batch_position: 1},
@@ -46,6 +46,11 @@ async function app(t, {withReferences = false} = {}) {
     if (url.pathname === '/auth/session') return route.fulfill({json: {state: 'connected', userId}});
     if (url.pathname === '/api/projects') return route.fulfill({json: {projects: [{id: projectId, title: 'Direção opcional'}]}});
     if (url.pathname === '/api/pieces' && request.method() === 'GET') return route.fulfill({json: {versions: []}});
+    if (url.pathname === '/api/studio/references/history')return route.fulfill({json:{references:[]}});
+    if (url.pathname === '/api/studio/references/signals' && request.postDataJSON().action === 'selected') {
+      const body=request.postDataJSON();referenceSelectionSignals.push(body);
+      return route.fulfill({status:201,json:{signal:{...body,createdAt:'2026-11-09T12:00:00.000Z'}}});
+    }
     if (withReferences && url.pathname === '/api/studio/references/search') {
       calls.push({path:url.pathname,body:request.postDataJSON()});
       return route.fulfill({json:{status:'ok',references:[{id:'e1_example',title:'Tipografia',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/e1_example/',previewUrl:'https://i.pinimg.com/236x/image.png'}]}});
@@ -85,7 +90,7 @@ async function app(t, {withReferences = false} = {}) {
     }
     return route.continue();
   });
-  return {page, origin, calls, errors, external, images, paging, selectionSignals};
+  return {page, origin, calls, errors, external, images, paging, selectionSignals, referenceSelectionSignals};
 }
 
 async function openProject(page, origin) {
@@ -299,12 +304,12 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await openProject(page, origin);
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
-  await panel.getByRole('checkbox').check();
+  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('link',{name:'Ver origem no Pinterest'}).waitFor();
   assert.equal(await panel.getByRole('button',{name:'Me interessa'}).count(),0);
   assert.equal(await panel.getByRole('button',{name:'Não combina'}).count(),0);
-  await panel.getByRole('button',{name:'Selecionar: Tipografia'}).click();
+  await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
   await page.getByLabel('Chave OpenAI',{exact:true}).fill(`sk-synthetic-${'x'.repeat(30)}`);
@@ -331,9 +336,9 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
-  await panel.getByRole('checkbox').check();
+  await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
-  await panel.getByRole('button',{name:'Selecionar: Tipografia'}).click();
+  await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   const recovery=page.locator('.studio-exploration-recovery');
   await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});
   await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();

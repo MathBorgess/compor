@@ -2,6 +2,7 @@
 
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
+import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
 import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content";
@@ -89,6 +90,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             typeof data.userId === "string" &&
             data.userId
           ) {
+            try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
             if (
               openAIKeyOwner.current &&
               openAIKeyOwner.current !== data.userId
@@ -149,6 +151,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             }
             setAuthState("connected");
           } else if (data.state === "signed-out") {
+            try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
             clearOpenAIKey();
             setAuthenticatedUser(null);
             setAccount(null);
@@ -230,6 +233,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     signingOut.current=true;
     sessionEpoch.current++;
     activeIdentity.current=null;
+    try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
     clearOpenAIKey();
     setAuthState("checking");
     try {
