@@ -76,7 +76,7 @@ Limites conhecidos:
 - Os dois servidores `next dev` observam a mesma pasta `app/`. As páginas de fixture que um teste cria aparecem também no outro servidor, mas só são compiladas quando pedidas.
 - As portas continuam escolhidas com `listen(0)` e liberadas antes de o `next dev` usá-las. Com dois arquivos ao mesmo tempo, a chance de colisão aumenta, mas continua pequena.
 - Iniciar um único `next dev` para toda a suíte foi avaliado e não foi feito. Com cache quente, cada início leva cerca de 1,2 s até a primeira resposta, e a suíte faz cerca de 45 inícios. Os arquivos usam ambientes diferentes: Supabase simulado por teste, certificados próprios e flags diferentes. Compartilhar o servidor exigiria reescrever o preparo de cerca de 28 arquivos e dividir estado de servidor entre eles.
-- O teste do fluxo do estúdio às vezes falha ao medir a posição do compositor ("the composer stays at the conversation bottom"). Isso aconteceu uma vez em série e uma vez em paralelo. É uma falha que já existia e não vem da concorrência.
+- A medição da posição do compositor ("the composer stays at the conversation bottom") foi corrigida em `d25de70`: o teste espera o fim da animação de reabertura da conversa antes de medir o layout. A falha histórica ocorreu tanto em série quanto em paralelo; não é uma pendência desta suíte.
 - Numa execução paralela anterior à ordem atual, o teste do orçamento de referências em `studio-storage.test.mjs` estourou o limite de 90 s. A causa não se repetiu em 55 execuções desse arquivo, sozinho ou ao lado de outro arquivo pesado. O hook corrigido faz um novo estouro falhar em 90 s, em vez de parar a suíte.
 
 ## Correção e manutenção
