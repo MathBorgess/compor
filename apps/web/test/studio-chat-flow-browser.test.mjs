@@ -392,7 +392,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
   return {status:'completed',text:'Contexto preservado na conversa.'};
  };
  await openOriginal(page,origin);await attachImage(page);
- await page.getByLabel('Legenda',{exact:true}).fill('Legenda preservada ao procurar referências.');
+ await page.getByLabel(/^Legenda/).fill('Legenda preservada ao procurar referências.');
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero comunicar uma oficina');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Contexto preservado na conversa.',{exact:true}).waitFor();
  await page.getByLabel('Sua mensagem',{exact:true}).fill('Rascunho de conversa não enviado');
  const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
@@ -401,7 +401,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  await page.getByRole('heading',{name:'Referências para sua ideia',exact:true}).waitFor();
  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
- assert.equal(await page.getByLabel('Legenda',{exact:true}).inputValue(),'Legenda preservada ao procurar referências.');
+ assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
  assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).inputValue(),'Rascunho de conversa não enviado');
  assert.deepEqual(await stored(page),before);assert.deepEqual(versions,originalVersions);
