@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {provisionalTitle,isProvisionalTitle} from '../lib/project-title.ts';
+import {provisionalTitle} from '../lib/project-title.ts';
+import {createStudioState,parseStudioState,resolveProjectTitle} from '../lib/studio-state.ts';
 
 test('título provisório é o começo da ideia cortado numa palavra inteira',()=>{
  assert.equal(provisionalTitle('Oficina de cerâmica aos sábados'),'Oficina de cerâmica aos sábados');
@@ -16,10 +17,14 @@ test('título provisório tem no máximo 48 caracteres e não acrescenta reticê
 test('primeira palavra maior que 48 caracteres é cortada no limite',()=>{
  assert.equal(provisionalTitle(`${'y'.repeat(60)} fim`),'y'.repeat(48));
 });
-test('título segue provisório enquanto for o recorte da primeira mensagem da pessoa',()=>{
- const messages=[{role:'system',text:'Seleção de referências'},{role:'user',text:'Quero divulgar minha oficina de cerâmica para iniciantes aos sábados'},{role:'assistant',text:'Para quem?'},{role:'user',text:'Iniciantes'}];
- assert.equal(isProvisionalTitle('Quero divulgar minha oficina de cerâmica para',messages),true);
- assert.equal(isProvisionalTitle('Cerâmica aos sábados',messages),false,'um título renomeado deixa de ser provisório');
- assert.equal(isProvisionalTitle('Iniciantes',messages),false,'só a primeira mensagem da pessoa conta');
- assert.equal(isProvisionalTitle('Seleção de referências',messages.slice(0,1)),false,'sem mensagem da pessoa não há título provisório');
+test('a oportunidade de sugerir título é explícita e persiste sem depender das mensagens',()=>{
+ const scope={userId:'00000000-0000-4000-8000-000000000001',projectId:'00000000-0000-4000-8000-000000000002'};
+ const initial=createStudioState({...scope,projectTitleProvisional:true});
+ assert.equal(parseStudioState(JSON.parse(JSON.stringify(initial))).projectTitleProvisional,true);
+ const resolved=resolveProjectTitle(initial);
+ assert.equal(parseStudioState(JSON.parse(JSON.stringify(resolved))).projectTitleProvisional,false,'uma proposta aceita ou recusada encerra a oportunidade entre sessões');
+ assert.equal(resolveProjectTitle(resolved),resolved,'não reabre a oportunidade nem avança revisão ao resolver outra vez');
+ const {projectTitleProvisional,...legacy}=initial;
+ assert.equal(parseStudioState(legacy).projectTitleProvisional,false,'estado histórico não autoriza renomeação por iniciativa do agente');
+ assert.throws(()=>parseStudioState({...initial,projectTitleProvisional:'true'}));
 });

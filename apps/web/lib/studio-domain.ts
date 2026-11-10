@@ -53,7 +53,7 @@ export const actionResultSchema=z.strictObject({status:z.enum(['completed','decl
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
-export const studioStateSchema=z.strictObject({schemaVersion:z.literal(1),userId:id,projectId:id,revision:z.number(),brief:briefSchema,persona:personaSchema,selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
+export const studioStateSchema=z.strictObject({schemaVersion:z.literal(1),userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),brief:briefSchema,persona:personaSchema,selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;
 export type StudioScope=Pick<StudioState,'userId'|'projectId'>;
 export interface StoredImage {file:Blob;metadata?:unknown}
