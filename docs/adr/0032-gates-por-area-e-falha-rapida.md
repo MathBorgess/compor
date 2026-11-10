@@ -17,3 +17,9 @@ Esta decisão substitui, no [ADR 0018](0018-gates-qualidade-e-performance.md), a
 ## Limites
 
 A regra por área supõe que cada arquivo só afeta as áreas mapeadas. Uma dependência fora do mapa passa no PR e só aparece no push para `main`. A estimativa de minutos não é a fatura do GitHub, e uma nova tentativa conta de novo os jobs reaproveitados. As estimativas por execução nos gates vêm de durações anteriores, não desta configuração. Exigir **Quality gate** na proteção da branch continua sendo uma configuração separada do GitHub.
+
+## Atualização de 10/11/2026
+
+Matheus pediu retirar o Quality do push na `main`, para evitar repetir a execução feita no PR. Esta decisão substitui somente o gatilho automático de push descrito acima: `pull_request` e `workflow_dispatch` permanecem; a execução manual continua cobrindo todas as áreas. Jobs, critérios do gate, orçamentos e limites não mudam. O workflow de migrations é separado e mantém seus gatilhos.
+
+O PR passa a concentrar a verificação automática da alteração. Um push direto na `main` não recebe Quality automaticamente, e uma dependência fora do mapa de áreas deixa de ter a segunda execução automática completa após o merge. A execução manual completa permanece disponível para essas verificações; atualizar o mapa de áreas continua obrigatório quando uma dependência muda.

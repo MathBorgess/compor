@@ -417,7 +417,7 @@ export default function StudioChat({
       return;
     }
     if(data.status==='unknown'&&data.errorCode==='provider_http_401'){
-      setBusy(false);setNotice(authenticationNotice);return;
+      setBusy(false);setNotice(credentialSource==='default'?'Não foi possível confirmar o resultado desta solicitação. Consulte seu estado antes de iniciar outra. Você pode continuar editando.':authenticationNotice);return;
     }
     setBusy(false);
     setNotice(

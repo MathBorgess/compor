@@ -1,6 +1,6 @@
 # Gates de qualidade
 
-O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull request, push para `main` e execução manual. Num pull request, executa só as áreas que a mudança pode afetar. Push para `main` e execução manual executam tudo. O check agregado **Quality gate** passa quando o job estático termina com sucesso e cada outro job termina com sucesso ou foi pulado porque a área dele está desligada. Falha, cancelamento, job ausente ou job pulado com a área ligada bloqueiam o agregado. O [ADR 0032](../adr/0032-gates-por-area-e-falha-rapida.md) registra essa regra. O workflow não altera a proteção da branch. Essa proteção precisa exigir **Quality gate** para impedir merges sem os checks.
+O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull request e por execução manual. Por decisão de Matheus em 10/11/2026, o push para `main` não repete os checks executados no PR. Num pull request, executa só as áreas que a mudança pode afetar; a execução manual executa tudo. O check agregado **Quality gate** passa quando o job estático termina com sucesso e cada outro job termina com sucesso ou foi pulado porque a área dele está desligada. Falha, cancelamento, job ausente ou job pulado com a área ligada bloqueiam o agregado. O [ADR 0032](../adr/0032-gates-por-area-e-falha-rapida.md) registra essa regra e sua atualização. O workflow não altera a proteção da branch. Essa proteção precisa exigir **Quality gate** para impedir merges sem os checks.
 
 | Job | Área | Condição de aprovação | Escopo |
 | --- | --- | --- | --- |
@@ -23,9 +23,9 @@ No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `use
 
 O primeiro passo do job estático, depois do checkout e do Node, executa `scripts/quality/changed-areas.mjs`. Num pull request, o script lista os arquivos com `git diff --name-only --no-renames` entre a base e o head do PR. Um arquivo movido conta no caminho antigo e no novo. As regras ficam na tabela `RULES` desse script, e a primeira que casar vale. Por exemplo, `apps/web/**` liga `web`, `packages/**` liga `web` e `unit`, e `apps/site/**` liga `site`. Markdown em `docs/` e na raiz não liga nada. Os outros arquivos de `docs/` ligam `unit`, porque um teste do protótipo lê JSON em `docs/evals`. `.github/**`, os `package*.json` da raiz, `eslint.config.mjs` e qualquer caminho sem regra ligam tudo.
 
-Push para `main`, execução manual, diff desconhecido ou falha do git também ligam tudo. Um job dependente só é pulado quando a saída da área é exatamente `false`. Como os outros jobs dependem do estático, uma falha de lint também evita os jobs caros. Para conferir as áreas de um intervalo, execute `node scripts/quality/changed-areas.mjs BASE HEAD` na raiz.
+Execução manual, diff desconhecido ou falha do git também ligam tudo. Um job dependente só é pulado quando a saída da área é exatamente `false`. Como os outros jobs dependem do estático, uma falha de lint também evita os jobs caros. Para conferir as áreas de um intervalo, execute `node scripts/quality/changed-areas.mjs BASE HEAD` na raiz.
 
-As regras supõem que cada arquivo só afeta as áreas mapeadas. Quando um teste passar a ler arquivos de outra área, atualize `RULES` e seus testes no mesmo PR. Uma dependência fora do mapa passa no PR e só aparece no push para `main`.
+As regras supõem que cada arquivo só afeta as áreas mapeadas. Quando um teste passar a ler arquivos de outra área, atualize `RULES` e seus testes no mesmo PR. Uma dependência fora do mapa pode passar no PR sem ser exercitada; a execução manual completa permite verificá-la. Um push direto na `main` não aciona Quality. O workflow separado de migrations mantém seus gatilhos.
 
 ## Falha rápida
 
@@ -49,7 +49,7 @@ Estimativas anteriores à primeira execução paralela aprovada no CI. A coluna 
 | --- | --- | --- | --- |
 | PR só com Markdown | Estático e gate | 2 | 2 |
 | PR só em `apps/web` | Estático, web, performance e gate | Cerca de 19 | Cerca de 13 a 16 |
-| Push para `main` | Todos | Cerca de 23 a 24 | Cerca de 17 a 21 |
+| Execução completa (manual; antes também push para `main`) | Todos | Cerca de 23 a 24 | Cerca de 17 a 21 |
 
 A suíte web domina o custo. Na primeira execução paralela aprovada, 295/295 testes passaram em 475,66 s, e a janela dos logs do job web foi de 519,07 s. Na execução serial comparada, 287/287 testes levaram 872,14 s, com janela de 914,65 s para o job. São execuções e contagens diferentes; o [registro](web-parallel-ci-2026-11-09.md) explica o método, a falha inicial e a correção. A capacidade mensal depende também das áreas executadas e do arredondamento de cada job.
 
