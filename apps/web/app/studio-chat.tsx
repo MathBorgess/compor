@@ -24,6 +24,8 @@ import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
 import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
+import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
+import TasteReadingCard from './studio-taste-reading';
 import { chatResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
@@ -34,6 +36,24 @@ async function contextDigest(state:StudioState) {
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 type CredentialSource='default'|'byok';
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
+/** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
+function MessageMarkdown({text}:{text:string}) {
+  return <Markdown
+    options={{
+      disableParsingRawHTML: true,
+      sanitizer: (value) => {
+        try {
+          const url = new URL(value);
+          return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
+        } catch { return null; }
+      },
+      overrides: {
+        a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
+        img: ({alt}: {alt?: string}) => <span>{alt}</span>,
+      },
+    }}
+  >{text}</Markdown>;
+}
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;
@@ -86,6 +106,8 @@ export default function StudioChat({
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
+  const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
+  const [currentContext,setCurrentContext]=useState<{value:string;digest:string}|null>(null);
   const attemptSource=useRef<CredentialSource>(credentialSource);
   const previousScope=useRef<{marker:string;source:CredentialSource;epoch:number}|null>(null);
   const mounted = useRef(true),
@@ -102,7 +124,12 @@ export default function StudioChat({
     legacyPending=useRef(false),
     inspectionLock=useRef(false),
     inspectionSequence=useRef(0),
-    failedAutomatic=useRef<string|null>(null);
+    failedAutomatic=useRef<string|null>(null),
+    // Synchronous guard shared by the composer and quick replies: a double click
+    // or a click followed by Enter cannot start a second submission.
+    submitLock=useRef(false),
+    composerRef=useRef<HTMLTextAreaElement>(null),
+    focusAnswer=useRef<string|null>(null);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
   const scopeMarker=`${marker}:${credentialSource}:${credentialEpoch}`;
   const currentScope=useRef(scopeMarker);
@@ -114,6 +141,24 @@ export default function StudioChat({
   const availability=useRef({message,busy,pending,hasApiKey});
   availability.current={message,busy,pending,hasApiKey};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
+  const quickReplyStorage=quickReplyKey(state.userId,state.projectId);
+  function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
+  useEffect(()=>{
+    refreshQuickReplies();
+    const stored=(event:StorageEvent)=>{if(event.storageArea===localStorage&&event.key===quickReplyStorage)refreshQuickReplies();};
+    window.addEventListener('storage',stored);
+    return ()=>window.removeEventListener('storage',stored);
+  },[quickReplyStorage]);
+  useEffect(()=>{
+    let active=true;
+    void contextDigest(state).then(digest=>{if(active)setCurrentContext({value:referenceContextValue,digest});}).catch(()=>{if(active)setCurrentContext(null);});
+    return ()=>{active=false;};
+  },[referenceContextValue]);
+  useEffect(()=>{
+    const id=focusAnswer.current;if(!id)return;
+    const target=document.getElementById(`studio-quick-reply-status-${id}`);
+    if(target){focusAnswer.current=null;target.focus();}
+  },[quickReplies,state.messages]);
   function referenceRecord() {
     try {
       const raw=localStorage.getItem(referenceMarker);
@@ -281,10 +326,16 @@ export default function StudioChat({
       const valid=!automatic||Boolean(record&&current&&record.requestId===requestId&&record.fingerprint===referenceFingerprint(current)&&record.epoch===readReferenceRound(current)?.epoch&&record.context===await contextDigest(current));
       if(!credentialIsCurrent())return;
       setUsage(data.usage ?? null);
-      if(valid) settle(requestId, "completed", {
-        messageId: crypto.randomUUID(),
-        text: data.text ?? "Operação concluída.",
-      });
+      if(valid) {
+        const messageId=crypto.randomUUID(),reply=automatic&&record?parseTasteReply(data.reply):null;
+        // Invalid or absent structure keeps the textual reply, which is always stored.
+        if(reply&&record) { try { rememberQuickReply(localStorage,quickReplyStorage,{messageId,requestId,fingerprint:record.fingerprint,context:record.context,epoch:record.epoch,reply,answer:null}); } catch {} }
+        settle(requestId, "completed", {
+          messageId,
+          text: data.text ?? "Operação concluída.",
+        });
+        if(reply)refreshQuickReplies();
+      }
       else settle(requestId,"completed");
       if(automatic) { try { if(valid) completeReferenceRecord(requestId); else localStorage.removeItem(referenceMarker); } catch {} previous.current=null; }
       else previous.current = requestId;
@@ -504,12 +555,22 @@ export default function StudioChat({
   },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!message.trim() || !canUseAI || busy || pending || inspectionLock.current||!credentialIsCurrent()) return;
+    await submitText(message,{fromComposer:true});
+  }
+  type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
+  /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
+  async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
+    if (!text.trim() || !canUseAI || busy || pending || submitLock.current || availability.current.busy || availability.current.pending || inspectionLock.current||!credentialIsCurrent()) return false;
+    submitLock.current=true;
+    try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
+    finally { submitLock.current=false; }
+  }
+  async function submitLocked(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
     onUseAI?.();
     setNotice("");
     setBusy(true);
     legacyPending.current=false;
-    const requestId = crypto.randomUUID();
+    const requestId = crypto.randomUUID(), userMessageId = crypto.randomUUID();
     let prepared = false,
       submitted = false;
     try {
@@ -530,14 +591,15 @@ export default function StudioChat({
       const next = change((value) =>
         prepareAdjustment(value, {
           requestId,
-          messageId: crypto.randomUUID(),
-          instruction: message,
+          messageId: userMessageId,
+          instruction: text,
           createdAt: new Date().toISOString(),
           eventId: crypto.randomUUID(),
         }),
       );
       if (!next) throw Error("O projeto ainda está carregando.");
       prepared = true;
+      onPrepared?.(userMessageId);
       imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
       if(!credentialIsCurrent()){settle(requestId,'failed');return;}
@@ -545,7 +607,7 @@ export default function StudioChat({
       setPending(requestId);
       setPendingSource(credentialSource);
       setBusy(true);
-      setMessage("");
+      if(fromComposer)setMessage("");
       const draft = getCurrentDraft(next),
         {level, evidence, gaps, limitations} = assessReadiness({brief:next.brief,persona:next.persona,direction:next.direction,references:next.references,referenceFeedback:feedback.referenceFeedback}),
         context = {
@@ -576,16 +638,18 @@ export default function StudioChat({
       const data = await api("/api/studio/chat", {
         projectId: state.projectId,
         requestId,
-        message: message.trim(),
+        message: text.trim(),
         context,
         history: before.messages
           .filter(item=>item.role!=='system')
           .slice(-30)
           .map(({ role, text }) => ({ role, text })),
         referenceImages,
-        ...(previous.current ? { previousAttemptKey: previous.current } : {}),
+        // A quick reply starts a text-only turn; it never resumes a tool-enabled session.
+        ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
       });
       await handle(data, requestId);
+      return true;
     } catch (e) {
       if (credentialIsCurrent()) {
         if (prepared && !submitted) {
@@ -596,7 +660,29 @@ export default function StudioChat({
         setBusy(false);
         setNotice(errorMessage(e));
       }
+      return submitted;
     }
+  }
+  function quickReplyContext(){
+    const snapshot=getState();
+    return {fingerprint:referenceFingerprint(snapshot),epoch:readReferenceRound(snapshot)?.epoch,context:currentContext?.value===referenceContext(snapshot)?currentContext.digest:null};
+  }
+  async function chooseQuickReply(entry:QuickReplyEntry,option:QuickReplyOption){
+    if(option.intent==='adjust'){
+      // Adjusting never sends: it opens the composer and keeps any typed draft.
+      if(!message.trim())setMessage(QUICK_REPLY_ADJUST_PREFIX);
+      const field=composerRef.current;
+      if(field&&!field.disabled)field.focus();
+      requestAnimationFrame(()=>{const current=composerRef.current;if(current&&document.activeElement===current)current.setSelectionRange(current.value.length,current.value.length);});
+      return;
+    }
+    if(quickReplyStatus(entry,getState().messages,quickReplyContext()).kind!=='active')return;
+    const text=quickReplyMessage(entry.reply,option);
+    if(!text)return;
+    await submitText(text,{fromComposer:false,quickReply:{version:1,intent:option.intent},onPrepared:userMessageId=>{
+      try{recordQuickReplyAnswer(localStorage,quickReplyStorage,entry.messageId,{optionId:option.id,userMessageId});}catch{}
+      focusAnswer.current=entry.messageId;refreshQuickReplies();
+    }});
   }
   async function reconcileImage() {
     const action=imageAction;
@@ -860,8 +946,10 @@ export default function StudioChat({
             </p>
           </div>
         )}
-        {state.messages.filter(item=>item.role!=='system').map((item) => (
-          <article
+        {state.messages.filter(item=>item.role!=='system').map((item) => {
+          const entry=item.role==='assistant'?quickReplies.find(candidate=>candidate.messageId===item.id):undefined;
+          if(entry)return <TasteReadingCard key={item.id} entry={entry} status={quickReplyStatus(entry,state.messages,{fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null})} disabled={!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
+          return <article
             className="studio-message"
             data-role={item.role}
             key={item.id}
@@ -871,25 +959,11 @@ export default function StudioChat({
             </span>
             {item.role === 'assistant' ? (
               <div className="studio-message-markdown">
-                <Markdown
-                  options={{
-                    disableParsingRawHTML: true,
-                    sanitizer: (value) => {
-                      try {
-                        const url = new URL(value);
-                        return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
-                      } catch { return null; }
-                    },
-                    overrides: {
-                      a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
-                      img: ({alt}: {alt?: string}) => <span>{alt}</span>,
-                    },
-                  }}
-                >{item.text}</Markdown>
+                <MessageMarkdown text={item.text} />
               </div>
             ) : <p>{item.text}</p>}
-          </article>
-        ))}
+          </article>;
+        })}
         {busy && <div className="studio-message studio-thinking" role="status">
           <span className="studio-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
           <span>Compor está trabalhando…</span>
@@ -973,6 +1047,7 @@ export default function StudioChat({
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
         <label className="studio-visually-hidden" htmlFor="studio-chat-message">Sua mensagem</label>
         <textarea
+          ref={composerRef}
           id="studio-chat-message"
           rows={1}
           maxLength={4000}
