@@ -1,0 +1,36 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+const alice='11111111-1111-4111-8111-111111111111',bob='bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb';
+const project='22222222-2222-4222-8222-222222222222',piece='33333333-3333-4333-8333-333333333333';
+const content={headline:'Post',price:'',date:'',caption:'Legenda',captionOrigin:'user'};
+test('variante começa sem aprovação, retoque herda e RPC v2 mantém compatibilidade e RLS',async t=>{
+  const db=new PGlite();t.after(()=>db.close());
+  await db.exec(`create role authenticated;create role anon;create schema auth;create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    grant usage on schema auth,public to public;grant execute on function auth.uid() to public;`);
+  for(const name of ['20261103000000_projects.sql','20261103000001_piece_versions.sql','20261105000014_version_metadata.sql','20261106000021_piece_dynamic_fields.sql','20261109000027_variant_metadata.sql'])
+    await db.exec(await readFile(new URL('../../supabase/migrations/'+name,import.meta.url),'utf8'));
+  await db.query('insert into auth.users values($1),($2)',[alice,bob]);await db.query("insert into public.projects(id,owner_id,title) values($1,$2,'Post')",[project,alice]);
+  await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[alice]);
+  const save=async(expected,base,operation,dimension)=>(await db.query('select public.save_piece_version_v3($1,$2,$3,$4,$5,$6,$7) as value',[project,piece,expected,base,content,operation,dimension])).rows[0].value;
+  const legacy=async(expected,base)=>(await db.query('select public.save_piece_version_v2($1,$2,$3,$4,$5) as value',[project,piece,expected,base,content])).rows[0].value;
+  assert.equal((await legacy(0,0)).status,'saved');await db.query('select public.approve_piece_version($1,$2,1,0)',[project,piece]);
+  const retouch=await save(1,1,'create',null);
+  assert.equal(retouch.version.metadata.approval.kind,'inherited');assert.equal(retouch.version.metadata.approval.sourceVersion,1);
+  const variant=await save(2,2,'edit','style');
+  assert.equal(variant.version.metadata.approval.status,'unapproved');assert.equal(variant.version.metadata.changedDimension,'style');assert.equal(variant.version.metadata.operation,'edit');
+  assert.equal((await save(3,3,'edit',null)).version.metadata.approval.status,'unapproved');
+  const old=await legacy(4,1);assert.equal(old.version.metadata.approval.kind,'inherited');assert.deepEqual(Object.keys(old.version.metadata).sort(),['approval','baseVersion','revision']);
+  const oldList=(await db.query('select public.list_project_piece_versions_v2($1) as value',[project])).rows[0].value;
+  assert.equal(Object.hasOwn(oldList[2].metadata,'changedDimension'),false);
+  const list=(await db.query('select public.list_project_piece_versions_v3($1) as value',[project])).rows[0].value;
+  assert.deepEqual(list.map(item=>item.metadata.changedDimension),[null,null,'style',null,null]);
+  assert.equal((await save(4,1,'create','hook')).status,'conflict');
+  for(const [operation,dimension] of [['wrong',null],['create','major'],[null,'hook']])await assert.rejects(()=>save(5,1,operation,dimension));
+  await assert.rejects(()=>db.query("update public.piece_version_metadata set changed_dimension='style'"));
+  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[bob]);assert.deepEqual(await save(5,1,'edit','hook'),{status:'not_found'});
+  await assert.rejects(()=>db.query('select public.list_project_piece_versions_v3($1)',[project]));assert.equal((await db.query('select * from public.piece_version_metadata')).rows.length,0);
+  await db.exec('set role anon');await assert.rejects(()=>save(5,1,'edit',null));
+});
