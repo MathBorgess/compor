@@ -26,11 +26,12 @@ before(async()=>{
 });
 after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopApp(server);}});
 
-async function studio(t,{touch=false,projects=[],createDelay=0}={}){
+async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorations=false,landingIdea=''}={}){
  const context=await browser.newContext({viewport:{width:1440,height:1000},hasTouch:touch});t.after(()=>context.close());
  await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage();page.setDefaultTimeout(15000);
- const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
+ if(landingIdea)await page.addInitScript(({userId,idea})=>sessionStorage.setItem(`compor-objective:user:${userId}`,idea),{userId,idea:landingIdea});
+ const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],explorations=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
@@ -50,6 +51,9 @@ async function studio(t,{touch=false,projects=[],createDelay=0}={}){
   if(url.pathname==='/api/studio/chat'){const body=request.postDataJSON();if(body.op!=='poll')chats.push(body);return route.fulfill({status:202,json:await flow.chat(body)});}
   if(url.pathname==='/api/studio/action'){const body=request.postDataJSON();actions.push(body);return route.fulfill({status:202,json:await flow.action(body)});}
   if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
+  if(url.pathname==='/api/studio/explorations'&&request.method()==='POST'){
+   const body=request.postDataJSON();explorations.push(body);return route.fulfill({status:completeExplorations?200:202,json:{status:completeExplorations?'completed':'unknown',requestId:body.requestId}});
+  }
   if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
   if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
@@ -58,7 +62,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0}={}){
  });
  await page.goto(origin,{timeout:60000});
  const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
- return {page,idea,posts,chats,actions,renames,flow,errors,external,projects};
+ return {page,idea,posts,chats,actions,renames,flow,errors,external,projects,explorations};
 }
 async function openChat(page){
  const message=page.getByLabel('Sua mensagem',{exact:true});
@@ -207,5 +211,25 @@ test('barra, cards e menu cortam o título com reticências e mantêm o nome com
  await page.keyboard.press('Escape');await page.setViewportSize({width:390,height:844});
  assert.deepEqual(await cut(trigger.locator('.studio-truncate')),shown,'barra superior no celular');
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'o título longo não cria rolagem horizontal');
+ assert.deepEqual(errors,[]);
+});
+
+test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e primeiros lotes separados',{skip,timeout:90000},async t=>{
+ const firstIdea='Oficina de cerâmica',secondIdea='Aula de gravura';
+ const {page,idea,projects,chats,explorations,errors}=await studio(t,{completeExplorations:true,landingIdea:'Uma ideia antiga da entrada'});
+ await idea.fill(firstIdea);await idea.press('Enter');await projectTrigger(page,firstIdea).waitFor();
+ await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:'Novo projeto',exact:true}).click();
+ await page.getByLabel('Sua ideia',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Começar conversa',exact:true}).click();await projectTrigger(page,secondIdea).waitFor();
+ await page.reload();await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
+ let message=await connectKey(page);assert.equal(await message.inputValue(),secondIdea);
+ await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
+ assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
+ await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
+ message=await openChat(page);assert.equal(await message.inputValue(),firstIdea);
+ await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
+ const firstBatch=explorations.filter(call=>call.projectId===projects[0].id);assert.equal(firstBatch.length,3);assert.ok(firstBatch.every(call=>call.prompt.includes(firstIdea)&&!call.prompt.includes(secondIdea)));
+ await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(call=>[call.projectId,call.message]),[[projects[1].id,secondIdea],[projects[0].id,firstIdea]]);
  assert.deepEqual(errors,[]);
 });

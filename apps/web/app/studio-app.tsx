@@ -19,6 +19,7 @@ import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visua
 import { recordReferenceRound } from "../lib/studio-reference-round";
 import { submitOnEnter } from "../lib/submit-on-enter";
 import { provisionalTitle } from "../lib/project-title";
+import { studioProjectIdea } from "../lib/studio-project-idea";
 import {
   updateBrief,
   updatePersona,
@@ -165,7 +166,7 @@ export default function StudioApp({
         getApiKey={getApiKey}
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
-        initialObjective={openingPrompt || initialObjective}
+        initialObjective={openingPrompt}
         initialTitleProvisional={Boolean(openingPrompt)}
       />
     );
@@ -223,7 +224,7 @@ function ProjectStudio({
   localAccount = false,
   onSignOut,
 }: ProjectStudioProps) {
-  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional }), s=session.state;
+  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [editorRequested, setEditorRequested] = useState(false);
   const [referencesRequested,setReferencesRequested] = useState(false);
@@ -262,7 +263,7 @@ function ProjectStudio({
   const draft = s ? getCurrentDraft(s) : null;
   const hasPost = Boolean(editorRequested || base || draft?.baseVersion || draft?.content.headline || draft?.content.price || draft?.content.date || draft?.content.caption || draft?.content.fields?.length);
   const showBrief = referencesRequested || !hasPost;
-  const idea = s?.messages.find(message=>message.role==='user')?.text || initialObjective;
+  const idea = studioProjectIdea(s,initialObjective);
   const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
   async function signOutSafely() {
     exploration.pause();
@@ -900,7 +901,7 @@ function ProjectStudio({
       getApiKey={getApiKey}
       onUseImage={useBase}
       prepareImageVersion={saveCurrent}
-      initialMessage={s.messages.length === 0 ? initialObjective : ""}
+      initialMessage={s.messages.length === 0 ? idea : ""}
       connection={<><details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa e as explorações usam sua API e geram consumo.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details><details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details></>}
       explorationRecovery={exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>}
       loadBase={async () => {
