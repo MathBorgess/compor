@@ -1,0 +1,25 @@
+{
+  "date": "2026-11-10",
+  "synthetic": true,
+  "edited": false,
+  "layoutSourceEquivalentCommit": "4ec0125f571a03e5c65a36064ab35af5248741fe",
+  "finalCodeCommit": "97e56f47594993aab24d0fe23d8dd1e9950ade00",
+  "laterCodeChange": "One asynchronous image-preparation scope guard; captured UI states unchanged",
+  "files": [
+    {
+      "file": "742x720.png",
+      "sha256": "bffd4714b0e8ba65a796640b0ebbfbb8e186ad018410988bb311a060ecb494fa",
+      "bytes": 84513
+    },
+    {
+      "file": "390x400.png",
+      "sha256": "9627401b10578f508cf08ce16d5d134ac5ab9cef5986c0d642f942adb828c2af",
+      "bytes": 40959
+    },
+    {
+      "file": "390x400-hidden.png",
+      "sha256": "966634c9933a997bfa45d730c8ab8230e67e73284408c4d6d303742888fa29e4",
+      "bytes": 41401
+    }
+  ]
+}

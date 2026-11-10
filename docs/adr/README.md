@@ -41,5 +41,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0035](0035-titulo-provisorio-e-falha-de-ferramenta.md) | recorded | Título provisório explícito e encerramento de ferramenta inválida |
 | [0036](0036-remocao-da-interface-legada.md) | accepted | Remoção autorizada da interface legada e do seletor por variável |
 | [0037](0037-referencias-sugeridas-e-retorno-ao-post.md) | accepted | Sugestões, consentimento por sessão, histórico próprio e retorno ao post |
+| [0038](0038-chave-padrao-openai-no-vault.md) | accepted | Chave padrão no Vault, prioridade BYOK e separação de fontes |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

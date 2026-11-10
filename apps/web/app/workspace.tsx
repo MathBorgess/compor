@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
+import { useAICredentials } from "./use-ai-credentials";
 import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
@@ -20,16 +21,8 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
   const [signOutError, setSignOutError] = useState(false);
   const sessionEpoch = useRef(0);
   const signingOut = useRef(false);
-  const openAIKey = useRef("");
-  const openAIKeyInput = useRef<HTMLInputElement>(null);
-  const [hasOpenAIKey, setHasOpenAIKey] = useState(false);
-  const openAIKeyOwner = useRef<string | null>(null);
-  const clearOpenAIKey = () => {
-    openAIKey.current = "";
-    openAIKeyOwner.current = null;
-    if (openAIKeyInput.current) openAIKeyInput.current.value = "";
-    setHasOpenAIKey(false);
-  };
+  const credentials = useAICredentials(authenticatedUser, authState === "connected");
+  const clearOpenAIKey = credentials.clear;
   const draftKey = useRef<string | null>(null);
   const memoryDrafts = useRef(new Map<string, string>());
   const activeIdentity = useRef<string | null>(null);
@@ -37,20 +30,11 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
   const [loginError, setLoginError] = useState(false);
   const [storageError, setStorageError] = useState(false);
   const [hasPendingDraft, setHasPendingDraft] = useState(false);
-  useLayoutEffect(() => {
-    if (authState === "connected" && openAIKeyInput.current)
-      openAIKeyInput.current.value = openAIKey.current;
-    else if (authState === "checking" && openAIKeyInput.current)
-      openAIKeyInput.current.value = "";
-  }, [authState, authenticatedUser]);
   useEffect(() => {
     const clearOnExit = () => clearOpenAIKey();
     window.addEventListener("pagehide", clearOnExit);
     return () => {
       window.removeEventListener("pagehide", clearOnExit);
-      openAIKey.current = "";
-      openAIKeyOwner.current = null;
-      if (openAIKeyInput.current) openAIKeyInput.current.value = "";
     };
   }, []);
   useEffect(() => {
@@ -91,11 +75,6 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             data.userId
           ) {
             try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
-            if (
-              openAIKeyOwner.current &&
-              openAIKeyOwner.current !== data.userId
-            )
-              clearOpenAIKey();
             setAuthenticatedUser(data.userId);
             setAccount(data.account ?? {label:"Conta conectada",local:localAuth});
             setSignOutError(false);
@@ -275,14 +254,15 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             isAuthenticated={() =>
               activeIdentity.current === `user:${authenticatedUser}`
             }
-            hasApiKey={authState === "connected" && hasOpenAIKey}
-            getApiKey={() =>
-              activeIdentity.current === `user:${authenticatedUser}` &&
-              openAIKeyOwner.current === authenticatedUser
-                ? openAIKey.current
-                : ""
-            }
-            onRemoveKey={clearOpenAIKey}
+            hasApiKey={credentials.hasApiKey}
+            canUseAI={credentials.canUseAI}
+            credentialSource={credentials.source}
+            credentialEpoch={credentials.epoch}
+            defaultAvailable={credentials.defaultAvailable}
+            onUseAI={credentials.useAI}
+            onPauseAI={credentials.pauseAI}
+            getApiKey={credentials.getApiKey}
+            onRemoveKey={credentials.useDefault}
             recoveryBanner={
               hasPendingDraft ? (
                 <div role="status">
@@ -293,26 +273,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
                 </div>
               ) : null
             }
-            keyInput={
-              <label>
-                Chave OpenAI
-                <input
-                  ref={element => {
-                    openAIKeyInput.current = element;
-                    if (element) element.value = authState === "connected" && openAIKeyOwner.current === authenticatedUser ? openAIKey.current : "";
-                  }}
-                  type="password"
-                  autoComplete="off"
-                  spellCheck={false}
-                  maxLength={300}
-                  onChange={(event) => {
-                    openAIKey.current = event.target.value;
-                    openAIKeyOwner.current = authenticatedUser;
-                    setHasOpenAIKey(Boolean(event.target.value));
-                  }}
-                />
-              </label>
-            }
+            keyInput={credentials.keyInput}
           />
         </div>
       </>

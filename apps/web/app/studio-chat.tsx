@@ -24,7 +24,7 @@ import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
 import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
-import { chatResponseSchema, errorResponseSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
+import { chatResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
 async function contextDigest(state:StudioState) {
@@ -32,6 +32,8 @@ async function contextDigest(state:StudioState) {
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
 }
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
+type CredentialSource='default'|'byok';
+const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;
  if(!value||typeof value!=='object'||Array.isArray(value)||Object.keys(value).sort().join(',')!=='assetId,pieceId,projectId,requestId,userId,version'||value.userId!==userId||value.projectId!==projectId||![value.assetId,value.pieceId,value.requestId,userId,projectId].every(uuid)||!Number.isSafeInteger(value.version)||value.version<1)return null;
@@ -52,16 +54,22 @@ export default function StudioChat({
   tools,
   hasApiKey,
   getApiKey,
+  credentialSource = 'byok',
+  credentialEpoch = 0,
+  canUseAI = hasApiKey,
+  onUseAI,
   onUseImage,
   prepareImageVersion,
   loadReference,
   loadBase,
   initialMessage = "",
+  messageDraft,
+  onMessageDraftChange,
   connection,
   explorationRecovery,
   developerMode = false,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
-  const [message, setMessage] = useState(initialMessage),
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
+  const [message, setMessageState] = useState(messageDraft ?? initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
     [imageAction, setImageAction] = useState<ImageAction|null>(null),
@@ -70,12 +78,16 @@ export default function StudioChat({
     [lastCompleted,setLastCompleted]=useState<string|null>(null),
     [inspecting,setInspecting]=useState(false),
     [inspection,setInspection]=useState<Inspection|null>(null);
+  function setMessage(value:string){setMessageState(value);onMessageDraftChange?.(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
   const [detailsVisible,setDetailsVisible]=useState(true);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
+  const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
+  const attemptSource=useRef<CredentialSource>(credentialSource);
+  const previousScope=useRef<{marker:string;source:CredentialSource;epoch:number}|null>(null);
   const mounted = useRef(true),
     messagesRef = useRef<HTMLDivElement>(null),
     followMessages = useRef(true),
@@ -92,6 +104,12 @@ export default function StudioChat({
     inspectionSequence=useRef(0),
     failedAutomatic=useRef<string|null>(null);
   const marker = `compor-studio-chat:${state.userId}:${state.projectId}`;
+  const scopeMarker=`${marker}:${credentialSource}:${credentialEpoch}`;
+  const currentScope=useRef(scopeMarker);
+  currentScope.current=scopeMarker;
+  const credentialIsCurrent=()=>mounted.current&&activeMarker.current===scopeMarker&&currentScope.current===scopeMarker;
+  const sourceMismatch=Boolean(pending&&pendingSource&&pendingSource!==credentialSource);
+  const authenticationNotice=credentialSource==='default'?'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.':openAIAuthenticationNotice;
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}`;
   const availability=useRef({message,busy,pending,hasApiKey});
   availability.current={message,busy,pending,hasApiKey};
@@ -104,7 +122,8 @@ export default function StudioChat({
       if (!value || typeof value!=='object' || !('fingerprint' in value) || !('requestId' in value) || !('context' in value) || !('status' in value)) return null;
       if (typeof value.fingerprint!=='string'||typeof value.context!=='string'||!uuid(value.requestId)||!['submitted','completed'].includes(String(value.status))) return null;
       const epoch='epoch' in value&&typeof value.epoch==='string'?value.epoch:'initial';
-      return {fingerprint:value.fingerprint,context:value.context,requestId:value.requestId,status:value.status,epoch};
+      if('credentialSource' in value&&value.credentialSource!=='default'&&value.credentialSource!=='byok')return null;
+      return {fingerprint:value.fingerprint,context:value.context,requestId:value.requestId,status:value.status,epoch,credentialSource:'credentialSource' in value&&value.credentialSource==='default'?'default' as const:'byok' as const};
     } catch { return null; }
   }
   function completeReferenceRecord(requestId:string) {
@@ -129,21 +148,31 @@ export default function StudioChat({
   const imageRejectedMarker = `compor-image-not-dispatched:${state.userId}:${state.projectId}`;
   useEffect(() => {
     mounted.current = true;
+    const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
+    previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
-    activeMarker.current=marker;receiptRef.current=null;setImageReceipt(null);
+    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
+    actionCount.current.clear();
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
       setClosedImageAttempt(uuid(submitted)?submitted:null);
       const parsed = chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker) ?? "null"));
       const value = parsed.success ? parsed.data : null;
+      const originalSource=value?.credentialSource??'byok';
+      attemptSource.current=value?.requestId?originalSource:credentialSource;
       legacyPending.current=Boolean(value?.requestId && value.imageProtocolVersion !== 1);
-      if (value && typeof value.requestId === "string")
+      if (value && typeof value.requestId === "string") {
         setPending(value.requestId);
-      previous.current = value?.previousAttemptKey ?? null;
-      setLastCompleted(uuid(value?.previousAttemptKey)?value.previousAttemptKey:null);
+        setPendingSource(originalSource);
+        if(originalSource!==credentialSource)setNotice(sourceNotice(originalSource));
+        else if(changed)setNotice('A fonte da IA mudou. Consulte a tentativa anterior antes de continuar.');
+      } else if(changed)setNotice('A fonte da IA mudou. Seu trabalho foi preservado; novas ações começarão outra conversa com a IA.');
+      previous.current = !changed&&originalSource===credentialSource?value?.previousAttemptKey??null:null;
+      setLastCompleted(uuid(previous.current)?previous.current:null);
       imageContext.current=value?.imageContext??null;
       receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
+      if(changed||originalSource!==credentialSource)remember(value?.requestId??null);
     } catch {}
     return () => {
       mounted.current = false;
@@ -154,12 +183,12 @@ export default function StudioChat({
       clearTimeout(timer.current);
       request.current?.abort();
     };
-  }, [marker]);
+  }, [marker,credentialSource,credentialEpoch]);
   function remember(requestId:string|null) {
     try {
       sessionStorage.setItem(
         marker,
-        JSON.stringify({ requestId, previousAttemptKey: previous.current,imageProtocolVersion:1,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}),...(receiptRef.current?{imageReceipt:receiptRef.current}:{}) }),
+        JSON.stringify({ requestId, previousAttemptKey: previous.current,credentialSource:attemptSource.current,imageProtocolVersion:1,...(requestId&&imageContext.current?{imageContext:imageContext.current}:{}),...(receiptRef.current?{imageReceipt:receiptRef.current}:{}) }),
       );
     } catch {
       throw Error("Não foi possível preservar a tentativa neste navegador.");
@@ -171,7 +200,7 @@ export default function StudioChat({
     if(record?.status!=='submitted')return;
     const operation=state.adjustments.find(item=>item.id===record.requestId);
     if(!operation||['completed','failed'].includes(operation.status)||!state.messages.some(item=>item.id===operation.messageId&&item.role==='system'))return;
-    try { remember(record.requestId);setPending(record.requestId);setNotice('Uma conversa anterior ainda precisa ser consultada.'); } catch { setNotice('Não foi possível recuperar a tentativa neste navegador.'); }
+    try { attemptSource.current=record.credentialSource;remember(record.requestId);setPending(record.requestId);setPendingSource(record.credentialSource);setNotice(record.credentialSource!==credentialSource?sourceNotice(record.credentialSource):'Uma conversa anterior ainda precisa ser consultada.'); } catch { setNotice('Não foi possível recuperar a tentativa neste navegador.'); }
   },[marker,pending,state.adjustments,state.messages]);
   useEffect(()=>{
     try{ensureReferenceRound(state);}catch{}
@@ -183,18 +212,29 @@ export default function StudioChat({
     return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
   },[marker]);
   async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse> {
+    if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
+    if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
+    if(pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
     const key = getApiKey?.();
-    if (!key) throw Error("Informe sua chave OpenAI para continuar.");
+    if (credentialSource==='byok'&&!key) throw Error("Conecte sua chave OpenAI para continuar.");
     const controller = new AbortController();
     request.current = controller;
     const response = await fetch(path, {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ ...body, apiKey: key }),
+      body: JSON.stringify({ ...body, ...(credentialSource==='byok'?{apiKey:key}:{}) }),
       signal: controller.signal,
     });
+    if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     const input:unknown = await response.json();
+    if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     const envelope = errorResponseSchema.parse(input);
+    if(response.status===503&&envelope.error==='default_credential_unavailable'){
+      const fresh=path==='/api/studio/chat'&&(body.op===undefined||body.op==='submit'||body.op==='reference_selection');
+      const proof=defaultCredentialNotSubmittedSchema.safeParse(input);
+      if(credentialSource==='default'&&fresh&&proof.success&&proof.data.requestId===body.requestId)return proof.data;
+      throw Error('A IA do Compor está indisponível. A tentativa anterior continua preservada para consulta.');
+    }
     if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
       return {status:"failed",error:"image_invalid_request"};
     if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
@@ -230,7 +270,7 @@ export default function StudioChat({
     );
   }
   async function handle(data:ChatResponse, requestId:string, count = 0):Promise<void> {
-    if (!mounted.current || activeMarker.current !== marker) return;
+    if (!mounted.current || !credentialIsCurrent()) return;
     const automatic=automaticRequest(requestId);
     if(automatic&&(data.status==='consent_required'||data.status==='action_required')) {
       setBusy(false);setNotice('A resposta precisa ser consultada antes de continuar.');return;
@@ -239,6 +279,7 @@ export default function StudioChat({
       const record=automatic?referenceRecord():null;
       const current=automatic?getState():null;
       const valid=!automatic||Boolean(record&&current&&record.requestId===requestId&&record.fingerprint===referenceFingerprint(current)&&record.epoch===readReferenceRound(current)?.epoch&&record.context===await contextDigest(current));
+      if(!credentialIsCurrent())return;
       setUsage(data.usage ?? null);
       if(valid) settle(requestId, "completed", {
         messageId: crypto.randomUUID(),
@@ -257,6 +298,7 @@ export default function StudioChat({
       setLastCompleted(requestId);
       remember(null);
       setPending(null);
+      setPendingSource(null);
       setBusy(false);
       setNotice("");
       return;
@@ -279,7 +321,7 @@ export default function StudioChat({
         sourceFingerprint = prepared.sourceFingerprint;
         if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
       } catch (error) { artworkInput = null; inputError = errorMessage(error); canPrepareTransport = error instanceof ArtworkTransportRequiredError; }
-      if (!mounted.current || activeMarker.current !== marker || preparationSequence.current !== preparation) return;
+      if (!mounted.current || !credentialIsCurrent() || preparationSequence.current !== preparation) return;
       const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [] };
       setImageAction(action);
       try {
@@ -298,6 +340,7 @@ export default function StudioChat({
       } catch {setBusy(false);setNotice('Não foi possível preservar o estado da geração neste navegador.');return;}
       setImageNeedsReconciliation(false);setImageNeedsDecision(false);
       if (artworkInput) {
+        if(!availability.current.hasApiKey){setBusy(false);setNotice('Comece a criar com IA para continuar esta proposta. Nenhuma imagem foi enviada.');return;}
         if (legacyPending.current) {
           setImageAction(null);
           setBusy(false);
@@ -312,6 +355,7 @@ export default function StudioChat({
       return;
     }
     if (data.status === "action_required") {
+      if(!availability.current.hasApiKey){setBusy(false);setNotice('Comece a criar com IA para continuar esta solicitação. Nenhuma nova ação foi executada.');return;}
       const n = actionCount.current.get(requestId) ?? 0;
       if (n >= 12) {
         setBusy(false);
@@ -326,9 +370,12 @@ export default function StudioChat({
       const result = await tools.current.execute(
         data.action.name,
         data.action.args,
+        {signal:request.current?.signal},
       );
+      if(!credentialIsCurrent())return;
       if(data.action.name==='compor_renomear_projeto')change(resolveProjectTitle);
       await flush();
+      if(!credentialIsCurrent())return;
       if(result.status==="completed"){
         const args = data.action.args;
         if(data.action.name==="compor_novo_post"&&result.pieceId)imageContext.current={pieceId:result.pieceId,baseVersion:0};
@@ -355,10 +402,13 @@ export default function StudioChat({
       settle(requestId, "failed");
       if(data.failurePhase!=='before_submission')previous.current=null;
       setPending(null);
+      setPendingSource(null);
       remember(null);
       setBusy(false);
       setNotice(
-        data.error === "project_busy" &&
+        data.error==='default_credential_unavailable'&&data.failurePhase==='before_submission'&&data.requestId===requestId
+          ? 'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.'
+          : data.error === "project_busy" &&
           data.failurePhase === "before_submission" &&
           data.requestId === requestId
           ? "Este pedido não foi enviado à OpenAI porque outro pedido deste projeto ainda precisa ser consultado. Seu trabalho foi preservado."
@@ -367,7 +417,7 @@ export default function StudioChat({
       return;
     }
     if(data.status==='unknown'&&data.errorCode==='provider_http_401'){
-      setBusy(false);setNotice(openAIAuthenticationNotice);return;
+      setBusy(false);setNotice(authenticationNotice);return;
     }
     setBusy(false);
     setNotice(
@@ -375,7 +425,8 @@ export default function StudioChat({
     );
   }
   async function poll(requestId:string, count = 0) {
-    if (!mounted.current) return;
+    if (!credentialIsCurrent()||!canUseAI) return;
+    if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
     setBusy(true);
     try {
       const data = await api("/api/studio/chat", {
@@ -385,14 +436,14 @@ export default function StudioChat({
       });
       await handle(data, requestId, count);
     } catch (e) {
-      if (mounted.current) {
+      if (credentialIsCurrent()) {
         setBusy(false);
         setNotice(errorMessage(e));
       }
     }
   }
   async function inspectLastCompleted(){
-    if(!mounted.current||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!hasApiKey)return;
+    if(!credentialIsCurrent()||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!canUseAI)return;
     inspectionLock.current=true;setInspecting(true);setInspection(null);
     const serial=++inspectionSequence.current;
     try{
@@ -407,7 +458,7 @@ export default function StudioChat({
   useEffect(()=>{
     if(!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const timeout=setTimeout(()=>{ void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
-      if(!lock||!mounted.current||activeMarker.current!==marker)return;
+      if(!lock||!mounted.current||!credentialIsCurrent())return;
       const available=availability.current;
       if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
       const before=getState();
@@ -423,36 +474,38 @@ export default function StudioChat({
         if(!canStartReferenceRound({record:existing,round,fingerprint:referenceSet,context:digest,failed:failedAutomatic.current===identity}))return;
         const feedback=await loadReadinessFeedback(before.projectId,before.references);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
-        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
-        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        attemptSource.current=credentialSource;
         const next=change(value=>prepareAdjustment(value,{requestId,messageId:crypto.randomUUID(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:new Date().toISOString(),eventId:crypto.randomUUID()}));
         if(!next)throw Error('O projeto ainda está carregando.');
         prepared=true;
         await flush();
-        if(!mounted.current||activeMarker.current!==marker||!availability.current.hasApiKey||availability.current.message.trim()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest) {
+        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest) {
           settle(requestId,'failed');prepared=false;return;
         }
-        localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch}));
-        remember(requestId);setPending(requestId);availability.current.pending=requestId;
+        localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
+        remember(requestId);setPending(requestId);setPendingSource(credentialSource);availability.current.pending=requestId;
         const draft=getCurrentDraft(next);
         const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
         const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:before.messages.filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
         await handle(data,requestId);
       } catch(error) {
-        if(mounted.current){
+        if(credentialIsCurrent()){
           if(!submitted)failedAutomatic.current=identity;
           if(prepared&&!submitted){settle(requestId,'failed');try{completeReferenceRecord(requestId);remember(null);}catch{}setPending(null);}
           setNotice(errorMessage(error));setBusy(false);
         }
-      } finally { if(!submitted&&mounted.current){availability.current.busy=false;setBusy(false);} }
+      } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });},5000);
     return ()=>clearTimeout(timeout);
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!message.trim() || !hasApiKey || busy || pending || inspectionLock.current) return;
+    if (!message.trim() || !canUseAI || busy || pending || inspectionLock.current||!credentialIsCurrent()) return;
+    onUseAI?.();
     setNotice("");
     setBusy(true);
     legacyPending.current=false;
@@ -462,15 +515,18 @@ export default function StudioChat({
     try {
       const before = getState();
       const selected=getCurrentDraft(before), storedBase=await loadBase?.();
+      if(!credentialIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
       const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
+      if(!credentialIsCurrent())return;
       if (getState().revision !== before.revision)
         throw Error(
           "O contexto mudou enquanto as referências eram preparadas. Revise e envie novamente.",
         );
+      attemptSource.current=credentialSource;
       const next = change((value) =>
         prepareAdjustment(value, {
           requestId,
@@ -484,8 +540,10 @@ export default function StudioChat({
       prepared = true;
       imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
+      if(!credentialIsCurrent()){settle(requestId,'failed');return;}
       remember(requestId);
       setPending(requestId);
+      setPendingSource(credentialSource);
       setBusy(true);
       setMessage("");
       const draft = getCurrentDraft(next),
@@ -529,7 +587,7 @@ export default function StudioChat({
       });
       await handle(data, requestId);
     } catch (e) {
-      if (mounted.current) {
+      if (credentialIsCurrent()) {
         if (prepared && !submitted) {
           settle(requestId, "failed");
           remember(null);
@@ -548,13 +606,13 @@ export default function StudioChat({
       const response=await fetch('/api/agent/image/reconcile',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,pieceId:action.context.pieceId,version:action.context.baseVersion,attemptId:action.attemptId,actionBinding:action.actionBinding})});
       const result:unknown=await response.json();
       if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='fenced')throw Error('unverified');
-      if(!mounted.current||activeMarker.current!==marker)return;
+      if(!mounted.current||!credentialIsCurrent())return;
       if(!recordImageNotDispatched(localStorage,imageSubmissionMarker,imageRejectedMarker,action.requestId))throw Error('marker changed');
       setImageNeedsReconciliation(false);setImageNeedsDecision(true);
       setNotice('A imagem não foi enviada. A proposta antiga foi bloqueada; recuse-a antes de pedir outra geração.');
     } catch {
-      if(mounted.current&&activeMarker.current===marker)setNotice('Não foi possível confirmar o envio. A tentativa continua preservada e não será repetida automaticamente.');
-    } finally {if(mounted.current&&activeMarker.current===marker)setBusy(false);}
+      if(mounted.current&&credentialIsCurrent())setNotice('Não foi possível confirmar o envio. A tentativa continua preservada e não será repetida automaticamente.');
+    } finally {if(mounted.current&&credentialIsCurrent())setBusy(false);}
   }
   async function reconcileClosedImage() {
     const requestId=closedImageAttempt;
@@ -564,13 +622,13 @@ export default function StudioChat({
       const response=await fetch('/api/agent/image/reconcile-closed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,requestId})});
       const result:unknown=await response.json();
       if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='confirmed')throw Error('unverified');
-      if(!mounted.current||activeMarker.current!==marker)return;
+      if(!mounted.current||!credentialIsCurrent())return;
       if(localStorage.getItem(imageSubmissionMarker)!==requestId)throw Error('marker changed');
       localStorage.removeItem(imageSubmissionMarker);setClosedImageAttempt(null);
       setNotice('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
     } catch {
-      if(mounted.current&&activeMarker.current===marker)setNotice('Não foi possível confirmar o envio. A tentativa continua preservada.');
-    } finally {if(mounted.current&&activeMarker.current===marker)setBusy(false);}
+      if(mounted.current&&credentialIsCurrent())setNotice('Não foi possível confirmar o envio. A tentativa continua preservada.');
+    } finally {if(mounted.current&&credentialIsCurrent())setBusy(false);}
   }
   async function declineImage() {
     const action = imageAction;
@@ -586,7 +644,7 @@ export default function StudioChat({
       setImageAction(null);
       await handle(next, action.requestId);
     } catch (error) {
-      if (mounted.current) {
+      if (credentialIsCurrent()) {
         setBusy(false);
         setNotice(errorMessage(error));
       }
@@ -600,7 +658,7 @@ export default function StudioChat({
       return;
     }
     const preparation = ++preparationSequence.current;
-    const isCurrentScope = () => mounted.current && activeMarker.current === marker && preparationSequence.current === preparation;
+    const isCurrentScope = () => mounted.current && credentialIsCurrent() && preparationSequence.current === preparation;
     const unchanged = () => {
       const current = getState(), selected = getCurrentDraft(current);
       return isCurrentScope() && current.userId === snapshot.userId && current.projectId === snapshot.projectId && current.revision === snapshot.revision && selected?.pieceId === draft.pieceId && selected?.baseVersion === draft.baseVersion;
@@ -657,7 +715,7 @@ export default function StudioChat({
     const snapshot = getState();
     let imageAvailable=false,imageApplied=false;
     let target = {pieceId: draft.pieceId, version: draft.baseVersion};
-    const isCurrentScope=()=>mounted.current&&activeMarker.current===marker;
+    const isCurrentScope=()=>mounted.current&&credentialIsCurrent();
     try {
       const fingerprint = await artworkSourceFingerprint({proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
       if (!isCurrentScope()) return;
@@ -685,7 +743,7 @@ export default function StudioChat({
       if (action.artworkInput.source && target.version <= action.artworkInput.source.version) throw Error("Salve uma nova versão para preservar a imagem de origem antes de editar.");
       imageContext.current = {pieceId: target.pieceId, baseVersion: target.version};
       remember(action.requestId);
-      if (!getApiKey()) throw Error("Conecte sua chave para continuar.");
+      if (!credentialIsCurrent() || !availability.current.hasApiKey || !canUseAI || (credentialSource==='byok'&&!getApiKey())) throw Error("Ative a IA escolhida para continuar.");
       const savedRevision = getState().revision;
       let data:ChatResponse;
       for (;;) {
@@ -716,7 +774,7 @@ export default function StudioChat({
         setNotice("Aguardando a exploração atual terminar para gerar esta peça…");
         await new Promise(resolve => setTimeout(resolve, 1500));
         if (!isCurrentScope()) return;
-        if (!getApiKey() || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
+        if (!credentialIsCurrent() || !availability.current.hasApiKey || (credentialSource==='byok'&&!getApiKey()) || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
       }
       if (data.assetId) {
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
@@ -837,7 +895,8 @@ export default function StudioChat({
           <span>Compor está trabalhando…</span>
         </div>}
         {explorationRecovery}
-        {notice && (
+        {sourceMismatch && pendingSource && <p role="status" className="studio-hint">{sourceNotice(pendingSource)}</p>}
+        {notice && !sourceMismatch && (
           <p role="status" className="studio-hint">
             {notice}
           </p>
@@ -869,14 +928,13 @@ export default function StudioChat({
               <p>A arte inteira será gerada, incluindo esses textos. Confira grafia, fatos e legibilidade no resultado. A versão anterior permanece no histórico.</p>
             </>}
             <p>
-              A geração será cobrada pela OpenAI. O custo final ainda é
-              desconhecido.
+              {credentialSource==='byok'?'A geração usa sua chave e é cobrada pela OpenAI. O custo final ainda é desconhecido.':'A geração usa a IA do Compor.'}
             </p>
             {imageNeedsReconciliation && <button type="button" disabled={busy} onClick={reconcileImage}>Verificar envio anterior</button>}
-            <button type="button" disabled={busy||!hasApiKey} onClick={()=>poll(imageAction.requestId)}>Consultar a mesma proposta</button>
+            <button type="button" disabled={busy||!canUseAI||sourceMismatch} onClick={()=>poll(imageAction.requestId)}>Consultar a mesma proposta</button>
             <button
               type="button"
-              disabled={busy || !hasApiKey || imageNeedsReconciliation}
+              disabled={busy || !canUseAI || sourceMismatch || imageNeedsReconciliation}
               onClick={declineImage}
             >
               Recusar geração
@@ -887,7 +945,7 @@ export default function StudioChat({
           <button
             type="button"
             className="studio-button-secondary"
-            disabled={!hasApiKey}
+            disabled={!canUseAI||sourceMismatch}
             onClick={() => poll(pending)}
           >
             Consultar esta tentativa
@@ -895,10 +953,10 @@ export default function StudioChat({
         )}
         {closedImageAttempt && !pending && !imageAction && <button type="button" className="studio-button-secondary" disabled={busy} onClick={reconcileClosedImage}>Verificar envio anterior</button>}
         {developerMode&&!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
-          <button type="button" className="studio-button-secondary" disabled={!hasApiKey||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
-          {!hasApiKey&&<p>Conecte sua chave para consultar a solicitação anterior.</p>}
+          <button type="button" className="studio-button-secondary" disabled={!canUseAI||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
+          {!canUseAI&&<p>A IA está indisponível para consultar a solicitação anterior.</p>}
           {inspection&&<div role="status">
-            {inspection.authenticationRejected?<p role="alert">{openAIAuthenticationNotice}</p>:<p>Estado da solicitação anterior: {{completed:'concluída',failed:'terminou com falha',running:'em andamento',action_required:'aguardando ação',consent_required:'aguardando confirmação',unknown:'não confirmado',unavailable:'consulta indisponível'}[inspection.status]}.</p>}
+            {inspection.authenticationRejected?<p role="alert">{authenticationNotice}</p>:<p>Estado da solicitação anterior: {{completed:'concluída',failed:'terminou com falha',running:'em andamento',action_required:'aguardando ação',consent_required:'aguardando confirmação',unknown:'não confirmado',unavailable:'consulta indisponível'}[inspection.status]}.</p>}
             <p>Esta consulta não executa ações nem inicia uma nova solicitação.</p>
             {inspection.usage&&<p>Uso informado: {inspection.usage.input_tokens??'?'} tokens de entrada e {inspection.usage.output_tokens??'?'} de saída. Custo final desconhecido.</p>}
             {inspection.technical&&<details><summary>Diagnóstico técnico</summary><dl>
@@ -927,7 +985,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : "Enviar →"}
-            disabled={!message.trim() || !hasApiKey || busy || inspecting || Boolean(pending)}
+            disabled={!message.trim() || !canUseAI || busy || inspecting || Boolean(pending)}
           >
             <span aria-hidden="true">↑</span>
           </button>

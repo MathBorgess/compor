@@ -87,6 +87,8 @@ O site Astro é uma saída estática independente. A página Next usa renderiza�
 
 ## Backend e dados
 
+A exceção administrativa delimitada é a leitura da padrão: `SUPABASE_SERVER_KEY`, exclusiva do servidor, chama `compor_default_openai_key` para obter somente `COMPOR_CIN_OPENAI`. A função não é executável por `PUBLIC`, `anon` ou `authenticated`. Esse privilégio não é usado para dados da pessoa. A integração depende de `COMPOR_DEFAULT_OPENAI_ENABLED=true`; indisponibilidade do Vault não bloqueia BYOK. Segredos não saem em status, provas, contexto, persistência ou logs.
+
 As rotas Next são adaptadores HTTP. Validação de origem, sessão e propriedade ocorre antes de ler dados, executar ferramentas ou chamar fornecedores. Supabase Auth usa Google/PKCE; Postgres e Storage mantêm RLS junto da autorização por operação. O app usa a identidade da pessoa, sem substituir o token por uma chave administrativa.
 
 Projetos, versões salvas, ativos privados e metadados técnicos de tentativas ficam no Supabase. Briefing, persona, referências e conversa do estúdio permanecem locais no primeiro marco. A OpenAI também pode reter a sessão e o conteúdo enviado para execução. Metadados de tentativa não são uma cópia completa do estado criativo local.
@@ -94,6 +96,8 @@ Projetos, versões salvas, ativos privados e metadados técnicos de tentativas f
 Reservas, vínculos assinados, versão esperada e recibos correlacionam operação, conta, projeto e peça. Resultado desconhecido é diferente de falha confirmada. Recuperação consulta o estado conhecido antes de considerar outra tentativa paga. Nada disso promete execução ou cobrança exatamente uma vez. Ver [ADR 0015](adr/0015-backend-dados-e-autorizacao.md).
 
 ## Agente e geração
+
+A aplicação web prepara duas fontes: BYOK conectada explicitamente e IA do Compor, com padrão do Supabase Vault somente no servidor. Sem própria, ações autorizadas podem usar a padrão; falha da própria nunca troca de fonte. Status global autenticado informa só disponibilidade e não exige projeto. Sua descoberta, abertura/reabertura ou recarga não autorizam a padrão, que exige intenção para o projeto. BYOK explícita mantém a autorização histórica por sessão. Troca após a primeira ativação pausa solicitações. Novas provas vinculam fonte e credencial, impedindo reutilização cruzada e downgrade; provas BYOK históricas mantêm o contrato legado. O [ADR 0038](adr/0038-chave-padrao-openai-no-vault.md) e o [procedimento](compor/chave-padrao-openai-vault.md) distinguem preparação, configuração e uso real.
 
 `packages/agents-api` trata criação/continuação de sessões, leitura de itens, pedidos de ação, autorização e recuperação. A Agents API executa o turno; o backend não usa Agents SDK para replicar esse loop. O estúdio disponibiliza function tools de escopo local, com schemas e recibos. Conforme a decisão de 06/11, a chave conectada autoriza a geração guiada durante a sessão; não há confirmação por imagem. A proteção contra reenvio incerto continua necessária. As instruções tratam um fato da oferta declarado pela pessoa como obrigatório e uma sugestão de gosto como sinal que o agente pondera e pode contestar uma vez. Cinco segundos depois de a seleção de referências estabilizar, um turno automático sem ferramentas responde com um objeto JSON de leitura do gosto, recomendação e uma única pergunta. O servidor valida esse objeto e devolve o Markdown composto; uma resposta fora da forma encerra o turno como falha `invalid_taste_reading`, sem nova tentativa. A prova assinada da sessão registra a origem na seleção, então a consulta do turno não depende do navegador. Ver [ADR 0029](adr/0029-agente-opinativo-e-pergunta-unica.md).
 
@@ -116,6 +120,8 @@ O MCP remoto também oferece geração e leitura de imagens exploratórias. A ch
 `prototypes/compor-mcp` executa stdio com identidade e recursos locais. Phoenix, filesystem e experimentos desse servidor não são capacidades implicitamente disponíveis ao cliente remoto. Ambos usam `packages/agile-deliberation`; as ferramentas de deliberação são puras, não persistem uma aceitação humana nem consultam serviços externos. A [proveniência do código](agile-deliberation.md) identifica o que foi copiado e portado. Ver [ADR 0017](adr/0017-mcp-transportes-e-capacidades.md).
 
 ## Instalação e verificação
+
+A [validação da preparação do Vault em 10/11](quality/default-openai-vault-2026-11-10.md) registra autenticação, separação de credenciais, SQL restrito, estados de interface, 357 testes web e o scan dos módulos privados nos bundles. O segredo informado é `COMPOR_CIN_OPENAI`; configuração remota e ativação continuam etapas distintas.
 
 O [fechamento do feedback do Estúdio em 10/11](quality/feedback-estudio-final-2026-11-10.md) reúne os gates das issues #22–#27 e #33, as capturas aprovadas, o pacote de release e a liberação em produção ainda pendente.
 

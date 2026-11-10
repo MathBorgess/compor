@@ -6,6 +6,7 @@ import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
 import { sessionCookie } from './session-cookie.mjs';
+import { connectOwnOpenAiKey } from './openai-credentials.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('chave permanece só em memória e é limpa ao trocar de conta, desconectar ou sair', { skip: !existsSync(browserPath), timeout: 90000 }, async t => {
@@ -29,6 +30,7 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   await page.route('**/auth/session', route => route.fulfill({ json: identity }));
   await page.route('**/api/**', route => {
     const path = new URL(route.request().url()).pathname;
+    if (path === '/api/ai/credential-status') return route.fulfill({ json: { defaultAvailable: false } });
     if (path === '/api/projects') return route.fulfill({ json: { projects: [{ id: project, title: 'Projeto de teste', revision: 1 }] } });
     if (path === '/api/pieces') return route.fulfill({ json: { versions: [] } });
     if (path === '/api/studio/explorations') return route.fulfill({ json: { images: [] } });
@@ -38,10 +40,10 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   });
   async function openConnection() {
     const previous = page.getByRole('button', { name: 'Projeto de teste Retomar conversa', exact: true });
-    await page.getByRole('button', { name: /^(Conectar IA|IA conectada)$/ }).or(previous).first().waitFor();
+    await page.getByRole('button', { name: /^(Conectar IA|IA do Compor|Minha chave OpenAI|IA conectada)$/ }).or(previous).first().waitFor();
     if (await previous.isVisible()) await previous.click();
     const input = page.getByLabel('Chave OpenAI', { exact: true });
-    if (!await input.isVisible()) await page.getByRole('button', { name: /^(Conectar IA|IA conectada)$/ }).click();
+    if (!await input.isVisible()) await page.getByRole('button', { name: /^(Conectar IA|IA do Compor|Minha chave OpenAI|IA conectada)$/ }).click();
     await input.waitFor();
     return input;
   }
@@ -56,6 +58,8 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   assert.equal(await input.getAttribute('type'), 'password');
   assert.equal(await input.getAttribute('value'), null);
   assert.doesNotMatch(await page.evaluate(() => document.documentElement.outerHTML), /sk-test-fake-not-a-real-credential/);
+  assert.deepEqual(leaked, [], 'digitar a chave não envia credenciais antes da conexão explícita');
+  await page.getByRole('button', { name: 'Usar minha chave', exact: true }).click();
   await page.getByRole('button', { name: 'Continuar', exact: true }).waitFor();
   const captured = await page.evaluate(() => ({ local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage), cookies: document.cookie, url: location.href }));
   assert.doesNotMatch(JSON.stringify(captured), /sk-test-fake-not-a-real-credential/);
@@ -69,7 +73,7 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   await recheck();
   await openConnection();
   assert.equal(await input.inputValue(), '', 'troca de conta limpa a chave');
-  await input.fill(secret);
+  await connectOwnOpenAiKey(page, secret);
   identity = { state: 'signed-out' };
   await recheck();
   await page.getByRole('button', { name: 'Entrar com Google' }).waitFor();
@@ -77,14 +81,14 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   await recheck();
   await openConnection();
   assert.equal(await input.inputValue(), '', 'desconexão limpa a chave');
-  await input.fill(secret);
+  await connectOwnOpenAiKey(page, secret);
   const valueDuringPagehide = await page.evaluate(() => { window.dispatchEvent(new Event('pagehide')); return document.querySelector('input[type="password"]').value; });
   assert.equal(valueDuringPagehide, '', 'saída da página limpa a propriedade de entrada imediatamente');
   assert.equal(await input.inputValue(), '', 'saída da página limpa a chave');
-  await input.fill(secret);
+  await connectOwnOpenAiKey(page, secret);
   await page.getByRole('button', { name: 'Remover chave' }).click();
   assert.equal(await input.inputValue(), '');
-  await input.fill(secret);
+  await connectOwnOpenAiKey(page, secret);
   identity = { state: 'unavailable' };
   await recheck();
   await page.getByText('Login temporariamente indisponível.').waitFor();
@@ -94,7 +98,7 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   assert.equal(await input.inputValue(), '', 'falha de sessão limpa a chave');
   await page.reload(); await openConnection();
   assert.equal(await input.inputValue(), '');
-  await input.fill(secret);
+  await connectOwnOpenAiKey(page, secret);
   await page.goto('about:blank');
   await page.goBack(); await openConnection();
   assert.equal(await input.inputValue(), '', 'retorno à página não recupera a chave');

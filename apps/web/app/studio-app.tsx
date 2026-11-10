@@ -16,6 +16,7 @@ import { recordReferenceSelection } from "../lib/reference-selection";
 import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import { useExplorationLoop } from "./use-exploration-loop";
+import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
 import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
 import { recordReferenceRound } from "../lib/studio-reference-round";
@@ -56,7 +57,7 @@ import type { StudioState, StudioReference, ActionResult, DraftContext } from '.
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialTitleProvisional:boolean};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
@@ -65,6 +66,12 @@ const approvedVersionSchema=z.object({status:z.literal('approved'),version:versi
 export default function StudioApp({
   userId,
   hasApiKey,
+  canUseAI = hasApiKey,
+  credentialSource = "byok",
+  credentialEpoch = 0,
+  defaultAvailable = false,
+  onUseAI,
+  onPauseAI,
   getApiKey,
   keyInput,
   onRemoveKey,
@@ -135,6 +142,7 @@ export default function StudioApp({
       });
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
+      onUseAI?.();
       setProjects((items) => [...items, data.project]);
       setSelected(data.project);
       setOpeningPrompt(projectName.trim());
@@ -165,6 +173,12 @@ export default function StudioApp({
         onCreateNew={requestCreate}
         onBack={() => {setSelected(null);refresh();}}
         hasApiKey={hasApiKey}
+        canUseAI={canUseAI}
+        credentialSource={credentialSource}
+        credentialEpoch={credentialEpoch}
+        defaultAvailable={defaultAvailable}
+        onUseAI={onUseAI}
+        onPauseAI={onPauseAI}
         getApiKey={getApiKey}
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
@@ -214,7 +228,13 @@ function ProjectStudio({
   onProjectRenamed,
   onCreateNew,
   onBack,
-  hasApiKey,
+  hasApiKey: credentialActive,
+  canUseAI = credentialActive,
+  credentialSource = "byok",
+  credentialEpoch = 0,
+  defaultAvailable = false,
+  onUseAI,
+  onPauseAI,
   getApiKey,
   keyInput,
   onRemoveKey,
@@ -228,6 +248,10 @@ function ProjectStudio({
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
+  const [projectIntent, setProjectIntent] = useState(Boolean(initialObjective));
+  const [messageDraft, setMessageDraft] = useState<string|undefined>(undefined);
+  const hasApiKey = credentialActive && (credentialSource !== "default" || projectIntent);
+  const credentialSeen = useRef(credentialEpoch);
   const [editorRequested, setEditorRequested] = useState(false);
   const [referencesRequested,setReferencesRequested] = useState(false);
   const [stageRestored, setStageRestored] = useState(false);
@@ -266,7 +290,21 @@ function ProjectStudio({
   const hasPost = Boolean(editorRequested || base || draft?.baseVersion || draft?.content.headline || draft?.content.price || draft?.content.date || draft?.content.caption || draft?.content.fields?.length);
   const showBrief = referencesRequested || !hasPost;
   const idea = studioProjectIdea(s,initialObjective);
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, getApiKey, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, canUseAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
+  useEffect(() => {
+    if (credentialSeen.current === credentialEpoch) return;
+    credentialSeen.current = credentialEpoch;
+    if (!credentialActive) { setProjectIntent(false); exploration.pause(); }
+  }, [credentialEpoch, credentialActive]);
+  function activateAI() {
+    setProjectIntent(true); onUseAI?.();
+    if (exploration.paused) void exploration.resume();
+  }
+  function continueWithoutAI() {
+    setProjectIntent(false); onPauseAI?.(); exploration.pause(); nextStage("studio");
+  }
+  const sourceLabel = credentialSource === "default" ? "IA do Compor" : "Minha chave OpenAI";
+  const defaultNotice = "A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.";
   async function signOutSafely() {
     exploration.pause();
     try { if (!session.loading) await session.flush(); }
@@ -902,11 +940,24 @@ function ProjectStudio({
       flush={local.flush}
       tools={toolsRef}
       hasApiKey={hasApiKey}
+      canUseAI={canUseAI}
+      credentialSource={credentialSource}
+      credentialEpoch={credentialEpoch}
+      onUseAI={activateAI}
       getApiKey={getApiKey}
       onUseImage={useBase}
       prepareImageVersion={saveCurrent}
       initialMessage={s.messages.length === 0 ? idea : ""}
-      connection={<><details className="studio-inline-key" open={!hasApiKey}><summary>{hasApiKey ? "IA conectada" : "Conectar minha IA"}</summary>{keyInput}<p className="studio-hint">A chave fica na memória desta aba. A conversa e as explorações usam sua API e geram consumo.</p>{hasApiKey && <button type="button" onClick={onRemoveKey}>Remover chave</button>}</details><details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details></>}
+      messageDraft={messageDraft}
+      onMessageDraftChange={setMessageDraft}
+      connection={<>
+        <div className="studio-credential-line">
+          <span role="status">{canUseAI ? sourceLabel : "IA indisponível"}</span>
+          {credentialSource === "default" && canUseAI && !hasApiKey && <button type="button" aria-label="Começar a criar com IA" onClick={activateAI}>Começar</button>}
+          <button type="button" onClick={() => nextStage("connect")}>{credentialSource === "byok" ? "Gerenciar IA" : "Usar minha chave"}</button>
+        </div>
+        <details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details>
+      </>}
       explorationRecovery={exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>}
       loadBase={async () => {
         const d = getCurrentDraft(local.get());
@@ -959,7 +1010,7 @@ function ProjectStudio({
             className="studio-button-secondary"
             onClick={() => nextStage("connect")}
           >
-            {hasApiKey ? "IA conectada" : "Conectar IA"}
+            {canUseAI ? sourceLabel : "Conectar IA"}
           </button>
           <button
             className="studio-button"
@@ -1162,24 +1213,19 @@ function ProjectStudio({
         <StudioPanel
           eyebrow="SUA IA, SUA ESCOLHA"
           title="Conectar sua IA"
-          description="Use sua chave OpenAI para criar com o Compor. O consumo é cobrado pela OpenAI."
+          description={credentialSource === "default" ? defaultAvailable ? "A IA do Compor está disponível para ajudar a criar." : defaultNotice : "Você está usando sua chave OpenAI."}
         >
           {keyInput}
-          <p className="studio-hint">
-            Sua chave fica somente na memória desta aba. Ao recarregar, você
-            pode precisar informá-la novamente.
-          </p>
+          {canUseAI && !hasApiKey && <button type="button" className="studio-button" onClick={() => {activateAI();nextStage("studio");}}>Começar a criar com IA</button>}
           <button
             className="studio-button"
-            disabled={!hasApiKey}
+            disabled={!canUseAI}
             onClick={() => nextStage("studio")}
           >
             Continuar
           </button>
-          <button onClick={onRemoveKey} disabled={!hasApiKey}>
-            Remover chave
-          </button>
-          <button onClick={() => nextStage("studio")}>
+          {credentialSource === "byok" && <button onClick={onRemoveKey}>{defaultAvailable ? "Usar IA do Compor" : "Remover chave"}</button>}
+          <button onClick={continueWithoutAI}>
             Continuar sem IA por enquanto
           </button>
         </StudioPanel>

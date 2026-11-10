@@ -1,20 +1,20 @@
 import {createStudioChatHandlers} from '@compor/agents-api/studio-chat';
 import {createStudioStore} from '@compor/agents-api/studio-chat-store';
-import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
 import {recordStudioEvent} from '@compor/agents-api/studio-telemetry';
 import {createSupabaseAttemptStore} from '@compor/agents-api/attempt-store';
-import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createUsageStore} from '@compor/agents-api/usage-store';
 import {authClient,authConfig} from './supabase';
 import {agentSigningKey} from './agent-config.ts';
+import {createCredentialSessionBindings,createCredentialStudioBindings} from './openai-credential-bindings.ts';
+import type {PreparedOpenAiRequest} from './openai-credential.ts';
 import {resolveSupabaseActor,ownsSupabaseProject,ownsSupabaseVersion} from './agent-auth.ts';
 
-export function configuredStudioChat(env=process.env){
- const config=authConfig(),secret=agentSigningKey();
+export function configuredStudioChat(env=process.env,credential?:Pick<PreparedOpenAiRequest,'source'|'actor'|'apiKey'>){
+ const config=authConfig(),secret=agentSigningKey(env);
  if(env.COMPOR_STUDIO_CHAT_ENABLED!=='true'||!config||!secret)return null;
  const credentials={url:config.service,anonKey:config.key};
  return createStudioChatHandlers({appOrigin:config.app,onEvent:recordStudioEvent,
-  resolveActor:async()=>resolveSupabaseActor(await authClient(config)),
+  resolveActor:async()=>credential?.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:args=>ownsSupabaseProject({...args,config}),ownsVersion:args=>ownsSupabaseVersion({...args,config}),
   verifyDurableResult:async({actor,projectId,name,args,result})=>{
    const endpoint=new URL(name==='compor_renomear_projeto'?'/rest/v1/projects':'/rest/v1/piece_version_metadata',config.service);
@@ -31,6 +31,6 @@ export function configuredStudioChat(env=process.env){
    return name==='compor_renomear_projeto'?rows[0].id===projectId&&rows[0].owner_id===actor.userId&&rows[0].title===args.title:rows[0].project_id===projectId&&rows[0].piece_id===args.pieceId&&rows[0].version===result.version&&rows[0].base_version===(args.baseVersion===0?null:args.baseVersion);
   },
   store:createStudioStore(credentials),attempts:createSupabaseAttemptStore(credentials),usage:createUsageStore(credentials),
-  bindings:createSessionBindings({secret}),studioBindings:createStudioBindings({secret}),
+  bindings:createCredentialSessionBindings({secret,source:credential?.source??'byok',apiKey:credential?.apiKey}),studioBindings:createCredentialStudioBindings({secret,source:credential?.source??'byok',apiKey:credential?.apiKey}),
  });
 }
