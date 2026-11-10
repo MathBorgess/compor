@@ -30,7 +30,7 @@ const server = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'star
   cwd: app,
   env: {
     PATH: process.env.PATH,
-    NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1', COMPOR_STUDIO_WEB_ENABLED: 'true',
+    NODE_ENV: 'production', NEXT_TELEMETRY_DISABLED: '1',
     APP_ORIGIN: origin, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_quality_fixture',
   },
   stdio: ['ignore', 'pipe', 'pipe'],

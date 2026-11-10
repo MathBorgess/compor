@@ -38,4 +38,6 @@ Lint, tipos, ESLint dos testes alterados e 20/20 testes dos gates passaram. Depo
 
 O cleanup foi conferido: nenhum processo permaneceu com `cwd` nas árvores privadas e nenhum diretório dessa execução restou. O checkout original não teve alteração em `app`, `lib`, pacotes, `next.config.mjs`, `tsconfig.json` ou `next-env.d.ts`.
 
-As duas execuções completas têm fontes de teste diferentes e não formam uma comparação causal de velocidade; nenhum percentual de ganho é atribuído a elas. O controle de fronteira, a sincronização de dispatch e a aprovação integral são evidências separadas. Nenhuma medição de produto/Lighthouse foi repetida por essa mudança de infraestrutura. O CI do runner novo ainda não foi executado.
+As duas execuções completas têm fontes de teste diferentes e não formam uma comparação causal de velocidade; nenhum percentual de ganho é atribuído a elas. O controle de fronteira, a sincronização de dispatch e a aprovação integral são evidências separadas. Nenhuma medição de produto/Lighthouse foi repetida localmente por essa mudança de infraestrutura.
+
+Depois desse registro local, o CI 53 (`42756121351`, head `d563210`) aprovou todos os jobs e 303/303 testes web, sem skips, em 399,20 s; a janela dos logs do job foi de 430,27 s. O merge só resolveu documentação de evidências frente ao candidato `146f8ee`; fontes de produto e executor permaneceram iguais. Os CIs 54 e 55 também aprovaram o executor com as features cumulativas. Os números e a comparação de árvores estão no [fechamento](feedback-estudio-final-2026-11-10.md).
