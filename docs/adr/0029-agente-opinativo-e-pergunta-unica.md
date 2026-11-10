@@ -18,7 +18,7 @@ Uma sugestão de gosto é um sinal, seja fala ou seleção, sobre estilo, compos
 
 **Uma pergunta por turno.** Cada resposta do agente termina com no máximo uma pergunta. O turno iniciado pela seleção de referências responde com três partes, uma leitura do gosto, uma recomendação e uma pergunta. O modelo responde só com um objeto JSON com os campos `leitura`, `recomendacao` e `pergunta`. O servidor valida esse objeto, exige uma única pergunta no fim de `pergunta` e nenhuma nas outras partes, e compõe o texto da conversa. Uma resposta fora dessa forma encerra o turno como falha, sem nova tentativa automática. A prova assinada da sessão registra que ela foi aberta pela seleção, e a consulta do turno usa essa prova em vez de uma declaração do navegador. Na implementação de 09/11/2026, essa resposta estruturada substituiu a ferramenta com um único campo de pergunta prevista inicialmente. O turno de seleção não tem ferramentas, e uma ferramenta acrescentaria outra ida e volta pelo ciclo de ações para uma resposta sem efeito no projeto.
 
-**A exploração espera a resposta.** Depois da pergunta desse turno, nenhum lote novo de exploração começa até a pessoa responder, selecionar ou comentar uma imagem, ou pedir mais imagens.
+**A exploração espera a resposta.** Depois da pergunta desse turno, nenhum lote novo de exploração começa até a pessoa responder, selecionar ou comentar uma imagem, ou pedir mais imagens. A correção de revisão em 09/11 preserva essa espera durante novos turnos automáticos, inclusive falhos, e mantém a retomada explícita por pergunta no navegador após uma recarga. Editar o briefing ou remover uma referência não responde à pergunta.
 
 ## O que muda e o que continua
 

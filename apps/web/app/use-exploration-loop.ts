@@ -41,13 +41,21 @@ export function useExplorationLoop(props: LoopProps) {
   const stopCurrent = useRef<(() => void) | null>(null);
   const resumeRequested = useRef(false);
   const resumeInFlight = useRef(false);
-  const [resumedQuestion, setResumedQuestion] = useState<string|null>(null);
+  const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
+  const [resumedQuestion, setResumedQuestion] = useState<{key:string;id:string}|null>(null);
   const question = props.state ? pendingSelectionQuestion(props.state) : null;
-  const awaitingAnswer = question !== null && question !== resumedQuestion;
+  const awaitingAnswer = question !== null && (resumedQuestion?.key !== questionKey || resumedQuestion.id !== question);
   const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;
   waitsForAnswer.current = awaitingAnswer;
   const ready = Boolean(props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+
+  useEffect(() => {
+    try {
+      const id=localStorage.getItem(questionKey);
+      setResumedQuestion(id ? {key:questionKey,id} : null);
+    } catch { setResumedQuestion(null); }
+  },[questionKey]);
 
   useEffect(() => {
     const key=`compor-exploration-batch:${props.userId}:${props.projectId}`;
@@ -243,7 +251,9 @@ export function useExplorationLoop(props: LoopProps) {
         return;
       } finally { resumeInFlight.current=false;setResuming(false); }
     }
-    resumeRequested.current=true;setResumedQuestion(question);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
+    try { if(question)localStorage.setItem(questionKey,question); }
+    catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
+    resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
   const running = props.enabled && !awaitingAnswer;
   return { status: awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };

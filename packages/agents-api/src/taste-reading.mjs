@@ -1,6 +1,7 @@
 const FIELD_LIMIT=1200;
-// A '?' counts as a question only before whitespace, the end or a closing quote/bracket, so a URL query does not.
-const questions=text=>text.match(/\?(?=$|[\s"'”’»)\]}])/g)?.length??0;
+// Exempt the query separator in HTTP(S) links with query parameters, then count
+// every remaining question mark, including punctuation and Markdown boundaries.
+const questions=text=>text.replace(/\bhttps?:\/\/[^\s<>"'`()\]{}*]+/gi,link=>link.replace(/\?(?=[\p{L}\p{N}_~%+.-])/u,'')).match(/\?/g)?.length??0;
 
 /** The selection-turn reply: a taste reading, a recommendation and one question, or null when the reply breaks that contract. */
 export function parseTasteReading(text){
