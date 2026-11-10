@@ -131,9 +131,11 @@ test('conexão e envio ficam acessíveis no celular', {skip: !existsSync(browser
   const {page, origin, errors} = await app(t);
   await page.setViewportSize({width: 390, height: 844});
   await openProject(page, origin);
+  await page.getByRole('button', {name:'Usar minha chave',exact:true}).click();
   const input = page.getByLabel('Chave OpenAI', {exact: true});
   assert.equal(await input.isVisible(), true);
   await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await page.getByRole('button', {name:'Continuar',exact:true}).click();
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Uma ideia para criar.');
   const send = page.getByRole('button', {name: 'Enviar →', exact: true});
   await send.scrollIntoViewIfNeeded();

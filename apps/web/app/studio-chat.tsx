@@ -658,7 +658,7 @@ export default function StudioChat({
       return;
     }
     const preparation = ++preparationSequence.current;
-    const isCurrentScope = () => mounted.current && activeMarker.current === marker && preparationSequence.current === preparation;
+    const isCurrentScope = () => mounted.current && credentialIsCurrent() && preparationSequence.current === preparation;
     const unchanged = () => {
       const current = getState(), selected = getCurrentDraft(current);
       return isCurrentScope() && current.userId === snapshot.userId && current.projectId === snapshot.projectId && current.revision === snapshot.revision && selected?.pieceId === draft.pieceId && selected?.baseVersion === draft.baseVersion;

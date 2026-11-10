@@ -164,7 +164,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await conversation.evaluate(element=>Promise.all(element.getAnimations().map(animation=>animation.finished)));
  const chatBounds=await conversation.boundingBox(),composerBounds=await page.locator('form.studio-chat-composer').boundingBox();
  assert.ok(Math.abs(chatBounds.y+chatBounds.height-composerBounds.y-composerBounds.height)<=2,'the composer stays at the conversation bottom');
- const connectionButton=page.getByRole('button',{name:'IA conectada',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');
+ const connectionButton=page.getByRole('button',{name:'Minha chave OpenAI',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');
  assert.equal(await page.locator('.studio-chat-header img').evaluate(element=>element.complete&&element.naturalWidth>0),true,'the Compor avatar asset is visible');
  await page.screenshot({path:'/tmp/compor-studio-visual-desktop.png',fullPage:true});
  await page.setViewportSize({width:390,height:844});
