@@ -26,3 +26,13 @@ Esta correção esclarece a aplicação do contrato do ADR 0038; não altera a p
 Os testes cobrem ACK de ação local, recusa de imagem, efeito local desconhecido, preservação dos IDs e digests estáveis, compatibilidade histórica e rejeição de alterações de argumento, credencial e fonte. A aprovação de imagem continua fora do endpoint genérico de ação.
 
 A validação focada e seus limites estão no [relatório de correção](../quality/studio-action-digest-2026-11-10.md). Não foram feitos merge, deploy, alterações no Vault ou chamadas pagas.
+
+## Adendo de 10/11/2026: digest do recibo da ação
+
+A revisão posterior do PR 48 encontrou uma exceção à frase “Digests de conteúdo, IDs locais, reservas e digests de resultado continuam no domínio estável”. A reivindicação do recibo (`claim_studio_action`) ainda gravava `actionDigest` com o `argsDigest` da prova, no domínio dela. O `resultDigest` já usava o domínio estável.
+
+Uma prova BYOK histórica e uma prova vinculada nova para a mesma chamada produziam digests diferentes para argumentos iguais. A repetição do ACK virava `409 conflict`, em vez de `existing` sem reenvio. A partir desta revisão, o handler grava `studioBindings.digest(args)`, que é estável por fonte e não muda quando a chave é trocada.
+
+Não há migração de dados. Para BYOK, o domínio estável é a chave histórica, então os recibos legados continuam iguais. Na `main` (`aa3e108`), as provas vinculadas eram recusadas antes da reivindicação, então não deveria haver recibo gravado nesse domínio. Nenhum deploy do head anterior do PR foi registrado. Se algum ambiente o executou, uma repetição desses recibos retorna `conflict` e continua sem reenvio.
+
+O teste `the action claim compares stable argument digests…` reproduz o 409 sem a mudança e passa com ela.

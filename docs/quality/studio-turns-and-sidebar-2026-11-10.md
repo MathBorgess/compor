@@ -50,3 +50,9 @@ As duas falhas levaram aos ajustes seguintes, sem reduzir asserções, aumentar 
 O próximo resultado deve ser conferido no SHA exato da branch; os ajustes não convertem a execução anterior em aprovação.
 
 O [Quality 64](https://github.com/MathBorgess/compor/actions/runs/42843243410), head `af87ec825aa143155a3548f5eea5a4b9676cac00`, aprovou as duas asserções antes reprovadas e terminou com 373/374 testes web aprovados. O caso adicional de foco em “Salvar versão” falhou e motivou duas guardas: o teste espera o controle visível e comprova foco antes de reduzir a largura; o shell captura o alvo no callback do breakpoint antes da atualização React, protegendo também contra um observador que force estilos antes do efeito de foco. A captura vale somente para o mesmo shell, projeto e destino de breakpoint, é consumida uma vez e só serve de fallback quando o foco atual voltou ao `body`; um foco posterior em outro controle é respeitado. O teste adicional permanece. Estáticos, contratos/isolamento e performance passaram novamente; o gate continua pendente da revalidação desse ajuste.
+
+## Quality 65
+
+O [Quality 65](https://github.com/MathBorgess/compor/actions/runs/42845658780), no head `2347547ad02dd987a93241fc68dc56d1d4d1da2d`, teve duas tentativas. A primeira foi cancelada às 15:55 UTC: o job web excedeu 20 minutos após uma falha no teste isolado de PersonaStep, sem resumo final. Com esse log incompleto, nenhuma causa foi atribuída. A segunda tentativa, no mesmo SHA e sem mudança de código, aprovou Static checks, Contracts and data isolation, Web types and behavior, Production performance e **Quality gate**. Foram 374/374 testes web, zero skips e job web de 15:57 a 16:05 UTC. As capturas sintéticas da sidebar foram inspecionadas.
+
+A revisão seguinte do PR 48, com o digest estável do recibo, as respostas rápidas e a seleção visível, está registrada em [studio-quick-replies-2026-11-10.md](studio-quick-replies-2026-11-10.md).

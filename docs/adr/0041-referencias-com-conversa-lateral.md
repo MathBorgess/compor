@@ -21,3 +21,25 @@ Não altera turnos, geração, pagamentos, consentimento, recuperação, armazen
 O teste `studio-reference-workspace-browser.test.mjs` cobre geometria de colunas, rolagens independentes, seleção, rascunho, alternância repetida, retorno ao editor, Escape, foco em mudanças de largura, contexto real expandido e redução independente do viewport visual. Ele não substitui testes em teclados e leitores de tela reais.
 
 Nesta implementação local, lint, tipos, build e 56 contratos focados passaram. A execução de navegador ficou bloqueada antes de abrir a página: Chromium aborta ao criar seu socket interno (`EPERM`), inclusive na execução aprovada fora do sandbox. Portanto, geometria, screenshots e qualidade visual ainda não foram confirmadas. Não há evidência de CI, merge ou deploy.
+
+### Revalidação posterior (10/11/2026)
+
+O parágrafo anterior descreve a primeira implementação local. O [Quality 65](https://github.com/MathBorgess/compor/actions/runs/42845658780), no head `2347547ad02dd987a93241fc68dc56d1d4d1da2d`, foi cancelado na tentativa 1. O job web excedeu 20 minutos após uma falha no teste isolado de PersonaStep, sem resumo final, e nenhuma causa foi atribuída. A tentativa 2, no mesmo SHA e sem mudança de código, aprovou o Quality gate com 374/374 testes web e zero skips. As capturas sintéticas da sidebar foram inspecionadas.
+
+Na revisão seguinte do PR 48, o Chromium abriu normalmente num macOS local, e a suíte de navegador foi executada fora do CI. O resultado está no [relatório da revisão](../quality/studio-quick-replies-2026-11-10.md). Esta decisão de layout não mudou. A bandeja de seleção e as respostas rápidas estão no [ADR 0042](0042-leitura-estruturada-e-respostas-rapidas.md). Teclados virtuais e leitores de tela reais continuam sem validação.
+
+### Correção de foco na mudança rápida de largura (10/11/2026)
+
+A suíte local revelou uma falha intermitente no foco ao reduzir a largura. Com o foco em “Salvar versão” ou no campo Oferta, o foco podia terminar no `body` em vez de em “Abrir conversa”. Foram dois mecanismos:
+
+- Duas mudanças de breakpoint caíam no mesmo lote do React. O estado final não mudava, e o efeito de foco não rodava.
+- O CSS da nova largura escondia o controle antes do listener da media query, que então só via o `body`.
+
+O shell agora conta cada mudança de breakpoint e lembra o último foco dentro dele. Esse foco só é usado quando o foco atual está no `body`, e só move o foco a partir das áreas que a vista compacta de conversa oculta. A regra de respeitar um foco novo continua.
+
+Correções no teste:
+
+- esperar o foco de abertura da conversa antes de redimensionar;
+- esperar o layout compacto antes de conferir a ocultação.
+
+Nenhuma asserção foi removida, e os timeouts ficaram iguais. Com o teste sincronizado, o shell anterior falhou em 27 de 30 rodadas locais. Sem o fallback do último foco, falhou em 16 de 20. Com as duas partes, passou em 30 de 30. Isso não substitui o teste com teclados e leitores de tela reais.
