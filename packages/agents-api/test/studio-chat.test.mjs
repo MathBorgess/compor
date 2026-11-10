@@ -330,7 +330,7 @@ test('resposta da seleção vira leitura, recomendação e uma única pergunta',
 test('resposta da seleção fora do formato encerra o turno como falha sem nova tentativa',async()=>{
  for(const answer of [JSON.stringify({...reading,pergunta:'Prefere a serifada? Ou a geométrica?'}),JSON.stringify({...reading,leitura:'Você gosta de tipografia editorial?'}),JSON.stringify({...reading,pergunta:'Posso seguir? Responda em seguida.'}),JSON.stringify({leitura:reading.leitura,pergunta:reading.pergunta}),JSON.stringify({...reading,recomendacao:'  '}),JSON.stringify({...reading,leitura:'a'.repeat(1201)}),'As referências são editoriais. Posso seguir pela serifada?']){
   const {f,first,again}=await selectionReply(answer);
-  assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},answer);assert.deepEqual(again,first);
+  assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},answer);assert.deepEqual(again,{status:'failed',retryAutomatically:false});
   assert.equal(f.records.get(requestId).state,'failed');
   assert.equal(f.calls.filter(call=>call.method==='POST').length,1,'nenhum novo envio ao provedor');
  }
@@ -381,4 +381,28 @@ test('contexto diz ao agente se o título do projeto ainda é provisório e quan
  assert.equal(JSON.parse(create.body.input[0].content[0].text).context.projectTitleProvisional,true);
  assert.match(create.body.agent.instructions,/Depois da sua primeira resposta, enquanto projectTitleProvisional for verdadeiro, proponha uma vez com compor_renomear_projeto um título de até 48 caracteres, curto e próximo do nome de uma campanha/);
  assert.match(create.body.agent.instructions,/Quando projectTitleProvisional for falso, nunca renomeie o projeto por iniciativa própria\. Renomeie sempre que a pessoa pedir/);
+});
+
+test('título inválido encerra a tentativa sem ação, libera o projeto e não volta a running no poll',async()=>{
+ for(const title of ['a'.repeat(49),'   ']){
+  const f=fixture();await f.chat(request(body));
+  f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_renomear_projeto',turn_id:'turn_one',call_id:'call_title',arguments:JSON.stringify({projectId,requestId,revision:1,title})}]});
+  const invalid=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+  assert.deepEqual(invalid,{status:'failed',error:'invalid_studio_action',retryAutomatically:false});
+  assert.equal(f.records.get(requestId).state,'failed');
+  const calls=f.calls.length;
+  assert.deepEqual(await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json(),{status:'failed',retryAutomatically:false});
+  assert.equal(f.calls.length,calls,'consultar a falha não retoma a sessão inválida');
+  assert.equal(f.calls.some(call=>call.url?.endsWith('/events')),false,'nenhuma alteração ou continuação foi enviada');
+  f.set({status:'in_progress',turnState:'in_progress',actions:[]});
+  const next=await(await f.chat(request({...body,requestId:request2}))).json();
+  assert.equal(next.status,'running','um novo pedido explícito consegue reservar o projeto');
+  assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,2);
+ }
+});
+test('um título com exatamente 48 caracteres continua sendo uma proposta assinada',async()=>{
+ const f=fixture();await f.chat(request(body));const title='a'.repeat(48);
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_renomear_projeto',turn_id:'turn_one',call_id:'call_title',arguments:{projectId,requestId,revision:1,title}}]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(pending.status,'action_required');assert.equal(pending.action.args.title,title);assert.ok(pending.actionBinding);
 });

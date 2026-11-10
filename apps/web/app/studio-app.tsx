@@ -36,6 +36,7 @@ import {
   approveDraft,
   recordSavedVersion,
   recordActionReceipt,
+  resolveProjectTitle,
 } from "../lib/studio-state.ts";
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat from "./studio-chat";
@@ -49,7 +50,7 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal})=>Promise<ActionResult>};
 type StudioAppProps={userId:string;hasApiKey:boolean;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
-type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void};
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialTitleProvisional:boolean};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
@@ -162,6 +163,7 @@ export default function StudioApp({
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
         initialObjective={openingPrompt || initialObjective}
+        initialTitleProvisional={Boolean(openingPrompt)}
       />
     );
   return (
@@ -211,13 +213,14 @@ function ProjectStudio({
   keyInput,
   onRemoveKey,
   initialObjective,
+  initialTitleProvisional,
   isAuthenticated,
   developerMode = false,
   accountLabel = "",
   localAccount = false,
   onSignOut,
 }: ProjectStudioProps) {
-  const session = useStudioState({ userId, projectId: project.id }), s=session.state;
+  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [editorRequested, setEditorRequested] = useState(false);
   const [stageRestored, setStageRestored] = useState(false);
@@ -660,6 +663,10 @@ function ProjectStudio({
       }
       if (parsed.data.project.id !== project.id) return { status: "unknown" };
       if (active.current) {
+        local.change(resolveProjectTitle);
+        await local.flush();
+      }
+      if (active.current) {
         setProjectDetails(parsed.data.project);
         onProjectRenamed(parsed.data.project);
       }
@@ -897,7 +904,7 @@ function ProjectStudio({
   const chat = (
     <StudioChat
       state={s}
-      projectTitle={projectDetails.title}
+      projectRevision={projectDetails.revision}
       developerMode={developerMode}
       getState={local.get}
       change={local.change}

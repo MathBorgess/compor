@@ -42,7 +42,7 @@ export function parseStudioState(input: unknown): StudioState {
   const shape = studioStateSchema.safeParse(input);
   if (!shape.success) fail();
   const value = shape.data;
-  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events'],['actionReceipts','direction']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
+  if (!keys(value, ['schemaVersion','userId','projectId','revision','brief','persona','selection','drafts','messages','marks','references','adjustments','events'],['actionReceipts','direction','projectTitleProvisional']) || value.schemaVersion !== STUDIO_SCHEMA_VERSION || !uuid(value.userId) || !uuid(value.projectId) || !integer(value.revision)) fail();
   if (!keys(value.brief, ['offer','audience','action','direction']) || !Object.values(value.brief).every(item => text(item, 4000))) fail();
   const persona = value.persona;
   if (!keys(persona, ['audience','situation','need','culturalReferences','claims']) || !(['audience','situation','need'] as const).every(key => text(persona[key], 2000)) || !text(persona.culturalReferences, 4000) || !Array.isArray(persona.claims) || persona.claims.length > 100 || !unique(persona.claims) || !persona.claims.every(item => keys(item, ['id','text','provenance','source']) && uuid(item.id) && text(item.text, 2000) && text(item.source, 2000) && ['hypothesis','creator_report','buyer_report','public_source','unknown'].includes(item.provenance))) fail();
@@ -76,7 +76,9 @@ function change(state: StudioState, action: (state: StudioState)=>void) { const 
 function current(state: StudioState) { const draft = state.drafts.find(item => state.selection && sameDraft(item, state.selection)); if (!draft) throw new StudioStateError('studio_no_selection'); return draft; }
 function event(state: StudioState, type: StudioEvent["type"], requestId: string|null, id: string) { if (!uuid(id)) fail(); if (state.events.length >= STUDIO_LIMITS.events) throw new StudioStateError('studio_state_limit'); state.events.push({id,type,requestId,sequence:state.events.length + 1}); }
 
-export function createStudioState({userId,projectId}: {userId:string;projectId:string}) { return parseStudioState({schemaVersion:1,userId,projectId,revision:0,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
+export function createStudioState({userId,projectId,projectTitleProvisional=false}: {userId:string;projectId:string;projectTitleProvisional?:boolean}) { return parseStudioState({schemaVersion:1,userId,projectId,revision:0,projectTitleProvisional,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
+/** A proposed or manually chosen name never becomes provisional again. */
+export function resolveProjectTitle(state: StudioState) { return state.projectTitleProvisional ? change(state,next=>{next.projectTitleProvisional=false;}) : state; }
 export const getCurrentDraft = (state: StudioState) => { parseStudioState(state); return state.selection ? freeze(clone(current(state))) : null; };
 export function selectDraft(state: StudioState, {pieceId,baseVersion}: Pick<StudioDraft,"pieceId"|"baseVersion">) { return change(state,next=>{if(!uuid(pieceId)||!integer(baseVersion)||!next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion))throw new StudioStateError('studio_draft_unavailable');next.selection={pieceId,baseVersion};}); }
 /** Compose with a domain reducer and save once to commit the effect and receipt together. */

@@ -56,7 +56,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0}={}){
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
- await page.goto(origin);
+ await page.goto(origin,{timeout:60000});
  const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
  return {page,idea,posts,chats,actions,renames,flow,errors,external,projects};
 }
@@ -149,6 +149,45 @@ test('o agente propõe um título curto e a pessoa vê o nome antes de confirmar
  flow.chat=()=>({status:'completed',text:'Seguimos.'});
  await message.fill('Agora a legenda');await message.press('Enter');await page.getByText('Seguimos.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
+});
+
+test('editar a primeira mensagem preserva a proposta e recusá-la persiste depois de recarregar',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,renames,actions,projects,flow,errors}=await studio(t);
+ await idea.fill(longIdea);await idea.press('Enter');
+ let message=await connectKey(page);await message.fill('Reescrevi a ideia: uma oficina para iniciantes.');await message.press('Enter');
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.equal(chats[0].context.projectTitleProvisional,true,'editar a ideia não transforma o título inicial em escolha manual');
+ flow.chat=body=>({status:'action_required',action:{name:'compor_renomear_projeto',args:{projectId:projects[0].id,requestId:id(92),revision:body.context.revision,title:'Cerâmica aos sábados'}},actionBinding:'declined-rename-binding'});
+ flow.action=()=>({status:'completed',text:'Nome mantido.'});
+ await message.fill('Vamos continuar');await message.press('Enter');
+ await page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true}).getByRole('button',{name:'Cancelar',exact:true}).click();
+ await page.getByText('Nome mantido.',{exact:true}).waitFor();
+ assert.deepEqual(actions.map(action=>action.result.status),['declined']);assert.equal(renames.length,0);
+ flow.chat=()=>({status:'completed',text:'Continuamos sem sugerir outro nome.'});
+ await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
+ message=await connectKey(page);await message.fill('Agora a legenda');await message.press('Enter');
+ await page.getByText('Continuamos sem sugerir outro nome.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
+});
+
+test('confirmar no menu o mesmo texto provisório torna o nome uma escolha da pessoa',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,projects,errors}=await studio(t);
+ await idea.fill(longIdea);await idea.press('Enter');const message=await connectKey(page);
+ await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill(projects[0].title);
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).waitFor({state:'hidden'});
+ await message.fill('Seguimos com este nome');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false]);assert.deepEqual(errors,[]);
+});
+
+test('uma revisão remota de nome impede outra proposta mesmo com texto igual',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,projects,errors}=await studio(t);
+ await idea.fill(longIdea);await idea.press('Enter');let message=await connectKey(page);
+ await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ projects[0]={...projects[0],revision:2};
+ await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
+ message=await connectKey(page);await message.fill('Continue a campanha');await message.press('Enter');
+ await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,false]);assert.deepEqual(errors,[]);
 });
 
 test('barra, cards e menu cortam o título com reticências e mantêm o nome completo acessível',{skip,timeout:90000},async t=>{

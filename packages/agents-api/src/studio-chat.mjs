@@ -51,7 +51,7 @@ const instructions=`Você ajuda a criar e revisar peças no Compor. Converse em 
 ${PERSONA_SKILL_INSTRUCTIONS}
 ${CREATIVE_DIRECTION_INSTRUCTIONS}
 Quando a pessoa comentar uma imagem gerada e indicar seu número, use compor_comentar_imagem_gerada com o número explícito e um trecho literal da opinião. Se o número, a imagem ou a avaliação não forem inequívocos, peça esclarecimento. A ferramenta não seleciona imagem nem transforma uma escolha em preferência confirmada.
-O contexto informa em projectTitleProvisional se o título do projeto ainda é o provisório, recortado da primeira mensagem da pessoa; ele não é o título da arte. Depois da sua primeira resposta, enquanto projectTitleProvisional for verdadeiro, proponha uma vez com compor_renomear_projeto um título de até ${SHORT_PROJECT_TITLE_LENGTH} caracteres, curto e próximo do nome de uma campanha; se a pessoa recusar, mantenha o título. Quando projectTitleProvisional for falso, nunca renomeie o projeto por iniciativa própria. Renomeie sempre que a pessoa pedir; para um título com mais de ${SHORT_PROJECT_TITLE_LENGTH} caracteres, diga que ela pode usar Renomear no menu do projeto.`;
+O contexto informa em projectTitleProvisional se ainda cabe a primeira proposta de título do projeto, cujo nome provisório foi recortado da ideia inicial; ele não é o título da arte. Depois da sua primeira resposta, enquanto projectTitleProvisional for verdadeiro, proponha uma vez com compor_renomear_projeto um título de até ${SHORT_PROJECT_TITLE_LENGTH} caracteres, curto e próximo do nome de uma campanha; se a pessoa recusar, mantenha o título. Depois de uma proposta, aceita ou recusada, projectTitleProvisional fica falso entre sessões. Quando projectTitleProvisional for falso, nunca renomeie o projeto por iniciativa própria. Renomeie sempre que a pessoa pedir; para um título com mais de ${SHORT_PROJECT_TITLE_LENGTH} caracteres, diga que ela pode usar Renomear no menu do projeto.`;
 
 async function limitedJson(stream,limit){
  if(!stream)throw Error('missing body');const reader=stream.getReader(),parts=[];let size=0;
@@ -137,6 +137,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  }
  async function poll(scope,record,key,d){
   rememberRecord(d,scope,record);
+  if(record.state==='failed')return reply({status:'failed',retryAutomatically:false});
   if(!record.binding){d.phase='binding_missing';return unknownReply(d);}
   d.phase='binding_verify';
   const verified=proof(scope,record),sessionId=verified.sessionId;d.sessionId=sessionId;
@@ -164,7 +165,15 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(action?.type!=='function_call'||action.turn_id!==turn.id||!isAgentCallId(action.call_id)||!args||typeof args!=='object'||Array.isArray(args)||JSON.stringify(args).includes(key)||/sk-[^\s]+/i.test(JSON.stringify(args)))throw Error('invalid action');
    if(action.name==='generate_image'){
     parseImageProposal(args);
-   }else{parseStudioAction(action.name,args);if(args.projectId!==scope.projectId)throw Error('invalid action project');}
+   }else{
+    try{parseStudioAction(action.name,args);}catch{
+     // The provider is waiting on arguments that were never handed to the UI.
+     // No local effect is possible; end this request instead of polling forever.
+     d.phase='turn_finish';await finish(scope,record,'failed',session.usage);
+     return reply({status:'failed',error:'invalid_studio_action',retryAutomatically:false});
+    }
+    if(args.projectId!==scope.projectId)throw Error('invalid action project');
+   }
    d.phase='action_receipt_get';const receipt=await store.getAction({...scope,turnId:turn.id,callId:action.call_id});
    if(receipt){if(receipt.state!=='accepted'){d.phase='action_receipt_pending';return unknownReply(d);}return reply({status:'running',requestId:scope.requestId,attemptId:record.attemptId,retryAutomatically:false},202);}
    d.phase='turn_state_write';

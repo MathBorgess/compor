@@ -354,7 +354,7 @@ export default function StudioShell({
                     onSubmit={(event) => {
                       event.preventDefault();
                       const title = renameValue.trim();
-                      if (!title || title === projectTitle) return;
+                      if (!title) return;
                       Promise.resolve(onRenameProject(title)).then((saved) => {
                         if (saved !== false) setMenuOpen(false);
                       });
