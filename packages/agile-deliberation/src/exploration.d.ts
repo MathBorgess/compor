@@ -1,4 +1,5 @@
 export interface ExplorationPromptInput {
+  idea?: string;
   offer: string;
   audience: string;
   briefAudience?: string;

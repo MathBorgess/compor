@@ -9,6 +9,7 @@ const safeText = value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^
 const briefText = z.string().trim().refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|(?:^|[^\p{L}\p{N}])sk-[^\s]+|sk-[^\s]{20,}/iu.test(value));
 const text = z.string().trim().max(1000).refine(safeText);
 const inputSchema = z.strictObject({
+  idea: briefText.optional().default(''),
   offer: briefText,
   audience: briefText,
   briefAudience: briefText.optional().default(''),
@@ -61,7 +62,7 @@ const contrasts = [
 /** Returns a prompt proposal, not a claim about learned preferences or audience response. */
 export function createExplorationPrompt(input) {
   const value = inputSchema.parse(input);
-  if (!value.offer && !value.direction) throw new Error('exploration_context_required');
+  if (!value.idea && !value.offer && !value.direction) throw new Error('exploration_context_required');
   const composition = compositions[value.sequence % compositions.length];
   const contrast = contrasts[Math.floor(value.sequence / compositions.length) % contrasts.length];
   const renderPrompt = (brief) => [
@@ -72,7 +73,7 @@ export function createExplorationPrompt(input) {
     `Proposta de exploração ${value.sequence + 1}: experimente ${composition}; ${contrast}. Busque uma leitura distinta das alternativas anteriores sem contrariar o contexto informado.`,
     'Use formato retrato. Evite texto pequeno ou ilegível; não inclua marcas de terceiros. A imagem é uma hipótese visual para avaliação humana.',
   ].join('\n');
-  const original = {oferta: value.offer, publico_da_persona: value.audience, publico_ou_observacoes_do_briefing: value.briefAudience, objetivo: value.goal, direcao: value.direction};
+  const original = {...(value.idea ? {ideia: value.idea} : {}), oferta: value.offer, publico_da_persona: value.audience, publico_ou_observacoes_do_briefing: value.briefAudience, objetivo: value.goal, direcao: value.direction};
   let prompt = renderPrompt(original);
   if (prompt.length > 8000) {
     // Share the space left by decisions and feedback fairly across briefing

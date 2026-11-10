@@ -19,6 +19,15 @@ test('não gera proposta sem contexto ou com credencial no contexto',()=>{
  assert.throws(()=>createExplorationPrompt({...input,offer:`sk-${'x'.repeat(30)}`}));
  assert.throws(()=>createExplorationPrompt({...input,sequence:-1}));
 });
+test('a ideia basta para a primeira proposta e não se transforma em fato de oferta',()=>{
+ const idea='Quero apresentar minha oficina de cerâmica';
+ const {prompt}=createExplorationPrompt({...input,idea,offer:'',direction:'',audience:'',goal:''});
+ assert.ok(prompt.includes(`"ideia":${JSON.stringify(idea)}`));
+ assert.ok(prompt.includes('"oferta":""'));
+ assert.ok(prompt.includes('"publico_da_persona":""'));
+ assert.ok(prompt.length<=8000);
+ assert.throws(()=>createExplorationPrompt({...input,idea:`${'x'.repeat(9000)} sk-secret`}));
+});
 test('conserva separadamente o campo do briefing e o público da persona, sem inventar uma reconciliação',()=>{
  const brief='Pessoas que trabalham à noite',persona='Pessoas que estudam pela manhã';
  const separate=createExplorationPrompt({...input,briefAudience:brief,audience:persona}).prompt;
@@ -59,7 +68,7 @@ test('valida credenciais e controles em todo o texto, mesmo em contexto que seri
 });
 
 test('campos de briefing aceitam hífens comuns e verificam chaves antes de truncar',()=>{
- for(const field of ['offer','audience','briefAudience','goal','direction']){
+ for(const field of ['idea','offer','audience','briefAudience','goal','direction']){
   const ordinary='task-flow e mask-black e másk-flow';
   assert.ok(createExplorationPrompt({...input,[field]:ordinary}).prompt.includes(ordinary),field);
   for(const value of ['sk-x','Veja (sk-x)',`tasksk-${'x'.repeat(20)}`,`${'x'.repeat(9000)} sk-x`,`${'x'.repeat(9000)} sk-${'x'.repeat(30)}`,'texto\u0000inválido'])
