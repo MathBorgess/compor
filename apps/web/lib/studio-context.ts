@@ -11,6 +11,11 @@ export function audienceResolution(state: AudienceState): AudienceResolution {
   return {status:'resolved',value:brief || persona};
 }
 
+/** Both human messages and automatic selection turns carry the same offer facts. */
+export function offerContext(state:Pick<StudioState,'brief'|'persona'|'offerFacts'>) {
+  return {offerFacts:state.offerFacts??[],audienceResolution:audienceResolution(state)};
+}
+
 /** Interview provenance is explicit; no text is classified by guessing its meaning. */
 export function offerFactsFromInterview(record: BriefRecord,newId:()=>string): OfferFact[] {
   return ([['fatos','Fato informado'],['preco','Preço'],['data','Data']] as const).flatMap(([key,label])=>{

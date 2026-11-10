@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {audienceResolution,offerFactsFromInterview} from '../lib/studio-context.ts';
+import {audienceResolution,offerFactsFromInterview,offerContext} from '../lib/studio-context.ts';
 import {createStudioState,parseStudioState,updateBrief,updatePersona,updateOfferFacts} from '../lib/studio-state.ts';
 import {recordFromStudio} from '../lib/brief-interview.ts';
 
@@ -63,4 +63,16 @@ test('fatos locais rejeitam origem inventada, IDs duplicados, credenciais e camp
   for(const facts of [[{...fact,status:'approved'}],[fact,fact],[{...fact,value:'sk-synthetic-private-key'}],[{...fact,source:'inferred'}]])
     assert.throws(()=>updateOfferFacts(initial(),facts));
   assert.deepEqual(updateOfferFacts(initial(),[]).offerFacts,[],'lista vazia registra a importação sem reaparecer após remoção');
+});
+
+test('contexto da oferta preserva título provisório, fatos e conflito de público na composição cumulativa',()=>{
+  let state=createStudioState({userId:id(1),projectId:id(2),projectTitleProvisional:true});
+  state=updateOfferFacts(state,[{id:id(3),label:'Preço',value:'R$ 180',status:'confirmed'}]);
+  const conflicting=structuredClone(state);conflicting.brief.audience='Criadores';conflicting.persona.audience='Estudantes';
+  const restored=parseStudioState(JSON.parse(JSON.stringify(conflicting)));
+  assert.equal(restored.projectTitleProvisional,true);
+  const before=offerContext(restored);
+  assert.equal(before.offerFacts[0].status,'confirmed');assert.equal(before.audienceResolution.status,'conflict');
+  const changed=updateOfferFacts(restored,[{...restored.offerFacts[0],value:'R$ 200'}]);
+  assert.notEqual(JSON.stringify(offerContext(changed)),JSON.stringify(before),'editar um fato invalida o contexto de uma leitura pendente');
 });

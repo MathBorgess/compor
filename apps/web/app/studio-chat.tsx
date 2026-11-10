@@ -16,7 +16,7 @@ import { canStartReferenceRound, ensureReferenceRound, readReferenceRound, refer
 import { assessReadiness } from '@compor/agile-deliberation/readiness';
 import { referenceImagesForRequest } from "../lib/studio-reference-images.ts";
 import { submitOnEnter } from "../lib/submit-on-enter.ts";
-import {audienceResolution} from '../lib/studio-context.ts';
+import {offerContext} from '../lib/studio-context.ts';
 import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 
@@ -26,7 +26,7 @@ import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { chatResponseSchema, errorResponseSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
-const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
+const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
 async function contextDigest(state:StudioState) {
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
@@ -436,7 +436,7 @@ export default function StudioChat({
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch}));
         remember(requestId);setPending(requestId);availability.current.pending=requestId;
         const draft=getCurrentDraft(next);
-        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references};
+        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
         const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:before.messages.filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
         await handle(data,requestId);
@@ -499,8 +499,7 @@ export default function StudioChat({
           approval: draft?.approval ?? null,
           baseImageId: baseId,
           brief: next.brief,
-          offerFacts: next.offerFacts ?? [],
-          audienceResolution: audienceResolution(next),
+          ...offerContext(next),
           persona: next.persona,
           direction: next.direction,
           readiness: {level, evidence, gaps, limitations},
