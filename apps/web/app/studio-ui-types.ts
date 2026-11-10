@@ -10,14 +10,10 @@ export const versionSchema = z.object({ project_id: z.string(), piece_id: z.stri
 export const versionsSchema = z.object({ versions: z.array(versionSchema) });
 export const markerSchema = z.object({ assetId: z.string().nullable() });
 export const storedImageSchema = z.object({ status: z.string(), assetId: z.string().optional() });
-export const legacyDraftSchema = z.object({ pieceId: z.string(), expectedVersion: z.number().int(), sourceVersion: z.number().int().optional(), content: contentSchema, dirty: z.boolean().default(false), conflict: z.boolean().optional(), unknown: z.boolean().optional() });
 export const savedVersionSchema = z.discriminatedUnion('status', [z.object({ status: z.literal('saved'), version: versionSchema }), z.object({ status: z.literal('conflict') })]);
 export type Project = z.infer<typeof projectSchema>;
 export type PieceVersion = z.infer<typeof versionSchema>;
 export type Content = z.infer<typeof contentSchema>;
-export type LegacyDraft = z.infer<typeof legacyDraftSchema>;
-export type ConnectionProps = { userId: string; hasApiKey: boolean; getApiKey: () => string };
-export type GeneratedBase = { pieceId: string; version: number | string; blob: Blob };
 export type ImageSelection = { blob: Blob; pieceId: string; version: number };
 export const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 export const errorMessage = (error: unknown) => error instanceof Error ? error.message : 'Não foi possível concluir a operação.';

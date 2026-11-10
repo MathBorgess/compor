@@ -11,15 +11,7 @@ import "./studio-shell.css";
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
-const LegacyWorkspace = dynamic(() => import("./legacy-workspace"));
-
-export default function Workspace({ loginAvailable, localAuth = false, legacy = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; legacy?: boolean; developerMode?: boolean }) {
-  return legacy
-    ? <LegacyWorkspace loginAvailable={loginAvailable} />
-    : <StudioWorkspace loginAvailable={loginAvailable} localAuth={localAuth} developerMode={developerMode} />;
-}
-
-function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAvailable: boolean; localAuth: boolean; developerMode: boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -301,12 +293,14 @@ function StudioWorkspace({ loginAvailable, localAuth, developerMode }: { loginAv
               <label>
                 Chave OpenAI
                 <input
-                  ref={openAIKeyInput}
+                  ref={element => {
+                    openAIKeyInput.current = element;
+                    if (element) element.value = authState === "connected" && openAIKeyOwner.current === authenticatedUser ? openAIKey.current : "";
+                  }}
                   type="password"
                   autoComplete="off"
                   spellCheck={false}
                   maxLength={300}
-                  defaultValue={openAIKey.current}
                   onChange={(event) => {
                     openAIKey.current = event.target.value;
                     openAIKeyOwner.current = authenticatedUser;

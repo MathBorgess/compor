@@ -19,7 +19,7 @@ before(async()=>{
  if(skip)return;
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));origin=`http://127.0.0.1:${port}`;
  let startup='';const record=chunk=>{startup=(startup+chunk).slice(-6000);};
- server=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin,COMPOR_STUDIO_WEB_ENABLED:'true'}});
+ server=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin}});
  server.stdout.on('data',record);server.stderr.on('data',record);
  await waitForApp({url:origin,child:server,signal:stopping.signal,diagnostics:()=>startup,timeoutMs:60000});
  browser=await chromium.launch({executablePath:browserPath,headless:true});

@@ -5,36 +5,58 @@ import { spawn } from 'node:child_process';
 import { once } from 'node:events';
 import { createServer } from 'node:net';
 import { chromium } from 'playwright-core';
+import { sessionCookie } from './session-cookie.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-test('chave permanece só em memória e é limpa ao trocar de conta, desconectar ou sair', { skip: !existsSync(browserPath) }, async t => {
+test('chave permanece só em memória e é limpa ao trocar de conta, desconectar ou sair', { skip: !existsSync(browserPath), timeout: 90000 }, async t => {
   const socket = createServer(); await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port; await new Promise(resolve => socket.close(resolve));
   const origin = `http://127.0.0.1:${port}`;
-  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: 'ignore', env: { ...process.env, COMPOR_STUDIO_WEB_ENABLED:'false', SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin } });
+  const child = spawn(process.execPath, ['node_modules/next/dist/bin/next', 'dev', '-p', String(port), '-H', '127.0.0.1'], { stdio: 'ignore', env: { ...process.env, SUPABASE_URL: 'https://example.supabase.co', SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest', APP_ORIGIN: origin } });
   t.after(async () => { if (child.exitCode === null && child.signalCode === null) { child.kill('SIGTERM'); await once(child, 'exit'); } });
   const deadline = Date.now() + 30000;
   while (true) { try { if ((await fetch(origin)).ok) break; } catch {} if (Date.now() > deadline) throw new Error('aplicação indisponível'); await new Promise(resolve => setTimeout(resolve, 200)); }
   const browser = await chromium.launch({ executablePath: browserPath, headless: true }); t.after(() => browser.close());
-  const page = await browser.newPage();
-  let identity = { state: 'connected', userId: 'alice' };
+  const page = await browser.newPage({ viewport: { width: 1440, height: 1000 } });
+  page.setDefaultTimeout(10000);
+  await page.context().addCookies([sessionCookie(origin)]);
+  const alice = '00000000-0000-4000-8000-000000000001', bob = '00000000-0000-4000-8000-000000000002';
+  const project = '00000000-0000-4000-8000-000000000003';
+  let identity = { state: 'connected', userId: alice };
   const secret = 'sk-test-fake-not-a-real-credential';
   const leaked = [];
   page.on('request', request => { if ((request.url() + (request.postData() || '') + JSON.stringify(request.headers())).includes(secret)) leaked.push('request'); });
   await page.route('**/auth/session', route => route.fulfill({ json: identity }));
-  await page.route('**/api/projects', route => route.fulfill({ json: { projects: [] } }));
+  await page.route('**/api/**', route => {
+    const path = new URL(route.request().url()).pathname;
+    if (path === '/api/projects') return route.fulfill({ json: { projects: [{ id: project, title: 'Projeto de teste', revision: 1 }] } });
+    if (path === '/api/pieces') return route.fulfill({ json: { versions: [] } });
+    if (path === '/api/studio/explorations') return route.fulfill({ json: { images: [] } });
+    if (path.endsWith('/signals')) return route.fulfill({ json: { signals: [] } });
+    if (path === '/api/studio/explorations/status') return route.fulfill({ json: { status: 'active' } });
+    return route.fulfill({ status: 503, json: { error: 'unavailable' } });
+  });
+  async function openConnection() {
+    const previous = page.getByRole('button', { name: 'Projeto de teste Retomar conversa', exact: true });
+    await page.getByRole('button', { name: /^(Conectar IA|IA conectada)$/ }).or(previous).first().waitFor();
+    if (await previous.isVisible()) await previous.click();
+    const input = page.getByLabel('Chave OpenAI', { exact: true });
+    if (!await input.isVisible()) await page.getByRole('button', { name: /^(Conectar IA|IA conectada)$/ }).click();
+    await input.waitFor();
+    return input;
+  }
   async function recheck() {
     const response = page.waitForResponse(result => new URL(result.url()).pathname === '/auth/session');
     await page.evaluate(() => window.dispatchEvent(new Event('focus')));
     await response;
   }
   await page.goto(origin);
-  const input = page.getByLabel('Chave OpenAI');
-  await input.fill(secret, { timeout: 3000 });
+  const input = await openConnection();
+  await input.fill(secret);
   assert.equal(await input.getAttribute('type'), 'password');
   assert.equal(await input.getAttribute('value'), null);
   assert.doesNotMatch(await page.evaluate(() => document.documentElement.outerHTML), /sk-test-fake-not-a-real-credential/);
-  await page.getByText(/geração ainda não está disponível/i).waitFor();
+  await page.getByRole('button', { name: 'Continuar', exact: true }).waitFor();
   const captured = await page.evaluate(() => ({ local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage), cookies: document.cookie, url: location.href }));
   assert.doesNotMatch(JSON.stringify(captured), /sk-test-fake-not-a-real-credential/);
   assert.doesNotMatch(JSON.stringify(await page.context().cookies()), /sk-test-fake-not-a-real-credential/);
@@ -43,22 +65,20 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   assert.equal(await input.inputValue(), secret, 'revalidação da mesma conta mantém a chave da aba');
   assert.equal(await input.getAttribute('value'), null);
   assert.doesNotMatch(await page.evaluate(() => document.documentElement.outerHTML), /sk-test-fake-not-a-real-credential/);
-  identity = { state: 'connected', userId: 'bob' };
+  identity = { state: 'connected', userId: bob };
   await recheck();
-  await page.waitForFunction(() => document.querySelector('.status')?.textContent === 'Conta conectada');
-  await input.waitFor();
-  await page.waitForFunction(() => document.querySelector('#openai-key')?.value === '');
+  await openConnection();
   assert.equal(await input.inputValue(), '', 'troca de conta limpa a chave');
   await input.fill(secret);
   identity = { state: 'signed-out' };
   await recheck();
   await page.getByRole('button', { name: 'Entrar com Google' }).waitFor();
-  identity = { state: 'connected', userId: 'bob' };
+  identity = { state: 'connected', userId: bob };
   await recheck();
-  await input.waitFor();
+  await openConnection();
   assert.equal(await input.inputValue(), '', 'desconexão limpa a chave');
   await input.fill(secret);
-  const valueDuringPagehide = await page.evaluate(() => { window.dispatchEvent(new Event('pagehide')); return document.querySelector('#openai-key').value; });
+  const valueDuringPagehide = await page.evaluate(() => { window.dispatchEvent(new Event('pagehide')); return document.querySelector('input[type="password"]').value; });
   assert.equal(valueDuringPagehide, '', 'saída da página limpa a propriedade de entrada imediatamente');
   assert.equal(await input.inputValue(), '', 'saída da página limpa a chave');
   await input.fill(secret);
@@ -68,15 +88,15 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   identity = { state: 'unavailable' };
   await recheck();
   await page.getByText('Login temporariamente indisponível.').waitFor();
-  identity = { state: 'connected', userId: 'bob' };
+  identity = { state: 'connected', userId: bob };
   await recheck();
-  await input.waitFor();
+  await openConnection();
   assert.equal(await input.inputValue(), '', 'falha de sessão limpa a chave');
-  await page.reload(); await input.waitFor();
+  await page.reload(); await openConnection();
   assert.equal(await input.inputValue(), '');
   await input.fill(secret);
   await page.goto('about:blank');
-  await page.goBack(); await input.waitFor();
+  await page.goBack(); await openConnection();
   assert.equal(await input.inputValue(), '', 'retorno à página não recupera a chave');
   assert.deepEqual(leaked, []);
 });

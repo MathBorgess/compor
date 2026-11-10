@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { renderLightEntry, servesLightEntry } from '../lib/light-entry.ts';
 
 const auth = { service: 'https://example.supabase.co', app: 'https://compor.example', key: 'sb_publishable_test' };
-const settings = { auth, localAuth: false, studioEnabled: true };
+const settings = { auth, localAuth: false };
 const visit = (overrides = {}) => ({ method: 'GET', pathname: '/', cookieNames: [], ...overrides });
 
 test('a primeira visita sem sessão recebe a entrada leve; qualquer outro caso continua no App Router', () => {
@@ -15,7 +15,6 @@ test('a primeira visita sem sessão recebe a entrada leve; qualquer outro caso c
   assert.equal(servesLightEntry(visit({ cookieNames: ['sb-example-auth-token.12'] }), settings), false);
   assert.equal(servesLightEntry(visit(), { ...settings, auth: null }), false);
   assert.equal(servesLightEntry(visit(), { ...settings, localAuth: true }), false);
-  assert.equal(servesLightEntry(visit(), { ...settings, studioEnabled: false }), false);
   for (const method of ['POST', 'HEAD', 'PUT']) assert.equal(servesLightEntry(visit({ method }), settings), false, method);
   for (const pathname of ['/auth/session', '/oauth/consent', '/index', '/api/projects']) assert.equal(servesLightEntry(visit({ pathname }), settings), false, pathname);
 });

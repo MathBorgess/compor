@@ -2,12 +2,12 @@ import type { AuthConfig } from './supabase.ts';
 import { brandImages, entryCopy, entryDraftStorage, siteMetadata } from './entry-content.ts';
 
 export type LightEntryRequest = { method: string; pathname: string; cookieNames: readonly string[] };
-export type LightEntrySettings = { auth: AuthConfig | null; localAuth: boolean; studioEnabled: boolean };
+export type LightEntrySettings = { auth: AuthConfig | null; localAuth: boolean };
 
 /** True only for a first visit that the App Router would answer with the signed-out entry; see ADR 0034. */
 export function servesLightEntry(request: LightEntryRequest, settings: LightEntrySettings) {
   if (request.method !== 'GET' || request.pathname !== '/') return false;
-  if (!settings.auth || settings.localAuth || !settings.studioEnabled) return false;
+  if (!settings.auth || settings.localAuth) return false;
   const session = sessionCookieName(settings.auth.service);
   return !request.cookieNames.some(name => name === session || (name.startsWith(`${session}.`) && /^(0|[1-9]\d*)$/.test(name.slice(session.length + 1))));
 }
