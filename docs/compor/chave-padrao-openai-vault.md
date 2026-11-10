@@ -1,6 +1,8 @@
 # Preparar a IA do Compor com Supabase Vault
 
-O [ADR 0038](../adr/0038-chave-padrao-openai-no-vault.md) registra a chave padrão quando não houver própria. Matheus informou ter criado `COMPOR_CIN_OPENAI` no Vault; o valor não foi lido ou verificado remotamente nesta preparação, que não habilita produção.
+O [ADR 0038](../adr/0038-chave-padrao-openai-no-vault.md) registra a chave padrão quando não houver própria. Matheus informou ter criado `COMPOR_CIN_OPENAI` no Vault; o valor não foi lido ou verificado remotamente.
+
+Estado conferido em 10/11/2026: migration aplicada e flag `COMPOR_DEFAULT_OPENAI_ENABLED=true` configurada na Vercel para produção; `SUPABASE_SERVER_KEY` ainda ausente. A padrão continua indisponível até configurar essa credencial de servidor e criar um deployment com as duas variáveis. O [registro operacional](../quality/vercel-ci-vault-2026-11-10.md) separa configuração, publicação e bloqueios de acesso.
 
 | Item | Uso |
 | --- | --- |
@@ -18,7 +20,7 @@ Não use `NEXT_PUBLIC_` para chave do servidor/OpenAI. Valores secretos não ent
 1. Revisar e integrar a migration de leitura restrita pelo fluxo normal do projeto verificado. Confirmar workflow e commit antes de usar o código dependente.
 2. Confirmar no mesmo projeto a entrada já informada `COMPOR_CIN_OPENAI`, com o valor da chave OpenAI. A aplicação não cria, lista ou altera segredos.
 3. Configurar `SUPABASE_SERVER_KEY` no servidor. Seu uso é exclusivo da RPC fixa; dados continuam com a identidade da pessoa.
-4. Habilitar `COMPOR_DEFAULT_OPENAI_ENABLED=true` no ambiente escolhido e publicar conforme os gates existentes, sem mover domínios antes da validação exigida.
+4. Habilitar `COMPOR_DEFAULT_OPENAI_ENABLED=true` no ambiente escolhido e criar um deployment que incorpore as duas variáveis. Matheus autorizou ativação em produção em 10/11/2026; proteções reais da plataforma permanecem aplicáveis.
 5. Em sessão autenticada, confirmar disponibilidade sem segredo exposto nem requisição OpenAI. Criar/enviar ideia ou a ação explícita de início autoriza uso.
 6. Validar própria, ausência dela, padrão indisponível, troca e pendências. Chamadas reais e custo dependem da autorização operacional aplicável; testes automáticos são simulados.
 
@@ -36,4 +38,4 @@ Após confirmar configuração, reative e faça a validação autorizada. Falha 
 
 A padrão não é identidade e não concede acesso a projetos alheios. Papéis comuns não executam a RPC. A chave administrativa não vai a clientes, testes de navegador ou ferramentas do modelo.
 
-Lotes e pausas não são orçamento. Cadastro, limites do projeto OpenAI, habilitação remota e testes com duas contas reais são etapas operacionais separadas. A execução atual não altera essas configurações.
+Lotes e pausas não são orçamento. Cadastro, limites do projeto OpenAI, habilitação remota e testes com duas contas reais são etapas operacionais separadas. Configurar a flag não comprova acesso ao Vault, saldo, isolamento entre contas ou geração real.
