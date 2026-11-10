@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
 import {waitForApp,stopApp} from './wait-for-app.mjs';
+import {isolateFixtureHmr} from './fixture-hmr.mjs';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const userId=id(1),projectId=id(2),requestId=id(3),pieceId=id(4),marker=`compor-studio-chat:${userId}:${projectId}`;
@@ -28,9 +29,10 @@ export default function Fixture(){const[developer,setDeveloper]=useState(true),[
  child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});child.stdout.on('data',recordStartup);child.stderr.on('data',recordStartup);
  await waitForApp({url:`${origin}/${basename(fixture)}`,child,signal:t.signal,diagnostics:()=>startup});
  phase='launching browser';
- browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let responseStatus='completed',responseErrorCode=null;
+ browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[],hmrFrames=[];let responseStatus='completed',responseErrorCode=null;
+ await isolateFixtureHmr(page,`/${basename(fixture)}`);
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId:null,previousAttemptKey:requestId}));},{marker,requestId});
- page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
+ page.on('websocket',socket=>socket.on('framereceived',frame=>{if(!socket.url().includes('/_next/'))return;try{const value=JSON.parse(String(frame.payload));hmrFrames.push(value.action||value.type||'unknown');if(hmrFrames.length>20)hmrFrames.shift();}catch{}}));page.on('pageerror',error=>{errors.push(error.message);t.diagnostic(`Erro na etapa ${phase}; HMR=${hmrFrames.join(',')}: ${error.stack||error.message}`);});page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),body=request.postDataJSON();calls.push({path:new URL(request.url()).pathname,body});
   return route.fulfill({status:202,json:{status:responseStatus,...(responseErrorCode?{errorCode:responseErrorCode}:{}),attemptId:id(9),sessionId:'sess_verified',turnId:'turn_verified',text:story,actionBinding:apiKey,declineBinding:apiKey,prompt:story,action:{name:'compor_novo_post',args:{projectId,requestId,revision:1,value:story}},usage:{input_tokens:11,output_tokens:13},itemTrace:{observedItems:3,functionCalls:1,outputs:1,omittedItems:0,items:[{type:'function_call',status:'failed',name:'functions.compor_contexto',argumentKeys:['projectId',apiKey],schemaValid:false,arguments:story},{type:'function_call_output',status:'failed',name:'functions.compor_contexto',errorClass:'unavailable',output:{apiKey,story}}]}}});

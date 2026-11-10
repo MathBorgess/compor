@@ -5,6 +5,7 @@ import StudioShell, { StudioPanel, CreativeBoard, type StudioStage, type StudioD
 const PersonaStep = dynamic(() => import("./persona-step"));
 const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
+import StudioReview from "./studio-review";
 import { useStudioState } from "./use-studio-state";
 import BriefSummary from "./brief-summary";
 import ReferenceExploration from "./reference-exploration";
@@ -41,7 +42,7 @@ import {
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
-const StudioAssets = dynamic(() => import("./studio-assets"));
+const StudioAssets = dynamic(() => import("./studio-assets"), {loading: () => <p role="status">Consultando imagens desta versão…</p>});
 
 import {z} from 'zod';
 import { projectsSchema, projectResponseSchema, versionsSchema, savedVersionSchema, versionSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
@@ -229,7 +230,6 @@ function ProjectStudio({
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
     [base, setBase] = useState<Blob|null>(null),
-    [preview, setPreview] = useState<Blob|null>(null),
     [referenceImages, setReferenceImages] = useState<{manifest:string;items:(StudioReference & {url:string})[]}|null>(null),
     [proposal, setProposal] = useState<{prompt:string}|null>(null),
     [dialog, setDialog] = useState<Confirmation|null>(null),
@@ -340,7 +340,6 @@ function ProjectStudio({
     };
   }, [referenceManifest, project.id, userId]);
   useEffect(() => {
-    setPreview(null);
     setBase(null);
     const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
@@ -396,16 +395,6 @@ function ProjectStudio({
     }
   }
 
-  useEffect(() => {
-    setPreview(null);
-  }, [
-    base,
-    draft?.content.headline,
-    draft?.content.price,
-    draft?.content.date,
-    JSON.stringify(draft?.content.fields),
-  ]);
-
   function nextStage(value:StudioStage) {
     setStage(value);
     setNotice("");
@@ -419,7 +408,6 @@ function ProjectStudio({
         : createPost(value, { pieceId }),
     );
     setBase(null);
-    setPreview(null);
     setDrawer(null);
     setViewingArt(false);
     setStage("studio");
@@ -807,14 +795,6 @@ function ProjectStudio({
         );
     }
   }
-  function downloadPreview() {
-    if(!preview) return;
-    const url=URL.createObjectURL(preview), anchor=document.createElement("a");
-    anchor.href=url;
-    anchor.download=`compor-post-v${draft?.baseVersion || "rascunho"}.png`;
-    anchor.click();
-    setTimeout(() => URL.revokeObjectURL(url),1000);
-  }
   if (local.loading || !s)
     return (
       <StudioShell stage="projects" accountLabel={accountLabel} localAccount={localAccount} onSignOut={onSignOut ? signOutSafely : undefined}>
@@ -844,13 +824,6 @@ function ProjectStudio({
         )
       }
       onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
-      onPreview={(blob) => {
-        const current=getCurrentDraft(local.get());
-        if(current?.pieceId!==draft?.pieceId||current?.baseVersion!==draft?.baseVersion||JSON.stringify(current?.content)!==JSON.stringify(draft?.content))return;
-        setPreview(blob);
-        setViewingArt(false);
-        setStage("review");
-      }}
       onApprove={async () => {
         const selected = getCurrentDraft(local.get());
         const version = versionRef.current.find(
@@ -996,9 +969,6 @@ function ProjectStudio({
       onDrawerChange={setDrawer}
       viewingArt={viewingArt}
       onCloseArt={() => setViewingArt(false)}
-      onDownload={downloadPreview}
-      downloadDisabled={!preview}
-      yellowDownload
       conversationFocus={showBrief}
       chatMessageCount={s.messages.length}
       bases={<>
@@ -1050,6 +1020,15 @@ function ProjectStudio({
                 {version.metadata?.approval.status==="approved"&&<small>{version.metadata.approval.kind==="inherited"?`Aprovação herdada da versão ${version.metadata.approval.sourceVersion}`:"Aprovação explícita"}</small>}
               </button>
             ))}
+            {draft && <StudioAssets
+              userId={userId}
+              projectId={project.id}
+              pieceId={draft.pieceId}
+              version={draft.baseVersion}
+              canSave={draft.baseVersion > 0 && !draft.dirty}
+              preview={base}
+              onUseImage={useBase}
+            />}
           </div>
           <div className="studio-moodboard">
             <h2>Referências da sua criação</h2>
@@ -1111,6 +1090,14 @@ function ProjectStudio({
           <BriefSummary state={s} />
           <button className="studio-button-secondary" type="button" onClick={() => setEditorRequested(true)}>Definir textos da arte</button>
         </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+          <label>
+            Imagem-base PNG ou JPEG
+            <input type="file" accept="image/png,image/jpeg" onChange={event => {
+              const file = event.target.files?.[0];
+              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
+              event.target.value = "";
+            }} />
+          </label>
           {editor}
         </CreativeBoard>
       }
@@ -1195,64 +1182,7 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          {preview ? <Preview blob={preview} /> : editor}
-          <label>
-            Imagem-base PNG ou JPEG
-            <input
-              type="file"
-              accept="image/png,image/jpeg"
-              onChange={(e) => {
-                const file = e.target.files?.[0];
-                if (file && draft)
-                  useBase({
-                    blob: file,
-                    pieceId: draft.pieceId,
-                    version: draft.baseVersion,
-                  });
-                e.target.value = "";
-              }}
-            />
-          </label>
-          <p>{draft?.content.caption}</p>
-          {draft && (
-            <StudioAssets
-              userId={userId}
-              projectId={project.id}
-              pieceId={draft.pieceId}
-              version={draft.baseVersion}
-              canSave={draft.baseVersion > 0 && !draft.dirty}
-              preview={preview}
-              onUseImage={useBase}
-            />
-          )}
-          <button
-            className="studio-button"
-            onClick={() => {
-              if (preview) {
-                const url = URL.createObjectURL(preview),
-                  a = document.createElement("a");
-                a.href = url;
-                a.download = `compor-post-v${draft?.baseVersion || "rascunho"}.png`;
-                a.click();
-                setTimeout(() => URL.revokeObjectURL(url), 1000);
-              }
-            }}
-            disabled={!preview}
-          >
-            Baixar PNG
-          </button>
-          <button
-            onClick={() =>
-              navigator.clipboard
-                .writeText(draft?.content.caption ?? "")
-                .then(() => setNotice("Legenda copiada."))
-                .catch(() =>
-                  setNotice("Selecione e copie a legenda manualmente."),
-                )
-            }
-          >
-            Copiar legenda
-          </button>
+          <StudioReview title={projectDetails.title} draft={draft} base={base} />
           <button onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>
@@ -1260,20 +1190,4 @@ function ProjectStudio({
       )}
     </StudioShell>
   );
-}
-function Preview({ blob }:{blob:Blob}) {
-  const [image, setImage] = useState<{blob:Blob;url:string}|null>(null);
-  const url = image?.blob === blob ? image.url : null;
-  useEffect(() => {
-    const value = URL.createObjectURL(blob);
-    setImage({blob,url:value});
-    return () => URL.revokeObjectURL(value);
-  }, [blob]);
-  return url ? (
-    <img
-      src={url}
-      className="studio-export-preview"
-      alt="Prévia da arte integral, sem textos adicionados pelo aplicativo"
-    />
-  ) : null;
 }

@@ -7,6 +7,7 @@ import {spawn} from 'node:child_process';
 import {once} from 'node:events';
 import {createServer} from 'node:net';
 import {chromium} from 'playwright-core';
+import {isolateFixtureHmr} from './fixture-hmr.mjs';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const userId=id(1),projectId=id(2),requestId=id(3),pieceId=id(4),assetId=id(5),otherPiece=id(6),marker=`compor-studio-chat:${userId}:${projectId}`;
@@ -27,6 +28,7 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
+ await isolateFixtureHmr(page,`/${basename(fixture)}`);
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{

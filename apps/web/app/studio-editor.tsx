@@ -1,11 +1,9 @@
 "use client";
 import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
-import { composeStudioPng } from "../lib/studio-compose.ts";
 import "./studio-editor-fields.css";
 
 import { creativeFieldSchema, type Brief, type StudioDraft, type StudioMark, type CreativeField } from "../lib/studio-domain";
 import { suggestedArtworkFields, type OptionalArtworkField } from "../lib/studio-editor-fields.ts";
-import { errorMessage } from "./studio-ui-types";
 type Region = {x: number;y: number;width: number;height: number};
 export type NewMark = Region & {kind: "area"; note: string};
 const elementLabels: Record<string, string> = { headline: "título", price: "preço", date: "data" };
@@ -20,22 +18,19 @@ export default function StudioEditor({
   onRemoveField,
   onMark,
   onRemoveMark,
-  onPreview,
   onApprove,
   onViewArt,
-}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onPreview?: (blob: Blob) => void;onApprove?: () => void;onViewArt?: () => void}) {
+}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onApprove?: () => void;onViewArt?: () => void}) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState<Region | null>(null),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
-    [busy, setBusy] = useState(false),
     [addedFields, setAddedFields] = useState<OptionalArtworkField[]>([]),
     [newFieldLabel, setNewFieldLabel] = useState(""),
     [image, setImage] = useState<{blob:Blob;url:string} | null>(null);
   const url = base && image?.blob === base ? image.url : null;
   const frame = useRef<HTMLDivElement>(null),
-    start = useRef<{x:number;y:number} | null>(null),
-    generation = useRef(0);
+    start = useRef<{x:number;y:number} | null>(null);
   const approvalHint = useId();
   useEffect(() => {
     setRegion(null);
@@ -43,9 +38,7 @@ export default function StudioEditor({
     setNewFieldLabel("");
     setNote("");
     setError("");
-    generation.current++;
   }, [draft?.pieceId, draft?.baseVersion]);
-  useEffect(()=>{generation.current++;setBusy(false);return()=>{generation.current++;};},[base,draft?.content.headline,draft?.content.price,draft?.content.date,JSON.stringify(draft?.content.fields)]);
   useEffect(() => {
     if (!base) {
       setImage(null);
@@ -91,22 +84,6 @@ export default function StudioEditor({
     if (!start.current) return;
     move(event);
     start.current = null;
-  }
-  async function preview() {
-    if (!base) return;
-    setBusy(true);
-    setError("");
-    const seq = generation.current;
-    try {
-      const blob = await composeStudioPng({
-        base,
-      });
-      if (seq === generation.current) onPreview?.(blob);
-    } catch (e) {
-      if (seq === generation.current) setError(errorMessage(e));
-    } finally {
-      if (seq === generation.current) setBusy(false);
-    }
   }
   return (
     <div className="studio-editor">
@@ -342,9 +319,6 @@ export default function StudioEditor({
           </section>
         )}
         <div className="studio-editor-actions">
-          <button type="button" disabled={busy || !base} onClick={preview}>
-            {busy ? "Preparando…" : "Preparar PNG"}
-          </button>
           <button
             type="button"
             disabled={draft.dirty || draft.baseVersion < 1}
