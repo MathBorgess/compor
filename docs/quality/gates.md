@@ -55,11 +55,13 @@ A suíte web domina o custo. Em 09/11, o job web levou de 859 a 914 s no CI, e o
 
 ## Suíte web paralela
 
-`npm run quality:browser` executa `apps/web/test/run.mjs`. O script usa a API `run()` do `node:test`, executa dois arquivos de teste por vez e mantém o limite de 90 s por teste. Cada arquivo continua num processo próprio, com servidores, navegador e dados próprios.
+`npm run quality:browser` executa `apps/web/test/run.mjs`. O script usa a API `run()` do `node:test`, executa dois arquivos de teste por vez e mantém o limite de 90 s por teste. Cada arquivo continua num processo próprio, com servidores, navegador e dados próprios. Uma descoberta sem arquivos de teste falha; um teste reprovado também encerra a suíte com código diferente de zero.
 
 O script começa pelos quatro arquivos mais lentos. Eles somam cerca de 60% do tempo da suíte e passam a maior parte desse tempo em esperas reais da interface. Os outros arquivos seguem em ordem alfabética. A lista dos mais lentos é mantida à mão. Uma lista desatualizada não quebra a suíte. Ela só deixa um arquivo lento terminar sozinho no fim.
 
 O `next dev` trava o próprio diretório de saída. Antes, com dois arquivos ao mesmo tempo, o segundo servidor desistia depois de 1 s. Agora cada processo de arquivo de teste carrega `test/next-dist-dir.mjs`. Esse módulo reserva `.next` ou `.next/test` e passa o diretório ao Next por `COMPOR_TEST_NEXT_DIST_DIR`. Sem essa variável, `next.config.mjs` usa `.next`. O `tsconfig.json` lista os tipos de `.next/test`. Sem essas linhas, o Next reescreveria o `tsconfig.json` durante os testes e reiniciaria o servidor. Depois de uma execução local, `next-env.d.ts` pode apontar para `.next/dev` ou para `.next/test/dev`. O Next já alterava esse arquivo durante os testes antes desta mudança.
+
+O preparo das fixtures autenticadas verifica a rota real com o mesmo cookie sintético do navegador, consome o HTML e os scripts e estilos locais em `/_next/static`. O HTTP 200 da entrada leve do ADR 0034 não comprova que o App Router está pronto. O prazo de startup continua em 30 s, com até 2 s por requisição, e também cobre o corpo e os chunks. Uma falha de asset espera a conclusão da mesma onda de requisições antes de tentar novamente. Os limites de 6 s das ações dessas fixtures e de 90 s por teste não mudam. O preparo não executa o JavaScript nem consulta serviços externos.
 
 Medição local de 09/11, num Apple M1 Max com outra tarefa usando a máquina ao mesmo tempo:
 

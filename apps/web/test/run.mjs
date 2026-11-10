@@ -8,6 +8,7 @@ const slowest = ['studio-reference-trigger-browser', 'studio-chat-flow-browser',
 const rank = name => slowest.includes(name) ? slowest.indexOf(name) : slowest.length;
 const dir = fileURLToPath(new URL('.', import.meta.url));
 const files = readdirSync(dir).filter(name => name.endsWith('.test.mjs')).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b)).map(name => dir + name);
+if (files.length === 0) throw Error('Nenhum arquivo .test.mjs foi encontrado para a suíte web.');
 
 run({files, concurrency: 2, timeout: 90000, execArgv: ['--import', 'tsx', '--import', './test/next-dist-dir.mjs']})
   .on('test:summary', ({file, success}) => { if (file === undefined && !success) process.exitCode = 1; })
