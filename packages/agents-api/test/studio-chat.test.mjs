@@ -335,6 +335,24 @@ test('resposta da seleção fora do formato encerra o turno como falha sem nova 
   assert.equal(f.calls.filter(call=>call.method==='POST').length,1,'nenhum novo envio ao provedor');
  }
 });
+test('pergunta única não ignora pontuação, Markdown ou texto colado após interrogação',async()=>{
+ for(const separator of ['!','.','…',',','*','—','a']){
+  for(const field of ['leitura','recomendacao','pergunta']){
+   const value=field==='pergunta'?`**Prefere quente?${separator}** Ou frio?`:`Editorial?${separator} Sóbria.`;
+   const {first,again}=await selectionReply(JSON.stringify({...reading,[field]:value}));
+   assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},`${field}: ${value}`);
+   assert.deepEqual(again,first);
+  }
+ }
+ const {first}=await selectionReply(JSON.stringify({...reading,leitura:'Compare https://exemplo.com/oferta?ref=pin&mode=compact e https://exemplo.com/cor?flag.'}));
+ assert.equal(first.status,'completed','queries de links não são perguntas');
+ const trailing=await selectionReply(JSON.stringify({...reading,pergunta:'Usamos https://exemplo.com/oferta?ref=pin?'}));
+ assert.equal(trailing.first.status,'completed','interrogação final depois do link continua contando');
+ for(const pergunta of ['Veja [fonte](https://exemplo.com)Quente?Ou frio?','Veja **https://exemplo.com**Quente?Ou frio?','Veja <https://exemplo.com>Quente?Ou frio?']){
+  const {first}=await selectionReply(JSON.stringify({...reading,pergunta}));
+  assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},pergunta);
+ }
+});
 test('turno comum entrega o texto do agente sem exigir o formato da seleção',async()=>{
  const f=fixture();await f.chat(request(body));f.set({status:'idle',turnState:'completed',answer:'Prefere a serifada? Ou a geométrica?'});
  assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).text,'Prefere a serifada? Ou a geométrica?');
