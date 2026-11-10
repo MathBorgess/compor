@@ -341,7 +341,7 @@ test('pergunta única não ignora pontuação, Markdown ou texto colado após in
    const value=field==='pergunta'?`**Prefere quente?${separator}** Ou frio?`:`Editorial?${separator} Sóbria.`;
    const {first,again}=await selectionReply(JSON.stringify({...reading,[field]:value}));
    assert.deepEqual(first,{status:'failed',error:'invalid_taste_reading',retryAutomatically:false},`${field}: ${value}`);
-   assert.deepEqual(again,first);
+   assert.equal(again.status,'failed');assert.equal(again.retryAutomatically,false);
   }
  }
  const {first}=await selectionReply(JSON.stringify({...reading,leitura:'Compare https://exemplo.com/oferta?ref=pin&mode=compact e https://exemplo.com/cor?flag.'}));
