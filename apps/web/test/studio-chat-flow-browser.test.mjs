@@ -29,8 +29,9 @@ async function app(t){
  browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage({viewport:{width:1440,height:1000}});page.setDefaultTimeout(6000);
  await page.context().addCookies([sessionCookie(origin)]);
  await page.addInitScript(()=>{const tools=Object.create(null);Object.defineProperty(window,'__studioNative',{value:tools});Object.defineProperty(document,'modelContext',{configurable:true,value:{registerTool:async(definition,{signal}={})=>{tools[definition.name]=definition;signal?.addEventListener('abort',()=>{if(tools[definition.name]===definition)delete tools[definition.name];},{once:true});}}});});
- const calls=[],external=[],errors=[],flow={},projectReads={count:0};const projects=[{id:projectId,title:'Projeto integrado',revision:1}],versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
+ const calls=[],external=[],errors=[],explorationPosts=[],flow={},projectReads={count:0};const projects=[{id:projectId,title:'Projeto integrado',revision:1}],versions=[{project_id:projectId,piece_id:originalPiece,version:1,content:content('Original preservado')}];
  page.on('pageerror',error=>errors.push(error.message));
+ page.on('request',request=>{if(new URL(request.url()).pathname==='/api/studio/explorations'&&request.method()==='POST')explorationPosts.push(request.postDataJSON().requestId);});
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
@@ -61,7 +62,7 @@ async function app(t){
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
- return {page,origin,calls,projects,projectReads,versions,flow,errors,external};
+ return {page,origin,calls,projects,projectReads,versions,flow,errors,external,explorationPosts};
 }
 async function openOriginal(page,origin,{key=true}={}){
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
@@ -78,7 +79,7 @@ const action=(name,args,binding)=>({status:'action_required',action:{name,args},
 const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
 
 test('chat cria e salva versões com confirmação; imagem usa snapshot novo automaticamente',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- const {page,origin,calls,versions,flow,errors,external}=await app(t);let submits=0;
+ const {page,origin,calls,versions,flow,errors,external,explorationPosts}=await app(t);let submits=0;
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Imagem integrada concluída.'}:++submits===1?action('compor_novo_post',{projectId,requestId:newPiece,revision:body.context.revision},'new'):consent('decline');
  flow.action=body=>{
   const scope={projectId,revision:body.result.revision};
@@ -100,6 +101,7 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
+ assert.deepEqual(explorationPosts,[],'novo post explícito, refino e salvamento permanecem no editor sem iniciar descoberta');
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 

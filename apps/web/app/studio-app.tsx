@@ -407,7 +407,7 @@ function ProjectStudio({
     if(value !== "studio") setViewingArt(false);
   }
   function newPost(pieceId:string = crypto.randomUUID()) {
-    setEditorRequested(false);
+    setEditorRequested(true);
     setReferencesRequested(false);
     local.change((value) =>
       value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
