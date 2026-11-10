@@ -4,7 +4,8 @@ import { createSupabasePieceStore } from '@compor/remote-mcp';
 const uuid = (value:unknown):value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const integer = (value:unknown):value is number => typeof value==='number' && Number.isSafeInteger(value) && value >= 0 && value <= 2147483647;
 function validMetadata(value:z.infer<typeof metadataSchema>, version:number) {
-  if (!value || Object.keys(value).sort().join(',') !== 'approval,baseVersion,revision' || !integer(value.revision) || !(value.baseVersion === null || integer(value.baseVersion) && value.baseVersion > 0 && value.baseVersion < version)) return false;
+  if (!value || Object.keys(value).some(key=>!['approval','baseVersion','revision','changedDimension','operation'].includes(key)) || !integer(value.revision) || !(value.baseVersion === null || integer(value.baseVersion) && value.baseVersion > 0 && value.baseVersion < version)) return false;
+  if(value.operation!=null&&!['create','edit'].includes(value.operation)||value.changedDimension!=null&&(!['style','composition','hook'].includes(value.changedDimension)||value.operation==null))return false;
   const a = value.approval;
   if (!a || Object.keys(a).sort().join(',') !== 'at,kind,sourceVersion,status') return false;
   if (a.status === 'unapproved') return a.kind === null && a.sourceVersion === null && a.at === null;
@@ -42,10 +43,15 @@ export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }:Stor
   }
   return {
     async save(context:StoreContext, input:SavePieceInput) {
-      if (input.baseVersion === undefined) return upstream.save(context, input);
+      if (input.baseVersion === undefined) {
+        if(input.operation!==undefined||input.changedDimension!==undefined)throw Error('image metadata requires a version base');
+        return upstream.save(context, input);
+      }
       const { projectId, pieceId, expectedVersion, baseVersion, content } = input;
-      const result = mutation(await rpc('save_piece_version_v2', context, { p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_base_version: baseVersion, p_content: content }), projectId, pieceId, 'saved');
+      const imageMetadata=input.operation!==undefined||input.changedDimension!==undefined;
+      const result = mutation(await rpc(imageMetadata?'save_piece_version_v3':'save_piece_version_v2', context, { p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_base_version: baseVersion, p_content: content,...(imageMetadata?{p_operation:input.operation??null,p_changed_dimension:input.changedDimension??null}:{}) }), projectId, pieceId, 'saved');
       if (result.status === 'saved' && (result.version.version !== expectedVersion + 1 || result.version.metadata.baseVersion !== (baseVersion || null))) throw Error('invalid response');
+      if(result.status==='saved'&&imageMetadata&&(result.version.metadata.operation!==input.operation||result.version.metadata.changedDimension!==(input.changedDimension??null)||input.changedDimension!==undefined&&result.version.metadata.approval.status!=='unapproved'))throw Error('invalid image metadata');
       return result;
     },
     async approve(context:StoreContext, { projectId, pieceId, version, expectedRevision, references }:ApprovePieceInput) {
@@ -54,7 +60,7 @@ export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }:Stor
       return result;
     },
     async listProject(context:StoreContext, projectId:string) {
-      const rows = await rpc('list_project_piece_versions_v2', context, { p_project_id: projectId });
+      const rows = await rpc('list_project_piece_versions_v3', context, { p_project_id: projectId });
       if (!Array.isArray(rows) || rows.length > 1000) throw Error('invalid or incomplete response');
       return rows.map(row => versionRow(row, projectId));
     },

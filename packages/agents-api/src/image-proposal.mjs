@@ -6,6 +6,7 @@ export const IMAGE_PROPOSAL_SCHEMA = Object.freeze({
     operation: {type: 'string', enum: ['create', 'edit']},
     baseImageId: {type: ['string', 'null']},
     referenceIds: {type: 'array', items: {type: 'string'}, maxItems: 20},
+    changedDimension: {type:'string',enum:['style','composition','hook'],description:'Declare a dimensão criativa alterada para criar uma variante. Omita em retoques que preservam o visual e a mensagem.'},
   },
   required: ['prompt', 'operation', 'baseImageId', 'referenceIds'],
   additionalProperties: false,
@@ -19,11 +20,13 @@ export function parseImageProposal(value) {
   const operation = value.operation === undefined ? 'create' : value.operation;
   const baseImageId = value.baseImageId ?? null;
   const referenceIds = value.referenceIds === undefined ? [] : value.referenceIds;
+  const changedDimension=value.changedDimension;
   if (!['create', 'edit'].includes(operation) || !Array.isArray(referenceIds) || referenceIds.length > 20 ||
       referenceIds.some(id => !uuid(id)) || new Set(referenceIds).size !== referenceIds.length ||
-      (operation === 'edit' ? !uuid(baseImageId) : baseImageId !== null) || referenceIds.includes(baseImageId))
+      (operation === 'edit' ? !uuid(baseImageId) : baseImageId !== null) || referenceIds.includes(baseImageId) ||
+      (changedDimension!==undefined&&!['style','composition','hook'].includes(changedDimension)))
     throw Error('invalid_image_proposal');
-  return {prompt: value.prompt, operation, baseImageId, referenceIds: [...referenceIds]};
+  return {prompt: value.prompt, operation, baseImageId, referenceIds: [...referenceIds],...(changedDimension===undefined?{}:{changedDimension})};
 }
 
 export function serializeImageProposal(value) {

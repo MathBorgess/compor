@@ -8,7 +8,7 @@ import {
   getCurrentDraft,
   REFERENCE_SELECTION_EVENT,
 } from "../lib/studio-state.ts";
-import { parseImageProposal } from "@compor/agents-api/image-proposal";
+import { parseImageProposal, type ImageProposal } from "@compor/agents-api/image-proposal";
 import { prepareArtworkTransport, artworkSourceFingerprint, ArtworkTransportRequiredError } from "../lib/studio-artwork-input.ts";
 import { sameCreativeFields } from "../lib/studio-state.ts";
 import { loadReadinessFeedback } from '../lib/studio-readiness.ts';
@@ -60,7 +60,7 @@ export default function StudioChat({
   connection,
   explorationRecovery,
   developerMode = false,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean }) {
   const [message, setMessage] = useState(initialMessage),
     [busy, setBusy] = useState(false),
     [notice, setNotice] = useState(""),
@@ -668,7 +668,7 @@ export default function StudioChat({
       }
       setImageAction(null);
       if (typeof prepareImageVersion === "function") {
-        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion});
+        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion,operation:action.proposal.operation,...(action.proposal.changedDimension?{changedDimension:action.proposal.changedDimension}:{})});
         if (!saved || saved.status !== "completed" || saved.pieceId !== draft.pieceId || typeof saved.version!=="number" || !Number.isSafeInteger(saved.version) || saved.version <= draft.baseVersion) throw Error("Não foi possível preparar a nova versão. Confira o histórico antes de tentar novamente.");
         target = {pieceId: saved.pieceId, version: saved.version};
         if (!isCurrentScope()) return;

@@ -62,3 +62,13 @@ test('versões com campos dinâmicos mantêm valores e versões legadas seguem l
  const rows=await store.listProject(context,projectId);assert.equal(rows[0].content.fields,undefined);assert.deepEqual(rows[1].content.fields,fields);
  const saved=await store.save(context,{projectId,pieceId,baseVersion:1,expectedVersion:2,content:dynamicContent});assert.deepEqual(saved.version.content.fields,fields);
 });
+test('salvar imagem transmite dimensão e recusa uma variante que herda aprovação',async()=>{
+ let call;
+ const row={...version,metadata:{...version.metadata,changedDimension:'style',operation:'edit',approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
+ const store=createProjectPieceStore({url:'https://example.supabase.co',anonKey:'sb_publishable_test',fetchImpl:async(url,options)=>{call={url,options};return Response.json({status:'saved',version:row});}});
+ const input={projectId,pieceId,expectedVersion:2,baseVersion:1,content,operation:'edit',changedDimension:'style'};
+ assert.equal((await store.save(context,input)).version.metadata.changedDimension,'style');
+ assert.equal(call.url.pathname,'/rest/v1/rpc/save_piece_version_v3');
+ assert.equal(JSON.parse(call.options.body).p_changed_dimension,'style');
+ row.metadata.approval=version.metadata.approval;await assert.rejects(()=>store.save(context,input),/invalid image metadata/);
+});

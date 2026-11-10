@@ -6,6 +6,8 @@ const PersonaStep = dynamic(() => import("./persona-step"));
 const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
 import StudioReview from "./studio-review";
+import VariantCards from "./studio-variant-cards";
+import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
@@ -451,7 +453,7 @@ function ProjectStudio({
     confirmResolver.current = null;
     setDialog(null);
   }
-  async function saveCurrent(args?:DraftContext):Promise<ActionResult> {
+  async function saveCurrent(args?:DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>):Promise<ActionResult> {
     const current = local.get(),
       d = getCurrentDraft(current);
     if (!d || saveLock.current) throw Error("save_unavailable");
@@ -477,6 +479,8 @@ function ProjectStudio({
           expectedVersion: d.expectedLatestVersion,
           baseVersion: d.baseVersion,
           content: d.content,
+          ...(args?.operation?{operation:args.operation}:{}),
+          ...(args?.changedDimension?{changedDimension:args.changedDimension}:{}),
         }),
       });
       const input:unknown = await response.json();
@@ -487,11 +491,11 @@ function ProjectStudio({
         const matching = versions.filter(item => item.piece_id === d.pieceId);
         const latest = matching.reduce<PieceVersion | null>((previous, item) => !previous || item.version > previous.version ? item : previous, null);
         if (latest?.version === d.expectedLatestVersion + 1 && latest.metadata?.baseVersion === (d.baseVersion || null) &&
-          samePieceContent(latest.content, d.content)) {
+          samePieceContent(latest.content, d.content) && (latest.metadata?.operation??null)===(args?.operation??null) && (latest.metadata?.changedDimension??null)===(args?.changedDimension??null)) {
           if (!active.current) return { status: "unknown" };
           const storage=local.storage.current;
           if (!storage) throw Error("storage_unavailable");
-          await storage.copyDraftAsset({userId,projectId:project.id},
+          if(!args?.changedDimension)await storage.copyDraftAsset({userId,projectId:project.id},
             {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
             {pieceId:d.pieceId,baseVersion:latest.version,kind:'base'});
           if (!active.current) return { status: "unknown" };
@@ -512,7 +516,7 @@ function ProjectStudio({
       if (!active.current) return { status: "unknown" };
       const storage=local.storage.current;
       if (!storage) throw Error("storage_unavailable");
-      await storage.copyDraftAsset({userId,projectId:project.id},
+      if(!args?.changedDimension)await storage.copyDraftAsset({userId,projectId:project.id},
         {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
         {pieceId:d.pieceId,baseVersion:data.version.version,kind:'base'});
       if (!active.current) return { status: "unknown" };
@@ -1093,7 +1097,9 @@ function ProjectStudio({
           <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary" type="button" onClick={()=>{setReferencesRequested(false);setEditorRequested(true);}}>{hasPost?'Voltar ao post':'Definir textos da arte'}</button></div>
           <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
           <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
-        </div> : <CreativeBoard title={draft ? "Post atual" : "Sua criação"} actions={<button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button>} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
+        </div> : <div className="studio-post-workspace">
+          {draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}
+          <CreativeBoard title={draft ? "Post atual" : "Sua criação"} actions={<button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button>} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
           <label>
             Imagem-base PNG ou JPEG
             <input type="file" accept="image/png,image/jpeg" onChange={event => {
@@ -1104,6 +1110,7 @@ function ProjectStudio({
           </label>
           {editor}
         </CreativeBoard>
+        </div>
       }
       chat={chat}
       overlays={
