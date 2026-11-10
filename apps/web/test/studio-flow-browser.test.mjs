@@ -75,6 +75,7 @@ async function app(t){
    return route.fulfill({status:202,json:{status:'action_required',action:{name:'compor_novo_post',args:{projectId,requestId:id(80),revision:body.context.revision}},actionBinding:'synthetic-binding'}});
   }
   if(url.pathname==='/api/studio/action'){calls.push({path:url.pathname,body:request.postDataJSON()});return route.fulfill({json:{status:'completed',text:'Novo post preparado no navegador.'}});}
+  if(url.pathname==='/api/image-assets'){calls.push({path:url.pathname,method:request.method()});return route.fulfill({json:{assets:[],nextCursor:null}});}
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
@@ -182,7 +183,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.getByLabel('Legenda',{exact:true}).fill('Legenda pronta para copiar.');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();
- await page.getByRole('heading',{name:'Projeto sintético',exact:true}).waitFor();
+ await page.getByRole('region',{name:'Arte e legenda do projeto',exact:true}).getByRole('heading',{name:'Projeto sintético',exact:true}).waitFor();
  assert.equal(await page.getByLabel('Título',{exact:true}).count(),0);
  assert.equal(await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).count(),0);
  for(const name of ['Preparar PNG','Salvar PNG final no projeto','Aprovar esta versão','Baixar'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,`${name} is outside the review`);
@@ -199,7 +200,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const converted=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  assert.deepEqual([...(await readFile(await(await converted).path())).subarray(0,8)],[137,80,78,71,13,10,26,10],'a replacement JPEG is composed at download time');
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);assert.equal(calls.filter(call=>call.path==='/api/studio/action').length,1);
- assert.equal(calls.some(call=>call.path.includes('/image')),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+ assert.equal(calls.some(call=>['/api/agent/image','/api/images'].includes(call.path)),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
 });
 

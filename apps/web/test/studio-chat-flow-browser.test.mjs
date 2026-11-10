@@ -318,7 +318,7 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
  await page.getByText('Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',{exact:true}).waitFor();
  const after=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);const recovered=after.drafts.find(d=>d.baseVersion===1&&d.pieceId===draft.pieceId);assert.equal(recovered.content.headline,'Edição posterior preservada');assert.equal(recovered.dirty,true);assert.equal(versions.find(v=>v.piece_id===draft.pieceId).content.headline,'Conteúdo já salvo');
  assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image,'a versão recuperada recebe os bytes da imagem-base original');
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
  assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,0);
  // A subsequent simulated edit must transport the recovered bytes, not just
  // show a cached preview from the previous selection.
