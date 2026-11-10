@@ -20,7 +20,7 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
    response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));
   }else{response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>Teste local de armazenamento</title>');}
  });
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const evidence=await page.evaluate(async()=>{
@@ -87,7 +87,7 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
 
 test('budget de referências é aplicado antes de gravação e preserva o último estado legível', {skip:!existsSync(browserPath)},async t=>{
  const server=createServer(async(request,response)=>{const name=request.url;if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(name)){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));}else response.end('<!doctype html>');});
- await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>new Promise(resolve=>server.close(resolve)));
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const result=await page.evaluate(async()=>{
