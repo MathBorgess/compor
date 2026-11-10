@@ -16,7 +16,6 @@ concurrency:
 env:
   NEXT_TELEMETRY_DISABLED: '1'
   ASTRO_TELEMETRY_DISABLED: '1'
-  COMPOR_STUDIO_WEB_ENABLED: 'true'
 
 jobs:
   static:

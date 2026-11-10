@@ -13,7 +13,7 @@ export function proxy(request: NextRequest) {
   const auth = authConfig();
   const light = servesLightEntry(
     { method: request.method, pathname: request.nextUrl.pathname, cookieNames: request.cookies.getAll().map(cookie => cookie.name) },
-    { auth, localAuth: Boolean(auth && localDevelopmentAuth(auth)), studioEnabled: process.env.COMPOR_STUDIO_WEB_ENABLED !== 'false' },
+    { auth, localAuth: Boolean(auth && localDevelopmentAuth(auth)) },
   );
   if (!light) return NextResponse.next();
   return new Response(renderLightEntry({ css, loginError: request.nextUrl.searchParams.get('login') === 'erro' }), { headers: lightEntryHeaders });
