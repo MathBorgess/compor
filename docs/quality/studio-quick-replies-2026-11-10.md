@@ -126,7 +126,7 @@ As capturas sintéticas ficam em `/tmp/compor-studio-visual-quick-replies-deskto
 - O teste `fontes e diretórios de dependências são privados…`, de `browser-worker-trees.test.mjs`, falha só no macOS. Ali, `/var` é um link para `/private/var`, e o teste compara caminhos sem resolvê-lo. Nem o teste nem `worker-trees.mjs` foram alterados; o CI Linux é a referência.
 - Não houve teste com o modelo real. Não sabemos se ele propõe alternativas úteis. A ausência de ferramentas é garantida por construção, não por comportamento observado.
 - Não houve teste com pessoas, leitores de tela ou teclados virtuais reais.
-- Uma resposta rápida encerra a pausa da pergunta como uma resposta digitada, e a exploração automática continua sob a autorização de 06/11. Se Matheus preferir outra regra, a decisão é dele.
+- Uma resposta rápida encerra a pausa da pergunta como uma resposta digitada, e a exploração automática continua sob a autorização de 06/11. Matheus confirmou esse comportamento em 10/11, depois desta revisão.
 
 ## Procedimento para validar o fluxo real
 

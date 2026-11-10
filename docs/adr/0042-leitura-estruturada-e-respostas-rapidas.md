@@ -56,7 +56,7 @@ As opções também ficam indisponíveis sem IA, com turno pendente, inspeção 
 
 Uma resposta rápida equivale a responder por texto. Ela encerra a pausa da pergunta como já faz qualquer resposta. A exploração continua sob a autorização de 06/11: lotes de três, espera de 15 segundos e parada após duas rodadas sem retorno.
 
-O turno da resposta não tem ferramentas, então não chama `generate_image`, salvamento, aprovação nem renomeação. Se Matheus preferir que uma resposta rápida não retome a exploração automática, essa é uma decisão pendente dele.
+O turno da resposta não tem ferramentas, então não chama `generate_image`, salvamento, aprovação nem renomeação. Matheus confirmou esse comportamento em 10/11/2026, na mesma sessão do Claude Code, ao responder “Manter como está” à pergunta sobre a retomada da exploração.
 
 ### Tela de referências
 
