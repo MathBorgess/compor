@@ -1,6 +1,6 @@
 # ADR 0043 — Deploy pela integração Git da Vercel, com Deployment Checks
 
-- Estado: accepted; configuração na Vercel pendente de Matheus
+- Estado: accepted; integração Git observada em preview, produção e Deployment Checks ainda não verificados
 - Data: 11/11/2026
 - Fonte: pedido de Matheus nesta data, na sessão do Claude Code: gerar deployments e atualizar o site a cada merge na `main`. Depois de saber que a Vercel CI só roda checks, ele escolheu “Git + Deployment Checks, não inclua Vercel CI”.
 
@@ -13,7 +13,9 @@ O [ADR 0039](0039-publicacao-vercel-apos-migrations.md) removeu o deploy por Git
 - está em beta;
 - exige o repositório conectado a um projeto Vercel.
 
-Em 11/11, os commits da `main` não tinham status nem check-run da Vercel. Os deployments `production` do GitHub vinham do ambiente do workflow de migrations. O repositório `MathBorgess/compor` continuava sem vínculo Git com o projeto `compor-marco0`.
+Na conferência de 11/11, antes deste PR, o último commit da `main` (`4e027f7`) não tinha status nem check-run da Vercel. Os deployments `production` do GitHub vinham do ambiente do workflow de migrations.
+
+Depois da abertura do PR 49, o commit `f31c286` recebeu o status `Vercel` com sucesso às 10:16 UTC, apontando um preview do projeto `compor-marco0`. A integração Git estava, portanto, ativa para PRs nesse momento. A data da conexão não foi observada, e a branch de produção, o Deployment Check, a versão de Node e as variáveis por ambiente não podem ser conferidos pelo GitHub.
 
 ## Decisão
 
