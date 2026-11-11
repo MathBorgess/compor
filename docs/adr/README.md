@@ -42,9 +42,10 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0036](0036-remocao-da-interface-legada.md) | accepted | Remoção autorizada da interface legada e do seletor por variável |
 | [0037](0037-referencias-sugeridas-e-retorno-ao-post.md) | accepted | Sugestões, consentimento por sessão, histórico próprio e retorno ao post |
 | [0038](0038-chave-padrao-openai-no-vault.md) | accepted | Chave padrão no Vault, prioridade BYOK e separação de fontes |
-| [0039](0039-publicacao-vercel-apos-migrations.md) | accepted; caminho substituído | Publicação após migrations, substituída por pedido de Vercel CI ainda bloqueado |
+| [0039](0039-publicacao-vercel-apos-migrations.md) | accepted; caminho substituído | Publicação após migrations; caminho por Action e depois por Vercel CI substituídos pelo ADR 0043 |
 | [0040](0040-validacao-argumentos-acoes-estudio.md) | recorded | Argumentos verificados no domínio da prova, com idempotência e BYOK legado preservados |
 | [0041](0041-referencias-com-conversa-lateral.md) | recorded | Referências como conteúdo principal e conversa lateral, com alternância compacta sem sobreposição |
 | [0042](0042-leitura-estruturada-e-respostas-rapidas.md) | recorded | Leitura estruturada com opções fechadas, resposta rápida sem ferramentas e seleção de referências visível |
+| [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; configuração na Vercel pendente | Deploy pela integração Git da Vercel, produção retida até o check de migrations, sem Vercel CI |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

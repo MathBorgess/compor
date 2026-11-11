@@ -10,6 +10,9 @@ operation=doc['on']['workflow_dispatch']['inputs']['operation']
 assert operation['default']=='migrate' and operation['options']==['migrate','bootstrap']
 assert doc['concurrency']['cancel-in-progress']=='false' and doc['concurrency']['queue']=='max'
 assert set(doc['jobs'])=={'preflight','migrate'}, 'Deploy Vercel não pertence ao workflow de migrations.'
+# Vercel Deployment Checks (ADR 0043) require this check by job name: a rename silently holds production.
+assert doc['jobs']['preflight']['name']=='Confirm migration automation is enabled'
+assert doc['jobs']['migrate']['name']=='Apply migrations or initialize baseline', 'Atualize Deployment Checks na Vercel e o ADR 0043 antes de renomear este job.'
 pre=doc['jobs']['preflight']['steps'][0]['run']; migrate=doc['jobs']['migrate']['steps'][-1]['run']
 subprocess.run(['bash','-n'],input=pre,text=True,check=True);subprocess.run(['bash','-n'],input=migrate,text=True,check=True)
 sha_guard=doc['jobs']['migrate']['steps'][1]['run']
