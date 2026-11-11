@@ -27,3 +27,7 @@ O smoke usa somente a entrada pública, sem sessão, modelo ou geração; não c
 Matheus substituiu o deploy por Action pelo setup `npx skills use vercel/ci@setup`. O job de deploy e seu helper exclusivo foram removidos; os jobs e contratos de migrations permanecem. A primeira execução do caminho anterior confirmou as migrations, mas parou antes de criar qualquer build por ausência de `VERCEL_TOKEN`. Não houve ativação por esse workflow.
 
 A skill de Vercel CI foi executada e exige repositório privado vinculado a um projeto Vercel, além de CI habilitado antes de publicar a branch de setup. O repositório é privado, mas a equipe retornou `linkedProjects: []`; as ferramentas conectadas não habilitam CI nem vinculam o projeto existente. O setup ficou bloqueado nessa pré-condição, sem mudanças Turborepo ou publicação fictícia. Vercel CI executa checks; não prova leitura do Vault nem substitui sozinho as migrations com credenciais. A coordenação automática de publicação descrita acima deixa de estar ativa até a configuração do caminho substituto.
+
+## Substituição em 11/11/2026
+
+Matheus escolheu a integração Git da Vercel com Deployment Checks e excluiu a Vercel CI, que só executa checks. O [ADR 0043](0043-deploy-vercel-por-integracao-git.md) substitui a seção anterior no ponto em que apontava a Vercel CI como caminho de publicação. A produção volta a esperar as migrations, agora pelo check `Apply migrations or initialize baseline`, sem job de deploy no GitHub Actions.

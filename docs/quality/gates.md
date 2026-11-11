@@ -19,6 +19,15 @@ Nos preparos de migração, `READ_COMMIT` identifica os bytes em um commit publi
 
 No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `userns` somente ao caminho exato do Chromium instalado. Isso permite iniciar o sandbox do navegador baixado pelo Playwright, que não usa o caminho coberto pelo perfil do Chrome do sistema. O job mantém AppArmor ativo e não passa `--no-sandbox` ao Lighthouse. A configuração segue a [orientação do Chromium para perfis AppArmor](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md) e existe somente no runner temporário.
 
+## Sinais externos da Vercel
+
+Com a integração Git do [ADR 0043](../adr/0043-deploy-vercel-por-integracao-git.md), a Vercel acrescenta dois sinais que ficam fora do Quality gate.
+
+- **Preview de cada PR.** O status da Vercel com o link do preview mostra se o build passa no ambiente dela: instalação sem `--ignore-scripts`, variáveis do projeto e versão de Node configurada. O `quality:build` não cobre essas diferenças. Para bloquear merges, a proteção da branch precisa exigir esse status, uma configuração do GitHub que cabe a Matheus.
+- **Promoção da produção.** Em Deployment Checks, o deployment da `main` espera o check `Apply migrations or initialize baseline`. A Vercel identifica o check pelo nome do job, e `scripts/tests/test_migration_workflow.py`, no job de contratos, exige esse nome. Renomear o job pede atualizar a Vercel e o ADR no mesmo PR.
+
+Nenhum dos dois faz smoke do deployment publicado nem comprova login, geração ou dados reais.
+
 ## Execução por área
 
 O primeiro passo do job estático, depois do checkout e do Node, executa `scripts/quality/changed-areas.mjs`. Num pull request, o script lista os arquivos com `git diff --name-only --no-renames` entre a base e o head do PR. Um arquivo movido conta no caminho antigo e no novo. As regras ficam na tabela `RULES` desse script, e a primeira que casar vale. Por exemplo, `apps/web/**` liga `web`, `packages/**` liga `web` e `unit`, e `apps/site/**` liga `site`. Markdown em `docs/` e na raiz não liga nada. Os outros arquivos de `docs/` ligam `unit`, porque um teste do protótipo lê JSON em `docs/evals`. `.github/**`, os `package*.json` da raiz, `eslint.config.mjs` e qualquer caminho sem regra ligam tudo.
