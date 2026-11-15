@@ -1,6 +1,6 @@
 # ADR 0045 — Conversas isoladas por post
 
-- Estado: decisão de produto aprovada; implementação local em verificação.
+- Estado: decisão de produto aprovada; implementação local disponível para avaliação.
 - Data: 15/11/2026.
 - Fonte: aprovação explícita de conversa e versões próprias de cada post, compartilhando o contexto geral do projeto, nesta conversa.
 
@@ -31,3 +31,5 @@ Marcadores de tentativas históricas não são apagados nem reenviados. Históri
 ## Verificação
 
 Testes de domínio cobrem separação, versões selecionadas, migração idempotente e recusa de campos inválidos. Contratos de servidor cobrem prova assinada, adulteração, consulta/reutilização entre posts e compatibilidade de prova histórica. Navegador deve cobrir dois posts, rascunhos, reload, referências, operação atrasada, troca de fonte e gravação local. Registrar resultados finais e limitações separadamente; teste simulado não comprova isolamento em Supabase real ou CI Linux.
+
+Os resultados e limites da verificação local estão no [registro de usabilidade](../quality/frontend-usability-2026-11-15.md). A avaliação manual ainda está pendente e o gate agregado de contratos não foi aprovado no Windows.

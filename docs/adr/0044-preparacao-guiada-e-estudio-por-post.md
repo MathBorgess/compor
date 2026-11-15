@@ -1,6 +1,6 @@
 # ADR 0044 — Preparação guiada e estúdio por post
 
-- Estado: decisão de produto aprovada; implementação local em verificação.
+- Estado: decisão de produto aprovada; implementação local disponível para avaliação.
 - Data: 15/11/2026.
 - Fonte: fluxo de caixas e setas aprovado pela pessoa usuária nesta conversa, seguido de autorização para implementação completa e avaliação local ao final. Usabilidade é a prioridade; a identidade visual existente deve ser mantida. Nenhum envio ao remoto foi autorizado.
 
@@ -25,3 +25,5 @@ Preserva os contratos de credenciais do ADR 0038: disponibilidade e recarga não
 ## Verificação
 
 Usar o roteiro do plano de usabilidade com fornecedores simulados e navegador real. Verificar zero geração na preparação/conexão/recarga, exploração somente por pedido explícito, retorno das configurações sem perda e teclado/compacto. Resultados de gates e avaliação humana serão registrados ao concluir a implementação; este ADR não afirma CI ou deployment aprovado.
+
+Os resultados e limites da verificação local estão no [registro de usabilidade](../quality/frontend-usability-2026-11-15.md). A avaliação manual ainda está pendente e o gate agregado de contratos não foi aprovado no Windows.

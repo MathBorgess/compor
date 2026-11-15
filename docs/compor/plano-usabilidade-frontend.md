@@ -203,11 +203,15 @@ Recortes de contrato podem ter commits separados antes da UI consumi-los, manten
 | --- | --- |
 | Planejamento | Aprovado; implementação completa autorizada |
 | 0 — Ambiente local | Preparado, privado e executável; verificação com Next e Chromium realizada |
-| 1 — Projeto e contexto | Implementado; criação, perguntas e retomada em verificação final |
+| 1 — Projeto e contexto | Implementado; criação, perguntas e retomada verificadas |
 | 2 — IA e referências | Implementado; intenção explícita, fonte e retorno às referências verificados com fixtures |
 | 3 — Posts e conversas | Implementado; escopos assinados, migração, dois posts e rascunhos separados verificados |
 | 4 — Estúdio dividido | Implementado; divisão por teclado/ponteiro e alternância compacta verificadas |
-| 5 — Configurações e saída | Implementado; contexto, IA, referências e recursos avançados reunidos; exportação em verificação final |
-| 6 — Integração e fechamento | Suíte completa e medição finais em andamento; avaliação humana ainda pendente |
+| 5 — Configurações e saída | Implementado; configurações reunidas e exportação verificada |
+| 6 — Integração e fechamento | Implementado para avaliação local; navegador 397/397, build e performance aprovados; gate unitário no Windows e avaliação humana pendentes |
 
 Não considerar uma etapa concluída apenas porque compila, está bonita na captura ou recebeu commit. Registrar separadamente os cenários verificados, a avaliação da pessoa e os impedimentos técnicos que restarem. Validação local não comprova CI Linux, deployment, isolamento entre contas reais ou qualidade das imagens geradas.
+
+## Evidência da implementação
+
+O [registro dos checks e limites](../quality/frontend-usability-2026-11-15.md) separa testes do fluxo, performance da entrada, limitações dos módulos legados no Windows e avaliação humana. A configuração de revisão, os scripts de iniciar/parar, dados fictícios, capturas e artefatos brutos continuam privados. Não houve push, PR, merge, migration remota ou deploy.
