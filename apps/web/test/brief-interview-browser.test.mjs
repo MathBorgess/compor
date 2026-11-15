@@ -222,18 +222,69 @@ test('no editor, histórico rola e o compositor continua acessível com a conver
  assert.deepEqual(errors,[]);
 });
 
-test('no editor, divisão responde a teclado e ponteiro e cada painel pode ocupar a área', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('no editor, divisão e chat minimizável preservam a área completa em desktop e celular', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await openProject(page,origin);await openEditorConversation(page);
+ const field=await openConversation(page);await field.fill('Rascunho preservado ao minimizar');
  const separator=page.getByRole('separator',{name:'Divisão entre conversa e post'});
+ const desktop=await page.locator('.guided-workspace').boundingBox();
+ const desktopMain=await page.locator('.studio-canvas-column').boundingBox();
+ assert.ok(desktop.x<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
  const start=Number(await separator.getAttribute('aria-valuenow'));await separator.focus();await page.keyboard.press('ArrowRight');
  assert.equal(Number(await separator.getAttribute('aria-valuenow')),start+3);
  const grip=await separator.boundingBox();await page.mouse.move(grip.x+6,grip.y+100);await page.mouse.down();await page.mouse.move(grip.x+90,grip.y+100,{steps:4});await page.mouse.up();
  assert.ok(Number(await separator.getAttribute('aria-valuenow'))>start+3);
- await page.getByRole('button',{name:'Conversa',exact:true}).click();assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),false);
- await page.getByRole('button',{name:'Post',exact:true}).click();assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),false);
- await page.getByRole('button',{name:'Ver ambos',exact:true}).click();assert.equal(await separator.isVisible(),true);
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).click();
+ assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),false);
+ assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
+ assert.equal(await separator.isVisible(),false);
+ await page.waitForFunction(()=>document.activeElement?.classList.contains('guided-chat-launcher'));
+ await page.keyboard.press('Enter');assert.equal(await separator.isVisible(),true);
+ assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Conversa do post');
+ assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
  await page.setViewportSize({width:390,height:844});await openConversation(page);
- assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),false);
+ assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
+ const overlap=await page.evaluate(()=>{const a=document.querySelector('.guided-chat-minimize')?.getBoundingClientRect(),b=document.querySelector('.studio-chat-details-toggle')?.getBoundingClientRect();return a&&b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});
+ assert.equal(overlap,false,'controle de minimizar não cobre os detalhes da conversa');
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).focus();await page.keyboard.press('Enter');
+ assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
+ const bounds=await page.locator('.guided-workspace').boundingBox();
+ const mobileMain=await page.locator('.studio-canvas-column').boundingBox();
+ assert.ok(bounds.x<=1&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await openConversation(page);assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
+ assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
+ assert.deepEqual(errors,[]);
+});
+
+test('configurações do projeto e referências ocupam o viewport com abas e rodapé acessíveis', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,errors}=await app(t);await openProject(page,origin);
+ const dialog=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
+ const tabs=dialog.getByRole('navigation',{name:'Configurações',exact:true});
+ async function assertViewport(width,height){
+  const bounds=await dialog.boundingBox();
+  assert.ok(Math.abs(bounds.x)<=1&&Math.abs(bounds.y)<=1&&Math.abs(bounds.width-width)<=1&&Math.abs(bounds.height-height)<=1,'configurações preenchem o viewport');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'a página não rola na horizontal');
+ }
+ await assertViewport(1440,1000);
+ await tabs.getByRole('button',{name:'Contexto',exact:true}).click();
+ assert.equal(await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).isVisible(),true);
+ await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
+ await tabs.getByRole('button',{name:'Referências',exact:true}).click();
+ const content=dialog.locator('.guided-reference-content'),footer=dialog.locator('.guided-references footer');
+ assert.ok(await content.evaluate(element=>element.scrollHeight>element.clientHeight),'referências rolam dentro do viewport');
+ await content.evaluate(element=>element.scrollTop=element.scrollHeight);
+ const footerBounds=await footer.boundingBox(),tabsBounds=await tabs.boundingBox();
+ assert.ok(tabsBounds.y>=0&&tabsBounds.y+tabsBounds.height<=500,'abas continuam visíveis');
+ assert.ok(footerBounds.y>=0&&footerBounds.y+footerBounds.height<=500,'rodapé continua visível após rolar as referências');
+ await page.setViewportSize({width:390,height:400});await assertViewport(390,400);
+ const shortContentHeight=await content.evaluate(element=>element.clientHeight);
+ assert.ok(shortContentHeight>=60,`conteúdo de referências ainda tem área de rolagem em viewport baixo (${shortContentHeight}px)`);
+ const shortFooter=await footer.boundingBox();assert.ok(shortFooter.y+shortFooter.height<=400,'rodapé continua no viewport baixo');
+ await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
+ const returnBounds=await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).boundingBox();
+ assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'retorno permanece acessível em outra aba');
+ await closeSettings(page);await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+ assert.ok((await page.getByRole('dialog',{name:'Configurações deste post',exact:true}).boundingBox()).width<390,'diálogo de post mantém dimensão própria');
  assert.deepEqual(errors,[]);
 });
 

@@ -2,9 +2,6 @@
 .studio-navigation-shell[data-expanded='true'] { width:244px;flex-basis:244px; }
 .studio-navigation { position:sticky;top:var(--studio-bar);max-height:calc(100dvh - var(--studio-bar));overflow-y:auto;padding:10px;display:grid;gap:16px;align-content:start; }
 .studio-navigation-actions { display:grid;gap:8px; }
-.studio-navigation-sections { display:grid;gap:6px;border-top:1px solid var(--studio-line);padding-top:12px;margin-top:4px; }
-.studio-navigation-sections>p { padding:0 10px 4px;color:var(--studio-muted);font-size:12px; }
-.studio-navigation-shell[data-expanded='false'] .studio-navigation-sections>p { display:none; }
 .studio-navigation button { display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--studio-ink);font:inherit;text-align:left;cursor:pointer; }
 .studio-navigation button svg { width:22px;height:22px;flex:0 0 22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round; }
 .studio-navigation button span { line-height:1.3; }

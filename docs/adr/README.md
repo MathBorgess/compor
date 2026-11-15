@@ -46,10 +46,9 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0040](0040-validacao-argumentos-acoes-estudio.md) | recorded | Argumentos verificados no domínio da prova, com idempotência e BYOK legado preservados |
 | [0041](0041-referencias-com-conversa-lateral.md) | recorded | Referências como conteúdo principal e conversa lateral, com alternância compacta sem sobreposição |
 | [0042](0042-leitura-estruturada-e-respostas-rapidas.md) | recorded | Leitura estruturada com opções fechadas, resposta rápida sem ferramentas e seleção de referências visível |
-| [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; preview observado, produção não verificada | Deploy pela integração Git da Vercel, produção retida até o check de migrations, sem Vercel CI |
+| [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; retenção inoperante em 15/11 | Deploy pela integração Git da Vercel; check configurado sem pré-requisito de autoatribuição de domínios |
 | [0044](0044-preparacao-guiada-e-estudio-por-post.md) | decisão aprovada; implementação local em verificação | Preparação guiada, início explícito da geração, configurações reunidas e estúdio dividido |
 | [0045](0045-conversas-isoladas-por-post.md) | decisão aprovada; implementação local em verificação | Escopo de conversa por post, provas de continuidade e migração local preservada |
-
 | [0046](0046-contexto-e-referencias-por-post.md) | decisão aprovada; implementação local em verificação | Objetivo e referências por post, snapshots, migração preservada e sinais com alcance explícito |
 
 | [0047](0047-exclusao-logica-de-projetos.md) | implementado localmente | Exclusão lógica da lista web, confirmação, revisão esperada e histórico preservado |
@@ -58,8 +57,11 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 
 | [0049](0049-lista-de-posts-preparacao-e-menu-lateral.md) | implementado localmente | Lista inicial vazia, preparação de cada post e ações num menu lateral recolhível |
 
-| [0050](0050-configuracoes-do-projeto-em-pagina.md) | implementado localmente | Configurações em página, seções no menu lateral e conteúdo de origem preservado ao retornar |
+| [0050](0050-configuracoes-do-projeto-em-pagina.md) | apresentação substituída pelo ADR 0053 | Configurações em página, seções no menu lateral e conteúdo de origem preservado ao retornar |
 
 | [0051](0051-nome-confirmacao-e-exclusao-de-posts.md) | implementado localmente; migration não aplicada | Nome organizacional, criação confirmada e exclusão lógica de posts com catálogo sob RLS |
+
+| [0052](0052-ia-inicial-e-jornada-unica-no-estudio.md) | decisão solicitada; implementação em validação | IA do Compor inicial sem geração automática, conversa minimizável e seleção única de referências |
+| [0053](0053-integracao-da-main-e-decisoes-de-usabilidade.md) | implementado localmente | Integração da main com nomes/exclusão, modais aprovados e histórico de decisões preservado |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

@@ -700,7 +700,7 @@ export default function StudioChat({
       requestAnimationFrame(()=>{const current=composerRef.current;if(current&&document.activeElement===current)current.setSelectionRange(current.value.length,current.value.length);});
       return;
     }
-    if(quickReplyStatus(entry,getState().messages,quickReplyContext()).kind!=='active')return;
+    if(quickReplyStatus(entry,conversationMessages(getState(),conversationId),quickReplyContext()).kind!=='active')return;
     const text=quickReplyMessage(entry.reply,option);
     if(!text)return;
     await submitText(text,{fromComposer:false,quickReply:{version:1,intent:option.intent},onPrepared:userMessageId=>{

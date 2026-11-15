@@ -9,13 +9,13 @@ import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5);
+const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5),foreignPiece=id(6);
 // The real StudioChat with an in-memory studio state persisted in sessionStorage, so reloads keep the history.
 const source=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import StudioChat from './app/studio-chat.tsx';
-import {createStudioState,createPost,addReference,parseStudioState} from './lib/studio-state.ts';
+import {createStudioState,createPost,addMessage,addReference,parseStudioState} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);
 const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
@@ -24,8 +24,8 @@ function initial(){const saved=sessionStorage.getItem('fixture-state');if(saved)
 function Fixture(){const [key,setKey]=useState(()=>sessionStorage.getItem('fixture-key')==='1'),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
 function change(fn){const next=fn(current.current);current.current=next;sessionStorage.setItem('fixture-state',JSON.stringify(next));setState(next);return next;}
 function choose(fn){change(fn);recordReferenceRound(current.current);}
-return <main><button onClick={()=>{sessionStorage.setItem('fixture-key','1');setKey(true);}}>Conectar</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><output id="snapshot">{JSON.stringify(state)}</output>
-<div style={{width:380,height:720,display:'flex'}}><StudioChat state={state} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
+return <main><button onClick={()=>{sessionStorage.setItem('fixture-key','1');setKey(true);}}>Conectar</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>change(s=>addMessage(s,{id:crypto.randomUUID(),role:'user',text:'Mensagem do outro post',createdAt:new Date().toISOString(),conversationId:'${foreignPiece}',context:{pieceId:'${foreignPiece}',baseVersion:0,expectedLatestVersion:0}}))}>Mensagem outro post</button><output id="snapshot">{JSON.stringify(state)}</output>
+<div style={{width:380,height:720,display:'flex'}}><StudioChat state={state} conversationId={__CONVERSATION_SCOPE__} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 const reply={version:1,kind:'taste_reading',reading:'As referências são editoriais e sóbrias.',recommendation:'Siga a tipografia serifada, porque conversa com quem compra presente.',question:'Posso seguir pela tipografia serifada?',synthesis:'Tipografia serifada com respiro editorial',options:[
  {id:'agree',intent:'agree',label:'Concordo'},
@@ -35,7 +35,7 @@ const reply={version:1,kind:'taste_reading',reading:'As referências são editor
 ]};
 const text=`${reply.reading}\n\n**Recomendação:** ${reply.recommendation}\n\n${reply.question}`;
 async function setup(t,{structured=reply,readOnly=false}={}){ // null omits the structure
- const result=await build({stdin:{contents:source.replace('<StudioChat state=',`<StudioChat readOnly={${readOnly}} state=`),loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
+ const result=await build({stdin:{contents:source.replace('<StudioChat state=',`<StudioChat readOnly={${readOnly}} state=`).replace('__CONVERSATION_SCOPE__',readOnly?'undefined':'"references"'),loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(result.outputFiles[0].text);}else if(req.url?.endsWith('.svg')){res.setHeader('Content-Type','image/svg+xml');res.end('<svg xmlns="http://www.w3.org/2000/svg"/>');}else{res.setHeader('Content-Type','text/html');res.end('<div id="root"></div><script type="module" src="/fixture.js"></script>');}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
@@ -108,12 +108,23 @@ test('“Concordo” registra resposta humana pelo mesmo envio, uma única vez, 
  assert.equal(calls.length,2);
 });
 
+test('mensagem de outro post não bloqueia a resposta rápida da conversa de referências',options,async t=>{
+ const {page,calls,reading,waitForCalls}=await setup(t);await reading();
+ await page.getByRole('button',{name:'Mensagem outro post'}).click();
+ const agree=group(page).getByRole('button',{name:'Concordo',exact:true});
+ assert.equal(await agree.isEnabled(),true,'a opção permanece disponível na conversa atual');
+ await agree.click();await waitForCalls(2);
+ assert.equal(calls[1].conversationId,'references');
+ assert.equal(calls[1].message,'Concordo com a recomendação: Tipografia serifada com respiro editorial.');
+ assert.equal(calls[1].history.some(item=>item.text==='Mensagem do outro post'),false);
+});
+
 test('alternativa pelo teclado envia a descrição; “Quero ajustar” só abre o compositor',options,async t=>{
  const {page,calls,reading,waitForCalls}=await setup(t);await reading();
  await group(page).getByRole('button',{name:'Quero ajustar',exact:true}).click();
  const composer=page.getByLabel('Sua mensagem');
  assert.equal(await composer.inputValue(),'Quero ajustar a recomendação: ');
- assert.equal(await page.evaluate(()=>document.activeElement?.id),'studio-chat-message');
+ assert.equal(await page.evaluate(()=>document.activeElement?.id),'studio-chat-message-references');
  await composer.fill('texto meu');
  await group(page).getByRole('button',{name:'Quero ajustar',exact:true}).click();
  assert.equal(await composer.inputValue(),'texto meu','um rascunho existente é preservado');
@@ -151,7 +162,7 @@ test('estrutura ausente, inválida ou corrompida mostra apenas o texto da leitur
   assert.equal(await page.getByText('Recomendação:',{exact:true}).count(),1,'o fallback textual mantém a recomendação');
  }
  const {page,origin,reading}=await setup(t);await reading();
- await page.evaluate(key=>localStorage.setItem(key,JSON.stringify({version:1,entries:[{messageId:'x'}]})),`compor-quick-replies:v1:${user}:${project}`);
+ await page.evaluate(key=>localStorage.setItem(key,JSON.stringify({version:1,entries:[{messageId:'x'}]})),`compor-quick-replies:v1:${user}:${project}:references`);
  await page.goto(origin);await page.getByText(reply.question,{exact:true}).waitFor();
  assert.equal(await page.locator('.studio-taste-card').count(),0,'registro corrompido volta ao texto');
 });

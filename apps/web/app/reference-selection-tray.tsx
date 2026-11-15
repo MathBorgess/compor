@@ -20,10 +20,15 @@ function referenceTitle(reference: StudioReference) {
 
 /** The current selection, always visible above the suggestions: how many, where
  * each came from, and how to remove it. Removing never deletes other images. */
-export default function ReferenceSelectionTray({ items, limit, onRemove }: { items: Item[]; limit: number; onRemove: (id: string) => Promise<void> }) {
-  const heading = useRef<HTMLHeadingElement>(null), list = useRef<HTMLUListElement>(null), focusIndex = useRef<number | null>(null);
+export default function ReferenceSelectionTray({ items, limit, onRemove, availableShared = [], onUseShared }: { items: Item[]; limit: number; onRemove: (id: string) => Promise<void>; availableShared?: (StudioReference & { url?: string })[]; onUseShared?: (id: string) => void | Promise<void> }) {
+  const heading = useRef<HTMLHeadingElement>(null), list = useRef<HTMLUListElement>(null), focusIndex = useRef<number | null>(null), focusAdded = useRef<string | null>(null);
   const ids = items.map(item => item.id).join(",");
   useEffect(() => {
+    const added = focusAdded.current;
+    if (added) {
+      const card = Array.from(list.current?.children ?? []).find(item => item.getAttribute("data-reference-id") === added);
+      if (card) { focusAdded.current = null; card.querySelector<HTMLButtonElement>("button")?.focus(); }
+    }
     const index = focusIndex.current;
     if (index === null) return;
     focusIndex.current = null;
@@ -42,13 +47,26 @@ export default function ReferenceSelectionTray({ items, limit, onRemove }: { ite
       ? <p className="reference-selection-empty">Nenhuma imagem selecionada. Escolha abaixo o que chamou sua atenção.</p>
       : <ul ref={list} className="reference-selection-list">{items.map((item, index) => {
         const origin = referenceOrigin(item), title = referenceTitle(item);
-        return <li key={item.id}>
+        return <li key={item.id} data-reference-id={item.id}>
           {item.url ? <img src={item.url} alt="" /> : <span className="reference-selection-placeholder" aria-hidden="true" />}
           <span className="reference-source" data-origin={origin}>{REFERENCE_ORIGIN_LABEL[origin]}</span>
           <span className="reference-selection-scope">{item.scopeLabel}</span><span className="reference-selection-title" title={title}>{title}</span>
           <button type="button" aria-label={`Remover da seleção: ${title}`} onClick={() => { focusIndex.current = index; void onRemove(item.id); }}>{item.removeLabel??'Remover'}</button>{item.onShare&&<button type="button" onClick={item.onShare}>Compartilhar com o projeto</button>}
         </li>;
       })}</ul>}
+    {availableShared.length > 0 && onUseShared && <div className="reference-shared-available">
+      <h3>Disponíveis do projeto</h3>
+      <p>Estas referências estão no projeto, mas não fazem parte deste post.</p>
+      <ul className="reference-selection-list">{availableShared.map(reference => {
+        const title = referenceTitle(reference);
+        return <li key={reference.id}>
+          {reference.url ? <img src={reference.url} alt="" /> : <span className="reference-selection-placeholder" aria-hidden="true" />}
+          <span className="reference-selection-scope">Do projeto</span>
+          <span className="reference-selection-title" title={title}>{title}</span>
+          <button type="button" aria-label={`Usar neste post: ${title}`} onClick={() => { focusAdded.current = reference.id; void onUseShared(reference.id); }}>Usar neste post</button>
+        </li>;
+      })}</ul>
+    </div>}
     <p className="reference-selection-note">A seleção orienta o estilo, sem aprovar a imagem. O Compor comenta as referências na conversa.</p>
   </section>;
 }

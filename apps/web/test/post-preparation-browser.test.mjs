@@ -60,7 +60,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   assert.equal(await nav.locator('button svg').count(),3);assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
   await button('Expandir menu').focus();await page.keyboard.press('Enter');assert.equal(await button('Recolher menu').getAttribute('aria-expanded'),'true');
   await page.keyboard.press('Escape');assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
-  await button('Configurações do projeto').click();await page.getByRole('region',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
+  await button('Configurações do projeto').click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
   await button('Criar novo post').click();await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');
   await page.getByLabel('Nome do post',{exact:true}).fill('Post de autoridade');await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
   if(width===390){await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));const menu=await button('Expandir menu').boundingBox(),header=await page.locator('.studio-topbar').boundingBox();assert.ok(menu.y>=header.y+header.height-1,'menu permanece abaixo do cabeçalho durante a rolagem');await button('Expandir menu').click();await page.keyboard.press('Escape');}

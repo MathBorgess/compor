@@ -36,35 +36,37 @@ export async function openPostEditor(page){
  else if(await page.getByRole('button',{name:'Criar novo post',exact:true}).isVisible())await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  const manual=page.getByRole('button',{name:'Começar sem IA, no editor',exact:true});
  if(await manual.isVisible())await manual.click();
- const post=page.locator('.guided-pane-controls').getByRole('button',{name:'Post',exact:true});
- if(page.viewportSize().width<=800&&await post.isVisible())await post.click();
+ const minimize=page.getByRole('button',{name:'Minimizar conversa',exact:true});
+ if(page.viewportSize().width<=800&&await minimize.isVisible())await minimize.click();
  const fields=page.getByText('Editar textos, legenda e aprovação',{exact:true});
  if(await fields.isVisible()&&!await page.getByLabel('Título',{exact:true}).isVisible())await fields.click();
  await page.getByLabel('Título',{exact:true}).waitFor();
  const variants=page.locator('details.guided-versions');if(await variants.isVisible()&&!await variants.evaluate(el=>el.open))await variants.locator('summary').click();
 }
 export async function openSettings(page,tab='Contexto'){
- const panel=page.getByRole('region',{name:'Configurações do projeto',exact:true});
- if(!await panel.isVisible()){
-  await finishPreparation(page,{preparePost:false});
-  await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
+ const postReferences=page.getByRole('dialog',{name:'Referências deste post',exact:true});
+ if(await postReferences.isVisible()){
+  if(tab==='Referências'){
+   await postReferences.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();
+   return page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
+  }
+  await page.keyboard.press('Escape');await postReferences.waitFor({state:'hidden'});
  }
- await page.getByRole('group',{name:'Seções das configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
+ await finishPreparation(page,{preparePost:false});
+ const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
+ if(!await panel.isVisible())await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
+ await panel.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
  return panel;
 }
 export async function closeSettings(page){
- const panel=page.getByRole('region',{name:'Configurações do projeto',exact:true});
- if(await panel.isVisible()){
-  await page.getByRole('navigation',{name:'Menu do projeto',exact:true}).getByRole('button',{name:/^Voltar à (criação|lista de posts)$/}).click();
-  await panel.waitFor({state:'hidden'});
- }
+ const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).or(page.getByRole('dialog',{name:'Referências deste post',exact:true}));
+ if(await panel.isVisible()){await page.keyboard.press('Escape');await panel.waitFor({state:'hidden'});}
 }
 export async function openConversation(page){
  await beginPost(page);
- const button=page.locator('.guided-pane-controls').getByRole('button',{name:'Conversa',exact:true});
+ const launcher=page.getByRole('button',{name:'Abrir conversa',exact:true});
  const message=page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true});
- if(page.viewportSize().width>800){const both=page.getByRole('button',{name:'Ver ambos',exact:true});if(await both.isVisible())await both.click();}
- else if(!await message.isVisible()&&await button.isVisible())await button.click();
+ if(await launcher.isVisible())await launcher.click();
  await message.waitFor();return message;
 }
 

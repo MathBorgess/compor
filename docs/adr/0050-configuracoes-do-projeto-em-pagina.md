@@ -2,7 +2,7 @@
 
 - Data: 15/11/2026.
 - Fonte: pedido de substituir o modal de configurações por uma página com menu lateral, devido à quantidade de informações.
-- Estado: implementado para avaliação local.
+- Estado: implementado para avaliação local; apresentação posteriormente substituída pelo [ADR 0053](0053-integracao-da-main-e-decisoes-de-usabilidade.md), por nova decisão explícita.
 
 Configurações do projeto ocupa o conteúdo principal do estúdio. O menu lateral oferece Contexto, IA, Referências, Marca e direção, Materiais e versões e Histórico anterior; apenas uma seção aparece por vez. O contexto usa os controles existentes em uma lista de expansões no fluxo da página, sem sobrepor os campos ao conteúdo. Cores, tipografia e componentes existentes são mantidos.
 

@@ -35,10 +35,21 @@ export function ProjectPosts({state,versions,posts,onOpen,onNew,onDelete}:{state
   })}</div></section>;
 }
 export function GuidedWorkspace({chat,artwork,intro,onManual}:{chat:ReactNode;artwork:ReactNode;intro:boolean;onManual:()=>void}) {
-  const [view,setView]=useState<'both'|'chat'|'post'>('both'),[width,setWidth]=useState(38);
-  const root=useRef<HTMLDivElement>(null),drag=useRef(false),chatArea=useRef<HTMLElement>(null),postArea=useRef<HTMLElement>(null);
-  useEffect(()=>{if(view==='chat')chatArea.current?.focus();if(view==='post')postArea.current?.focus();},[view]);
-  return <div ref={root} className="guided-workspace" data-view={intro?'intro':view} style={{'--guided-chat-width':`${width}%`} as CSSProperties}><nav className="guided-pane-controls" aria-label="Áreas do post"><button type="button" className="studio-button-secondary" aria-pressed={view==='chat'} onClick={()=>setView('chat')}>Conversa</button><button type="button" className="studio-button-secondary" aria-pressed={view==='post'} onClick={()=>setView('post')}>Post</button><button type="button" className="studio-button-secondary guided-both" aria-pressed={view==='both'} onClick={()=>setView('both')}>Ver ambos</button></nav><section ref={chatArea} tabIndex={-1} className="guided-chat-area" aria-label="Conversa do post">{chat}{intro&&<button type="button" className="studio-button-secondary guided-manual" onClick={onManual}>Começar sem IA, no editor</button>}</section><div className="guided-divider" role="separator" tabIndex={0} aria-label="Divisão entre conversa e post" aria-orientation="vertical" aria-valuemin={28} aria-valuemax={65} aria-valuenow={width} onKeyDown={event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();setWidth(value=>Math.max(28,Math.min(65,value+(event.key==='ArrowLeft'?-3:3))));}}} onPointerDown={event=>{drag.current=true;event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{if(!drag.current)return;const rect=root.current?.getBoundingClientRect();if(rect)setWidth(Math.max(28,Math.min(65,100*(event.clientX-rect.left)/rect.width)));}} onPointerUp={()=>{drag.current=false;}} onPointerCancel={()=>{drag.current=false;}}/><section ref={postArea} tabIndex={-1} className="guided-post-area" aria-label="Criação do post">{artwork}</section></div>;
+  const [chatMinimized,setChatMinimized]=useState(false),[width,setWidth]=useState(38);
+  const root=useRef<HTMLDivElement>(null),drag=useRef(false),chatArea=useRef<HTMLElement>(null),launcher=useRef<HTMLButtonElement>(null),toggled=useRef(false);
+  useEffect(()=>{if(!toggled.current)return;if(chatMinimized)launcher.current?.focus();else chatArea.current?.focus();},[chatMinimized]);
+  const minimize=()=>{toggled.current=true;setChatMinimized(true);};
+  const reopen=()=>{toggled.current=true;setChatMinimized(false);};
+  const isMinimized=chatMinimized&&!intro;
+  return <div ref={root} className="guided-workspace" data-view={intro?'intro':'editor'} data-chat={isMinimized?'minimized':'open'} style={{'--guided-chat-width':`${width}%`} as CSSProperties}>
+    <section ref={chatArea} id="guided-post-chat" tabIndex={-1} className="guided-chat-area" aria-label="Conversa do post">
+      {!intro&&<button type="button" className="guided-chat-minimize" aria-label="Minimizar conversa" title="Minimizar conversa" onClick={minimize}><span aria-hidden="true">−</span></button>}
+      {chat}{intro&&<button type="button" className="studio-button-secondary guided-manual" onClick={onManual}>Começar sem IA, no editor</button>}
+    </section>
+    <div className="guided-divider" role="separator" tabIndex={0} aria-label="Divisão entre conversa e post" aria-orientation="vertical" aria-valuemin={28} aria-valuemax={65} aria-valuenow={width} onKeyDown={event=>{if(event.key==='ArrowLeft'||event.key==='ArrowRight'){event.preventDefault();setWidth(value=>Math.max(28,Math.min(65,value+(event.key==='ArrowLeft'?-3:3))));}}} onPointerDown={event=>{drag.current=true;event.currentTarget.setPointerCapture(event.pointerId);}} onPointerMove={event=>{if(!drag.current)return;const rect=root.current?.getBoundingClientRect();if(rect)setWidth(Math.max(28,Math.min(65,100*(event.clientX-rect.left)/rect.width)));}} onPointerUp={()=>{drag.current=false;}} onPointerCancel={()=>{drag.current=false;}}/>
+    <section className="guided-post-area" aria-label="Criação do post">{artwork}</section>
+    {isMinimized&&<button ref={launcher} type="button" className="guided-chat-launcher" aria-controls="guided-post-chat" aria-expanded="false" onClick={reopen}><span aria-hidden="true">●</span>Abrir conversa</button>}
+  </div>;
 }
 export function GuidedArtPreview({image}:{image:Blob}) {
   const [url,setUrl]=useState(''),[zoom,setZoom]=useState(100);

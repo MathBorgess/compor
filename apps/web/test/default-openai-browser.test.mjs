@@ -1,4 +1,4 @@
-import {openSettings} from './guided-navigation.mjs';
+import {openSettings,openPostEditor,closeSettings} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -55,12 +55,14 @@ test('IA do Compor exige intenção nova após disponibilidade e recarga, sem en
   await page.getByRole('region',{name:'Contexto do projeto',exact:true}).getByText('Uma aula de cerâmica',{exact:true}).waitFor();
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'abrir projeto recuperado com contexto pronto não ativa geração');
   await openSettings(page,'IA');
+  assert.equal(await page.getByRole('button',{name:/^Usar a IA do Compor/}).getAttribute('aria-pressed'),'true','IA do Compor é a escolha inicial sem ativar geração');
   await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
   await page.waitForFunction(()=>Boolean(localStorage.getItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001')));
   assert.equal(creative.length,1,'a ação explícita ativa o fluxo real de exploração');
   assert.equal(Object.hasOwn(creative[0].body,'apiKey'),false);
   assert.equal(Object.hasOwn(creative[0].headers,'x-compor-openai-key'),false);
   assert.ok(statusRequests.length>=2);assert.ok(statusRequests.every(item=>item.body===null&&!Object.hasOwn(item.headers,'x-compor-openai-key')));
+  await closeSettings(page);await openPostEditor(page);
   const stored=await page.evaluate(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,read=db.transaction('states').objectStore('states').getAll();read.onsuccess=()=>{db.close();resolve(read.result[0]);};};}));
   const pendingId=crypto.randomUUID(),at=new Date().toISOString();
   const unknown=settleAdjustment(prepareAdjustment(stored.state,{requestId:pendingId,messageId:crypto.randomUUID(),instruction:'Pedido anterior ainda não confirmado',createdAt:at,eventId:crypto.randomUUID()}),{requestId:pendingId,status:'unknown',eventId:crypto.randomUUID()});

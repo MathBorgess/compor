@@ -102,14 +102,22 @@ begin
   if not exists(select 1 from public.projects p where p.id=p_project_id and p.owner_id=(select auth.uid())) then
     raise exception 'not_found' using errcode='42501';
   end if;
-  with selected_data as (
-    select distinct on(s.origin_url) s.* from public.reference_signals s
-    where s.owner_id=(select auth.uid()) and s.action='selected' and (s.piece_id is null or exists(select 1 from public.piece_version_reference_links scoped_link join public.piece_version_metadata scoped_version on scoped_version.project_id=scoped_link.project_id and scoped_version.piece_id=scoped_link.piece_id and scoped_version.version=scoped_link.version where scoped_link.reference_signal_id=s.id and scoped_link.owner_id=(select auth.uid()) and scoped_version.approval_state='explicit')) and s.reference_data is not null
-    order by s.origin_url,s.created_at desc,s.id desc
-  ), positive_choices as (
-    select distinct on(s.origin_url) s.origin_url,s.created_at from public.reference_signals s
+  with positive_choices as (
+    select distinct on(s.origin_url) s.origin_url,s.board,s.created_at from public.reference_signals s
     where s.owner_id=(select auth.uid()) and s.action='selected' and (s.piece_id is null or exists(select 1 from public.piece_version_reference_links scoped_link join public.piece_version_metadata scoped_version on scoped_version.project_id=scoped_link.project_id and scoped_version.piece_id=scoped_link.piece_id and scoped_version.version=scoped_link.version where scoped_link.reference_signal_id=s.id and scoped_link.owner_id=(select auth.uid()) and scoped_version.approval_state='explicit'))
     order by s.origin_url,s.created_at desc,s.id desc
+  ), selected_data as (
+    -- A shared selection may reuse a local pin without carrying its metadata.
+    -- The shared choice (or an explicit approval) makes the origin eligible;
+    -- metadata can then come from another selected signal owned by this account.
+    select distinct on(s.origin_url) s.* from public.reference_signals s
+    join positive_choices positive on positive.origin_url=s.origin_url and positive.board=s.board
+    where s.owner_id=(select auth.uid()) and s.action='selected' and s.reference_data is not null
+    order by s.origin_url,
+      exists(select 1 from public.piece_version_reference_links scoped_link
+        join public.piece_version_metadata scoped_version on scoped_version.project_id=scoped_link.project_id and scoped_version.piece_id=scoped_link.piece_id and scoped_version.version=scoped_link.version
+        where scoped_link.reference_signal_id=s.id and scoped_link.owner_id=(select auth.uid()) and scoped_version.approval_state='explicit') desc,
+      (s.piece_id is null) desc,s.created_at desc,s.id desc
   ), current_choices as (
     select distinct on(s.origin_url) s.origin_url,s.action from public.reference_signals s
     where s.owner_id=(select auth.uid()) and s.project_id=p_project_id and s.piece_id is null and s.action in ('selected','rejected')
@@ -121,7 +129,7 @@ begin
        from public.piece_version_reference_links l
        join public.reference_signals selected on selected.id=l.reference_signal_id and selected.owner_id=(select auth.uid())
        join public.piece_version_metadata m on m.project_id=l.project_id and m.piece_id=l.piece_id and m.version=l.version
-       where l.owner_id=(select auth.uid()) and selected.origin_url=data.origin_url and m.approval_state='explicit') as approvals
+       where l.owner_id=(select auth.uid()) and selected.origin_url=data.origin_url and selected.board=data.board and m.approval_state='explicit') as approvals
     from selected_data data join positive_choices positive on positive.origin_url=data.origin_url
     where not exists(select 1 from current_choices c where c.origin_url=data.origin_url and c.action='rejected')
     order by approvals desc,positive.created_at desc,data.origin_url limit 100

@@ -18,13 +18,15 @@ import ExplorationGallery from './app/exploration-gallery.tsx';
 import ReferenceSelectionTray from './app/reference-selection-tray.tsx';
 function Screen(){
  const [references,setReferences]=useState([]),current=useRef(references);
+ const [usingShared,setUsingShared]=useState(false);
+ const shared={id:'shared-project-reference',name:'projeto.png',mime:'image/png',size:70,width:1,height:1};
  const update=next=>{current.current=next;setReferences(next);};
  const add=(source,file)=>new Promise(resolve=>setTimeout(()=>{update([...current.current,{id:crypto.randomUUID(),name:file.name,mime:'image/png',size:file.size,width:1,height:1,source,url:URL.createObjectURL(file)}]);resolve();},50));
  const remove=async match=>{await new Promise(resolve=>setTimeout(resolve,50));update(current.current.filter(item=>!match(item)));};
  return <main>
-  <ReferenceSelectionTray items={references} limit={20} onRemove={id=>remove(item=>item.id===id)}/>
-  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica" selectedOrigins={references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onRemoveReference={originUrl=>remove(item=>item.source?.originUrl===originUrl)} onContinue={()=>{}}/>
-  <ExplorationGallery projectId="${project}" completed={0} selectedIds={references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)} onRemoveReference={imageId=>remove(item=>item.source?.imageId===imageId)}/>
+  <ReferenceSelectionTray items={usingShared?[...references,shared]:references} limit={20} onRemove={id=>id===shared.id?setUsingShared(false):remove(item=>item.id===id)} availableShared={usingShared?[]:[shared]} onUseShared={()=>setUsingShared(true)}/>
+  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica" selectedOrigins={references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onContinue={()=>{}}/>
+  <ExplorationGallery projectId="${project}" completed={0} selectedIds={references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)}/>
  </main>;
 }
 createRoot(document.getElementById('root')).render(<Screen/>);`;
@@ -54,7 +56,6 @@ async function fixture(t,viewport={width:1280,height:900}) {
   return {page};
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
-const focused=page=>page.evaluate(()=>document.activeElement?.getAttribute('aria-label')??document.activeElement?.textContent??null);
 
 test('origem, seleção, quantidade e remoção ficam visíveis e o foco não se perde',options,async t=>{
  const {page}=await fixture(t);
@@ -64,11 +65,11 @@ test('origem, seleção, quantidade e remoção ficam visíveis e o foco não se
  assert.match(await tray.textContent(),/sem aprovar a imagem/);
  assert.equal(await page.locator('.reference-results .reference-source',{hasText:'Pinterest · externa'}).count(),2);
  assert.equal(await page.locator('.studio-exploration-gallery .reference-source',{hasText:'Gerada pelo Compor'}).count(),1);
- // Keyboard selection keeps focus in the same card, now on its removal control.
+ // Keyboard selection moves focus to the single removal area.
  await page.getByRole('button',{name:'Usar como referência: Terracota e textura'}).focus();await page.keyboard.press('Enter');
- await page.getByRole('button',{name:'Remover da seleção: Terracota e textura'}).first().waitFor();
- await page.waitForFunction(()=>document.activeElement?.classList.contains('reference-remove'));
- assert.equal(await focused(page),'Remover da seleção: Terracota e textura');
+ await tray.getByRole('button',{name:'Remover da seleção: Terracota e textura'}).waitFor();
+ await page.waitForFunction(()=>document.activeElement?.id==='reference-selection-title');
+ assert.equal(await page.locator('.reference-results .reference-remove').count(),0);
  assert.match(await tray.textContent(),/1 de 20 referências/);
  assert.match(await tray.locator('li').first().textContent(),/Pinterest · externa.*Terracota e textura/);
  assert.equal(await page.getByRole('button',{name:'Selecionada: Terracota e textura'}).getAttribute('aria-pressed'),'true');
@@ -76,11 +77,9 @@ test('origem, seleção, quantidade e remoção ficam visíveis e o foco não se
  await page.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).click();
  await tray.getByText('2',{exact:true}).waitFor();
  assert.match(await tray.locator('li').nth(1).textContent(),/Gerada pelo Compor.*Imagem 3/);
- // Removing from the card returns focus to the card's selection control.
- await page.locator('.reference-results').getByRole('button',{name:'Remover da seleção: Terracota e textura'}).click();
+ // Removing from the tray restores availability in the source card.
+ await tray.getByRole('button',{name:'Remover da seleção: Terracota e textura'}).click();
  await page.getByRole('button',{name:'Usar como referência: Terracota e textura'}).waitFor();
- await page.waitForFunction(()=>document.activeElement?.classList.contains('reference-image-select'));
- assert.equal(await focused(page),'Usar como referência: Terracota e textura');
  assert.match(await tray.textContent(),/1 de 20 referências/);
  // Removing the last tray item moves focus to the tray heading.
  await tray.getByRole('button',{name:'Remover da seleção: Imagem 3'}).click();
@@ -97,4 +96,17 @@ test('a seleção cabe no celular sem rolagem horizontal da página',options,asy
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'a página não rola na horizontal');
  const buttons=await page.locator('.reference-selection-list button').evaluateAll(items=>items.map(item=>item.getBoundingClientRect().height));
  assert.ok(buttons.every(height=>height>=44),'alvos de toque com pelo menos 44 px');
+});
+
+test('referência compartilhada excluída volta ao post dentro de Sua seleção',options,async t=>{
+ const {page}=await fixture(t);
+ const tray=page.getByRole('region',{name:'Sua seleção'});
+ await tray.getByRole('heading',{name:'Disponíveis do projeto'}).waitFor();
+ assert.equal(await page.getByText('Referências do projeto usadas neste post').count(),0);
+ await tray.getByRole('button',{name:'Usar neste post: projeto.png'}).click();
+ await tray.getByText('1',{exact:true}).waitFor();
+ await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Remover da seleção: projeto.png');
+ assert.equal(await tray.getByRole('button',{name:'Usar neste post: projeto.png'}).count(),0);
+ await tray.getByRole('button',{name:'Remover da seleção: projeto.png'}).click();
+ await tray.getByRole('button',{name:'Usar neste post: projeto.png'}).waitFor();
 });

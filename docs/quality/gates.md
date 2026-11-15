@@ -24,7 +24,7 @@ No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `use
 Com a integração Git do [ADR 0043](../adr/0043-deploy-vercel-por-integracao-git.md), a Vercel acrescenta dois sinais que ficam fora do Quality gate.
 
 - **Preview de cada PR.** O status da Vercel com o link do preview mostra se o build passa no ambiente dela: instalação sem `--ignore-scripts`, variáveis do projeto e versão de Node configurada. O `quality:build` não cobre essas diferenças. Para bloquear merges, a proteção da branch precisa exigir esse status, uma configuração do GitHub que cabe a Matheus.
-- **Promoção da produção.** Em Deployment Checks, o deployment da `main` espera o check `Apply migrations or initialize baseline`. A Vercel identifica o check pelo nome do job, e `scripts/tests/test_migration_workflow.py`, no job de contratos, exige esse nome. Renomear o job pede atualizar a Vercel e o ADR no mesmo PR.
+- **Promoção da produção.** O contrato exige que o deployment da `main` espere o check `Apply migrations or initialize baseline`. A Vercel identifica o check pelo nome do job, e `scripts/tests/test_migration_workflow.py`, no job de contratos, exige esse nome. Renomear o job pede atualizar a Vercel e o ADR no mesmo PR. Em 15/11, a autoatribuição dos domínios de Production estava desligada e um deployment mostrou `No checks configured`; portanto o check listado no projeto não estava retendo a publicação. A [verificação e o pré-requisito da Vercel](../adr/0043-deploy-vercel-por-integracao-git.md#verificação-posterior-em-15112026) precisam ser resolvidos antes de declarar este gate eficaz.
 
 Nenhum dos dois faz smoke do deployment publicado nem comprova login, geração ou dados reais.
 
