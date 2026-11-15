@@ -35,8 +35,8 @@ function Screen(){
  return <StudioShell stage="studio" projectId="${project}" projectTitle="Oficina de cerâmica" conversationFocus chatMessageCount={state.messages.length} accountLabel="Conta de teste" headerActions={<button className="studio-button-secondary" onClick={()=>setKey(true)}>Conectar IA de teste</button>} chat={chat} canvas={<div className="studio-brief">
   <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary">Definir textos da arte</button></div>
   <ReferenceSelectionTray items={state.references.map(item=>({...item,url:urls[item.id]}))} limit={20} onRemove={id=>remove(item=>item.id===id)}/>
-  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica para iniciantes" selectedOrigins={state.references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onRemoveReference={originUrl=>remove(item=>item.source?.originUrl===originUrl)} onContinue={()=>{}}/>
-  <ExplorationGallery projectId="${project}" completed={0} selectedIds={state.references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)} onRemoveReference={imageId=>remove(item=>item.source?.imageId===imageId)}/>
+  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica para iniciantes" selectedOrigins={state.references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onContinue={()=>{}}/>
+  <ExplorationGallery projectId="${project}" completed={0} selectedIds={state.references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)}/>
  </div>}/>;
 }
 createRoot(document.getElementById('root')).render(<Screen/>);`;

@@ -55,6 +55,7 @@ test('IA do Compor exige intenção nova após disponibilidade e recarga, sem en
   await page.getByRole('region',{name:'Contexto do projeto',exact:true}).getByText('Uma aula de cerâmica',{exact:true}).waitFor();
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'abrir projeto recuperado com contexto pronto não ativa geração');
   await openSettings(page,'IA');
+  assert.equal(await page.getByRole('button',{name:/^Usar a IA do Compor/}).getAttribute('aria-pressed'),'true','IA do Compor é a escolha inicial sem ativar geração');
   await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
   await page.waitForFunction(()=>Boolean(localStorage.getItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001')));
   assert.equal(creative.length,1,'a ação explícita ativa o fluxo real de exploração');

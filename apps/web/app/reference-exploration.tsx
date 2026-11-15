@@ -5,27 +5,24 @@ import { referenceHistoryResponseSchema,referenceSearchResponseSchema,type Explo
 import { grantReferenceConsent,referenceConsentGranted,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
 import './reference-exploration.css';
 
-type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onRemoveReference?:(originUrl:string)=>Promise<void>;onContinue?:()=>void};
+type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void};
 type SearchState={status:'idle'|'loading'|'empty'|'unavailable'|'ok';references:ExploredReference[]};
-export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onRemoveReference,onContinue}:Props) {
+export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue}:Props) {
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
   const [search,setSearch]=useState<SearchState>({status:'idle',references:[]});
   const [history,setHistory]=useState<{scope:string;references:ReferenceHistoryEntry[]}|null>(null),[historyUnavailable,setHistoryUnavailable]=useState(false);
   const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
   const currentScope=`${userId}:${projectId}`,scope=useRef(currentScope),selectionLock=useRef(false),searchRequest=useRef<AbortController|null>(null);
   scope.current=currentScope;
-  // A selected card's button becomes disabled; keep focus on the same card.
-  const pendingFocus=useRef<{origin:string;target:'remove'|'select'}|null>(null),root=useRef<HTMLElement>(null);
+  // A selected card becomes inactive; move keyboard focus to its removal action in the selection tray.
+  const pendingFocus=useRef<string|null>(null);
   const selectedKey=selectedOrigins.join('\n');
   useEffect(()=>{
-    const pending=pendingFocus.current;if(!pending)return;
-    const selected=selectedOrigins.includes(pending.origin);
-    if((pending.target==='remove')!==selected)return;
+    const pending=pendingFocus.current;if(!pending||!selectedOrigins.includes(pending))return;
     pendingFocus.current=null;
     const active=document.activeElement;
     if(active&&active!==document.body&&document.contains(active)&&!(active instanceof HTMLButtonElement&&active.disabled))return;
-    const card=Array.from(root.current?.querySelectorAll<HTMLElement>('[data-reference-origin]')??[]).find(element=>element.dataset.referenceOrigin===pending.origin);
-    card?.querySelector<HTMLButtonElement>(pending.target==='remove'?'.reference-remove':'.reference-image-select')?.focus();
+    document.getElementById('reference-selection-title')?.focus();
   },[selectedKey]);
   const consent=consentOwner===userId;
   const suggestedQuery=idea.trim().slice(0,1000);
@@ -86,16 +83,11 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
       if(!['image/png','image/jpeg'].includes(blob.type)||blob.size>2*1024*1024)throw Error('invalid');
       if(scope.current!==requestedScope)return;
       const file=new File([blob],`referencia-pinterest-${reference.id}.${blob.type==='image/png'?'png':'jpg'}`,{type:blob.type});
-      pendingFocus.current={origin:reference.originUrl,target:'remove'};
+      pendingFocus.current=reference.originUrl;
       await onUseReference(reference,file);
       if(scope.current===requestedScope)setNotice('Referência adicionada à conversa e à Direção neste navegador.');
     } catch {if(scope.current===requestedScope)setNotice('Não foi possível adicionar esta referência. Suas outras imagens foram preservadas.');}
     finally{selectionLock.current=false;if(scope.current===requestedScope)setBusy(false);}
-  }
-  async function removeReference(originUrl:string) {
-    if(!onRemoveReference||busy)return;
-    pendingFocus.current={origin:originUrl,target:'select'};
-    await onRemoveReference(originUrl);
   }
   const ordered=(history?.scope===currentScope?[...history.references]:[]).sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt));
   const knownOrigins=new Set(ordered.map(reference=>reference.originUrl));
@@ -108,7 +100,6 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
           <span>{selected?'✓ Selecionada':'Usar como referência'}</span>
         </button>
         <span className="reference-source" data-origin="pinterest">Pinterest · externa</span>
-        {selected&&onRemoveReference&&<button type="button" className="reference-remove" aria-label={`Remover da seleção: ${item.title}`} disabled={busy} onClick={()=>{void removeReference(item.originUrl);}}>Remover da seleção</button>}
         <a href={item.originUrl} target="_blank" rel="noopener noreferrer">Ver origem no Pinterest</a>
         <h3>{item.title}</h3>
         <small>A imagem só vai ao modelo depois da sua escolha.</small>
@@ -116,7 +107,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     })}</div>;
   }
   const approved=ordered.filter(item=>item.approvedVersions>0),selected=ordered.filter(item=>item.approvedVersions===0);
-  return <section ref={root} className="reference-exploration" aria-label="Buscar referências visuais">
+  return <section className="reference-exploration" aria-label="Buscar referências visuais">
     {approved.length>0&&<section aria-label="Usadas em posts que você aprovou"><h2>Usadas em posts que você aprovou</h2>{cards(approved)}</section>}
     {selected.length>0&&<section aria-label="Suas referências"><h2>Suas referências</h2>{cards(selected)}</section>}
     <div><h2>Sugestões do Pinterest</h2>

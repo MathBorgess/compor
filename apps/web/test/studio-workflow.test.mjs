@@ -5,8 +5,9 @@ import {conversationMessages,updateWorkflow} from '../lib/studio-workflow.ts';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const initial=()=>createStudioState({userId:id(1),projectId:id(2),prepare:true,projectIdea:'Uma oficina'});
 test('preparação é explícita e a ideia não é uma mensagem ou autorização',()=>{
- const state=initial();assert.equal(state.schemaVersion,3);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'none');assert.deepEqual(state.messages,[]);
- const next=updateWorkflow(state,{phase:'ready',aiPreference:'default'});assert.equal(next.workflow.phase,'ready');assert.deepEqual(next.messages,[]);assert.equal(next.projectIdea,'Uma oficina');
+ const state=initial();assert.equal(state.schemaVersion,3);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'default');assert.deepEqual(state.messages,[]);
+ const next=updateWorkflow(state,{phase:'ready'});assert.equal(next.workflow.phase,'ready');assert.equal(next.workflow.aiPreference,'default');assert.deepEqual(next.messages,[]);assert.equal(next.projectIdea,'Uma oficina');
+ const skipped=updateWorkflow(state,{aiPreference:'none'});assert.equal(parseStudioState(skipped).workflow.aiPreference,'none','escolha explícita sem IA persiste');
 });
 test('conversas de posts e referências não compartilham mensagens e mantêm suas origens',()=>{
  let state=createPost(initial(),{pieceId:id(3)});
@@ -20,7 +21,7 @@ test('conversas de posts e referências não compartilham mensagens e mantêm su
 test('migração legada preserva conteúdo, não inventa post para mensagem sem contexto e é idempotente',()=>{
  const base=initial();const legacy={...base};delete legacy.workflow;legacy.schemaVersion=1;
  legacy.messages=[{id:id(20),role:'user',text:'Conversa antiga sem peça',createdAt:'2026-11-15T12:00:00.000Z',status:'completed',context:null}];
- const migrated=parseStudioState(legacy);assert.equal(migrated.workflow.phase,'ready');assert.equal(migrated.workflow.view,'posts');assert.deepEqual(migrated.messages,legacy.messages);assert.deepEqual(conversationMessages(migrated,id(3)),[]);assert.deepEqual(conversationMessages(migrated,undefined).map(m=>m.text),['Conversa antiga sem peça']);assert.deepEqual(parseStudioState(migrated),migrated);assert.equal(legacy.schemaVersion,1);
+ const migrated=parseStudioState(legacy);assert.equal(migrated.workflow.phase,'ready');assert.equal(migrated.workflow.view,'posts');assert.equal(migrated.workflow.aiPreference,'none','migração não infere autorização');assert.deepEqual(migrated.messages,legacy.messages);assert.deepEqual(conversationMessages(migrated,id(3)),[]);assert.deepEqual(conversationMessages(migrated,undefined).map(m=>m.text),['Conversa antiga sem peça']);assert.deepEqual(parseStudioState(migrated),migrated);assert.equal(legacy.schemaVersion,1);
 });
 test('escopo inválido e campos desconhecidos são recusados sem descartar o estado anterior',()=>{
  const state=initial();assert.throws(()=>parseStudioState({...state,workflow:{...state.workflow,apiKey:'não armazenar'}}));assert.throws(()=>parseStudioState({...state,schemaVersion:99}));assert.equal(state.revision,0);

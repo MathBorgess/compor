@@ -21,6 +21,17 @@ async function assetBytes(page,pieceId,version){return page.evaluate(async ({use
 async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
 async function closeDrawer(page){await closeSettings(page);}
 async function openEditor(page){await openPostEditor(page);}
+async function openSavedPost(page,title){
+ await closeSettings(page);
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();
+ await page.getByRole('button',{name:new RegExp(`^${title} .*Abrir post e conversa$`)}).click();
+}
+async function openCurrentVersion(page,version){
+ await openDrawer(page,'Bases');
+ await page.getByRole('button',{name:'Ver versões deste post',exact:true}).click();
+ await page.locator('.guided-versions select').filter({has:page.locator(`option[value="${version}"]`)}).selectOption(String(version));
+ await openEditor(page);
+}
 async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
@@ -69,7 +80,8 @@ async function app(t){
 }
 async function openOriginal(page,origin,{key=true}={}){
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();
- await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ await openSavedPost(page,'Original preservado');
+ await eventually(()=>stored(page),state=>state?.selection?.pieceId===originalPiece&&state.selection.baseVersion===1);
  if(key){await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);}
  await openEditor(page);await openConversation(page);
 }
@@ -161,17 +173,15 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  };
  await openOriginal(page,origin);
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Proponha uma imagem para este post original.');
- await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;
- await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Post B fora do pedido.*Versão 2/}).click();
- await waiting;release();
- const proposal=page.locator('.studio-image-consent');await proposal.waitFor({state:'attached'});assert.equal(await proposal.isVisible(),false,'a proposta de A não é apresentada como pedido de B');
- assert.match(await proposal.innerText(),/Original preservado · versão 1/,'a proposta identifica a origem capturada, sem adotar a seleção feita durante a espera');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;await waiting;
+ await openSavedPost(page,'Post B fora do pedido');
+ await eventually(()=>stored(page),state=>state?.selection?.pieceId===newPiece&&state.selection.baseVersion===2);
+ release();
+ const proposal=page.locator('.studio-image-consent');assert.equal(await proposal.isVisible(),false,'a proposta de A não é apresentada como pedido de B');
  await page.waitForLoadState('networkidle');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
- await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
- await page.getByRole('button',{name:'Consultar a mesma proposta',exact:true}).click();
+ await openSavedPost(page,'Original preservado');
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
  await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,2);assert.equal(versions.find(version=>version.piece_id===originalPiece&&version.version===1).content.headline,'Original preservado');
@@ -192,8 +202,7 @@ test('download pendente não exporta a arte no post aberto depois',{skip:!exists
  await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
  await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
- await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
+ await openSavedPost(page,'Post B preservado');await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
  await page.evaluate(()=>window.__releasePreviewEncoding());
  await page.waitForFunction(()=>window.__previewEncodingDone===true);
@@ -239,7 +248,8 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
  await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  await openDrawer(page,'Bases');
- const saved=page.getByRole('button',{name:/Post criado durante a leitura anterior.*Versão 1/});await saved.waitFor();
+ await page.getByRole('button',{name:'Ver versões deste post',exact:true}).click();
+ const saved=page.locator('.guided-versions').getByRole('button',{name:'Abrir variante 1',exact:true});await saved.waitFor();
  const oldRead=page.waitForResponse(response=>response.headers()['x-compor-old-read']==='true');release();await oldRead;
  await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));
  assert.equal(await saved.count(),1,'a resposta anterior ao salvamento não substitui a versão que já foi confirmada');
@@ -276,9 +286,9 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
- await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ await openCurrentVersion(page,1);await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
  await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
- await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 2/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
+ await openCurrentVersion(page,2);await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'reabrir versões e recarregar não regenera a imagem');assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
