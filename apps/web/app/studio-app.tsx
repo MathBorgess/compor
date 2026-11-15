@@ -10,9 +10,10 @@ import VariantCards from "./studio-variant-cards";
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
-import {updateWorkflow,conversationMessages,postIds,startPostPreparation,completePostPreparation,prepareReferenceWorkspace} from '../lib/studio-workflow';
+import {updateWorkflow,conversationMessages,postIds,startPostPreparation,completePostPreparation,updatePostPreparation,updateLegacyPostName,cancelPostPreparation,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
 import StudioNavigation from './studio-navigation';
 import StudioSettingsPage from './studio-settings-page';
+import {postMutationSchema,postNameSchema,type PostRecord} from '../lib/post-catalog';
 import PostSettings from './studio-post-settings';
 import ReferencePanel from './studio-reference-panel';
 import {addPostCriterion,decidePostCriterion,freezeCreationContext,conversationContext,effectiveReferences,postContext,updatePostContext,selectScopedReference,unselectScopedReference} from '../lib/studio-post-context';
@@ -278,6 +279,10 @@ function ProjectStudio({
   const [referenceScope,setReferenceScope]=useState('references');
   const [referenceChatTarget,setReferenceChatTarget]=useState<HTMLDivElement|null>(null);
   const [postSettingsOpen,setPostSettingsOpen]=useState(false);
+  const [postRecords,setPostRecords]=useState<PostRecord[]>([]);
+  const postRecordsRef=useRef<PostRecord[]>([]);postRecordsRef.current=postRecords;
+  const [creatingPost,setCreatingPost]=useState(false),[deletingPost,setDeletingPost]=useState(false);
+  const [postDeleteTarget,setPostDeleteTarget]=useState<{pieceId:string;name:string}|null>(null),[postDeleteError,setPostDeleteError]=useState('');
   const [explorationRequested,setExplorationRequested]=useState(false);
   const [visitedPosts,setVisitedPosts]=useState<string[]>([]);
   const projectAIChosen=Boolean(s&&s.workflow.aiPreference!=='none'&&s.workflow.aiPreference===credentialSource);
@@ -309,6 +314,11 @@ function ProjectStudio({
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
+  useEffect(()=>{
+    const pieceId=s?.selection?.pieceId;
+    if(!s||!pieceId||!postRecords.some(post=>post.pieceId===pieceId&&post.deleted)||s.adjustments.some(turn=>turn.context.pieceId===pieceId&&!['completed','failed'].includes(turn.status)))return;
+    local.change(value=>removePostFromList(value,pieceId));setStage('studio');
+  },[postRecords,s?.selection?.pieceId,s?.adjustments]);
   const currentSettings=settingsTab??(drawer==='marca'?'direction':drawer==='bases'?'materials':null);
   const referencesOpen=s?.workflow.phase==='references'||currentSettings==='references';
   useEffect(()=>{if(draft)setVisitedPosts(ids=>ids.includes(draft.pieceId)?ids:[...ids,draft.pieceId]);},[draft?.pieceId]);
@@ -342,7 +352,8 @@ function ProjectStudio({
     );
     if (!response.ok) throw Error("Não foi possível carregar as versões.");
     const data = versionsSchema.parse(await response.json());
-    if (active.current&&readSequence===versionsReadSequence.current) setVersions(data.versions);
+    if(data.posts.some(post=>post.projectId!==project.id))throw Error('invalid posts');
+    if (active.current&&readSequence===versionsReadSequence.current){setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
     return data.versions;
   }
   useEffect(() => {
@@ -471,19 +482,60 @@ function ProjectStudio({
     if(value !== "studio") setViewingArt(false);
   }
   function closeSettings(){setSettings(null);setDrawer(null);}
+  function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
   function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
+    if(isRemoved(pieceId))throw Error("Post excluído.");
     closeSettings();
     local.change(value=>fromAgent?updateWorkflow(value.drafts.some(d=>d.pieceId===pieceId&&d.baseVersion===0)?selectDraft(value,{pieceId,baseVersion:0}):createPost(value,{pieceId}),{view:'studio'}):startPostPreparation(value,pieceId));
     setBase(null);setViewingArt(false);setStage('studio');
   }
+  async function confirmPostCreation(){
+    if(creatingPost)return;
+    const value=local.get(),pieceId=value.workflow.pendingPost?.pieceId??value.selection?.pieceId;
+    const parsed=postNameSchema.safeParse(value.workflow.pendingPost?.name??(pieceId?value.posts[pieceId]?.name:''));
+    if(!pieceId||!parsed.success)return;
+    setCreatingPost(true);setNotice('');
+    try{
+      await local.flush();
+      const response=await fetch('/api/posts',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:project.id,pieceId,name:parsed.data})});
+      if(!response.ok)throw Error('unconfirmed');const result=postMutationSchema.parse(await response.json());
+      if(result.status!=='created'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||result.post.name!==parsed.data||result.post.deleted)throw Error('unconfirmed');
+      if(!active.current||!isAuthenticated())return;
+      ++versionsReadSequence.current;
+      setPostRecords(previous=>[...previous.filter(post=>post.pieceId!==pieceId),result.post]);
+      local.change(completePostPreparation);await local.flush();
+    }catch{if(active.current)setNotice('Não foi possível confirmar a criação do post. Sua preparação foi mantida. Tente novamente para verificar o mesmo pedido.');}
+    finally{if(active.current)setCreatingPost(false);}
+  }
+  async function confirmPostDeletion(){
+    if(!postDeleteTarget||deletingPost)return;
+    const {pieceId}=postDeleteTarget;
+    if(local.get().adjustments.some(turn=>turn.context.pieceId===pieceId&&!['completed','failed'].includes(turn.status))){setPostDeleteError('Conclua ou verifique o pedido pendente antes de excluir este post.');return;}
+    setDeletingPost(true);setPostDeleteError('');
+    try{
+      await local.flush();
+      const response=await fetch('/api/posts',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:project.id,pieceId})});
+      if(!response.ok)throw Error('unconfirmed');const result=postMutationSchema.parse(await response.json());
+      if(result.status!=='deleted'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||!result.post.deleted)throw Error('unconfirmed');
+      if(!active.current||!isAuthenticated())return;
+      ++versionsReadSequence.current;
+      setPostRecords(previous=>[...previous.filter(post=>post.pieceId!==pieceId),result.post]);
+      setVersions(previous=>previous.filter(version=>version.piece_id!==pieceId));
+      local.change(value=>removePostFromList(value,pieceId));await local.flush();
+      setPostDeleteTarget(null);setNotice('Post excluído da lista deste projeto.');
+    }catch{if(active.current)setPostDeleteError('Não foi possível confirmar a exclusão. Verifique novamente antes de sair; não houve repetição automática.');}
+    finally{if(active.current)setDeletingPost(false);}
+  }
   function openPost(pieceId:string) {
+    if(isRemoved(pieceId))return;
     const value=local.get(),remembered=value.workflow.selections[pieceId];
     const chosen=value.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===remembered)??value.drafts.filter(item=>item.pieceId===pieceId).at(-1);
     closeSettings();setStage('studio');
     if(chosen)local.change(state=>updateWorkflow(selectDraft(state,chosen),{view:state.posts[pieceId]?.prepared===false?'prepare-post':'studio'}));
-    else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);}
+    else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);else if(postRecordsRef.current.some(post=>post.pieceId===pieceId&&!post.deleted))local.change(value=>updateWorkflow(createPost(value,{pieceId}),{view:'compose'}));}
   }
   function openVersion(version:PieceVersion) {
+    if(isRemoved(version.piece_id))return;
     setSettings(null);
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
@@ -1017,7 +1069,7 @@ function ProjectStudio({
               Atualizar versões
             </button>
             <h3>Rascunhos neste navegador</h3>
-            {s.drafts.filter(item=>item.pieceId!==s.workflow.referencePieceId).map((item) => (
+            {s.drafts.filter(item=>item.pieceId!==s.workflow.referencePieceId&&!isRemoved(item.pieceId)).map((item) => (
               <button
                 key={`${item.pieceId}:${item.baseVersion}`}
                 onClick={() => {
@@ -1043,7 +1095,7 @@ function ProjectStudio({
               </button>
             ))}
             <h3>Versões salvas</h3>
-            {versions.map((version) => (
+            {versions.filter(version=>!isRemoved(version.piece_id)).map((version) => (
               <button
                 key={`${version.piece_id}:${version.version}`}
                 onClick={() => openVersion(version)}
@@ -1095,7 +1147,7 @@ function ProjectStudio({
         </div>
         </div>);
   const preparing=s.workflow.phase!=='ready';
-  const postTitle=draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
+  const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
   const finishPreparation=()=>local.change(value=>updateWorkflow(value,{phase:'ready',view:'posts'}));
   const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
   const returnToWorkspaceLabel=s.workflow.view==='posts'?'Voltar aos posts':'Voltar ao post';
@@ -1114,9 +1166,19 @@ function ProjectStudio({
   const chats=chatIds.map(id=><div className="guided-conversation" key={id} hidden={id!==draft?.pieceId}>{renderChat(id,id===draft?.pieceId&&intro)}</div>);
   const pendingTurn=s.adjustments.find(item=>!['completed','failed'].includes(item.status));
   const showPosts=()=>{closeSettings();setPostSettingsOpen(false);nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));};
-  const preparingPost=s.workflow.view==='prepare-post'&&draft;
-  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>O projeto já está configurado. Agora defina o propósito desta peça antes de seguir para a conversa ou o editor.</p><PostSettings preparing value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/><p className="studio-hint">A chamada para ação é opcional. Você pode complementar essas informações depois.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" onClick={showPosts}>Voltar aos posts</button><button type="button" className="studio-button" onClick={()=>local.change(completePostPreparation)}>Continuar para criação</button></div></section>;
-  const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>pendingTurn.context.conversationId==='references'?setSettings('references'):openPost(pendingTurn.context.pieceId)}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} onOpen={openPost} onNew={()=>newPost()}/>:preparingPost?postPreparation:<GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/>}</>;
+  const pendingPost=s.workflow.pendingPost;
+  const preparingPost=s.workflow.view==='prepare-post';
+  const preparedValue=pendingPost??(draft?postContext(s,draft.pieceId):{objective:'',message:'',action:''});
+  const preparedName=pendingPost?.name??(draft?s.posts[draft.pieceId]?.name??'':'');
+  const changePreparation=(patch:Partial<typeof preparedValue&{name:string}>)=>local.change(value=>{
+    if(value.workflow.pendingPost)return updatePostPreparation(value,patch);
+    if(!draft)return value;
+    const next=updatePostContext(value,draft.pieceId,patch);
+    return 'name' in patch?updateLegacyPostName(next,draft.pieceId,patch.name??''):next;
+  });
+  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>Escolha um nome para organizar esta peça e defina o que ela deve comunicar.</p><form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}><fieldset className="guided-post-preparation-fields" disabled={creatingPost}><label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" disabled={creatingPost} onChange={event=>changePreparation({name:event.target.value})}/></label><PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/><p className="studio-hint">A chamada para ação é opcional. O post será criado somente ao continuar.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={creatingPost} onClick={()=>{local.change(cancelPostPreparation);showPosts();}}>Cancelar</button><button type="submit" className="studio-button" disabled={creatingPost||!postNameSchema.safeParse(preparedName).success}>{creatingPost?'Criando post…':'Continuar para criação'}</button></div></fieldset></form></section>;
+
+  const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>pendingTurn.context.conversationId==='references'?setSettings('references'):openPost(pendingTurn.context.pieceId)}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>:preparingPost?postPreparation:<GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/>}</>;
 
   return (
     <StudioShell
@@ -1127,7 +1189,7 @@ function ProjectStudio({
       onSignOut={onSignOut ? signOutSafely : undefined}
       canOpenStudio
       versionStatus={
-        draft?.approval.status === "approved"
+        preparingPost||s.workflow.view==='posts'?'':draft?.approval.status === "approved"
           ? "Aprovado"
           : draft?.dirty
             ? "Rascunho"
@@ -1144,10 +1206,10 @@ function ProjectStudio({
       }}
       onReview={() => nextStage("review")}
       guided
-      pieceSubtitle={!preparing&&!currentSettings&&s.workflow.view!=='posts'?postTitle:undefined}
+      pieceSubtitle={!preparing&&!preparingPost&&!currentSettings&&s.workflow.view!=='posts'?postTitle:undefined}
       sidebar={!preparing?<StudioNavigation actions={[
-        {id:'posts',label:'Posts do projeto',onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
-        {id:'project',label:'Configurações do projeto',onClick:()=>setSettings('context')},
+        {id:'posts',label:'Posts do projeto',disabled:creatingPost||deletingPost,onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
+        {id:'project',label:'Configurações do projeto',disabled:creatingPost||deletingPost,onClick:()=>setSettings('context')},
         ...(currentSettings?[{id:'back' as const,label:s.workflow.view==='posts'?'Voltar à lista de posts':'Voltar à criação',onClick:closeSettings}]:draft&&s.workflow.view!=='posts'&&!preparingPost?[
           {id:'post' as const,label:'Configurações deste post',onClick:()=>setPostSettingsOpen(true)},
           {id:'review' as const,label:'Revisar post',onClick:()=>nextStage('review'),disabled:Boolean(preparingPost),current:stage==='review'},
@@ -1170,7 +1232,7 @@ function ProjectStudio({
       workspacePage={settingsPage}
       overlays={
         <>
-
+          {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
           {postSettingsOpen&&draft&&<StudioDialog title="Configurações deste post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}<button type="button" className="studio-button" onClick={()=>setPostSettingsOpen(false)}>Voltar ao post</button></StudioDialog>}
           {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (

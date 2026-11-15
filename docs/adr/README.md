@@ -60,4 +60,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 
 | [0050](0050-configuracoes-do-projeto-em-pagina.md) | implementado localmente | Configurações em página, seções no menu lateral e conteúdo de origem preservado ao retornar |
 
+| [0051](0051-nome-confirmacao-e-exclusao-de-posts.md) | implementado localmente; migration não aplicada | Nome organizacional, criação confirmada e exclusão lógica de posts com catálogo sob RLS |
+
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

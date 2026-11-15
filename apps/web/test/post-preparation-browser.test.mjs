@@ -62,10 +62,10 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   await page.keyboard.press('Escape');assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
   await button('Configurações do projeto').click();await page.getByRole('region',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
   await button('Criar novo post').click();await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');
-  await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
+  await page.getByLabel('Nome do post',{exact:true}).fill('Post de autoridade');await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
   if(width===390){await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));const menu=await button('Expandir menu').boundingBox(),header=await page.locator('.studio-topbar').boundingBox();assert.ok(menu.y>=header.y+header.height-1,'menu permanece abaixo do cabeçalho durante a rolagem');await button('Expandir menu').click();await page.keyboard.press('Escape');}
-  await button('Voltar aos posts').click();await page.getByRole('button',{name:/Continuar preparação$/}).click();assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');
-  await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const r=q.result.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{q.result.close();resolve(Object.values(r.result[0]?.state.posts??{}).some(post=>post.message==='Ensinar uma estratégia de porcentagem'));};};}));
+  await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const r=q.result.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{q.result.close();resolve(r.result[0]?.state.workflow.pendingPost?.message==='Ensinar uma estratégia de porcentagem');};};}));
+  assert.equal(Object.keys((await stored()).posts).length,0);
   await page.reload();await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
   await button('Continuar para criação').click();const chat=await openConversation(page);assert.equal(await chat.inputValue(),'');
   await button('Configurações deste post').click();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
@@ -73,7 +73,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   if(width===390){await page.locator('#studio-main').click({position:{x:310,y:12}});assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');}
   else await button('Recolher menu').click();
   await button('Posts do projeto').click();await button('Criar novo post').click();await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');assert.equal(await action.inputValue(),'');
-  await objective.fill('Inscrições para live gratuita');await action.fill('Inscreva-se pelo link da bio');await button('Continuar para criação').click();await openConversation(page);
+  await page.getByLabel('Nome do post',{exact:true}).fill('Convite para live');await objective.fill('Inscrições para live gratuita');await action.fill('Inscreva-se pelo link da bio');await button('Continuar para criação').click();await openConversation(page);
   await button('Começar sem IA, no editor').click();
   assert.ok(await page.getByRole('button',{name:'Salvar versão',exact:true}).isEnabled());
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'sem rolagem horizontal');

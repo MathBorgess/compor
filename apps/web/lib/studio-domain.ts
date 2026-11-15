@@ -1,3 +1,4 @@
+import {postNameText} from './post-catalog';
 import * as z from 'zod';
 import { pinOriginSchema } from './reference-exploration-contract.ts';
 import { boardSlugSchema } from './phoenix/catalog.ts';
@@ -41,7 +42,7 @@ export const postContextSchema=z.strictObject({objective:postText,message:postTe
 export type PostContext=z.infer<typeof postContextSchema>;
 export const creationContextSchema=z.strictObject({postContext:postContextSchema,references:z.array(referenceSchema).max(20)});
 export const draftSchema=draftContextSchema.extend({content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema,creationContext:creationContextSchema.optional()});
-export const postSettingsSchema=postContextSchema.extend({prepared:z.boolean().default(true),direction:directionSchema.default({criteria:[],decisions:[]}),referenceIds:z.array(z.uuid()).max(20),excludedReferenceIds:z.array(z.uuid()).max(20)});
+export const postSettingsSchema=postContextSchema.extend({name:postNameText.default(''),deleted:z.boolean().default(false),prepared:z.boolean().default(true),direction:directionSchema.default({criteria:[],decisions:[]}),referenceIds:z.array(z.uuid()).max(20),excludedReferenceIds:z.array(z.uuid()).max(20)});
 export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value)),status:z.enum(['confirmed','pending','omitted'])});
 export type OfferFact=z.infer<typeof offerFactSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
@@ -61,7 +62,7 @@ export const actionResultSchema=z.strictObject({status:z.enum(['completed','decl
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
-export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','prepare-post','compose','studio']),referencePieceId:z.uuid().nullable().default(null),aiPreference:z.enum(['default','byok','none']),contextStep:z.number().int().min(0).max(2).default(0),contextStarted:z.boolean().default(false),selections:z.record(z.string().uuid(),z.number().int().nonnegative()).default({})});
+export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','prepare-post','compose','studio']),referencePieceId:z.uuid().nullable().default(null),pendingPost:postContextSchema.extend({pieceId:z.uuid(),name:postNameText}).nullable().default(null),aiPreference:z.enum(['default','byok','none']),contextStep:z.number().int().min(0).max(2).default(0),contextStarted:z.boolean().default(false),selections:z.record(z.string().uuid(),z.number().int().nonnegative()).default({})});
 export type StudioWorkflow=z.infer<typeof workflowSchema>;
 export const studioStateSchema=z.strictObject({schemaVersion:z.literal(3),projectReferenceIds:z.array(z.uuid()).max(20),posts:z.record(z.uuid(),postSettingsSchema),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;

@@ -397,7 +397,7 @@ export default function StudioShell({
                 <span className="studio-badge">{versionStatus}</span>
               ) : null}
             </div>
-            {pieceSubtitle ? <p className="studio-project-subtitle">{pieceSubtitle}</p> : null}
+            {pieceSubtitle ? <p className="studio-project-subtitle" title={pieceSubtitle}>{pieceSubtitle}</p> : null}
             {menuOpen ? (
               <div id="studio-project-menu" role="dialog" aria-label="Projetos" className="studio-menu-panel">
                 {onNavigate ? (

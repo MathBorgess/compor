@@ -1,5 +1,8 @@
+import {mockPostCatalog} from './mock-post-catalog.mjs';
+const namedPosts=new WeakMap();
 /** Navigate the production UI through the same explicit actions as a person. */
 export async function finishPreparation(page,{useDefault=false,preparePost=true}={}) {
+ await mockPostCatalog(page);
  await page.getByRole('navigation',{name:'Preparação do projeto',exact:true}).or(page.getByRole('button',{name:'Configurações do projeto',exact:true})).first().waitFor();
  if (!await page.getByRole('navigation',{name:'Preparação do projeto',exact:true}).isVisible()) {if(preparePost)await beginPost(page);return;}
  for(let step=0;step<3;step++){
@@ -24,7 +27,7 @@ async function beginPost(page){
   if(await existing.isVisible())await existing.click();else await create.click();
  }
  const next=page.getByRole('button',{name:'Continuar para criação',exact:true});
- if(await next.isVisible())await next.click();
+ if(await next.isVisible()){const name=page.getByRole('textbox',{name:'Nome do post',exact:true});if(await name.isVisible()&&!await name.inputValue()){const number=(namedPosts.get(page)??0)+1;namedPosts.set(page,number);await name.fill(`Post ${number}`);}await next.click();}
 }
 export async function openPostEditor(page){
  await finishPreparation(page);

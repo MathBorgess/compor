@@ -1,4 +1,5 @@
 import * as z from 'zod';
+import {postRecordSchema} from '../lib/post-catalog';
 import { pieceContentSchema, approvalSchema } from '../lib/studio-domain';
 
 export const projectSchema = z.object({ id: z.string(), title: z.string(), revision:z.number().optional(), created_at: z.string().optional() });
@@ -7,7 +8,7 @@ export const projectResponseSchema = z.object({ project: projectSchema });
 export const contentSchema = pieceContentSchema;
 const persistedUnapprovedSchema = z.strictObject({status:z.literal('unapproved'),kind:z.null(),sourceVersion:z.null(),at:z.null()}).transform(() => ({status:'unapproved'} as const));
 export const versionSchema = z.object({ project_id: z.string(), piece_id: z.string(), version: z.number().int(), content: contentSchema, metadata:z.object({revision:z.number(),baseVersion:z.number().nullable().optional(),approval:z.union([approvalSchema,persistedUnapprovedSchema]),changedDimension:z.enum(['style','composition','hook']).nullable().optional(),operation:z.enum(['create','edit']).nullable().optional()}).optional(), created_at: z.string().optional() });
-export const versionsSchema = z.object({ versions: z.array(versionSchema) });
+export const versionsSchema = z.object({ versions: z.array(versionSchema),posts:z.array(postRecordSchema).max(1000).default([]) });
 export const markerSchema = z.object({ assetId: z.string().nullable() });
 export const storedImageSchema = z.object({ status: z.string(), assetId: z.string().optional() });
 export const savedVersionSchema = z.discriminatedUnion('status', [z.object({ status: z.literal('saved'), version: versionSchema }), z.object({ status: z.literal('conflict') })]);

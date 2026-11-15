@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createStudioState,parseStudioState,createPost,prepareAdjustment,settleAdjustment,addMessage,pendingSelectionQuestion,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
-import {conversationMessages,updateWorkflow,postIds,startPostPreparation,completePostPreparation,prepareReferenceWorkspace} from '../lib/studio-workflow.ts';
+import {conversationMessages,updateWorkflow,postIds,startPostPreparation,completePostPreparation,updatePostPreparation,cancelPostPreparation,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow.ts';
 import {updatePostContext} from '../lib/studio-post-context.ts';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const initial=()=>createStudioState({userId:id(1),projectId:id(2),prepare:true,projectIdea:'Uma oficina'});
@@ -9,12 +9,12 @@ const initial=()=>createStudioState({userId:id(1),projectId:id(2),prepare:true,p
 test('preparação não gera posts e cada nova peça retoma suas respostas sem CTA obrigatório',()=>{
  let state=updateWorkflow(initial(),{phase:'ready',view:'posts'});
  assert.deepEqual(postIds(state),[]);assert.deepEqual(state.drafts,[]);
- state=startPostPreparation(state,id(3));state=updatePostContext(state,id(3),{objective:'Autoridade',message:'Uma dica de matemática'});
+ state=startPostPreparation(state,id(3));state=updatePostPreparation(state,{name:'Autoridade — Matemática',objective:'Autoridade',message:'Uma dica de matemática'});
  state=parseStudioState(JSON.parse(JSON.stringify(state)));
- assert.equal(state.workflow.view,'prepare-post');assert.equal(state.posts[id(3)].prepared,false);
+ assert.equal(state.workflow.view,'prepare-post');assert.equal(state.workflow.pendingPost.name,'Autoridade — Matemática');assert.deepEqual(state.drafts,[]);assert.deepEqual(postIds(state),[]);
  state=completePostPreparation(state);assert.equal(state.workflow.view,'compose');assert.equal(state.posts[id(3)].prepared,true);assert.equal(state.posts[id(3)].action,'');assert.deepEqual(state.messages,[]);
  assert.throws(()=>startPostPreparation(state,id(3)));assert.equal(state.posts[id(3)].message,'Uma dica de matemática');
- state=startPostPreparation(state,id(4));assert.equal(state.posts[id(4)].objective,'');assert.equal(state.posts[id(3)].message,'Uma dica de matemática');
+ state=startPostPreparation(state,id(4));assert.equal(state.workflow.pendingPost.objective,'');assert.equal(state.posts[id(3)].message,'Uma dica de matemática');
 });
 
 test('análise das referências conserva uma origem técnica sem criar post na lista',()=>{
@@ -23,12 +23,12 @@ test('análise das referências conserva uma origem técnica sem criar post na l
  state=prepareAdjustment(state,{requestId:id(30),messageId:id(31),instruction:REFERENCE_SELECTION_EVENT,origin:'system',conversationId:'references',createdAt:'2026-11-15T12:00:00.000Z',eventId:id(32)});
  assert.equal(state.adjustments[0].context.pieceId,id(3));
  assert.deepEqual(postIds(state),[]);
- state=startPostPreparation(state,id(4));assert.deepEqual(postIds(state),[id(4)]);
+ state=startPostPreparation(state,id(4));assert.deepEqual(postIds(state),[]);
  assert.throws(()=>parseStudioState({...state,workflow:{...state.workflow,referencePieceId:id(9)}}));
 });
 
 test('posts anteriores não precisam repetir preparação',()=>{
- const state=startPostPreparation(initial(),id(3)),old=structuredClone(state);delete old.posts[id(3)].prepared;delete old.workflow.referencePieceId;old.workflow.view='studio';
+ const state=createPost(initial(),{pieceId:id(3)}),old=structuredClone(updatePostContext(state,id(3),{objective:'Anterior'}));delete old.posts[id(3)].prepared;delete old.workflow.referencePieceId;old.workflow.view='studio';
  const restored=parseStudioState(old);assert.equal(restored.posts[id(3)].prepared,true);assert.equal(restored.workflow.referencePieceId,null);assert.equal(restored.workflow.view,'studio');
 });
 test('preparação é explícita e a ideia não é uma mensagem ou autorização',()=>{
@@ -62,4 +62,19 @@ test('pergunta legada das referências espera resposta na mesma conversa',()=>{
  state=parseStudioState(legacy);assert.equal(pendingSelectionQuestion(state,'references'),id(33));
  state=addMessage(state,{id:id(35),role:'user',text:'Pedido de outro post',createdAt:'2026-11-15T12:00:02.000Z',conversationId:id(3)});assert.equal(pendingSelectionQuestion(state,'references'),id(33));
  state=addMessage(state,{id:id(36),role:'user',text:'Pode seguir',createdAt:'2026-11-15T12:00:03.000Z',conversationId:'references'});assert.equal(pendingSelectionQuestion(state,'references'),null);
+});
+
+test('cancelar não cria peça e confirmar exige nome válido',()=>{
+ let state=startPostPreparation(initial(),id(8));assert.throws(()=>completePostPreparation(state));
+ state=updatePostPreparation(state,{name:'   '});assert.throws(()=>completePostPreparation(state));
+ state=cancelPostPreparation(state);assert.equal(state.workflow.pendingPost,null);assert.deepEqual(state.drafts,[]);
+ state=startPostPreparation(state,id(8));state=updatePostPreparation(state,{name:'  Live gratuita  '});state=completePostPreparation(state);
+ assert.equal(state.posts[id(8)].name,'Live gratuita');assert.equal(state.workflow.pendingPost,null);
+ const removed=removePostFromList(state,id(8));assert.deepEqual(postIds(removed),[]);assert.deepEqual(removed.drafts,state.drafts);assert.equal(removed.selection,null);
+});
+test('exclusão preserva turnos e bloqueia resultados pendentes',()=>{
+ let state=createPost(initial(),{pieceId:id(3)});state=prepareAdjustment(state,{requestId:id(30),messageId:id(31),instruction:'Uma peça',conversationId:id(3),createdAt:'2026-11-15T12:00:00.000Z',eventId:id(32)});
+ assert.throws(()=>removePostFromList(state,id(3)));
+ state=settleAdjustment(state,{requestId:id(30),status:'completed',result:{messageId:id(33),text:'Confirmado'},createdAt:'2026-11-15T12:00:01.000Z',eventId:id(34)});
+ const removed=removePostFromList(state,id(3));assert.deepEqual(removed.messages,state.messages);assert.deepEqual(removed.adjustments,state.adjustments);
 });
