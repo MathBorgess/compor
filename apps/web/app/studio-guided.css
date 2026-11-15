@@ -5,7 +5,7 @@
 .guided-steps li span { display:grid;place-items:center;width:26px;height:26px;border:1px solid var(--studio-line);border-radius:50%;background:white; }
 .guided-question { display:grid;gap:20px; }
 .guided-question form,.guided-key { display:grid;gap:16px; }
-.guided-question textarea { width:100%;min-height:130px;resize:vertical;padding:14px;border:1px solid var(--studio-line);border-radius:10px;background:white;color:var(--studio-ink);font:inherit; }
+.guided-question textarea,.guided-context-goal textarea { width:100%;min-height:130px;resize:vertical;padding:14px;border:1px solid var(--studio-line);border-radius:10px;background:white;color:var(--studio-ink);font:inherit; }
 .guided-actions,.guided-heading,.guided-settings-tabs,.guided-pane-controls { display:flex;flex-wrap:wrap;align-items:center;gap:10px; }
 .guided-heading { justify-content:space-between;margin-bottom:24px; }
 .guided-heading h2 { color:var(--studio-cobalt); }
@@ -64,3 +64,5 @@
  .guided-heading { align-items:flex-start; }
  .guided-question textarea { font-size:16px; }
 }
+
+.guided-context-goal { display:grid;gap:7px;margin:16px 0;font-size:13px;font-weight:500; }
