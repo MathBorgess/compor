@@ -465,7 +465,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('button',{name:'Selecionada: Referência adicional'}).waitFor();
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
- await openDrawer(page,'Bases');await page.getByRole('button',{name:'Remover referência',exact:true}).click();await openSettings(page,'Referências');
+ await page.locator('.reference-selection-tray').getByRole('button',{name:'Remover da seleção: Referência adicional',exact:true}).click();
  await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
  await eventually(()=>selectionTurns.length,count=>count===2,15000);
  assert.equal(selected.length,2);assert.notEqual(selected[0].id,selected[1].id);
