@@ -24,7 +24,7 @@ Ambiente: Windows, Node 24.13.0, Next 16.4.4, Chromium 156.0.8078.4 e Python 3.1
 | `quality:lint` | Aprovado, sem avisos |
 | `quality:typecheck` | Aprovado, tipos estritos |
 | `quality:test` | 23/23 aprovados |
-| `quality:browser` | 397/397 aprovados, zero falhas e zero skips |
+| `quality:browser` | 397/397 na implementação inicial; 399/399 após a correção de AbortError, sem falhas ou skips |
 | Vínculo de conversa focado | 57/57 aprovados |
 | Estado e workflow focados | 25/25 aprovados |
 | Build Next de produção | Aprovado em cópia isolada: `npm run build` em `apps/web`, o comando chamado por `quality:build` |
@@ -34,7 +34,7 @@ Ambiente: Windows, Node 24.13.0, Next 16.4.4, Chromium 156.0.8078.4 e Python 3.1
 
 O site foi verificado com Git Bash como `npm_config_script_shell` no Windows, mantendo scripts e lockfiles. O Chromium obrigatório foi configurado por variável de ambiente privada. A suíte web completa usa fontes físicas isoladas; não reconstrói o `.next` da revisão.
 
-A suíte completa terminou antes dos últimos ajustes pontuais de orientação e edição do objetivo nas configurações. Depois deles, a revisão final no Next real/Chromium exercitou criação, dois posts, compositor preservado, compacto, alteração/retomada do objetivo, lote explícito de três referências, escolha de imagem e editor sem IA, sem erros de página. Lint, tipos e build foram executados novamente sobre o código final `9d14ad1`. O MCP do Next também retornou `issues: []`; não se afirma execução da skill next-dev-loop, cujo pré-requisito global não foi instalado.
+A suíte inicial de 397 testes terminou antes dos últimos ajustes pontuais de orientação e edição do objetivo nas configurações. Depois deles, a revisão final no Next real/Chromium exercitou criação, dois posts, compositor preservado, compacto, alteração/retomada do objetivo, lote explícito de três referências, escolha de imagem e editor sem IA, sem erros de página. Lint, tipos e build foram executados novamente sobre o código final `9d14ad1`. O MCP do Next também retornou `issues: []`; não se afirma execução da skill next-dev-loop, cujo pré-requisito global não foi instalado.
 
 ## Bundle e performance
 
@@ -65,3 +65,14 @@ Os commits de portabilidade mantêm o Chromium obrigatório e os mesmos testes/l
 ## Alcance da evidência
 
 O ambiente de revisão serve o Next real e usa o domínio, IndexedDB e componentes reais, com sessão e fronteiras externas fictícias. A busca externa desse ambiente é vazia; upload e imagens de exemplo permitem avaliar o percurso. Isso não comprova integração real com Pinterest/OpenAI, qualidade criativa, isolamento entre contas reais, CI Linux ou deploy. A avaliação manual da pessoa usuária continua pendente; implementação disponível não significa aprovação visual ou de usabilidade.
+
+
+## Correção das duas issues de AbortError
+
+Na revisão posterior, o MCP do Next registrou `AbortError: signal is aborted without reason` em `Workspace.useEffect.checkSession` e no cleanup de `ExplorationGallery.useEffect`. Não havia erro de compilação. Ambas as origens chamavam `AbortController.abort()` em consultas de leitura de sessão ou metadados de explorações.
+
+Essas duas leituras agora podem terminar após ficarem obsoletas: a sessão mantém suas guardas de geração/epoch, e a galeria ignora o resultado de um efeito encerrado. Dados atrasados não atualizam a tela. A mudança não alcança pedidos de geração, seu cancelamento, provas, chaves ou autorização. Não foi adicionado filtro global de erros.
+
+Dois testes em Next/Chromium exercitam respostas fora de ordem, troca de conta, fechar/reabrir a galeria, ausência de eventos de abort/rejeição não tratada e visibilidade de falhas reais HTTP 503. Os dois passaram, assim como os testes existentes focados de memória BYOK e edição/exportação. O MCP do Next retornou `configErrors: []` e `sessionErrors: []` depois da atualização. As leituras sintéticas controladas não usaram serviços reais nem alteraram os projetos da pessoa.
+
+Correção no commit local `9bd1f11`: lint, tipos estritos, build isolado e suíte web completa aprovados (399/399; zero falhas e zero skips). As cinco medições posteriores também passaram: JavaScript total gzip 299726 bytes, LCP mediano 657.3 ms, TBT 0 ms e CLS 0.0080. O Next confirmou novamente ausência de erros de configuração/runtime e `issues: []` na compilação. Nenhum dado de revisão foi reiniciado nem houve envio ao remoto. As limitações legadas do gate unitário descritas acima permanecem separadas desta correção.
