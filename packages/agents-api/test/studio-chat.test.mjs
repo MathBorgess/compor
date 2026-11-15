@@ -11,6 +11,26 @@ const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-422
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
 const request=(body,origin=app)=>new Request(app+'/api/studio/chat',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 const body={apiKey,projectId,requestId,message:'Atualize a oferta para oficina fictícia',context:{revision:1,pieceId:null,brief:{offer:'Oficina'}},history:[]};
+
+test('conversas do mesmo projeto não consultam nem reutilizam a sessão de outro post',async()=>{
+ const f=fixture(),first={...body,conversationId:attemptId,context:{...body.context,pieceId:attemptId}};
+ assert.equal((await f.chat(request(first))).status,202);
+ f.set({status:'idle',turnState:'completed'});
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).json()).status,'completed');
+ const before=f.calls.length;
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:request2}))).json()).status,'unknown');
+ assert.equal(f.calls.length,before,'a conversa incorreta não consulta o fornecedor');
+ const crossed=await(await f.chat(request({...first,requestId:request2,conversationId:request2,context:{...first.context,pieceId:request2},previousAttemptKey:requestId}))).json();
+ assert.equal(crossed.failurePhase,'before_submission');assert.equal(f.calls.length,before);
+ const same=await(await f.chat(request({...first,requestId:'66666666-6666-4666-8666-666666666666',previousAttemptKey:requestId}))).json();
+ assert.equal(same.sessionReused,true);
+});
+
+test('novo escopo não adota vínculo legado nem aceita post diferente do contexto',async()=>{
+ const f=fixture();await f.chat(request(body));const before=f.calls.length;
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).json()).status,'unknown');assert.equal(f.calls.length,before);
+ assert.equal((await f.chat(request({...body,requestId:request2,conversationId:attemptId,context:{...body.context,pieceId:request2}}))).status,400);assert.equal(f.calls.length,before);
+});
 function fixture(options={}){
  const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL,answer='Atualização concluída na aba.';
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});

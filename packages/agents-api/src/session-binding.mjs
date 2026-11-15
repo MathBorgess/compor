@@ -39,9 +39,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
   // a row, so recovery must not trust its contents without this signature.
   // `origin` signs which reply contract the session was opened with; proofs
   // issued before it existed have none and keep their original contract.
-  function issueRecovery({ userId, projectId, attemptId, sessionId, origin }) {
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection')) throw new Error('invalid recovery context');
-    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}) })).toString('base64url');
+  function issueRecovery({ userId, projectId, attemptId, sessionId, origin, conversationId }) {
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection') || (conversationId !== undefined && conversationId !== 'references' && !uuid(conversationId))) throw new Error('invalid recovery context');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}), ...(conversationId ? { conversationId } : {}) })).toString('base64url');
     return `v4.${payload}.${createHmac('sha256', signingKey).update(`v4.${payload}`).digest('base64url')}`;
   }
   function verifyRecovery({ token, userId, projectId, attemptId }) {
@@ -56,8 +56,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (bytes.toString('base64url') !== p[1]) return null;
       const value = JSON.parse(bytes.toString('utf8'));
       const signedOrigin = value && Object.hasOwn(value, 'origin');
-      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
-      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}) };
+      const scoped=value&&Object.hasOwn(value,'conversationId');
+      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4)+(scoped?1:0) || (scoped&&value.conversationId!=='references'&&!uuid(value.conversationId)) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
+      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}), ...(scoped?{conversationId:value.conversationId}:{}) };
     } catch { return null; }
   }
   // Stable per original attempt, but unlinkable without the server secret.

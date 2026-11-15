@@ -128,10 +128,12 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return{error:reply({error:'invalid_request'},400)};
   let body;try{body=await limitedJson(request.body,limit);}catch{return{error:reply({error:'invalid_request'},400)};}
   if(!body||typeof body!=='object'||Array.isArray(body)||!/^sk-[^\s]{20,300}$/.test(body.apiKey??'')||![body.projectId,body.requestId].every(uuid))return{error:reply({error:'invalid_request'},400)};
+  if(body.conversationId!==undefined&&body.conversationId!=='references'&&!uuid(body.conversationId))return{error:reply({error:'invalid_request'},400)};
+  if(body.context&&body.conversationId&&body.conversationId!=='references'&&body.context.pieceId!==body.conversationId)return{error:reply({error:'invalid_request'},400)};
   let actor;try{actor=await resolveActor();}catch{return{error:reply({error:'unavailable'},503)};}
   if(!uuid(actor?.userId)||typeof actor.token!=='string'||!actor.token)return{error:reply({error:'unauthorized'},401)};
   try{if(!await ownsProject({actor,projectId:body.projectId}))return{error:reply({error:'not_found'},404)};}catch{return{error:reply({error:'unavailable'},503)};}
-  return{body,actor,scope:{actor,projectId:body.projectId,requestId:body.requestId}};
+  return{body,actor,scope:{actor,projectId:body.projectId,requestId:body.requestId,conversationId:body.conversationId}};
  }
  async function get(path,key){
   const r=await fetchApi(`${ROOT}/${path}`,{headers:headers(key),redirect:'error',signal:AbortSignal.timeout(10000)});
@@ -139,7 +141,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   try{return await limitedJson(r.body,1024*1024);}catch{throw new ProviderDiagnosticError('provider_body_invalid');}
  }
  async function state(scope,record,value,turnId){if(record.state===value&&(!turnId||record.turnId===turnId))return;await store.state({...scope,state:value,turnId});record.state=value;if(turnId)record.turnId=turnId;}
- function proof(scope,record){const p=bindings.verifyRecovery({token:record.binding,userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId});if(!p||!identifier(p.sessionId,'sess'))throw Error('unverified session');return p;}
+ function proof(scope,record){const p=bindings.verifyRecovery({token:record.binding,userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId});if(!p||p.conversationId!==scope.conversationId||!identifier(p.sessionId,'sess'))throw Error('unverified session');return p;}
  function measurement(scope,record){return{actor:scope.actor,projectId:scope.projectId,attemptId:record.attemptId,part:'agent',partId:record.attemptId,model:AGENT_MODEL};}
  async function finish(scope,record,status,counts){
   if(['completed','failed'].includes(record.state))return;
@@ -232,10 +234,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   const auth=await authorize(request);if(auth.error)return auth.error;const{body,actor,scope}=auth,key=body.apiKey;
   const d=diagnostic(scope.requestId,'store_get');
   if(body.op==='poll'){
-   if(Object.keys(body).sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
+   if(Object.keys(body).filter(k=>k!=='conversationId').sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
    try{const record=await store.get(scope);if(!record)return reply({error:'not_found'},404);return await poll(scope,record,key,d);}catch(error){return unknownReply(d,error);}
   }
-  const allowed=['apiKey','projectId','requestId','message','context','history','previousAttemptKey','op','referenceImages','quickReply'];
+  const allowed=['apiKey','projectId','requestId','message','context','history','previousAttemptKey','op','referenceImages','quickReply','conversationId'];
   const automatic=body.op==='reference_selection',quick=body.quickReply!==undefined;
   // A quick reply never reuses a tool-enabled session and never rides on the automatic event.
   if(quick&&(automatic||!quickReplyValid(body.quickReply)||body.previousAttemptKey!==undefined))return reply({error:'invalid_request'},400);
@@ -245,7 +247,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   if(body.context.pieceId&&body.context.baseVersion>0){try{if(typeof ownsVersion!=='function'||!await ownsVersion({actor,projectId:body.projectId,pieceId:body.context.pieceId,version:body.context.baseVersion}))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}}
   let record;
   try{
-   const inputDigest=studioBindings.digest({op:body.op??'submit',message:body.message??null,context:body.context,history:body.history??[],previousAttemptKey:body.previousAttemptKey??null,referenceImages:body.referenceImages,...(quick?{quickReply:body.quickReply}:{})});
+   const inputDigest=studioBindings.digest({...(body.conversationId?{conversationId:body.conversationId}:{}),op:body.op??'submit',message:body.message??null,context:body.context,history:body.history??[],previousAttemptKey:body.previousAttemptKey??null,referenceImages:body.referenceImages,...(quick?{quickReply:body.quickReply}:{})});
    const reserved=await store.reserve({...scope,inputDigest});
    if(reserved.status==='not_found')return reply({error:'not_found'},404);
    // The reservation refused this new request before inserting metadata or
@@ -281,7 +283,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    }}
    if(previous){
     d.phase='session_sign';
-    const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId});
+    const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,...(scope.conversationId?{conversationId:scope.conversationId}:{})});
     d.sessionId=proof(scope,{...record,binding}).sessionId;
     d.phase='session_bind';await store.bind({...scope,binding,expiresAt,priorTurnId,initialInput,initialOutput});d.phase='recovery_bind';await attempts.bindRecovery({actor,projectId:scope.projectId,attemptId:record.attemptId,binding});
     dispatched=true;
@@ -299,7 +301,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     };
     const submitted=await submit();
     if(submitted.rejected)return reply({status:'failed',error:'provider_rejected',retryAutomatically:false},submitted.rejected);
-    d.phase='session_sign';const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,...(automatic?{origin:'reference_selection'}:{})});
+    d.phase='session_sign';const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,...(scope.conversationId?{conversationId:scope.conversationId}:{}),...(automatic?{origin:'reference_selection'}:{})});
     d.sessionId=proof(scope,{...record,binding}).sessionId;
     d.phase='session_bind';await store.bind({...scope,binding,expiresAt,priorTurnId:null,initialInput:0,initialOutput:0});d.phase='recovery_bind';await attempts.bindRecovery({actor,projectId:scope.projectId,attemptId:record.attemptId,binding});
    }
@@ -313,7 +315,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  async function action(request){
   const auth=await authorize(request,64000);if(auth.error)return auth.error;const{body,scope}=auth;
   const d=diagnostic(scope.requestId,'action_binding');
-  if(Object.keys(body).sort().join(',')!=='actionBinding,apiKey,projectId,requestId,result'||typeof body.actionBinding!=='string'||!body.result||typeof body.result!=='object'||Array.isArray(body.result)||!['completed','declined','unknown'].includes(body.result.status)||JSON.stringify(body.result).length>32000||JSON.stringify(body.result).includes(body.apiKey)||/sk-[^\s]+/i.test(JSON.stringify(body.result)))return reply({error:'invalid_request'},400);
+  if(Object.keys(body).filter(k=>k!=='conversationId').sort().join(',')!=='actionBinding,apiKey,projectId,requestId,result'||typeof body.actionBinding!=='string'||!body.result||typeof body.result!=='object'||Array.isArray(body.result)||!['completed','declined','unknown'].includes(body.result.status)||JSON.stringify(body.result).length>32000||JSON.stringify(body.result).includes(body.apiKey)||/sk-[^\s]+/i.test(JSON.stringify(body.result)))return reply({error:'invalid_request'},400);
   try{
    const signed=studioBindings.verify({token:body.actionBinding,userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId});if(!signed)return reply({error:'invalid_binding'},403);
    d.turnId=signed.turnId;d.callId=signed.callId;d.callIdAccepted=isAgentCallId(signed.callId);

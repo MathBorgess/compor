@@ -41,9 +41,10 @@ export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText
 export type OfferFact=z.infer<typeof offerFactSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
 export type RequestStatus=z.infer<typeof requestStatusSchema>;
-export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema});
+export const conversationIdSchema=z.union([z.literal('references'),z.string().uuid()]);
+export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema,conversationId:conversationIdSchema.optional()});
 export type StudioMessage=z.infer<typeof messageSchema>;
-export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional()});
+export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional(),conversationId:conversationIdSchema.optional()});
 export type AdjustmentContext=z.infer<typeof adjustmentContextSchema>;
 export const adjustmentResultSchema=z.strictObject({messageId:id.optional(),text:z.string().optional(),assetId:id.optional()});
 export type AdjustmentResult=z.infer<typeof adjustmentResultSchema>;
@@ -55,7 +56,9 @@ export const actionResultSchema=z.strictObject({status:z.enum(['completed','decl
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
-export const studioStateSchema=z.strictObject({schemaVersion:z.literal(1),userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
+export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','compose','studio']),aiPreference:z.enum(['default','byok','none']),selections:z.record(z.string().uuid(),z.number().int().nonnegative()).default({})});
+export type StudioWorkflow=z.infer<typeof workflowSchema>;
+export const studioStateSchema=z.strictObject({schemaVersion:z.literal(2),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;
 export type StudioScope=Pick<StudioState,'userId'|'projectId'>;
 export interface StoredImage {file:Blob;metadata?:unknown}
