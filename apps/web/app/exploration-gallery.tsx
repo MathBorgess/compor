@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { z } from "zod";
+import * as z from 'zod';
 import { rememberShownExplorations } from '../lib/shown-explorations';
 
 const imagesSchema = z.object({

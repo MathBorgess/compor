@@ -1,8 +1,8 @@
 import type {StudioState} from './studio-domain.ts';
 
-type Scope=Pick<StudioState,'userId'|'projectId'|'references'>;
+type Scope=Pick<StudioState,'userId'|'projectId'|'references'>&{referenceScope?:string};
 export const referenceFingerprint=(state:Pick<StudioState,'references'>)=>JSON.stringify(state.references.map(item=>item.id).sort());
-export const referenceRoundKey=(state:Scope)=>`compor-reference-selection:${state.userId}:${state.projectId}`;
+export const referenceRoundKey=(state:Scope)=>`compor-reference-selection:${state.userId}:${state.projectId}${state.referenceScope&&state.referenceScope!=='references'?`:${state.referenceScope}`:''}`;
 export function readReferenceRound(state:Scope) {
   try {
     const raw=localStorage.getItem(referenceRoundKey(state));

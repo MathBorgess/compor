@@ -5,7 +5,7 @@ import { referenceHistoryResponseSchema,referenceSearchResponseSchema,type Explo
 import { grantReferenceConsent,referenceConsentGranted,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
 import './reference-exploration.css';
 
-type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onRemoveReference?:(originUrl:string)=>Promise<void>;onContinue:()=>void};
+type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onRemoveReference?:(originUrl:string)=>Promise<void>;onContinue?:()=>void};
 type SearchState={status:'idle'|'loading'|'empty'|'unavailable'|'ok';references:ExploredReference[]};
 export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onRemoveReference,onContinue}:Props) {
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
@@ -120,7 +120,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     {approved.length>0&&<section aria-label="Usadas em posts que você aprovou"><h2>Usadas em posts que você aprovou</h2>{cards(approved)}</section>}
     {selected.length>0&&<section aria-label="Suas referências"><h2>Suas referências</h2>{cards(selected)}</section>}
     <div><h2>Sugestões do Pinterest</h2>
-      {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button><button type="button" onClick={onContinue}>Continuar sem referências</button></div>}
+      {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button>{onContinue&&<button type="button" onClick={onContinue}>Continuar sem referências</button>}</div>}
       {consent&&<p>As sugestões partem da sua ideia. Você pode explorar outro assunto.</p>}
     </div>
     <form onSubmit={searchNow}>

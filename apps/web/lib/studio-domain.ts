@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { pinOriginSchema } from './reference-exploration-contract.ts';
 import { boardSlugSchema } from './phoenix/catalog.ts';
 
@@ -12,7 +12,6 @@ export const approvalSchema = z.union([z.strictObject({status:z.literal('unappro
 export type Approval = z.infer<typeof approvalSchema>;
 export const draftContextSchema = z.strictObject({pieceId:id,baseVersion:z.number(),expectedLatestVersion:z.number()});
 export type DraftContext = z.infer<typeof draftContextSchema>;
-export const draftSchema = draftContextSchema.extend({content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema});
 export type StudioDraft = z.infer<typeof draftSchema>;
 export type Draft = StudioDraft;
 export const referenceSourceSchema = z.union([
@@ -37,6 +36,12 @@ export const personaSchema=z.strictObject({audience:z.string(),situation:z.strin
 export type Persona=z.infer<typeof personaSchema>;
 export const briefSchema=z.strictObject({offer:z.string(),audience:z.string(),action:z.string(),direction:z.string()});
 export type Brief=z.infer<typeof briefSchema>;
+const postText=z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value));
+export const postContextSchema=z.strictObject({objective:postText,message:postText,action:postText});
+export type PostContext=z.infer<typeof postContextSchema>;
+export const creationContextSchema=z.strictObject({postContext:postContextSchema,references:z.array(referenceSchema).max(20)});
+export const draftSchema=draftContextSchema.extend({content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema,creationContext:creationContextSchema.optional()});
+export const postSettingsSchema=postContextSchema.extend({direction:directionSchema.default({criteria:[],decisions:[]}),referenceIds:z.array(z.uuid()).max(20),excludedReferenceIds:z.array(z.uuid()).max(20)});
 export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value)),status:z.enum(['confirmed','pending','omitted'])});
 export type OfferFact=z.infer<typeof offerFactSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
@@ -44,7 +49,7 @@ export type RequestStatus=z.infer<typeof requestStatusSchema>;
 export const conversationIdSchema=z.union([z.literal('references'),z.string().uuid()]);
 export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema,conversationId:conversationIdSchema.optional()});
 export type StudioMessage=z.infer<typeof messageSchema>;
-export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional(),conversationId:conversationIdSchema.optional()});
+export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional(),conversationId:conversationIdSchema.optional(),postContext:postContextSchema.optional()});
 export type AdjustmentContext=z.infer<typeof adjustmentContextSchema>;
 export const adjustmentResultSchema=z.strictObject({messageId:id.optional(),text:z.string().optional(),assetId:id.optional()});
 export type AdjustmentResult=z.infer<typeof adjustmentResultSchema>;
@@ -58,7 +63,7 @@ export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.stri
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
 export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','compose','studio']),aiPreference:z.enum(['default','byok','none']),contextStep:z.number().int().min(0).max(2).default(0),contextStarted:z.boolean().default(false),selections:z.record(z.string().uuid(),z.number().int().nonnegative()).default({})});
 export type StudioWorkflow=z.infer<typeof workflowSchema>;
-export const studioStateSchema=z.strictObject({schemaVersion:z.literal(2),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
+export const studioStateSchema=z.strictObject({schemaVersion:z.literal(3),projectReferenceIds:z.array(z.uuid()).max(20),posts:z.record(z.uuid(),postSettingsSchema),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;
 export type StudioScope=Pick<StudioState,'userId'|'projectId'>;
 export interface StoredImage {file:Blob;metadata?:unknown}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { z } from "zod";
+import * as z from 'zod';
 import { createExplorationPrompt } from "@compor/agile-deliberation/exploration";
 import { criterionChoice } from "../lib/studio-direction";
 import { pendingSelectionQuestion } from "../lib/studio-state";
@@ -17,7 +17,7 @@ const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])})
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
 
-type LoopProps = { userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
+type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -44,7 +44,7 @@ export function useExplorationLoop(props: LoopProps) {
   const resumeInFlight = useRef(false);
   const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
   const [resumedQuestion, setResumedQuestion] = useState<{key:string;id:string}|null>(null);
-  const question = props.state ? pendingSelectionQuestion(props.state,'references') : null;
+  const question = props.state ? pendingSelectionQuestion(props.state,props.conversationId??'references') : null;
   const awaitingAnswer = question !== null && (resumedQuestion?.key !== questionKey || resumedQuestion.id !== question);
   const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;
@@ -72,7 +72,8 @@ export function useExplorationLoop(props: LoopProps) {
   useEffect(() => {
     if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer || unresolvedChat) return;
     const source = props.credentialSource ?? "byok", epoch = props.credentialEpoch ?? 0;
-    const sameCredential = () => (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
+    const scope=props.conversationId;
+    const sameCredential = () => current.current.conversationId===scope && (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
     const cancel = new AbortController();
     let active = true;
     let dispatched = false;
@@ -148,11 +149,18 @@ export function useExplorationLoop(props: LoopProps) {
               localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
               setAwaitingFeedback(true);setPhase('idle');setCountdown(null);return;
             }
-            const feedbackRequest={method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:props.projectId,scope:'account'}),signal:cancel.signal};
-            const [feedbackResponse,referenceResponse]=await Promise.all([fetch('/api/studio/explorations/signals',feedbackRequest),fetch('/api/studio/references/signals',feedbackRequest)]);
-            if(!feedbackResponse.ok||!referenceResponse.ok)throw Error('feedback unavailable');
-            const generatedSignals=generatedSignalsSchema.parse(await feedbackResponse.json()).signals;
-            const referenceSignals=referenceSignalsResponseSchema.parse(await referenceResponse.json()).signals;
+            const readSignals=async(path:string,local=false)=>{
+              const body={projectId:props.projectId,scope:local?'project':'account',...(local&&props.conversationId&&props.conversationId!=='references'?{pieceId:props.conversationId}:{})};
+              const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),signal:cancel.signal});
+              if(!response.ok)throw Error('feedback unavailable');return response.json();
+            };
+            const local=props.conversationId&&props.conversationId!=='references';
+            const [generated,external]=await Promise.all([
+              Promise.all([readSignals('/api/studio/explorations/signals'),...(local?[readSignals('/api/studio/explorations/signals',true)]:[])]),
+              Promise.all([readSignals('/api/studio/references/signals'),...(local?[readSignals('/api/studio/references/signals',true)]:[])])
+            ]);
+            const generatedSignals=generated.flatMap(value=>generatedSignalsSchema.parse(value).signals);
+            const referenceSignals=external.flatMap(value=>referenceSignalsResponseSchema.parse(value).signals);
             const latestState=current.current.getState();
             if(!active || cancel.signal.aborted || !latestState)return;
             const engaged=new Set(generatedSignals.filter(item=>item.projectId===props.projectId&&(item.action==='selected'||Boolean(item.comment.trim()))).map(item=>item.imageId));

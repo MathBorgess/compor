@@ -25,8 +25,11 @@ test('comentário registrado no chat passa a contar para prontidão da referênc
  const result=await recordVisualFeedback(state,{projectId,requestId:id(23),revision:state.revision,referenceId:pinId,action:'comment',quote:'Gosto do contraste'},write);
  assert.equal(result.feedbackStatus,'recorded');
  const before=assessReadiness({references:[pin]});assert.equal(before.evidence.referenceMeaning,'unknown');
- const loaded=await loadReadinessFeedback(projectId,[pin],reader([],saved));
+ const read=async(path,options)=>{const {pieceId:scope}=JSON.parse(options.body);return Response.json({signals:path.includes('explorations')?[]:saved.filter(item=>item.pieceId===scope)});};
+ const loaded=await loadReadinessFeedback(projectId,[pin],read,pieceId);
  const after=assessReadiness({references:[pin],referenceFeedback:loaded.referenceFeedback});assert.equal(after.evidence.referenceMeaning,'discussed');
+ assert.deepEqual((await loadReadinessFeedback(projectId,[pin],read)).referenceFeedback,[],'o comentário do post não vira gosto geral');
+ assert.deepEqual((await loadReadinessFeedback(projectId,[pin],read,id(99))).referenceFeedback,[],'outro post não recebe o comentário');
 });
 test('falhas não transformam seleção em confirmação',async()=>{
  const result=await loadReadinessFeedback(projectId,[pin,image],async()=>{throw Error('offline');});

@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { StudioMessage } from './studio-domain.ts';
 
 /** Closed, versioned contract for structured replies in the studio chat.

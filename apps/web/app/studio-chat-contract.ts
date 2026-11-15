@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import type { prepareArtworkInput, ArtworkConversion } from '../lib/studio-artwork-input';
 type ArtworkInput=Awaited<ReturnType<typeof prepareArtworkInput>>;

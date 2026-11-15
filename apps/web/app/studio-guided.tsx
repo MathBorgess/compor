@@ -9,9 +9,9 @@ export function PreparationSteps({phase}:{phase:StudioWorkflow['phase']}) {
   const current=phase==='context'?0:phase==='ai'?1:2;
   return <nav className="guided-steps" aria-label="Preparação do projeto"><span>Preparar projeto</span><ol>{steps.map((label,index)=><li key={label} aria-current={index===current?'step':undefined}><span aria-hidden="true">{index+1}</span>{label}</li>)}</ol></nav>;
 }
-const questions:[keyof Brief,string,string][]=[['offer','O que vamos divulgar?','Revise a ideia inicial ou acrescente o que for importante sobre a oferta.'],['audience','Quem você quer alcançar?','Descreva para quem é essa divulgação. Você pode detalhar depois.'],['action','O que você quer que a pessoa faça?','Ex.: conhecer a oferta, conversar com você ou fazer uma inscrição.']];
+const questions:[keyof Brief,string,string][]=[['offer','O que vamos divulgar?','Revise a ideia inicial ou acrescente o que for importante sobre a oferta.'],['audience','Quem você quer alcançar?','Descreva para quem é essa divulgação. Você pode detalhar depois.']];
 export function ProjectQuestions({state,onChange,onStep,onContinue}:{state:StudioState;onChange:(patch:Partial<Brief>)=>void;onStep:(step:number)=>void;onContinue:()=>void}) {
-  const index=state.workflow.contextStep;
+  const index=Math.min(state.workflow.contextStep,questions.length-1);
   const field=useRef<HTMLTextAreaElement>(null),[name,title,help]=questions[index];
   const offer=state.workflow.contextStarted?state.brief.offer:state.brief.offer||state.projectIdea;
   useEffect(()=>{field.current?.focus();},[index]);

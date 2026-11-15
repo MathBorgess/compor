@@ -76,6 +76,16 @@ test('o contexto conserva estados dos fatos e deixa a escolha do público diverg
  assert.deepEqual(forwarded.offerFacts,facts);assert.deepEqual(forwarded.audienceResolution,context.audienceResolution);
  assert.match(create.body.agent.instructions,/não escolha, una ou substitua os valores por suposição/);assert.match(create.body.agent.instructions,/Não apresente fatos pendentes como confirmados nem inclua os omitidos/);
 });
+test('contexto próprio do post é preservado e campos inválidos são recusados antes do fornecedor',async()=>{
+ const postContext={objective:'Autoridade',message:'Minha experiência',action:''},f=fixture();
+ assert.equal((await f.chat(request({...body,context:{...body.context,postContext}}))).status,202);
+ const create=f.calls.find(call=>call.method==='POST'&&call.url.endsWith('/sessions'));
+ assert.deepEqual(JSON.parse(create.body.input[0].content[0].text).context.postContext,postContext);
+ assert.match(create.body.agent.instructions,/um post de autoridade não precisa de chamada comercial/);
+ for(const invalid of [null,[],{...postContext,action:'sk-secret'},{...postContext,objective:1},{...postContext,action:'x'.repeat(4001)},{...postContext,authority:true}]){
+  const blocked=fixture();assert.equal((await blocked.chat(request({...body,context:{...body.context,postContext:invalid}}))).status,400);assert.deepEqual(blocked.calls,[]);assert.equal(blocked.records.size,0);
+ }
+});
 test('o servidor recusa fatos e resoluções adulterados antes de reservar ou chamar o fornecedor',async()=>{
  const fact={id:request2,label:'Preço',value:'R$ 180',status:'confirmed'};
  const base={...body.context,brief:{audience:'Público escolhido'},persona:{audience:'Público escolhido'}};

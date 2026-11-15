@@ -5,7 +5,7 @@ import {conversationMessages,updateWorkflow} from '../lib/studio-workflow.ts';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const initial=()=>createStudioState({userId:id(1),projectId:id(2),prepare:true,projectIdea:'Uma oficina'});
 test('preparação é explícita e a ideia não é uma mensagem ou autorização',()=>{
- const state=initial();assert.equal(state.schemaVersion,2);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'none');assert.deepEqual(state.messages,[]);
+ const state=initial();assert.equal(state.schemaVersion,3);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'none');assert.deepEqual(state.messages,[]);
  const next=updateWorkflow(state,{phase:'ready',aiPreference:'default'});assert.equal(next.workflow.phase,'ready');assert.deepEqual(next.messages,[]);assert.equal(next.projectIdea,'Uma oficina');
 });
 test('conversas de posts e referências não compartilham mensagens e mantêm suas origens',()=>{

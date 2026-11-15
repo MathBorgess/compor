@@ -103,7 +103,7 @@ async function openProject(page,origin){
 async function openEditorConversation(page){await closeSettings(page);await openPostEditor(page);await openConversation(page);}
 async function connectKey(page,{references=false}={}){
  await connectOwnOpenAiKey(page,`sk-synthetic-${'x'.repeat(30)}`);await closeSettings(page);
- if(references)await openSettings(page,'Referências');else await openConversation(page);
+ if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();}else await openConversation(page);
 }
 
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
@@ -120,15 +120,17 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await openSettings(page,'Contexto');
-  await summary.getByText('Aula de cerâmica', {exact: true}).waitFor();
+  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
+  await page.keyboard.press('Escape');
   await closeSettings(page);assert.equal(await page.getByText('Quero divulgar uma aula de cerâmica.', {exact: true}).count(), 1);
   assert.deepEqual(calls.filter(call => call.path !== '/api/studio/explorations').map(call => call.path), ['/api/studio/chat', '/api/studio/action']);
   await page.reload();
   await page.getByRole('button', {name: /Direção opcional/}).click();
   await openPostEditor(page);await openConversation(page);await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await openSettings(page,'Contexto');
-  await page.getByRole('region', {name: 'Contexto do projeto', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
+  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
+  await page.keyboard.press('Escape');
   await closeSettings(page);assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);
@@ -239,6 +241,7 @@ test('consultar explorações mostra resultados confirmados, recusados e incerto
   const {page, origin, calls, errors, images} = await app(t);
   images.unshift({id:'00000000-0000-4000-8000-000000000094',project_id:projectId,state:'rejected',created_at:'2026-11-06T12:02:00Z',ordinal:3,batch_id:'00000000-0000-4000-8000-000000000093',batch_position:3});
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   await page.getByRole('button', {name: 'Consultar explorações', exact: true}).click();
   const gallery = page.getByRole('region', {name: 'Explorações de imagem', exact: true});
   await gallery.getByText('Resultado não confirmado.', {exact: true}).waitFor();
@@ -289,6 +292,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
 test('referência escolhida preserva origem e acompanha o próximo turno da conversa', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors} = await app(t, {withReferences:true});
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -321,7 +325,8 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
-  await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+  await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -336,6 +341,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
   await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
   await recovery.waitFor({state:'detached'});
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   assert.deepEqual(errors,[]);
 });
@@ -343,6 +349,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
 test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, selectionSignals} = await app(t);
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   assert.equal(await gallery.getByText('Avaliar esta imagem').count(),0);
   await gallery.getByRole('button',{name:'Usar imagem 1 na conversa e na Direção'}).click();
@@ -369,6 +376,7 @@ test('último lote aparece primeiro e ordinal não muda quando chegam imagens no
   const first='00000000-0000-4000-8000-000000000201',second='00000000-0000-4000-8000-000000000202';
   images.splice(0,images.length,item(3,second),item(2,first),item(1,first));
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).waitFor();
@@ -390,6 +398,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
   images.splice(0,images.length,item(103),item(102),item(101));
   paging.nextBeforeOrdinal=101;paging.older=[{...item(100),batch_id:'00000000-0000-4000-8000-000000000201'},{...item(99),batch_id:'00000000-0000-4000-8000-000000000201'}];
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 103 na conversa e na Direção'}).waitFor();
@@ -409,7 +418,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
 test('recuperação incerta e reconexão preservam compositor em viewport baixo',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await page.setViewportSize({width:390,height:400});await openProject(page,origin);await connectKey(page);
  const field=await openConversation(page);await field.fill('Quero divulgar uma aula de cerâmica.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();await field.fill('Meu rascunho continua aqui');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByRole('button',{name:'Remover chave'}).click();await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
  assert.equal(await field.inputValue(),'Meu rascunho continua aqui');await field.scrollIntoViewIfNeeded();
  const send=page.getByRole('button',{name:'Enviar →',exact:true});await send.scrollIntoViewIfNeeded();const bounds=await send.boundingBox();assert.ok(bounds.y>=0&&bounds.y+bounds.height<=400);assert.deepEqual(errors,[]);

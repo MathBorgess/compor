@@ -1,4 +1,5 @@
 "use client";
+import {conversationContext,postContext} from '../lib/studio-post-context';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
@@ -7,7 +8,6 @@ import {
   prepareAdjustment,
   settleAdjustment,
   resolveProjectTitle,
-  getCurrentDraft,
   REFERENCE_SELECTION_EVENT,
 } from "../lib/studio-state.ts";
 import { parseImageProposal, type ImageProposal } from "@compor/agents-api/image-proposal";
@@ -29,8 +29,9 @@ import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
 import { chatResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
+const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
-const referenceContext = (state:StudioState) => JSON.stringify({brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
+const referenceContext = (state:StudioState) => JSON.stringify({postContext:state.selection?postContext(state,state.selection.pieceId):undefined,brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
 async function contextDigest(state:StudioState) {
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
@@ -68,10 +69,10 @@ function inspectionSummary(data:ChatResponse):Inspection{
 }
 
 export default function StudioChat({
-  state,
+  state:sourceState,
   projectRevision,
-  getState,
-  change,
+  getState:readState,
+  change:writeState,
   flush,
   tools,
   hasApiKey,
@@ -89,12 +90,16 @@ export default function StudioChat({
   onMessageDraftChange,
   connection,
   explorationRecovery,
-  developerMode = false,
+  developerMode:requestedDeveloperMode = false,
   conversationId,
   readOnly = false,
   allowReferenceAnalysis = true,
   intro = false,
 }: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean }) {
+  const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
+  const state=conversationContext(sourceState,conversationId);
+  const getState=()=>conversationContext(readState(),conversationId);
+  const change=(reducer:(value:StudioState)=>StudioState)=>{const next=writeState(reducer);return next?conversationContext(next,conversationId):null;};
   const ownedDraft=useConversationDraft(state.userId,state.projectId,conversationId??'legacy');
   const composerId=conversationId?`studio-chat-message-${conversationId}`:'studio-chat-message';
   const detailsId=conversationId?`studio-chat-details-${conversationId}`:'studio-chat-details';
@@ -437,7 +442,7 @@ export default function StudioChat({
       const result = await tools.current.execute(
         data.action.name,
         data.action.args,
-        {signal:request.current?.signal},
+        {signal:request.current?.signal,conversationId},
       );
       if(!credentialIsCurrent())return;
       if(data.action.name==='compor_renomear_projeto')change(resolveProjectTitle);
@@ -539,7 +544,7 @@ export default function StudioChat({
       try {
         const digest=await contextDigest(before);
         if(!canStartReferenceRound({record:existing,round,fingerprint:referenceSet,context:digest,failed:failedAutomatic.current===identity}))return;
-        const feedback=await loadReadinessFeedback(before.projectId,before.references);
+        const feedback=await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
         if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
@@ -555,7 +560,7 @@ export default function StudioChat({
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
         remember(requestId);setPending(requestId);setPendingSource(credentialSource);availability.current.pending=requestId;
         const draft=getCurrentDraft(next);
-        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
+        const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
         const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
         await handle(data,requestId);
@@ -594,7 +599,7 @@ export default function StudioChat({
       const selected=getCurrentDraft(before), storedBase=await loadBase?.();
       if(!credentialIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
-      const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references):{referenceFeedback:[],accountHints:[],availability:'available'};
+      const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
       const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
@@ -636,7 +641,7 @@ export default function StudioChat({
           approval: draft?.approval ?? null,
           baseImageId: baseId,
           brief: next.brief,
-          ...offerContext(next),
+          ...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),
           persona: next.persona,
           direction: next.direction,
           readiness: {level, evidence, gaps, limitations},
@@ -897,6 +902,7 @@ export default function StudioChat({
             blob: image,
             pieceId: target.pieceId,
             version: target.version,
+            creationContext:{postContext:getState().adjustments.find(item=>item.id===action.requestId)?.context.postContext??postContext(getState(),target.pieceId),references:getState().adjustments.find(item=>item.id===action.requestId)?.context.references.filter(reference=>action.proposal.referenceIds.includes(reference.id))??[]},
           })!==true)throw Error('image application unconfirmed');
         if(!isCurrentScope())return;
         imageApplied=true;

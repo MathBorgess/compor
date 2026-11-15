@@ -1,5 +1,6 @@
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
-export const IMAGE_PROPOSAL_SCHEMA = Object.freeze({
+const proposalFields=['prompt','operation','baseImageId','referenceIds','changedDimension'];
+export const IMAGE_PROPOSAL_SCHEMA = /*#__PURE__*/Object.freeze({
   type: 'object',
   properties: {
     prompt: {type: 'string', minLength: 1, maxLength: 4000},
@@ -14,7 +15,7 @@ export const IMAGE_PROPOSAL_SCHEMA = Object.freeze({
 
 export function parseImageProposal(value) {
   if (!value || typeof value !== 'object' || Array.isArray(value) ||
-      Object.keys(value).some(key => !Object.hasOwn(IMAGE_PROPOSAL_SCHEMA.properties, key)) ||
+      Object.keys(value).some(key => !proposalFields.includes(key)) ||
       typeof value.prompt !== 'string' || !value.prompt.trim() || value.prompt.length > 4000 ||
       /sk-[^\s]+/i.test(value.prompt)) throw Error('invalid_image_proposal');
   const operation = value.operation === undefined ? 'create' : value.operation;

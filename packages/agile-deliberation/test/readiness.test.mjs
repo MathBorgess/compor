@@ -6,6 +6,7 @@ const complete = { brief: { offer: 'Oficina de cerâmica', action: 'Inscrever-se
 
 test('empty briefing asks a question without fabricating evidence', () => {
   const result = assessReadiness({});
+  assert.deepEqual(result,assessReadiness({brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:''},direction:{criteria:[],decisions:[]}}));
   assert.equal(result.level, 'low');
   assert.equal(result.next, 'ask');
   assert.ok(result.gaps.includes('offer'));

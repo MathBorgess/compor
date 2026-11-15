@@ -1,4 +1,4 @@
-import {openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
+import {addProjectReferences,openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -20,7 +20,7 @@ async function stored(page,userId=alice){return page.evaluate(async scope=>{cons
 async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
 async function closeDrawer(page){await closeSettings(page);}
 async function openEditor(page){await openPostEditor(page);}
-async function chooseFiles(page,label,files){if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
+async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
@@ -51,7 +51,7 @@ async function app(t){
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
-   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   const selection=request.postDataJSON();assert.deepEqual(selection,{projectId,scope:selection.pieceId?'project':'account',...(selection.pieceId?{pieceId:selection.pieceId}:{})});if(selection.pieceId)assert.match(selection.pieceId,/^[0-9a-f-]{36}$/);
    return route.fulfill({json:{signals:[]}});
   }
     if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
@@ -115,9 +115,9 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
  await openDrawer(page,'Bases');
  await chooseFiles(page,'Adicionar PNG ou JPEG',[{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
- await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await page.getByText('reference.png',{exact:true}).waitFor();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
- await page.getByRole('button',{name:'Remover referência',exact:true}).first().click();
+ await page.getByRole('button',{name:'Remover da seleção: reference.png',exact:true}).click();
  await eventually(()=>stored(page),value=>value?.references?.length===1);
  await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
@@ -167,7 +167,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
- await openDrawer(page,'Bases');await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Gerenciar referências do projeto',exact:true}).click();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await closeDrawer(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();

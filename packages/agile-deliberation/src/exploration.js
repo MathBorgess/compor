@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 // Briefing fields can contain multiple lines and may be longer than the
 // feedback fields. Validate the complete input before making any excerpts so

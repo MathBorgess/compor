@@ -1,6 +1,6 @@
 "use client";
 import {useEffect,useState} from 'react';
-import {z} from 'zod';
+import * as z from 'zod';
 
 const draftSchema=z.string().max(4000).refine(value=>!/sk-[^\s]+/i.test(value));
 /** Drafts are private to the tab and conversation, and never change a tool's revision. */

@@ -1,4 +1,4 @@
-import {openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
+import {addProjectReferences,openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -21,7 +21,7 @@ async function assetBytes(page,pieceId,version){return page.evaluate(async ({use
 async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
 async function closeDrawer(page){await closeSettings(page);}
 async function openEditor(page){await openPostEditor(page);}
-async function chooseFiles(page,label,files){if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
+async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const recordStartup=chunk=>{const output=startup+chunk;startup=output.length>6000?output.slice(0,4500)+output.slice(-1500):output;};
@@ -41,7 +41,7 @@ async function app(t){
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
-   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   const selection=request.postDataJSON();assert.deepEqual(selection,{projectId,scope:selection.pieceId?'project':'account',...(selection.pieceId?{pieceId:selection.pieceId}:{})});if(selection.pieceId)assert.match(selection.pieceId,/^[0-9a-f-]{36}$/);
    return route.fulfill({json:{signals:[]}});
   }
     if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
@@ -143,7 +143,7 @@ test('efeito WebMCP persistido não se repete após refresh e recriação do exe
  const {page,origin,calls,errors}=await app(t);await openOriginal(page,origin,{key:false});
  await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');
  const before=await eventually(()=>stored(page),value=>value?.selection?.pieceId===originalPiece),args={projectId,requestId:id(70),revision:before.revision,field:'offer',value:'Oferta registrada uma única vez'};
- const first=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(first.status,'completed');const persisted=await eventually(()=>stored(page),value=>value?.actionReceipts?.some(receipt=>receipt.requestId===id(70)&&receipt.result.status==='completed'));assert.equal(persisted.brief.offer,args.value);
+ const first=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(first.status,'completed');const persisted=await eventually(()=>stored(page),value=>value?.actionReceipts?.some(receipt=>receipt.requestId===id(70)&&receipt.result.status==='completed'));assert.equal(persisted.posts[originalPiece].message,args.value);
  await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'a chave não sobrevive ao refresh e não é requisito do WebMCP local');
  const restored=await stored(page),repeated=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(repeated.status,'completed');assert.equal(repeated.revision,restored.revision);assert.deepEqual(await stored(page),restored,'nem o efeito nem o recibo são gravados novamente');assert.equal(restored.actionReceipts.length,1);
  const conflict=await page.evaluate(async args=>{try{await window.__studioNative.compor_editar_briefing.execute({...args,value:'Oferta trocada'});return null;}catch(error){return error.message;}},args);assert.equal(conflict,'action_conflict');assert.deepEqual(await stored(page),restored);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
@@ -272,7 +272,7 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  };
  await openOriginal(page,origin);
  const source=await attachImage(page,{mime:'image/png',name:'original.png'});
- await openDrawer(page,'Bases');await chooseFiles(page,'Adicionar PNG ou JPEG',{name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await closeDrawer(page);
+ await openDrawer(page,'Bases');await chooseFiles(page,'Adicionar PNG ou JPEG',{name:'reference.png',mimeType:'image/png',buffer:png});await page.getByText('reference.png',{exact:true}).waitFor();await closeDrawer(page);
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
@@ -449,7 +449,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
  const originalVersions=structuredClone(versions);
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
- await page.getByRole('heading',{name:'Referências para sua ideia',exact:true}).waitFor();
+ await page.getByRole('heading',{name:'Referências deste post',exact:true}).waitFor();
  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
  assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');

@@ -71,7 +71,7 @@ test('comentário literal de imagem mostrada não exige seleção e grava sinal 
   sent.push(JSON.parse(options.body));return new Response('{}',{status:201});
  };
  const result=await recordGeneratedComment(state,input,fetchApi,undefined,[{id:id(8),ordinal:42}]);
- assert.equal(result.feedbackStatus,'recorded');assert.deepEqual(sent,[{id:id(15),projectId,imageId:id(8),action:'comment',comment:'gostei muito das cores',supersedes:null}]);
+ assert.equal(result.feedbackStatus,'recorded');assert.deepEqual(sent,[{id:id(15),projectId,pieceId:id(3),imageId:id(8),action:'comment',comment:'gostei muito das cores',supersedes:null}]);
  assert.equal(state.references.some(ref=>ref.source?.kind==='generated'),false,'não seleciona imagem');
 });
 

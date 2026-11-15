@@ -3,7 +3,7 @@ import { useEffect, useRef } from "react";
 import type { StudioReference } from "../lib/studio-domain.ts";
 import "./reference-exploration.css";
 
-type Item = StudioReference & { url?: string };
+type Item = StudioReference & { url?: string;scopeLabel?:string;removeLabel?:string;onShare?:()=>void };
 export type ReferenceOrigin = "pinterest" | "generated" | "upload";
 export function referenceOrigin(reference: StudioReference): ReferenceOrigin {
   if (reference.source && "originUrl" in reference.source) return "pinterest";
@@ -45,10 +45,10 @@ export default function ReferenceSelectionTray({ items, limit, onRemove }: { ite
         return <li key={item.id}>
           {item.url ? <img src={item.url} alt="" /> : <span className="reference-selection-placeholder" aria-hidden="true" />}
           <span className="reference-source" data-origin={origin}>{REFERENCE_ORIGIN_LABEL[origin]}</span>
-          <span className="reference-selection-title" title={title}>{title}</span>
-          <button type="button" aria-label={`Remover da seleção: ${title}`} onClick={() => { focusIndex.current = index; void onRemove(item.id); }}>Remover</button>
+          <span className="reference-selection-scope">{item.scopeLabel}</span><span className="reference-selection-title" title={title}>{title}</span>
+          <button type="button" aria-label={`Remover da seleção: ${title}`} onClick={() => { focusIndex.current = index; void onRemove(item.id); }}>{item.removeLabel??'Remover'}</button>{item.onShare&&<button type="button" onClick={item.onShare}>Compartilhar com o projeto</button>}
         </li>;
       })}</ul>}
-    <p className="reference-selection-note">Selecionar orienta o gosto do post. Não aprova a imagem nem todos os seus elementos. Quando a seleção se estabiliza, o Compor comenta na conversa.</p>
+    <p className="reference-selection-note">A seleção orienta o estilo, sem aprovar a imagem. O Compor comenta as referências na conversa.</p>
   </section>;
 }

@@ -1,5 +1,5 @@
 // Adapted from the Compor Phoenix prototype; see PROVENANCE.md and ADR-0019.
-import { z } from 'zod';
+import * as z from 'zod';
 
 /** Static catalog vocabulary for synthetic exploration; no source is fetched or verified here. */
 export const SPECIALIZED_ADS_BOARDS = [

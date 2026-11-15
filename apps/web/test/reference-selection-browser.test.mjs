@@ -61,7 +61,7 @@ test('origem, seleção, quantidade e remoção ficam visíveis e o foco não se
  const tray=page.getByRole('region',{name:'Sua seleção'});
  await tray.getByText('0',{exact:true}).waitFor();
  assert.match(await tray.textContent(),/0 de 20 referências/);
- assert.match(await tray.textContent(),/Não aprova a imagem nem todos os seus elementos/);
+ assert.match(await tray.textContent(),/sem aprovar a imagem/);
  assert.equal(await page.locator('.reference-results .reference-source',{hasText:'Pinterest · externa'}).count(),2);
  assert.equal(await page.locator('.studio-exploration-gallery .reference-source',{hasText:'Gerada pelo Compor'}).count(),1);
  // Keyboard selection keeps focus in the same card, now on its removal control.

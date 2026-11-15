@@ -4,6 +4,16 @@ import {recordReferenceSelection} from '../lib/reference-selection.ts';
 const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000002';
 const reference={id:'pin',title:'Tipografia',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/pin/',previewUrl:'https://i.pinimg.com/236x/pin.jpg'};
 const storage=()=>{const data=new Map();return {getItem:key=>data.get(key)??null,setItem:(key,value)=>data.set(key,value),removeItem:key=>data.delete(key)};};
+test('preserva o marcador global anterior e separa tentativas da mesma origem por post',async()=>{
+ const session=storage(),pendingId='00000000-0000-4000-8000-000000000030',pieceId='00000000-0000-4000-8000-000000000031',sent=[];
+ const legacyKey=`compor-reference-selection-pending:${userId}:${projectId}:${reference.originUrl}`;
+ session.setItem(legacyKey,JSON.stringify({id:pendingId,reference}));
+ const send=async(_path,options)=>{const body=JSON.parse(options.body);sent.push(body);return Response.json({signal:{...body,createdAt:'2026-11-15T10:00:00.000Z'}});};
+ await recordReferenceSelection({userId,projectId,reference,commit:async()=>{}},session,send);
+ await recordReferenceSelection({userId,projectId,pieceId,reference,commit:async()=>{}},session,send);
+ assert.equal(sent[0].id,pendingId);assert.equal(sent[0].pieceId,undefined);assert.equal(session.getItem(legacyKey),null);
+ assert.notEqual(sent[1].id,pendingId);assert.equal(sent[1].pieceId,pieceId);
+});
 test('resultado incerto conserva UUID; escolha confirmada libera nova seleção depois de remover ou rejeitar',async()=>{
   const session=storage(),requests=[],events=[];let fail=true,commits=0;
   const send=async(_url,options)=>{

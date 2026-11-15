@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 const text = z.string().optional().default('');
 const criterion = z.object({
@@ -10,8 +10,8 @@ const criterion = z.object({
   counterexample: z.object({ referenceId: z.string().nullable().optional() }).optional(),
 });
 const inputSchema = z.object({
-  brief: z.object({ offer: text, audience: text, action: text, direction: text }).optional().prefault({}),
-  persona: z.object({ audience: text, situation: text, need: text }).optional().prefault({}),
+  brief: z.object({ offer: text, audience: text, action: text, direction: text }).default({offer:'',audience:'',action:'',direction:''}),
+  persona: z.object({ audience: text, situation: text, need: text }).default({audience:'',situation:'',need:''}),
   direction: z.object({
     criteria: z.array(criterion).optional().default([]),
     decisions: z.array(z.object({
@@ -19,7 +19,7 @@ const inputSchema = z.object({
       choice: z.enum(['accept', 'reject', 'reopen']),
       reason: text,
     })).optional().default([]),
-  }).optional().prefault({}),
+  }).default({criteria:[],decisions:[]}),
   references: z.array(z.object({ id: z.string() })).optional().default([]),
   referenceFeedback: z.array(z.object({ referenceId: z.string(), text: z.string() })).optional().default([]),
   explicitRequest: z.boolean().optional().default(false),

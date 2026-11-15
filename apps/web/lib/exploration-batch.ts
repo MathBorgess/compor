@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 
 export const BATCH_SIZE=3;
 export const BATCH_DELAY_MS=15_000;
