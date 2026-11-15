@@ -236,6 +236,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
   return route.fulfill({json:{versions}});
  });
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
+ await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  await openDrawer(page,'Bases');
@@ -250,7 +251,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
 test('a conversa gera a arte integral de um rascunho sem exigir salvamento prévio',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,versions,flow,errors,external}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Primeira arte pronta.'}:consent('draft');
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  assert.equal(await page.getByLabel('Preço',{exact:true}).count(),0);assert.equal(await page.getByLabel('Data',{exact:true}).count(),0);
  await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
  await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);
@@ -336,7 +337,7 @@ test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(b
   const version={project_id:projectId,piece_id:body.pieceId,version:1,content:body.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
   versions.push(version);return route.fulfill({json:{status:'saved',version}});
  });
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo persistido');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo persistido');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  const state=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);assert.equal(state.drafts.find(d=>d.baseVersion===1).content.headline,'Conteúdo persistido');assert.deepEqual(errors,[]);
 });
@@ -344,7 +345,7 @@ test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(b
 test('409 recupera versão idêntica e imagem-base sem perder edição durante consulta',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,versions,calls,errors,flow}=await app(t);let release,entered;
  const gate=new Promise(resolve=>{release=resolve;}),waiting=new Promise(resolve=>{entered=resolve;});
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
  const image=await attachImage(page,{mime:'image/png',name:'original.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Conteúdo já salvo'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
@@ -368,7 +369,7 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
 });
 
 test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Minha edição');
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Minha edição');
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Minha edição'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:{...draft.content,headline:'Outra edição'},created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
@@ -376,7 +377,7 @@ test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!ex
  const after=await stored(page);assert.equal(after.selection.baseVersion,0);assert.equal(after.drafts.find(d=>d.pieceId===draft.pieceId&&d.baseVersion===0).content.headline,'Minha edição');assert.deepEqual(errors,[]);
 });
 test('409 com variante de outra aba não adota classificação nem copia a arte antiga',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  await page.getByLabel('Título',{exact:true}).fill('Mesmo texto em outra direção');
  const image=await attachImage(page,{mime:'image/png',name:'origem.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Mesmo texto em outra direção'));
@@ -392,7 +393,7 @@ test('409 com variante de outra aba não adota classificação nem copia a arte 
 });
 
 test('falha ao copiar imagem para versão recuperada não troca a seleção nem perde a origem',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
  const image=await attachImage(page,{mime:'image/png',name:'original.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Arte preservada'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
@@ -405,7 +406,7 @@ test('falha ao copiar imagem para versão recuperada não troca a seleção nem 
 test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na geração',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,versions,flow,errors}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte com local pronta.'}:consent('custom-field');
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  await page.waitForFunction(()=>typeof window.__studioNative?.compor_adicionar_campo?.execute==='function');
  const before=await eventually(()=>stored(page),state=>state?.selection?.baseVersion===0),fieldId=id(75);
  const args={projectId,requestId:fieldId,revision:before.revision,pieceId:before.selection.pieceId,baseVersion:0,label:'Local'};

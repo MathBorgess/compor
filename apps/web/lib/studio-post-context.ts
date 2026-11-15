@@ -2,7 +2,7 @@ import {parseDirection,proposeCriterion,decideCriterion} from './studio-directio
 import type {CreativeCriterion,CreativeDecision,PostContext,StudioReference,StudioState} from './studio-domain.ts';
 import {changeStudioState,StudioStateError} from './studio-state.ts';
 
-export const emptyPostSettings=()=>({direction:{criteria:[] as CreativeCriterion[],decisions:[] as CreativeDecision[]},objective:'',message:'',action:'',referenceIds:[] as string[],excludedReferenceIds:[] as string[]});
+export const emptyPostSettings=()=>({prepared:true,direction:{criteria:[] as CreativeCriterion[],decisions:[] as CreativeDecision[]},objective:'',message:'',action:'',referenceIds:[] as string[],excludedReferenceIds:[] as string[]});
 export function postContext(state:StudioState,pieceId:string):PostContext {
   const post=state.posts[pieceId]??emptyPostSettings();
   return {objective:post.objective,message:post.message,action:post.action};

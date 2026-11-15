@@ -60,6 +60,7 @@
 .compor-studio .studio-button-secondary { background: white; color: var(--studio-ink); border-color: var(--studio-line); }
 .compor-studio .studio-button-quiet { color: var(--studio-cobalt); background: transparent; border-color: transparent; }
 .studio-save-status { color: var(--studio-muted); font-size: 11px; }
+.studio-frame { display:flex;flex:1;min-width:0;min-height:0;position:relative; }
 .studio-body { flex: 1; display: grid; min-width: 0; min-height: 0; }
 .studio-body[data-chat='open'] { grid-template-columns: minmax(0, 1fr); }
 .studio-body[data-chat='collapsed'] { grid-template-columns: minmax(0, 1fr); }

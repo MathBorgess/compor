@@ -74,6 +74,8 @@
 .studio-modal:has(.guided-post-context) { width:min(720px,94vw);max-width:94vw;max-height:90dvh;box-sizing:border-box;overflow-y:auto; }
 .guided-post-context,.guided-post-context label { display:grid;gap:12px; }
 .guided-post-context { margin-bottom:24px; }
+.guided-question .guided-post-context { margin-bottom:0; }
+.guided-question .guided-post-context textarea[rows='2'] { min-height:80px; }
 .guided-post-context input,.guided-post-context textarea,.guided-reference-scope select { box-sizing:border-box;width:100%;padding:12px;border:1px solid var(--studio-line,#dedfd9);border-radius:10px;font:inherit;background:white;color:inherit; }
 .guided-references { min-width:0;display:grid;gap:24px; }
 .guided-reference-content { min-width:0;display:grid;gap:24px; }

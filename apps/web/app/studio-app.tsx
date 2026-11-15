@@ -10,7 +10,8 @@ import VariantCards from "./studio-variant-cards";
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
-import {updateWorkflow,conversationMessages,postIds} from '../lib/studio-workflow';
+import {updateWorkflow,conversationMessages,postIds,startPostPreparation,completePostPreparation,prepareReferenceWorkspace} from '../lib/studio-workflow';
+import StudioNavigation from './studio-navigation';
 import PostSettings from './studio-post-settings';
 import ReferencePanel from './studio-reference-panel';
 import {addPostCriterion,decidePostCriterion,freezeCreationContext,conversationContext,effectiveReferences,postContext,updatePostContext,selectScopedReference,unselectScopedReference} from '../lib/studio-post-context';
@@ -352,8 +353,8 @@ function ProjectStudio({
     };
   }, [project.id]);
   useEffect(() => {
-    if (s && !s.selection) local.change(value => createPost(value, { pieceId: crypto.randomUUID() }));
-  }, [Boolean(s)]);
+    if (s && referencesOpen && s.projectReferenceIds.length && !s.selection) local.change(value => prepareReferenceWorkspace(value,crypto.randomUUID()));
+  }, [Boolean(s),referencesOpen,s?.projectReferenceIds.length]);
   useEffect(() => {
     if (!s) return;
     try {
@@ -469,14 +470,14 @@ function ProjectStudio({
   function closeSettings(){setSettings(null);setDrawer(null);}
   function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
     closeSettings();
-    local.change(value=>updateWorkflow(value.drafts.some(d=>d.pieceId===pieceId&&d.baseVersion===0)?selectDraft(value,{pieceId,baseVersion:0}):createPost(value,{pieceId}),{view:fromAgent?'studio':'compose'}));
+    local.change(value=>fromAgent?updateWorkflow(value.drafts.some(d=>d.pieceId===pieceId&&d.baseVersion===0)?selectDraft(value,{pieceId,baseVersion:0}):createPost(value,{pieceId}),{view:'studio'}):startPostPreparation(value,pieceId));
     setBase(null);setViewingArt(false);setStage('studio');
   }
   function openPost(pieceId:string) {
     const value=local.get(),remembered=value.workflow.selections[pieceId];
     const chosen=value.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===remembered)??value.drafts.filter(item=>item.pieceId===pieceId).at(-1);
     closeSettings();setStage('studio');
-    if(chosen)local.change(state=>updateWorkflow(selectDraft(state,chosen),{view:'studio'}));
+    if(chosen)local.change(state=>updateWorkflow(selectDraft(state,chosen),{view:state.posts[pieceId]?.prepared===false?'prepare-post':'studio'}));
     else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);}
   }
   function openVersion(version:PieceVersion) {
@@ -1013,7 +1014,7 @@ function ProjectStudio({
               Atualizar versões
             </button>
             <h3>Rascunhos neste navegador</h3>
-            {s.drafts.map((item) => (
+            {s.drafts.filter(item=>item.pieceId!==s.workflow.referencePieceId).map((item) => (
               <button
                 key={`${item.pieceId}:${item.baseVersion}`}
                 onClick={() => {
@@ -1092,7 +1093,7 @@ function ProjectStudio({
         </div>);
   const preparing=s.workflow.phase!=='ready';
   const postTitle=draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
-  const finishPreparation=()=>local.change(value=>updateWorkflow(value,{phase:'ready',view:'compose'}));
+  const finishPreparation=()=>local.change(value=>updateWorkflow(value,{phase:'ready',view:'posts'}));
   const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
   const aiPanel=<ProjectAI continueLabel={preparing?'Continuar para referências':'Voltar ao post'} preference={s.workflow.aiPreference} source={credentialSource} available={defaultAvailable} canUseAI={canUseAI} keyInput={keyInput} onDefault={()=>{if(credentialSource==='byok')onRemoveKey();local.change(value=>updateWorkflow(value,{aiPreference:'default'}));activateAI();}} onOwn={()=>local.change(value=>updateWorkflow(value,{aiPreference:'byok'}))} onRemove={()=>{onRemoveKey();setProjectIntent(false);exploration.pause();}} onContinue={preparing?nextReferences:closeSettings} onSkip={()=>{continueWithoutAI();if(preparing)nextReferences();else closeSettings();}} onBack={()=>preparing?local.change(value=>updateWorkflow(value,{phase:'context'})):closeSettings()}/>;
   const referencePanel=<ReferencePanel projectWide={referenceScope==='references'} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
@@ -1102,12 +1103,15 @@ function ProjectStudio({
     upload={<label className="guided-reference-upload">Enviar suas imagens<p>PNG ou JPEG, até 8 MB cada. Limite de 20 imagens por projeto.</p><input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label>}
     proposals={<section><h2>Propostas visuais do Compor</h2><p>Explore estilos antes de criar o post.</p><p role="status">{explorationRequested?exploration.status:'A exploração ainda não foi iniciada.'}</p>{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}<div className="guided-actions"><button type="button" className="studio-button" disabled={!canUseProjectAI||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onClick={()=>{activateAI();setExplorationRequested(true);void exploration.resume();}}>Pedir propostas visuais</button>{explorationRequested&&!exploration.paused&&<button type="button" className="studio-button-secondary" onClick={exploration.pause}>Pausar exploração</button>}</div><ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} onRemoveReference={imageId=>removeSelected(reference=>Boolean(reference.source&&'kind' in reference.source&&reference.source.kind==='generated'&&reference.source.imageId===imageId))} selectedIds={selectedGeneratedIds}/></section>}
     conversation={<>{explorationRecovery}{scopedReferences.length>0&&canUseProjectAI&&<details open><summary>Conversa sobre estas referências</summary><div className="guided-reference-chat">{referenceScope==='references'?renderChat(referenceScope):<p>O Compor comenta esta seleção na conversa deste post. Ao continuar, você volta para ela.</p>}</div></details>}</>}
-    onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={preparing?finishPreparation:closeSettings} continueLabel={preparing?'Continuar para meu primeiro post':'Voltar ao post'}/>;
+    onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={preparing?finishPreparation:closeSettings} continueLabel={preparing?'Ir para os posts do projeto':'Voltar ao post'}/>;
   const intro=s.workflow.view==='compose'&&!draft?.baseVersion&&!base&&!conversationMessages(s,draft?.pieceId).some(message=>message.role==='user');
   const chatIds=[...new Set([...visitedPosts,...(draft?[draft.pieceId]:[])])];
   const chats=chatIds.map(id=><div className="guided-conversation" key={id} hidden={id!==draft?.pieceId}>{renderChat(id,id===draft?.pieceId&&intro)}</div>);
   const pendingTurn=s.adjustments.find(item=>!['completed','failed'].includes(item.status));
-  const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>pendingTurn.context.conversationId==='references'?setSettings('references'):openPost(pendingTurn.context.pieceId)}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} onOpen={openPost} onNew={()=>newPost()}/>:<GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/>}</>;
+  const showPosts=()=>{closeSettings();setPostSettingsOpen(false);nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));};
+  const preparingPost=s.workflow.view==='prepare-post'&&draft;
+  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>O projeto já está configurado. Agora defina o propósito desta peça antes de seguir para a conversa ou o editor.</p><PostSettings preparing value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/><p className="studio-hint">A chamada para ação é opcional. Você pode complementar essas informações depois.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" onClick={showPosts}>Voltar aos posts</button><button type="button" className="studio-button" onClick={()=>local.change(completePostPreparation)}>Continuar para criação</button></div></section>;
+  const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>pendingTurn.context.conversationId==='references'?setSettings('references'):openPost(pendingTurn.context.pieceId)}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} onOpen={openPost} onNew={()=>newPost()}/>:preparingPost?postPreparation:<GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/>}</>;
 
   return (
     <StudioShell
@@ -1135,8 +1139,16 @@ function ProjectStudio({
       }}
       onReview={() => nextStage("review")}
       guided
-      pieceSubtitle={!preparing?postTitle:undefined}
-      headerActions={!preparing?<><button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));}}>Posts do projeto</button><button type="button" className="studio-button-secondary" onClick={()=>setSettings('context')}>Configurações do projeto</button>{draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>setPostSettingsOpen(true)}>Configurações deste post</button>}{s.workflow.view!=='posts'&&<><button type="button" className="studio-button-secondary" disabled={!draft} onClick={()=>nextStage('review')}>Revisar post</button><button type="button" className="studio-button" disabled={!draft||saving} onClick={()=>saveCurrent()}>{saving?'Salvando…':'Salvar versão'}</button></>}</>:null}
+      pieceSubtitle={!preparing&&s.workflow.view!=='posts'?postTitle:undefined}
+      sidebar={!preparing?<StudioNavigation actions={[
+        {id:'posts',label:'Posts do projeto',onClick:showPosts,current:s.workflow.view==='posts'&&stage==='studio'},
+        {id:'project',label:'Configurações do projeto',onClick:()=>setSettings('context')},
+        ...(draft&&s.workflow.view!=='posts'&&!preparingPost?[
+          {id:'post' as const,label:'Configurações deste post',onClick:()=>setPostSettingsOpen(true)},
+          {id:'review' as const,label:'Revisar post',onClick:()=>nextStage('review'),disabled:Boolean(preparingPost),current:stage==='review'},
+          {id:'save' as const,label:saving?'Salvando…':'Salvar versão',onClick:()=>{void saveCurrent();},disabled:saving||Boolean(preparingPost)},
+        ]:[]),
+      ]}/>:undefined}
       projectId={project.id}
       projects={projects}
       onOpenProject={async target => {

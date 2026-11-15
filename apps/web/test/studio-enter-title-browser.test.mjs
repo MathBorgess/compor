@@ -244,7 +244,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  await field.fill('Primeiro post, sobre a oficina');await field.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  const first=chats[0].conversationId;assert.equal(first,chats[0].context.pieceId);
  await field.fill('Rascunho privado do post um');
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Novo post',exact:true}).click();
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  field=await openConversation(page);assert.equal(await field.inputValue(),'');assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Primeiro post, sobre a oficina',{exact:true}).count(),0);
  await field.fill('Segundo post, sobre materiais');await field.press('Enter');await page.locator('.guided-conversation:not([hidden])').getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.notEqual(chats[1].conversationId,first);assert.equal(chats[1].context.brief.offer,chats[0].context.brief.offer);

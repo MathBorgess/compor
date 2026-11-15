@@ -925,8 +925,8 @@ export default function StudioChat({
       <header className="studio-chat-header">
         <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
         <div>
-          <h2>{readOnly?"Histórico anterior do projeto":intro?"Qual post você quer criar agora?":"Vamos compor juntos"}</h2>
-          <p>{intro?"O contexto do projeto já está preparado. Agora descreva esta peça.":"Uma conversa, muitas possibilidades."}</p>
+          <h2>{readOnly?"Histórico anterior do projeto":intro?"Vamos criar este post":"Vamos compor juntos"}</h2>
+          <p>{intro?"O contexto deste post está preparado. Descreva como você quer a arte.":"Uma conversa, muitas possibilidades."}</p>
         </div>
         <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls={detailsId} onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
@@ -1079,7 +1079,7 @@ export default function StudioChat({
           maxLength={4000}
           value={message}
           disabled={busy||readOnly}
-          placeholder={intro?"Ex.: crie um post para anunciar as inscrições da oficina, com uma mensagem acolhedora.":"Escreva uma mensagem…"}
+          placeholder={intro?"Ex.: use uma imagem de estudo e destaque a mensagem principal com um tom acolhedor.":"Escreva uma mensagem…"}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={submitOnEnter}
         />
