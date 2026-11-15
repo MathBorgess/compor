@@ -26,8 +26,6 @@ import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
 import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
 import { recordReferenceRound } from "../lib/studio-reference-round";
-import { submitOnEnter } from "../lib/submit-on-enter";
-import { provisionalTitle } from "../lib/project-title";
 import { studioProjectIdea } from "../lib/studio-project-idea";
 import {
   updateBrief,
@@ -63,7 +61,7 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
 type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
-type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialTitleProvisional:boolean};
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=projectResponseSchema.extend({status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
@@ -90,8 +88,8 @@ export default function StudioApp({
 }: StudioAppProps) {
   const [projects, setProjects] = useState<Project[]>([]),
     [selected, setSelected] = useState<Project|null>(null),
-    [projectName, setProjectName] = useState(initialObjective || ""),
-    [openingPrompt, setOpeningPrompt] = useState(""),
+    [projectName, setProjectName] = useState(""),
+    [createdProjectId, setCreatedProjectId] = useState<string|null>(null),
     [state, setState] = useState("loading"),
     [notice, setNotice] = useState(""),
     [uncertain, setUncertain] = useState(false);
@@ -131,7 +129,7 @@ export default function StudioApp({
   }, [selected, state]);
   function requestCreate() {
     focusCreate.current = true;
-    setOpeningPrompt("");
+    setCreatedProjectId(null);
     setSelected(null);
     refresh();
   }
@@ -161,13 +159,13 @@ export default function StudioApp({
       const response = await fetch("/api/projects", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        body: JSON.stringify({ title: provisionalTitle(projectName) }),
+        body: JSON.stringify({ title: projectName.trim() }),
       });
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
       setProjects((items) => [...items, data.project]);
       setSelected(data.project);
-      setOpeningPrompt(projectName.trim());
+      setCreatedProjectId(data.project.id);
       setProjectName("");
       setState("ready");
     } catch {
@@ -190,7 +188,7 @@ export default function StudioApp({
         onSignOut={onSignOut}
         project={selected}
         projects={projects}
-        onOpenProject={project => {setOpeningPrompt("");setSelected(project);}}
+        onOpenProject={project => {setCreatedProjectId(null);setSelected(project);}}
         onProjectRenamed={projectRenamed}
         onCreateNew={requestCreate}
         onBack={() => {setSelected(null);refresh();}}
@@ -204,8 +202,8 @@ export default function StudioApp({
         getApiKey={getApiKey}
         keyInput={keyInput}
         onRemoveKey={onRemoveKey}
-        initialObjective={openingPrompt}
-        initialTitleProvisional={Boolean(openingPrompt)}
+        initialObjective=""
+        initialPrepare={createdProjectId===selected.id}
       />
     );
   return (
@@ -224,10 +222,11 @@ export default function StudioApp({
         <h2 id="starter-title">Comece um projeto</h2>
         <p>Um projeto reúne o contexto, as referências e os posts de uma mesma divulgação. Primeiro vamos prepará-lo; depois você cria cada post.</p>
         <form onSubmit={create}>
-          <label htmlFor="studio-project-name">Sua ideia</label><p className="studio-hint" id="project-idea-help">Conte o que você quer divulgar. Criar o projeto não gera imagens.</p>
-          <textarea id="studio-project-name" aria-describedby="project-idea-help" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} onKeyDown={submitOnEnter} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
+          <label htmlFor="studio-project-name">Nome do projeto</label><p className="studio-hint" id="project-idea-help">Escolha um nome para organizar seus posts. Na próxima etapa, você descreve o contexto do projeto.</p>
+          <input type="text" id="studio-project-name" aria-describedby="project-idea-help" maxLength={200} value={projectName} onChange={event => setProjectName(event.target.value)} placeholder="Ex.: Mentoria Veloz — Campanha 1" />
           <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Criando projeto…" : "Criar projeto e continuar"}</button>
         </form>
+        {initialObjective&&<details><summary>Rascunho anterior</summary><p>{initialObjective}</p></details>}
         {notice && <p role="alert">{notice}</p>}
         {(state === "error" || uncertain) && <button type="button" onClick={refresh}>Atualizar projetos</button>}
         {uncertain && <button type="button" onClick={() => setUncertain(false)}>Entendi, iniciar outra criação</button>}
@@ -236,7 +235,7 @@ export default function StudioApp({
         <h2>Seus projetos</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => { setCreatedProjectId(null); setSelected(project); }}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
         </div>
       </section>
     </StudioShell>
@@ -262,14 +261,14 @@ function ProjectStudio({
   keyInput,
   onRemoveKey,
   initialObjective,
-  initialTitleProvisional,
+  initialPrepare,
   isAuthenticated,
   developerMode = false,
   accountLabel = "",
   localAccount = false,
   onSignOut,
 }: ProjectStudioProps) {
-  const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional,projectIdea:initialObjective }), s=session.state;
+  const session = useStudioState({ userId, projectId: project.id, prepare:initialPrepare,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [projectIntent, setProjectIntent] = useState(false);
   const [settingsTab,setSettings]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);

@@ -364,3 +364,5 @@ button.studio-quick-reply {
 .studio-project-delete:hover { background:var(--studio-blue-tint);color:var(--studio-cobalt); }
 .studio-project-delete:focus-visible { outline:2px solid var(--studio-cobalt);outline-offset:2px; }
 .studio-project-delete:disabled { opacity:.5;cursor:default; }
+
+.studio-starter input[type="text"] { width:100%;box-sizing:border-box;padding:14px 18px;border:1px solid var(--studio-line);border-radius:12px;font:inherit;color:var(--studio-ink);background:white; }

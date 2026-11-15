@@ -54,4 +54,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 
 | [0047](0047-exclusao-logica-de-projetos.md) | implementado localmente | Exclusão lógica da lista web, confirmação, revisão esperada e histórico preservado |
 
+| [0048](0048-nome-explicito-e-contexto-independente.md) | implementado localmente | Nome escolhido pela pessoa, contexto inicialmente vazio e preparação independente do título provisório |
+
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.
