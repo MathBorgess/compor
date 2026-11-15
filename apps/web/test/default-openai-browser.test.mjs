@@ -1,3 +1,4 @@
+import {openSettings} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -40,40 +41,41 @@ test('IA do Compor exige intenção nova após disponibilidade e recarga, sem en
     if(url.pathname==='/api/studio/chat'){creative.push({path:url.pathname,body:request.postDataJSON(),headers:request.headers()});return route.fulfill({status:202,json:{status:'completed',text:'Resposta sintética'}});}
     return route.fulfill({status:503,json:{error:'unavailable'}});
   });
-  async function openProject(){await page.getByRole('button',{name:'Projeto preservado Retomar conversa',exact:true}).click();await page.getByRole('region',{name:'Contexto do projeto',exact:true}).waitFor();}
+  async function openProject(){await page.getByRole('button',{name:'Projeto preservado Abrir projeto',exact:true}).click();await openSettings(page,'Contexto');}
   await page.goto(origin);await openProject();
   const context=page.getByRole('region',{name:'Contexto do projeto',exact:true});
   await context.locator('summary').filter({hasText:'O que vamos divulgar?'}).click();
   await context.getByLabel('Oferta',{exact:true}).fill('Uma aula de cerâmica');
   await page.waitForFunction(()=>new Promise(resolve=>{
-    const request=indexedDB.open('compor-studio-v1',2);
+    const request=indexedDB.open('compor-studio-v1');
     request.onsuccess=()=>{const db=request.result,q=db.transaction('states').objectStore('states').getAll();q.onsuccess=()=>{const saved=q.result.some(row=>row.state?.brief?.offer==='Uma aula de cerâmica');db.close();resolve(saved);};q.onerror=()=>{db.close();resolve(false);};};request.onerror=()=>resolve(false);
   }));
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'disponibilidade e edição do contexto não autorizam gastos');
   await page.reload();await openProject();
   await page.getByRole('region',{name:'Contexto do projeto',exact:true}).getByText('Uma aula de cerâmica',{exact:true}).waitFor();
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'abrir projeto recuperado com contexto pronto não ativa geração');
-  await page.getByRole('button',{name:'IA do Compor',exact:true}).click();
-  await page.getByRole('button',{name:'Começar a criar com IA',exact:true}).click();
+  await openSettings(page,'IA');
+  assert.equal(await page.getByRole('button',{name:/^Usar a IA do Compor/}).getAttribute('aria-pressed'),'true','IA do Compor é a escolha inicial sem ativar geração');
+  await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
   await page.waitForFunction(()=>Boolean(localStorage.getItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001')));
   assert.equal(creative.length,1,'a ação explícita ativa o fluxo real de exploração');
   assert.equal(Object.hasOwn(creative[0].body,'apiKey'),false);
   assert.equal(Object.hasOwn(creative[0].headers,'x-compor-openai-key'),false);
   assert.ok(statusRequests.length>=2);assert.ok(statusRequests.every(item=>item.body===null&&!Object.hasOwn(item.headers,'x-compor-openai-key')));
-  const stored=await page.evaluate(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1',2);q.onsuccess=()=>{const db=q.result,read=db.transaction('states').objectStore('states').getAll();read.onsuccess=()=>{db.close();resolve(read.result[0]);};};}));
+  const stored=await page.evaluate(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,read=db.transaction('states').objectStore('states').getAll();read.onsuccess=()=>{db.close();resolve(read.result[0]);};};}));
   const pendingId=crypto.randomUUID(),at=new Date().toISOString();
   const unknown=settleAdjustment(prepareAdjustment(stored.state,{requestId:pendingId,messageId:crypto.randomUUID(),instruction:'Pedido anterior ainda não confirmado',createdAt:at,eventId:crypto.randomUUID()}),{requestId:pendingId,status:'unknown',eventId:crypto.randomUUID()});
-  async function replaceSaved(state){await page.evaluate(({scope,state})=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1',2);q.onsuccess=()=>{const db=q.result,tx=db.transaction('states','readwrite');tx.objectStore('states').put({scope,state});tx.oncomplete=()=>{db.close();localStorage.removeItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001');resolve();};};}),{scope:stored.scope,state});}
+  async function replaceSaved(state){await page.evaluate(({scope,state})=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,tx=db.transaction('states','readwrite');tx.objectStore('states').put({scope,state});tx.oncomplete=()=>{db.close();localStorage.removeItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001');resolve();};};}),{scope:stored.scope,state});}
   await replaceSaved(unknown);await page.reload();await openProject();
-  await page.getByRole('button',{name:'IA do Compor',exact:true}).click();await page.getByRole('button',{name:'Começar a criar com IA',exact:true}).click();
+  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
   await page.waitForTimeout(1800);assert.equal(creative.length,1,'a intenção na fonte nova não inicia imagens enquanto o chat anterior permanece unknown');
   const completed=settleAdjustment(unknown,{requestId:pendingId,status:'completed',eventId:crypto.randomUUID()});
   await replaceSaved(completed);await page.reload();await openProject();
-  await page.getByRole('button',{name:'IA do Compor',exact:true}).click();await page.getByRole('button',{name:'Começar a criar com IA',exact:true}).click();
+  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
   await page.waitForFunction(()=>Boolean(localStorage.getItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001')));
   assert.equal(creative.length,2,'o término confirmado do chat libera apenas uma nova ação explícita');
-  available=false;await page.reload();await openProject();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
-  await page.getByText('A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.',{exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).isEnabled(),true);
+  available=false;await page.reload();await openProject();await openSettings(page,'IA');
+  await page.getByText('Indisponível no momento',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('button',{name:'Escolher depois',exact:true}).isEnabled(),true);
   assert.equal(creative.length,2);assert.deepEqual(errors,[]);
 });

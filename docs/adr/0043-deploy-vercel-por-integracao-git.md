@@ -1,6 +1,6 @@
 # ADR 0043 — Deploy pela integração Git da Vercel, com Deployment Checks
 
-- Estado: accepted; integração Git observada em preview, produção e Deployment Checks ainda não verificados
+- Estado: accepted; integração Git observada, mas retenção por Deployment Check inoperante na verificação de 15/11/2026
 - Data: 11/11/2026
 - Fonte: pedido de Matheus nesta data, na sessão do Claude Code: gerar deployments e atualizar o site a cada merge na `main`. Depois de saber que a Vercel CI só roda checks, ele escolheu “Git + Deployment Checks, não inclua Vercel CI”.
 
@@ -33,6 +33,12 @@ Esta decisão substitui a seção “Substituição posterior em 10/11/2026” d
 - **Preview:** o deployment de cada PR passa a validar o build no ambiente da Vercel, com instalação sem `--ignore-scripts`, variáveis reais do projeto e Node da Vercel. Esse status é externo ao Quality gate. Para bloquear merge, a proteção da branch precisa exigi-lo, uma configuração do GitHub que cabe a Matheus.
 
 Não foi adicionado smoke automático do deployment. A Vercel permite que um workflow acionado por `repository_dispatch` reporte status ao Deployment Checks. Isso exigiria um segredo de bypass para previews protegidos e minutos adicionais, e fica como proposta separada.
+
+## Verificação posterior em 15/11/2026
+
+O projeto lista `Apply migrations or initialize baseline` como check GitHub de Production, marcado Blocking. Contudo, `Auto-Assign Custom Production Domains` está desligado. O [deployment de produção `FFEtnh1`](https://vercel.com/math-ai2/compor-marco0/FFEtnh1ap1i89jtWHe4CysvxK8UV), criado por redeploy da branch do PR 50 no SHA `5b6783a`, mostra `No checks configured` e `Assigning Custom Domains: Skipped`; os aliases oficiais foram atribuídos em seguida. A [documentação de Deployment Checks da Vercel](https://vercel.com/docs/deployment-checks#adding-github-checks) exige a atribuição automática ligada como pré-requisito para checks do GitHub. Assim, a retenção pretendida nesta decisão não estava ativa neste deployment e não pode ser presumida para o próximo. A migration 00029 ainda não pertence à `main` nesta verificação.
+
+Não há alteração no repositório capaz de ativar esse setting. Reabilitá-lo exige verificar o efeito sobre deployments já preparados e observar um novo deployment legítimo de `main` com o check presente antes da atribuição dos domínios. Uma promoção manual depois da migration seria outro fluxo, não a retenção automática definida aqui.
 
 ## Limites
 

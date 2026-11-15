@@ -104,3 +104,61 @@ test('budget de referências é aplicado antes de gravação e preserva o últim
  });
  assert.equal(result.code,'studio_storage_quota');assert.equal(result.last,true);assert.equal(result.missing,true);
 });
+
+
+test('migração arquiva schema 1 atomicamente, conserva blobs e recusa cliente IndexedDB antigo',{skip:!existsSync(browserPath)},async t=>{
+ const server=createServer(async(request,response)=>{
+  const name=request.url?.split('?')[0];
+  if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(name)){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));}
+  else response.end('<!doctype html>');
+ });
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
+ const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
+ const result=await page.evaluate(async()=>{
+  const domain=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts');
+  const scope={userId:crypto.randomUUID(),projectId:crypto.randomUUID()},key=JSON.stringify([scope.userId,scope.projectId]),name='compor-studio-migration';
+  const current=domain.addMessage(domain.createStudioState(scope),{id:crypto.randomUUID(),role:'user',text:'Conversa anterior preservada',createdAt:new Date().toISOString()});
+  const {workflow,...legacy}=current;legacy.schemaVersion=1;
+  const old=await new Promise((resolve,reject)=>{const q=indexedDB.open(name,2);q.onupgradeneeded=()=>{q.result.createObjectStore('states',{keyPath:'scope'});q.result.createObjectStore('references',{keyPath:'key'});q.result.createObjectStore('draftAssets',{keyPath:'key'});};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});
+  const file=new Blob(['original bytes'],{type:'image/png'});
+  await new Promise((resolve,reject)=>{const tx=old.transaction(['states','draftAssets'],'readwrite');tx.objectStore('states').put({scope:key,state:legacy});tx.objectStore('draftAssets').put({key:'untouched',scope:key,file});tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});
+  let oldClosed=false;old.onversionchange=()=>{old.close();oldClosed=true;};
+  const repo=createStudioStorage({name}),loaded=await repo.load(scope),candidate=domain.updateBrief(loaded,{offer:'Nova oferta'});
+  const read=store=>new Promise((resolve,reject)=>{const q=indexedDB.open(name);q.onsuccess=()=>{const db=q.result,r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>{db.close();resolve(r.result);};r.onerror=()=>reject(r.error);};q.onerror=()=>reject(q.error);});
+  const put=IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put=function(...args){if(this.name==='states')throw new DOMException('quota simulada','QuotaExceededError');return put.apply(this,args);};
+  let quota='';try{await repo.save(candidate,{expectedRevision:loaded.revision});}catch(error){quota=error.code;}finally{IDBObjectStore.prototype.put=put;}
+  const rollback=(await read('legacyStates')).length===0&&(await read('states'))[0].state.schemaVersion===1;
+  await repo.save(candidate,{expectedRevision:loaded.revision});
+  const backup=(await read('legacyStates'))[0].state,stored=(await read('states'))[0].state,asset=(await read('draftAssets'))[0];
+  let refused='';await new Promise(resolve=>{const q=indexedDB.open(name,2);q.onerror=()=>{refused=q.error.name;resolve();};q.onsuccess=()=>{q.result.close();resolve();};});
+  repo.close();return{oldClosed,quota,rollback,backup,legacy,stored,blob:await asset.file.text(),refused};
+ });
+ assert.equal(result.oldClosed,true);assert.equal(result.quota,'studio_storage_quota');assert.equal(result.rollback,true);
+ assert.deepEqual(result.backup,result.legacy);assert.equal(result.stored.schemaVersion,3);assert.equal(result.stored.brief.offer,'Nova oferta');
+ assert.equal(result.stored.messages[0].text,'Conversa anterior preservada');assert.equal(result.blob,'original bytes');assert.equal(result.refused,'VersionError');
+});
+
+test('schema 2 é arquivado com CAS e quota atômicos sem substituir o arquivo de schema 1',{skip:!existsSync(browserPath)},async t=>{
+ const server=createServer(async(req,res)=>{const name=req.url?.split('?')[0];res.setHeader('content-type',name==='/studio-storage.ts'?'text/javascript':'text/html');res.end(name==='/studio-storage.ts'?await browserModuleSource(new URL('../lib/studio-storage.ts',import.meta.url)):'<!doctype html><title>Migração 2</title>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
+ const evidence=await page.evaluate(async()=>{
+  const {createStudioStorage}=await import('/studio-storage.ts');
+  const userId=crypto.randomUUID(),projectId=crypto.randomUUID(),scope=JSON.stringify([userId,projectId]),name='compor-studio-schema-two';
+  const state={schemaVersion:2,userId,projectId,revision:7,workflow:{phase:'context',view:'compose',aiPreference:'none',contextStep:2},brief:{offer:'Tema geral',audience:'Estudantes ',action:'Venda antiga',direction:''},persona:{audience:'Estudantes ',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]};
+  const db=await new Promise((resolve,reject)=>{const q=indexedDB.open(name,3);q.onupgradeneeded=()=>{q.result.createObjectStore('states',{keyPath:'scope'});q.result.createObjectStore('legacyStates',{keyPath:'scope'});q.result.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');q.result.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};q.onsuccess=()=>resolve(q.result);q.onerror=()=>reject(q.error);});
+  const oldest={scope,state:{schemaVersion:1,original:true}};
+  await new Promise((resolve,reject)=>{const tx=db.transaction(['states','legacyStates'],'readwrite');tx.objectStore('states').put({scope,state});tx.objectStore('legacyStates').put(oldest);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
+  const read=store=>new Promise((resolve,reject)=>{const q=indexedDB.open(name);q.onsuccess=()=>{const db=q.result,r=db.transaction(store).objectStore(store).getAll();r.onsuccess=()=>{db.close();resolve(r.result);};r.onerror=()=>reject(r.error);};q.onerror=()=>reject(q.error);});
+  const repo=createStudioStorage({name}),loaded=await repo.load({userId,projectId}),next={...loaded,revision:8};
+  let conflict='';try{await repo.save(next,{expectedRevision:6});}catch(error){conflict=error.code;}
+  const put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(){if(this.name==='states')throw new DOMException('quota','QuotaExceededError');return put.apply(this,arguments);};
+  let quota='';try{await repo.save(next,{expectedRevision:7});}catch(error){quota=error.code;}finally{IDBObjectStore.prototype.put=put;}
+  const rollback=(await read('stateArchives')).length===0&&(await read('states'))[0].state.schemaVersion===2;
+  await repo.save(next,{expectedRevision:7});const archives=await read('stateArchives'),legacy=await read('legacyStates');repo.close();return {conflict,quota,rollback,archives,legacy,oldest,state,loaded};
+ });
+ assert.equal(evidence.conflict,'studio_storage_conflict');assert.equal(evidence.quota,'studio_storage_quota');assert.equal(evidence.rollback,true);
+ assert.deepEqual(evidence.archives[0].state,evidence.state);assert.deepEqual(evidence.legacy,[evidence.oldest]);assert.equal(evidence.loaded.brief.audience,'Estudantes ');assert.equal(evidence.loaded.brief.action,'Venda antiga');assert.deepEqual(evidence.loaded.posts,{});
+});

@@ -56,11 +56,11 @@ test('o estúdio conserva rascunhos herdados por conta e recupera uma reivindica
   assert.deepEqual(archives,['Ideia já guardada de Alice']);
   await page.reload();await idea.waitFor();
   assert.equal(await idea.inputValue(),'Rascunho anterior sem conta');
-  await page.getByRole('button',{name:'Começar conversa',exact:true}).click();
+  await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();
   await page.getByText('A criação pode ter acontecido. Atualize a lista antes de criar outro projeto.',{exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:'Começar conversa',exact:true}).isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).isDisabled(),true);
   await page.getByRole('button',{name:'Atualizar projetos',exact:true}).click();
   await page.getByRole('button',{name:'Entendi, iniciar outra criação',exact:true}).waitFor();
-  assert.equal(await page.getByRole('button',{name:'Começar conversa',exact:true}).isDisabled(),true);
+  assert.equal(await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).isDisabled(),true);
   assert.equal(writes,1,'consultar a lista não repete uma criação com resultado desconhecido');
 });

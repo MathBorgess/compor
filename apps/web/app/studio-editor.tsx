@@ -20,7 +20,8 @@ export default function StudioEditor({
   onRemoveMark,
   onApprove,
   onViewArt,
-}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onApprove?: () => void;onViewArt?: () => void}) {
+  guided = false,
+}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onApprove?: () => void;onViewArt?: () => void;guided?:boolean}) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState<Region | null>(null),
     [note, setNote] = useState(""),
@@ -161,7 +162,8 @@ export default function StudioEditor({
             ),
         )}
       </div>
-      <div className="studio-post-inspector">
+      <details className="studio-post-inspector" open={!guided}>
+        <summary>Editar textos, legenda e aprovação</summary>
         <p className="studio-hint">Estes textos orientam a próxima geração. Alterá-los não modifica os pixels da arte atual.</p>
         <label>
           Título
@@ -333,7 +335,7 @@ export default function StudioEditor({
           <p id={approvalHint} className="studio-hint">Salve a versão para aprovar este post.</p>
         )}
         {error && <p role="alert">{error}</p>}
-      </div>
+      </details>
     </div>
   );
 }

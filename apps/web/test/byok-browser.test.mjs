@@ -1,3 +1,4 @@
+import {openSettings} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import { existsSync } from 'node:fs';
@@ -41,13 +42,12 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
     return route.fulfill({ status: 503, json: { error: 'unavailable' } });
   });
   async function openConnection() {
-    const previous = page.getByRole('button', { name: 'Projeto de teste Retomar conversa', exact: true });
-    await page.getByRole('button', { name: /^(Conectar IA|IA do Compor|Minha chave OpenAI|IA conectada)$/ }).or(previous).first().waitFor();
-    if (await previous.isVisible()) await previous.click();
-    const input = page.getByLabel('Chave OpenAI', { exact: true });
-    if (!await input.isVisible()) await page.getByRole('button', { name: /^(Conectar IA|IA do Compor|Minha chave OpenAI|IA conectada)$/ }).click();
-    await input.waitFor();
-    return input;
+    const previous=page.getByRole('button',{name:'Projeto de teste Abrir projeto',exact:true});
+    await page.getByRole('button',{name:'Configurações do projeto',exact:true}).or(previous).first().waitFor();
+    if(await previous.isVisible())await previous.click();
+    await openSettings(page,'IA');
+    if(!await page.getByLabel('Chave OpenAI',{exact:true}).isVisible())await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();
+    return page.getByLabel('Chave OpenAI',{exact:true});
   }
   async function recheck() {
     const response = page.waitForResponse(result => new URL(result.url()).pathname === '/auth/session');
@@ -62,7 +62,7 @@ test('chave permanece só em memória e é limpa ao trocar de conta, desconectar
   assert.doesNotMatch(await page.evaluate(() => document.documentElement.outerHTML), /sk-test-fake-not-a-real-credential/);
   assert.deepEqual(leaked, [], 'digitar a chave não envia credenciais antes da conexão explícita');
   await page.getByRole('button', { name: 'Usar minha chave', exact: true }).click();
-  await page.getByRole('button', { name: 'Continuar', exact: true }).waitFor();
+  await page.getByRole('button', { name: 'Remover chave', exact: true }).waitFor();
   const captured = await page.evaluate(() => ({ local: JSON.stringify(localStorage), session: JSON.stringify(sessionStorage), cookies: document.cookie, url: location.href }));
   assert.doesNotMatch(JSON.stringify(captured), /sk-test-fake-not-a-real-credential/);
   assert.doesNotMatch(JSON.stringify(await page.context().cookies()), /sk-test-fake-not-a-real-credential/);

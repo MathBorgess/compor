@@ -34,15 +34,19 @@ export function matchReadinessFeedback(projectId:string,references:StudioReferen
   return {referenceFeedback:referenceFeedback.slice(0,20),accountHints:accountHints.slice(0,10)};
 }
 /** Failed reads never manufacture evidence; scopes are enforced by authenticated routes. */
-export async function loadReadinessFeedback(projectId:string,references:StudioReference[],fetchApi:typeof fetch=fetch):Promise<FeedbackResult> {
-  const read=async(path:string,scope:'project'|'account')=>{
-    const response=await fetchApi(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,scope}),signal:AbortSignal.timeout(5000)});
+export async function loadReadinessFeedback(projectId:string,references:StudioReference[],fetchApi:typeof fetch=fetch,pieceId?:string):Promise<FeedbackResult> {
+  const scoped=<T extends {pieceId?:string}>(values:T[],local:boolean)=>{
+    if(values.some(value=>value.pieceId!==(local?pieceId:undefined)))throw Error('feedback scope mismatch');
+    return values;
+  };
+  const read=async(path:string,scope:'project'|'account',local=false)=>{
+    const response=await fetchApi(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,scope,...(local&&pieceId?{pieceId}:{})}),signal:AbortSignal.timeout(5000)});
     if(!response.ok)throw Error('feedback unavailable');
     return response.json();
   };
   const [generated,pins]=await Promise.allSettled([
-    read('/api/studio/explorations/signals','project').then(value=>generatedSignalsSchema.parse(value).signals).then(values=>{if(values.some(item=>item.projectId!==projectId))throw Error('project mismatch');return values;}),
-    read('/api/studio/references/signals','account').then(value=>referenceSignalsResponseSchema.parse(value).signals),
+    Promise.all([read('/api/studio/explorations/signals','project'),...(pieceId?[read('/api/studio/explorations/signals','project',true)]:[])]).then(values=>values.flatMap((value,index)=>scoped(generatedSignalsSchema.parse(value).signals,index>0))).then(values=>{if(values.some(item=>item.projectId!==projectId))throw Error('project mismatch');return values;}),
+    Promise.all([read('/api/studio/references/signals','account'),...(pieceId?[read('/api/studio/references/signals','project',true)]:[])]).then(values=>values.flatMap((value,index)=>scoped(referenceSignalsResponseSchema.parse(value).signals,index>0))),
   ]);
   const values=matchReadinessFeedback(projectId,references,generated.status==='fulfilled'?generated.value:[],pins.status==='fulfilled'?pins.value:[]);
   const success=Number(generated.status==='fulfilled')+Number(pins.status==='fulfilled');

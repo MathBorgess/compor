@@ -1,3 +1,4 @@
+import {addProjectReferences,openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -16,27 +17,10 @@ const key=`sk-synthetic-${'x'.repeat(30)}`;
 const content=headline=>({headline,price:'R$ 20,00',date:'10/11/2026',caption:'Legenda sintética',captionOrigin:'user'});
 async function eventually(fn,predicate,timeout=5000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('expected persistent state was not observed');await new Promise(resolve=>setTimeout(resolve,40));}}
 async function stored(page,userId=alice){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{return await new Promise((resolve,reject)=>{const request=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));request.onsuccess=()=>resolve(request.result?.state??null);request.onerror=()=>reject(request.error);});}finally{db.close();}},{userId,projectId});}
-async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
-async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
-async function openEditor(page){
- const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});
- await title.or(open).first().waitFor();
- if(await open.isVisible()){
-  // Reveal the editor action and restore the conversation only if needed.
-  // Entering the editor can restore its independent open preference.
-  const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});
-  const wasOpen=await collapse.isVisible();
-  if(wasOpen)await collapse.click();
-  await open.click();await title.waitFor();
-  if(wasOpen){
-   const conversation=page.getByRole('complementary',{name:'Conversa com a IA',exact:true});
-   if(!await conversation.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
-   await conversation.waitFor();
-  }
- }
- await title.waitFor();
-}
-async function chooseFiles(page,label,files){const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
+async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
+async function closeDrawer(page){await closeSettings(page);}
+async function openEditor(page){await openPostEditor(page);}
+async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
@@ -67,7 +51,7 @@ async function app(t){
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
-   assert.deepEqual(request.postDataJSON(), {projectId, scope:'account'});
+   const selection=request.postDataJSON();assert.deepEqual(selection,{projectId,scope:selection.pieceId?'project':'account',...(selection.pieceId?{pieceId:selection.pieceId}:{})});if(selection.pieceId)assert.match(selection.pieceId,/^[0-9a-f-]{36}$/);
    return route.fulfill({json:{signals:[]}});
   }
     if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
@@ -90,19 +74,19 @@ async function app(t){
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
- await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByLabel('Sua mensagem',{exact:true}).waitFor({state:'attached'});if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
- await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await openEditor(page);
+ await openSettings(page,'Contexto');
  const publicField=page.getByRole('region',{name:'Contexto do projeto',exact:true}).locator('summary').nth(1);await publicField.click();
  await page.getByLabel('Público do projeto',{exact:true}).fill('Pessoas interessadas em aprender');await publicField.click();
  await openDrawer(page,'Marca');assert.equal(await page.getByLabel('Quem você quer alcançar?',{exact:true}).count(),0);
  await page.getByRole('button',{name:'Continuar com o que sei',exact:true}).click();
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();
+
  await connectOwnOpenAiKey(page,key);
- await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await closeSettings(page);
  const files=await page.evaluate(()=>{const c=document.createElement('canvas');c.width=128;c.height=128;const ctx=c.getContext('2d');ctx.fillStyle='#2244aa';ctx.fillRect(0,0,128,128);return{png:c.toDataURL('image/png').split(',')[1],jpeg:c.toDataURL('image/jpeg').split(',')[1]};});
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  assert.equal(await page.getByRole('button',{name:'Baixar PNG',exact:true}).isDisabled(),true,'an empty draft cannot export placeholder artwork');
- await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();await openEditor(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'an unsaved post cannot be approved');
@@ -131,23 +115,26 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
  await openDrawer(page,'Bases');
  await chooseFiles(page,'Adicionar PNG ou JPEG',[{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
- await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await page.getByText('reference.png',{exact:true}).waitFor();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
- await page.getByRole('button',{name:'Remover referência',exact:true}).first().click();
+ await page.getByRole('button',{name:'Remover da seleção: reference.png',exact:true}).click();
  await eventually(()=>stored(page),value=>value?.references?.length===1);
  await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
+ await page.getByRole('button',{name:'Abrir posts do projeto',exact:true}).click();
+ await page.getByRole('button',{name:/Atual existente.*Abrir post e conversa/}).click();
+ await openDrawer(page,'Bases');
+ await page.getByRole('button',{name:'Ver versões deste post',exact:true}).click();
+ await page.getByLabel('Versões da variante 1',{exact:true}).selectOption('1');
+ await openEditor(page);
  await page.getByLabel('Título',{exact:true}).fill('Alteração local da base antiga');
  assert.equal(await page.getByRole('button',{name:'Aprovar esta versão',exact:true}).isDisabled(),true,'editing a saved version requires saving before approval');
- await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Atual existente.*Versão 2/}).click();
+ await page.getByLabel('Versões da variante 1',{exact:true}).selectOption('2');
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Atual existente');
- await openDrawer(page,'Bases');
- await page.getByRole('button',{name:/Original antigo.*Versão 1/}).click();
+ await page.getByLabel('Versões da variante 1',{exact:true}).selectOption('1');
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Alteração local da base antiga');
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Inicie um novo post para outra ideia');
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Inicie um novo post para outra ideia');
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();
- await page.getByText('Novo post preparado no navegador.',{exact:true}).waitFor();await openEditor(page);
+ await page.getByText('Novo post preparado no navegador.',{exact:true}).waitFor({state:'attached'});await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
  await page.getByLabel('Título',{exact:true}).fill('Rascunho que permanece local');
  await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 15');await page.getByLabel('Data',{exact:true}).fill('20/11');
@@ -159,21 +146,21 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  release();session.hold=null;
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local','same-account check keeps the active project mounted');
- await page.getByLabel('Sua mensagem',{exact:true}).fill('A chave ainda está nesta sessão');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isEnabled(),true);await page.getByLabel('Sua mensagem',{exact:true}).fill('');
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('A chave ainda está nesta sessão');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isEnabled(),true);await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('');
  const persisted=await stored(page);assert.equal(persisted.persona.audience,'Pessoas interessadas em aprender');assert.equal(persisted.messages.length,2);assert.equal(persisted.references[0].mime,'image/jpeg');
  const storageText=await page.evaluate(async()=>{const db=await new Promise(resolve=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);});const records=await new Promise(resolve=>{const r=db.transaction('states').objectStore('states').getAll();r.onsuccess=()=>resolve(r.result);});db.close();return JSON.stringify([records,Object.entries(localStorage),Object.entries(sessionStorage)]);});
  assert.equal(storageText.includes(key),false);
- const conversation=page.getByRole('complementary',{name:'Conversa com a IA',exact:true});
+ const conversation=page.getByRole('region',{name:'Conversa do post',exact:true});
  // Reopening the conversation replays its 180 ms expand animation; measure the settled layout, not two frames of it.
  await conversation.evaluate(element=>Promise.all(element.getAnimations().map(animation=>animation.finished)));
- const chatBounds=await conversation.boundingBox(),composerBounds=await page.locator('form.studio-chat-composer').boundingBox();
+ const chatBounds=await conversation.boundingBox(),composerBounds=await page.locator('.guided-conversation:not([hidden]) form.studio-chat-composer').boundingBox();
  assert.ok(Math.abs(chatBounds.y+chatBounds.height-composerBounds.y-composerBounds.height)<=2,'the composer stays at the conversation bottom');
- const connectionButton=page.getByRole('button',{name:'Minha chave OpenAI',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');
- assert.equal(await page.locator('.studio-chat-header img').evaluate(element=>element.complete&&element.naturalWidth>0),true,'the Compor avatar asset is visible');
+ const connectionButton=page.getByRole('button',{name:'Configurações do projeto',exact:true});assert.ok((await connectionButton.boundingBox()).height>=40,'the connection action has the same minimum target size as other header actions');
+ assert.equal(await page.locator('.guided-conversation:not([hidden]) .studio-chat-header img').evaluate(element=>element.complete&&element.naturalWidth>0),true,'the Compor avatar asset is visible');
  await page.screenshot({path:'/tmp/compor-studio-visual-desktop.png',fullPage:true});
- await page.setViewportSize({width:390,height:844});
+ await page.setViewportSize({width:390,height:844});await openEditor(page);
  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth),true,'page itself must not overflow; board may scroll internally');
- for(const name of [/^Bases \(\d+\)$/,'Marca']){const control=await page.getByRole('button',{name,exact:true}).boundingBox();assert.ok(control.x>=0&&control.x+control.width<=390,'the mobile navigation controls remain visible');}
+ for(const name of ['Posts do projeto','Configurações do projeto']){const control=await page.getByRole('button',{name,exact:true}).boundingBox();assert.ok(control.x>=0&&control.x+control.width<=390,'the mobile navigation controls remain visible');}
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile.png',fullPage:true});
  await page.getByLabel('Título',{exact:true}).scrollIntoViewIfNeeded();
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');
@@ -183,14 +170,14 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
- await openDrawer(page,'Bases');await page.getByRole('img',{name:'reference.jpg',exact:true}).waitFor();
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Referências',exact:true}).click();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await closeDrawer(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  await page.getByLabel('Legenda',{exact:true}).fill('Legenda pronta para copiar.');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();
- await page.getByRole('region',{name:'Arte e legenda do projeto',exact:true}).getByRole('heading',{name:'Projeto sintético',exact:true}).waitFor();
+ await page.getByRole('region',{name:'Arte e legenda do projeto',exact:true}).getByRole('heading',{name:/Projeto sintético/}).waitFor();
  assert.equal(await page.getByLabel('Título',{exact:true}).count(),0);
  assert.equal(await page.getByLabel('Imagem-base PNG ou JPEG',{exact:true}).count(),0);
  for(const name of ['Preparar PNG','Salvar PNG final no projeto','Aprovar esta versão','Baixar'])assert.equal(await page.getByRole('button',{name,exact:true}).count(),0,`${name} is outside the review`);
@@ -201,7 +188,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const download=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();const result=await download;const bytes=await readFile(await result.path());
  assert.equal(result.suggestedFilename(),'Projeto sintético-v0.png');
  assert.deepEqual(bytes,Buffer.from(files.png,'base64'),'export preserves every pixel and PNG byte despite title, price and date instructions');
- await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();await openEditor(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'base.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')});
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  const converted=page.waitForEvent('download');await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
@@ -214,13 +201,13 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
- await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,key);
+ await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await connectOwnOpenAiKey(page,key);
  let release;session.hold=new Promise(resolve=>{release=resolve;});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);session.userId=bob;release();session.hold=null;
  await page.getByRole('button',{name:/Projeto sintético/}).click();await openEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await connectOwnOpenAiKey(page,key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
- session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await connectOwnOpenAiKey(page,key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  assert.deepEqual(errors,[`Failed to load resource: the server responded with a status of 503 (Service Unavailable) (${origin}/auth/session)`]);
 });

@@ -76,3 +76,12 @@ test('contexto da oferta preserva título provisório, fatos e conflito de públ
   const changed=updateOfferFacts(restored,[{...restored.offerFacts[0],value:'R$ 200'}]);
   assert.notEqual(JSON.stringify(offerContext(changed)),JSON.stringify(before),'editar um fato invalida o contexto de uma leitura pendente');
 });
+
+
+test('digitação preserva espaços e cursor lógico sem mudar a resolução canônica do público',()=>{
+ let state=initial();
+ for(const value of ['E','Estudantes','Estudantes ','Estudantes de ','Estudantes de medicina']){
+  state=updateBrief(state,{audience:value});assert.equal(state.brief.audience,value);assert.equal(state.persona.audience,value);
+  assert.equal(audienceResolution(state).value,value.trim());assert.equal(parseStudioState(JSON.parse(JSON.stringify(state))).brief.audience,value);
+ }
+});

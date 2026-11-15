@@ -2,6 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { answerPrompt, answerWithReuse, artFacts, briefDecisions, briefPatch, briefRecordSchema, chooseOption, confirmMentionedClaims, nextPrompt, recordFromStudio, showsMarketProof, skipPrompt } from "../lib/brief-interview.ts";
 
 test("a entrevista reaproveita o brief e pergunta opcionais somente quando solicitados", () => {
@@ -110,7 +111,7 @@ async function uiSources(dir) {
 test("a interface não apresenta Phoenix, nota ou validação", async () => {
   const forbidden = /\b(Phoenix|validado|comprovado|NDCG|ndcg|probabilidade|probabilidades|calibrado)\b|\bscores?\b/i;
   const hits = [];
-  for (const path of await uiSources(new URL("../app/", import.meta.url).pathname)) {
+  for (const path of await uiSources(fileURLToPath(new URL("../app/", import.meta.url)))) {
     const lines = (await readFile(path, "utf8")).split("\n");
     lines.forEach((line, index) => {
       if (forbidden.test(line)) hits.push(`${path}:${index + 1}:${line.trim()}`);

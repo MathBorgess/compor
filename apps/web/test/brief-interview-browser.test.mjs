@@ -1,3 +1,4 @@
+import {openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -95,44 +96,42 @@ async function app(t, {withReferences = false} = {}) {
   return {page, origin, calls, errors, external, images, paging, selectionSignals, referenceSelectionSignals};
 }
 
-async function openProject(page, origin) {
-  await page.goto(origin);
-  await page.getByRole('button', {name: /Direção opcional/}).click();
-  await page.getByLabel('Sua mensagem', {exact: true}).waitFor({state:'attached'});
-  if (!await page.getByLabel('Sua mensagem', {exact: true}).isVisible()) await page.getByRole('button', {name: 'Abrir conversa', exact: true}).click();
-  await page.getByLabel('Sua mensagem', {exact: true}).waitFor();
+async function openProject(page,origin){
+ await page.goto(origin);await page.getByRole('button',{name:/Direção opcional/}).click();
+ await openPostEditor(page);await openSettings(page,'Referências');
 }
-
-async function openEditorConversation(page) {
-  const references=page.getByRole('button',{name:'Referências',exact:true});
-  if(await references.isVisible())await references.click();
-  await page.getByRole('button',{name:'Definir textos da arte',exact:true}).click();
-  const message=page.getByLabel('Sua mensagem',{exact:true});
-  if(!await message.isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
-  await message.waitFor();
+async function openEditorConversation(page){await closeSettings(page);await openPostEditor(page);await openConversation(page);}
+async function connectKey(page,{references=false}={}){
+ await connectOwnOpenAiKey(page,`sk-synthetic-${'x'.repeat(30)}`);await closeSettings(page);
+ if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();}else await openConversation(page);
 }
 
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, external} = await app(t);
   await openProject(page, origin);
-  const summary = page.getByRole('region', {name: 'Contexto do projeto', exact: true});
   await page.getByRole('region', {name: 'Buscar referências visuais', exact: true}).waitFor();
+  await openSettings(page,'Contexto');
+  const summary = page.getByRole('region', {name: 'Contexto do projeto', exact: true});
   await summary.getByText('O que vamos divulgar?', {exact: true}).waitFor();
   assert.equal(await page.getByLabel('Entrevista do brief', {exact: true}).count(), 0);
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await summary.getByText('Aula de cerâmica', {exact: true}).waitFor();
-  assert.equal(await page.getByText('Quero divulgar uma aula de cerâmica.', {exact: true}).count(), 1);
+  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
+  await page.keyboard.press('Escape');
+  await closeSettings(page);assert.equal(await page.getByText('Quero divulgar uma aula de cerâmica.', {exact: true}).count(), 1);
   assert.deepEqual(calls.filter(call => call.path !== '/api/studio/explorations').map(call => call.path), ['/api/studio/chat', '/api/studio/action']);
   await page.reload();
   await page.getByRole('button', {name: /Direção opcional/}).click();
-  await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await page.getByRole('region', {name: 'Contexto do projeto', exact: true}).getByText('Aula de cerâmica', {exact: true}).waitFor();
-  assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
+  await openPostEditor(page);await openConversation(page);await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
+  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
+  await page.keyboard.press('Escape');
+  await closeSettings(page);assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
   assert.deepEqual(external, []);
   assert.deepEqual(errors, []);
 });
@@ -141,11 +140,11 @@ test('conexão e envio ficam acessíveis no celular', {skip: !existsSync(browser
   const {page, origin, errors} = await app(t);
   await page.setViewportSize({width: 390, height: 844});
   await openProject(page, origin);
-  await page.getByRole('button', {name:'Usar minha chave',exact:true}).click();
+  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();
   const input = page.getByLabel('Chave OpenAI', {exact: true});
   assert.equal(await input.isVisible(), true);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
-  await page.getByRole('button', {name:'Continuar',exact:true}).click();
+  await connectKey(page);
+  await closeSettings(page);
   await page.getByLabel('Sua mensagem', {exact: true}).fill('Uma ideia para criar.');
   const send = page.getByRole('button', {name: 'Enviar →', exact: true});
   await send.scrollIntoViewIfNeeded();
@@ -169,7 +168,7 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
     await route.fulfill({status:202,json:{status:'completed',text:'**Direção visual**\n\n- Azul\n- Amarelo\n\n[Link seguro](https://example.com/) [Contato](mailto:contato@example.com) [Link perigoso](javascript:alert(1)) [Link relativo](/privado) [Link em arquivo](file:///etc/passwd)\n\n![imagem externa](https://tracking.example/pixel.png)\n\n<script>alert(1)</script>\n\n<img src="https://tracking.example/raw.png" onerror="alert(1)">\n\n<a href="javascript:alert(1)">HTML bruto</a>'}});
   });
   await openProject(page, origin);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Mostre a direção.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   const status = page.getByRole('status').filter({hasText:'Compor está trabalhando…'});
@@ -199,103 +198,101 @@ test('duas rodadas sem resposta pedem decisão no chat e retomam somente por aç
     localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:6,batchId,completed:3,nextAt:0,remainingMs:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:true}));
   },{userId,projectId});
   await openProject(page,origin);
+  await connectKey(page,{references:true});
   await page.getByText(/Mostrei duas rodadas de propostas/).waitFor();
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
   await page.getByRole('button',{name:'Gerar mais propostas'}).waitFor();
   assert.equal(calls.filter(call=>call.path==='/api/studio/explorations' && call.body).length,0);
 });
 
-test('no editor, somente histórico rola e o envio permanece visível no painel compacto', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page, origin, errors} = await app(t);
-  await page.setViewportSize({width: 742, height: 720});
-  await openProject(page, origin);
-  await openEditorConversation(page);
-  await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
-  const geometry = await page.evaluate(() => {
-    const panel = document.querySelector('.studio-conversation').getBoundingClientRect();
-    const input = document.querySelector('#studio-chat-message').getBoundingClientRect();
-    const send = document.querySelector('form.studio-chat-composer button').getBoundingClientRect();
-    const meta = document.querySelector('.studio-chat-meta');
-    const composer = document.querySelector('form.studio-chat-composer');
-    const history = document.querySelector('.studio-chat-messages');
-    return {panel: panel.toJSON(), input: input.toJSON(), send: send.toJSON(), metaOverflow: getComputedStyle(meta).overflowY, composerOverflow: getComputedStyle(composer).overflowY, historyOverflow: getComputedStyle(history).overflowY};
-  });
-  t.diagnostic(JSON.stringify({viewport:"742x720",geometry}));
-  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-742x720.png`});
-  assert.ok(geometry.input.top >= geometry.panel.top && geometry.input.bottom <= geometry.panel.bottom);
-  assert.ok(geometry.send.top >= geometry.panel.top && geometry.send.bottom <= geometry.panel.bottom);
-  assert.equal(geometry.metaOverflow, 'visible');
-  assert.equal(geometry.composerOverflow, 'visible');
-  assert.equal(geometry.historyOverflow, 'auto');
-  await page.getByLabel('Sua mensagem', {exact:true}).fill('Rascunho preservado na conexão');
-  await page.getByRole('button', {name:'Usar minha chave',exact:true}).click();
-  await page.getByLabel('Chave OpenAI', {exact:true}).waitFor();
-  assert.equal(await page.getByLabel('Chave OpenAI', {exact:true}).evaluate(element => getComputedStyle(element).borderRadius), '10px');
-  await page.getByRole('button', {name:'Continuar sem IA por enquanto',exact:true}).click();
-  await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
-  assert.equal(await page.getByLabel('Sua mensagem', {exact:true}).inputValue(),'Rascunho preservado na conexão');
-  await page.setViewportSize({width: 390, height: 400});
-  await page.waitForFunction(()=>Number(document.querySelector('[role="slider"]').getAttribute('aria-valuemax'))===Math.floor(window.innerHeight-32));
-  const shortViewport = await page.evaluate(() => {
-    const panel = document.querySelector('.studio-conversation').getBoundingClientRect();
-    const input = document.querySelector('#studio-chat-message').getBoundingClientRect();
-    const send = document.querySelector('form.studio-chat-composer button').getBoundingClientRect();
-    const slider=document.querySelector('[role="slider"]');
-    return {panel: panel.toJSON(), input: input.toJSON(), send: send.toJSON(),aria:{min:Number(slider.getAttribute('aria-valuemin')),max:Number(slider.getAttribute('aria-valuemax')),now:Number(slider.getAttribute('aria-valuenow'))}};
-  });
-  t.diagnostic(JSON.stringify({viewport:"390x400",geometry:shortViewport}));
-  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-390x400.png`});
-  assert.ok(shortViewport.input.top >= shortViewport.panel.top && shortViewport.input.bottom <= shortViewport.panel.bottom, 'o campo permanece acessível com viewport baixo');
-  assert.ok(shortViewport.send.top >= shortViewport.panel.top && shortViewport.send.bottom <= shortViewport.panel.bottom, 'o envio permanece acessível com viewport baixo');
-  const slider=page.getByRole('slider',{name:'Altura da conversa'});
-  assert.equal(shortViewport.aria.min,260);
-  assert.equal(shortViewport.aria.max,368);
-  assert.equal(shortViewport.aria.now,Math.round(shortViewport.panel.height));
-  await page.getByRole('button',{name:'Ocultar detalhes da conversa'}).click();
-  await page.waitForFunction(()=>document.querySelector('[role="slider"]').getAttribute('aria-valuemin')==='180');
-  const hidden=await page.locator('.studio-conversation').boundingBox();
-  assert.equal(hidden.height,shortViewport.panel.height,'ocultar detalhes não encolhe a altura escolhida');
-  await slider.focus();await page.keyboard.press('Home');
-  await page.waitForFunction(()=>document.querySelector('[role="slider"]').getAttribute('aria-valuenow')==='180');
-  const compact=await page.evaluate(()=>({panel:document.querySelector('.studio-conversation').getBoundingClientRect().toJSON(),composer:document.querySelector('.studio-chat-composer').getBoundingClientRect().toJSON()}));
-  assert.equal(compact.panel.height,180);
-  assert.ok(compact.composer.top>=compact.panel.top&&compact.composer.bottom<=compact.panel.bottom);
-  t.diagnostic(JSON.stringify({viewport:'390x400-details-hidden',geometry:compact}));
-  if(process.env.COMPOR_LAYOUT_CAPTURE_PREFIX)await page.screenshot({path:`${process.env.COMPOR_LAYOUT_CAPTURE_PREFIX}-390x400-hidden.png`});
-
-  assert.deepEqual(errors, []);
+test('no editor, histórico rola e o compositor continua acessível com a conversa e a arte em painéis', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,errors}=await app(t);await page.setViewportSize({width:742,height:720});
+ await openProject(page,origin);await openEditorConversation(page);
+ const field=await openConversation(page);await field.fill('Rascunho preservado na conexão');
+ assert.equal(await page.locator('.studio-chat-messages').evaluate(el=>getComputedStyle(el).overflowY),'auto');
+ await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();
+ assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).evaluate(el=>getComputedStyle(el).borderRadius),'10px');
+ await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
+ assert.equal(await field.inputValue(),'Rascunho preservado na conexão');
+ for(const size of [{width:742,height:720},{width:390,height:400}]){
+  await page.setViewportSize(size);await field.scrollIntoViewIfNeeded();
+  const send=page.getByRole('button',{name:'Enviar →',exact:true});await send.scrollIntoViewIfNeeded();
+  const bounds=await send.boundingBox();assert.ok(bounds.y>=0&&bounds.y+bounds.height<=size.height,'envio alcançável sem ficar sob outros painéis');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ }
+ assert.deepEqual(errors,[]);
 });
 
-test('no editor, detalhes podem ser recolhidos e a conversa ampliada por teclado ou ponteiro', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page,origin,errors}=await app(t);
-  await page.emulateMedia({reducedMotion:'reduce'});await page.setViewportSize({width:742,height:720});
-  await openProject(page,origin);
-  await openEditorConversation(page);
-  const details=page.locator('#studio-chat-details');
-  const toggle=page.getByRole('button',{name:'Ocultar detalhes da conversa'});
-  assert.equal(await details.isVisible(),true);await toggle.click();
-  assert.equal(await details.isVisible(),false);
-  assert.equal(await page.getByRole('button',{name:'Mostrar detalhes da conversa'}).getAttribute('aria-expanded'),'false');
-  const panel=page.locator('.studio-conversation'),slider=page.getByRole('slider',{name:'Altura da conversa'});
-  const before=await panel.boundingBox();await slider.focus();await page.keyboard.press('ArrowUp');
-  await page.waitForFunction(previous=>document.querySelector('.studio-conversation').getBoundingClientRect().height>previous,before.height);
-  const keyboard=await panel.boundingBox();assert.ok(Math.abs((keyboard.y+keyboard.height)-(before.y+before.height))<1,'borda inferior permanece fixa');
-  const grip=await slider.boundingBox();await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2);await page.mouse.down();await page.mouse.move(grip.x+grip.width/2,grip.y+grip.height/2-80,{steps:4});await page.mouse.up();
-  await page.waitForFunction(previous=>document.querySelector('.studio-conversation').getBoundingClientRect().height>previous,keyboard.height);
-  const after=await panel.boundingBox();assert.ok(Math.abs((after.y+after.height)-(before.y+before.height))<1);
-  await page.getByRole('button',{name:'Mostrar detalhes da conversa'}).click();assert.equal(await details.isVisible(),true);
-  await page.setViewportSize({width:390,height:400});
-  await page.getByRole('button',{name:'Ocultar detalhes da conversa'}).click();
-  await slider.focus();await page.keyboard.press('End');
-  const short=await panel.boundingBox(),composer=await page.locator('form.studio-chat-composer').boundingBox();
-  assert.ok(short.y>=0&&short.y+short.height<=400);assert.ok(composer.y+composer.height<=short.y+short.height);
-  assert.deepEqual(errors,[]);
+test('no editor, divisão e chat minimizável preservam a área completa em desktop e celular', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,errors}=await app(t);await openProject(page,origin);await openEditorConversation(page);
+ const field=await openConversation(page);await field.fill('Rascunho preservado ao minimizar');
+ const separator=page.getByRole('separator',{name:'Divisão entre conversa e post'});
+ const desktop=await page.locator('.guided-workspace').boundingBox();
+ const desktopMain=await page.locator('.studio-canvas-column').boundingBox();
+ assert.ok(desktop.x<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
+ const start=Number(await separator.getAttribute('aria-valuenow'));await separator.focus();await page.keyboard.press('ArrowRight');
+ assert.equal(Number(await separator.getAttribute('aria-valuenow')),start+3);
+ const grip=await separator.boundingBox();await page.mouse.move(grip.x+6,grip.y+100);await page.mouse.down();await page.mouse.move(grip.x+90,grip.y+100,{steps:4});await page.mouse.up();
+ assert.ok(Number(await separator.getAttribute('aria-valuenow'))>start+3);
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).click();
+ assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),false);
+ assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
+ assert.equal(await separator.isVisible(),false);
+ await page.waitForFunction(()=>document.activeElement?.classList.contains('guided-chat-launcher'));
+ await page.keyboard.press('Enter');assert.equal(await separator.isVisible(),true);
+ assert.equal(await page.evaluate(()=>document.activeElement?.getAttribute('aria-label')),'Conversa do post');
+ assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
+ await page.setViewportSize({width:390,height:844});await openConversation(page);
+ assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
+ const overlap=await page.evaluate(()=>{const a=document.querySelector('.guided-chat-minimize')?.getBoundingClientRect(),b=document.querySelector('.studio-chat-details-toggle')?.getBoundingClientRect();return a&&b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});
+ assert.equal(overlap,false,'controle de minimizar não cobre os detalhes da conversa');
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).focus();await page.keyboard.press('Enter');
+ assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
+ const bounds=await page.locator('.guided-workspace').boundingBox();
+ const mobileMain=await page.locator('.studio-canvas-column').boundingBox();
+ assert.ok(bounds.x<=1&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport');
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
+ await openConversation(page);assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
+ assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
+ assert.deepEqual(errors,[]);
+});
+
+test('configurações do projeto e referências ocupam o viewport com abas e rodapé acessíveis', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,errors}=await app(t);await openProject(page,origin);
+ const dialog=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
+ const tabs=dialog.getByRole('navigation',{name:'Configurações',exact:true});
+ async function assertViewport(width,height){
+  const bounds=await dialog.boundingBox();
+  assert.ok(Math.abs(bounds.x)<=1&&Math.abs(bounds.y)<=1&&Math.abs(bounds.width-width)<=1&&Math.abs(bounds.height-height)<=1,'configurações preenchem o viewport');
+  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'a página não rola na horizontal');
+ }
+ await assertViewport(1440,1000);
+ await tabs.getByRole('button',{name:'Contexto',exact:true}).click();
+ assert.equal(await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).isVisible(),true);
+ await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
+ await tabs.getByRole('button',{name:'Referências',exact:true}).click();
+ const content=dialog.locator('.guided-reference-content'),footer=dialog.locator('.guided-references footer');
+ assert.ok(await content.evaluate(element=>element.scrollHeight>element.clientHeight),'referências rolam dentro do viewport');
+ await content.evaluate(element=>element.scrollTop=element.scrollHeight);
+ const footerBounds=await footer.boundingBox(),tabsBounds=await tabs.boundingBox();
+ assert.ok(tabsBounds.y>=0&&tabsBounds.y+tabsBounds.height<=500,'abas continuam visíveis');
+ assert.ok(footerBounds.y>=0&&footerBounds.y+footerBounds.height<=500,'rodapé continua visível após rolar as referências');
+ await page.setViewportSize({width:390,height:400});await assertViewport(390,400);
+ const shortContentHeight=await content.evaluate(element=>element.clientHeight);
+ assert.ok(shortContentHeight>=60,`conteúdo de referências ainda tem área de rolagem em viewport baixo (${shortContentHeight}px)`);
+ const shortFooter=await footer.boundingBox();assert.ok(shortFooter.y+shortFooter.height<=400,'rodapé continua no viewport baixo');
+ await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
+ const returnBounds=await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).boundingBox();
+ assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'retorno permanece acessível em outra aba');
+ await closeSettings(page);await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+ assert.ok((await page.getByRole('dialog',{name:'Configurações deste post',exact:true}).boundingBox()).width<390,'diálogo de post mantém dimensão própria');
+ assert.deepEqual(errors,[]);
 });
 
 test('consultar explorações mostra resultados confirmados, recusados e incertos sem gerar imagens', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, images} = await app(t);
   images.unshift({id:'00000000-0000-4000-8000-000000000094',project_id:projectId,state:'rejected',created_at:'2026-11-06T12:02:00Z',ordinal:3,batch_id:'00000000-0000-4000-8000-000000000093',batch_position:3});
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   await page.getByRole('button', {name: 'Consultar explorações', exact: true}).click();
   const gallery = page.getByRole('region', {name: 'Explorações de imagem', exact: true});
   await gallery.getByText('Resultado não confirmado.', {exact: true}).waitFor();
@@ -317,7 +314,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
     return route.fulfill({status:202,json:{status:'completed',text:`Resposta Outra ideia 3 ${'detalhe '.repeat(300)}`}});
   });
   await openProject(page, origin);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   const field = page.getByLabel('Sua mensagem', {exact: true});
   for (let index = 0; index < 3; index++) {
     await field.fill(`Outra ideia ${index}`);
@@ -346,6 +343,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
 test('referência escolhida preserva origem e acompanha o próximo turno da conversa', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors} = await app(t, {withReferences:true});
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -356,7 +354,7 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare essa referência.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare essa referência.',{exact:false}).waitFor();
@@ -374,10 +372,12 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
   await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
   await openProject(page, origin);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
+  await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -392,6 +392,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
   await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
   await recovery.waitFor({state:'detached'});
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   assert.deepEqual(errors,[]);
 });
@@ -399,6 +400,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
 test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, selectionSignals} = await app(t);
   await openProject(page, origin);
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   assert.equal(await gallery.getByText('Avaliar esta imagem').count(),0);
   await gallery.getByRole('button',{name:'Usar imagem 1 na conversa e na Direção'}).click();
@@ -407,7 +409,7 @@ test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: 
   assert.match(selectionSignals[0].id,/^[0-9a-f-]{36}$/);
   assert.deepEqual({...selectionSignals[0],id:'id-validado'},{id:'id-validado',projectId,imageId:'00000000-0000-4000-8000-000000000091',action:'selected',comment:'',supersedes:null});
   assert.equal(await gallery.getByRole('button',{name:'Imagem usada 1 na conversa e na Direção'}).isDisabled(),true);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
+  await connectKey(page);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare esta exploração.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare esta exploração.',{exact:false}).waitFor();
@@ -425,7 +427,7 @@ test('último lote aparece primeiro e ordinal não muda quando chegam imagens no
   const first='00000000-0000-4000-8000-000000000201',second='00000000-0000-4000-8000-000000000202';
   images.splice(0,images.length,item(3,second),item(2,first),item(1,first));
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Recolher conversa',exact:true}).click();
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).waitFor();
@@ -447,7 +449,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
   images.splice(0,images.length,item(103),item(102),item(101));
   paging.nextBeforeOrdinal=101;paging.older=[{...item(100),batch_id:'00000000-0000-4000-8000-000000000201'},{...item(99),batch_id:'00000000-0000-4000-8000-000000000201'}];
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Recolher conversa',exact:true}).click();
+  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 103 na conversa e na Direção'}).waitFor();
@@ -464,27 +466,11 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
   assert.deepEqual(errors,[]);
 });
 
-test('recuperação incerta e reconexão não encobrem o compositor em viewport baixo', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page, origin, errors} = await app(t);
-  await page.setViewportSize({width: 390, height: 400});
-  await openProject(page, origin);
-  await connectOwnOpenAiKey(page, `sk-synthetic-${'x'.repeat(30)}`);
-  await page.getByLabel('Sua mensagem', {exact:true}).fill('Quero divulgar uma aula de cerâmica.');
-  await page.getByRole('button',{name:'Enviar →',exact:true}).click();
-  await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
-  await page.getByRole('button',{name:'Gerenciar IA',exact:true}).click();
-  await page.getByRole('button',{name:'Remover chave'}).click();
-  await page.getByLabel('Chave OpenAI', {exact:true}).waitFor();
-  await page.getByRole('button',{name:'Continuar sem IA por enquanto',exact:true}).click();
-  await page.locator('.studio-conversation').evaluate(element => Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {}))));
-  await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
-  const bounds=await page.evaluate(() => {
-    const panel=document.querySelector('.studio-conversation').getBoundingClientRect();
-    const input=document.querySelector('#studio-chat-message').getBoundingClientRect();
-    const send=document.querySelector('form.studio-chat-composer button').getBoundingClientRect();
-    return {panel:panel.toJSON(),input:input.toJSON(),send:send.toJSON()};
-  });
-  assert.ok(bounds.input.top>=bounds.panel.top&&bounds.input.bottom<=bounds.panel.bottom);
-  assert.ok(bounds.send.top>=bounds.panel.top&&bounds.send.bottom<=bounds.panel.bottom);
-  assert.deepEqual(errors,[]);
+test('recuperação incerta e reconexão preservam compositor em viewport baixo',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const {page,origin,errors}=await app(t);await page.setViewportSize({width:390,height:400});await openProject(page,origin);await connectKey(page);
+ const field=await openConversation(page);await field.fill('Quero divulgar uma aula de cerâmica.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();await field.fill('Meu rascunho continua aqui');
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
+ await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByRole('button',{name:'Remover chave'}).click();await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
+ assert.equal(await field.inputValue(),'Meu rascunho continua aqui');await field.scrollIntoViewIfNeeded();
+ const send=page.getByRole('button',{name:'Enviar →',exact:true});await send.scrollIntoViewIfNeeded();const bounds=await send.boundingBox();assert.ok(bounds.y>=0&&bounds.y+bounds.height<=400);assert.deepEqual(errors,[]);
 });

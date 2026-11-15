@@ -1,4 +1,4 @@
-import {z} from 'zod';
+import * as z from 'zod';
 import {referenceSchema, type StudioReference, type StudioState, type StudioScope} from './studio-domain.ts';
 export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview'}
 export interface DraftAssetMetadata extends DraftAssetAddress {mime:string;size:number;width:number;height:number}
@@ -32,7 +32,7 @@ function checkGlobalBudget(references:StoredRecord[],assets:StoredRecord[],repla
 }
 
 /**
- * Browser-only content. IDB v2 retains the v1 state/reference stores and adds draft assets.
+ * Browser-only content. IDB v4 retains state/reference/draft asset stores and archives schemas 1 and 2 before their first converted save.
  * References and draft assets share an atomic 256 MiB / 500 blob budget for this database;
  * existing per-project reference limits still apply. Quota errors never evict content.
  * State is limited to 512 KiB per project, without a global project/state count limit.
@@ -48,8 +48,8 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     opening=new Promise<IDBDatabase>((resolve,reject)=>{
       let request:IDBOpenDBRequest,settled=false;
       const rejectOnce=(error:unknown)=>{if(!settled){settled=true;reject(storageError(error));}};
-      try{request=indexedDB.open(name,2);}catch(error){rejectOnce(error);return;}
-      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'scope'});if(!db.objectStoreNames.contains('references'))db.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('draftAssets'))db.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};
+      try{request=indexedDB.open(name,4);}catch(error){rejectOnce(error);return;}
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'scope'});if(!db.objectStoreNames.contains('legacyStates'))db.createObjectStore('legacyStates',{keyPath:'scope'});if(!db.objectStoreNames.contains('stateArchives'))db.createObjectStore('stateArchives',{keyPath:'key'});if(!db.objectStoreNames.contains('references'))db.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('draftAssets'))db.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};
       request.onerror=()=>rejectOnce(request.error);
       request.onblocked=()=>rejectOnce(new StudioStorageError('studio_storage_blocked'));
       request.onsuccess=()=>{const db=request.result;if(settled){db.close();return;}settled=true;connection=db;db.onversionchange=()=>{db.close();if(connection===db)connection=null;};resolve(db);};
@@ -81,13 +81,15 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     let state;try{state=parseStudioState(value);}catch{throw new StudioStorageError('studio_storage_invalid');}
     if(expectedRevision!==null && (typeof expectedRevision!=='number'||!Number.isSafeInteger(expectedRevision)||expectedRevision<0))throw new StudioStorageError('studio_storage_invalid');
     const scope=scopeOf(state);
-    return transaction(['states'],'readwrite',(tx,done,fail)=>{
+    return transaction(['states','legacyStates','stateArchives'],'readwrite',(tx,done,fail)=>{
       const store=tx.objectStore('states'),request=store.get(scope);
       request.onsuccess=()=>{
         try{
           const existing=readState(request.result,scope);
           if((existing?.revision??null)!==expectedRevision)throw new StudioStorageError('studio_storage_conflict',{currentRevision:existing?.revision});
           if(existing && state.revision<=existing.revision){if(JSON.stringify(existing)===JSON.stringify(state)){done(state);return;}throw new StudioStorageError('studio_storage_invalid');}
+          const previous=z.object({state:z.object({schemaVersion:z.number()}).passthrough()}).optional().parse(request.result);
+          if(previous&&[1,2].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
           store.put({scope,state});done(state);
         }catch(error){fail(error);}
       };
@@ -137,7 +139,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const scopeKey=scopeOf(scope),key=referenceKey(scopeKey,id);
     return transaction(['states','references'],'readwrite',(tx,done,fail)=>{
       const request=tx.objectStore('states').get(scopeKey);
-      request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||state.direction.criteria.some(item=>[item.example.referenceId,item.counterexample.referenceId].includes(id))||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
+      request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||[state.direction,...Object.values(state.posts).map(post=>post.direction)].some(direction=>direction.criteria.some(item=>[item.example.referenceId,item.counterexample.referenceId].includes(id)))||state.drafts.some(draft=>draft.creationContext?.references.some(reference=>reference.id===id))||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
     });
   }
   function putDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob}):Promise<DraftAssetMetadata> {

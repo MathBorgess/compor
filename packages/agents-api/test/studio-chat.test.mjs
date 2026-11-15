@@ -11,6 +11,26 @@ const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-422
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
 const request=(body,origin=app)=>new Request(app+'/api/studio/chat',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 const body={apiKey,projectId,requestId,message:'Atualize a oferta para oficina fictícia',context:{revision:1,pieceId:null,brief:{offer:'Oficina'}},history:[]};
+
+test('conversas do mesmo projeto não consultam nem reutilizam a sessão de outro post',async()=>{
+ const f=fixture(),first={...body,conversationId:attemptId,context:{...body.context,pieceId:attemptId}};
+ assert.equal((await f.chat(request(first))).status,202);
+ f.set({status:'idle',turnState:'completed'});
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).json()).status,'completed');
+ const before=f.calls.length;
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:request2}))).json()).status,'unknown');
+ assert.equal(f.calls.length,before,'a conversa incorreta não consulta o fornecedor');
+ const crossed=await(await f.chat(request({...first,requestId:request2,conversationId:request2,context:{...first.context,pieceId:request2},previousAttemptKey:requestId}))).json();
+ assert.equal(crossed.failurePhase,'before_submission');assert.equal(f.calls.length,before);
+ const same=await(await f.chat(request({...first,requestId:'66666666-6666-4666-8666-666666666666',previousAttemptKey:requestId}))).json();
+ assert.equal(same.sessionReused,true);
+});
+
+test('novo escopo não adota vínculo legado nem aceita post diferente do contexto',async()=>{
+ const f=fixture();await f.chat(request(body));const before=f.calls.length;
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).json()).status,'unknown');assert.equal(f.calls.length,before);
+ assert.equal((await f.chat(request({...body,requestId:request2,conversationId:attemptId,context:{...body.context,pieceId:request2}}))).status,400);assert.equal(f.calls.length,before);
+});
 function fixture(options={}){
  const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL,answer='Atualização concluída na aba.';
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
@@ -55,6 +75,16 @@ test('o contexto conserva estados dos fatos e deixa a escolha do público diverg
  const forwarded=JSON.parse(create.body.input[0].content[0].text).context;
  assert.deepEqual(forwarded.offerFacts,facts);assert.deepEqual(forwarded.audienceResolution,context.audienceResolution);
  assert.match(create.body.agent.instructions,/não escolha, una ou substitua os valores por suposição/);assert.match(create.body.agent.instructions,/Não apresente fatos pendentes como confirmados nem inclua os omitidos/);
+});
+test('contexto próprio do post é preservado e campos inválidos são recusados antes do fornecedor',async()=>{
+ const postContext={objective:'Autoridade',message:'Minha experiência',action:''},f=fixture();
+ assert.equal((await f.chat(request({...body,context:{...body.context,postContext}}))).status,202);
+ const create=f.calls.find(call=>call.method==='POST'&&call.url.endsWith('/sessions'));
+ assert.deepEqual(JSON.parse(create.body.input[0].content[0].text).context.postContext,postContext);
+ assert.match(create.body.agent.instructions,/um post de autoridade não precisa de chamada comercial/);
+ for(const invalid of [null,[],{...postContext,action:'sk-secret'},{...postContext,objective:1},{...postContext,action:'x'.repeat(4001)},{...postContext,authority:true}]){
+  const blocked=fixture();assert.equal((await blocked.chat(request({...body,context:{...body.context,postContext:invalid}}))).status,400);assert.deepEqual(blocked.calls,[]);assert.equal(blocked.records.size,0);
+ }
 });
 test('o servidor recusa fatos e resoluções adulterados antes de reservar ou chamar o fornecedor',async()=>{
  const fact={id:request2,label:'Preço',value:'R$ 180',status:'confirmed'};
@@ -190,6 +220,52 @@ test('rejeição definitiva permite novo pedido; resposta HTTP408 preserva a inc
  for(const [status,expected]of [[400,'failed'],[408,'unknown']]){
   const f=fixture({fetch:async()=>new Response(null,{status})});const result=await(await f.chat(request(body))).json();assert.equal(result.status,expected);assert.equal(f.records.get(requestId).state,expected);
  }
+});
+test('HTTP503 na criação preserva uma única tentativa incerta sem repetir o envio',async()=>{
+ const calls=[],f=fixture({fetch:async(url,init={})=>{calls.push({url,method:init.method??'GET'});return new Response(`PRIVATE_PROVIDER_BODY ${apiKey}`,{status:503});}});
+ const response=await f.chat(request(body)),result=await response.json();
+ assert.equal(response.status,202);assert.deepEqual(result,{status:'unknown',retryAutomatically:false,errorCode:'provider_http_503',phase:'provider_create',requestId,attemptId});
+ assert.equal(f.records.get(requestId).state,'unknown');assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY|sk-synthetic/);
+ const again=await(await f.chat(request(body))).json();assert.equal(again.status,'unknown');
+ assert.equal(calls.filter(call=>call.method==='POST'&&call.url.endsWith('/sessions')).length,1);
+});
+test('HTTP503 no poll mantém a prova da conversa e não inicia outro turno',async()=>{
+ let actor={userId,token:'jwt-synthetic'};const calls=[];
+ const f=fixture({resolveActor:async()=>actor,fetch:async(url,init={})=>{
+  calls.push({url,method:init.method??'GET'});
+  return init.method==='POST'?Response.json({id:'sess_one'},{status:201}):Response.json({error:{message:`PRIVATE_PROVIDER_BODY ${apiKey}`}},{status:503});
+ }});
+ const scoped={...body,conversationId:attemptId,context:{...body.context,pieceId:attemptId}};
+ assert.equal((await f.chat(request(scoped))).status,202);
+ const before=calls.length;
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:request2}))).json()).phase,'binding_verify');
+ actor={userId:request2,token:'other-jwt'};
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId}))).json()).phase,'binding_verify');
+ assert.equal(calls.length,before,'escopo e identidade diferentes não consultam o fornecedor');
+ actor={userId,token:'jwt-synthetic'};
+ const response=await f.chat(request({op:'poll',apiKey,projectId,requestId,conversationId:attemptId})),result=await response.json();
+ assert.equal(response.status,202);assert.equal(result.status,'unknown');assert.equal(result.phase,'session_lookup');assert.equal(result.errorCode,'provider_http_503');
+ assert.equal(result.attemptId,attemptId);assert.equal(result.sessionId,'sess_one');assert.equal(f.records.get(requestId).state,'running');
+ assert.equal(calls.filter(call=>call.method==='POST').length,1);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY|sk-synthetic/);
+});
+test('HTTP503 ao continuar sessão conserva a tentativa unknown e não repete o evento',async()=>{
+ const calls=[],f=fixture({fetch:async(url,init={})=>{
+  calls.push({url,method:init.method??'GET',headers:init.headers});
+  if(init.method==='POST'&&url.endsWith('/sessions'))return Response.json({id:'sess_one'},{status:201});
+  if(init.method==='POST'&&url.endsWith('/events'))return new Response(`PRIVATE_PROVIDER_BODY ${apiKey}`,{status:503});
+  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]});
+  if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:'turn_one',content:[{type:'output_text',text:'Resposta concluída.'}]}]});
+  return Response.json({id:'sess_one',agent:{model:AGENT_MODEL,tools:AGENT_STUDIO_TOOLS},status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
+ }});
+ await f.chat(request(body));assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
+ const next={...body,requestId:request2,previousAttemptKey:requestId,message:'Outra mensagem'};
+ const response=await f.chat(request(next)),result=await response.json();
+ assert.equal(response.status,202);assert.equal(result.status,'unknown');assert.equal(result.phase,'provider_message');assert.equal(result.errorCode,'provider_http_503');
+ assert.equal(f.records.get(request2).state,'unknown');assert.equal(calls.filter(call=>call.method==='POST'&&call.url.endsWith('/events')).length,1);
+ assert.equal(calls.find(call=>call.method==='POST'&&call.url.endsWith('/events')).headers['Idempotency-Key'],request2);
+ await f.chat(request(next));assert.equal(calls.filter(call=>call.method==='POST'&&call.url.endsWith('/events')).length,1);
+ assert.equal(calls.filter(call=>call.method==='POST'&&call.url.endsWith('/sessions')).length,1);
+ assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY|sk-synthetic/);
 });
 test('resultado persistente só continua se o servidor comprovar peça e versão',async()=>{
  const f=fixture({verifyDurableResult:async()=>false});await f.chat(request(body));f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_salvar_versao',turn_id:'turn_one',call_id:'call_save',arguments:{projectId,requestId,revision:1,pieceId:request2,baseVersion:0,expectedLatestVersion:0}}]});

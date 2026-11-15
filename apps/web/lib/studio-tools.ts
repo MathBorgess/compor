@@ -1,7 +1,7 @@
 import type {ActionInputByName,StudioActionName,StudioAction,StudioTool} from '@compor/agents-api/studio-chat-tools';
 import type {ActionResult,ActionReceipt} from './studio-domain.ts';
-export type StudioHandlers = {[Name in StudioActionName]?: (input:ActionInputByName[Name],context:{signal?:AbortSignal})=>ActionResult|Promise<ActionResult>};
-export interface StudioModelContext {registerTool:(tool:StudioTool & {execute:(input:unknown,context:{signal?:AbortSignal})=>Promise<ActionResult>},options:{signal:AbortSignal})=>unknown|Promise<unknown>}
+export type StudioHandlers = {[Name in StudioActionName]?: (input:ActionInputByName[Name],context:{signal?:AbortSignal;conversationId?:string})=>ActionResult|Promise<ActionResult>};
+export interface StudioModelContext {registerTool:(tool:StudioTool & {execute:(input:unknown,context:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>},options:{signal:AbortSignal})=>unknown|Promise<unknown>}
 interface StudioToolsOptions {getScope?:()=>{userId:string|null;projectId:string;revision:number}|null;handlers?:StudioHandlers;confirm?:(action:{name:StudioActionName;args:StudioAction})=>Promise<boolean>;getReceipt?:(requestId:string)=>ActionReceipt|null|undefined;canRecord?:(requestId:string)=>boolean;saveReceipt?:(receipt:ActionReceipt)=>Promise<ActionResult|void>}
 import {
   STUDIO_TOOLS,
@@ -33,12 +33,12 @@ export function createStudioTools({
     registrations = new Set<AbortController>();
   let busy = false,
     disposed = false;
-  async function execute(name:string, input:unknown, options:{signal?:AbortSignal} = {}):Promise<ActionResult> {
+  async function execute(name:string, input:unknown, options:{signal?:AbortSignal;conversationId?:string} = {}):Promise<ActionResult> {
     const definition=STUDIO_TOOLS.find(tool=>tool.name===name);
     if(!definition)throw Error("action_unavailable");
     return executeNamed(definition.name,input,options);
   }
-  async function executeNamed<Name extends StudioActionName>(name:Name, input:unknown, { signal }:{signal?:AbortSignal} = {}):Promise<ActionResult> {
+  async function executeNamed<Name extends StudioActionName>(name:Name, input:unknown, { signal,conversationId }:{signal?:AbortSignal;conversationId?:string} = {}):Promise<ActionResult> {
     const tool = STUDIO_TOOLS.find((item) => item.name === name);
     if (!tool || disposed || signal?.aborted) throw Error("action_unavailable");
     const args = parseStudioAction(name, input),
@@ -50,7 +50,7 @@ export function createStudioTools({
     )
       throw Error("context_unavailable");
     const canonical = JSON.stringify([
-      name,
+      name,...(conversationId?[conversationId]:[]),
       ...Object.keys(tool.inputSchema.properties)
         .sort()
         .map((key) => [key, Reflect.get(args,key)]),
@@ -110,7 +110,7 @@ export function createStudioTools({
       const reserved=await record({ status: "unknown" });
       const afterReservation=readScope();
       if(disposed||signal?.aborted||afterReservation?.userId!==scope.userId||afterReservation?.projectId!==scope.projectId||afterReservation?.revision!==(reserved.revision??latest.revision))throw Error("context_changed");
-      const result = await handler(args, { signal });
+      const result = await handler(args, { signal,conversationId });
       if (
         !result ||
         !["completed", "pending_confirmation", "unknown"].includes(

@@ -5,7 +5,7 @@ import { searchReferences } from './reference-exploration.ts';
 
 const searchInput=z.strictObject({projectId:z.uuid(),query:z.string().trim().min(1).max(1000),consentExternalSearch:z.literal(true)});
 const signalInput=referenceSignalInputSchema;
-type Store={list:(projectId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:(projectId:string)=>Promise<ReferenceHistoryEntry[]>};
+type Store={list:(projectId?:string,pieceId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:(projectId:string)=>Promise<ReferenceHistoryEntry[]>};
 type Dependencies={appOrigin:string;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:(actor:Actor)=>Store;search?:typeof searchReferences};
 const reply=(body:unknown,status=200)=>Response.json(body,{status,headers:{'Cache-Control':'no-store','Referrer-Policy':'no-referrer'}});
 async function json(request:Request) {
@@ -50,16 +50,16 @@ export function createReferenceHistoryRoute(deps:Dependencies) {
 export function createReferenceSignalsRoute(deps:Dependencies) {
   return async(request:Request)=>{
     let raw:unknown;try{raw=await json(request);}catch{return reply({error:'invalid_request'},400);}
-    const read=z.strictObject({projectId:z.uuid(),scope:z.enum(['project','account']).optional()}).safeParse(raw);
+    const read=z.strictObject({projectId:z.uuid(),pieceId:z.uuid().optional(),scope:z.enum(['project','account']).optional()}).safeParse(raw);
     const input=signalInput.safeParse(raw);
     if(!read.success&&!input.success)return reply({error:'invalid_request'},400);
     try {
       const projectId=read.success?read.data.projectId:input.success?input.data.projectId:'';
       const actor=await authorize(request,deps,projectId);if(!actor)return reply({error:'not_found'},404);
       const store=deps.store(actor);
-      if(read.success)return reply({signals:(await store.list(read.data.scope==='account'?undefined:projectId)).map(value=>referenceSignalSchema.parse(value))});
+      if(read.success)return reply({signals:(await store.list(read.data.scope==='account'?undefined:projectId,read.data.scope==='account'?undefined:read.data.pieceId)).map(value=>referenceSignalSchema.parse(value)).filter(value=>value.pieceId===(read.data.scope==='account'?undefined:read.data.pieceId))});
       if(!input.success)return reply({error:'invalid_request'},400);
-      if(input.data.supersedes){const previous=(await store.list(projectId)).find(item=>item.id===input.data.supersedes);if(!previous||previous.originUrl!==input.data.originUrl||previous.board!==input.data.board||(previous.action==='comment')!==(input.data.action==='comment'))return reply({error:'invalid_correction'},409);}
+      if(input.data.supersedes){const previous=(await store.list(projectId,input.data.pieceId)).find(item=>item.id===input.data.supersedes);if(!previous||previous.pieceId!==input.data.pieceId||previous.originUrl!==input.data.originUrl||previous.board!==input.data.board||(previous.action==='comment')!==(input.data.action==='comment'))return reply({error:'invalid_correction'},409);}
       return reply({signal:referenceSignalSchema.parse(await store.insert(input.data))},201);
     } catch {return reply({error:'unavailable'},503);}
   };

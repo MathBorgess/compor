@@ -1,7 +1,7 @@
 'use client';
 import {useEffect,useState} from 'react';
 import { uuid } from './studio-ui-types';
-import { z } from 'zod';
+import * as z from 'zod';
 const assetsSchema=z.object({assets:z.array(z.object({assetId:z.string(),origin:z.literal('unknown')})),nextCursor:z.string().nullable()});
 
 // References are hints, not authorization or provenance. Each PNG is fetched separately.

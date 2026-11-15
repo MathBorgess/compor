@@ -4,6 +4,19 @@ import { createSessionBindings } from '../src/session-binding.mjs';
 import { createProjectAgentHandler } from '../src/project-route.mjs';
 const userId = '11111111-1111-4111-8111-111111111111', projectId = '22222222-2222-4222-8222-222222222222', attemptId = '33333333-3333-4333-8333-333333333333', idempotencyKey = '44444444-4444-4444-8444-444444444444';
 const apiKey = 'sk-test-secret-123456789012345';
+
+test('recovery proof signs the conversation without changing historical proofs',()=>{
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,17)}),scope={userId,projectId,attemptId,sessionId:'sess_scoped'};
+ for(const conversationId of [undefined,'references',idempotencyKey]){
+  const input={...scope,...(conversationId?{conversationId}:{})},token=bindings.issueRecovery(input);
+  assert.deepEqual(bindings.verifyRecovery({token,userId,projectId,attemptId}),input);
+  const [prefix,payload,signature]=token.split('.'),claim=JSON.parse(Buffer.from(payload,'base64url'));
+  claim.conversationId='55555555-5555-4555-8555-555555555555';
+  const changed=Buffer.from(JSON.stringify(claim)).toString('base64url');
+  assert.equal(bindings.verifyRecovery({token:`${prefix}.${changed}.${signature}`,userId,projectId,attemptId}),null);
+ }
+ assert.throws(()=>bindings.issueRecovery({...scope,conversationId:'outro-post'}));
+});
 const req = (extra = {}) => new Request('https://compor.test/api/agent', { method: 'POST', headers: { origin: 'https://compor.test', 'content-type': 'application/json', 'x-compor-project-id': projectId, 'x-compor-attempt-id': idempotencyKey }, body: JSON.stringify({ apiKey, objective: 'Teste', sessionId: 'sess_browser_forged', userId: '55555555-5555-4555-8555-555555555555', ...extra }) });
 
 test('vínculo assinado vem da resposta OpenAI e pertence à conta, projeto e tentativa', async () => {

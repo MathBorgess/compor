@@ -1,0 +1,26 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import {fileURLToPath} from 'node:url';
+import {createServer} from 'node:http';
+import {build} from 'esbuild';
+import {chromium} from 'playwright-core';
+const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+test('disponibilidade atrasada não reativa outra conta ou conexão e desmontagem não lança AbortError',{skip:!existsSync(browserPath)},async t=>{
+ const result=await build({stdin:{contents:`import {StrictMode,useState} from 'react';import {createRoot} from 'react-dom/client';import {useAICredentials} from './use-ai-credentials';
+ function Fixture(){const[user,setUser]=useState('alice'),[connected,setConnected]=useState(true);const credentials=useAICredentials(user,connected);return <><button onClick={()=>setUser(value=>value==='alice'?'bob':'alice')}>Trocar conta</button><button onClick={()=>setConnected(value=>!value)}>Conectar ou desconectar</button><button onClick={credentials.useAI}>Ativar IA</button><output>{JSON.stringify({user,connected,available:credentials.defaultAvailable,active:credentials.hasApiKey})}</output></>;}createRoot(document.getElementById('root')).render(<StrictMode><Fixture/></StrictMode>);`,resolveDir:fileURLToPath(new URL('../app/',import.meta.url)),loader:'tsx'},bundle:true,write:false,format:'esm',platform:'browser',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'}});
+ const server=createServer((req,res)=>{res.setHeader('content-type',req.url==='/bundle.js'?'text/javascript':'text/html');res.end(req.url==='/bundle.js'?result.outputFiles[0].text:'<!doctype html><div id="root"></div><script type="module" src="/bundle.js"></script>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage(),errors=[],reads=[];
+ page.on('pageerror',error=>errors.push(error.message));await page.exposeFunction('rejection',reason=>errors.push(reason));await page.addInitScript(()=>window.addEventListener('unhandledrejection',event=>window.rejection(event.reason?.name)));
+ await page.route('**/api/ai/credential-status',route=>{reads.push(route);});
+ const output=()=>page.locator('output').textContent().then(JSON.parse);
+ const waitReads=async count=>{for(let i=0;i<100&&reads.length<count;i++)await page.waitForTimeout(20);assert.ok(reads.length>=count);};
+ await page.goto(`http://127.0.0.1:${server.address().port}`);await waitReads(2);
+ await page.getByRole('button',{name:'Ativar IA'}).click();await page.getByRole('button',{name:'Trocar conta'}).click();await waitReads(3);
+ for(const route of reads.slice(0,2))await route.fulfill({json:{defaultAvailable:true}});
+ await page.waitForTimeout(50);assert.deepEqual(await output(),{user:'bob',connected:true,available:false,active:false});
+ await page.getByRole('button',{name:'Conectar ou desconectar'}).click();await reads[2].fulfill({json:{defaultAvailable:true}});await page.waitForTimeout(50);assert.equal((await output()).available,false);
+ await page.getByRole('button',{name:'Conectar ou desconectar'}).click();await waitReads(4);await reads[3].fulfill({json:{defaultAvailable:true}});await page.waitForFunction(()=>JSON.parse(document.querySelector('output').textContent).available);assert.equal((await output()).active,false,'disponibilidade não autoriza gerar');
+ assert.deepEqual(errors,[]);
+});

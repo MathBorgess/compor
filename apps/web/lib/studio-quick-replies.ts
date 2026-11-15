@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import type { StudioMessage } from './studio-domain.ts';
 
 /** Closed, versioned contract for structured replies in the studio chat.
@@ -51,7 +51,7 @@ const entrySchema = z.strictObject({
 });
 export type QuickReplyEntry = z.infer<typeof entrySchema>;
 const MAX_ENTRIES = 12;
-export const quickReplyKey = (userId: string, projectId: string) => `compor-quick-replies:v1:${userId}:${projectId}`;
+export const quickReplyKey = (userId: string, projectId: string, conversationId?:string) => `compor-quick-replies:v1:${userId}:${projectId}${conversationId?':'+conversationId:''}`;
 
 /** Each entry is validated alone: a defective entry only falls back to the message text. */
 export function readQuickReplies(storage: Pick<Storage, 'getItem'>, key: string): QuickReplyEntry[] {

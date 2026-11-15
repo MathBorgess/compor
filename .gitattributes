@@ -5,3 +5,10 @@ docs/evals/model-efficiency/metrics-*.json linguist-generated=true
 docs/evals/model-efficiency/judge-*.json linguist-generated=true
 docs/evals/model-efficiency/results.json linguist-generated=true
 prototypes/compor-mcp/evals/model-efficiency/e3/transport-probe*/** linguist-generated=true
+
+# Preserve the byte hashes recorded in the third-party provenance manifest on Windows.
+third_party/** text eol=lf
+
+# Migration/deploy generators compare canonical Git bytes; SQL guards and shell scripts use LF.
+scripts/** text eol=lf
+supabase/** text eol=lf

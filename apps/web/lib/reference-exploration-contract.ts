@@ -1,4 +1,4 @@
-import { z } from 'zod';
+import * as z from 'zod';
 import { boardSlugSchema } from './phoenix/catalog.ts';
 
 export const pinOriginSchema = z.string().max(300).refine(value => {
@@ -13,7 +13,7 @@ export const referenceSearchResponseSchema = z.strictObject({ status: z.enum(['o
 export const referenceHistoryEntrySchema = exploredReferenceSchema.extend({approvedVersions:z.number().int().min(0).max(2147483647),selectedAt:z.iso.datetime({offset:true})});
 export type ReferenceHistoryEntry = z.infer<typeof referenceHistoryEntrySchema>;
 export const referenceHistoryResponseSchema = z.strictObject({references:z.array(referenceHistoryEntrySchema).max(100)});
-const signalShape = {id:z.uuid(),projectId:z.uuid(),originUrl:pinOriginSchema,board:boardSlugSchema,action:z.enum(['selected','rejected','comment']),comment:z.string().trim().max(1000),supersedes:z.uuid().nullable(),reference:exploredReferenceSchema.optional()};
+const signalShape = {id:z.uuid(),projectId:z.uuid(),pieceId:z.uuid().optional(),originUrl:pinOriginSchema,board:boardSlugSchema,action:z.enum(['selected','rejected','comment']),comment:z.string().trim().max(1000),supersedes:z.uuid().nullable(),reference:exploredReferenceSchema.optional()};
 function validSignal(value:z.infer<z.ZodObject<typeof signalShape>>,ctx:z.RefinementCtx) {
   if(value.action==='comment' && !value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});
   if(value.reference && (value.action!=='selected'||value.reference.originUrl!==value.originUrl||value.reference.board!==value.board||value.reference.originUrl!==`https://www.pinterest.com/pin/${value.reference.id}/`))ctx.addIssue({code:'custom',message:'Referência não corresponde à seleção'});

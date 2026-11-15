@@ -47,6 +47,7 @@ export type StudioShellProps = {
   viewingArt?: boolean;
   onCloseArt?: () => void;
   onLayoutChange?: (layout: StudioLayout) => void;
+  guided?:boolean;
 };
 const stageTitles: Partial<Record<StudioStage, string>> = {
   projects: "Seus projetos",
@@ -99,6 +100,7 @@ export default function StudioShell({
   viewingArt = false,
   onCloseArt,
   onLayoutChange,
+  guided = false,
 }: StudioShellProps) {
   const renameId = useId();
   const menuRef = useRef<HTMLDivElement>(null);
@@ -169,7 +171,7 @@ export default function StudioShell({
   const layoutListener = useRef(onLayoutChange);
   layoutListener.current = onLayoutChange;
   const isStudio = stage === "studio";
-  const showChrome = bases != null || marca != null;
+  const showChrome = !guided && (bases != null || marca != null);
   const showChat = Boolean(chat) && isStudio;
   const referenceWorkspace = showChat && conversationFocus;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -340,6 +342,7 @@ export default function StudioShell({
   return (
     <div
       className="compor-studio"
+      data-guided={guided?'true':undefined}
       data-stage={stage}
       data-conversation-focus={conversationFocus ? "true" : "false"}
       data-chat-presentation={referenceWorkspace ? "sidebar" : "floating"}

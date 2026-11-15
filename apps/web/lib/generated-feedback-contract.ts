@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import * as z from 'zod';
 const safeText=z.string().trim().max(1000).refine(value=>!/[\u0000-\u0008\u000b-\u001f\u007f]|sk-[^\s]+/i.test(value));
 export const explorationPlanSchema=z.strictObject({composition:safeText.min(1).max(300),contrast:safeText.min(1).max(300)});
-export const generatedSignalInputSchema=z.strictObject({id:z.uuid(),projectId:z.uuid(),imageId:z.uuid(),action:z.enum(['selected','rejected','comment']),comment:safeText,supersedes:z.uuid().nullable()}).superRefine((value,ctx)=>{if(value.action==='comment'&&!value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});});
-export const generatedSignalSchema=z.strictObject({id:z.uuid(),projectId:z.uuid(),imageId:z.uuid(),action:z.enum(['selected','rejected','comment']),comment:safeText,supersedes:z.uuid().nullable(),createdAt:z.iso.datetime({offset:true}),plan:explorationPlanSchema.nullable()});
+export const generatedSignalInputSchema=z.strictObject({id:z.uuid(),projectId:z.uuid(),pieceId:z.uuid().optional(),imageId:z.uuid(),action:z.enum(['selected','rejected','comment']),comment:safeText,supersedes:z.uuid().nullable()}).superRefine((value,ctx)=>{if(value.action==='comment'&&!value.comment)ctx.addIssue({code:'custom',message:'Comentário vazio'});});
+export const generatedSignalSchema=z.strictObject({id:z.uuid(),projectId:z.uuid(),pieceId:z.uuid().optional(),imageId:z.uuid(),action:z.enum(['selected','rejected','comment']),comment:safeText,supersedes:z.uuid().nullable(),createdAt:z.iso.datetime({offset:true}),plan:explorationPlanSchema.nullable()});
 export const generatedSignalsSchema=z.strictObject({signals:z.array(generatedSignalSchema).max(500)});
 export type GeneratedSignal=z.infer<typeof generatedSignalSchema>;
 export type ExplorationPlan=z.infer<typeof explorationPlanSchema>;
