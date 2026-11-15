@@ -113,7 +113,7 @@ export function createStudioTools({
       const result = await handler(args, { signal,conversationId });
       if (
         !result ||
-        !["completed", "pending_confirmation", "unknown"].includes(
+        !["completed", "declined", "pending_confirmation", "unknown"].includes(
           result.status,
         )
       )

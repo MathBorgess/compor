@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
 import {explorationCandidateSchema,type StudioState} from './studio-domain.ts';
 import {getCurrentDraft,changeStudioState,StudioStateError} from './studio-state.ts';
 import {freezeCreationContext} from './studio-post-context.ts';
@@ -6,7 +6,7 @@ import type {createStudioStorage} from './studio-storage.ts';
 
 type Candidate=z.infer<typeof explorationCandidateSchema>;
 type Repository=Pick<ReturnType<typeof createStudioStorage>,'getDraftAsset'|'putDraftAsset'>;
-const listing=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(['running','completed','unknown','rejected']),ordinal:z.number().int().positive()})).max(100),nextBeforeOrdinal:z.number().int().positive().nullable().optional()});
+const listing=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(['running','completed','unknown','rejected']),ordinal:z.number().check(z.int()).check(z.positive())})).check(z.maxLength(100)),nextBeforeOrdinal:z.optional(z.nullable(z.number().check(z.int()).check(z.positive())))});
 
 export async function confirmedExploration(projectId:string,imageId:string,fetcher:typeof fetch=fetch,expectedOrdinal?:number):Promise<Candidate> {
   let cursor=expectedOrdinal===undefined?undefined:expectedOrdinal+1;
@@ -32,7 +32,7 @@ export function recordCompletedExploration(state:StudioState,conversationId:stri
 }
 function eligible(state:StudioState,conversationId:string) {
   const draft=getCurrentDraft(state);
-  return draft&&draft.baseVersion===0&&draft.expectedLatestVersion===0&&!draft.dirty&&draft.approval.status==='unapproved'&&
+  return draft&&draft.pieceId!==state.workflow.referencePieceId&&draft.baseVersion===0&&draft.expectedLatestVersion===0&&!draft.dirty&&draft.approval.status==='unapproved'&&
     (conversationId==='references'||conversationId===draft.pieceId)&&
     !state.drafts.some(item=>item.pieceId===draft.pieceId&&item.baseVersion>0)&&
     !Object.entries(draft.content).some(([key,value])=>key==='fields'?Array.isArray(value)&&value.length>0:key!=='captionOrigin'&&typeof value==='string'&&value.trim());

@@ -338,8 +338,9 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(claim.status!=='claimed')return claim.status==='conflict'?reply({status:'conflict',retryAutomatically:false},409):unknownReply(d);
    if(body.result.status==='unknown'){d.phase='action_local_unknown';await store.finishAction({...scope,submissionId:claim.id,state:'unknown'});await state(scope,record,'unknown');return unknownReply(d);}
    let response;
+   const declinedError=signed.name==='compor_novo_post'?'A criação ainda não aconteceu. A pessoa precisa informar o nome e confirmar no formulário aberto. Aguarde essa confirmação e não execute outras ações neste turno.':'A pessoa recusou esta ação. Não a execute.';
    d.phase='action_result_send';
-   try{response=await fetchApi(`${ROOT}/${signed.sessionId}/events`,{method:'POST',headers:headers(body.apiKey,{'Content-Type':'application/json','Idempotency-Key':claim.id}),body:JSON.stringify({events:[{type:'agent.session.input.tool_result',turn_id:signed.turnId,call_id:signed.callId,success:body.result.status==='completed',...(body.result.status==='completed'?{output:JSON.stringify(body.result)}:{error:'A pessoa recusou esta ação. Não a execute.'})}]}),redirect:'error',signal:AbortSignal.timeout(15000)});
+   try{response=await fetchApi(`${ROOT}/${signed.sessionId}/events`,{method:'POST',headers:headers(body.apiKey,{'Content-Type':'application/json','Idempotency-Key':claim.id}),body:JSON.stringify({events:[{type:'agent.session.input.tool_result',turn_id:signed.turnId,call_id:signed.callId,success:body.result.status==='completed',...(body.result.status==='completed'?{output:JSON.stringify(body.result)}:{error:declinedError})}]}),redirect:'error',signal:AbortSignal.timeout(15000)});
     if(!response.ok)throw providerFailure(response.status);
    }catch(error){await store.finishAction({...scope,submissionId:claim.id,state:'unknown'});await state(scope,record,'unknown');return unknownReply(d,error);}
    finally{try{Promise.resolve(response?.body?.cancel()).catch(()=>{});}catch{}}

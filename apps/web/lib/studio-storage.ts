@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
 import {referenceSchema, type StudioReference, type StudioState, type StudioScope} from './studio-domain.ts';
 export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview'}
 export interface DraftAssetMetadata extends DraftAssetAddress {mime:string;size:number;width:number;height:number}
@@ -69,7 +69,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     });
   };
   const readState=(input:unknown,scope:string):StudioState|null=>{
-    const record=z.object({scope:z.string(),state:z.unknown()}).optional().parse(input);
+    const record=z.optional(z.object({scope:z.string(),state:z.unknown()})).parse(input);
     if(record===undefined)return null;
     try{if(record.scope!==scope)throw Error();const state=parseStudioState(record.state);if(scopeOf(state)!==scope)throw Error();return state;}catch{throw new StudioStorageError('studio_storage_corrupt');}
   };
@@ -88,7 +88,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
           const existing=readState(request.result,scope);
           if((existing?.revision??null)!==expectedRevision)throw new StudioStorageError('studio_storage_conflict',{currentRevision:existing?.revision});
           if(existing && state.revision<=existing.revision){if(JSON.stringify(existing)===JSON.stringify(state)){done(state);return;}throw new StudioStorageError('studio_storage_invalid');}
-          const previous=z.object({state:z.object({schemaVersion:z.number()}).passthrough()}).optional().parse(request.result);
+          const previous=z.optional(z.object({state:z.catchall(z.object({schemaVersion:z.number()}),z.unknown())})).parse(request.result);
           if(previous&&[1,2].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
           store.put({scope,state});done(state);
         }catch(error){fail(error);}

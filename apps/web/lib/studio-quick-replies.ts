@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
 import type { StudioMessage } from './studio-domain.ts';
 
 /** Closed, versioned contract for structured replies in the studio chat.
@@ -9,9 +9,9 @@ import type { StudioMessage } from './studio-domain.ts';
 export const TASTE_REPLY_VERSION = 1;
 const LIMITS = Object.freeze({ field: 1200, synthesis: 80, label: 40, description: 140 });
 const secret = /sk-[^\s]+/i;
-const longText = z.string().trim().min(1).max(LIMITS.field).refine(value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) && !secret.test(value));
+const longText = z.string().check(z.trim()).check(z.minLength(1)).check(z.maxLength(LIMITS.field)).check(z.refine(value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value) && !secret.test(value)));
 // Mirrors the server: plain text without questions, links, Markdown/HTML punctuation or control characters.
-const shortText = (limit: number) => z.string().trim().min(1).max(limit).refine(value => !/[\u0000-\u001f\u007f-\u009f<>*_`#[\]|\\?{}]/u.test(value) && !/https?:|www\.|sk-/i.test(value));
+const shortText = (limit: number) => z.string().check(z.trim()).check(z.minLength(1)).check(z.maxLength(limit)).check(z.refine(value => !/[\u0000-\u001f\u007f-\u009f<>*_`#[\]|\\?{}]/u.test(value) && !/https?:|www\.|sk-/i.test(value)));
 const optionSchema = z.discriminatedUnion('intent', [
   z.strictObject({ id: z.literal('agree'), intent: z.literal('agree'), label: z.literal('Concordo') }),
   z.strictObject({ id: z.enum(['prefer_1', 'prefer_2']), intent: z.literal('prefer'), label: shortText(LIMITS.label), description: shortText(LIMITS.description) }),
@@ -25,29 +25,29 @@ export const tasteReplySchema = z.strictObject({
   reading: longText,
   recommendation: longText,
   question: longText,
-  synthesis: shortText(LIMITS.synthesis).optional(),
-  options: z.array(optionSchema).min(2).max(4),
-}).superRefine((value, context) => {
+  synthesis: z.optional(shortText(LIMITS.synthesis)),
+  options: z.array(optionSchema).check(z.minLength(2)).check(z.maxLength(4)),
+}).check(z.superRefine((value, context) => {
   const ids = value.options.map(option => option.id), labels = value.options.map(option => option.label.toLocaleLowerCase('pt-BR'));
   const preferences = value.options.filter(option => option.intent === 'prefer').map(option => option.id);
   const ordered = ids[0] === 'agree' && ids[ids.length - 1] === 'adjust' && preferences.every((id, index) => id === `prefer_${index + 1}`) && ids.length === preferences.length + 2;
   if (!ordered || new Set(labels).size !== labels.length) context.addIssue({ code: 'custom', message: 'invalid options' });
-});
+}));
 export type TasteReply = z.infer<typeof tasteReplySchema>;
 export function parseTasteReply(value: unknown): TasteReply | null {
   const parsed = tasteReplySchema.safeParse(value);
   return parsed.success ? parsed.data : null;
 }
 
-const uuid = z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+const uuid = z.string().check(z.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i));
 const entrySchema = z.strictObject({
   messageId: uuid,
   requestId: uuid,
-  fingerprint: z.string().max(4000),
-  context: z.string().regex(/^[0-9a-f]{64}$/),
-  epoch: z.string().min(1).max(200),
+  fingerprint: z.string().check(z.maxLength(4000)),
+  context: z.string().check(z.regex(/^[0-9a-f]{64}$/)),
+  epoch: z.string().check(z.minLength(1)).check(z.maxLength(200)),
   reply: tasteReplySchema,
-  answer: z.strictObject({ optionId: z.enum(['agree', 'prefer_1', 'prefer_2']), userMessageId: uuid }).nullable(),
+  answer: z.nullable(z.strictObject({ optionId: z.enum(['agree', 'prefer_1', 'prefer_2']), userMessageId: uuid })),
 });
 export type QuickReplyEntry = z.infer<typeof entrySchema>;
 const MAX_ENTRIES = 12;

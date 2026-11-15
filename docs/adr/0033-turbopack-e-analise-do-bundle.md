@@ -30,6 +30,14 @@ As seis skills do Next publicadas pela Vercel ficam no projeto, em `.claude/skil
 
 ## Limites
 
+### Medição da integração de referências em 15/11/2026
+
+A bancada com o PR 52 ultrapassou o orçamento: 306.853 bytes gzip de JavaScript em todos os chunks do build. A análise completa dos 36 caminhos identificou o runtime clássico do Zod entre os módulos de cliente; as definições de ferramentas WebMCP continuam necessárias no navegador e foram preservadas.
+
+Os donos dos schemas usados pelo cliente passaram aos builders funcionais de `zod/mini`, da versão já instalada, mantendo validação em runtime, limites, objetos estritos, refinamentos, defaults e mensagens em inglês. Os adaptadores de schema importam somente o locale inglês. Não foram acrescentadas dependências nem removidos os schemas de ferramentas. Servidores que precisam do conversor JSON Schema continuam usando a entrada clássica correspondente.
+
+Snapshots exportados `references-combined-before-01a1e14c-01` e `references-combined-mini-final-01a1e14c-01`: bytes atribuídos de cliente 384.410 → 373.679; gzip real dos chunks 306.853 → 297.755, redução de 9.098 bytes (2,96%). As duas métricas têm escopos próprios e não devem ser somadas. A evidência local e seus limites ficam no [relatório da integração](../quality/references-workbench-2026-11-15.md).
+
 O analisador informa bytes comprimidos atribuídos por módulo, não transferência medida nem economia prevista. Seus totais não equivalem ao gzip por arquivo do gate: 347.426 bytes atribuídos contra 294.602 medidos pelo gate no mesmo build.
 
 O analisador não mede tempo de execução. A tarefa longa da entrada vinha da inicialização do App Router e do React. Uma página sem componentes de cliente manteve a mesma tarefa, e reduzir bytes não removeria esse custo. O [ADR 0034](0034-entrada-leve-sem-runtime.md) trata a entrada.

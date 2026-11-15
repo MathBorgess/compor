@@ -4,7 +4,7 @@ import { createStudioState, type StudioState, type StudioScope } from "../lib/st
 import { createStudioStorage } from "../lib/studio-storage.ts";
 import { createStudioStateWriter } from "../lib/studio-state-writer.ts";
 
-export function useStudioState({ userId, projectId, projectTitleProvisional = false,projectIdea='' }: StudioScope & {projectTitleProvisional?:boolean;projectIdea?:string}) {
+export function useStudioState({ userId, projectId, projectTitleProvisional = false,projectIdea='',prepare=false }: StudioScope & {projectTitleProvisional?:boolean;projectIdea?:string;prepare?:boolean}) {
   const [state, setState] = useState<StudioState|null>(null),
     [error, setError] = useState(""),
     [loading, setLoading] = useState(true);
@@ -47,8 +47,9 @@ export function useStudioState({ userId, projectId, projectTitleProvisional = fa
     const ready = load
       .then((saved) => {
         if (active.current !== record) return;
-        const value = saved ?? createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare:projectTitleProvisional });
+        const value = saved ?? createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare });
         initialize(value, saved?.revision ?? null);
+        if(!saved&&prepare&&record.writer){record.writer.enqueue(value);void record.writer.flush().catch(()=>{});}
         if (!record.repo)
           setError(
             "Armazenamento local indisponível. O trabalho ficará somente em memória.",
@@ -56,7 +57,7 @@ export function useStudioState({ userId, projectId, projectTitleProvisional = fa
       })
       .catch(() => {
         if (active.current !== record) return;
-        const value = createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare:projectTitleProvisional });
+        const value = createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare });
         initialize(value, null);
         setError(
           "Não foi possível abrir o trabalho local. Evite fechar esta aba.",

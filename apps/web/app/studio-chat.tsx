@@ -1,6 +1,7 @@
 "use client";
 import {conversationContext,postContext} from '../lib/studio-post-context';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
+import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import Markdown from "markdown-to-jsx";
@@ -96,7 +97,8 @@ export default function StudioChat({
   allowReferenceAnalysis = true,
   intro = false,
   referenceWorkbench = false,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean;referenceWorkbench?:boolean }) {
+  portalTarget,
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean;referenceWorkbench?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
@@ -118,6 +120,7 @@ export default function StudioChat({
   function setMessage(value:string){setMessageState(value);if(onMessageDraftChange)onMessageDraftChange(value);else if(conversationId)ownedDraft.setValue(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
   const [detailsVisible,setDetailsVisible]=useState(!referenceWorkbench);
+  useEffect(()=>{if(referenceWorkbench)setDetailsVisible(false);},[referenceWorkbench]);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
@@ -170,8 +173,11 @@ export default function StudioChat({
   const sourceMismatch=Boolean(pending&&pendingSource&&pendingSource!==credentialSource);
   const authenticationNotice=credentialSource==='default'?'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.':openAIAuthenticationNotice;
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
-  const availability=useRef({message,busy,pending,hasApiKey});
-  availability.current={message,busy,pending,hasApiKey};
+  // A hidden controller can finish an existing turn, but cannot prepare a new reading.
+  // Its own busy update must not invalidate the preparation's visibility epoch.
+  const availability=useRef({message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
+  const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis?1:0);
+  availability.current={message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
   const quickReplyStorage=quickReplyKey(state.userId,state.projectId,conversationId);
   function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
@@ -545,8 +551,10 @@ export default function StudioChat({
   }
   useEffect(()=>{
     if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    const epoch=availability.current.analysisEpoch;
+    const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.message.trim();
     const timeout=setTimeout(()=>{ void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
-      if(!lock||!mounted.current||!credentialIsCurrent())return;
+      if(!lock||!allowed())return;
       const available=availability.current;
       if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
       const before=getState();
@@ -559,18 +567,19 @@ export default function StudioChat({
       availability.current.busy=true;setBusy(true);setNotice('');
       try {
         const digest=await contextDigest(before);
+        if(!allowed())return;
         if(!canStartReferenceRound({record:existing,round,fingerprint:referenceSet,context:digest,failed:failedAutomatic.current===identity}))return;
         const feedback=await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
-        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
-        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
+        if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         attemptSource.current=credentialSource;
         const next=change(value=>prepareAdjustment(value,{requestId,messageId:crypto.randomUUID(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',conversationId,createdAt:new Date().toISOString(),eventId:crypto.randomUUID()}));
         if(!next)throw Error('O projeto ainda está carregando.');
         prepared=true;
         await flush();
-        if(!mounted.current||!credentialIsCurrent()||!availability.current.hasApiKey||availability.current.message.trim()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest) {
+        if(!allowed()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest||!allowed()) {
           settle(requestId,'failed');prepared=false;return;
         }
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
@@ -589,7 +598,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });},5000);
     return ()=>clearTimeout(timeout);
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -941,13 +950,13 @@ export default function StudioChat({
   const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch;
   const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
-  return (
+  const panel=(
     <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} data-reference-workbench={referenceWorkbench?'true':undefined} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
       <header className="studio-chat-header">
         <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
         <div>
-          <h2>{readOnly?"Histórico anterior do projeto":intro?"Qual post você quer criar agora?":referenceWorkbench?"Conversa sobre as referências":"Vamos compor juntos"}</h2>
-          <p>{intro?"O contexto do projeto já está preparado. Agora descreva esta peça.":referenceWorkbench?"Compare, escolha e conte o que quer aproveitar.":"Uma conversa, muitas possibilidades."}</p>
+          <h2>{readOnly?"Histórico anterior do projeto":intro?"Vamos criar este post":referenceWorkbench?"Conversa sobre as referências":"Vamos compor juntos"}</h2>
+          <p>{intro?"O contexto deste post está preparado. Descreva como você quer a arte.":referenceWorkbench?"Compare, escolha e conte o que quer aproveitar.":"Uma conversa, muitas possibilidades."}</p>
         </div>
         <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls={detailsId} onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
@@ -1107,7 +1116,7 @@ export default function StudioChat({
           maxLength={4000}
           value={message}
           disabled={busy||readOnly}
-          placeholder={intro?"Ex.: crie um post para anunciar as inscrições da oficina, com uma mensagem acolhedora.":referenceWorkbench?"Comente as referências ou peça outro caminho…":"Escreva uma mensagem…"}
+          placeholder={intro?"Ex.: use uma imagem de estudo e destaque a mensagem principal com um tom acolhedor.":referenceWorkbench?"Comente as referências ou peça outro caminho…":"Escreva uma mensagem…"}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={submitOnEnter}
         />
@@ -1121,4 +1130,5 @@ export default function StudioChat({
       </form>
     </section>
   );
+  return portalTarget?createPortal(panel,portalTarget):panel;
 }

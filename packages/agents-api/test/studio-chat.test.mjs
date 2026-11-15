@@ -196,6 +196,27 @@ test('efeito local desconhecido não envia continuação ao agente',async()=>{
  const f=fixture();await f.chat(request(body));f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_novo_post',turn_id:'turn_one',call_id:'call_new',arguments:{projectId,requestId,revision:1}}]});
  const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();await f.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'unknown'}}));assert.equal(f.calls.filter(c=>c.url?.endsWith('/events')).length,0);assert.equal(f.records.get(requestId).state,'unknown');
 });
+test('novo post aguardando nome e confirmação informa ação não realizada sem inventar criação',async()=>{
+ const f=fixture();await f.chat(request(body));
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_novo_post',turn_id:'turn_one',call_id:'call_new',arguments:{projectId,requestId,revision:1}}]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ const result=await(await f.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'declined',local:true}}))).json();
+ assert.equal(result.status,'running');
+ const sent=f.calls.filter(call=>call.url?.endsWith('/events'));
+ assert.equal(sent.length,1);
+ assert.deepEqual(sent[0].body.events,[{type:'agent.session.input.tool_result',turn_id:'turn_one',call_id:'call_new',success:false,error:'A criação ainda não aconteceu. A pessoa precisa informar o nome e confirmar no formulário aberto. Aguarde essa confirmação e não execute outras ações neste turno.'}]);
+ assert.equal('output' in sent[0].body.events[0],false);
+ assert.equal('pieceId' in result,false);
+ assert.equal(f.calls.some(call=>call.url?.includes('/images/')||call.url?.includes('/posts')),false);
+});
+test('recusa explícita de outra ação conserva a orientação anterior',async()=>{
+ const f=fixture();await f.chat(request(body));
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'compor_editar_briefing',turn_id:'turn_one',call_id:'call_edit',arguments:{projectId,requestId,revision:1,field:'offer',value:'Outra oficina'}}]});
+ const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ await f.action(request({apiKey,projectId,requestId,actionBinding:pending.actionBinding,result:{status:'declined'}}));
+ const sent=f.calls.find(call=>call.url?.endsWith('/events'));
+ assert.deepEqual(sent.body.events,[{type:'agent.session.input.tool_result',turn_id:'turn_one',call_id:'call_edit',success:false,error:'A pessoa recusou esta ação. Não a execute.'}]);
+});
 test('ações da mesma mensagem recebem identificadores locais próprios e estáveis',async()=>{
  const f=fixture();await f.chat(request(body));const base={type:'function_call',name:'compor_novo_post',turn_id:'turn_one',arguments:{projectId,requestId,revision:1}};
  f.set({status:'requires_action',turnState:'waiting',actions:[{...base,call_id:'call_first'}]});

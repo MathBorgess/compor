@@ -1,8 +1,8 @@
 "use client";
 import {useEffect,useState} from 'react';
-import * as z from 'zod';
+import * as z from '../lib/schema.ts';
 
-const draftSchema=z.string().max(4000).refine(value=>!/sk-[^\s]+/i.test(value));
+const draftSchema=z.string().check(z.maxLength(4000)).check(z.refine(value=>!/sk-[^\s]+/i.test(value)));
 /** Drafts are private to the tab and conversation, and never change a tool's revision. */
 export function useConversationDraft(userId:string,projectId:string,conversationId:string) {
   const key=`compor-message-draft:v1:${userId}:${projectId}:${conversationId}`;

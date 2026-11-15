@@ -50,16 +50,16 @@ function deferredRead(route){let release;const done=new Promise(resolve=>{releas
 async function flushBrowser(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
 
 test('sessão descarta resposta antiga após troca de conta e mantém falha real visível, sem abortar leituras',{timeout:90000},async t=>{
- const {page,errors}=await setup(t);await page.goto(origin);const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();assert.equal(await idea.inputValue(),'Rascunho de Alice');
+ const {page,errors}=await setup(t);await page.goto(origin);const idea=page.getByLabel('Nome do projeto',{exact:true});await idea.waitFor();assert.equal(await idea.inputValue(),'');
  const pending=[];await page.route('**/auth/session',route=>{const read=deferredRead(route);pending.push(read);return read.done;});
  t.after(()=>{for(const read of pending)read.release({state:'signed-out'});});
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await until(()=>pending.length,n=>n===1);await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);
  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await until(()=>pending.length,n=>n===2);
- pending[1].release({state:'connected',userId:bob});await page.waitForFunction(()=>document.querySelector('#studio-project-name')?.value==='Rascunho de Bob');
+ pending[1].release({state:'connected',userId:bob,account:{label:'Conta Bob',local:false}});await page.getByLabel('Conta: Conta Bob',{exact:true}).waitFor();
  assert.deepEqual(await page.evaluate(()=>window.readLifecycle.aborts),[]);
  pending[0].release({state:'connected',userId:alice});await pending[0].done;await flushBrowser(page);
- assert.equal(await idea.inputValue(),'Rascunho de Bob','a conta antiga não reaparece quando a resposta atrasada chega');
+ assert.equal(await idea.inputValue(),'');assert.equal(await page.getByText('Rascunho de Bob',{exact:true}).count(),1);assert.equal(await page.getByLabel('Conta: Conta Bob',{exact:true}).isVisible(),true,'a conta antiga não reaparece quando a resposta atrasada chega');
  await page.route('**/auth/session',route=>route.fulfill({status:503,json:{state:'unavailable'}}));await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();
  assert.equal(await page.getByRole('button',{name:'Entrar com Google',exact:true}).isDisabled(),true);
  assert.deepEqual(await page.evaluate(()=>window.readLifecycle.rejections),[]);assert.deepEqual(errors,[]);

@@ -202,7 +202,7 @@ test('bancada mantém a decisão ativa ao lado do histórico e recolhe leituras 
  const history=page.locator('.studio-taste-history');
  assert.equal(await history.evaluate(element=>element.open),false);
  await page.getByText('Você escolheu “Concordo”. A resposta está na conversa.',{exact:true}).waitFor();
- await history.locator('summary').click();
+ await history.locator(':scope > summary').click();
  assert.equal(await history.getByRole('group',{name:reply.question}).isVisible(),true);
  assert.equal(await history.getByRole('button',{disabled:false}).count(),0);
  assert.equal(await page.getByLabel('Sua mensagem').isVisible(),true);

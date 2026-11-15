@@ -1,8 +1,8 @@
 'use client';
 import {useEffect,useState} from 'react';
 import { uuid } from './studio-ui-types';
-import * as z from 'zod';
-const assetsSchema=z.object({assets:z.array(z.object({assetId:z.string(),origin:z.literal('unknown')})),nextCursor:z.string().nullable()});
+import * as z from '../lib/schema.ts';
+const assetsSchema=z.object({assets:z.array(z.object({assetId:z.string(),origin:z.literal('unknown')})),nextCursor:z.nullable(z.string())});
 
 // References are hints, not authorization or provenance. Each PNG is fetched separately.
 export default function AssetRecovery({userId,projectId,pieceId,version,onSelect}: {userId:string;projectId:string;pieceId:string;version:number|string;onSelect:(assetId:string)=>void}) {

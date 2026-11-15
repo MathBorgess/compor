@@ -96,6 +96,8 @@ async function app(t, {withReferences = false} = {}) {
   return {page, origin, calls, errors, external, images, paging, selectionSignals, referenceSelectionSignals};
 }
 
+const activeChat=page=>page.locator('.studio-chat-panel:visible');
+
 async function openProject(page,origin){
  await page.goto(origin);await page.getByRole('button',{name:/Direção opcional/}).click();
  await openPostEditor(page);await openSettings(page,'Referências');
@@ -117,7 +119,7 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
   await connectKey(page);
-  await page.getByLabel('Sua mensagem', {exact: true}).fill('Quero divulgar uma aula de cerâmica.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
   await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
@@ -145,13 +147,13 @@ test('conexão e envio ficam acessíveis no celular', {skip: !existsSync(browser
   assert.equal(await input.isVisible(), true);
   await connectKey(page);
   await closeSettings(page);
-  await page.getByLabel('Sua mensagem', {exact: true}).fill('Uma ideia para criar.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Uma ideia para criar.');
   const send = page.getByRole('button', {name: 'Enviar →', exact: true});
   await send.scrollIntoViewIfNeeded();
   const bounds = await send.boundingBox();
   assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844);
   await page.waitForFunction(() => {
-    const button = document.querySelector('form.studio-chat-composer button');
+    const button = Array.from(document.querySelectorAll('form.studio-chat-composer button')).find(element=>element.getClientRects().length>0);
     return button instanceof HTMLButtonElement && !button.disabled;
   });
   assert.equal(await send.isEnabled(), true);
@@ -169,13 +171,13 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
   });
   await openProject(page, origin);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Mostre a direção.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Mostre a direção.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   const status = page.getByRole('status').filter({hasText:'Compor está trabalhando…'});
   await status.waitFor();
   assert.equal(await status.locator('i').first().evaluate(element=>getComputedStyle(element).animationName),'none');
   release();
-  const message=page.locator('article[data-role="assistant"]').last();
+  const message=activeChat(page).locator('article[data-role="assistant"]').last();
   await message.locator('strong').getByText('Direção visual').waitFor();
   assert.deepEqual(await message.locator('li').allTextContents(),['Azul','Amarelo']);
   assert.equal(await message.getByRole('link',{name:'Link seguro'}).getAttribute('href'),'https://example.com/');
@@ -208,7 +210,7 @@ test('no editor, histórico rola e o compositor continua acessível com a conver
  const {page,origin,errors}=await app(t);await page.setViewportSize({width:742,height:720});
  await openProject(page,origin);await openEditorConversation(page);
  const field=await openConversation(page);await field.fill('Rascunho preservado na conexão');
- assert.equal(await page.locator('.studio-chat-messages').evaluate(el=>getComputedStyle(el).overflowY),'auto');
+ assert.equal(await activeChat(page).locator('.studio-chat-messages').evaluate(el=>getComputedStyle(el).overflowY),'auto');
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();
  assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).evaluate(el=>getComputedStyle(el).borderRadius),'10px');
  await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
@@ -228,7 +230,7 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  const separator=page.getByRole('separator',{name:'Divisão entre conversa e post'});
  const desktop=await page.locator('.guided-workspace').boundingBox();
  const desktopMain=await page.locator('.studio-canvas-column').boundingBox();
- assert.ok(desktop.x<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
+ assert.ok(Math.abs(desktop.x-desktopMain.x)<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
  const start=Number(await separator.getAttribute('aria-valuenow'));await separator.focus();await page.keyboard.press('ArrowRight');
  assert.equal(Number(await separator.getAttribute('aria-valuenow')),start+3);
  const grip=await separator.boundingBox();await page.mouse.move(grip.x+6,grip.y+100);await page.mouse.down();await page.mouse.move(grip.x+90,grip.y+100,{steps:4});await page.mouse.up();
@@ -249,7 +251,7 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
  const bounds=await page.locator('.guided-workspace').boundingBox();
  const mobileMain=await page.locator('.studio-canvas-column').boundingBox();
- assert.ok(bounds.x<=1&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport');
+ assert.ok(Math.abs(bounds.x-mobileMain.x)<=1&&bounds.x+bounds.width<=390&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport: '+JSON.stringify({bounds,mobileMain}));
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await openConversation(page);assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
  assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
@@ -317,23 +319,23 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
   });
   await openProject(page, origin);
   await connectKey(page);
-  const field = page.getByLabel('Sua mensagem', {exact: true});
+  const field = activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true});
   for (let index = 0; index < 3; index++) {
     await field.fill(`Outra ideia ${index}`);
     await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
     await page.getByText(`Resposta Outra ideia ${index}`, {exact: false}).waitFor();
   }
-  const history = page.locator('.studio-chat-messages');
+  const history = activeChat(page).locator('.studio-chat-messages');
   assert.ok(await history.evaluate(element => element.scrollTop > 0), 'a resposta mais recente entra em vista');
   await history.evaluate(element => { element.scrollTop = 0; });
-  await page.waitForFunction(() => document.querySelector('.studio-chat-messages').scrollTop === 0);
+  await page.waitForFunction(element=>element.scrollTop===0,await history.elementHandle());
   await field.fill('Outra ideia 3');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByRole('status').filter({hasText:'Compor está trabalhando…'}).waitFor();
   assert.ok(await history.evaluate(element => element.scrollTop > 0), 'o processamento mostra a conversa recente');
   await history.hover();
   await page.mouse.wheel(0,-100000);
-  await page.waitForFunction(() => document.querySelector('.studio-chat-messages').scrollTop === 0);
+  await page.waitForFunction(element=>element.scrollTop===0,await history.elementHandle());
   await history.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   release();
   await page.getByText('Resposta Outra ideia 3', {exact: false}).waitFor();
@@ -357,7 +359,7 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare essa referência.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Outra ideia: compare essa referência.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare essa referência.',{exact:false}).waitFor();
   const call=calls.find(call=>call.path==='/api/studio/chat');
@@ -375,7 +377,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);images.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:Math.max(0,...images.map(item=>item.ordinal))+1,batch_id:body.batch.id,batch_position:body.batch.position});return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
   await openProject(page, origin);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
   await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
@@ -386,7 +388,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   const recovery=page.locator('.studio-exploration-recovery');
-  await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});
+  try{await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});}catch(error){throw Error(`${error.message}\nFluxo: ${JSON.stringify({generations,selections,errors,text:await page.locator('body').innerText()})}`,{cause:error});}
   await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();
   assert.equal(selections.length,1);
   const held=generations.length;assert.ok(held>0,'a exploração já gerava antes da pergunta');
@@ -412,7 +414,7 @@ test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: 
   assert.deepEqual({...selectionSignals[0],id:'id-validado'},{id:'id-validado',projectId,imageId:'00000000-0000-4000-8000-000000000091',action:'selected',comment:'',supersedes:null});
   assert.equal(await gallery.getByRole('button',{name:'Imagem usada 1 na conversa e na Direção'}).isDisabled(),true);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare esta exploração.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Outra ideia: compare esta exploração.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare esta exploração.',{exact:false}).waitFor();
   const call=calls.find(call=>call.path==='/api/studio/chat');

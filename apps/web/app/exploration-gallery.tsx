@@ -1,20 +1,20 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as z from 'zod';
+import * as z from '../lib/schema.ts';
 import { rememberShownExplorations } from '../lib/shown-explorations';
 
 const imagesSchema = z.object({
   images: z.array(z.object({
-    id: z.string().uuid(),
-    project_id: z.string().uuid(),
+    id: z.string().check(z.uuid()),
+    project_id: z.string().check(z.uuid()),
     state: z.enum(["running", "unknown", "completed", "rejected"]),
     created_at: z.string(),
-    ordinal: z.number().int().positive().optional(),
-    batch_id: z.string().uuid().nullable().optional(),
-    batch_position: z.number().int().min(1).max(3).nullable().optional(),
-  })).max(100),
-  nextBeforeOrdinal: z.number().int().positive().nullable().optional(),
+    ordinal: z.optional(z.number().check(z.int()).check(z.positive())),
+    batch_id: z.optional(z.nullable(z.string().check(z.uuid()))),
+    batch_position: z.optional(z.nullable(z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)))),
+  })).check(z.maxLength(100)),
+  nextBeforeOrdinal: z.optional(z.nullable(z.number().check(z.int()).check(z.positive()))),
 });
 type ImageRecord = z.infer<typeof imagesSchema>["images"][number];
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import * as z from 'zod';
+import * as z from '../lib/schema.ts';
 import { createExplorationPrompt } from "@compor/agile-deliberation/exploration";
 import { criterionChoice } from "../lib/studio-direction";
 import { pendingSelectionQuestion } from "../lib/studio-state";
@@ -13,10 +13,10 @@ import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeB
 import { referenceSignalsResponseSchema,currentReferenceFeedback } from "../lib/reference-exploration-contract";
 import {postContext} from '../lib/studio-post-context.ts';
 
-const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().uuid(), retryAutomatically: z.boolean().optional() });
+const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()) });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
-const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
+const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(["running", "unknown", "completed", "rejected"]) })).check(z.maxLength(100)) });
 
 type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string;onCompleted?:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void> };
 

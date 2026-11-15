@@ -2,7 +2,7 @@
 
 - Estado: decisão solicitada por Matheus; implementação e validação locais em andamento.
 - Data: 15/11/2026.
-- Fonte: escolha explícita do exemplo visual 3 e dos detalhamentos de Pinterest/propostas, seguida do pedido de implementação com a última proposta do Compor preservada como v0.
+- Fonte: escolha explícita do exemplo visual 3 e dos detalhamentos de Pinterest/propostas, seguida do pedido de implementação com a última proposta do Compor preservada como v0 e de integração com o PR 52.
 
 ## Decisão
 
@@ -14,6 +14,8 @@ A leitura atual pode ficar ao lado do histórico dentro do painel de conversa. L
 
 Ao continuar para um rascunho novo e vazio, a última exploração **concluída e vinculada à conversa correspondente** pode fornecer os bytes da imagem-base da v0. A transição não gera outra imagem, não cria aprovação nem transforma a exploração em versão remota salva. Referências do Pinterest e uploads não substituem essa candidata apenas por terem sido escolhidos depois. Um rascunho com imagem, edição, aprovação ou versão salva é preservado.
 
+Na preparação inicial, sair das referências abre a lista de posts vazia e guarda um encaminhamento local da conversa de origem. A identidade técnica usada pela conversa de referências não é um post do catálogo nem recebe a imagem-base. A pessoa escolhe **Criar novo post**, informa o nome e confirma; somente após o recibo de `/api/posts` corresponder à preparação atual a candidata pode ser aplicada ao novo rascunho. O encaminhamento é consumido após a passagem bem-sucedida. Uma confirmação atrasada de outra preparação não aplica a imagem ao post seguinte. Um pedido de novo post feito pelo agente abre o mesmo formulário e retorna `declined` até a confirmação humana, sem alegar que criou uma peça.
+
 ## Estado, origem e recuperação
 
 Metadados opcionais de conclusão são mantidos no estado local, por conversa, com identificador e ordinal da imagem. O marcador da operação em andamento pode preservar o alcance e o contexto do despacho. A v0 conserva a origem da exploração; referências ou contexto alterados depois da geração não recebem atribuição retroativa sobre seus pixels. Sem evidência de contexto original, a origem permanece limitada ao que é conhecido.
@@ -22,7 +24,7 @@ Os bytes passam por leitura autenticada e validação antes da cópia local. A i
 
 ## Decisões substituídas
 
-Substitui a disposição de referências e conversa empilhadas dos ADRs 0044/0047 e a orientação de sair das referências de um post para conversar. Mantém a separação de conversas do ADR 0045, o alcance e os snapshots do ADR 0046, a remoção centralizada do ADR 0047 e os demais contratos de autorização, persistência e geração.
+Substitui a disposição de referências e conversa empilhadas dos ADRs 0044/0052 e a orientação de sair das referências de um post para conversar. Mantém a separação de conversas do ADR 0045, o alcance e os snapshots do ADR 0046, a remoção centralizada do ADR 0052, a confirmação e o catálogo do ADR 0051 e os demais contratos de autorização, persistência e geração. O portal do chat preserva um único controlador, turno e texto ainda não enviado ao abrir as referências do post.
 
 ## Evidência
 

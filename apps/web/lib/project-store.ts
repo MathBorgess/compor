@@ -12,7 +12,7 @@ export function createWebProjectStore({ url, anonKey, fetchImpl = fetch }:StoreO
   async function request(context:StoreContext, title?:string) {
     const endpoint = new URL('/rest/v1/projects', url);
     endpoint.searchParams.set('select', 'id,owner_id,title,created_at,revision');
-    if (title === undefined) endpoint.searchParams.set('owner_id', `eq.${context.actor.userId}`);
+    if (title === undefined) {endpoint.searchParams.set('owner_id', `eq.${context.actor.userId}`);endpoint.searchParams.set('deleted_at','is.null');}
     const response = await fetchImpl(endpoint, { method: title === undefined ? 'GET' : 'POST', headers: { apikey: anonKey, authorization: `Bearer ${context.token}`, 'content-type': 'application/json', prefer: 'return=representation' }, ...(title === undefined ? {} : { body: JSON.stringify({ title }) }), redirect: 'error', signal: AbortSignal.timeout(5000) });
     if (!response.ok) throw Error('unavailable');
     const rows = await response.json();
@@ -20,6 +20,13 @@ export function createWebProjectStore({ url, anonKey, fetchImpl = fetch }:StoreO
     return rows.map(project);
   }
   return {
+    async remove(context:StoreContext,{projectId,expectedRevision}:{projectId:string;expectedRevision:number}) {
+      const response=await fetchImpl(new URL('/rest/v1/rpc/delete_project_from_list',url),{method:'POST',headers:{apikey:anonKey,authorization:`Bearer ${context.token}`,'content-type':'application/json'},body:JSON.stringify({p_project_id:projectId,p_expected_revision:expectedRevision}),redirect:'error',signal:AbortSignal.timeout(5000)});
+      if(!response.ok)throw Error('unavailable');
+      const result=z.discriminatedUnion('status',[z.strictObject({status:z.literal('deleted'),projectId:z.string().uuid()}),z.strictObject({status:z.literal('not_found')}),z.strictObject({status:z.literal('conflict'),currentRevision:z.number().int().positive()})]).parse(await response.json());
+      if(result.status==='deleted'&&result.projectId!==projectId)throw Error('invalid response');
+      return result;
+    },
     list: (context:StoreContext) => request(context),
     async create(context:StoreContext, title:string) {
       const rows = await request(context, title);

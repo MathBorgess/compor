@@ -19,11 +19,11 @@ const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;can
 const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
 function initial(){let state=createPost(createStudioState({userId:'${user}',projectId:'${project}'}),{pieceId:'${piece}'});return addReference(state,reference('${first}'));}
-function Fixture(){const [key,setKey]=useState(false),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
+function Fixture(){const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
 function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}
 function choose(fn){change(fn);recordReferenceRound(current.current);}
-return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
-<StudioChat state={state} conversationId="references" getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></main>}
+return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>setVisible(false)}>Fechar referências</button><button onClick={()=>setVisible(true)}>Abrir referências</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
+<div hidden={!visible}><StudioChat state={state} conversationId="references" allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 async function setup(t,{feedbackDelayMs=0}={}){
  const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'}});
@@ -93,4 +93,22 @@ test('pedido explícito é enviado sem recomendação interna contraditória',{s
 test('seleção com persistência lenta rearma iniciativa após o salvamento',{skip:!existsSync(browserPath),timeout:35000},async t=>{
  const {page,calls,origin,waitForCalls}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Persistência lenta'}).click();
  await waitForCalls(1,12000);assert.equal(calls.length,1);assert.equal(calls[0].context.references.length,2);
+});
+
+
+test('controlador preservado cancela leitura ao fechar e rearma ao reabrir a mesma seleção',{skip:!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.waitForTimeout(500);await page.getByRole('button',{name:'Fechar referências'}).click();
+ await page.waitForTimeout(5500);assert.equal(calls.length,0,'sair antes da espera não inicia leitura em um controlador oculto');
+ await page.getByRole('button',{name:'Abrir referências'}).click();await waitForCalls(1);await waitForAnswer(1);
+ assert.equal(calls.length,1);assert.equal(calls[0].op,'reference_selection');assert.deepEqual(calls[0].context.references.map(reference=>reference.id),[first]);
+});
+
+test('fechar durante a preparação cancela a leitura e reabrir exige uma espera nova',{skip:!existsSync(browserPath),timeout:35000},async t=>{
+ const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t,{feedbackDelayMs:2000});await page.goto(origin);
+ const feedback=page.waitForRequest(request=>new URL(request.url()).pathname.endsWith('/signals'));
+ await page.getByRole('button',{name:'Conectar'}).click();await feedback;
+ await page.getByRole('button',{name:'Fechar referências'}).click();await page.getByRole('button',{name:'Abrir referências'}).click();
+ await page.waitForTimeout(3000);assert.equal(calls.length,0,'a preparação antiga não aproveita a reabertura para enviar antes da nova espera');
+ await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);
 });

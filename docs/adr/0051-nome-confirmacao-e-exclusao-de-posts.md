@@ -1,0 +1,17 @@
+# ADR 0051 — Nome, confirmação e exclusão de posts
+
+- Data: 15/11/2026.
+- Fonte: pedido de nomear cada post, criar somente ao continuar para a criação e permitir excluir posts. Inclui o pedido posterior de apresentar Enviar imagens em um card consistente com os demais.
+- Estado: implementado para avaliação local; migration preparada, sem execução remota.
+
+**Criar novo post** abre um formulário de preparação, sem criar peça local, versão ou registro de catálogo. O campo Nome do post é obrigatório, tem até 200 caracteres e é independente dos textos que aparecem na arte. Objetivo, mensagem e CTA opcional mantêm seus contratos. As respostas ficam em `workflow.pendingPost`, ligado à conta/projeto, para permitir reload sem transformar a preparação em post. Cancelar descarta apenas essa preparação. A antiga preparação já associada a uma peça permanece legível, sem apagar rascunhos históricos.
+
+**Continuar para criação** confirma a intenção de criar o post. A interface valida o nome e envia o mesmo `pieceId` ao repetir explicitamente um pedido de resultado incerto. A RPC de criação é idempotente por projeto/peça/nome, rejeita outro nome para a mesma identidade e não ressuscita uma peça excluída. Só uma confirmação válida permite converter a preparação em peça local. Durante o envio, o formulário fica desabilitado. Criar o registro não inicia imagem ou conversa.
+
+O catálogo `project_posts`, introduzido pela migration `20261115000031`, guarda projeto, peça, nome e marcador de exclusão. Não contém credenciais, contexto do modelo ou bytes de imagem. A leitura usa RLS da pessoa; as RPCs de escrita verificam `auth.uid()` e propriedade do projeto, bloqueando sua linha durante a operação. O acesso direto de escrita é revogado. `/api/posts` POST/DELETE exige origem, sessão verificada, propriedade e corpo limitado/validado. A consulta web de versões também retorna o catálogo, filtrando versões de posts excluídos; os contratos externos do MCP não mudam.
+
+Nome aparece na lista e no cabeçalho, sem mudar quando o texto da arte é editado. Posts antigos sem nome continuam usando seus rótulos históricos. Peças locais e versões já salvas podem ser excluídas pela lixeira dentro do card, após confirmação. A exclusão é lógica e idempotente: remove da lista web e mantém versões, imagens, conversas, referências e recibos como proveniência. O estado local guarda o marcador; o servidor impede o reaparecimento em outro navegador. Uma leitura antiga não sobrepõe uma confirmação de criação/exclusão. Pedidos locais pendentes ou incertos bloqueiam o botão de exclusão. Ao observar exclusão externa, uma peça aberta retorna à lista depois de terminar qualquer recuperação já pendente.
+
+`posts[pieceId]` acrescenta `name`/`deleted` com padrões compatíveis, e `workflow.pendingPost` tem padrão nulo, sem upgrade do IndexedDB. Clientes antigos estritos não aceitam esses campos novos. Ações do agente que criam outra peça continuam com seus IDs e contratos existentes; o nome organizacional não é inserido como texto literal da arte. Credenciais, autorização de geração e política de resultados desconhecidos permanecem inalteradas.
+
+Substitui a criação antecipada de rascunho ao abrir a preparação do ADR 0049. A nova preparação só se torna post depois da confirmação. O envio de referências recebe apenas ajuste de apresentação: card branco, borda, largura e espaçamento equivalentes aos outros, mantendo formatos, limites e consentimentos.

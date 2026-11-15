@@ -17,12 +17,20 @@ test('rota Next valida propriedade e encaminha versão com token da pessoa', asy
   const dir = await mkdtemp(join(tmpdir(), 'compor-pieces-test-')); t.after(() => rm(dir, { recursive: true, force: true }));
   const key = join(dir, 'key.pem'), cert = join(dir, 'cert.pem');
   execFileSync('openssl', ['req', '-x509', '-newkey', 'rsa:2048', '-nodes', '-days', '1', '-keyout', key, '-out', cert, '-subj', '/CN=127.0.0.1', '-addext', 'subjectAltName=IP:127.0.0.1'], { stdio: 'ignore' });
-  let writes = 0;
+  let writes = 0,postWrites=0;let postRecord=null;
   const service = httpsServer({ key: await readFile(key), cert: await readFile(cert) }, async (req, res) => {
     res.setHeader('content-type', 'application/json');
     if (req.headers.authorization !== 'Bearer mock-user-token') { res.statusCode = 401; return res.end('{}'); }
     if (req.url === '/auth/v1/user') return res.end(JSON.stringify({ id: user, aud: 'authenticated' }));
     if (req.url.startsWith('/rest/v1/projects?')) return res.end(JSON.stringify(req.url.includes(other) ? [] : [{ id: project, owner_id: user }]));
+    if(req.url==='/rest/v1/rpc/list_project_posts')return res.end(JSON.stringify(postRecord?[postRecord]:[]));
+    if(req.url==='/rest/v1/rpc/create_project_post'||req.url==='/rest/v1/rpc/delete_project_post'){
+      let raw='';for await(const chunk of req)raw+=chunk;const data=JSON.parse(raw);postWrites++;
+      assert.equal(data.p_project_id,project);assert.equal(data.p_piece_id,piece);
+      const deleted=req.url.endsWith('delete_project_post');
+      postRecord={projectId:project,pieceId:piece,name:deleted?postRecord?.name??'':data.p_name,deleted};
+      return res.end(JSON.stringify({status:deleted?'deleted':'created',post:postRecord}));
+    }
     if (req.url === '/rest/v1/rpc/list_project_piece_versions_v3') return res.end(JSON.stringify([{ project_id: project, piece_id: piece, version: 1, content, created_at: '2026-11-03T00:00:00Z', metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} }]));
     if (req.url === '/rest/v1/rpc/approve_piece_version') {
       let raw='';for await(const chunk of req)raw+=chunk;
@@ -53,4 +61,11 @@ test('rota Next valida propriedade e encaminha versão com token da pessoa', asy
   assert.equal((await post(other)).status, 404); assert.equal(writes, 1);
   const approval=await fetch(endpoint,{method:'PATCH',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({operation:'approve',projectId:project,pieceId:piece,version:1,expectedRevision:0})});
   assert.equal(approval.status,409);assert.deepEqual(await approval.json(),{status:'conflict',currentRevision:1});
+  const catalog=(method,p=project)=>fetch(`${origin}/api/posts`,{method,headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({projectId:p,pieceId:piece,...(method==='POST'?{name:'Live gratuita'}:{})})});
+  assert.equal((await catalog('POST',other)).status,404);assert.equal(postWrites,0);
+  assert.equal((await catalog('POST')).status,200);assert.equal(postWrites,1);
+  const named=await fetch(`${endpoint}?projectId=${project}`,{headers:{Cookie:cookie}});assert.equal((await named.json()).posts[0].name,'Live gratuita');
+  assert.equal((await catalog('DELETE')).status,200);assert.equal(postWrites,2);
+  const removed=await fetch(`${endpoint}?projectId=${project}`,{headers:{Cookie:cookie}});const list=await removed.json();assert.equal(list.versions.length,0);assert.equal(list.posts[0].deleted,true);
+
 });

@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createStudioState,createPost,parseStudioState,editDraft,recordSavedVersion} from '../lib/studio-state.ts';
 import {confirmedExploration,recordCompletedExploration,prepareExplorationDraft} from '../lib/exploration-draft.ts';
 import {selectScopedReference,updatePostContext} from '../lib/studio-post-context.ts';
+import {prepareReferenceWorkspace,startPostPreparation,updatePostPreparation,completePostPreparation,updateWorkflow} from '../lib/studio-workflow.ts';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const scope={userId:id(1),projectId:id(2)};
 const source=(n,ordinal=n)=>({imageId:id(n),ordinal});
@@ -79,4 +80,14 @@ test('an older scoped candidate is confirmed after newer images from other posts
  const fetcher=async url=>{urls.push(url);return Response.json(url.includes('beforeOrdinal=100')?{images:[{id:id(12),project_id:id(2),state:'completed',ordinal:12}],nextBeforeOrdinal:null}:{images:[{id:id(200),project_id:id(2),state:'completed',ordinal:200}],nextBeforeOrdinal:100});};
  assert.deepEqual(await confirmedExploration(id(2),id(12),fetcher),source(12));assert.equal(urls.length,2);
  const h=harness(recordCompletedExploration(initial(),'references',source(12)));await prepareExplorationDraft(h.options);assert.equal(h.getState().drafts[0].creationContext.explorationSource.ordinal,12);
+});
+test('an internal reference workspace is never seeded; only the explicitly completed named post receives v0',async()=>{
+ let state=recordCompletedExploration(prepareReferenceWorkspace(createStudioState({...scope,prepare:true}),id(3)),'references',source(12));
+ state=updateWorkflow(state,{referenceHandoff:'references'});
+ const internal=harness(state);assert.equal(await prepareExplorationDraft(internal.options),'preserved');assert.equal(internal.reads(),0);assert.equal(internal.asset(),null);
+ state=updatePostPreparation(startPostPreparation(state,id(4)),{name:'Convite para colaborar',message:'Mensagem do post'});
+ assert.equal(state.drafts.some(draft=>draft.pieceId===id(4)),false);
+ state=completePostPreparation(state);
+ const confirmed=harness(state);assert.equal(await prepareExplorationDraft(confirmed.options),'retained');
+ assert.equal(confirmed.getState().selection.pieceId,id(4));assert.equal(confirmed.getState().posts[id(4)].name,'Convite para colaborar');assert.equal(confirmed.getState().drafts.find(draft=>draft.pieceId===id(3)).creationContext,undefined);
 });

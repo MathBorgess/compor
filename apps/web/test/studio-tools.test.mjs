@@ -11,6 +11,15 @@ const args = {
   field: "offer",
   value: "Curso fictício",
 };
+test('preparar o nome do post não registra criação nem repete a preparação', async()=>{
+  let revision=1,calls=0;
+  const tools=createStudioTools({getScope:()=>({userId,projectId,revision}),handlers:{compor_novo_post:async()=>{calls++;revision++;return {status:'declined',local:true};}}});
+  const request={projectId,requestId,revision:1};
+  const result=await tools.execute('compor_novo_post',request);
+  assert.equal(result.status,'declined');assert.equal('pieceId' in result,false);
+  assert.equal((await tools.execute('compor_novo_post',request)).status,'declined');
+  assert.equal(calls,1);
+});
 test("chat e WebMCP usam o mesmo efeito e repetição não duplica alteração", async () => {
   let calls = 0,
     scope = { userId, projectId, revision: 1 };

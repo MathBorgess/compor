@@ -41,12 +41,12 @@ test('o estúdio conserva rascunhos herdados por conta e recupera uma reivindica
     sessionStorage.setItem('compor-claim-pending','anonymous');
   },{alice,bob});
   await page.goto(origin,{timeout:60000});
-  const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
-  assert.equal(await idea.inputValue(),'Ideia já guardada de Alice');
+  const idea=page.getByLabel('Nome do projeto',{exact:true});await idea.waitFor();
+  assert.equal(await idea.inputValue(),'');assert.equal(await page.evaluate(user=>sessionStorage.getItem(`compor-objective:user:${user}`),alice),'Ideia já guardada de Alice');
   await page.getByRole('button',{name:'Recuperar rascunho anterior',exact:true}).waitFor();
   assert.equal(await page.evaluate(user=>sessionStorage.getItem(`compor-objective:pending:${user}`),alice),'Rascunho anterior sem conta');
   identity=bob;await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
-  await page.waitForFunction(()=>document.querySelector('#studio-project-name')?.value==='Ideia só de Bob');
+  await page.getByRole('button',{name:'Recuperar rascunho anterior',exact:true}).waitFor({state:'hidden'});assert.equal(await idea.inputValue(),'');
   assert.equal(await page.getByRole('button',{name:'Recuperar rascunho anterior',exact:true}).count(),0);
   identity=alice;await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
   await page.getByRole('button',{name:'Recuperar rascunho anterior',exact:true}).click();
@@ -55,7 +55,7 @@ test('o estúdio conserva rascunhos herdados por conta e recupera uma reivindica
   const archives=await page.evaluate(user=>Object.keys(sessionStorage).filter(key=>key.startsWith(`compor-objective:user:${user}:archive:`)).map(key=>sessionStorage.getItem(key)),alice);
   assert.deepEqual(archives,['Ideia já guardada de Alice']);
   await page.reload();await idea.waitFor();
-  assert.equal(await idea.inputValue(),'Rascunho anterior sem conta');
+  assert.equal(await idea.inputValue(),'');await idea.fill('Projeto de teste');
   await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();
   await page.getByText('A criação pode ter acontecido. Atualize a lista antes de criar outro projeto.',{exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).isDisabled(),true);

@@ -87,6 +87,7 @@
 .reference-workbench .reference-shared-available p { font-size:11px; }
 .reference-workbench .reference-workbench-conversation { display:flex;flex-direction:column;min-width:0;min-height:0;overflow:hidden;padding-top:8px; }
 .reference-workbench .guided-reference-chat { display:flex;flex:1;min-width:0;min-height:0;max-height:none; }
+.studio-modal .reference-workbench .guided-reference-chat:has(.guided-reference-post-chat) { height:auto;min-height:0; }
 .reference-workbench .reference-workbench-conversation > .studio-chat-panel { min-width:0;min-height:0; }
 .reference-workbench .studio-exploration-recovery { display:flex;flex:none;align-items:center;gap:12px;max-height:44px;padding:2px 8px;border-radius:0;background:transparent;overflow:auto; }
 .reference-workbench .studio-exploration-recovery > p { flex:1;min-width:0;font-size:12px;line-height:16px; }
@@ -111,6 +112,13 @@
  .reference-workbench .reference-consent-status { margin-left:0; }
 }
 @media(max-width:700px) {
+ .compor-studio:has(.reference-workbench) .studio-topbar { flex-wrap:nowrap;gap:8px;padding:6px 12px; }
+ .compor-studio:has(.reference-workbench) .studio-topbar-start { flex:1;flex-wrap:nowrap;gap:8px; }
+ .compor-studio:has(.reference-workbench) .studio-project-menu,
+ .compor-studio:has(.reference-workbench) .studio-project-heading h1 { min-width:0; }
+ .compor-studio:has(.reference-workbench) .studio-brand .studio-wordmark { position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%); }
+ .compor-studio:has(.reference-workbench) .studio-project-heading > .studio-badge { display:none; }
+ .compor-studio:has(.reference-workbench) .studio-topbar-end { flex:none; }
  .compor-studio[data-guided='true'] .studio-canvas-column:has(.reference-workbench) { padding:8px 12px; }
  .guided-references.reference-workbench { grid-template-rows:auto minmax(140px,1fr) auto minmax(220px,34%); }
  .reference-workbench > .reference-workbench-heading { align-items:flex-start;padding-top:0; }
@@ -145,7 +153,8 @@
  .reference-workbench .exploration-gallery-controls { gap:8px; }
  .reference-workbench .exploration-gallery-controls > button { padding:4px 8px;font-size:11px; }
  .reference-workbench .studio-exploration-recovery { gap:6px;padding-inline:0; }
- .reference-workbench .studio-exploration-grid { min-height:140px;gap:12px; }
+ .reference-workbench .studio-exploration-grid { flex:none;height:240px;min-height:240px;gap:12px; }
+ .reference-workbench .reference-result-groups { flex:none;min-height:260px; }
 }
 @media(max-height:720px) and (min-width:701px) {
  .guided-references.reference-workbench { grid-template-rows:auto minmax(150px,1fr) auto minmax(180px,32%); }
