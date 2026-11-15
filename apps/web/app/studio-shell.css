@@ -358,6 +358,9 @@ button.studio-quick-reply {
   .studio-quick-reply[data-chosen='true'] { outline: 2px solid Highlight; }
 }
 
-.studio-project-entry { display:grid;gap:8px;min-width:0;align-content:start; }
-.studio-project-entry>.studio-project-card { width:100%;min-width:0; }
-.studio-project-entry>.studio-button-secondary { justify-self:start;min-height:44px; }
+.studio-project-entry { position:relative;min-width:0; }
+.studio-project-entry>.studio-project-card { width:100%;min-width:0;padding-right:70px; }
+.studio-project-delete { position:absolute;top:10px;right:10px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:9px;background:transparent;color:var(--studio-muted);cursor:pointer; }
+.studio-project-delete:hover { background:var(--studio-blue-tint);color:var(--studio-cobalt); }
+.studio-project-delete:focus-visible { outline:2px solid var(--studio-cobalt);outline-offset:2px; }
+.studio-project-delete:disabled { opacity:.5;cursor:default; }

@@ -36,7 +36,12 @@ test('excluir exige confirmação, mantém o projeto ao cancelar e confirma pers
   return route.fulfill({status:503,json:{error:'unexpected'}});
  });
  try{
-  await page.goto(origin);const remove=page.locator('.studio-project-entry').filter({hasText:'Projeto de matemática'}).getByRole('button',{name:'Excluir projeto',exact:true});await remove.click();
+  await page.goto(origin);const remove=page.locator('.studio-project-entry').filter({hasText:'Projeto de matemática'}).getByRole('button',{name:'Excluir projeto',exact:true});await remove.waitFor();
+  const card=await page.locator('.studio-project-card').boundingBox(),icon=await remove.boundingBox();
+  assert.ok(icon.x>=card.x&&icon.y>=card.y&&icon.x+icon.width<=card.x+card.width&&icon.y+icon.height<=card.y+card.height,'a lixeira fica dentro do card');
+  assert.ok(icon.width>=44&&icon.height>=44,'o alvo de toque continua acessível');
+  assert.equal(await remove.innerText(),'','o botão exibe apenas o ícone');
+  await remove.focus();await page.keyboard.press('Enter');
   const dialog=page.getByRole('dialog',{name:'Excluir projeto?',exact:true});await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();assert.equal(deletes,0);assert.equal(await remove.isVisible(),true);
   fail=true;await remove.click();await dialog.getByRole('button',{name:'Excluir projeto',exact:true}).click();await dialog.getByRole('alert').waitFor();assert.equal(deletes,1);await page.waitForTimeout(200);assert.equal(deletes,1);
   await dialog.getByRole('button',{name:'Atualizar projetos',exact:true}).click();await remove.waitFor();assert.equal(await remove.isVisible(),true);
