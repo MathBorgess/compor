@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { execFileSync } from "node:child_process";
 import { build } from "esbuild";
 import { calibrateDecision } from "../lib/phoenix-worker.ts";
@@ -94,7 +95,7 @@ test("o runtime roda em bundle isolado sem protótipo, servidor MCP ou subproces
   const temporary = await mkdtemp(join(tmpdir(), "compor-phoenix-bundle-"));
   try {
     const bundle = join(temporary, "phoenix.mjs");
-    const result = await build({ entryPoints: [new URL("../lib/phoenix-worker.ts", import.meta.url).pathname], outfile: bundle,
+    const result = await build({ entryPoints: [fileURLToPath(new URL("../lib/phoenix-worker.ts", import.meta.url))], outfile: bundle,
       bundle: true, platform: "node", format: "esm", target: "node24", metafile: true, logLevel: "silent" });
     assert.ok(Object.keys(result.metafile.inputs).every((path) => !path.includes("prototypes/") && !path.includes("openai/")));
     const code = await readFile(bundle, "utf8");

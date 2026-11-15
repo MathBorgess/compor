@@ -78,5 +78,6 @@ test('teardown encerra somente o processo criado mesmo se ele ignorar SIGTERM', 
   t.after(()=>stopApp(child,{graceMs:100}));
   await once(child.stdout,'data',{signal:t.signal});
   await stopApp(child,{graceMs:100});
-  assert.equal(child.signalCode,'SIGKILL');
+  assert.equal(child.signalCode,process.platform==='win32'?'SIGTERM':'SIGKILL');
+  assert.equal(child.exitCode!==null||child.signalCode!==null,true,'o processo criado foi encerrado');
 });

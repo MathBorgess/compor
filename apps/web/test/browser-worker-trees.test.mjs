@@ -54,7 +54,7 @@ test('fontes e diretórios de dependências são privados e links relativos fica
   for(const worker of workers) {
     for(const path of dependencies)assert.equal(await readFile(join(worker,path),'utf8'),path);
     const bin=join(worker,'apps/web/node_modules/.bin/tool');
-    assert.equal(await readlink(bin),'../tool/bin/cli.js');
+    assert.equal((await readlink(bin)).replaceAll('\\','/'),'../tool/bin/cli.js');
     assert.equal(await realpath(bin),join(worker,'apps/web/node_modules/tool/bin/cli.js'));
     assert.equal(await realpath(join(worker,'apps/web/lib/state-link.ts')),join(worker,'apps/web/lib/state.ts'));
   }

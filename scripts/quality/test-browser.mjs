@@ -8,7 +8,7 @@ accessSync(browser, constants.X_OK);
 const version = spawnSync(browser, ['--version'], { encoding: 'utf8' });
 if (version.status !== 0) throw Error('Configured Chromium could not run.');
 console.log(version.stdout.trim());
-const result = spawnSync('npm', ['test'], {
+const result = spawnSync(process.execPath, ['test/run.mjs'], {
   cwd: resolve(import.meta.dirname, '../../apps/web'),
   env: { ...process.env, NEXT_TELEMETRY_DISABLED: '1' },
   stdio: 'inherit',
