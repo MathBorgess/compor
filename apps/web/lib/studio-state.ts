@@ -57,6 +57,9 @@ export function parseStudioState(input: unknown): StudioState {
   if (!unique(value.marks) || !value.marks.every(markValid) || !value.marks.every(mark => value.drafts.some(draft => sameDraft(draft, mark)))) fail();
   if (!unique(value.references) || !value.references.every(reference => referenceInProject(reference, value.projectId)) || value.references.reduce((sum, item) => sum + item.size, 0) > STUDIO_LIMITS.referenceTotalBytes) fail();
   if (!validatePostSettings(value)) fail();
+  if(Object.keys(value.workflow.latestExplorations??{}).some(scope=>scope!=='references'&&!value.drafts.some(draft=>draft.pieceId===scope)))fail();
+  if(Object.values(value.workflow.latestExplorations??{}).some(candidate=>candidate.creationContext&&(!unique(candidate.creationContext.references)||!candidate.creationContext.references.every(reference=>referenceInProject(reference,value.projectId))||candidate.creationContext.references.reduce((sum,reference)=>sum+reference.size,0)>STUDIO_LIMITS.referenceTotalBytes||candidate.creationContext.explorationSource?.projectId!==undefined&&candidate.creationContext.explorationSource.projectId!==value.projectId)))fail();
+  if(value.drafts.some(draft=>draft.creationContext?.explorationSource&&(draft.creationContext.explorationSource.projectId!==value.projectId||draft.creationContext.explorationSource.conversationId!=='references'&&draft.creationContext.explorationSource.conversationId!==draft.pieceId)))fail();
   if (!unique(value.adjustments) || !value.adjustments.every(item => adjustmentValid(item,value))) fail();
   if (!unique(value.events) || !value.events.every((item,index) => uuid(item.id) && (item.requestId === null || uuid(item.requestId) && value.adjustments.some(request=>request.id===item.requestId)) && item.sequence === index + 1)) fail();
   const actionReceipts=value.actionReceipts;

@@ -68,10 +68,10 @@ test('sessão descarta resposta antiga após troca de conta e mantém falha real
 test('fechar e reabrir galeria descarta resultados antigos e conserva mensagem de falha real, sem AbortError',{timeout:90000},async t=>{
  const {page,errors}=await setup(t),reads=[];await page.route('**/api/studio/explorations?*',route=>{const read=deferredRead(route);reads.push(read);return read.done;});
  t.after(()=>{for(const read of reads)read.release({images:[]});});
- await page.goto(origin);await page.getByRole('button',{name:'Leituras de teste Abrir projeto',exact:true}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await until(()=>reads.length,n=>n>=1);
+ await page.goto(origin);await page.getByRole('button',{name:'Leituras de teste Abrir projeto',exact:true}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();await until(()=>reads.length,n=>n>=1);
  await closeSettings(page);const obsolete=[...reads];
  const image=(n)=>({id:id(n),project_id:project,state:'completed',ordinal:n,created_at:'2026-11-15T12:00:00.000Z'});
- await page.route('**/api/studio/explorations?*',route=>route.fulfill({json:{images:[image(20)]}}));await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+ await page.route('**/api/studio/explorations?*',route=>route.fulfill({json:{images:[image(20)]}}));await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
  const fresh=page.getByRole('button',{name:'Usar imagem 20 na conversa e na Direção',exact:true});await fresh.waitFor();
  assert.deepEqual(await page.evaluate(()=>window.readLifecycle.aborts),[]);
  for(const read of obsolete)read.release({images:[image(10)]});await Promise.all(obsolete.map(read=>read.done));await flushBrowser(page);

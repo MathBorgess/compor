@@ -1,11 +1,12 @@
 import * as z from 'zod';
+import {creationContextSchema} from './studio-domain.ts';
 
 export const BATCH_SIZE=3;
 export const BATCH_DELAY_MS=15_000;
 const sequence=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER-1);
 const reviewBatch=z.strictObject({batchId:z.string().uuid(),imageIds:z.array(z.string().uuid()).max(BATCH_SIZE)});
 const progressSchema=z.strictObject({sequence,batchId:z.string().uuid(),completed:z.number().int().min(0).max(BATCH_SIZE),nextAt:z.number().int().nonnegative().nullable(),remainingMs:z.number().int().min(0).max(BATCH_DELAY_MS).nullable().default(null),reviewBatches:z.array(reviewBatch).max(2).default([]),reviewedBatchId:z.string().uuid().nullable().default(null),awaitingFeedback:z.boolean().default(false)}).refine(value=>value.completed===BATCH_SIZE ? (value.nextAt!==null)!==(value.remainingMs!==null) : value.nextAt===null&&value.remainingMs===null);
-export const pendingSchema=z.strictObject({projectId:z.string().uuid(),requestId:z.string().uuid(),sequence,batchId:z.string().uuid().optional(),position:z.number().int().min(1).max(BATCH_SIZE).optional()}).refine(value=>(value.batchId===undefined)===(value.position===undefined));
+export const pendingSchema=z.strictObject({projectId:z.string().uuid(),requestId:z.string().uuid(),sequence,batchId:z.string().uuid().optional(),position:z.number().int().min(1).max(BATCH_SIZE).optional(),conversationId:z.union([z.literal('references'),z.uuid()]).optional(),creationContext:creationContextSchema.optional()}).refine(value=>(value.batchId===undefined)===(value.position===undefined));
 export type BatchProgress=z.infer<typeof progressSchema>;
 export type PendingExploration=z.infer<typeof pendingSchema>;
 type StorageReader=Pick<Storage,'getItem'|'setItem'>;

@@ -18,7 +18,7 @@ function referenceTitle(reference: StudioReference) {
   return reference.name;
 }
 
-/** The current selection, always visible above the suggestions: how many, where
+/** The current selection, always visible beside the suggestions: how many, where
  * each came from, and how to remove it. Removing never deletes other images. */
 export default function ReferenceSelectionTray({ items, limit, onRemove, availableShared = [], onUseShared }: { items: Item[]; limit: number; onRemove: (id: string) => Promise<void>; availableShared?: (StudioReference & { url?: string })[]; onUseShared?: (id: string) => void | Promise<void> }) {
   const heading = useRef<HTMLHeadingElement>(null), list = useRef<HTMLUListElement>(null), focusIndex = useRef<number | null>(null), focusAdded = useRef<string | null>(null);
@@ -44,14 +44,14 @@ export default function ReferenceSelectionTray({ items, limit, onRemove, availab
       <p className="reference-selection-count" aria-live="polite"><strong>{items.length}</strong> de {limit} referências</p>
     </div>
     {items.length === 0
-      ? <p className="reference-selection-empty">Nenhuma imagem selecionada. Escolha abaixo o que chamou sua atenção.</p>
+      ? <p className="reference-selection-empty">Nenhuma imagem selecionada. Escolha o que chamou sua atenção.</p>
       : <ul ref={list} className="reference-selection-list">{items.map((item, index) => {
         const origin = referenceOrigin(item), title = referenceTitle(item);
         return <li key={item.id} data-reference-id={item.id}>
           {item.url ? <img src={item.url} alt="" /> : <span className="reference-selection-placeholder" aria-hidden="true" />}
-          <span className="reference-source" data-origin={origin}>{REFERENCE_ORIGIN_LABEL[origin]}</span>
-          <span className="reference-selection-scope">{item.scopeLabel}</span><span className="reference-selection-title" title={title}>{title}</span>
-          <button type="button" aria-label={`Remover da seleção: ${title}`} onClick={() => { focusIndex.current = index; void onRemove(item.id); }}>{item.removeLabel??'Remover'}</button>{item.onShare&&<button type="button" onClick={item.onShare}>Compartilhar com o projeto</button>}
+          <div className="reference-selection-meta"><span className="reference-source" data-origin={origin}>{REFERENCE_ORIGIN_LABEL[origin]}</span>
+          <span className="reference-selection-scope">{item.scopeLabel}</span><span className="reference-selection-title" title={title}>{title}</span></div>
+          <button type="button" className="reference-selection-remove" title={item.removeLabel??'Remover da seleção'} aria-label={`Remover da seleção: ${title}`} onClick={() => { focusIndex.current = index; void onRemove(item.id); }}>Retirar</button>{item.onShare&&<button type="button" className="reference-selection-share" onClick={item.onShare}>Compartilhar com o projeto</button>}
         </li>;
       })}</ul>}
     {availableShared.length > 0 && onUseShared && <div className="reference-shared-available">

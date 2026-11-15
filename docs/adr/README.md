@@ -51,5 +51,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0045](0045-conversas-isoladas-por-post.md) | decisão aprovada; implementação local em verificação | Escopo de conversa por post, provas de continuidade e migração local preservada |
 | [0046](0046-contexto-e-referencias-por-post.md) | decisão aprovada; implementação local em verificação | Objetivo e referências por post, snapshots, migração preservada e sinais com alcance explícito |
 | [0047](0047-ia-inicial-e-jornada-unica-no-estudio.md) | decisão solicitada; implementação em validação | IA do Compor inicial sem geração automática, conversa minimizável e seleção única de referências |
+| [0054](0054-bancada-de-referencias-e-rascunho-v0.md) | decisão solicitada; implementação local em validação | Bancada com seleção e conversa, busca e geração distintas, última exploração preservada como v0 sem aprovação |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

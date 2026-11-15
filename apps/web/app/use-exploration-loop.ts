@@ -11,13 +11,14 @@ import { generatedSignalsSchema,currentGeneratedFeedback } from "../lib/generate
 import { markBeforeDispatch } from "../lib/exploration-pending";
 import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
 import { referenceSignalsResponseSchema,currentReferenceFeedback } from "../lib/reference-exploration-contract";
+import {postContext} from '../lib/studio-post-context.ts';
 
 const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().uuid(), retryAutomatically: z.boolean().optional() });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
 const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().uuid(), project_id: z.string().uuid(), state: z.enum(["running", "unknown", "completed", "rejected"]) })).max(100) });
 
-type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string };
+type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string;onCompleted?:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void> };
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -123,6 +124,7 @@ export function useExplorationLoop(props: LoopProps) {
             localStorage.setItem(batchKey(pending.projectId),JSON.stringify(reconciled));
             localStorage.setItem(sequenceKey(pending.projectId),String(reconciled.sequence));
             if(pending.projectId===props.projectId)progress=reconciled;
+            if(pending.projectId===props.projectId&&pending.conversationId)await current.current.onCompleted?.(pending.requestId,pending.sequence+1,pending.conversationId,pending.creationContext);
             localStorage.removeItem(pendingKey);
           }
           if(progress.awaitingFeedback) {
@@ -189,7 +191,9 @@ export function useExplorationLoop(props: LoopProps) {
             const { prompt,composition,contrast } = createExplorationPrompt({ idea:current.current.idea??'', offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });
             const requestId = crypto.randomUUID();
             const batch={id:progress.batchId,position:progress.completed+1};
-            const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position};
+            // This endpoint sends a textual prompt and plan, not selected image bytes.
+            // Aggregated signals may inform that prompt but do not prove asset attribution.
+            const pending={projectId:props.projectId,requestId,sequence,batchId:batch.id,position:batch.position,conversationId:props.conversationId??'references',creationContext:{postContext:props.conversationId&&props.conversationId!=='references'?postContext(latestState,props.conversationId):{objective:'',message:'',action:''},references:[]}};
             const marker=JSON.stringify(pending);
             if (!markBeforeDispatch(localStorage,pendingKey,marker,()=>active && !cancel.signal.aborted && current.current.enabled && current.current.isAuthenticated() && current.current.hasApiKey && sameCredential() && current.current.getApiKey() === apiKey)) return;
             setPhase('generating');setCountdown(null);setStatus(`Explorando caminho visual ${sequence + 1}…`);
@@ -238,6 +242,7 @@ export function useExplorationLoop(props: LoopProps) {
             if(!active || !current.current.enabled)progress=freezeBatchWait(progress,completedAt);
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
+            await current.current.onCompleted?.(requestId,sequence+1,pending.conversationId,pending.creationContext);
             localStorage.removeItem(pendingKey);
             setCompleted(value => value + 1);
           }

@@ -34,8 +34,8 @@ const reply={version:1,kind:'taste_reading',reading:'As referências são editor
  {id:'adjust',intent:'adjust',label:'Quero ajustar'},
 ]};
 const text=`${reply.reading}\n\n**Recomendação:** ${reply.recommendation}\n\n${reply.question}`;
-async function setup(t,{structured=reply,readOnly=false}={}){ // null omits the structure
- const result=await build({stdin:{contents:source.replace('<StudioChat state=',`<StudioChat readOnly={${readOnly}} state=`).replace('__CONVERSATION_SCOPE__',readOnly?'undefined':'"references"'),loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
+async function setup(t,{structured=reply,readOnly=false,workbench=false}={}){ // null omits the structure
+ const result=await build({stdin:{contents:source.replace('<StudioChat state=',`<StudioChat referenceWorkbench={${workbench}} readOnly={${readOnly}} state=`).replace('__CONVERSATION_SCOPE__',readOnly?'undefined':'"references"'),loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(result.outputFiles[0].text);}else if(req.url?.endsWith('.svg')){res.setHeader('Content-Type','image/svg+xml');res.end('<svg xmlns="http://www.w3.org/2000/svg"/>');}else{res.setHeader('Content-Type','text/html');res.end('<div id="root"></div><script type="module" src="/fixture.js"></script>');}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
@@ -182,4 +182,28 @@ test('histórico somente leitura consulta pendências sem executar ferramentas n
   await page.getByText('Este pedido pertence ao histórico anterior. Seus dados foram preservados; consulte o resultado antes de fazer um novo pedido na conversa do post.',{exact:true}).waitFor();
   assert.deepEqual(requests.map(request=>request.op),['poll']);assert.deepEqual(await snapshot(),pending);assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).isDisabled(),true);
  }
+});
+
+
+test('bancada mantém a decisão ativa ao lado do histórico e recolhe leituras respondidas',options,async t=>{
+ const {page,reading,waitForCalls}=await setup(t,{workbench:true});await reading();
+ const decision=page.getByRole('complementary',{name:'Decisão atual sobre referências'});
+ await decision.getByRole('group',{name:reply.question}).waitFor();
+ assert.equal(await decision.locator('.studio-reference-recommendation-summary').isVisible(),true,'a recomendação permanece visível antes de concordar');
+ const rationale=decision.locator('.studio-taste-rationale');
+ assert.equal(await rationale.evaluate(element=>element.open),false);
+ await rationale.locator('summary').click();
+ assert.equal(await rationale.getByText(reply.recommendation,{exact:true}).isVisible(),true);
+ assert.equal(await page.locator('.studio-chat-messages .studio-taste-card').count(),0);
+ assert.equal(await page.getByRole('button',{name:'Mostrar detalhes da conversa',exact:true}).getAttribute('aria-expanded'),'false');
+ await decision.getByRole('button',{name:'Concordo',exact:true}).click();await waitForCalls(2);
+ await page.getByText('Seguimos por essa direção.',{exact:true}).waitFor();
+ assert.equal(await decision.count(),0);
+ const history=page.locator('.studio-taste-history');
+ assert.equal(await history.evaluate(element=>element.open),false);
+ await page.getByText('Você escolheu “Concordo”. A resposta está na conversa.',{exact:true}).waitFor();
+ await history.locator('summary').click();
+ assert.equal(await history.getByRole('group',{name:reply.question}).isVisible(),true);
+ assert.equal(await history.getByRole('button',{disabled:false}).count(),0);
+ assert.equal(await page.getByLabel('Sua mensagem').isVisible(),true);
 });

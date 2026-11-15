@@ -124,16 +124,15 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
     </figure>;
   }
   return <section className="studio-exploration-gallery" aria-label="Explorações de imagem">
-    <h2>Explorações de imagem</h2>
-    <p>Imagens geradas pelo Compor para experimentar caminhos visuais. Use as que chamarem sua atenção como referência.</p>
-    {phase === "generating" && <p role="status">Gerando uma imagem do lote…</p>}
-    {phase === "waiting" && countdown !== null && <div className="studio-batch-wait" role="timer" aria-label={`Próximo lote em ${countdown} segundos`}><img className="studio-batch-spinner" src="/studio/compor-avatar.svg" alt="" /><span aria-hidden="true">Próximo lote em {countdown}s</span></div>}
-    <button className="studio-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)} disabled={loading}>
-      {loading ? "Consultando…" : "Consultar explorações"}
-    </button>
-    {notice && <p role="status">{notice}</p>}
+    <div className="exploration-gallery-heading"><h2>Explorações de imagem</h2><p>Compare as propostas. Escolher orienta a criação, sem aprovar a arte.</p></div>
+    {phase === "generating" && <p className="exploration-gallery-generating" role="status">Gerando uma imagem do lote…</p>}
+    {notice && <p role="status" data-notice={notice.startsWith('Imagem adicionada')?'selected':'error'}>{notice}</p>}
     {images?.length === 0 && <p>Nenhuma exploração encontrada neste projeto.</p>}
     {latest.length > 0 && <div className="studio-exploration-grid">{latest.map(imageCard)}</div>}
-    {(previous.length > 0 || nextBeforeOrdinal !== null) && <details className="studio-previous-explorations" onToggle={event=>setPreviousOpen(event.currentTarget.open)}><summary>Ver imagens anteriores ({previous.length})</summary><div className="studio-exploration-grid">{previous.map(imageCard)}</div>{nextBeforeOrdinal !== null && <button type="button" className="studio-button-secondary" onClick={loadPrevious} disabled={loadingPrevious}>{loadingPrevious ? "Carregando…" : "Carregar anteriores"}</button>}</details>}
+    <div className="exploration-gallery-controls">
+      {phase === "waiting" && countdown !== null && <div className="studio-batch-wait" role="timer" aria-label={`Próximo lote em ${countdown} segundos`}><img className="studio-batch-spinner" src="/studio/compor-avatar.svg" alt="" /><span aria-hidden="true">Próximo lote em {countdown}s</span></div>}
+      <button className="studio-button-secondary" type="button" onClick={() => setRefresh(value => value + 1)} disabled={loading}>{loading ? "Consultando…" : "Consultar explorações"}</button>
+      {(previous.length > 0 || nextBeforeOrdinal !== null) && <details className="studio-previous-explorations" onToggle={event=>setPreviousOpen(event.currentTarget.open)}><summary>Ver imagens anteriores ({previous.length})</summary><div className="studio-exploration-grid">{previous.map(imageCard)}</div>{nextBeforeOrdinal !== null && <button type="button" className="studio-button-secondary" onClick={loadPrevious} disabled={loadingPrevious}>{loadingPrevious ? "Carregando…" : "Carregar anteriores"}</button>}</details>}
+    </div>
   </section>;
 }

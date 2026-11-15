@@ -95,7 +95,8 @@ export default function StudioChat({
   readOnly = false,
   allowReferenceAnalysis = true,
   intro = false,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean }) {
+  referenceWorkbench = false,
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean;referenceWorkbench?:boolean }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
@@ -116,13 +117,28 @@ export default function StudioChat({
   useEffect(()=>{if(restoredDraft!==undefined&&!busy&&!pending)setMessageState(restoredDraft);},[restoredDraft]);
   function setMessage(value:string){setMessageState(value);if(onMessageDraftChange)onMessageDraftChange(value);else if(conversationId)ownedDraft.setValue(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
-  const [detailsVisible,setDetailsVisible]=useState(true);
+  const [detailsVisible,setDetailsVisible]=useState(!referenceWorkbench);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
+  const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
+  const referenceLoader=useRef(loadReference);
+  referenceLoader.current=loadReference;
+  const latestReference=state.references.at(-1);
+  useEffect(()=>{
+    setReferencePreview(null);
+    if(!referenceWorkbench||!latestReference)return;
+    let active=true,url:string|undefined;
+    void referenceLoader.current(latestReference.id).then(image=>{
+      if(!active||!image)return;
+      url=URL.createObjectURL(image.file);
+      setReferencePreview({id:latestReference.id,url});
+    }).catch(()=>{ /* The selected reference and its context remain available without a preview. */ });
+    return()=>{active=false;if(url)URL.revokeObjectURL(url);};
+  },[referenceWorkbench,state.userId,state.projectId,conversationId,latestReference?.id]);
   const [currentContext,setCurrentContext]=useState<{value:string;digest:string}|null>(null);
   const attemptSource=useRef<CredentialSource>(credentialSource);
   const previousScope=useRef<{marker:string;source:CredentialSource;epoch:number}|null>(null);
@@ -920,13 +936,18 @@ export default function StudioChat({
   }
   const currentDraft=getCurrentDraft(state);
   const visibleMessages=conversationMessages(state,conversationId);
+  const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
+  const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
+  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch;
+  const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
+  const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   return (
-    <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
+    <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} data-reference-workbench={referenceWorkbench?'true':undefined} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
       <header className="studio-chat-header">
         <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
         <div>
-          <h2>{readOnly?"Histórico anterior do projeto":intro?"Qual post você quer criar agora?":"Vamos compor juntos"}</h2>
-          <p>{intro?"O contexto do projeto já está preparado. Agora descreva esta peça.":"Uma conversa, muitas possibilidades."}</p>
+          <h2>{readOnly?"Histórico anterior do projeto":intro?"Qual post você quer criar agora?":referenceWorkbench?"Conversa sobre as referências":"Vamos compor juntos"}</h2>
+          <p>{intro?"O contexto do projeto já está preparado. Agora descreva esta peça.":referenceWorkbench?"Compare, escolha e conte o que quer aproveitar.":"Uma conversa, muitas possibilidades."}</p>
         </div>
         <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls={detailsId} onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
@@ -959,6 +980,7 @@ export default function StudioChat({
           )}
         </details>
       </div>
+      <div className="studio-chat-content">
       <div className="studio-chat-messages" aria-live="polite" ref={messagesRef} onScroll={(event) => {
         const element = event.currentTarget;
         followMessages.current = element.scrollHeight - element.scrollTop - element.clientHeight < 80;
@@ -973,7 +995,7 @@ export default function StudioChat({
         )}
         {visibleMessages.filter(item=>item.role!=='system').map((item) => {
           const entry=item.role==='assistant'?quickReplies.find(candidate=>candidate.messageId===item.id):undefined;
-          if(entry)return <TasteReadingCard key={item.id} entry={entry} status={quickReplyStatus(entry,visibleMessages,{fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null})} disabled={readOnly||!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
+          if(entry)return activeReading?.messageId===entry.messageId?null:readingCard(entry);
           return <article
             className="studio-message"
             data-role={item.role}
@@ -1068,9 +1090,15 @@ export default function StudioChat({
           </div>}
         </div>}
       </div>
+      {activeReading&&<aside className="studio-reference-question" aria-label="Decisão atual sobre referências">{readingCard(activeReading)}</aside>}
+      </div>
       {conversationId&&ownedDraft.error&&<p role="status" className="studio-hint">{ownedDraft.error}</p>}
       <form className="studio-chat-composer" onSubmit={send}>
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
+        {referenceWorkbench&&latestReference&&<span className="studio-reference-composer-context" title={`Última referência escolhida: ${lastReferenceTitle}. A conversa considera toda a seleção.`}>
+          {referencePreview?.id===latestReference.id&&<img src={referencePreview.url} alt="" width="36" height="36"/>}
+          <span>{lastReferenceTitle}<small>{state.references.length} referências na conversa</small></span>
+        </span>}
         <label className="studio-visually-hidden" htmlFor={composerId}>Sua mensagem</label>
         <textarea
           ref={composerRef}
@@ -1079,7 +1107,7 @@ export default function StudioChat({
           maxLength={4000}
           value={message}
           disabled={busy||readOnly}
-          placeholder={intro?"Ex.: crie um post para anunciar as inscrições da oficina, com uma mensagem acolhedora.":"Escreva uma mensagem…"}
+          placeholder={intro?"Ex.: crie um post para anunciar as inscrições da oficina, com uma mensagem acolhedora.":referenceWorkbench?"Comente as referências ou peça outro caminho…":"Escreva uma mensagem…"}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={submitOnEnter}
         />

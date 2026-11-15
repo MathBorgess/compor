@@ -5,6 +5,7 @@ import type { Project } from "./studio-ui-types";
 import AccountMenu from "./account-menu";
 import "./studio-shell.css";
 import "./studio-reference-workspace.css";
+import "./studio-reference-chat.css";
 
 const assets = "/studio/";
 export type StudioTab = "post" | "moodboard" | "direction" | "facts" | "history";

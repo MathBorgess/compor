@@ -58,6 +58,6 @@ export async function openConversation(page){
 
 export async function addProjectReferences(page,files){
  const panel=await openSettings(page,'Referências');
- await panel.getByRole('button',{name:'Enviar imagens',exact:true}).click();
+ await panel.getByRole('button',{name:'Enviar imagem',exact:true}).click();
  await panel.locator('input[type="file"]').setInputFiles(files);
 }

@@ -33,7 +33,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
  await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage();page.setDefaultTimeout(15000);
  if(landingIdea)await page.addInitScript(({userId,idea})=>sessionStorage.setItem(`compor-objective:user:${userId}`,idea),{userId,idea:landingIdea});
- const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],explorations=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
+ const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],explorations=[],generatedRows=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
@@ -53,9 +53,12 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   if(url.pathname==='/api/pieces')return route.fulfill({json:{versions:[]}});
   if(url.pathname==='/api/studio/chat'){const body=request.postDataJSON();if(body.op!=='poll')chats.push(body);return route.fulfill({status:202,json:await flow.chat(body)});}
   if(url.pathname==='/api/studio/action'){const body=request.postDataJSON();actions.push(body);return route.fulfill({status:202,json:await flow.action(body)});}
-  if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
+  if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:generatedRows.filter(row=>row.project_id===url.searchParams.get('projectId')&&(!url.searchParams.has('beforeOrdinal')||row.ordinal<Number(url.searchParams.get('beforeOrdinal')))),nextBeforeOrdinal:null}});
+  if(url.pathname==='/api/studio/explorations/image')return route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64')});
   if(url.pathname==='/api/studio/explorations'&&request.method()==='POST'){
-   const body=request.postDataJSON();explorations.push(body);return route.fulfill({status:completeExplorations?200:202,json:{status:completeExplorations?'completed':'unknown',requestId:body.requestId}});
+   const body=request.postDataJSON();explorations.push(body);
+   if(completeExplorations)generatedRows.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:generatedRows.filter(row=>row.project_id===body.projectId).length+1,batch_id:body.batch.id,batch_position:body.batch.position});
+   return route.fulfill({status:completeExplorations?200:202,json:{status:completeExplorations?'completed':'unknown',requestId:body.requestId}});
   }
   if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
@@ -224,13 +227,13 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  await page.reload();await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
  let message=await connectKey(page);assert.equal(await message.inputValue(),'');
  assert.equal(explorations.length,0,'conectar a chave não inicia exploração');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
  assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
  await closeSettings(page);await message.fill('Post sobre gravura');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
  message=await connectKey(page);assert.equal(await message.inputValue(),'');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
  const firstBatch=explorations.filter(call=>call.projectId===projects[0].id);assert.equal(firstBatch.length,3);assert.ok(firstBatch.every(call=>call.prompt.includes(firstIdea)&&!call.prompt.includes(secondIdea)));
  await closeSettings(page);await message.fill('Post sobre cerâmica');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();

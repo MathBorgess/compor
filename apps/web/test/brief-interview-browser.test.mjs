@@ -103,7 +103,7 @@ async function openProject(page,origin){
 async function openEditorConversation(page){await closeSettings(page);await openPostEditor(page);await openConversation(page);}
 async function connectKey(page,{references=false}={}){
  await connectOwnOpenAiKey(page,`sk-synthetic-${'x'.repeat(30)}`);await closeSettings(page);
- if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();}else await openConversation(page);
+ if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();}else await openConversation(page);
 }
 
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
@@ -256,7 +256,7 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  assert.deepEqual(errors,[]);
 });
 
-test('configurações do projeto e referências ocupam o viewport com abas e rodapé acessíveis', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('configurações e bancada de referências mantêm abas, seleção, chat e retorno no viewport', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await openProject(page,origin);
  const dialog=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
  const tabs=dialog.getByRole('navigation',{name:'Configurações',exact:true});
@@ -270,16 +270,18 @@ test('configurações do projeto e referências ocupam o viewport com abas e rod
  assert.equal(await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).isVisible(),true);
  await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
  await tabs.getByRole('button',{name:'Referências',exact:true}).click();
- const content=dialog.locator('.guided-reference-content'),footer=dialog.locator('.guided-references footer');
- assert.ok(await content.evaluate(element=>element.scrollHeight>element.clientHeight),'referências rolam dentro do viewport');
+ const content=dialog.locator('.reference-workbench-source'),returnAction=dialog.locator('.reference-workbench-return');
  await content.evaluate(element=>element.scrollTop=element.scrollHeight);
- const footerBounds=await footer.boundingBox(),tabsBounds=await tabs.boundingBox();
+ const returnBoundsAfterScroll=await returnAction.boundingBox(),tabsBounds=await tabs.boundingBox();
  assert.ok(tabsBounds.y>=0&&tabsBounds.y+tabsBounds.height<=500,'abas continuam visíveis');
- assert.ok(footerBounds.y>=0&&footerBounds.y+footerBounds.height<=500,'rodapé continua visível após rolar as referências');
+ assert.ok(returnBoundsAfterScroll.y>=0&&returnBoundsAfterScroll.y+returnBoundsAfterScroll.height<=500,'retorno continua visível após rolar as referências');
+ const composer=dialog.locator('.reference-workbench-conversation .studio-chat-composer');
+ const composerBounds=await composer.boundingBox();assert.ok(composerBounds.y>=0&&composerBounds.y+composerBounds.height<=500,`compositor permanece no viewport junto das referências: ${JSON.stringify(composerBounds)}`);
  await page.setViewportSize({width:390,height:400});await assertViewport(390,400);
  const shortContentHeight=await content.evaluate(element=>element.clientHeight);
  assert.ok(shortContentHeight>=60,`conteúdo de referências ainda tem área de rolagem em viewport baixo (${shortContentHeight}px)`);
- const shortFooter=await footer.boundingBox();assert.ok(shortFooter.y+shortFooter.height<=400,'rodapé continua no viewport baixo');
+ const shortReturn=await returnAction.boundingBox();assert.ok(shortReturn.y+shortReturn.height<=400,'retorno continua no viewport baixo');
+ const shortComposer=await composer.boundingBox();assert.ok(shortComposer.y>=0&&shortComposer.y+shortComposer.height<=400,'compositor continua no viewport baixo');
  await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
  const returnBounds=await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).boundingBox();
  assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'retorno permanece acessível em outra aba');
@@ -292,7 +294,7 @@ test('consultar explorações mostra resultados confirmados, recusados e incerto
   const {page, origin, calls, errors, images} = await app(t);
   images.unshift({id:'00000000-0000-4000-8000-000000000094',project_id:projectId,state:'rejected',created_at:'2026-11-06T12:02:00Z',ordinal:3,batch_id:'00000000-0000-4000-8000-000000000093',batch_position:3});
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   await page.getByRole('button', {name: 'Consultar explorações', exact: true}).click();
   const gallery = page.getByRole('region', {name: 'Explorações de imagem', exact: true});
   await gallery.getByText('Resultado não confirmado.', {exact: true}).waitFor();
@@ -343,7 +345,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
 test('referência escolhida preserva origem e acompanha o próximo turno da conversa', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors} = await app(t, {withReferences:true});
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
+  await page.getByRole('navigation',{name:'Como adicionar referências',exact:true}).getByRole('button',{name:'Buscar referências',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -367,17 +369,17 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
 });
 
 test('pergunta do turno de seleção pausa a exploração até a pessoa responder ou pedir mais', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page, origin, errors} = await app(t, {withReferences:true});
+  const {page, origin, errors,images} = await app(t, {withReferences:true});
   const selections=[],generations=[];
   await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
-  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
+  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);images.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:Math.max(0,...images.map(item=>item.ordinal))+1,batch_id:body.batch.id,batch_position:body.batch.position});return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
   await openProject(page, origin);
   await connectKey(page);
   await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
-  await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
-  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
+  await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await page.getByRole('navigation',{name:'Como adicionar referências',exact:true}).getByRole('button',{name:'Buscar referências',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -392,7 +394,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
   await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
   await recovery.waitFor({state:'detached'});
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   assert.deepEqual(errors,[]);
 });
@@ -400,7 +402,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
 test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, selectionSignals} = await app(t);
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   assert.equal(await gallery.getByText('Avaliar esta imagem').count(),0);
   await gallery.getByRole('button',{name:'Usar imagem 1 na conversa e na Direção'}).click();
@@ -427,7 +429,7 @@ test('último lote aparece primeiro e ordinal não muda quando chegam imagens no
   const first='00000000-0000-4000-8000-000000000201',second='00000000-0000-4000-8000-000000000202';
   images.splice(0,images.length,item(3,second),item(2,first),item(1,first));
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).waitFor();
@@ -449,7 +451,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
   images.splice(0,images.length,item(103),item(102),item(101));
   paging.nextBeforeOrdinal=101;paging.older=[{...item(100),batch_id:'00000000-0000-4000-8000-000000000201'},{...item(99),batch_id:'00000000-0000-4000-8000-000000000201'}];
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 103 na conversa e na Direção'}).waitFor();
@@ -469,7 +471,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
 test('recuperação incerta e reconexão preservam compositor em viewport baixo',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await page.setViewportSize({width:390,height:400});await openProject(page,origin);await connectKey(page);
  const field=await openConversation(page);await field.fill('Quero divulgar uma aula de cerâmica.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();await field.fill('Meu rascunho continua aqui');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByRole('button',{name:'Remover chave'}).click();await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
  assert.equal(await field.inputValue(),'Meu rascunho continua aqui');await field.scrollIntoViewIfNeeded();
  const send=page.getByRole('button',{name:'Enviar →',exact:true});await send.scrollIntoViewIfNeeded();const bounds=await send.boundingBox();assert.ok(bounds.y>=0&&bounds.y+bounds.height<=400);assert.deepEqual(errors,[]);
