@@ -97,10 +97,11 @@
 .guided-references .reference-selection-list li button { margin:0;min-height:44px; }
 .guided-references .reference-selection-list li button:last-child { margin-top:auto; }
 .guided-references .reference-selection-list img { width:100%;object-fit:contain; }
-.guided-references .reference-exploration { max-height:none;overflow:visible;padding:0; }
+.guided-references .reference-exploration { max-height:none;overflow:visible;padding:1rem 1.25rem; }
 .guided-references .guided-reference-chat { min-height:0;max-height:none; }
 .guided-references footer { border-top:1px solid var(--studio-line,#dedfd9);padding-top:20px; }
 @media(max-width:600px) {
+ .guided-references .reference-exploration { padding:.9rem; }
  .studio-modal:has(.guided-references) { padding:18px;width:96vw;max-width:96vw; }
  .studio-modal>.guided-references { max-height:calc(90dvh - 36px); }
  .guided-references { gap:20px; }
