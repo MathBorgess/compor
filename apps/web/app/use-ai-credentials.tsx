@@ -53,22 +53,22 @@ export function useAICredentials(userId: string | null, connected: boolean) {
   }, []);
   useEffect(() => {
     if (!connected || !userId) { setDefaultAvailable(false); return; }
-    const controller = new AbortController();
+    let activeRead = true;
     setDefaultAvailable(false);
-    void fetch("/api/ai/credential-status", { cache: "no-store", signal: controller.signal })
+    void fetch("/api/ai/credential-status", { cache: "no-store" })
       .then(async response => {
         const value: unknown = response.ok ? await response.json() : null;
         const available = value !== null && typeof value === "object" && !Array.isArray(value) &&
           Object.keys(value).length === 1 && "defaultAvailable" in value && value.defaultAvailable === true;
-        if (controller.signal.aborted || identity.current.userId !== userId || !identity.current.connected) return;
+        if (!activeRead || identity.current.userId !== userId || !identity.current.connected) return;
         setDefaultAvailable(available);
         if (available && intent.current && current.current.source === "default") {
           activated.current = true; setActive(true);
         }
       }).catch(() => {
-        if (!controller.signal.aborted && identity.current.userId === userId) setDefaultAvailable(false);
+        if (activeRead && identity.current.connected && identity.current.userId === userId) setDefaultAvailable(false);
       });
-    return () => controller.abort();
+    return () => { activeRead = false; };
   }, [connected, userId]);
 
   const authenticated = connected && userId !== null;
