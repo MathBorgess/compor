@@ -1,6 +1,6 @@
 # ADR 0054 — Bancada de referências e passagem para a v0
 
-- Estado: decisão solicitada por Matheus; implementação e validação locais em andamento.
+- Estado: decisão solicitada por Matheus; implementada e validada localmente. Publicação e migrations remotas são evidências separadas.
 - Data: 15/11/2026.
 - Fonte: escolha explícita do exemplo visual 3 e dos detalhamentos de Pinterest/propostas, seguida do pedido de implementação com a última proposta do Compor preservada como v0 e de integração com o PR 52.
 

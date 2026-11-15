@@ -19,16 +19,16 @@ Ambiente: Codex desktop, Darwin 27.2.0, Node 24.16.0, Next 16.4.4, Chrome 157.0.
 | Lint e TypeScript estrito | Aprovados |
 | Contratos de pacotes e migrações | 473 testes JavaScript + 22 Python aprovados, sem pulos |
 | Avaliadores de qualidade | 25 aprovados, sem pulos |
-| Percurso real Next, entrada por botão e chat | 2 variantes aprovadas; bytes v0, catálogo, nome normalizado, recarga, portal e post seguinte |
+| Percurso real Next, entrada por botão e chat | 3 variantes aprovadas; bytes v0, catálogo, nome normalizado, recarga, portal e post seguinte |
 | Domínio, IndexedDB e workflow de v0 | 20 aprovados, sem pulos |
 | Build de produção | Aprovado |
-| Suíte web completa da combinação | Em validação; fixtures antigas de confirmação estão sendo ajustadas |
-| Performance da combinação final | Em validação; build Mini medido abaixo do orçamento |
+| Suíte web completa da combinação | 466/466 aprovados; zero falhas e zero pulos (475,5 s) |
+| Performance da combinação final | Aprovada: JS 297.914/300.000 bytes; LCP mediano 627 ms, TBT 0 ms e CLS 0,008 em cinco execuções |
 | Inspeção visual e acessibilidade | [Relatório e comparação](../../design-qa.md) |
 
 A primeira execução web revelou fixtures que pressupunham confirmação síncrona de `/api/posts`, além de um simulado que encadeava edição após `declined`. A correção espera o formulário desaparecer após o recibo e exige nome/confirmar antes de um novo turno. Preserva as verificações de versões, bytes, conflitos e isolamento de conversa; não relaxa gates.
 
-A revisão estática independente não encontrou P0/P1/P2 comprovado nos recibos, no catálogo/RLS, nas exclusões lógicas ou no controlador único. Revisão estática não substitui execução.
+A revisão independente encontrou dois P2 de integração, corrigidos antes da validação final: análise poderia começar depois de ocultar as referências; e um novo post pedido pelo chat das referências de um projeto já pronto perdia a candidata à v0. A leitura agora revalida disponibilidade após cada preparação assíncrona, com uma época própria de visibilidade; busy/pending da própria operação não a cancelam. A saída pelo agente captura o encaminhamento da conversa ativa. As regressões de fechar/reabrir e o percurso de projeto pronto passaram. Não houve outro P0/P1/P2 comprovado nos recibos, catálogo/RLS ou exclusões lógicas. Revisão estática não substitui execução.
 
 ## Bundle
 
@@ -39,3 +39,7 @@ A entrada Mini da versão instalada preserva validação, refinamentos, defaults
 ## Limites e publicação
 
 Serviços simulados não comprovam geração/cobrança real, login real, isolamento entre contas reais ou qualidade criativa. Lighthouse mede a entrada sem sessão. Validação local não comprova CI Linux ou deploy. As evidências remotas serão registradas separadamente. Nenhuma migration remota ou promoção de produção foi executada nesta validação local.
+
+## Preview remoto
+
+O push da branch `codex/references-workbench-v0` gerou o [preview 25136e8](https://compor-marco0-1h4fiuxbx-math-ai2.vercel.app/), estado READY confirmado na Vercel; a entrada respondeu 200 pelo conector autenticado. Isso não comprova login, migrations ou geração reais. A criação do PR pelo conector abriu formulário pendente de envio humano; nenhum PR de código havia sido criado na consulta pelo head. Não houve merge na main.
