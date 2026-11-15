@@ -915,7 +915,7 @@ export default function StudioChat({
   const currentDraft=getCurrentDraft(state);
   const visibleMessages=conversationMessages(state,conversationId);
   return (
-    <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} aria-label="Conversa do projeto">
+    <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
       <header className="studio-chat-header">
         <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
         <div>
@@ -924,6 +924,7 @@ export default function StudioChat({
         </div>
         <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls={detailsId} onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
+      {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro||!detailsVisible} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;

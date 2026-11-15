@@ -44,7 +44,7 @@ export function useExplorationLoop(props: LoopProps) {
   const resumeInFlight = useRef(false);
   const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
   const [resumedQuestion, setResumedQuestion] = useState<{key:string;id:string}|null>(null);
-  const question = props.state ? pendingSelectionQuestion(props.state) : null;
+  const question = props.state ? pendingSelectionQuestion(props.state,'references') : null;
   const awaitingAnswer = question !== null && (resumedQuestion?.key !== questionKey || resumedQuestion.id !== question);
   const waitsForAnswer = useRef(awaitingAnswer);
   current.current = props;

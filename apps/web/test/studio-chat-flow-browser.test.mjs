@@ -1,3 +1,4 @@
+import {openPostEditor,openSettings,closeSettings,openConversation} from './guided-navigation.mjs';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -17,10 +18,10 @@ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4A
 async function eventually(fn,predicate,timeout=6000){const until=Date.now()+timeout;for(;;){const value=await fn();if(predicate(value))return value;if(Date.now()>until)throw Error('estado esperado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 async function stored(page){return page.evaluate(async scope=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{return await new Promise((resolve,reject)=>{const r=db.transaction('states').objectStore('states').get(JSON.stringify([scope.userId,scope.projectId]));r.onsuccess=()=>resolve(r.result?.state??null);r.onerror=()=>reject(r.error);});}finally{db.close();}},{userId,projectId});}
 async function assetBytes(page,pieceId,version){return page.evaluate(async ({userId,projectId,pieceId,version})=>{const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});try{const row=await new Promise((resolve,reject)=>{const key=JSON.stringify([JSON.stringify([userId,projectId]),pieceId,version,'base']);const r=db.transaction('draftAssets').objectStore('draftAssets').get(key);r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});return row?Array.from(new Uint8Array(await row.file.arrayBuffer())):null;}finally{db.close();}},{userId,projectId,pieceId,version});}
-async function openDrawer(page,name){const panel=page.getByRole('dialog',{name,exact:true});if(!await panel.isVisible())await page.getByRole('button',{name:name==='Bases'?/^Bases \(\d+\)$/:name,exact:true}).click();await panel.waitFor();return panel;}
-async function closeDrawer(page){await page.keyboard.press('Escape');await page.getByRole('dialog',{name:/^(Bases|Marca)$/}).waitFor({state:'hidden'});}
-async function openEditor(page){const title=page.getByLabel('Título',{exact:true}),open=page.getByRole('button',{name:'Definir textos da arte',exact:true});await title.or(open).first().waitFor();if(await open.isVisible())await open.click();await title.waitFor();}
-async function chooseFiles(page,label,files){const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
+async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
+async function closeDrawer(page){await closeSettings(page);}
+async function openEditor(page){await openPostEditor(page);}
+async function chooseFiles(page,label,files){if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const recordStartup=chunk=>{const output=startup+chunk;startup=output.length>6000?output.slice(0,4500)+output.slice(-1500):output;};
@@ -67,10 +68,10 @@ async function app(t){
  return {page,origin,calls,projects,projectReads,versions,flow,errors,external,explorationPosts};
 }
 async function openOriginal(page,origin,{key=true}={}){
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByLabel('Sua mensagem',{exact:true}).waitFor({state:'attached'});if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
- if(key){await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();}
- await page.getByLabel('Título',{exact:true}).waitFor();
- if(!await page.getByLabel('Sua mensagem',{exact:true}).isVisible())await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();
+ if(key){await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);}
+ await openEditor(page);await openConversation(page);
 }
 async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={}){
  if(!buffer)buffer=Buffer.from(await page.evaluate(mime=>{const canvas=document.createElement('canvas');canvas.width=96;canvas.height=128;const context=canvas.getContext('2d');context.fillStyle='#2244aa';context.fillRect(0,0,96,128);return canvas.toDataURL(mime).split(',')[1];},mime),'base64');
@@ -96,11 +97,13 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
    default:throw Error('resultado inesperado');
   }
  };
- await openOriginal(page,origin);await page.getByLabel('Sua mensagem',{exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await openOriginal(page,origin);await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`,{cause:error});}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await eventually(()=>page.getByLabel('Título',{exact:true}).inputValue(),value=>value==='Título novo refinado');await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1,'segunda versão também espera confirmação');
- await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();
- await page.getByText('Imagem gerada e adicionada a este post · versão 3.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor({state:'attached'});
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Original preservado .*Abrir post e conversa$/}).click();await openConversation(page);
+ await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();assert.equal((await stored(page)).adjustments[0].status,'completed');
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Título novo refinado .*Abrir post e conversa$/}).click();await openEditor(page);await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),1,'Novo post mostra só os cards da nova peça');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
@@ -119,11 +122,12 @@ test('dimensão da proposta prepara variante sem aprovação e conserva a imagem
   versions.push(version);return route.fulfill({json:{status:'saved',version}});
  });
  await openOriginal(page,origin);await attachImage(page);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero outra direção de estilo.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero outra direção de estilo.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Variante sintética pronta.',{exact:true}).waitFor();
  const save=calls.find(call=>call.path==='/api/pieces');assert.equal(save.body.changedDimension,'style');assert.equal(save.body.operation,'create');
  const state=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===2);
  assert.deepEqual(state.drafts.find(draft=>draft.pieceId===originalPiece&&draft.baseVersion===2).approval,{status:'unapproved'});
+ await page.getByRole('region',{name:'Variantes deste post',exact:true}).scrollIntoViewIfNeeded();
  await page.getByRole('img',{name:'Arte da versão 1',exact:true}).waitFor();await page.getByRole('img',{name:'Arte da versão 2',exact:true}).waitFor();
  assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),2);
  assert.equal(versions[0].metadata.approval.status,'approved');
@@ -140,7 +144,7 @@ test('efeito WebMCP persistido não se repete após refresh e recriação do exe
  await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');
  const before=await eventually(()=>stored(page),value=>value?.selection?.pieceId===originalPiece),args={projectId,requestId:id(70),revision:before.revision,field:'offer',value:'Oferta registrada uma única vez'};
  const first=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(first.status,'completed');const persisted=await eventually(()=>stored(page),value=>value?.actionReceipts?.some(receipt=>receipt.requestId===id(70)&&receipt.result.status==='completed'));assert.equal(persisted.brief.offer,args.value);
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByLabel('Título',{exact:true}).waitFor();await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'a chave não sobrevive ao refresh e não é requisito do WebMCP local');
+ await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'a chave não sobrevive ao refresh e não é requisito do WebMCP local');
  const restored=await stored(page),repeated=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(repeated.status,'completed');assert.equal(repeated.revision,restored.revision);assert.deepEqual(await stored(page),restored,'nem o efeito nem o recibo são gravados novamente');assert.equal(restored.actionReceipts.length,1);
  const conflict=await page.evaluate(async args=>{try{await window.__studioNative.compor_editar_briefing.execute({...args,value:'Oferta trocada'});return null;}catch(error){return error.message;}},args);assert.equal(conflict,'action_conflict');assert.deepEqual(await stored(page),restored);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
@@ -156,12 +160,12 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
   entered();await gate;return consent('origin');
  };
  await openOriginal(page,origin);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Proponha uma imagem para este post original.');
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Proponha uma imagem para este post original.');
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();await starting;
  await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Post B fora do pedido.*Versão 2/}).click();
  await waiting;release();
- const proposal=page.locator('.studio-image-consent');await proposal.waitFor();
+ const proposal=page.locator('.studio-image-consent');await proposal.waitFor({state:'attached'});assert.equal(await proposal.isVisible(),false,'a proposta de A não é apresentada como pedido de B');
  assert.match(await proposal.innerText(),/Original preservado · versão 1/,'a proposta identifica a origem capturada, sem adotar a seleção feita durante a espera');
  await page.waitForLoadState('networkidle');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0,'a seleção B não pode receber a geração pedida em A');
@@ -187,7 +191,7 @@ test('download pendente não exporta a arte no post aberto depois',{skip:!exists
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await page.getByRole('button',{name:'Baixar PNG',exact:true}).click();
  await page.waitForFunction(()=>typeof window.__releasePreviewEncoding==='function');
- await page.getByRole('button',{name:'Estúdio',exact:true}).click();
+ await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
  await openDrawer(page,'Bases');
  await page.getByRole('button',{name:/Post B preservado.*Versão 2/}).click();
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Post B preservado');
@@ -249,10 +253,10 @@ test('a conversa gera a arte integral de um rascunho sem exigir salvamento prév
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
  assert.equal(await page.getByLabel('Preço',{exact:true}).count(),0);assert.equal(await page.getByLabel('Data',{exact:true}).count(),0);
  await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
+ await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);
  const before=await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.headline==='Curso de planilhas'));assert.equal(before.selection.baseVersion,0);
- await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await openConversation(page);
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Gere o post completo com esses textos.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Primeira arte pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.pieceId,before.selection.pieceId);assert.equal(generation[0].body.version,1);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Curso de planilhas',price:'R$ 49',date:'12/12'},source:null,images:[]});
  assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1);assert.equal(versions.find(version=>version.piece_id===before.selection.pieceId).content.caption,'');
@@ -269,7 +273,7 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  await openOriginal(page,origin);
  const source=await attachImage(page,{mime:'image/png',name:'original.png'});
  await openDrawer(page,'Bases');await chooseFiles(page,'Adicionar PNG ou JPEG',{name:'reference.png',mimeType:'image/png',buffer:png});await page.getByRole('img',{name:'reference.png',exact:true}).waitFor();await closeDrawer(page);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Ajuste esta arte usando minha referência.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Nova arte editada.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  await openDrawer(page,'Bases');await page.getByRole('button',{name:/Original preservado.*Versão 1/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
@@ -303,7 +307,7 @@ test('nome confirmado pelo chat permanece no menu e a segunda renomeação usa a
  flow.action=body=>{assert.equal(body.actionBinding,'rename-first');assert.equal(body.result.status,'completed');return{status:'completed',text:'Primeiro nome confirmado.'};};
  const trigger=title=>page.getByRole('heading',{level:1}).getByRole('button',{name:title,exact:true});
  await openOriginal(page,origin);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Renomeie este projeto com o título confirmado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Renomeie este projeto com o título confirmado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true}).waitFor();
  assert.equal(calls.filter(call=>call.path==='/api/projects').length,0,'o chat aguarda confirmação antes da renomeação persistida');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Primeiro nome confirmado.',{exact:true}).waitFor();
@@ -357,8 +361,8 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
  await page.unroute('**/api/pieces');
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte recuperada editada.'}:{...consent('recovered'),proposal:{prompt:'Ajuste a arte preservada.',operation:'edit',baseImageId:draft.pieceId,referenceIds:[]}};
  await page.getByRole('button',{name:'Pedir ajuste no estúdio',exact:true}).click();
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Estúdio',exact:true}).click();
- await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Ajuste esta arte.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);
+ await openConversation(page);await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Ajuste esta arte.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Arte recuperada editada.',{exact:true}).waitFor();
  const generation=calls.filter(c=>c.path==='/api/agent/image');assert.equal(generation.length,1);assert.deepEqual(generation[0].body.artworkInput.source,{pieceId:draft.pieceId,version:1});assert.equal(generation[0].body.artworkInput.images[0].data,image.toString('base64'));assert.deepEqual(errors,[]);
 });
@@ -409,8 +413,8 @@ test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na ger
  assert.equal(await page.getByLabel('Local',{exact:true}).inputValue(),'','sugestão não inventa um valor');
  await page.getByLabel('Local',{exact:true}).fill('Ateliê central');
  await eventually(()=>stored(page),state=>state?.drafts?.some(draft=>draft.content.fields?.[0]?.value==='Ateliê central'));
- await page.getByRole('button',{name:'Conectar IA',exact:true}).click();await connectOwnOpenAiKey(page,apiKey);await page.getByRole('button',{name:'Continuar',exact:true}).click();
- await page.getByRole('button',{name:'Abrir conversa',exact:true}).click();await page.getByLabel('Sua mensagem',{exact:true}).fill('Gere o post com o local informado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);
+ await openConversation(page);await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Gere o post com o local informado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByText('Arte com local pronta.',{exact:true}).waitFor();await page.getByText('Imagem gerada e adicionada a este post · versão 1.',{exact:true}).waitFor();
  const field={id:fieldId,label:'Local',value:'Ateliê central',origin:'user'};
  assert.deepEqual(versions.find(version=>version.piece_id===before.selection.pieceId).content.fields,[field]);
@@ -440,8 +444,8 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  };
  await openOriginal(page,origin);await attachImage(page);
  await page.getByLabel(/^Legenda/).fill('Legenda preservada ao procurar referências.');
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero comunicar uma oficina');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Contexto preservado na conversa.',{exact:true}).waitFor();
- await page.getByLabel('Sua mensagem',{exact:true}).fill('Rascunho de conversa não enviado');
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero comunicar uma oficina');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Contexto preservado na conversa.',{exact:true}).waitFor();
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Rascunho de conversa não enviado');
  const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
  const originalVersions=structuredClone(versions);
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
@@ -450,9 +454,9 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
  assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
- assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).inputValue(),'Rascunho de conversa não enviado');
+ assert.equal(await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).inputValue(),'Rascunho de conversa não enviado');
  assert.deepEqual(await stored(page),before);assert.deepEqual(versions,originalVersions);
- await page.getByLabel('Sua mensagem',{exact:true}).fill('');
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('');
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
  await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
@@ -461,7 +465,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('button',{name:'Selecionada: Referência adicional'}).waitFor();
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
- await openDrawer(page,'Bases');await page.getByRole('button',{name:'Remover referência',exact:true}).click();await closeDrawer(page);
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Remover referência',exact:true}).click();await openSettings(page,'Referências');
  await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
  await eventually(()=>selectionTurns.length,count=>count===2,15000);
  assert.equal(selected.length,2);assert.notEqual(selected[0].id,selected[1].id);

@@ -1,7 +1,7 @@
 "use client";
 import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import dynamic from "next/dynamic";
-import StudioShell, { StudioPanel, CreativeBoard, type StudioStage, type StudioDrawer } from "./studio-shell";
+import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
 const PersonaStep = dynamic(() => import("./persona-step"));
 const StudioDirection = dynamic(() => import("./studio-direction"));
 import StudioEditor from "./studio-editor";
@@ -9,6 +9,8 @@ import StudioReview from "./studio-review";
 import VariantCards from "./studio-variant-cards";
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
+import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
+import {updateWorkflow,conversationMessages,postIds} from '../lib/studio-workflow';
 import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
@@ -103,6 +105,7 @@ export default function StudioApp({
       const data = projectsSchema.parse(await response.json());
       if (n !== seq.current) return;
       setProjects(data.projects);
+      if (!uncertain) setNotice("");
       setState("ready");
     } catch {
       if (n === seq.current) {
@@ -144,7 +147,6 @@ export default function StudioApp({
       });
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
-      onUseAI?.();
       setProjects((items) => [...items, data.project]);
       setSelected(data.project);
       setOpeningPrompt(projectName.trim());
@@ -200,22 +202,22 @@ export default function StudioApp({
     >
       {recoveryBanner}
       <section className="studio-starter" aria-labelledby="starter-title">
-        <h2 id="starter-title">O que vamos comunicar?</h2>
-        <p>Comece com uma ideia, uma oferta ou uma dúvida. A conversa ajuda a encontrar o visual e a mensagem para quem vai receber seu post.</p>
+        <h2 id="starter-title">Comece um projeto</h2>
+        <p>Um projeto reúne o contexto, as referências e os posts de uma mesma divulgação. Primeiro vamos prepará-lo; depois você cria cada post.</p>
         <form onSubmit={create}>
-          <label htmlFor="studio-project-name">Sua ideia</label>
-          <textarea id="studio-project-name" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} onKeyDown={submitOnEnter} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
-          <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Abrindo conversa…" : "Começar conversa"}</button>
+          <label htmlFor="studio-project-name">Sua ideia</label><p className="studio-hint" id="project-idea-help">Conte o que você quer divulgar. Criar o projeto não gera imagens.</p>
+          <textarea id="studio-project-name" aria-describedby="project-idea-help" maxLength={4000} value={projectName} onChange={event => setProjectName(event.target.value)} onKeyDown={submitOnEnter} placeholder="Quero divulgar minha mentoria com uma mensagem próxima, sem parecer mais uma promessa de resultado." />
+          <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Criando projeto…" : "Criar projeto e continuar"}</button>
         </form>
         {notice && <p role="alert">{notice}</p>}
         {(state === "error" || uncertain) && <button type="button" onClick={refresh}>Atualizar projetos</button>}
         {uncertain && <button type="button" onClick={() => setUncertain(false)}>Entendi, iniciar outra criação</button>}
       </section>
       <section className="studio-recent-projects" aria-label="Conversas e projetos anteriores">
-        <h2>Continue de onde parou</h2>
-        {state === "loading" && <p role="status">Carregando seus projetos…</p>}
+        <h2>Seus projetos</h2>
+        {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <button className="studio-project-card" key={project.id} title={project.title} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong className="studio-truncate">{project.title}</strong><span>Retomar conversa</span></button>)}
+          {projects.map(project => <button className="studio-project-card" key={project.id} title={project.title} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>)}
         </div>
       </section>
     </StudioShell>
@@ -250,12 +252,14 @@ function ProjectStudio({
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id, projectTitleProvisional: initialTitleProvisional,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
-  const [projectIntent, setProjectIntent] = useState(Boolean(initialObjective));
-  const [messageDraft, setMessageDraft] = useState<string|undefined>(undefined);
-  const hasApiKey = credentialActive && (credentialSource !== "default" || projectIntent);
+  const [projectIntent, setProjectIntent] = useState(false);
+  const [settingsTab,setSettings]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);
+  const [explorationRequested,setExplorationRequested]=useState(false);
+  const [visitedPosts,setVisitedPosts]=useState<string[]>([]);
+  const projectAIChosen=Boolean(s&&s.workflow.aiPreference!=='none'&&s.workflow.aiPreference===credentialSource);
+  const canUseProjectAI=canUseAI&&projectAIChosen;
+  const hasApiKey = credentialActive && projectAIChosen && (credentialSource !== "default" || projectIntent);
   const credentialSeen = useRef(credentialEpoch);
-  const [editorRequested, setEditorRequested] = useState(false);
-  const [referencesRequested,setReferencesRequested] = useState(false);
   const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
     [versions, setVersions] = useState<PieceVersion[]>([]),
@@ -266,7 +270,6 @@ function ProjectStudio({
     [proposal, setProposal] = useState<{prompt:string}|null>(null),
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
-    [compact, setCompact] = useState(false),
     [drawer, setDrawer] = useState<StudioDrawer>(null),
     [viewingArt, setViewingArt] = useState(false);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
@@ -279,20 +282,15 @@ function ProjectStudio({
     saveLock = useRef(false),
     baseLoadGeneration=useRef(0),
     versionsReadSequence=useRef(0);
-  useEffect(() => {
-    const media = window.matchMedia("(max-width:600px)");
-    const update = () => setCompact(media.matches);
-    update();
-    media.addEventListener("change", update);
-    return () => media.removeEventListener("change", update);
-  }, []);
   stateRef.current = s;
   versionRef.current = versions;
   const draft = s ? getCurrentDraft(s) : null;
-  const hasPost = Boolean(editorRequested || base || draft?.baseVersion || draft?.content.headline || draft?.content.price || draft?.content.date || draft?.content.caption || draft?.content.fields?.length);
-  const showBrief = referencesRequested || !hasPost;
+  const currentSettings=settingsTab??(drawer==='marca'?'direction':drawer==='bases'?'materials':null);
+  const referencesOpen=s?.workflow.phase==='references'||currentSettings==='references';
+  useEffect(()=>{if(draft)setVisitedPosts(ids=>ids.includes(draft.pieceId)?ids:[...ids,draft.pieceId]);},[draft?.pieceId]);
+  useEffect(()=>{if(!referencesOpen){setExplorationRequested(false);}},[referencesOpen]);
   const idea = studioProjectIdea(s,initialObjective);
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, canUseAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && showBrief });
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s, getState: session.get, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea, enabled: stageRestored && stage === "studio" && referencesOpen && explorationRequested });
   useEffect(() => {
     if (credentialSeen.current === credentialEpoch) return;
     credentialSeen.current = credentialEpoch;
@@ -300,13 +298,12 @@ function ProjectStudio({
   }, [credentialEpoch, credentialActive]);
   function activateAI() {
     setProjectIntent(true); onUseAI?.();
-    if (exploration.paused) void exploration.resume();
+
   }
   function continueWithoutAI() {
-    setProjectIntent(false); onPauseAI?.(); exploration.pause(); nextStage("studio");
+    setProjectIntent(false); onPauseAI?.(); exploration.pause(); local.change(value=>updateWorkflow(value,{aiPreference:'none'})); nextStage("studio");
   }
   const sourceLabel = credentialSource === "default" ? "IA do Compor" : "Minha chave OpenAI";
-  const defaultNotice = "A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.";
   async function signOutSafely() {
     exploration.pause();
     try { if (!session.loading) await session.flush(); }
@@ -343,7 +340,7 @@ function ProjectStudio({
       const saved = sessionStorage.getItem(
         `compor-studio-stage:${userId}:${project.id}`,
       );
-      if (saved === "studio" || saved === "review" || saved === "export") setStage(saved);
+      if (s.workflow.phase==="ready"&&(saved === "studio" || saved === "review" || saved === "export")) setStage(saved);
     } catch {}
     setStageRestored(true);
   }, [Boolean(s)]);
@@ -448,26 +445,26 @@ function ProjectStudio({
     setNotice("");
     if(value !== "studio") setViewingArt(false);
   }
-  function newPost(pieceId:string = crypto.randomUUID()) {
-    setEditorRequested(true);
-    setReferencesRequested(false);
-    local.change((value) =>
-      value.drafts.some((d) => d.pieceId === pieceId && d.baseVersion === 0)
-        ? selectDraft(value, { pieceId, baseVersion: 0 })
-        : createPost(value, { pieceId }),
-    );
-    setBase(null);
-    setDrawer(null);
-    setViewingArt(false);
-    setStage("studio");
+  function closeSettings(){setSettings(null);setDrawer(null);}
+  function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
+    closeSettings();
+    local.change(value=>updateWorkflow(value.drafts.some(d=>d.pieceId===pieceId&&d.baseVersion===0)?selectDraft(value,{pieceId,baseVersion:0}):createPost(value,{pieceId}),{view:fromAgent?'studio':'compose'}));
+    setBase(null);setViewingArt(false);setStage('studio');
+  }
+  function openPost(pieceId:string) {
+    const value=local.get(),remembered=value.workflow.selections[pieceId];
+    const chosen=value.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===remembered)??value.drafts.filter(item=>item.pieceId===pieceId).at(-1);
+    closeSettings();setStage('studio');
+    if(chosen)local.change(state=>updateWorkflow(selectDraft(state,chosen),{view:'studio'}));
+    else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);}
   }
   function openVersion(version:PieceVersion) {
-    setReferencesRequested(false);
+    setSettings(null);
     const latest = versionRef.current
       .filter((v) => v.piece_id === version.piece_id)
       .reduce((n, v) => Math.max(n, v.version), 0);
     local.change((value) =>
-      selectVersion(value, {
+      updateWorkflow(selectVersion(value, {
         pieceId: version.piece_id,
         version: version.version,
         latestVersion: latest,
@@ -476,7 +473,7 @@ function ProjectStudio({
           version.metadata?.approval?.status === "approved"
             ? version.metadata.approval
             : { status: "unapproved" },
-      }),
+      }), {view:'studio'}),
     );
     setDrawer(null);
     setViewingArt(false);
@@ -647,7 +644,7 @@ function ProjectStudio({
       return { status: "completed", local: true };
     },
     compor_novo_post: async (args) => {
-      newPost(args.requestId);
+      newPost(args.requestId,true);
       return {
         status: "completed",
         local: true,
@@ -861,7 +858,7 @@ function ProjectStudio({
   const selectedGeneratedIds = s.references.flatMap(reference => reference.source && 'kind' in reference.source && reference.source.kind === 'generated' ? [reference.source.imageId] : []);
   const selectedOrigins = s.references.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);
   const editor = (
-    <StudioEditor
+    <StudioEditor guided
       draft={draft}
       brief={s.brief}
       base={base}
@@ -936,8 +933,9 @@ function ProjectStudio({
       }}
     />
   );
-  const chat = (
-    <StudioChat
+  const explorationRecovery=(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>);
+  const renderChat = (conversationId:string|undefined,intro=false,readOnly=false) => (
+    <StudioChat key={conversationId??"legacy"} conversationId={conversationId} intro={intro} readOnly={readOnly} allowReferenceAnalysis={conversationId==="references"}
       state={s}
       projectRevision={projectDetails.revision}
       developerMode={developerMode}
@@ -946,25 +944,16 @@ function ProjectStudio({
       flush={local.flush}
       tools={toolsRef}
       hasApiKey={hasApiKey}
-      canUseAI={canUseAI}
+      canUseAI={canUseProjectAI}
       credentialSource={credentialSource}
       credentialEpoch={credentialEpoch}
       onUseAI={activateAI}
       getApiKey={getApiKey}
       onUseImage={useBase}
       prepareImageVersion={saveCurrent}
-      initialMessage={s.messages.length === 0 ? idea : ""}
-      messageDraft={messageDraft}
-      onMessageDraftChange={setMessageDraft}
-      connection={<>
-        <div className="studio-credential-line">
-          <span role="status">{canUseAI ? sourceLabel : "IA indisponível"}</span>
-          {credentialSource === "default" && canUseAI && !hasApiKey && <button type="button" aria-label="Começar a criar com IA" onClick={activateAI}>Começar</button>}
-          <button type="button" onClick={() => nextStage("connect")}>{credentialSource === "byok" ? "Gerenciar IA" : "Usar minha chave"}</button>
-        </div>
-        <details className="studio-exploration-status"><summary>Exploração visual</summary><p>{exploration.status}</p><p>As propostas seguem regras de variação a partir do briefing e das suas decisões.</p>{hasApiKey && !exploration.blocked && !exploration.awaitingFeedback && (exploration.paused ? <button type="button" onClick={exploration.resume}>Retomar exploração</button> : <button type="button" onClick={exploration.pause}>Pausar exploração</button>)}</details>
-      </>}
-      explorationRecovery={exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>}
+      initialMessage=""
+      connection={<p className="studio-hint">{canUseProjectAI?sourceLabel:'Escolha uma IA nas configurações para conversar, ou continue no editor sem IA.'}</p>}
+
       loadBase={async () => {
         const d = getCurrentDraft(local.get());
         return d
@@ -982,72 +971,7 @@ function ProjectStudio({
       }
     />
   );
-  return (
-    <StudioShell
-      stage={stage}
-      projectTitle={projectDetails.title}
-      accountLabel={accountLabel}
-      localAccount={localAccount}
-      onSignOut={onSignOut ? signOutSafely : undefined}
-      canOpenStudio
-      versionStatus={
-        draft?.approval.status === "approved"
-          ? "Aprovado"
-          : draft?.dirty
-            ? "Rascunho"
-            : draft?.baseVersion
-              ? `Versão ${draft.baseVersion}`
-              : "Rascunho"
-      }
-      onTabChange={() => {setDrawer(null);nextStage("studio");}}
-      onNewProject={async () => {try {await local.flush();if(active.current) onCreateNew();} catch {setNotice("Não foi possível preservar o projeto antes de sair.");}}}
-      onNavigate={async value => {
-        if(value !== "projects") return nextStage(value);
-        try {await local.flush();if(active.current) onBack();}
-        catch {setNotice("Não foi possível preservar o projeto antes de sair.");}
-      }}
-      onReview={() => nextStage("review")}
-      headerActions={
-        <>
-          <button className="studio-button-secondary" disabled={!draft} onClick={() => nextStage("review")}>
-            Revisar post
-          </button>
-          <button
-            className="studio-button-secondary"
-            onClick={() => nextStage("connect")}
-          >
-            {canUseAI ? sourceLabel : "Conectar IA"}
-          </button>
-          <button
-            className="studio-button"
-            disabled={!draft || saving}
-            onClick={() => saveCurrent()}
-          >
-            {saving ? "Salvando…" : "Salvar versão"}
-          </button>
-        </>
-      }
-      projectId={project.id}
-      projects={projects}
-      onOpenProject={async target => {
-        try { await local.flush(); if(active.current) onOpenProject(target); }
-        catch { setNotice("Não foi possível preservar este projeto antes de trocar."); }
-      }}
-      onRenameProject={async title => {
-        try {
-          const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
-          return result.status === "completed";
-        } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
-      }}
-      basesCount={references.length + versions.length}
-      drawer={drawer}
-      onDrawerChange={setDrawer}
-      viewingArt={viewingArt}
-      onCloseArt={() => setViewingArt(false)}
-      conversationFocus={showBrief}
-      context={<ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/>}
-      chatMessageCount={s.messages.length}
-      bases={<>
+  const basesPanel=(<>
           <ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} />
           <div className="studio-history">
             <h2>Histórico do projeto</h2>
@@ -1073,8 +997,8 @@ function ProjectStudio({
                     }),
                   );
                   setDrawer(null);
-                  setReferencesRequested(false);
-                  setEditorRequested(true);
+                  setSettings(null);
+                  local.change(value=>updateWorkflow(value,{view:'studio'}));
                   setStage("studio");
                 }}
               >
@@ -1135,8 +1059,8 @@ function ProjectStudio({
               ))}
             </div>
           </div>
-      </>}
-      marca={<>
+      </>);
+  const directionPanel=(<>
           <div>
             <PersonaStep
               showAudience={false}
@@ -1144,36 +1068,84 @@ function ProjectStudio({
               onChange={(value) =>
                 local.change((state) => updatePersona(state, value))
               }
-              onContinue={() => setDrawer(null)}
+              onContinue={closeSettings}
             />
           </div>
         <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
-      </>}
-      canvas={
-        showBrief ? <div className="studio-brief">
-          <div className="studio-reference-screen-heading"><h2>Referências para sua ideia</h2><button className="studio-button-secondary" type="button" onClick={()=>{setReferencesRequested(false);setEditorRequested(true);}}>{hasPost?'Voltar ao post':'Definir textos da arte'}</button></div>
-          <ReferenceSelectionTray items={s.references.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} limit={STUDIO_LIMITS.references} onRemove={removeFile} />
-          <ReferenceExploration key={`references:${project.id}`} userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={originUrl=>removeSelected(reference=>Boolean(reference.source&&'originUrl' in reference.source&&reference.source.originUrl===originUrl))} onContinue={()=>{setReferencesRequested(false);setEditorRequested(true);}} />
-          <ExplorationGallery key={`explorations:${project.id}`} projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} onRemoveReference={imageId=>removeSelected(reference=>Boolean(reference.source&&'kind' in reference.source&&reference.source.kind==='generated'&&reference.source.imageId===imageId))} selectedIds={selectedGeneratedIds} />
-        </div> : <div className="studio-post-workspace">
-          <div className="studio-post-workspace-header"><button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setReferencesRequested(true);}}>Escolher mais referências</button></div>
-          {draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}
-          <CreativeBoard title={draft ? "Post atual" : "Sua criação"} surfaceWidth={compact ? 352 : 772} surfaceHeight={compact ? 1760 : 1100} onCurrentPost={() => setDrawer(null)}>
-          <label>
+      </>);
+  const artwork=(<div className="studio-post-workspace">
+          <div className="studio-post-workspace-header"><button type="button" className="studio-button-secondary" onClick={()=>{setDrawer(null);setSettings('references');}}>Escolher mais referências</button></div>
+
+          <div className="guided-artwork-editor">
+          <details><summary>Usar uma imagem-base própria</summary><label>
             Imagem-base PNG ou JPEG
             <input type="file" accept="image/png,image/jpeg" onChange={event => {
               const file = event.target.files?.[0];
               if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
               event.target.value = "";
             }} />
-          </label>
+          </label></details>
           {editor}
-        </CreativeBoard>
+          <details className="guided-versions"><summary>Versões e variantes deste post</summary>{draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}</details>
         </div>
+        </div>);
+  const preparing=s.workflow.phase!=='ready';
+  const postTitle=draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
+  const finishPreparation=()=>local.change(value=>updateWorkflow(value,{phase:'ready',view:'compose'}));
+  const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
+  const aiPanel=<ProjectAI continueLabel={preparing?'Continuar para referências':'Voltar ao post'} preference={s.workflow.aiPreference} source={credentialSource} available={defaultAvailable} canUseAI={canUseAI} keyInput={keyInput} onDefault={()=>{if(credentialSource==='byok')onRemoveKey();local.change(value=>updateWorkflow(value,{aiPreference:'default'}));activateAI();}} onOwn={()=>local.change(value=>updateWorkflow(value,{aiPreference:'byok'}))} onRemove={()=>{onRemoveKey();setProjectIntent(false);exploration.pause();}} onContinue={preparing?nextReferences:closeSettings} onSkip={()=>{continueWithoutAI();if(preparing)nextReferences();else closeSettings();}} onBack={()=>preparing?local.change(value=>updateWorkflow(value,{phase:'context'})):closeSettings()}/>;
+  const referencePanel=<div className="guided-references"><div><h2>Referências para sua ideia</h2><p>Escolha imagens que ajudem a mostrar o estilo que você procura. Você também pode continuar sem referências.</p></div><ReferenceSelectionTray items={s.references.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} limit={STUDIO_LIMITS.references} onRemove={removeFile}/><ReferenceExploration userId={userId} projectId={project.id} idea={idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={originUrl=>removeSelected(reference=>Boolean(reference.source&&'originUrl' in reference.source&&reference.source.originUrl===originUrl))} onContinue={preparing?finishPreparation:closeSettings}/><label>Enviar minhas referências<input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label><section><h2>Propostas visuais do Compor</h2><p>Peça imagens para explorar caminhos visuais. Elas serão referências para os seus posts.</p><p role="status">{explorationRequested?exploration.status:'A exploração ainda não foi iniciada.'}</p>{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}<div className="guided-actions"><button type="button" className="studio-button" disabled={!canUseProjectAI||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onClick={()=>{activateAI();setExplorationRequested(true);void exploration.resume();}}>Pedir propostas visuais</button>{explorationRequested&&!exploration.paused&&<button type="button" className="studio-button-secondary" onClick={exploration.pause}>Pausar exploração</button>}</div>{explorationRecovery}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} onRemoveReference={imageId=>removeSelected(reference=>Boolean(reference.source&&'kind' in reference.source&&reference.source.kind==='generated'&&reference.source.imageId===imageId))} selectedIds={selectedGeneratedIds}/></section>{s.references.length>0&&canUseProjectAI&&<details open><summary>Conversa sobre suas referências</summary><div className="guided-reference-chat">{renderChat('references')}</div></details>}{preparing&&<div className="guided-actions"><button type="button" className="studio-button-secondary" onClick={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}>Voltar</button><button type="button" className="studio-button" onClick={finishPreparation}>Continuar para meu primeiro post</button></div>}</div>;
+  const intro=s.workflow.view==='compose'&&!draft?.baseVersion&&!base&&!conversationMessages(s,draft?.pieceId).some(message=>message.role==='user');
+  const chatIds=[...new Set([...visitedPosts,...(draft?[draft.pieceId]:[])])];
+  const chats=chatIds.map(id=><div className="guided-conversation" key={id} hidden={id!==draft?.pieceId}>{renderChat(id,id===draft?.pieceId&&intro)}</div>);
+  const pendingTurn=s.adjustments.find(item=>!['completed','failed'].includes(item.status));
+  const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>pendingTurn.context.conversationId==='references'?setSettings('references'):openPost(pendingTurn.context.pieceId)}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} onOpen={openPost} onNew={()=>newPost()}/>:<GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/>}</>;
+
+  return (
+    <StudioShell
+      stage={stage}
+      projectTitle={projectDetails.title}
+      accountLabel={accountLabel}
+      localAccount={localAccount}
+      onSignOut={onSignOut ? signOutSafely : undefined}
+      canOpenStudio
+      versionStatus={
+        draft?.approval.status === "approved"
+          ? "Aprovado"
+          : draft?.dirty
+            ? "Rascunho"
+            : draft?.baseVersion
+              ? `Versão ${draft.baseVersion}`
+              : "Rascunho"
       }
-      chat={chat}
+      onTabChange={() => {setDrawer(null);nextStage("studio");}}
+      onNewProject={async () => {try {await local.flush();if(active.current) onCreateNew();} catch {setNotice("Não foi possível preservar o projeto antes de sair.");}}}
+      onNavigate={async value => {
+        if(value !== "projects") return nextStage(value);
+        try {await local.flush();if(active.current) onBack();}
+        catch {setNotice("Não foi possível preservar o projeto antes de sair.");}
+      }}
+      onReview={() => nextStage("review")}
+      guided
+      pieceSubtitle={!preparing?postTitle:undefined}
+      headerActions={!preparing?<><button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));}}>Posts do projeto</button><button type="button" className="studio-button-secondary" onClick={()=>setSettings('context')}>Configurações do projeto</button>{s.workflow.view!=='posts'&&<><button type="button" className="studio-button-secondary" disabled={!draft} onClick={()=>nextStage('review')}>Revisar post</button><button type="button" className="studio-button" disabled={!draft||saving} onClick={()=>saveCurrent()}>{saving?'Salvando…':'Salvar versão'}</button></>}</>:null}
+      projectId={project.id}
+      projects={projects}
+      onOpenProject={async target => {
+        try { await local.flush(); if(active.current) onOpenProject(target); }
+        catch { setNotice("Não foi possível preservar este projeto antes de trocar."); }
+      }}
+      onRenameProject={async title => {
+        try {
+          const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
+          return result.status === "completed";
+        } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
+      }}
+      canvas={canvas}
       overlays={
         <>
+          {currentSettings&&<StudioDialog title="Configurações do projeto" onClose={closeSettings}><nav className="guided-settings-tabs" aria-label="Configurações">{([['context','Contexto'],['ai','IA'],['references','Referências'],['direction','Marca e direção'],['materials','Materiais e versões'],['history','Histórico anterior']] as const).map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{setDrawer(null);setSettings(tab);}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='references'?referencePanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}<button type="button" className="studio-button" onClick={closeSettings}>Voltar ao post</button></StudioDialog>}
+          {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (
             <StudioDialog
               title="Confirmar alteração no projeto?"
@@ -1216,27 +1188,6 @@ function ProjectStudio({
         </>
       }
     >
-      {stage === "connect" && (
-        <StudioPanel
-          eyebrow="SUA IA, SUA ESCOLHA"
-          title="Conectar sua IA"
-          description={credentialSource === "default" ? defaultAvailable ? "A IA do Compor está disponível para ajudar a criar." : defaultNotice : "Você está usando sua chave OpenAI."}
-        >
-          {keyInput}
-          {canUseAI && !hasApiKey && <button type="button" className="studio-button" onClick={() => {activateAI();nextStage("studio");}}>Começar a criar com IA</button>}
-          <button
-            className="studio-button"
-            disabled={!canUseAI}
-            onClick={() => nextStage("studio")}
-          >
-            Continuar
-          </button>
-          {credentialSource === "byok" && <button onClick={onRemoveKey}>{defaultAvailable ? "Usar IA do Compor" : "Remover chave"}</button>}
-          <button onClick={continueWithoutAI}>
-            Continuar sem IA por enquanto
-          </button>
-        </StudioPanel>
-      )}
       {(stage === "review" || stage === "export") && (
         <StudioPanel
           eyebrow="ARTE E LEGENDA"
@@ -1247,7 +1198,7 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          <StudioReview title={projectDetails.title} draft={draft} base={base} />
+          <p className="studio-hint">{postTitle}</p><StudioReview title={projectDetails.title} draft={draft} base={base} />
           <button onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>

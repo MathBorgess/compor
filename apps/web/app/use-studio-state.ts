@@ -47,7 +47,7 @@ export function useStudioState({ userId, projectId, projectTitleProvisional = fa
     const ready = load
       .then((saved) => {
         if (active.current !== record) return;
-        const value = saved ?? createStudioState({ userId, projectId, projectTitleProvisional,projectIdea });
+        const value = saved ?? createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare:projectTitleProvisional });
         initialize(value, saved?.revision ?? null);
         if (!record.repo)
           setError(
@@ -56,7 +56,7 @@ export function useStudioState({ userId, projectId, projectTitleProvisional = fa
       })
       .catch(() => {
         if (active.current !== record) return;
-        const value = createStudioState({ userId, projectId, projectTitleProvisional,projectIdea });
+        const value = createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare:projectTitleProvisional });
         initialize(value, null);
         setError(
           "Não foi possível abrir o trabalho local. Evite fechar esta aba.",

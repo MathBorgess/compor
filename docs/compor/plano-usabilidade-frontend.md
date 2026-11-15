@@ -202,12 +202,12 @@ Recortes de contrato podem ter commits separados antes da UI consumi-los, manten
 | Etapa | Estado |
 | --- | --- |
 | Planejamento | Aprovado; implementação completa autorizada |
-| 0 — Ambiente local | Pendente |
-| 1 — Projeto e contexto | Pendente |
-| 2 — IA e referências | Pendente |
-| 3 — Posts e conversas | Pendente |
-| 4 — Estúdio dividido | Pendente |
-| 5 — Configurações e saída | Pendente |
-| 6 — Integração e fechamento | Pendente |
+| 0 — Ambiente local | Preparado, privado e executável; verificação com Next e Chromium realizada |
+| 1 — Projeto e contexto | Implementado; criação, perguntas e retomada em verificação final |
+| 2 — IA e referências | Implementado; intenção explícita, fonte e retorno às referências verificados com fixtures |
+| 3 — Posts e conversas | Implementado; escopos assinados, migração, dois posts e rascunhos separados verificados |
+| 4 — Estúdio dividido | Implementado; divisão por teclado/ponteiro e alternância compacta verificadas |
+| 5 — Configurações e saída | Implementado; contexto, IA, referências e recursos avançados reunidos; exportação em verificação final |
+| 6 — Integração e fechamento | Suíte completa e medição finais em andamento; avaliação humana ainda pendente |
 
 Não considerar uma etapa concluída apenas porque compila, está bonita na captura ou recebeu commit. Registrar separadamente os cenários verificados, a avaliação da pessoa e os impedimentos técnicos que restarem. Validação local não comprova CI Linux, deployment, isolamento entre contas reais ou qualidade das imagens geradas.
