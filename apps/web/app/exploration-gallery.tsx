@@ -48,27 +48,29 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
     figure?.querySelector<HTMLButtonElement>(pending.target === "remove" ? ".reference-remove" : ".reference-image-select")?.focus();
   }, [selectedKey]);
   useEffect(() => {
-    const controller = new AbortController();
+    // This read has no generation side effect. Let it settle and ignore an
+    // obsolete response instead of aborting it when the gallery closes.
+    let active = true;
     async function load() {
       setLoading(true);
       setNotice("");
       try {
-        const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId })}`, { cache: "no-store", signal: controller.signal });
+        const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId })}`, { cache: "no-store" });
         if (!response.ok) throw Error("unavailable");
         const result = imagesSchema.parse(await response.json());
         if (result.images.some((item) => item.project_id !== projectId)) throw Error("scope");
-        if (!controller.signal.aborted) {
+        if (active) {
           setImages(current => mergeImages(result.images, current ?? []));
           if (!loadedPrevious.current) setNextBeforeOrdinal(result.nextBeforeOrdinal ?? null);
         }
       } catch {
-        if (!controller.signal.aborted) setNotice("Não foi possível consultar as explorações agora.");
+        if (active) setNotice("Não foi possível consultar as explorações agora.");
       } finally {
-        if (!controller.signal.aborted) setLoading(false);
+        if (active) setLoading(false);
       }
     }
     void load();
-    return () => controller.abort();
+    return () => { active = false; };
   }, [projectId, completed, refresh]);
   async function loadPrevious() {
     if (!nextBeforeOrdinal || loadingPrevious) return;

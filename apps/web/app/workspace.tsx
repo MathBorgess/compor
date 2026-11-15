@@ -48,21 +48,20 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
       setAuthState("offline");
       return;
     }
-    let controller: AbortController | undefined;
+    // Invalidate stale session reads by generation/epoch; cancelling their
+    // browser response can surface AbortError during focus or effect cleanup.
     let generation = 0;
     const checkSession = () => {
       if (signingOut.current) return;
       const currentGeneration = ++generation;
       const currentEpoch = ++sessionEpoch.current;
-      controller?.abort();
-      controller = new AbortController();
       draftKey.current = null;
       activeIdentity.current = null;
       pendingKey.current = null;
       setHasPendingDraft(false);
       setObjective("");
       setAuthState("checking");
-      fetch("/auth/session", { cache: "no-store", signal: controller.signal })
+      fetch("/auth/session", { cache: "no-store" })
         .then((response) =>
           response.ok ? response.json() : { state: "unavailable" },
         )
@@ -164,7 +163,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
           }
         })
         .catch((error) => {
-          if (currentGeneration === generation && currentEpoch === sessionEpoch.current && error.name !== "AbortError") {
+          if (currentGeneration === generation && currentEpoch === sessionEpoch.current && !(error instanceof DOMException && error.name === "AbortError")) {
             clearOpenAIKey();
             setAuthenticatedUser(null);
             setAccount(null);
@@ -181,7 +180,6 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     return () => {
       generation++;
       sessionEpoch.current++;
-      controller?.abort();
       window.removeEventListener("focus", checkSession);
       document.removeEventListener("visibilitychange", checkVisible);
     };
