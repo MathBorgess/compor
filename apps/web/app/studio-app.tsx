@@ -95,6 +95,8 @@ export default function StudioApp({
     [state, setState] = useState("loading"),
     [notice, setNotice] = useState(""),
     [uncertain, setUncertain] = useState(false);
+  const [deleteTarget,setDeleteTarget]=useState<Project|null>(null),[deleteError,setDeleteError]=useState('');
+  const deleteLock=useRef(false);
   const seq = useRef(0);
   const focusCreate = useRef(false);
   async function refresh() {
@@ -116,6 +118,7 @@ export default function StudioApp({
     }
   }
   useEffect(() => {
+    setDeleteTarget(null);setDeleteError('');deleteLock.current=false;
     refresh();
     return () => {
       seq.current++;
@@ -135,6 +138,20 @@ export default function StudioApp({
   function projectRenamed(project:Project) {
     setProjects(items => items.map(item => item.id === project.id ? {...item,...project} : item));
     setSelected(current => current?.id === project.id ? {...current,...project} : current);
+  }
+  async function deleteProject(){
+    const target=deleteTarget;
+    if(!target||!target.revision||deleteLock.current||deleteError||!isAuthenticated())return;
+    deleteLock.current=true;const n=++seq.current;setState('deleting');
+    try{
+      const response=await fetch('/api/projects',{method:'DELETE',signal:AbortSignal.timeout(15000),headers:{'content-type':'application/json'},body:JSON.stringify({projectId:target.id,expectedRevision:target.revision})});
+      if(n!==seq.current||!isAuthenticated())return;
+      const result=z.strictObject({status:z.literal('deleted'),projectId:z.string()}).safeParse(await response.json());
+      if(!response.ok||!result.success||result.data.projectId!==target.id)throw Error('unconfirmed');
+      setProjects(items=>items.filter(item=>item.id!==target.id));setDeleteTarget(null);setNotice('Projeto excluído da lista.');
+    }catch{
+      if(n===seq.current)setDeleteError('Não foi possível confirmar a exclusão. Atualize a lista antes de tentar novamente.');
+    }finally{if(n===seq.current){deleteLock.current=false;setState('ready');}}
   }
   async function create(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -202,6 +219,7 @@ export default function StudioApp({
       }
     >
       {recoveryBanner}
+      {deleteTarget&&<StudioDialog title="Excluir projeto?" onClose={()=>{if(!deleteLock.current)setDeleteTarget(null);}}><p>Excluir “{deleteTarget.title}” da sua lista de projetos?</p><p>Os posts, imagens e históricos serão preservados internamente. Esta ação não apaga os arquivos definitivamente.</p>{deleteError&&<p role="alert">{deleteError}</p>}<button type="button" className="studio-button-secondary" disabled={state==='deleting'} onClick={()=>setDeleteTarget(null)}>Cancelar</button>{deleteError?<button type="button" className="studio-button" onClick={()=>{setDeleteTarget(null);setDeleteError('');void refresh();}}>Atualizar projetos</button>:<button type="button" className="studio-button" disabled={state==='deleting'} onClick={()=>void deleteProject()}>{state==='deleting'?'Excluindo…':'Excluir projeto'}</button>}</StudioDialog>}
       <section className="studio-starter" aria-labelledby="starter-title">
         <h2 id="starter-title">Comece um projeto</h2>
         <p>Um projeto reúne o contexto, as referências e os posts de uma mesma divulgação. Primeiro vamos prepará-lo; depois você cria cada post.</p>
@@ -218,7 +236,7 @@ export default function StudioApp({
         <h2>Seus projetos</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <button className="studio-project-card" key={project.id} title={project.title} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>)}
+          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => { setOpeningPrompt(""); setSelected(project); }}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-button-secondary" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}>Excluir projeto</button></div>)}
         </div>
       </section>
     </StudioShell>

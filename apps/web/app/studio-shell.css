@@ -357,3 +357,7 @@ button.studio-quick-reply {
 @media (forced-colors: active) {
   .studio-quick-reply[data-chosen='true'] { outline: 2px solid Highlight; }
 }
+
+.studio-project-entry { display:grid;gap:8px;min-width:0;align-content:start; }
+.studio-project-entry>.studio-project-card { width:100%;min-width:0; }
+.studio-project-entry>.studio-button-secondary { justify-self:start;min-height:44px; }

@@ -6,7 +6,7 @@ import { createProjectRoutes } from '../../../lib/project-route.ts';
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
-async function handle(method:'GET'|'POST'|'PATCH', request:Request) {
+async function handle(method:'GET'|'POST'|'PATCH'|'DELETE', request:Request) {
   const config = authConfig();
   if (!config) return Response.json({ error: 'unavailable' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   try {
@@ -22,3 +22,4 @@ async function handle(method:'GET'|'POST'|'PATCH', request:Request) {
 export const GET = (request:Request) => handle('GET', request);
 export const POST = (request:Request) => handle('POST', request);
 export const PATCH = (request:Request) => handle('PATCH', request);
+export const DELETE = (request:Request) => handle('DELETE', request);

@@ -182,3 +182,5 @@ O histórico de referências da [issue #33](https://github.com/MathBorgess/compo
 Evidências reais anteriores estão em [estúdio marco 0](compor/estudio-web-marco0.md) e [isolamento e proteção](compor/isolamento-e-protecao-dados-marco0.md), com seus escopos e pendências. Testes novos com fixtures não herdam a prova de uma execução anterior. A metodologia não comprova qualidade criativa nem representa audiência real.
 
 O [ADR 0011](adr/0011-agents-api-e-mcp-remoto.md) permanece com status histórico `proposed`. Este mapa registra a Agents API observada na implementação, sem alterar aquela aprovação. A [arquitetura v0](arquitetura-v0.md) preserva a direção de 27/10/2026; os contratos atuais e suas diferenças estão neste guia e nos ADRs posteriores.
+
+A lista inicial permite excluir projetos mediante confirmação. A exclusão lógica usa `DELETE /api/projects`, revisão esperada e a RPC autenticada `delete_project_from_list`; a listagem web filtra `deleted_at`. Posts, imagens, histórico e permissões anteriores são preservados. Ver [ADR 0047](adr/0047-exclusao-logica-de-projetos.md).
