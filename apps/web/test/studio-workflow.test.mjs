@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createStudioState,parseStudioState,createPost,prepareAdjustment,settleAdjustment,addMessage} from '../lib/studio-state.ts';
+import {createStudioState,parseStudioState,createPost,prepareAdjustment,settleAdjustment,addMessage,pendingSelectionQuestion,REFERENCE_SELECTION_EVENT} from '../lib/studio-state.ts';
 import {conversationMessages,updateWorkflow} from '../lib/studio-workflow.ts';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const initial=()=>createStudioState({userId:id(1),projectId:id(2),prepare:true,projectIdea:'Uma oficina'});
@@ -24,4 +24,15 @@ test('migração legada preserva conteúdo, não inventa post para mensagem sem 
 });
 test('escopo inválido e campos desconhecidos são recusados sem descartar o estado anterior',()=>{
  const state=initial();assert.throws(()=>parseStudioState({...state,workflow:{...state.workflow,apiKey:'não armazenar'}}));assert.throws(()=>parseStudioState({...state,schemaVersion:99}));assert.equal(state.revision,0);
+});
+
+
+test('pergunta legada das referências espera resposta na mesma conversa',()=>{
+ let state=createPost(initial(),{pieceId:id(3)});
+ state=prepareAdjustment(state,{requestId:id(30),messageId:id(31),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:'2026-11-15T12:00:00.000Z',eventId:id(32)});
+ state=settleAdjustment(state,{requestId:id(30),status:'completed',result:{messageId:id(33),text:'Posso seguir?'},createdAt:'2026-11-15T12:00:01.000Z',eventId:id(34)});
+ const legacy=JSON.parse(JSON.stringify(state));for(const message of legacy.messages)delete message.conversationId;for(const turn of legacy.adjustments)delete turn.context.conversationId;
+ state=parseStudioState(legacy);assert.equal(pendingSelectionQuestion(state,'references'),id(33));
+ state=addMessage(state,{id:id(35),role:'user',text:'Pedido de outro post',createdAt:'2026-11-15T12:00:02.000Z',conversationId:id(3)});assert.equal(pendingSelectionQuestion(state,'references'),id(33));
+ state=addMessage(state,{id:id(36),role:'user',text:'Pode seguir',createdAt:'2026-11-15T12:00:03.000Z',conversationId:'references'});assert.equal(pendingSelectionQuestion(state,'references'),null);
 });

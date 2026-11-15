@@ -142,7 +142,9 @@ export function settleAdjustment(state: StudioState, {requestId,status,result,ev
 export function pendingSelectionQuestion(state: StudioState, conversationId?:string): string|null {
   for(let index=state.messages.length-1;index>=0;index--){
     const message=state.messages[index];
-    if(conversationId!==undefined && (message.conversationId??(message.role==='system'?'references':message.context?.pieceId))!==conversationId)continue;
+    const sourceTurn=state.adjustments.find(item=>item.result?.messageId===message.id);
+    const fromReferences=message.role==='system'||Boolean(sourceTurn&&state.messages.find(item=>item.id===sourceTurn.messageId)?.role==='system');
+    if(conversationId!==undefined && (message.conversationId??(fromReferences?'references':message.context?.pieceId))!==conversationId)continue;
     if(message.role==='user')return null;
     if(message.role!=='assistant')continue;
     const turn=state.adjustments.find(item=>item.result?.messageId===message.id);

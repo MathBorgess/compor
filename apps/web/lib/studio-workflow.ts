@@ -1,11 +1,7 @@
-import {parseStudioState,type StudioState,type StudioWorkflow,type StudioMessage} from './studio-state';
+import {parseStudioState,type StudioState,type StudioWorkflow} from './studio-state';
 
 export function updateWorkflow(state:StudioState,patch:Partial<StudioWorkflow>) {
   return parseStudioState({...state,revision:state.revision+1,workflow:{...state.workflow,...patch}});
-}
-/** Unassigned historical messages remain available in the legacy history only. */
-export function messageConversation(message:StudioMessage) {
-  return message.conversationId??(message.role==='system'?'references':message.context?.pieceId??null);
 }
 export function conversationMessages(state:StudioState,conversationId?:string) {
   if(conversationId===undefined)return state.messages;

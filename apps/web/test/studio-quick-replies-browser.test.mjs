@@ -1,3 +1,4 @@
+import {createStudioState,createPost,prepareAdjustment} from '../lib/studio-state.ts';
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
@@ -33,8 +34,8 @@ const reply={version:1,kind:'taste_reading',reading:'As referências são editor
  {id:'adjust',intent:'adjust',label:'Quero ajustar'},
 ]};
 const text=`${reply.reading}\n\n**Recomendação:** ${reply.recommendation}\n\n${reply.question}`;
-async function setup(t,{structured=reply}={}){ // null omits the structure
- const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
+async function setup(t,{structured=reply,readOnly=false}={}){ // null omits the structure
+ const result=await build({stdin:{contents:source.replace('<StudioChat state=',`<StudioChat readOnly={${readOnly}} state=`),loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',loader:{'.css':'empty'},define:{'process.env.NODE_ENV':'"test"'}});
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(result.outputFiles[0].text);}else if(req.url?.endsWith('.svg')){res.setHeader('Content-Type','image/svg+xml');res.end('<svg xmlns="http://www.w3.org/2000/svg"/>');}else{res.setHeader('Content-Type','text/html');res.end('<div id="root"></div><script type="module" src="/fixture.js"></script>');}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
@@ -153,4 +154,21 @@ test('estrutura ausente, inválida ou corrompida mostra apenas o texto da leitur
  await page.evaluate(key=>localStorage.setItem(key,JSON.stringify({version:1,entries:[{messageId:'x'}]})),`compor-quick-replies:v1:${user}:${project}`);
  await page.goto(origin);await page.getByText(reply.question,{exact:true}).waitFor();
  assert.equal(await page.locator('.studio-taste-card').count(),0,'registro corrompido volta ao texto');
+});
+
+
+test('histórico somente leitura consulta pendências sem executar ferramentas nem imagens',options,async t=>{
+ const pending=prepareAdjustment(createPost(createStudioState({userId:user,projectId:project}),{pieceId:piece}),{requestId:id(90),messageId:id(91),instruction:'Pedido anterior',createdAt:'2026-11-15T12:00:00.000Z',eventId:id(92)});
+ const responses=[{status:'action_required',action:{name:'compor_editar_briefing',args:{projectId:project,requestId:id(93),revision:pending.revision,field:'offer',value:'Não aplicar'}},actionBinding:'historical-tool'},
+ {status:'consent_required',attemptId:id(94),prompt:'Não gerar',proposal:{prompt:'Não gerar',operation:'create',baseImageId:null,referenceIds:[]},actionBinding:'historical-image',declineBinding:'historical-decline'}];
+ for(const response of responses){
+  const {page,origin,snapshot}=await setup(t,{readOnly:true});const requests=[];
+  await page.context().addInitScript(({pending,user,project})=>{sessionStorage.setItem('fixture-state',JSON.stringify(pending));sessionStorage.setItem('fixture-key','1');sessionStorage.setItem(`compor-studio-chat:${user}:${project}`,JSON.stringify({requestId:pending.adjustments[0].id,credentialSource:'byok'}));},{pending,user,project});
+  await page.route('**/api/studio/chat',route=>{requests.push(route.request().postDataJSON());return route.fulfill({json:response});});
+  await page.route('**/api/studio/action',()=>{throw Error('histórico não pode executar ação');});
+  await page.route('**/api/agent/**',()=>{throw Error('histórico não pode gerar imagem');});
+  await page.goto(origin);await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+  await page.getByText('Este pedido pertence ao histórico anterior. Seus dados foram preservados; consulte o resultado antes de fazer um novo pedido na conversa do post.',{exact:true}).waitFor();
+  assert.deepEqual(requests.map(request=>request.op),['poll']);assert.deepEqual(await snapshot(),pending);assert.equal(await page.getByLabel('Sua mensagem',{exact:true}).isDisabled(),true);
+ }
 });
