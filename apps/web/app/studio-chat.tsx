@@ -1,6 +1,7 @@
 "use client";
 import {conversationContext,postContext} from '../lib/studio-post-context';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
+import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import Markdown from "markdown-to-jsx";
@@ -95,7 +96,8 @@ export default function StudioChat({
   readOnly = false,
   allowReferenceAnalysis = true,
   intro = false,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean }) {
+  portalTarget,
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
@@ -920,7 +922,7 @@ export default function StudioChat({
   }
   const currentDraft=getCurrentDraft(state);
   const visibleMessages=conversationMessages(state,conversationId);
-  return (
+  const panel=(
     <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
       <header className="studio-chat-header">
         <img src="/studio/compor-avatar.svg" alt="" width="26" height="26.4044" />
@@ -1093,4 +1095,5 @@ export default function StudioChat({
       </form>
     </section>
   );
+  return portalTarget?createPortal(panel,portalTarget):panel;
 }

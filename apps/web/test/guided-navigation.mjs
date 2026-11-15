@@ -41,20 +41,20 @@ export async function openPostEditor(page){
  const variants=page.locator('details.guided-versions');if(await variants.isVisible()&&!await variants.evaluate(el=>el.open))await variants.locator('summary').click();
 }
 export async function openSettings(page,tab='Contexto'){
- const references=page.getByRole('dialog',{name:'Escolher referências',exact:true});
- if(await references.isVisible()){
-  if(tab==='Referências')return references;
-  await page.keyboard.press('Escape');await references.waitFor({state:'hidden'});
+ const panel=page.getByRole('region',{name:'Configurações do projeto',exact:true});
+ if(!await panel.isVisible()){
+  await finishPreparation(page,{preparePost:false});
+  await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
  }
- await finishPreparation(page,{preparePost:false});
- const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
- if(!await panel.isVisible())await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
- await panel.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
- return tab==='Referências'?page.getByRole('dialog',{name:'Escolher referências',exact:true}):panel;
+ await page.getByRole('group',{name:'Seções das configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
+ return panel;
 }
 export async function closeSettings(page){
- const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).or(page.getByRole('dialog',{name:'Escolher referências',exact:true}));
- if(await panel.isVisible()){await page.keyboard.press('Escape');await panel.waitFor({state:'hidden'});}
+ const panel=page.getByRole('region',{name:'Configurações do projeto',exact:true});
+ if(await panel.isVisible()){
+  await page.getByRole('navigation',{name:'Menu do projeto',exact:true}).getByRole('button',{name:/^Voltar à (criação|lista de posts)$/}).click();
+  await panel.waitFor({state:'hidden'});
+ }
 }
 export async function openConversation(page){
  await beginPost(page);

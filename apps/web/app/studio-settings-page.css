@@ -1,0 +1,19 @@
+.studio-settings-page { width:min(100%,1100px);margin:0 auto;display:grid;gap:24px;min-width:0; }
+.studio-settings-page>header { display:grid;gap:8px; }
+.studio-settings-page>header h2 { color:var(--studio-cobalt);font-size:26px;scroll-margin-top:calc(var(--studio-bar) + 20px); }
+.studio-settings-page>header h2:focus { outline:none; }
+.studio-settings-content { width:100%;min-width:0;display:grid;gap:24px; }
+.studio-settings-content>.studio-panel { width:100%;padding:0;border:0;margin:0; }
+.studio-settings-content .studio-context { padding:0;border:0; }
+.studio-settings-content .studio-context-fields { grid-template-columns:1fr;gap:0; }
+.studio-settings-content .studio-context-field { border-right:0;border-bottom:1px solid var(--studio-line);padding:16px 0; }
+.studio-settings-content .studio-context-edit { position:static;width:100%;max-height:none;overflow:visible;box-shadow:none;border:0;padding:16px 0 0; }
+.studio-settings-content .guided-reference-chat { height:min(65dvh,720px);min-height:280px;max-height:none; }
+.guided-reference-post-chat { display:flex;min-width:0;min-height:0;width:100%; }
+.guided-reference-post-chat>.studio-chat-panel { width:100%;min-height:0; }
+.studio-workspace-content[hidden] { display:none; }
+@media(max-width:600px) {
+ .studio-settings-page { gap:18px; }
+ .studio-settings-page>header h2 { font-size:23px; }
+ .studio-settings-content { padding:20px 14px; }
+}

@@ -37,6 +37,7 @@ export type StudioShellProps = {
   chatMessageCount?: number;
   headerActions?: ReactNode;
   sidebar?: ReactNode;
+  workspacePage?: ReactNode;
   context?: ReactNode;
   footer?: ReactNode;
   overlays?: ReactNode;
@@ -91,6 +92,7 @@ export default function StudioShell({
   chatMessageCount = 0,
   headerActions,
   sidebar,
+  workspacePage,
   context,
   footer,
   overlays,
@@ -519,8 +521,8 @@ export default function StudioShell({
       <div className="studio-frame">
       {sidebar}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
-        <main id="studio-main" tabIndex={-1} className={isStudio ? "studio-canvas-column" : "studio-page-content"} hidden={referenceWorkspace && compactReferences && !layoutC}>
-          {isStudio ? (canvas ?? children) : children}
+        <main id="studio-main" tabIndex={-1} className={isStudio||workspacePage ? "studio-canvas-column" : "studio-page-content"} hidden={referenceWorkspace && compactReferences && !layoutC}>
+          {guided?<><div className="studio-workspace-content" hidden={Boolean(workspacePage)}>{isStudio ? (canvas ?? children) : children}</div>{workspacePage}</>:isStudio ? (canvas ?? children) : children}
         </main>
         {showChat ? (
           <div className="studio-chat-slot" style={referenceWorkspace ? undefined : {height:`min(${currentChatHeight}px, calc(100dvh - 32px))`}}>
