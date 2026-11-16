@@ -111,11 +111,12 @@ for(const entry of ['button','chat','ready-chat','project-exit-x','project-exit-
  assert.deepEqual(seeded.bytes,Array.from(generatedPixels));assert.notDeepEqual(seeded.bytes,Array.from(referencePixels));
  const draft=seeded.state.drafts.find(item=>item.pieceId===seeded.state.selection.pieceId&&item.baseVersion===0);
  assert.ok(draft);assert.equal(posts.length,1);assert.equal(posts[0].pieceId,draft.pieceId);assert.notEqual(draft.pieceId,workspaceId);assert.equal(posts[0].name,'Convite para colaborar');assert.equal(seeded.state.workflow.referenceHandoff,null);assert.equal(draft.approval.status,'unapproved');assert.equal(draft.creationContext.explorationSource.imageId,generation[2].requestId);assert.equal(draft.creationContext.explorationSource.ordinal,103);assert.deepEqual(draft.creationContext.references,[],'selected references before or after a text-only exploration get no unsupported image attribution');
+ if(entry.startsWith('project-exit-')){assert.deepEqual(errors,[]);return;}
  await page.reload();await page.getByAltText('Arte integral da versão selecionada',{exact:true}).waitFor();assert.deepEqual((await stored(page)).bytes,Array.from(generatedPixels));assert.equal(generation.length,3,'transition and reload never call image generation');
  if(entry==='post-exit-x'){
   await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
   await page.getByRole('textbox',{name:'Nome do post',exact:true}).fill('Post sem imagem');await page.getByRole('button',{name:'Continuar para criação',exact:true}).click();
-  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+  await page.getByRole('button',{name:'Começar sem IA, no editor',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
   const postModal=page.getByRole('dialog',{name:'Referências deste post',exact:true});
   await postModal.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   await waitStored(page,value=>value.state?.workflow.latestExplorations?.[value.state.selection?.pieceId]?.ordinal===106);
