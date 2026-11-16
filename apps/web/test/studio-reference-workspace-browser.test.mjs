@@ -16,10 +16,10 @@ import ContextStrip from './app/context-strip.tsx';
 import {createStudioState,updateBrief,updateOfferFacts} from './lib/studio-state.ts';
 import './app/reference-exploration.css';
 function Conversation(){
- const [draft,setDraft]=useState(''),[details,setDetails]=useState(false);
+ const [draft,setDraft]=useState('');
  return <section className="studio-chat-panel" aria-label="Conversa do projeto">
-  <header className="studio-chat-header"><img src="/studio/compor-avatar.svg" alt="" width="26" height="26"/><div><h2>Vamos compor juntos</h2><p>Uma conversa, muitas possibilidades.</p></div><button className="studio-chat-details-toggle" aria-expanded={details} onClick={()=>setDetails(!details)}>Detalhes</button></header>
-  <div className="studio-chat-meta" hidden={!details}><p>Contexto do projeto</p>{Array.from({length:12},(_,i)=><p key={i}>Detalhe da direção criativa {i+1}</p>)}</div>
+  <header className="studio-chat-header"><img src="/studio/compor-avatar.svg" alt="" width="26" height="26"/><div><h2>Vamos compor juntos</h2><p>Uma conversa, muitas possibilidades.</p></div></header>
+  <div className="studio-chat-meta"><details className="studio-chat-context"><summary>Contexto do pedido</summary><p>Contexto do projeto</p>{Array.from({length:12},(_,i)=><p key={i}>Detalhe da direção criativa {i+1}</p>)}</details></div>
   <div className="studio-chat-messages">{Array.from({length:24},(_,i)=><div className="studio-message" key={i}><p>{i===0?'Estas referências exploram cor e composição. O que mais combina com sua ideia?':'Podemos testar outra direção visual mantendo sua mensagem.'}</p></div>)}</div>
   <form className="studio-chat-composer" onSubmit={event=>event.preventDefault()}><label className="sr-only" htmlFor="test-message">Sua mensagem</label><textarea id="test-message" value={draft} onChange={event=>setDraft(event.target.value)} placeholder="Conte o que chamou sua atenção…"/><button className="studio-button" aria-label="Enviar mensagem">↑</button></form>
  </section>;
@@ -121,10 +121,13 @@ test('mobile alterna áreas em fluxo, conserva escolhas e rascunho e acomoda tel
     assert.ok(box.composer.top>=box.chat.y,'compositor não sobe sobre cabeçalho');
   }
   await page.setViewportSize({width:390,height:844});
-  await page.getByRole('button',{name:'Detalhes',exact:true}).click();
+  const requestContext=page.locator('.studio-chat-context');
+  await requestContext.locator('summary').click();
+  assert.equal(await requestContext.evaluate(element=>element.open),true,'contexto nativo abre antes de simular o teclado');
   // Model a keyboard that changes only the visual viewport, not CSS media queries.
   await page.evaluate(()=>{Object.defineProperty(window.visualViewport,'height',{configurable:true,value:380});window.visualViewport.dispatchEvent(new Event('resize'));});
   await page.waitForFunction(()=>document.querySelector('.studio-chat-composer').getBoundingClientRect().bottom<=380);
+  assert.equal(await requestContext.evaluate(element=>element.open),true,'abrir o teclado preserva o contexto expandido');
   await page.evaluate(()=>{delete window.visualViewport.height;window.visualViewport.dispatchEvent(new Event('resize'));});
   assert.ok((await geometry(page)).composer.bottom<=844);
   await page.screenshot({path:'/tmp/compor-studio-visual-reference-sidebar-mobile-chat.png'});

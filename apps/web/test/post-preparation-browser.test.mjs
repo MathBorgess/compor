@@ -68,7 +68,9 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   assert.equal(Object.keys((await stored()).posts).length,0);
   await page.goto(new URL('/',page.url()).href);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
   await button('Continuar para criação').click();const chat=await openConversation(page);assert.equal(await chat.inputValue(),'');
-  await button('Configurações do Post').click();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.guided-workspace').getAttribute('data-view'),'intro','as configurações continuam acessíveis antes do primeiro pedido');
+  await nav.getByRole('button',{name:'Configurações do Post',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do Post',exact:true}).waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
+  assert.equal(await page.locator('.guided-workspace').getAttribute('data-view'),'intro','abrir configurações não força a criação nem o editor manual');
   await button('Expandir menu').click();
   if(width===390){const main=page.locator('#studio-main'),bounds=await main.boundingBox();await main.click({position:{x:bounds.width-12,y:12}});assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');}
   else await button('Recolher menu').click();

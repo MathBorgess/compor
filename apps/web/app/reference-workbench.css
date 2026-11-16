@@ -89,6 +89,9 @@
 .reference-workbench .guided-reference-chat { display:flex;flex:1;min-width:0;min-height:0;max-height:none; }
 .studio-modal .reference-workbench .guided-reference-chat:has(.guided-reference-post-chat) { height:auto;min-height:0; }
 .reference-workbench .reference-workbench-conversation > .studio-chat-panel { min-width:0;min-height:0; }
+/* Details remain scrollable when the dock is short; they cannot push its composer outside the panel. */
+.reference-workbench .studio-chat-meta { flex:0 1 auto;min-height:0; }
+.reference-workbench .studio-chat-content { overflow:hidden; }
 .reference-workbench .studio-exploration-recovery { display:flex;flex:none;align-items:center;gap:12px;max-height:44px;padding:2px 8px;border-radius:0;background:transparent;overflow:auto; }
 .reference-workbench .studio-exploration-recovery > p { flex:1;min-width:0;font-size:12px;line-height:16px; }
 .reference-workbench .studio-exploration-recovery button { flex:none;min-height:40px;width:auto;padding:4px 10px;font-size:12px; }

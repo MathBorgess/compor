@@ -1361,6 +1361,7 @@ function ProjectStudio({
       sidebar={!preparing?<StudioNavigation projectTitle={projectDetails.title} onRenameProject={renameProject} actions={[
         {id:'posts',label:'Posts do projeto',disabled:creatingPost||deletingPost,onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
         {id:'project',label:'Configurações do projeto',disabled:creatingPost||deletingPost,onClick:()=>setSettings('context')},
+        ...(intro&&draft?[{id:'post' as const,label:'Configurações do Post',onClick:()=>setPostSettingsOpen(true)}]:[]),
       ]}/>:undefined}
       projectId={project.id}
       projects={projects}
