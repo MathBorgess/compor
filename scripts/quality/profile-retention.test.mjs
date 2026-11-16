@@ -1,0 +1,38 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {readFile} from 'node:fs/promises';
+import {PGlite} from '@electric-sql/pglite';
+
+const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+test('excluir o único projeto mantém sinais, correções e histórico próprios sob RLS',async t=>{
+  const db=new PGlite();t.after(()=>db.close());
+  await db.exec(`create role authenticated;create role anon;create schema auth;create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
+    grant usage on schema auth,public to public;grant execute on function auth.uid() to public;`);
+  const migrate=async name=>db.exec(await readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
+  for(const name of ['20261103000000_projects.sql','20261103000001_piece_versions.sql','20261105000014_version_metadata.sql','20261106000017_reference_signals.sql'])await migrate(name);
+  await db.exec(`create table public.exploration_images(id uuid primary key,owner_id uuid not null,project_id uuid not null,state text not null);
+    alter table public.exploration_images enable row level security;grant select on public.exploration_images to authenticated;
+    create policy owned_exploration on public.exploration_images for select to authenticated using(owner_id=auth.uid());`);
+  for(const name of ['20261106000019_exploration_feedback.sql','20261109000026_reference_history.sql','20261115000029_post_reference_scope.sql','20261115000030_project_deletion.sql'])await migrate(name);
+  const alice=id(1),bob=id(2),project=id(3),image=id(4),pin=id(5),correction=id(6),generated=id(7),post=id(8);
+  await db.query('insert into auth.users values($1),($2)',[alice,bob]);
+  await db.query("insert into public.projects(id,owner_id,title) values($1,$2,'Café Aurora')",[project,alice]);
+  await db.query("insert into public.exploration_images values($1,$2,$3,'completed')",[image,alice,project]);
+  await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false)",[alice]);
+  const metadata={id:'123',title:'Luz natural',board:'behance/typography',originUrl:'https://www.pinterest.com/pin/123/',previewUrl:'https://i.pinimg.com/236x/123.jpg'};
+  await db.query("insert into public.reference_signals(id,project_id,origin_url,board,action,reference_data) values($1,$2,$3,$4,'selected',$5)",[pin,project,metadata.originUrl,metadata.board,metadata]);
+  await db.query("insert into public.reference_signals(id,project_id,origin_url,board,action,supersedes) values($1,$2,$3,$4,'rejected',$5)",[correction,project,metadata.originUrl,metadata.board,pin]);
+  await db.query("insert into public.generated_image_signals(id,project_id,piece_id,image_id,action,comment) values($1,$2,$3,$4,'comment','Prefiro luz suave neste post')",[generated,project,post,image]);
+  const records=async()=>({pins:(await db.query('select * from public.reference_signals order by id')).rows,generated:(await db.query('select * from public.generated_image_signals order by id')).rows});
+  const before=await records();
+  assert.equal((await db.query('select public.delete_project_from_list($1,1) as result',[project])).rows[0].result.status,'deleted');
+  assert.deepEqual(await records(),before,'a exclusão não altera IDs, comentários, datas, escopo ou correções');
+  assert.equal((await db.query('select * from public.projects where deleted_at is null')).rows.length,0);
+  assert.equal((await db.query('select title,deleted_at from public.projects')).rows[0].title,'Café Aurora');
+  assert.equal((await db.query('select count(*)::int as n from public.exploration_images')).rows[0].n,1);
+  await db.query("select set_config('request.jwt.claim.sub',$1,false)",[bob]);
+  assert.equal((await db.query('select * from public.projects')).rows.length,0);
+  assert.deepEqual(await records(),{pins:[],generated:[]},'a conta alheia não recebe o histórico preservado');
+  assert.equal((await db.query('select public.delete_project_from_list($1,1) as result',[project])).rows[0].result.status,'not_found');
+});

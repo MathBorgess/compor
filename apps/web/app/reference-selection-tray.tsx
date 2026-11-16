@@ -18,8 +18,8 @@ function referenceTitle(reference: StudioReference) {
   return reference.name;
 }
 
-/** The current selection, always visible beside the suggestions: how many, where
- * each came from, and how to remove it. Removing never deletes other images. */
+/** Inspect the selection and its scope. The focused gallery discloses this tray
+ * on demand; removing a selection never deletes the source image. */
 export default function ReferenceSelectionTray({ items, limit, onRemove, availableShared = [], onUseShared }: { items: Item[]; limit: number; onRemove: (id: string) => Promise<void>; availableShared?: (StudioReference & { url?: string })[]; onUseShared?: (id: string) => void | Promise<void> }) {
   const heading = useRef<HTMLHeadingElement>(null), list = useRef<HTMLUListElement>(null), focusIndex = useRef<number | null>(null), focusAdded = useRef<string | null>(null);
   const ids = items.map(item => item.id).join(",");

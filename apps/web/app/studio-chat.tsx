@@ -95,10 +95,11 @@ export default function StudioChat({
   conversationId,
   readOnly = false,
   allowReferenceAnalysis = true,
+  onReferenceWait,
   intro = false,
   referenceWorkbench = false,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;intro?:boolean;referenceWorkbench?:boolean;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
@@ -126,6 +127,8 @@ export default function StudioChat({
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
   const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
+  const referenceWaitListener=useRef(onReferenceWait);
+  referenceWaitListener.current=onReferenceWait;
   const referenceLoader=useRef(loadReference);
   referenceLoader.current=loadReference;
   const latestReference=state.references.at(-1);
@@ -551,7 +554,9 @@ export default function StudioChat({
     if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
     const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.message.trim();
-    const timeout=setTimeout(()=>{ void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
+    const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
+    reportWait(true);
+    const timeout=setTimeout(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
       if(!lock||!allowed())return;
       const available=availability.current;
       if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
@@ -595,7 +600,7 @@ export default function StudioChat({
         }
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });},5000);
-    return ()=>clearTimeout(timeout);
+    return ()=>{clearTimeout(timeout);reportWait(false);};
   },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();

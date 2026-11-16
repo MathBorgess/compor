@@ -12,14 +12,15 @@ import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import ReferencePanel from './app/studio-reference-panel.tsx';
 import ExplorationGallery from './app/exploration-gallery.tsx';
+import './app/style.css';
 import './app/studio-shell.css';
 import './app/studio-guided.css';
-function Screen(){const [requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false);
+function Screen(){const [selected,setSelected]=useState([]),[requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false);
  return <div className="compor-studio" data-guided="true"><div className="studio-body"><main className="studio-canvas-column">
- <ReferencePanel projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)} onRequestProposals={()=>setRequests(value=>value+1)} proposalsDisabled={requests>0}
- search={<section><h2>Sugestões do Pinterest</h2><p>Permita nesta sessão para carregar prévias.</p><button>Permitir nesta sessão</button></section>}
+ <ReferencePanel entry="preparation" projectTitle="Café Aurora" selectionCount={3} projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)} onRequestProposals={()=>setRequests(value=>value+1)} proposalsDisabled={requests>0}
+ search={sourceControl=><section className="reference-exploration"><form>{sourceControl}<label>O que você quer explorar?<input type="search"/></label><button type="button">Buscar referências</button></form><p>Permita nesta sessão para carregar prévias.</p><button>Permitir nesta sessão</button></section>}
  upload={<label>Enviar suas imagens<input type="file" accept="image/png,image/jpeg" /></label>}
- proposals={<ExplorationGallery projectId="00000000-0000-4000-8000-000000000003" completed={0} selectedIds={[]} onUseReference={async()=>{}}/>}
+ proposals={<ExplorationGallery projectId="00000000-0000-4000-8000-000000000003" completed={0} selectedIds={selected} onUseReference={async imageId=>setSelected(items=>[...items,imageId])} onRemoveReference={async imageId=>setSelected(items=>items.filter(item=>item!==imageId))}/>}
  selection={<section className="reference-selection-tray"><h2>Sua seleção</h2><p>2 do projeto · 1 deste post</p></section>}
  conversation={<section className="studio-chat-panel"><div className="studio-chat-messages">Conversa preservada sobre as referências</div><form className="studio-chat-composer"><textarea aria-label="Mensagem ao Compor" /></form></section>}/>
  <output id="requests">{requests}</output><output id="returned">{String(returned)}</output>
@@ -42,45 +43,51 @@ async function fixture(t,viewport){
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
 
-for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){
- test('exploração, seleção, compositor e retorno dividem a tela em '+viewport.width+'px',options,async t=>{
+
+for(const viewport of [{width:1440,height:1024},{width:960,height:768},{width:390,height:844},{width:320,height:640},{width:390,height:400}]){
+ test('galeria focada preserva fonte, consulta e conversa em '+viewport.width+'×'+viewport.height,options,async t=>{
   const page=await fixture(t,viewport);
   const composer=page.getByRole('textbox',{name:'Mensagem ao Compor'});
-  await composer.fill('Quero aproveitar as cores.');
-  await page.getByRole('navigation',{name:'Como adicionar referências'}).getByRole('button',{name:'Enviar imagem',exact:true}).click();
+  assert.equal(await composer.isVisible(),false,'a conversa não reserva espaço na galeria');
+  assert.equal(await page.getByRole('heading',{level:1}).count(),1);
+  await page.getByLabel('O que você quer explorar?').fill('Café com luz natural');
+  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
   await page.getByLabel('Enviar suas imagens').waitFor();
-  assert.equal(await composer.inputValue(),'Quero aproveitar as cores.');
-  assert.equal(await page.locator('#requests').textContent(),'0');
-  await page.getByRole('navigation',{name:'Como adicionar referências'}).getByRole('button',{name:'Ver propostas anteriores'}).click();
-  await page.getByRole('heading',{name:'Explorações de imagem'}).waitFor();
-  assert.equal(await page.locator('#requests').textContent(),'0','consultar propostas anteriores não inicia geração');
-  await page.getByRole('navigation',{name:'Como adicionar referências'}).getByRole('button',{name:'Pedir 3 propostas'}).click();
-  await page.getByRole('heading',{name:'Explorações de imagem'}).waitFor();
+  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
+  await page.getByRole('checkbox',{name:'Escolher imagem 1'}).waitFor();
+  assert.equal(await page.locator('#requests').textContent(),'0','trocar fonte e consultar histórico não gera');
+  const frames=page.locator('.studio-exploration-grid > figure > .reference-image-preview');
+  const boxes=await frames.evaluateAll(items=>items.map(item=>({width:item.getBoundingClientRect().width,height:item.getBoundingClientRect().height,fit:getComputedStyle(item.querySelector('img')).objectFit,padding:getComputedStyle(item).padding})));
+  assert.equal(boxes.length,3);
+  assert.ok(boxes.every(box=>Math.abs(box.width-box.height)<1&&box.fit==='contain'&&box.padding==='0px'),'molduras quadradas sem recorte: '+JSON.stringify(boxes));
+  assert.ok(boxes.every(box=>box.width>=Math.min(300,viewport.width-32)),'as imagens mantêm a largura contratada');
+  const layout=await page.locator('.studio-exploration-grid').evaluate(element=>({columns:getComputedStyle(element).gridTemplateColumns.split(' ').length,columnGap:getComputedStyle(element).columnGap,rowGap:getComputedStyle(element).rowGap}));
+  assert.equal(layout.columns,viewport.width===1440?3:viewport.width===960?2:1);
+  assert.equal(layout.columnGap,'24px');assert.equal(layout.rowGap,'32px');
+  const preview=page.getByRole('button',{name:'Ampliar referência: Imagem 1'});await preview.click();
+  await page.getByRole('dialog',{name:'Imagem 1',exact:true}).waitFor();
+  assert.equal(await page.getByRole('checkbox',{name:'Escolher imagem 1'}).isChecked(),false,'ampliar não seleciona');
+  await page.keyboard.press('Escape');assert.equal(await preview.evaluate(element=>document.activeElement===element),true,'Escape devolve o foco');
+  await page.getByRole('checkbox',{name:'Escolher imagem 1'}).click();
+  await page.getByRole('checkbox',{name:'Escolher imagem 1',checked:true}).waitFor();
+  assert.equal(await preview.evaluate(element=>getComputedStyle(element).borderTopColor),'rgb(18, 62, 171)','borda azul indica seleção sem esconder a imagem');
+  await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   assert.equal(await page.locator('#requests').textContent(),'1');
-  await page.getByRole('navigation',{name:'Como adicionar referências'}).getByRole('button',{name:'Buscar referências'}).click();
-  await page.getByRole('heading',{name:'Sugestões do Pinterest'}).waitFor();
-  await page.getByRole('navigation',{name:'Como adicionar referências'}).getByRole('button',{name:'Pedir 3 propostas'}).click();
-  assert.equal(await page.locator('#requests').textContent(),'1','reabrir o lote não inicia outra geração pendente');
-  await page.getByLabel('Aplicar referências a').selectOption('project');
-  await page.getByRole('heading',{name:'Referências do projeto',exact:true}).waitFor();
-  for(const selector of ['.reference-workbench-explore','.reference-workbench-selection','.reference-workbench-conversation','.studio-chat-composer','.reference-workbench-return']){
-   const bounds=await page.locator(selector).boundingBox();
-   assert.ok(bounds&&bounds.width>0&&bounds.height>0,selector+' visível');
-   assert.ok(bounds.y>=0&&bounds.y+bounds.height<=viewport.height+1,selector+' permanece no viewport');
-  }
-  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'sem rolagem horizontal da página');
-  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
-  assert.equal(await page.locator('#returned').textContent(),'true');
+  await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
+  await composer.fill('Quero aproveitar as cores.');
+  assert.equal(await page.locator('.reference-workbench-explore').isVisible(),false,'conversa ocupa a mesma superfície');
+  await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
+  assert.equal(await page.getByRole('combobox',{name:'Fonte',exact:true}).inputValue(),'compor');
+  assert.equal(await page.getByRole('button',{name:'Comentar seleção'}).evaluate(element=>document.activeElement===element),true);
+  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
+  assert.equal(await page.getByLabel('O que você quer explorar?').inputValue(),'Café com luz natural');
+  await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();assert.equal(await composer.inputValue(),'Quero aproveitar as cores.');
+  await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
+  await page.getByText('Revisar seleção e alcance',{exact:true}).click();await page.getByLabel('Aplicar referências a').selectOption('project');
+  await page.getByText('Referências do projeto',{exact:true}).waitFor();
+  assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),true,'sem rolagem horizontal');
+  const type=await page.locator('.reference-workbench-heading h1,.reference-selection-summary [role=status],.reference-workbench-return .studio-button').evaluateAll(items=>items.map(item=>({size:parseFloat(getComputedStyle(item).fontSize),weight:getComputedStyle(item).fontWeight})));assert.equal(type[0].weight,'700');assert.ok(type.every(item=>item.size>=16),'título, contador e CTA legíveis');
+  const targets=await page.locator('.reference-step button:visible,.reference-step select:visible,.reference-step summary:visible').evaluateAll(items=>items.map(item=>item.getBoundingClientRect().height));assert.ok(targets.every(height=>height>=44),'alvos de pelo menos 44px');
+  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();assert.equal(await page.locator('#returned').textContent(),'true','retorno acessível pela rolagem natural');
  });
 }
-
-test('três propostas recebem a área visual sem títulos repetidos nem bordas internas largas',options,async t=>{
- const page=await fixture(t,{width:1440,height:1024});
- await page.getByRole('button',{name:'Ver propostas anteriores'}).click();
- await page.getByRole('button',{name:'Usar imagem 1 na conversa e na Direção'}).waitFor();
- const images=await page.locator('.studio-exploration-grid > figure > button > img').evaluateAll(items=>items.map(item=>({height:item.getBoundingClientRect().height,padding:getComputedStyle(item.parentElement).padding})));
- assert.equal(images.length,3);
- assert.ok(images.every(image=>image.height>=280),'as imagens usam ao menos280px na bancada desktop');
- assert.ok(images.every(image=>image.padding==='0px'),'a moldura não reduz a imagem com padding herdado');
- assert.equal(await page.getByRole('button',{name:'Consultar explorações',exact:true}).count(),1);
-});

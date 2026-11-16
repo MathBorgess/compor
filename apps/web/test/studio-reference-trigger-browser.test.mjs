@@ -10,7 +10,7 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5);
 const source=`
-import {useRef,useState} from 'react';
+import {useCallback,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import StudioChat from './app/studio-chat.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
@@ -19,11 +19,11 @@ const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;can
 const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
 function initial(){let state=createPost(createStudioState({userId:'${user}',projectId:'${project}'}),{pieceId:'${piece}'});return addReference(state,reference('${first}'));}
-function Fixture(){const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
+function Fixture(){const [waiting,setWaiting]=useState(false);const reportWait=useCallback((id,value)=>setWaiting(value),[]);const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
 function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}
 function choose(fn){change(fn);recordReferenceRound(current.current);}
 return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>setVisible(false)}>Fechar referências</button><button onClick={()=>setVisible(true)}>Abrir referências</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
-<div hidden={!visible}><StudioChat state={state} conversationId="references" allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
+<output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat onReferenceWait={reportWait} state={state} conversationId="references" allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 async function setup(t,{feedbackDelayMs=0}={}){
  const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'}});
@@ -111,4 +111,18 @@ test('fechar durante a preparação cancela a leitura e reabrir exige uma espera
  await page.getByRole('button',{name:'Fechar referências'}).click();await page.getByRole('button',{name:'Abrir referências'}).click();
  await page.waitForTimeout(3000);assert.equal(calls.length,0,'a preparação antiga não aproveita a reabertura para enviar antes da nova espera');
  await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);
+});
+
+
+test('espera de seleção informa o timer real e desaparece ao digitar ou sair das referências',{skip:!existsSync(browserPath),timeout:25000},async t=>{
+ const {page,calls,origin,waitForCalls}=await setup(t);await page.goto(origin);
+ const wait=page.getByLabel('Espera de seleção');assert.equal(await wait.textContent(),'ociosa');
+ await page.getByRole('button',{name:'Conectar'}).click();await wait.filter({hasText:'estabilizando'}).waitFor();
+ await page.getByLabel('Sua mensagem').fill('Ainda estou escolhendo');await wait.filter({hasText:'ociosa'}).waitFor();
+ await page.waitForTimeout(5200);assert.equal(calls.length,0);
+ await page.getByLabel('Sua mensagem').fill('');await wait.filter({hasText:'estabilizando'}).waitFor();
+ await page.getByRole('button',{name:'Fechar referências'}).click();await wait.filter({hasText:'ociosa'}).waitFor();
+ await page.waitForTimeout(5200);assert.equal(calls.length,0);
+ await page.getByRole('button',{name:'Abrir referências'}).click();await wait.filter({hasText:'estabilizando'}).waitFor();
+ await waitForCalls(1);await wait.filter({hasText:'ociosa'}).waitFor();assert.equal(calls.length,1);assert.equal(calls[0].op,'reference_selection');
 });

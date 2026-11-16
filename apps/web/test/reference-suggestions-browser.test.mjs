@@ -53,28 +53,28 @@ test('sugestões aguardam permissão; histórico aprovado vem primeiro e só a e
   assert.deepEqual(JSON.parse(await page.locator('#used').textContent()),[]);
   await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await page.getByRole('heading',{name:'Usadas em posts que você aprovou'}).waitFor();
-  await page.getByRole('button',{name:'Usar como referência: Nova referência'}).waitFor();
+  await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
   assert.equal(searches.length,1);assert.equal(searches[0].query,'Quero divulgar uma aula de cerâmica');assert.equal(await page.getByLabel('O que você quer explorar?').inputValue(),'');
   assert.deepEqual(await page.locator('.reference-results h3').allTextContents(),['Usada em post aprovado','Escolhida antes','Nova referência']);
   assert.deepEqual(JSON.parse(await page.locator('#used').textContent()),[],'prévia não escolhe pela pessoa');
-  await page.getByRole('button',{name:'Usar como referência: Nova referência'}).click();await page.getByRole('button',{name:'Selecionada: Nova referência'}).waitFor();
+  await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência',checked:true}).waitFor();
   assert.equal(previews.length,1);assert.equal(JSON.parse(await page.locator('#used').textContent()).length,1);
 });
 test('permissão resiste à troca de projeto e é apagada na troca de conta ou saída',options,async t=>{
   const {page,searches}=await fixture(t);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('button',{name:'Usar como referência: Nova referência'}).waitFor();
-  await page.getByRole('button',{name:'Outro projeto',exact:true}).click();await page.getByRole('button',{name:'Usar como referência: Nova referência'}).waitFor();
+  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
+  await page.getByRole('button',{name:'Outro projeto',exact:true}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
   assert.equal(searches.length,2);assert.equal(await page.getByRole('button',{name:'Permitir nesta sessão'}).count(),0);
   await page.getByRole('button',{name:'Outra conta',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);assert.equal(await page.locator('img').count(),0);
   await page.getByRole('button',{name:'Conta inicial',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,2);
-  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('button',{name:'Usar como referência: Nova referência'}).waitFor();
+  await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();
   await page.getByRole('button',{name:'Sair e entrar',exact:true}).click();await page.getByRole('button',{name:'Permitir nesta sessão'}).waitFor();assert.equal(searches.length,3);assert.equal(await page.locator('img').count(),0);
 });
 test('digitar durante sugestão pendente não prende a busca manual',options,async t=>{
   const {page,searches,release}=await fixture(t,{holdFirst:true});
   await page.getByRole('button',{name:'Permitir nesta sessão'}).click();await page.getByRole('status').filter({hasText:'Buscando referências'}).waitFor();
   await page.getByLabel('O que você quer explorar?').fill('gravura');await page.getByRole('button',{name:'Buscar referências',exact:true}).click();
-  await page.getByRole('button',{name:'Usar como referência: Nova referência'}).waitFor();assert.equal(searches.length,2);assert.equal(searches[1].query,'gravura');release();
+  await page.getByRole('checkbox',{name:'Escolher referência: Nova referência'}).waitFor();assert.equal(searches.length,2);assert.equal(searches[1].query,'gravura');release();
 });
 test('primeiro lote começa somente com ideia e chave e conserva três imagens e espera visível',options,async t=>{
   const {page,generations}=await fixture(t);

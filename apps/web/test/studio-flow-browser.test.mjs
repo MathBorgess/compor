@@ -115,6 +115,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.screenshot({path:'/tmp/compor-studio-visual-marks.png',fullPage:true});
  await openDrawer(page,'Bases');
  await chooseFiles(page,'Adicionar PNG ou JPEG',[{name:'reference.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')},{name:'reference.jpg',mimeType:'image/jpeg',buffer:Buffer.from(files.jpeg,'base64')}]);
+ await page.getByText('Revisar seleção e alcance',{exact:true}).click();
  await page.getByText('reference.png',{exact:true}).waitFor();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
  await page.getByRole('button',{name:'Remover da seleção: reference.png',exact:true}).click();
@@ -170,7 +171,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
- await openDrawer(page,'Bases');await page.getByRole('button',{name:'Referências',exact:true}).click();await page.getByText('reference.jpg',{exact:true}).waitFor();
+ await openDrawer(page,'Bases');await page.getByRole('button',{name:'Referências',exact:true}).click();await page.getByText('Revisar seleção e alcance',{exact:true}).click();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await closeDrawer(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();

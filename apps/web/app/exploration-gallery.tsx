@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import * as z from '../lib/schema.ts';
+import ReferencePreview from './reference-preview';
 import { rememberShownExplorations } from '../lib/shown-explorations';
 
 const imagesSchema = z.object({
@@ -24,7 +25,7 @@ function mergeImages(incoming: ImageRecord[], previous: ImageRecord[]) {
   return [...byId.values()].sort((a, b) => (b.ordinal ?? 0) - (a.ordinal ?? 0));
 }
 
-export default function ExplorationGallery({ projectId, completed, selectedIds, onUseReference, phase = "idle", countdown = null }: { projectId: string; completed: number; selectedIds: string[]; onUseReference: (imageId: string, file: File, ordinal?: number) => Promise<void>; phase?: "idle" | "generating" | "waiting" | "blocked"; countdown?: number | null }) {
+export default function ExplorationGallery({ projectId, completed, selectedIds, onUseReference, onRemoveReference, phase = "idle", countdown = null }: { projectId: string; completed: number; selectedIds: string[]; onUseReference: (imageId: string, file: File, ordinal?: number) => Promise<void>; onRemoveReference?:(imageId:string)=>Promise<void>; phase?: "idle" | "generating" | "waiting" | "blocked"; countdown?: number | null }) {
   const [images, setImages] = useState<ImageRecord[] | null>(null);
   const [notice, setNotice] = useState("");
   const [loading, setLoading] = useState(false);
@@ -35,17 +36,6 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   const [selecting, setSelecting] = useState<string | null>(null);
   const selectionLock = useRef(false);
   const [refresh, setRefresh] = useState(0);
-  // Selecting disables the image button; move focus to the selection tray.
-  const pendingFocus = useRef<string | null>(null);
-  const selectedKey = selectedIds.join(",");
-  useEffect(() => {
-    const pending = pendingFocus.current;
-    if (!pending || !selectedIds.includes(pending)) return;
-    pendingFocus.current = null;
-    const active = document.activeElement;
-    if (active && active !== document.body && document.contains(active) && !(active instanceof HTMLButtonElement && active.disabled)) return;
-    document.getElementById('reference-selection-title')?.focus();
-  }, [selectedKey]);
   useEffect(() => {
     // This read has no generation side effect. Let it settle and ignore an
     // obsolete response instead of aborting it when the gallery closes.
@@ -99,7 +89,6 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
       if (!response.ok) throw Error("unavailable");
       const blob = await response.blob();
       if (blob.type !== "image/png" || !blob.size || blob.size > 8 * 1024 * 1024) throw Error("invalid image");
-      pendingFocus.current = imageId;
       await onUseReference(imageId, new File([blob], `exploracao-${imageId}.png`, { type: "image/png" }), ordinal);
       setNotice("Imagem adicionada à conversa e à Direção neste navegador.");
     } catch {
@@ -108,6 +97,13 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
       selectionLock.current = false;
       setSelecting(null);
     }
+  }
+  async function removeImage(imageId:string) {
+    if(!onRemoveReference||selectionLock.current)return;
+    selectionLock.current=true;setSelecting(imageId);setNotice('');
+    try {await onRemoveReference(imageId);setNotice('Imagem retirada da seleção.');}
+    catch {setNotice('Não foi possível confirmar a alteração da seleção.');}
+    finally {selectionLock.current=false;setSelecting(null);}
   }
   const newest = images?.[0];
   const latest = newest ? (newest.batch_id ? images?.filter(item => item.batch_id === newest.batch_id) ?? [] : [newest]) : [];
@@ -119,8 +115,8 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   function imageCard(item: ImageRecord) {
     const label = item.ordinal ? String(item.ordinal) : item.id, selected = selectedIds.includes(item.id);
     return <figure key={item.id} data-image-id={item.id} data-selected={selected ? "true" : undefined}>
-      {item.state === "completed" ? <button type="button" className="reference-image-select" aria-pressed={selectedIds.includes(item.id)} aria-label={`${selectedIds.includes(item.id) ? "Imagem usada" : "Usar imagem"} ${label} na conversa e na Direção`} disabled={Boolean(selecting) || selectedIds.includes(item.id)} onClick={() => useImage(item.id, item.ordinal)}><img src={`/api/studio/explorations/image?${new URLSearchParams({ projectId, imageId: item.id })}`} alt="" /><span>{selecting === item.id ? "Adicionando…" : selected ? "✓ Selecionada" : "Usar na conversa"}</span></button> : <p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p>}
-      <figcaption><span className="reference-source" data-origin="generated">Gerada pelo Compor</span> Imagem {label}</figcaption>
+      {item.state === "completed" ? <><ReferencePreview src={`/api/studio/explorations/image?${new URLSearchParams({projectId,imageId:item.id})}`} title={`Imagem ${label}`}/><figcaption>Imagem {label}</figcaption><div className="reference-card-actions"><label className="reference-choice"><input type="checkbox" aria-label={`Escolher imagem ${label}`} checked={selected} disabled={selected&&!onRemoveReference} aria-disabled={Boolean(selecting)||undefined} onChange={()=>{if(selected)void removeImage(item.id);else void useImage(item.id,item.ordinal);}}/>{selecting===item.id?'Atualizando…':selected?'Escolhida':'Escolher'}</label><span className="reference-source" data-origin="generated">Gerada pelo Compor</span></div></> : <><p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p><figcaption>Imagem {label}</figcaption></>}
+
     </figure>;
   }
   return <section className="studio-exploration-gallery" aria-label="Explorações de imagem">

@@ -27,6 +27,7 @@ export type StudioShellProps = {
   accountLabel?: string;
   localAccount?: boolean;
   onSignOut?: () => void | Promise<void>;
+  onOpenProfile?: () => void;
   statusText?: string;
   children?: ReactNode;
   canvas?: ReactNode;
@@ -130,6 +131,7 @@ export default function StudioShell({
   accountLabel = "",
   localAccount = false,
   onSignOut,
+  onOpenProfile,
   statusText = "",
   children,
   canvas,
@@ -436,7 +438,7 @@ export default function StudioShell({
             </>
           ) : null}
           <div className="studio-account">
-            <AccountMenu label={accountLabel || userLabel || "Conta"} local={localAccount} onSignOut={onSignOut} />
+            <AccountMenu label={accountLabel || userLabel || "Conta"} local={localAccount} onSignOut={onSignOut} onOpenProfile={onOpenProfile} />
             {statusText ? (
               <span className="studio-save-status" role="status">
                 {statusText}

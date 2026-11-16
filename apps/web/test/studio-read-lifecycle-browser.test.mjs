@@ -68,14 +68,14 @@ test('sessão descarta resposta antiga após troca de conta e mantém falha real
 test('fechar e reabrir galeria descarta resultados antigos e conserva mensagem de falha real, sem AbortError',{timeout:90000},async t=>{
  const {page,errors}=await setup(t),reads=[];await page.route('**/api/studio/explorations?*',route=>{const read=deferredRead(route);reads.push(read);return read.done;});
  t.after(()=>{for(const read of reads)read.release({images:[]});});
- await page.goto(origin);await page.getByRole('button',{name:'Leituras de teste Abrir projeto',exact:true}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();await until(()=>reads.length,n=>n>=1);
+ await page.goto(origin);await page.getByRole('button',{name:'Leituras de teste Abrir projeto',exact:true}).click();await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await until(()=>reads.length,n=>n>=1);
  await closeSettings(page);const obsolete=[...reads];
  const image=(n)=>({id:id(n),project_id:project,state:'completed',ordinal:n,created_at:'2026-11-15T12:00:00.000Z'});
- await page.route('**/api/studio/explorations?*',route=>route.fulfill({json:{images:[image(20)]}}));await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
- const fresh=page.getByRole('button',{name:'Usar imagem 20 na conversa e na Direção',exact:true});await fresh.waitFor();
+ await page.route('**/api/studio/explorations?*',route=>route.fulfill({json:{images:[image(20)]}}));await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
+ const fresh=page.getByRole('checkbox',{name:'Escolher imagem 20',exact:true});await fresh.waitFor();
  assert.deepEqual(await page.evaluate(()=>window.readLifecycle.aborts),[]);
  for(const read of obsolete)read.release({images:[image(10)]});await Promise.all(obsolete.map(read=>read.done));await flushBrowser(page);
- assert.equal(await page.getByRole('button',{name:'Usar imagem 10 na conversa e na Direção',exact:true}).count(),0,'a leitura da galeria fechada não substitui a seleção atual');assert.equal(await fresh.isVisible(),true);
+ assert.equal(await page.getByRole('checkbox',{name:'Escolher imagem 10',exact:true}).count(),0,'a leitura da galeria fechada não substitui a seleção atual');assert.equal(await fresh.isVisible(),true);
  await page.route('**/api/studio/explorations?*',route=>route.fulfill({status:503,json:{error:'unavailable'}}));await page.getByRole('button',{name:'Consultar explorações',exact:true}).click();await page.getByText('Não foi possível consultar as explorações agora.',{exact:true}).waitFor();assert.equal(await fresh.isVisible(),true);
  await closeSettings(page);await flushBrowser(page);assert.deepEqual(await page.evaluate(()=>window.readLifecycle.aborts),[]);assert.deepEqual(await page.evaluate(()=>window.readLifecycle.rejections),[]);assert.deepEqual(errors,[]);
 });

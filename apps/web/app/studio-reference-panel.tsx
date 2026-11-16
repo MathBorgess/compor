@@ -1,38 +1,59 @@
 "use client";
-import {useId,useState,type ReactNode} from 'react';
+import {useEffect,useId,useRef,useState,type ReactNode} from 'react';
 import './reference-workbench.css';
 type Props={
   projectWide:boolean;onScope?:(projectWide:boolean)=>void;
-  selection:ReactNode;search:ReactNode;upload:ReactNode;proposals:ReactNode;conversation:ReactNode;
+  entry?:'preparation'|'project'|'post';projectTitle?:string;selectionCount?:number;selectionWaiting?:boolean;needsResponse?:boolean;
+  selection:ReactNode;search:ReactNode|((sourceControl:ReactNode)=>ReactNode);upload:ReactNode;proposals:ReactNode;conversation:ReactNode;
   onBack?:()=>void;onContinue?:()=>void;continueLabel?:string;continueDisabled?:boolean;
   onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;
-  onPauseProposals?:()=>void;proposalStatus?:string;
+  onPauseProposals?:()=>void;proposalStatus?:string;proposalPhase?:'idle'|'generating'|'waiting'|'blocked';
 };
-export default function ReferencePanel({projectWide,onScope,selection,search,upload,proposals,conversation,onBack,onContinue,continueLabel,continueDisabled=false,onRequestProposals,proposalsDisabled=false,proposalsRunning=false,onPauseProposals,proposalStatus}:Props) {
-  const [source,setSource]=useState<'search'|'upload'|'compor'>('search');
-  const sourceId=useId();
-  return <div className="guided-references reference-workbench" data-source={source}>
+type Source='search'|'upload'|'compor';
+export default function ReferencePanel({projectWide,onScope,entry='post',projectTitle,selectionCount=0,selectionWaiting=false,needsResponse=false,selection,search,upload,proposals,conversation,onBack,onContinue,continueLabel,continueDisabled=false,onRequestProposals,proposalsDisabled=false,proposalsRunning=false,onPauseProposals,proposalStatus,proposalPhase='idle'}:Props) {
+  const [source,setSource]=useState<Source>('search'),[surface,setSurface]=useState<'gallery'|'conversation'>('gallery');
+  const sourceId=useId(),conversationId=useId(),headingId=useId();
+  const heading=useRef<HTMLHeadingElement>(null),conversationSection=useRef<HTMLElement>(null),conversationTrigger=useRef<HTMLButtonElement>(null),gallery=useRef<HTMLDivElement>(null);
+  const galleryScroll=useRef(0),switching=useRef(false);
+  useEffect(()=>{heading.current?.focus();},[]);
+  useEffect(()=>{
+    if(!switching.current)return;
+    if(surface==='conversation')conversationSection.current?.focus();
+    else {window.scrollTo({top:galleryScroll.current});conversationTrigger.current?.focus({preventScroll:true});}
+  },[surface]);
+  function openConversation(){galleryScroll.current=window.scrollY;switching.current=true;setSurface('conversation');}
+  function closeConversation(){switching.current=true;setSurface('gallery');}
+  const sourceControl=<label className="reference-source-control">Fonte<select aria-label="Fonte" name="source" aria-controls={sourceId} value={source} onChange={event=>setSource(event.target.value as Source)}><option value="search">Pinterest</option><option value="upload">Enviar imagem</option><option value="compor">Propostas do Compor</option></select></label>;
+  return <section className="reference-workbench reference-step" data-source={source} data-surface={surface} data-phase={proposalPhase} data-selection-phase={selectionWaiting?'stabilizing':'idle'} aria-busy={proposalPhase==='generating'||continueDisabled} aria-labelledby={headingId}>
+    {entry==='preparation'&&<nav className="reference-preparation-steps" aria-label="Preparação do projeto"><ol><li>Contexto concluído</li><li>IA revisada</li><li aria-current="step">Referências opcionais</li><li>Pedido</li></ol></nav>}
     <header className="reference-workbench-heading">
-      <div><h2>Referências {projectWide?'do projeto':'deste post'}</h2><p>{projectWide?'Compartilhadas com todos os posts.':'Combine referências do projeto e deste post.'} Referências são opcionais.</p></div>
-      {onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}
-      {/* Nos modais o X fecha; o retorno próprio só existe na preparação do projeto (ADR 0055). */}
-      {(onBack||onContinue)&&<div className="reference-workbench-return">{onBack&&<button type="button" className="studio-button-secondary" onClick={onBack}>Voltar</button>}{onContinue&&<button type="button" className="studio-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button>}</div>}
+      {projectTitle&&<p className="reference-project-name">{projectTitle}</p>}
+      <h1 id={headingId} ref={heading} tabIndex={-1}>Escolha o que inspira este post</h1>
+      <p>Referências são opcionais. Escolha imagens ou continue sem elas.</p>
     </header>
-    <section className="reference-workbench-explore" aria-label="Explorar caminhos visuais">
-      <div className="reference-workbench-toolbar">
-        <div><h3>Compare caminhos visuais</h3><p>Escolha imagens e converse sobre o que aproveitar.</p></div>
-        <nav className="guided-reference-tabs" aria-label="Como adicionar referências">
-          <button type="button" className="studio-button-secondary" aria-pressed={source==='search'} aria-controls={sourceId} onClick={()=>setSource('search')}>Buscar referências</button>
-          <button type="button" className="studio-button-secondary" aria-pressed={source==='upload'} aria-controls={sourceId} onClick={()=>setSource('upload')}>Enviar imagem</button>
-          <button type="button" className="studio-button-quiet reference-workbench-browse" aria-label="Ver propostas anteriores" aria-controls={sourceId} onClick={()=>setSource('compor')}>Ver anteriores</button>
-          <button type="button" className="studio-button" aria-pressed={source==='compor'} aria-controls={sourceId} disabled={proposalsDisabled&&source==='compor'} onClick={()=>{setSource('compor');if(!proposalsDisabled)onRequestProposals?.();}}>Pedir 3 propostas</button>
-          {proposalsRunning&&onPauseProposals&&<button type="button" className="studio-button-secondary" onClick={onPauseProposals}>Pausar exploração</button>}
-        </nav>
-      </div>
-      {proposalStatus&&<p className="reference-workbench-status" role="status">{proposalStatus}</p>}
-      <div className="guided-reference-source reference-workbench-source" id={sourceId}>{source==='search'?search:source==='upload'?upload:proposals}</div>
+    {selectionWaiting&&<p className="reference-workbench-status" role="status">Aguardando 5 segundos sem alterações ou digitação para verificar esta seleção.</p>}
+    <div ref={gallery} className="reference-gallery-surface" hidden={surface!=='gallery'}>
+      <section className="reference-workbench-explore" aria-label="Explorar caminhos visuais">
+        <div className="guided-reference-source reference-workbench-source" id={sourceId}>
+          <div hidden={source!=='search'}>{typeof search==='function'?search(sourceControl):<>{sourceControl}{search}</>}</div>
+          <div hidden={source!=='upload'}>{sourceControl}{upload}</div>
+          <div hidden={source!=='compor'}>
+            <div className="reference-proposal-controls">{sourceControl}<button type="button" className="studio-button-secondary" disabled={proposalsDisabled} onClick={()=>onRequestProposals?.()}>Pedir 3 propostas</button></div>
+            {proposals}
+          </div>
+        </div>
+      </section>
+      {(proposalStatus||proposalsRunning)&&<div className="reference-exploration-status">{proposalStatus&&<p className="reference-workbench-status" role={proposalPhase==='waiting'?'timer':'status'} aria-live={proposalPhase==='waiting'?'off':'polite'}>{proposalStatus}</p>}{proposalsRunning&&onPauseProposals&&<button type="button" className="studio-button-secondary" onClick={onPauseProposals}>Pausar exploração</button>}</div>}
+      {needsResponse&&<p className="reference-pending-question">Há uma pergunta sobre suas referências. <button type="button" className="studio-button-quiet" onClick={openConversation}>Responder</button></p>}
+      <footer className="reference-step-actions">
+        <div className="reference-selection-summary"><div><p role="status" aria-atomic="true">{selectionCount} {selectionCount===1?'referência escolhida':'referências escolhidas'}</p><p className="reference-scope-summary">{projectWide?'Referências do projeto':'Referências deste post'}</p></div><button ref={conversationTrigger} type="button" className="studio-button-quiet" aria-controls={conversationId} onClick={openConversation}>Comentar seleção</button></div>
+        <div className="reference-workbench-return">{onBack&&<button type="button" className="studio-button-secondary" disabled={continueDisabled} onClick={onBack}>Voltar</button>}{onContinue&&<div><button type="button" className="studio-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button>{entry==='preparation'&&<p>Você revisa o pedido antes de gerar.</p>}</div>}</div>
+      </footer>
+      <details className="reference-workbench-selection"><summary>Revisar seleção e alcance</summary>{onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}{selection}</details>
+    </div>
+    <section ref={conversationSection} id={conversationId} tabIndex={-1} className="reference-workbench-conversation" aria-label="Conversa sobre estas referências" hidden={surface!=='conversation'}>
+      <button type="button" className="studio-button-secondary reference-back-to-images" onClick={closeConversation}>Voltar às imagens</button>
+      {conversation}
     </section>
-    <div className="reference-workbench-selection">{selection}</div>
-    <section className="reference-workbench-conversation" aria-label="Conversa sobre estas referências">{conversation}</section>
-  </div>;
+  </section>;
 }
