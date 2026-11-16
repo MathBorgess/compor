@@ -110,7 +110,7 @@ export default function StudioEditor({
     if (!guided) return <details className="studio-post-inspector" open><summary>Editar textos, legenda e aprovação</summary>{inspector}</details>;
     return <aside className="studio-editor-side" aria-label="Painéis do post" hidden={!allPanels.some(panel => openPanels.includes(panel.id))}>
       {allPanels.map(panel => <section key={panel.id} id={`${panelId}-${panel.id}`} className={`studio-editor-panel ${panel.className ?? ""}`} aria-label={panel.title} tabIndex={-1} hidden={!openPanels.includes(panel.id)}>
-        <div className="studio-editor-panel-heading"><h3>{panel.title}</h3><button type="button" aria-label={`Fechar ${panel.title}`} onClick={() => togglePanel(panel.id)}>×</button></div>
+        <div className="studio-editor-panel-heading"><h3>{panel.title}</h3><button type="button" aria-label={`Fechar ${panel.title}`} onClick={() => {document.getElementById(`${panelId}-${panel.id}-toggle`)?.focus();togglePanel(panel.id);}}>×</button></div>
         {panel.id === "texts" ? inspector : panel.content}
       </section>)}
     </aside>;
@@ -143,6 +143,7 @@ export default function StudioEditor({
         {guided ? allPanels.map(panel => (
           <button
             key={panel.id}
+            id={`${panelId}-${panel.id}-toggle`}
             type="button"
             className="studio-panel-toggle"
             aria-expanded={openPanels.includes(panel.id)}

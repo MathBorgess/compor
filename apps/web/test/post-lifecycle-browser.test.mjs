@@ -50,7 +50,13 @@ for(const width of [1440,390])test(`nome, confirmação e exclusão de posts em 
  await button('Continuar para criação').click();await posted;assert.ok(await button('Criando post…').isDisabled());assert.equal((await stored()).drafts.length,0);release();catalog.createGate=null;
  await page.getByRole('textbox',{name:'Sua mensagem',exact:true}).waitFor();assert.equal(catalog.calls.filter(call=>call.method==='POST').length,1);
  assert.equal(await page.locator('.studio-post-identity h2').textContent(),'Live gratuita — Matemática no ENEM');
- await openPostEditor(page);await page.getByLabel('Título',{exact:true}).fill('Texto que vai na arte');assert.equal(await page.locator('.studio-post-identity h2').textContent(),'Live gratuita — Matemática no ENEM');
+ await openPostEditor(page);
+ for(const [label,title] of [['Textos','Editar textos, legenda e aprovação'],['Versões','Versões e variantes deste post'],['Imagem-base','Usar uma imagem-base própria']]){
+  const toggle=button(label);if(await toggle.getAttribute('aria-expanded')!=='true')await toggle.click();
+  const close=button(`Fechar ${title}`);await close.focus();await page.keyboard.press('Enter');
+  assert.equal(await toggle.getAttribute('aria-expanded'),'false');assert.equal(await toggle.evaluate(el=>document.activeElement===el),true,`o foco retorna ao botão ${label}`);
+ }
+ await button('Textos').click();await page.getByLabel('Título',{exact:true}).fill('Texto que vai na arte');assert.equal(await page.locator('.studio-post-identity h2').textContent(),'Live gratuita — Matemática no ENEM');
  await button('Posts do projeto').click();await page.getByRole('button',{name:/^Live gratuita — Matemática no ENEM .*Abrir post e conversa$/}).waitFor();
  await button('Criar novo post').click();await name.fill('Post descartado');await button('Cancelar').click();assert.equal(await page.locator('.studio-project-entry').count(),1);assert.equal(catalog.calls.length,1);
  await button('Criar novo post').click();await name.fill('Dica de porcentagem');await button('Continuar para criação').click();await page.getByRole('textbox',{name:'Sua mensagem',exact:true}).waitFor();
