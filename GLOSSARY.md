@@ -279,3 +279,19 @@ _Avoid_: Raciocínio interno do modelo, reconstrução presumida, caso de avalia
 **Harness do Compor**:
 Conjunto versionado de instruções, ferramentas, controles e fluxos que conduz e valida as tentativas do agente no produto.
 _Avoid_: Modelo de IA, pesos treinados, memória adotada pelo usuário
+
+**Goal de verificação do Compor**:
+Objetivo de desenvolvimento ou QA cujo atendimento depende de critérios observáveis de uma jornada, com escopo, efeitos permitidos e evidências identificados.
+_Avoid_: Pedido criativo da pessoa, aprovação da peça, tarefa concluída por declaração do agente
+
+**Agente de verificação do Compor**:
+Agente externo de desenvolvimento ou QA que percorre jornadas e examina evidências de comportamento do produto.
+_Avoid_: Agente criativo do estúdio, pessoa usuária real, avaliador infalível
+
+**AX do Compor**:
+Experiência do agente de verificação ao descobrir ações, observar estado, compreender esperas e erros, retomar trabalho e conferir seus efeitos.
+_Avoid_: Acessibilidade humana, autonomia criativa do estúdio, permissão adicional
+
+**Exploração de verificação do Compor**:
+Percurso em que um agente de desenvolvimento/QA escolhe ações para investigar um Goal e registra o caminho e os efeitos observados. Um achado precisa de reprodução antes de integrar a regressão determinística.
+_Avoid_: Exploração de imagens, geração criativa, teste aprovado pelo relato do agente

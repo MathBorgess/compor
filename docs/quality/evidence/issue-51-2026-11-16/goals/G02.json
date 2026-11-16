@@ -1,0 +1,170 @@
+{
+  "schemaVersion": "goal/v1",
+  "revision": 1,
+  "requiredProfiles": [
+    "offline"
+  ],
+  "preconditions": [
+    "PostgreSQL and PostgREST run locally with the fixed migrations",
+    "Synthetic identities and external services; egress denied",
+    "The evaluator uses the fixed suite outside the app snapshot"
+  ],
+  "initialState": {
+    "accounts": [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222"
+    ],
+    "projectId": "33333333-3333-4333-8333-333333333333",
+    "postId": "44444444-4444-4444-8444-444444444444"
+  },
+  "authorizedIntents": [
+    "Synthetic account A owns the prepared project and asset",
+    "Synthetic account B attempts forbidden reads and a write",
+    "Two independent authenticated requests contend for the same reservation"
+  ],
+  "allowedEffects": [
+    "Ephemeral rows and files scoped to this run",
+    "Calls to the local provider fixture"
+  ],
+  "forbiddenEffects": [
+    "Real network egress or paid calls",
+    "Generation before explicit intent",
+    "Cross-account access",
+    "Automatic repeat after uncertain effect"
+  ],
+  "obstacles": [
+    "Cross-account access",
+    "Concurrent requests"
+  ],
+  "faults": [],
+  "clockPolicy": {
+    "virtual": [
+      "selection stabilization 5000ms",
+      "batch interval 15000ms"
+    ],
+    "real": [
+      "watchdog",
+      "database",
+      "JWT validity"
+    ]
+  },
+  "seed": "compor-issue51-v1",
+  "budgets": {
+    "actions": 80,
+    "requests": 240,
+    "wallTimeMs": 180000,
+    "cycles": 2,
+    "candidates": 1,
+    "concurrency": 1
+  },
+  "suiteRevision": "verification/v1",
+  "id": "G02",
+  "objective": "Reject cross-account project and private-asset access and preserve one reservation effect under concurrent requests.",
+  "criteria": [
+    {
+      "id": "G02.cross-account-denied",
+      "description": "Account B cannot read or mutate A's project or read A's asset.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "one-of",
+          "artifact": "observations",
+          "path": "/http/readProjectAsB/status",
+          "expected": [
+            403,
+            404
+          ]
+        },
+        {
+          "kind": "one-of",
+          "artifact": "observations",
+          "path": "/http/writeProjectAsB/status",
+          "expected": [
+            403,
+            404
+          ]
+        },
+        {
+          "kind": "one-of",
+          "artifact": "observations",
+          "path": "/http/readAssetAsB/status",
+          "expected": [
+            403,
+            404
+          ]
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/db/beforeAttack/projects",
+          "otherPath": "/db/afterAttack/projects"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/db/beforeAttack/assets",
+          "otherPath": "/db/afterAttack/assets"
+        }
+      ]
+    },
+    {
+      "id": "G02.reservation-exclusive",
+      "description": "Concurrent requests create exactly one reservation and one provider dispatch.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/reservationRows",
+          "expected": 1
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/providerLedger/reservationDispatches",
+          "expected": 1
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/concurrentFirst/status",
+          "expected": 200
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/concurrentFirst/body/status",
+          "expected": "completed"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/concurrentSecond/status",
+          "expected": 409
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/concurrentSecond/body/status",
+          "expected": "busy"
+        }
+      ]
+    },
+    {
+      "id": "G02.private-bytes-scoped",
+      "description": "The owner's private file retains its independently observed digest.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "file-digest",
+          "artifact": "owner-image",
+          "expectedArtifact": "observations",
+          "expectedPath": "/files/ownerImageSha256"
+        }
+      ]
+    }
+  ]
+}

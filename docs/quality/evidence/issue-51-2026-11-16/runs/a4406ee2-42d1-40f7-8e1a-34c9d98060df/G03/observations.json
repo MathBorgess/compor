@@ -1,0 +1,211 @@
+{
+  "http": {
+    "createProject": {
+      "status": 201,
+      "body": {
+        "project": {
+          "id": "e8dec406-f536-4756-a453-17006b4f4a77",
+          "title": "G03 — confirmação perdida sintética",
+          "created_at": "2026-11-16T14:27:15.186182+00:00",
+          "revision": 1
+        }
+      }
+    },
+    "persistedReplyLost": {
+      "status": 502,
+      "body": {
+        "status": "unknown",
+        "requestId": "beb672a0-3437-451f-8dad-665e7a6e0934",
+        "retryAutomatically": false
+      }
+    },
+    "persistedReopen": {
+      "status": 200,
+      "body": {
+        "images": [
+          {
+            "id": "beb672a0-3437-451f-8dad-665e7a6e0934",
+            "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+            "state": "completed",
+            "created_at": "2026-11-16T14:27:15.205565+00:00",
+            "ordinal": 1,
+            "batch_id": null,
+            "batch_position": null
+          }
+        ],
+        "nextBeforeOrdinal": null
+      }
+    },
+    "persistedReplay": {
+      "status": 200,
+      "body": {
+        "status": "completed",
+        "requestId": "beb672a0-3437-451f-8dad-665e7a6e0934",
+        "imageId": "beb672a0-3437-451f-8dad-665e7a6e0934"
+      }
+    },
+    "providerReplyLost": {
+      "status": 502,
+      "body": {
+        "status": "unknown",
+        "requestId": "d62da81e-d0df-4fde-a129-690463a72365",
+        "retryAutomatically": false
+      }
+    },
+    "unknownReopen": {
+      "status": 200,
+      "body": {
+        "images": [
+          {
+            "id": "d62da81e-d0df-4fde-a129-690463a72365",
+            "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+            "state": "unknown",
+            "created_at": "2026-11-16T14:27:15.323905+00:00",
+            "ordinal": 2,
+            "batch_id": null,
+            "batch_position": null
+          },
+          {
+            "id": "beb672a0-3437-451f-8dad-665e7a6e0934",
+            "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+            "state": "completed",
+            "created_at": "2026-11-16T14:27:15.205565+00:00",
+            "ordinal": 1,
+            "batch_id": null,
+            "batch_position": null
+          }
+        ],
+        "nextBeforeOrdinal": null
+      }
+    },
+    "unknownReplay": {
+      "status": 409,
+      "body": {
+        "status": "unknown",
+        "requestId": "d62da81e-d0df-4fde-a129-690463a72365",
+        "retryAutomatically": false
+      }
+    },
+    "unknownNewRequest": {
+      "status": 409,
+      "body": {
+        "status": "blocked",
+        "requestId": "888857dc-4c4e-4029-ad2f-29904073956b",
+        "retryAutomatically": false
+      }
+    },
+    "unknownFinalRead": {
+      "status": 200,
+      "body": {
+        "images": [
+          {
+            "id": "d62da81e-d0df-4fde-a129-690463a72365",
+            "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+            "state": "unknown",
+            "created_at": "2026-11-16T14:27:15.323905+00:00",
+            "ordinal": 2,
+            "batch_id": null,
+            "batch_position": null
+          },
+          {
+            "id": "beb672a0-3437-451f-8dad-665e7a6e0934",
+            "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+            "state": "completed",
+            "created_at": "2026-11-16T14:27:15.205565+00:00",
+            "ordinal": 1,
+            "batch_id": null,
+            "batch_position": null
+          }
+        ],
+        "nextBeforeOrdinal": null
+      }
+    }
+  },
+  "db": {
+    "persistedBeforeReopen": [
+      {
+        "id": "beb672a0-3437-451f-8dad-665e7a6e0934",
+        "owner_id": "11111111-1111-4111-8111-111111111111",
+        "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+        "state": "completed",
+        "ordinal": 1
+      }
+    ],
+    "persistedAfterReopen": [
+      {
+        "id": "beb672a0-3437-451f-8dad-665e7a6e0934",
+        "owner_id": "11111111-1111-4111-8111-111111111111",
+        "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+        "state": "completed",
+        "ordinal": 1
+      }
+    ],
+    "unknownBeforeReopen": [
+      {
+        "id": "d62da81e-d0df-4fde-a129-690463a72365",
+        "owner_id": "11111111-1111-4111-8111-111111111111",
+        "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+        "state": "unknown",
+        "ordinal": 2
+      }
+    ],
+    "unknownAfterReopen": [
+      {
+        "id": "d62da81e-d0df-4fde-a129-690463a72365",
+        "owner_id": "11111111-1111-4111-8111-111111111111",
+        "project_id": "e8dec406-f536-4756-a453-17006b4f4a77",
+        "state": "unknown",
+        "ordinal": 2
+      }
+    ],
+    "unknownAssets": []
+  },
+  "providerLedger": {
+    "persistedBeforeReopen": [
+      {
+        "kind": "image",
+        "id": "fixture_image_5",
+        "prompt": "Efeito sintético persistido antes de perder a confirmação.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      }
+    ],
+    "persistedAfterReopen": [
+      {
+        "kind": "image",
+        "id": "fixture_image_5",
+        "prompt": "Efeito sintético persistido antes de perder a confirmação.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      }
+    ],
+    "unknownBeforeReopen": [
+      {
+        "kind": "image",
+        "id": "fixture_image_6",
+        "prompt": "Efeito sintético no provedor cuja resposta não chega ao produto.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "reply_lost"
+      }
+    ],
+    "unknownAfterReopen": [
+      {
+        "kind": "image",
+        "id": "fixture_image_6",
+        "prompt": "Efeito sintético no provedor cuja resposta não chega ao produto.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "reply_lost"
+      }
+    ]
+  },
+  "controller": {
+    "persistedReopened": {
+      "operationId": "beb672a0-3437-451f-8dad-665e7a6e0934",
+      "status": "completed"
+    },
+    "providerLostAfterReopen": {
+      "operationId": "d62da81e-d0df-4fde-a129-690463a72365",
+      "status": "unknown"
+    }
+  }
+}

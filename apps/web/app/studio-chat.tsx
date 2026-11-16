@@ -1,5 +1,6 @@
 "use client";
 import {conversationContext,postContext} from '../lib/studio-post-context';
+import {scheduleSelectionReading} from '../lib/selection-reading-timer';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
 import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
@@ -556,7 +557,7 @@ export default function StudioChat({
     const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
-    const timeout=setTimeout(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
+    const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
       if(!lock||!allowed())return;
       const available=availability.current;
       if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
@@ -599,8 +600,8 @@ export default function StudioChat({
           setNotice(errorMessage(error));setBusy(false);
         }
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
-    });},5000);
-    return ()=>{clearTimeout(timeout);reportWait(false);};
+    });});
+    return ()=>{cancelReading();reportWait(false);};
   },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();

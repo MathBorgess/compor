@@ -1,0 +1,153 @@
+{
+  "http": {
+    "exploration": [
+      {
+        "action": "create-project",
+        "status": 201,
+        "body": {
+          "project": {
+            "id": "dc3038ce-9ade-491a-8757-c363c0dbf666",
+            "title": "Exploração sintética dirigida pelo agente",
+            "created_at": "2026-11-16T14:27:25.485223+00:00",
+            "revision": 1
+          }
+        }
+      },
+      {
+        "action": "request-image",
+        "status": 200,
+        "body": {
+          "status": "completed",
+          "requestId": "8e89a1b4-2d6e-4a00-a66a-31ccdc2f94f6",
+          "imageId": "8e89a1b4-2d6e-4a00-a66a-31ccdc2f94f6"
+        }
+      },
+      {
+        "action": "list-images",
+        "status": 200,
+        "body": {
+          "images": [
+            {
+              "id": "8e89a1b4-2d6e-4a00-a66a-31ccdc2f94f6",
+              "project_id": "dc3038ce-9ade-491a-8757-c363c0dbf666",
+              "state": "completed",
+              "created_at": "2026-11-16T14:27:27.06522+00:00",
+              "ordinal": 1,
+              "batch_id": null,
+              "batch_position": null
+            }
+          ],
+          "nextBeforeOrdinal": null
+        }
+      },
+      {
+        "action": "create-turn",
+        "status": 202,
+        "body": {
+          "status": "running",
+          "requestId": "f159d929-e75c-46cb-b01d-04f56a598b55",
+          "attemptId": "c831df7b-8f49-4793-a174-bbe36f64e814",
+          "sessionReused": false
+        }
+      },
+      {
+        "action": "poll-turn",
+        "status": 200,
+        "body": {
+          "status": "completed",
+          "requestId": "f159d929-e75c-46cb-b01d-04f56a598b55",
+          "attemptId": "c831df7b-8f49-4793-a174-bbe36f64e814",
+          "sessionId": "sess_verification2",
+          "turnId": "turn_sess_verification2",
+          "itemTrace": {
+            "observedItems": 1,
+            "functionCalls": 0,
+            "outputs": 0,
+            "omittedItems": 0,
+            "items": []
+          },
+          "text": "Pedido sintético recebido; os fatos permanecem como informados.",
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+      }
+    ]
+  },
+  "db": {
+    "versions": [
+      {
+        "project_id": "dc3038ce-9ade-491a-8757-c363c0dbf666",
+        "piece_id": "2a356f72-6a28-440f-bf26-1260dc58b283",
+        "version": 1,
+        "content": {
+          "date": "",
+          "price": "",
+          "caption": "Legenda sintética preservada.",
+          "headline": "",
+          "captionOrigin": "user"
+        }
+      }
+    ]
+  },
+  "controller": {
+    "reopened": {
+      "pieceId": "2a356f72-6a28-440f-bf26-1260dc58b283",
+      "baseVersion": 1,
+      "content": {
+        "headline": "",
+        "price": "",
+        "date": "",
+        "caption": "Legenda sintética preservada.",
+        "captionOrigin": "user"
+      },
+      "facts": [],
+      "suggestedFacts": []
+    }
+  },
+  "providerLedger": {
+    "beforeIntent": [],
+    "afterExplicitRequest": [
+      {
+        "kind": "image",
+        "id": "fixture_image_1",
+        "prompt": "Desenho sintético de formas simples, sem alegações comerciais.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      }
+    ],
+    "final": [
+      {
+        "kind": "image",
+        "id": "fixture_image_1",
+        "prompt": "Desenho sintético de formas simples, sem alegações comerciais.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      },
+      {
+        "kind": "session",
+        "id": "sess_verification2",
+        "input": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "input_text",
+                "text": "{\"origin\":\"user\",\"message\":\"Revise esta composição sintética mantendo a legenda.\",\"projectId\":\"dc3038ce-9ade-491a-8757-c363c0dbf666\",\"context\":{\"revision\":13,\"pieceId\":\"2a356f72-6a28-440f-bf26-1260dc58b283\",\"baseVersion\":1,\"expectedLatestVersion\":1,\"content\":{\"headline\":\"\",\"price\":\"\",\"date\":\"\",\"caption\":\"Legenda sintética preservada.\",\"captionOrigin\":\"user\"},\"approval\":{\"status\":\"unapproved\"},\"baseImageId\":null,\"brief\":{\"offer\":\"\",\"audience\":\"\",\"action\":\"\",\"direction\":\"\"},\"offerFacts\":[],\"audienceResolution\":{\"status\":\"resolved\",\"value\":\"\"},\"postContext\":{\"objective\":\"\",\"message\":\"Revise esta composição sintética mantendo a legenda.\",\"action\":\"\"},\"persona\":{\"audience\":\"\",\"situation\":\"\",\"need\":\"\",\"culturalReferences\":\"\",\"claims\":[]},\"direction\":{\"criteria\":[],\"decisions\":[]},\"marks\":[],\"references\":[]},\"requestId\":\"f159d929-e75c-46cb-b01d-04f56a598b55\",\"localConversation\":[]}"
+              }
+            ]
+          }
+        ],
+        "model": "gpt-6.1-terra"
+      }
+    ]
+  },
+  "errors": [],
+  "identity": {
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "projectId": "dc3038ce-9ade-491a-8757-c363c0dbf666",
+    "pieceId": "2a356f72-6a28-440f-bf26-1260dc58b283"
+  }
+}

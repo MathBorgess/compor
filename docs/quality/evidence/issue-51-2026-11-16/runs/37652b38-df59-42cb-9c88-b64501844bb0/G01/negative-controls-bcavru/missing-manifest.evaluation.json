@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "evaluation/v1",
+  "goalId": "G01",
+  "profile": null,
+  "status": "inconclusivo",
+  "passed": false,
+  "integrity": {
+    "valid": false,
+    "reasons": [
+      "ENOENT: no such file or directory, realpath '<local-evidence>/37652b38-df59-42cb-9c88-b64501844bb0/G01/negative-controls-bcavru/missing-manifest/manifest.json'"
+    ]
+  },
+  "completion": {
+    "complete": false,
+    "reasons": [
+      "invalid manifest or trusted inputs"
+    ]
+  },
+  "criteria": [
+    {
+      "id": "G01.no-generation-before-intent",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.post-confirmed",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.references-scoped",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.version-reopened",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.facts-preserved",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.waits-enforced",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    }
+  ],
+  "modelUsage": {
+    "tokens": null,
+    "costUsd": null
+  }
+}

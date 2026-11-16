@@ -1,0 +1,230 @@
+{
+  "http": {
+    "createProject": {
+      "status": 201,
+      "body": {
+        "project": {
+          "id": "cb13ce17-4328-475f-8091-0f328d6f7111",
+          "title": "Campanha sintética G01",
+          "created_at": "2026-11-16T14:27:02.445941+00:00",
+          "revision": 1
+        }
+      }
+    },
+    "openProject": {
+      "status": 200,
+      "body": {
+        "projects": [
+          {
+            "id": "cb13ce17-4328-475f-8091-0f328d6f7111",
+            "title": "Campanha sintética G01",
+            "created_at": "2026-11-16T14:27:02.445941+00:00",
+            "revision": 1
+          }
+        ]
+      }
+    },
+    "reloadProject": {
+      "status": 200,
+      "body": {
+        "projects": [
+          {
+            "id": "cb13ce17-4328-475f-8091-0f328d6f7111",
+            "title": "Campanha sintética G01",
+            "created_at": "2026-11-16T14:27:02.445941+00:00",
+            "revision": 1
+          }
+        ]
+      }
+    },
+    "credentialAvailability": {
+      "status": 200,
+      "body": {
+        "defaultAvailable": true
+      }
+    },
+    "chatSubmission": {
+      "status": 202,
+      "body": {
+        "status": "running",
+        "requestId": "0cd30421-f5d4-417b-ba52-01ebc77412ba",
+        "attemptId": "6ca03147-a9f8-420f-8b28-8cc9f4da5faa",
+        "sessionReused": false
+      }
+    },
+    "chatPolls": [
+      {
+        "status": 200,
+        "body": {
+          "status": "completed",
+          "requestId": "0cd30421-f5d4-417b-ba52-01ebc77412ba",
+          "attemptId": "6ca03147-a9f8-420f-8b28-8cc9f4da5faa",
+          "sessionId": "sess_verification1",
+          "turnId": "turn_sess_verification1",
+          "itemTrace": {
+            "observedItems": 1,
+            "functionCalls": 0,
+            "outputs": 0,
+            "omittedItems": 0,
+            "items": []
+          },
+          "text": "Pedido sintético recebido; os fatos permanecem como informados.",
+          "usage": {
+            "input_tokens": 10,
+            "output_tokens": 5,
+            "total_tokens": 15
+          }
+        }
+      }
+    ],
+    "imageGeneration": {
+      "status": 200,
+      "body": {
+        "status": "completed",
+        "requestId": "3642423a-9563-48eb-bf2d-8fc3335d8add",
+        "imageId": "3642423a-9563-48eb-bf2d-8fc3335d8add"
+      }
+    },
+    "explorations": {
+      "status": 200,
+      "body": {
+        "images": [
+          {
+            "id": "3642423a-9563-48eb-bf2d-8fc3335d8add",
+            "project_id": "cb13ce17-4328-475f-8091-0f328d6f7111",
+            "state": "completed",
+            "created_at": "2026-11-16T14:27:03.467483+00:00",
+            "ordinal": 1,
+            "batch_id": null,
+            "batch_position": null
+          }
+        ],
+        "nextBeforeOrdinal": null
+      }
+    },
+    "storeImage": {
+      "status": 404,
+      "body": {
+        "error": "not_found"
+      }
+    }
+  },
+  "db": {
+    "afterPreparation": {
+      "posts": []
+    },
+    "afterCancellation": {
+      "posts": []
+    },
+    "afterConfirmation": {
+      "posts": [
+        {
+          "project_id": "cb13ce17-4328-475f-8091-0f328d6f7111",
+          "piece_id": "5cf38187-eb6d-4c26-a082-f099c8102849",
+          "name": "Oferta declarada",
+          "deleted_at": null
+        }
+      ]
+    },
+    "versions": []
+  },
+  "controller": {
+    "declaredFacts": [
+      {
+        "id": "97b40ccc-b6fe-40e3-b9ac-7764992ed072",
+        "label": "Preço declarado",
+        "value": "R$ 20",
+        "status": "confirmed"
+      }
+    ],
+    "suggestedFacts": [
+      {
+        "id": "ee54dc78-9701-41a8-9633-5b4072bdbf9a",
+        "label": "Data sugerida",
+        "value": "25 de novembro",
+        "status": "pending"
+      }
+    ],
+    "confirmation": {
+      "status": "created",
+      "post": {
+        "projectId": "cb13ce17-4328-475f-8091-0f328d6f7111",
+        "pieceId": "5cf38187-eb6d-4c26-a082-f099c8102849",
+        "name": "Oferta declarada",
+        "deleted": false
+      },
+      "retained": {
+        "result": "none",
+        "hasImage": false
+      }
+    },
+    "references": {
+      "sharedIds": [
+        "dbada94e-9ff3-4bfe-ae37-125044ff16ff"
+      ],
+      "postLocalIds": [
+        "26d57636-5d03-41b0-bc0c-c02efe99cad1"
+      ],
+      "effectiveIds": [
+        "dbada94e-9ff3-4bfe-ae37-125044ff16ff",
+        "26d57636-5d03-41b0-bc0c-c02efe99cad1"
+      ],
+      "otherPostEffectiveIds": [
+        "dbada94e-9ff3-4bfe-ae37-125044ff16ff"
+      ],
+      "otherPostId": "7059f2fd-349a-4f73-86ca-07d1199ba727"
+    },
+    "retained": {
+      "result": "retained",
+      "hasImage": true
+    },
+    "saved": {
+      "result": {
+        "status": "completed",
+        "pieceId": "5cf38187-eb6d-4c26-a082-f099c8102849",
+        "version": 1
+      },
+      "notice": "saved"
+    }
+  },
+  "providerLedger": {
+    "beforeIntent": [],
+    "afterExplicitRequest": [
+      {
+        "kind": "session",
+        "id": "sess_verification1",
+        "input": [
+          {
+            "role": "user",
+            "content": [
+              {
+                "type": "input_text",
+                "text": "{\"origin\":\"user\",\"message\":\"Crie uma proposta sintética para a oficina por R$ 20. A data sugerida ainda não foi confirmada.\",\"projectId\":\"cb13ce17-4328-475f-8091-0f328d6f7111\",\"context\":{\"revision\":22,\"pieceId\":\"5cf38187-eb6d-4c26-a082-f099c8102849\",\"baseVersion\":0,\"expectedLatestVersion\":0,\"content\":{\"headline\":\"\",\"price\":\"\",\"date\":\"\",\"caption\":\"\",\"captionOrigin\":\"user\"},\"approval\":{\"status\":\"unapproved\"},\"baseImageId\":null,\"brief\":{\"offer\":\"Oficina sintética de desenho\",\"audience\":\"Pessoas iniciantes\",\"action\":\"\",\"direction\":\"Formas geométricas simples\"},\"offerFacts\":[{\"id\":\"97b40ccc-b6fe-40e3-b9ac-7764992ed072\",\"label\":\"Preço declarado\",\"value\":\"R$ 20\",\"status\":\"confirmed\"},{\"id\":\"ee54dc78-9701-41a8-9633-5b4072bdbf9a\",\"label\":\"Data sugerida\",\"value\":\"25 de novembro\",\"status\":\"pending\"}],\"audienceResolution\":{\"status\":\"resolved\",\"value\":\"Pessoas iniciantes\"},\"postContext\":{\"objective\":\"Divulgar a oficina sintética\",\"message\":\"Oficina por R$ 20\",\"action\":\"\"},\"persona\":{\"audience\":\"Pessoas iniciantes\",\"situation\":\"\",\"need\":\"\",\"culturalReferences\":\"\",\"claims\":[]},\"direction\":{\"criteria\":[],\"decisions\":[]},\"marks\":[],\"references\":[{\"id\":\"dbada94e-9ff3-4bfe-ae37-125044ff16ff\",\"name\":\"referencia-compartilhada-sintetica.png\",\"mime\":\"image/png\",\"size\":68,\"width\":1,\"height\":1},{\"id\":\"26d57636-5d03-41b0-bc0c-c02efe99cad1\",\"name\":\"referencia-local-sintetica.png\",\"mime\":\"image/png\",\"size\":68,\"width\":1,\"height\":1}]},\"requestId\":\"0cd30421-f5d4-417b-ba52-01ebc77412ba\",\"localConversation\":[]}"
+              }
+            ]
+          }
+        ],
+        "model": "gpt-6.1-terra"
+      },
+      {
+        "kind": "image",
+        "id": "fixture_image_2",
+        "prompt": "Arte sintética para oficina por R$ 20, formas geométricas simples. Não incluir data.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      }
+    ]
+  },
+  "files": {},
+  "errors": [
+    {
+      "stage": "save-version",
+      "message": "store-image_http_404"
+    }
+  ],
+  "identity": {
+    "actor": "11111111-1111-4111-8111-111111111111",
+    "projectId": "cb13ce17-4328-475f-8091-0f328d6f7111",
+    "pieceId": "5cf38187-eb6d-4c26-a082-f099c8102849"
+  }
+}

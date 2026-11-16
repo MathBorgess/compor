@@ -67,9 +67,17 @@ A revisão do PR identificou um caminho que o teste anterior não exercitava: ab
 
 Os dois testes passaram após a correção. Cobrem revisão e exportação restaurada, preservação da URL/post, título, seleção e rascunho da conversa, além da ausência de geração implícita. Logs locais: `reference-stage-red.log` e `reference-stage-green.log`. A alteração não modifica o carregamento dos módulos ou os limites de performance; o CI mede novamente a revisão final.
 
+## Integração da issue 51 já incorporada na main
+
+O Quality aprovou `fc0249a` com 479 testes web e 296.276 bytes gzip em Linux. Durante essa execução, a `main` recebeu o PR 56 (`f0021dc`), criando conflitos no controlador de jornada e no agendamento da leitura de referências. A integração preserva essa extração: `createStudioJourneyController` executa criação, salvamento, seleção e retomada; a preparação direta do primeiro post usa seus métodos. O rollback de seleção com falha de quota permanece atômico e específico da interface.
+
+O aviso de espera acompanha `scheduleSelectionReading`, inclusive disparo e cancelamento, mantendo os 5 segundos definidos no módulo compartilhado. Não há um segundo relógio. A integração também mantém a navegação desde revisão/exportação, o perfil, a exclusão lógica e a consolidação dos módulos do estúdio.
+
+O build e a performance local da integração passaram com **296.354 bytes gzip**, margem de **3.646 bytes**. Passaram 18 testes do controlador, 60 testes dos avaliadores e 28 testes de navegador focados; o caso adicional de remoção com falha de quota também passou. Os casos verificam preparação, perfil/exclusão, revisão e exportação, v0, responsividade, concorrência, persistência lenta e cancelamento/visibilidade do timer. O snapshot `references-pr58-main-integrated` e seu export separado preservam a evidência do grafo após a integração. A comparação conserva 37 rotas, 11 raízes e 14 outputs cliente (12 exatos e dois runtime/polyfill), sem outputs unsupported ou triggers ausentes. A fronteira workspace → studio-app segue assíncrona, e os três componentes consolidados seguem síncronos. As novas fontes cliente são apenas o controlador, o relógio e o schema público de peça; adaptadores de perfil, identidade e banco seguem ausentes dos members e parts emitidos para o cliente. A atribuição comprimida passou de 354.304 para 355.701 bytes; novamente, não é o total gzip cobrado pelo gate. O gate Docker permanece opcional; nenhuma execução de containers foi necessária para esta mudança. O resultado do CI sobre a revisão integrada será registrado no PR.
+
 ## Proveniência e artefatos
 
-Execução no Codex desktop, macOS/arm64, Node 24.16.0, Next 16.4.4, Chromium 157 e Lighthouse 13.6.0. A variante exata do modelo não foi exposta pelo ambiente. Base Git `f04ee7baa4183b8f2b9bd8ef73983094a3deac66`, branch local `codex/references-focused-profile`; os relatórios de ferramentas indicam essa base, enquanto o código verificado inclui o diff local.
+Execução no Codex desktop, macOS/arm64, Node 24.16.0, Next 16.4.4, Chromium 157 e Lighthouse 13.6.0. A variante exata do modelo não foi exposta pelo ambiente. Base Git inicial `f04ee7baa4183b8f2b9bd8ef73983094a3deac66`, branch local `codex/references-focused-profile`; os relatórios de ferramentas indicam essa base, enquanto o código verificado inclui o diff local.
 
 Política instalada `3b095b1e008e6bfd6af49351b12af544c3c295cc`. SHA-256 de `AGENTS.md`: `8c3b24688e08cb2478d35a12e914b29c51cc8c1fa4321be78f57e57e2e5c95e5`.
 
@@ -79,7 +87,7 @@ Experience First orientou o espaço dedicado às imagens. Model the Domain mante
 
 ## Próximos passos e limites
 
-- Confirmar o Quality em CI Linux sobre o ajuste de bundle abaixo antes de publicar. A validação inicial foi local; em 16/11/2026 Matheus autorizou abrir o PR, acompanhar o CI e reduzir o bundle se necessário, sem aumentar o limite. Merge e publicação em produção permanecem fora deste pedido.
+- Confirmar o Quality em CI Linux sobre o ajuste de bundle abaixo antes de publicar. A validação inicial foi local; em 16/11/2026 Matheus autorizou abrir o PR, acompanhar o CI e reduzir o bundle se necessário, sem aumentar o limite. O merge do PR na `main` e a publicação em produção permanecem fora deste pedido.
 - Validar a leitura do perfil com Auth/PostgREST reais num ambiente próprio. PGlite e HTTP simulado não comprovam isolamento entre contas reais.
 - A consulta mostra 25 projetos por página e até 500 sinais de cada fonte. Os demais sinais continuam armazenados; paginação individual de sinais ainda não existe.
 - Critérios locais não são sincronizados entre dispositivos. Excluir o projeto não limpa o IndexedDB; limpar o navegador continua sendo uma operação distinta.

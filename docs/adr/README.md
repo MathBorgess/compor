@@ -66,6 +66,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0054](0054-bancada-de-referencias-e-rascunho-v0.md) | decisão solicitada; implementação local em validação | Bancada com seleção e conversa, busca e geração distintas, última exploração preservada como v0 sem aprovação |
 | [0055](0055-configuracoes-do-projeto-em-janela-modal.md) | decisão solicitada; implementado localmente | Configurações do projeto como janela modal sobre o estúdio, com X para fechar, substituindo só a dimensão de viewport do ADR 0053 |
 | [0056](0056-navegacao-por-url-e-organizacao-do-estudio.md) | implementado no PR 54; verificação em andamento | URLs de projeto/post, retomada na página inicial, trilho de projetos e ações junto ao post |
+| [0057](0057-verificacao-por-goals-em-tres-camadas.md) | direção e spike local aprovados | Goals para agentes de desenvolvimento/QA, evidência offline/web/integração real, AX explícita e preservação dos delays |
 
 | [0058](0058-referencias-focadas-e-aprendizados-do-perfil.md) | implementado localmente | Referências em página, conversa sob demanda e perfil consultável após exclusão lógica de projetos |
 

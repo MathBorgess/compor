@@ -1,0 +1,187 @@
+{
+  "schemaVersion": 1,
+  "status": "ready",
+  "profile": "synthetic-supabase-boundary",
+  "postgresVersion": "17.12 (Debian 17.12-1.pgdg12+1)",
+  "postgrestVersion": "PostgREST 16.5",
+  "ports": {
+    "postgres": 5432,
+    "postgrest": 3001,
+    "postgrestHealth": 3002
+  },
+  "users": {
+    "alice": "11111111-1111-4111-8111-111111111111",
+    "bob": "22222222-2222-4222-8222-222222222222"
+  },
+  "baselineSha256": "2e26c17cc9d8fb1e07577e3824dfa9515b8e1020400901b03e6d372cdea2e083",
+  "migrations": [
+    {
+      "name": "20261103000000_projects.sql",
+      "sha256": "ad26b2f1f207e2b826c11522f8903ee5d2e7f280637fab3d7c05c987eb117b09",
+      "bytes": 827
+    },
+    {
+      "name": "20261103000001_piece_versions.sql",
+      "sha256": "be5327b6e63b438b749c6b4c56abd38fe55f699a52f5203fa4420ce92b692528",
+      "bytes": 3113
+    },
+    {
+      "name": "20261103000002_agent_attempts.sql",
+      "sha256": "04817a32f79f0099d1f9395c1fed71c47245a980a8a106a5ad35aa6f3e227145",
+      "bytes": 3772
+    },
+    {
+      "name": "20261103000003_private_project_images.sql",
+      "sha256": "824f8ebfa6554271ef10f2a4a65c3b7be7a2d2aec50bca0840a6197ac71c1b0a",
+      "bytes": 3387
+    },
+    {
+      "name": "20261103000004_image_tool_reservations.sql",
+      "sha256": "35912893fb38deb9fe078bd315073364fc0a3f488906050247d60b1e6c734efd",
+      "bytes": 5328
+    },
+    {
+      "name": "20261103000005_image_consent_declarations.sql",
+      "sha256": "739f37d9e3d6c80c0dd915b4932f9995bc03136b59e52509827cea1bce0e24e7",
+      "bytes": 2558
+    },
+    {
+      "name": "20261103000006_image_tool_execution_claim.sql",
+      "sha256": "847bfdfdf6a4a626137c871c385554e122216557f113b95e53360487fd0355c2",
+      "bytes": 5703
+    },
+    {
+      "name": "20261103000007_image_tool_result_submission.sql",
+      "sha256": "946d5a869ea0b78a1425f811f71b1243f9aa3f00da269d76bd913a54c9faccdf",
+      "bytes": 4781
+    },
+    {
+      "name": "20261103000008_agent_attempt_state.sql",
+      "sha256": "ab3f92467633364fe2c4058e4dd15d06b5937bbc67faa737c362d1561c92252e",
+      "bytes": 1440
+    },
+    {
+      "name": "20261103000009_usage_measurements.sql",
+      "sha256": "a43299ae674a1a6d9a9ed1e835f9539a960439b9557e9d012d3ec77a7f7cd925",
+      "bytes": 7301
+    },
+    {
+      "name": "20261103000010_list_piece_image_assets.sql",
+      "sha256": "1125bc2242b693293ddba5ac9ac67868ccee300b39862dd00563d6d70a6be2a7",
+      "bytes": 2081
+    },
+    {
+      "name": "20261103000011_agent_session_recovery.sql",
+      "sha256": "e31e9d29edd88c1bbed8877a00a0b744de99973c97f8d3cea4c2380438d2925a",
+      "bytes": 3007
+    },
+    {
+      "name": "20261105000012_image_model_26.sql",
+      "sha256": "6bd71c0eba6f30b1c87bb3125f33257095ac0aa7a458421fa4ac95a829b208a7",
+      "bytes": 3975
+    },
+    {
+      "name": "20261105000013_studio_turn_metadata.sql",
+      "sha256": "7d8fd22588e865ebac063c62be57f9bb7e89d3cd24d9beacae705886a1a12c9e",
+      "bytes": 10658
+    },
+    {
+      "name": "20261105000014_version_metadata.sql",
+      "sha256": "e6b01622c81d2f86d13175c9def11938f932d2c1b9abc44d426d06c5bd5fa62f",
+      "bytes": 11398
+    },
+    {
+      "name": "20261105000015_usage_model_v3.sql",
+      "sha256": "d0b672c2454e8275a899480dbe852e1e5ef1fc3cf6a1d422e96c26ec0fa799c3",
+      "bytes": 3758
+    },
+    {
+      "name": "20261105000016_provider_call_ids.sql",
+      "sha256": "997f7e476b3347f397381c743940ac5c83fa7b6da907d4677516cb02af035c54",
+      "bytes": 5683
+    },
+    {
+      "name": "20261106000017_reference_signals.sql",
+      "sha256": "561bb0ddb7a251e104ca094a6b161a74a5aeee61ff703bb309ad878ee1d00fb1",
+      "bytes": 1866
+    },
+    {
+      "name": "20261106000018_exploration_images.sql",
+      "sha256": "353d7145b8c200dbbe7a17df584bdd45fbb9ad505fc565a14d5ce6b26e653c05",
+      "bytes": 10287
+    },
+    {
+      "name": "20261106000019_exploration_feedback.sql",
+      "sha256": "1f6b7e1ba574534d14c84fd7f330a4f82efd8a4202f8c1ef29f114cbb0cc2af1",
+      "bytes": 3311
+    },
+    {
+      "name": "20261106000020_exploration_batches.sql",
+      "sha256": "a238fdd0b790660df840403692b5dd28bd51eadad6b50f62cd6fbb1ecc37fd40",
+      "bytes": 3638
+    },
+    {
+      "name": "20261106000021_piece_dynamic_fields.sql",
+      "sha256": "8e802cfb1f4aadd0b4036adcbfcfd27a2b8c8e6cfbb2ddea8f7a17de1958e6f5",
+      "bytes": 4575
+    },
+    {
+      "name": "20261106000022_fence_unsubmitted_image.sql",
+      "sha256": "a9c43b3410a8267dfffaaf14fed6f24688c7cdaba91473345efd111e46cbbbcf",
+      "bytes": 1963
+    },
+    {
+      "name": "20261106000023_exploration_review_gate.sql",
+      "sha256": "f7911581c25c037e973c233027234daa74985bfa9d98544662b249510c28f1f0",
+      "bytes": 12358
+    },
+    {
+      "name": "20261106000024_confirm_closed_image_attempt.sql",
+      "sha256": "e3303364d6deaf87898917d2bfae5a7c2f2705d80a971d3dd6118bbc91d7831b",
+      "bytes": 1388
+    },
+    {
+      "name": "20261106000025_exploration_rejection_proof.sql",
+      "sha256": "513fb07d0827da6c932a28111e490f44bbe1e3ee70239a4ddbdaec0c195c7fe5",
+      "bytes": 10071
+    },
+    {
+      "name": "20261109000026_reference_history.sql",
+      "sha256": "b7f4f18a9ff02287c7f0deee32069ad92b9db4aeb423163bd55bc8b5c8bbf76c",
+      "bytes": 10676
+    },
+    {
+      "name": "20261109000027_variant_metadata.sql",
+      "sha256": "8d77f7985992b31b3165d0d1d6725666762be44db42663483badd02db056b239",
+      "bytes": 3399
+    },
+    {
+      "name": "20261110000028_default_openai_vault.sql",
+      "sha256": "a01cc6e0d8938b22e50b6b0963b62276c2ed5267774a9908dc2a6cd2f47d4b6f",
+      "bytes": 1560
+    },
+    {
+      "name": "20261115000029_post_reference_scope.sql",
+      "sha256": "4216761e67c96e0fa2de4ebe3eed55424e9c075a3b2e7a0c7a266caccf18d20b",
+      "bytes": 11439
+    },
+    {
+      "name": "20261115000030_project_deletion.sql",
+      "sha256": "f5c627199021d31ad17fd1f4fb509419a0ffe6660a3a801674a1bc03c7194bc0",
+      "bytes": 1371
+    },
+    {
+      "name": "20261115000031_project_posts.sql",
+      "sha256": "cb7a80ee14619edcd37275e16e55a67544eb3b30cc3e509da38f2bb6851a2a2b",
+      "bytes": 3640
+    }
+  ],
+  "omissions": [
+    "Supabase Auth service and OAuth",
+    "Supabase Storage service",
+    "Vault encryption",
+    "managed infrastructure"
+  ],
+  "startedAt": "2026-11-16T14:27:09.723Z",
+  "readyAt": "2026-11-16T14:27:11.023Z"
+}

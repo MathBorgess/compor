@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "status": "stopped",
+  "results": [
+    "postgrest_stopped",
+    "postgres_stopped"
+  ],
+  "failures": [],
+  "preserved": [
+    "logs",
+    "infra-manifest.json",
+    "infra-preflight.json",
+    "database-directory"
+  ]
+}
