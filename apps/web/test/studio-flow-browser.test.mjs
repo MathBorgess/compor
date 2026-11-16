@@ -74,7 +74,7 @@ async function app(t){
 
 test('Workspace preserva conversa, marcações e referências e exporta a arte integral sem chamada paga', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,session,errors,external,calls,revokedImages}=await app(t);
- await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:'Projeto sintético Abrir projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  await openSettings(page,'Contexto');
  const publicField=page.getByRole('region',{name:'Contexto do projeto',exact:true}).locator('summary').nth(1);await publicField.click();
  await page.getByLabel('Público do projeto',{exact:true}).fill('Pessoas interessadas em aprender');await publicField.click();
@@ -166,7 +166,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile-inspector.png',fullPage:true});
  await page.setViewportSize({width:1440,height:1000});
- await page.reload();await page.getByRole('button',{name:/Projeto sintético/}).click();
+ await page.reload();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).waitFor();
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');
@@ -200,14 +200,15 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
 });
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto sintético/}).click();
+ const {page,origin,session,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:'Projeto sintético Abrir projeto',exact:true}).click();
  await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Somente de Alice');await connectOwnOpenAiKey(page,key);
  let release;session.hold=new Promise(resolve=>{release=resolve;});await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
  assert.equal(await page.getByTestId('studio-auth-boundary').isVisible(),false);session.userId=bob;release();session.hold=null;
- await page.getByRole('button',{name:/Projeto sintético/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
+ await page.getByRole('button',{name:'Projeto sintético Abrir projeto',exact:true}).waitFor();assert.equal(new URL(page.url()).pathname,'/','outra conta retorna à lista de projetos');
+ await page.getByRole('button',{name:'Projeto sintético Abrir projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'');
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await connectOwnOpenAiKey(page,key);session.state='signed-out';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Entrar com Google',exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
- session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:/Projeto sintético/}).click();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
+ session.state='connected';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByRole('button',{name:'Configurações do projeto',exact:true}).waitFor();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByLabel('Chave OpenAI',{exact:true}).waitFor();await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).inputValue(),'');
  await connectOwnOpenAiKey(page,key);session.state='unavailable';await page.evaluate(()=>window.dispatchEvent(new Event('focus')));await page.getByText('Login temporariamente indisponível.',{exact:true}).waitFor();assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).count(),0);
  assert.deepEqual(errors,[`Failed to load resource: the server responded with a status of 503 (Service Unavailable) (${origin}/auth/session)`]);
 });

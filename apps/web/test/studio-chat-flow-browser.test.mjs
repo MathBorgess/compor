@@ -165,7 +165,7 @@ test('efeito WebMCP persistido não se repete após refresh e recriação do exe
  await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');
  const before=await eventually(()=>stored(page),value=>value?.selection?.pieceId===originalPiece),args={projectId,requestId:id(70),revision:before.revision,field:'offer',value:'Oferta registrada uma única vez'};
  const first=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(first.status,'completed');const persisted=await eventually(()=>stored(page),value=>value?.actionReceipts?.some(receipt=>receipt.requestId===id(70)&&receipt.result.status==='completed'));assert.equal(persisted.posts[originalPiece].message,args.value);
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'a chave não sobrevive ao refresh e não é requisito do WebMCP local');
+ await page.reload();await openEditor(page);await page.waitForFunction(()=>typeof window.__studioNative?.compor_editar_briefing?.execute==='function');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'a chave não sobrevive ao refresh e não é requisito do WebMCP local');
  const restored=await stored(page),repeated=await page.evaluate(args=>window.__studioNative.compor_editar_briefing.execute(args),args);assert.equal(repeated.status,'completed');assert.equal(repeated.revision,restored.revision);assert.deepEqual(await stored(page),restored,'nem o efeito nem o recibo são gravados novamente');assert.equal(restored.actionReceipts.length,1);
  const conflict=await page.evaluate(async args=>{try{await window.__studioNative.compor_editar_briefing.execute({...args,value:'Oferta trocada'});return null;}catch(error){return error.message;}},args);assert.equal(conflict,'action_conflict');assert.deepEqual(await stored(page),restored);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
@@ -297,7 +297,7 @@ test('edição envia os bytes aprovados da origem e referência e preserva a ima
  const generation=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generation.length,1);assert.equal(generation[0].body.version,2);assert.deepEqual(generation[0].body.artworkInput,{literalText:{headline:'Original preservado',price:'R$ 20',date:'20/11'},source:{pieceId:originalPiece,version:1},images:[{id:originalPiece,role:'base',mime:'image/png',data:source.toString('base64')},{id:referenceId,role:'reference',mime:'image/png',data:png.toString('base64')}]});
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  await openCurrentVersion(page,1);await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
+ await page.reload();await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
  await openCurrentVersion(page,2);await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===1);
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'reabrir versões e recarregar não regenera a imagem');assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
@@ -313,38 +313,38 @@ test('critério proposto mostra contraste e tensão, e só o criador registra um
  const proposed=await eventually(()=>stored(page),value=>value?.direction.criteria.length===1);assert.equal(proposed.direction.decisions.length,0);assert.equal(proposed.direction.criteria[0].provenance,'hypothesis');
  await page.getByRole('button',{name:'Usar este critério',exact:true}).click();
  const chosen=await eventually(()=>stored(page),value=>value?.direction.decisions.length===1);assert.equal(chosen.direction.decisions[0].choice,'accept');assert.equal(chosen.direction.criteria[0].provenance,'hypothesis','decisão criativa não inventa evidência de público');
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await openDrawer(page,'Marca');
+ await page.reload();await openDrawer(page,'Marca');
  await page.getByRole('button',{name:'Usar este critério',exact:true,pressed:true}).waitFor();
  await page.getByRole('button',{name:'Reabrir decisão',exact:true}).click();
  const reopened=await eventually(()=>stored(page),value=>value?.direction.decisions.length===2);assert.deepEqual(reopened.direction.decisions.map(decision=>decision.choice),['accept','reopen']);assert.equal(calls.length,0);assert.deepEqual(errors,[]);
 });
 
-test('nome confirmado pelo chat permanece no menu e a segunda renomeação usa a revisão atual após trocar de projeto',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+test('nome confirmado pelo chat permanece na navegação e a segunda renomeação usa a revisão atual após trocar de projeto',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,projects,projectReads,flow,errors,external}=await app(t);
  const renamed='Nome confirmado pelo chat',finalName='Nome final do projeto',otherTitle='Outro projeto';
  projects.push({id:id(190),title:otherTitle,revision:7});
  flow.chat=body=>action('compor_renomear_projeto',{projectId,requestId:id(191),revision:body.context.revision,title:renamed},'rename-first');
  flow.action=body=>{assert.equal(body.actionBinding,'rename-first');assert.equal(body.result.status,'completed');return{status:'completed',text:'Primeiro nome confirmado.'};};
- const trigger=title=>page.getByRole('heading',{level:1}).getByRole('button',{name:title,exact:true});
+ const trigger=title=>page.getByRole('button',{name:`Renomear projeto ${title}`,exact:true});
  await openOriginal(page,origin);
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Renomeie este projeto com o título confirmado.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  await page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true}).waitFor();
  assert.equal(calls.filter(call=>call.path==='/api/projects').length,0,'o chat aguarda confirmação antes da renomeação persistida');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Primeiro nome confirmado.',{exact:true}).waitFor();
  await trigger(renamed).waitFor();const readsBeforeSwitch=projectReads.count;
- await trigger(renamed).click();const menu=page.getByRole('dialog',{name:'Projetos',exact:true});
- assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),1,'a lista do menu recebe o título confirmado pelo agente');
+ const menu=page.getByRole('navigation',{name:'Projetos',exact:true});
+ assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),1,'a lista de projetos recebe o título confirmado pelo agente');
  assert.equal(await menu.getByRole('button',{name:'Projeto integrado',exact:true}).count(),0);
  await menu.getByRole('button',{name:otherTitle,exact:true}).click();await trigger(otherTitle).waitFor();
- await trigger(otherTitle).click();await menu.getByRole('button',{name:renamed,exact:true}).click();await trigger(renamed).waitFor();
- assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado','voltar pelo menu reabre a seleção do projeto original');
- await trigger(renamed).click();await menu.getByLabel('Renomear',{exact:true}).fill(finalName);await menu.getByRole('button',{name:'Salvar nome',exact:true}).click();await trigger(finalName).waitFor();
+ await menu.getByRole('button',{name:renamed,exact:true}).click();await trigger(renamed).waitFor();
+ assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado','voltar pelo trilho reabre a seleção do projeto original');
+ await trigger(renamed).click();const projectMenu=page.getByRole('navigation',{name:'Menu do projeto',exact:true});await projectMenu.getByLabel('Renomear',{exact:true}).fill(finalName);await projectMenu.getByRole('button',{name:'Salvar nome',exact:true}).click();await trigger(finalName).waitFor();
  assert.equal(projectReads.count,readsBeforeSwitch,'a troca usa a lista atualizada em memória, sem depender de refetch para corrigir o título ou a revisão');
  assert.deepEqual(calls.filter(call=>call.path==='/api/projects').map(call=>call.body),[
   {projectId,title:renamed,expectedRevision:1},
   {projectId,title:finalName,expectedRevision:2},
  ]);
- await trigger(finalName).click();assert.equal(await menu.getByRole('button',{name:finalName,exact:true}).count(),1);assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),0);
+ assert.equal(await menu.getByRole('button',{name:finalName,exact:true}).getAttribute('aria-current'),'page');assert.equal(await menu.getByRole('button',{name:renamed,exact:true}).count(),0);
  assert.equal(projects.find(project=>project.id===projectId).revision,3);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -374,7 +374,7 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
  await page.getByText('Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',{exact:true}).waitFor();
  const after=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);const recovered=after.drafts.find(d=>d.baseVersion===1&&d.pieceId===draft.pieceId);assert.equal(recovered.content.headline,'Edição posterior preservada');assert.equal(recovered.dirty,true);assert.equal(versions.find(v=>v.piece_id===draft.pieceId).content.headline,'Conteúdo já salvo');
  assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image,'a versão recuperada recebe os bytes da imagem-base original');
- await page.reload();await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
+ await page.reload();await page.getByRole('button',{name:'Revisar post',exact:true}).click();await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,1)),image);
  assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,0);
  // A subsequent simulated edit must transport the recovered bytes, not just
  // show a cached preview from the previous selection.
@@ -469,7 +469,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  const before=await eventually(()=>stored(page),state=>state?.drafts.some(draft=>draft.content.caption==='Legenda preservada ao procurar referências.'));
  const originalVersions=structuredClone(versions);
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
- await page.getByRole('heading',{name:'Referências deste post',exact:true}).waitFor();
+ await page.getByRole('dialog',{name:'Referências deste post',exact:true}).waitFor();
  await page.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await page.getByRole('dialog',{name:'Referências deste post',exact:true}).waitFor({state:'hidden'});
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
  assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');

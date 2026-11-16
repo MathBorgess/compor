@@ -1,4 +1,4 @@
-import {z} from './schema.ts';
+import * as z from './schema.ts';
 
 export const postNameText=z.string().check(z.maxLength(200)).check(z.refine(value=>!/[\u0000-\u001f\u007f]|sk-[^\s]+/i.test(value)));
 export const postNameSchema=z.pipe(z.pipe(postNameText,z.transform(value=>value.trim())),z.string().check(z.minLength(1)).check(z.maxLength(200)));

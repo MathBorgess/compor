@@ -518,7 +518,8 @@ function ProjectStudio({
       postRecords.some(post => post.pieceId === routePieceId && !post.deleted);
     if (!known && !versionsLoaded) return;
     if (!known || isRemoved(routePieceId)) {
-      sync.done = true;
+      // Keep screen -> URL paused until the list renders, even when the catalog loaded before local state.
+      sync.tried = true;
       closeSettings(); setPostSettingsOpen(false); nextStage("studio");
       local.change(value => updateWorkflow(value, {view:"posts"}));
       onRoutePiece(null, true);
@@ -1360,6 +1361,7 @@ function ProjectStudio({
       sidebar={!preparing?<StudioNavigation projectTitle={projectDetails.title} onRenameProject={renameProject} actions={[
         {id:'posts',label:'Posts do projeto',disabled:creatingPost||deletingPost,onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
         {id:'project',label:'Configurações do projeto',disabled:creatingPost||deletingPost,onClick:()=>setSettings('context')},
+        ...(intro&&draft?[{id:'post' as const,label:'Configurações do Post',onClick:()=>setPostSettingsOpen(true)}]:[]),
       ]}/>:undefined}
       projectId={project.id}
       projects={projects}
