@@ -170,7 +170,7 @@ test('editar a primeira mensagem preserva a proposta e recusá-la persiste depoi
  await page.getByText('Nome mantido.',{exact:true}).waitFor();
  assert.deepEqual(actions.map(action=>action.result.status),['declined']);assert.equal(renames.length,0);
  flow.chat=()=>({status:'completed',text:'Continuamos sem sugerir outro nome.'});
- await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
+ await page.goto(new URL('/',page.url()).href);await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
  message=await connectKey(page);await message.fill('Agora a legenda');await message.press('Enter');
  await page.getByText('Continuamos sem sugerir outro nome.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false,false]);assert.deepEqual(errors,[]);
@@ -190,7 +190,7 @@ test('uma revisão remota de nome impede outra proposta mesmo com texto igual',{
  await idea.fill(longIdea);await idea.press('Enter');let message=await connectKey(page);
  await message.fill('Descreva o primeiro post');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  projects[0]={...projects[0],revision:2};
- await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
+ await page.goto(new URL('/',page.url()).href);await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
  message=await connectKey(page);await message.fill('Continue a campanha');await message.press('Enter');
  await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false]);assert.deepEqual(errors,[]);
@@ -222,7 +222,7 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  await idea.fill(firstIdea);await idea.press('Enter');await projectTrigger(page,firstIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(firstIdea);
  await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:'Novo projeto',exact:true}).click();
  await page.getByLabel('Nome do projeto',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();await projectTrigger(page,secondIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(secondIdea);
- await page.reload();await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
+ await page.goto(new URL('/',page.url()).href);await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
  let message=await connectKey(page);assert.equal(await message.inputValue(),'');
  assert.equal(explorations.length,0,'conectar a chave não inicia exploração');
  await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
@@ -255,7 +255,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  await field.fill('Rascunho privado do post dois');
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 1 /}).click();
  field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post um');
- await page.reload();await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();await finishPreparation(page);
+ await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();await finishPreparation(page);
  field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post um');
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 2 /}).click();
  field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post dois');
@@ -267,7 +267,7 @@ test('recarregar retoma a pergunta e preserva inclusive uma resposta apagada',{s
  const {page,idea,projects,posts,chats,explorations,errors}=await studio(t);
  await idea.fill('Contexto de uma oficina');await idea.press('Enter');
  const offer=page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true});await offer.fill('Uma oferta em edição');
- async function reopen(){await page.reload();await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();}
+ async function reopen(){await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();}
  await page.getByRole('button',{name:'Continuar',exact:true}).click();const audience=page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true});await audience.fill('Pessoas iniciantes');
  await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,r=db.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{db.close();resolve(r.result.some(row=>row.state.workflow.contextStep===1&&row.state.brief.audience==='Pessoas iniciantes'));};};}));
  await reopen();await audience.waitFor();assert.equal(await audience.inputValue(),'Pessoas iniciantes');

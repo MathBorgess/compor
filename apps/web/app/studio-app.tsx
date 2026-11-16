@@ -56,6 +56,7 @@ import {
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
+import { rootRoute, useStudioRoute } from "../lib/studio-route";
 const StudioAssets = dynamic(() => import("./studio-assets"), {loading: () => <p role="status">Consultando imagens desta versão…</p>});
 
 import * as z from '../lib/schema.ts';
@@ -65,7 +66,7 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
 type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
-type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean};
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=z.extend(projectResponseSchema,{status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
@@ -102,6 +103,23 @@ export default function StudioApp({
   const deleteLock=useRef(false);
   const seq = useRef(0);
   const focusCreate = useRef(false);
+  const [route, navigate] = useStudioRoute();
+  const [openedFromUrl, setOpenedFromUrl] = useState(false);
+  function openProject(project:Project, created=false) {
+    setCreatedProjectId(created ? project.id : null);
+    setOpenedFromUrl(false);
+    setSelected(project);
+    navigate({ projectId: project.id, pieceId: null });
+  }
+  // The URL (initial load or back/forward) chooses the open project once the list is known.
+  useEffect(() => {
+    if (!route) return;
+    if (!route.projectId) { if (selected) { setSelected(null); refresh(); } return; }
+    if (selected?.id === route.projectId || state !== "ready") return;
+    const target = projects.find(project => project.id === route.projectId);
+    if (target) { setCreatedProjectId(null); setOpenedFromUrl(true); setSelected(target); }
+    else { navigate(rootRoute, { replace: true }); setNotice("Este projeto não está disponível na sua conta."); }
+  }, [route, state, projects]);
   async function refresh() {
     const n = ++seq.current;
     setState("loading");
@@ -136,6 +154,7 @@ export default function StudioApp({
     focusCreate.current = true;
     setCreatedProjectId(null);
     setSelected(null);
+    navigate(rootRoute);
     refresh();
   }
   function projectRenamed(project:Project) {
@@ -169,8 +188,7 @@ export default function StudioApp({
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
       setProjects((items) => [...items, data.project]);
-      setSelected(data.project);
-      setCreatedProjectId(data.project.id);
+      openProject(data.project, true);
       setProjectName("");
       setState("ready");
     } catch {
@@ -193,10 +211,13 @@ export default function StudioApp({
         onSignOut={onSignOut}
         project={selected}
         projects={projects}
-        onOpenProject={project => {setCreatedProjectId(null);setSelected(project);}}
+        onOpenProject={project => openProject(project)}
         onProjectRenamed={projectRenamed}
         onCreateNew={requestCreate}
-        onBack={() => {setSelected(null);refresh();}}
+        onBack={() => {setSelected(null);navigate(rootRoute);refresh();}}
+        routePieceId={route?.projectId===selected.id?route.pieceId:null}
+        onRoutePiece={(pieceId,replace)=>navigate({projectId:selected.id,pieceId},{replace})}
+        openedFromUrl={openedFromUrl}
         hasApiKey={hasApiKey}
         canUseAI={canUseAI}
         credentialSource={credentialSource}
@@ -240,7 +261,7 @@ export default function StudioApp({
         <h2>Seus projetos</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => { setCreatedProjectId(null); setSelected(project); }}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => openProject(project)}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
         </div>
       </section>
     </StudioShell>
@@ -272,6 +293,9 @@ function ProjectStudio({
   accountLabel = "",
   localAccount = false,
   onSignOut,
+  routePieceId,
+  onRoutePiece,
+  openedFromUrl,
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id, prepare:initialPrepare,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
@@ -294,6 +318,7 @@ function ProjectStudio({
   const credentialSeen = useRef(credentialEpoch);
   const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
+    [versionsLoaded, setVersionsLoaded] = useState(false),
     [versions, setVersions] = useState<PieceVersion[]>([]),
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
@@ -365,14 +390,15 @@ function ProjectStudio({
     if (!response.ok) throw Error("Não foi possível carregar as versões.");
     const data = versionsSchema.parse(await response.json());
     if(data.posts.some(post=>post.projectId!==project.id))throw Error('invalid posts');
-    if (active.current&&readSequence===versionsReadSequence.current){setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
+    if (active.current&&readSequence===versionsReadSequence.current){setVersionsLoaded(true);setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
     return data.versions;
   }
   useEffect(() => {
     active.current = true;
-    refreshVersions().catch(() =>
-      setNotice("As versões não estão disponíveis."),
-    );
+    refreshVersions().catch(() => {
+      setVersionsLoaded(true);
+      setNotice("As versões não estão disponíveis.");
+    });
     return () => {
       active.current = false;
       confirmResolver.current?.(false);
@@ -400,6 +426,40 @@ function ProjectStudio({
       );
     } catch {}
   }, [stage, userId, project.id, Boolean(s)]);
+  // The address bar names the open post (/projetos/<id>/posts/<pieceId>); the reference workspace is not a post.
+  const openPieceId = s && s.workflow.phase === "ready" && (s.workflow.view === "compose" || s.workflow.view === "studio") &&
+    s.selection && s.selection.pieceId !== s.workflow.referencePieceId ? s.selection.pieceId : null;
+  // Opened from the project list, the project resumes its saved screen and the URL follows it.
+  const routeSync = useRef<{target:string|null|undefined;tried:boolean;done:boolean;resume:boolean}>({target:undefined,tried:false,done:false,resume:!openedFromUrl});
+  useEffect(() => { // URL -> screen (initial load, back/forward)
+    const sync = routeSync.current;
+    if (sync.target !== routePieceId) {
+      const resume = sync.target === undefined && sync.resume && routePieceId === null;
+      Object.assign(sync, {target:routePieceId,tried:false,done:resume});
+    }
+    if (s && sync.resume && openPieceId === routePieceId) sync.resume = false; // resumed screen already matches the URL
+    if (sync.done || !s) return;
+    if (openPieceId === routePieceId) { sync.done = true; return; }
+    if (sync.tried || s.workflow.phase !== "ready") { sync.done = true; onRoutePiece(openPieceId, true); return; }
+    if (routePieceId === null) {
+      sync.tried = true;
+      closeSettings(); setPostSettingsOpen(false); nextStage("studio");
+      local.change(value => updateWorkflow(value, {view:"posts"}));
+      return;
+    }
+    const known = s.drafts.some(item => item.pieceId === routePieceId) || versions.some(item => item.piece_id === routePieceId) ||
+      postRecords.some(post => post.pieceId === routePieceId && !post.deleted);
+    if (!known && !versionsLoaded) return;
+    if (!known || isRemoved(routePieceId)) { sync.done = true; onRoutePiece(openPieceId, true); return; }
+    sync.tried = true;
+    openPost(routePieceId);
+  }, [Boolean(s), routePieceId, openPieceId, versionsLoaded]);
+  useEffect(() => { // screen -> URL
+    const sync = routeSync.current;
+    if (!s || !sync.done || openPieceId === routePieceId) return;
+    onRoutePiece(openPieceId, sync.resume);
+    sync.resume = false;
+  }, [openPieceId]);
   useEffect(() => {
     if (!s || !referenceManifest || !local.storage.current) return;
     let live = true;

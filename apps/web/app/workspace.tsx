@@ -20,6 +20,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
   const [account, setAccount] = useState<{label:string;local:boolean}|null>(null);
   const [signOutError, setSignOutError] = useState(false);
   const sessionEpoch = useRef(0);
+  const lastConnectedUser = useRef<string | null>(null);
   const signingOut = useRef(false);
   const credentials = useAICredentials(authenticatedUser, authState === "connected");
   const clearOpenAIKey = credentials.clear;
@@ -74,6 +75,9 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             data.userId
           ) {
             try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
+            // Another account must not inherit the open project/post from the address bar.
+            if (lastConnectedUser.current && lastConnectedUser.current !== data.userId && window.location.pathname !== "/") window.history.replaceState(null, "", "/");
+            lastConnectedUser.current = data.userId;
             setAuthenticatedUser(data.userId);
             setAccount(data.account ?? {label:"Conta conectada",local:localAuth});
             setSignOutError(false);
