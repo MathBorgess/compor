@@ -1,6 +1,6 @@
 # ADR 0043 — Deploy pela integração Git da Vercel, com Deployment Checks
 
-- Estado: accepted; integração Git observada, mas retenção por Deployment Check inoperante na verificação de 15/11/2026
+- Estado: accepted; atribuição automática e check obrigatório verificados em 16/11/2026
 - Data: 11/11/2026
 - Fonte: pedido de Matheus nesta data, na sessão do Claude Code: gerar deployments e atualizar o site a cada merge na `main`. Depois de saber que a Vercel CI só roda checks, ele escolheu “Git + Deployment Checks, não inclua Vercel CI”.
 
@@ -40,10 +40,24 @@ O projeto lista `Apply migrations or initialize baseline` como check GitHub de P
 
 Não há alteração no repositório capaz de ativar esse setting. Reabilitá-lo exige verificar o efeito sobre deployments já preparados e observar um novo deployment legítimo de `main` com o check presente antes da atribuição dos domínios. Uma promoção manual depois da migration seria outro fluxo, não a retenção automática definida aqui.
 
+## Reativação e verificação em 16/11/2026
+
+Matheus pediu nesta data que os próximos deployments de produção atualizem `compor-ai.vercel.app` automaticamente, sem reatribuição manual. É a restauração da decisão de 11/11; não substitui o check de migrations nem adota outro fluxo de publicação.
+
+O projeto passou a se chamar `compor`, mantendo o ID `prj_48C8lO4W6WdEMScyAfZRSnkvN6QS`. A inspeção remota confirmou `main` como branch de produção e `compor-ai.vercel.app` associado a Production. O agente reativou `autoAssignCustomDomains` por atualização restrita da API e confirmou a opção ligada em uma nova leitura da interface. `Apply migrations or initialize baseline` permaneceu configurado como Production/Blocking.
+
+Antes e depois da mudança, o domínio continuou no deployment `dpl_3q7YqPFZshV9UdcXWANn6L2rfVPU`; não foi observada uma troca retroativa nessa janela. Isso não estabelece uma garantia geral para outros deployments já preparados. A [API pública da Vercel](https://openapi.vercel.sh) expõe o campo em `PATCH /v9/projects/{idOrName}`, e a [documentação dos checks](https://vercel.com/docs/deployment-checks#adding-github-checks) exige a atribuição automática ligada e prevê o alias automático depois dos checks aprovados.
+
+Para verificar o caminho automático, foi criado pela conexão Git um novo deployment Production, `dpl_5axLr1zoVuCXhXFMML4XGPYfFdnS`, fixado no mesmo SHA de produção `c6346ebd7c7418550dd81115cb51d116cb2d0cb6`. O [check de migrations desse commit](https://github.com/MathBorgess/compor/actions/runs/43882627847) já estava aprovado. O deployment ficou `READY` após um build de cerca de 46 segundos. A interface da Vercel mostrou o check obrigatório aprovado, vinculado ao [job de migrations do mesmo SHA](https://github.com/MathBorgess/compor/runs/133352303513), e a etapa `Assigning Custom Domains` concluída. A leitura independente do alias confirmou a troca de `dpl_3q7YqPFZshV9UdcXWANn6L2rfVPU` para `dpl_5axLr1zoVuCXhXFMML4XGPYfFdnS`; a lista de aliases do deployment incluiu `compor-ai.vercel.app`, sem erro de atribuição. Não foram feitas chamadas de promoção ou atribuição manual de alias nessa prova, nem repetidas migrations.
+
+O domínio respondeu HTTP 200 na entrada. O início de login com a origem nova retornou HTTP 303 ao Supabase/Google com o callback exato e PKCE `s256`; uma origem alheia continuou em HTTP 403. A consulta aos logs de erro/fatal do deployment, na janela dos dez minutos anteriores à verificação, não retornou eventos. Esses checks pontuais não repetem o login completo nem comprovam geração ou isolamento entre contas.
+
+A prova demonstra a configuração lida, o vínculo do check aprovado e a atribuição automática num deployment novo do mesmo commit. Como o check já estava aprovado, não foi provocada uma falha para testar a retenção, e essa criação pela conexão Git não equivale à observação de um novo push na `main`. Um próximo ciclo legítimo de integração deve confirmar também o gatilho Git.
+
 ## Limites
 
 - Banco e Vercel continuam sem transação comum. Se a migration falhar ou ficar incerta, o deployment fica retido, mas a versão anterior continua no ar.
 - A documentação não diz como a Vercel trata um check pulado ou ausente. Se o preflight desabilitar o `migrate`, conferir o deployment antes de usar **Force Promote**.
 - A execução manual `bootstrap` não cria deployment.
-- A configuração do projeto e da proteção da branch vive na Vercel e no GitHub, não no repositório. Este ADR não comprova que ela foi feita. O [roteiro](../compor/deploy-vercel-git.md) lista os passos e a conferência posterior.
+- A configuração do projeto e da proteção da branch vive na Vercel e no GitHub, não no repositório. As observações datadas acima descrevem as leituras e execuções verificadas; a presença deste ADR não garante a configuração futura. O [roteiro](../compor/deploy-vercel-git.md) lista os passos e a conferência posterior.
 - Publicar não habilita a chave padrão do Vault nem comprova login, geração ou isolamento entre contas reais.
