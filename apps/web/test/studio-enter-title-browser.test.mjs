@@ -126,15 +126,16 @@ test('em tela de toque o Enter quebra linha e o botão envia',{skip,timeout:9000
 });
 
 const longIdea='Quero divulgar minha oficina de cerâmica para iniciantes aos sábados';
-const projectTrigger=(page,name)=>page.getByRole('heading',{level:1}).getByRole('button',name?{name,exact:true}:{});
+const projectHeading=(page,name)=>page.getByRole('heading',{level:1,...(name?{name,exact:true}:{})});
+const renameProject=page=>page.getByRole('navigation',{name:'Menu do projeto',exact:true}).getByRole('button',{name:/^Renomear projeto /});
 
 test('o nome escolhido não é provisório e continua podendo ser renomeado',{skip,timeout:90000},async t=>{
  const {page,idea,chats,renames,errors}=await studio(t);
  await idea.fill(longIdea);await idea.press('Enter');
  const message=await connectKey(page);assert.equal(await message.inputValue(),'');
  await message.fill('Meu primeiro post sobre a oficina');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
- await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill('Cerâmica aos sábados');await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
- await projectTrigger(page,'Cerâmica aos sábados').waitFor();
+ await renameProject(page).click();await page.getByLabel('Renomear',{exact:true}).fill('Cerâmica aos sábados');await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await projectHeading(page,'Cerâmica aos sábados').waitFor();
  await message.fill('Quero um tom acolhedor');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false],'depois da renomeação pela pessoa o agente não propõe outro título');
  assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(errors,[]);
@@ -150,7 +151,7 @@ test('o agente propõe um título curto e a pessoa vê o nome antes de confirmar
  const dialog=page.getByRole('dialog',{name:'Confirmar alteração no projeto?',exact:true});
  await dialog.getByText('O projeto passa a se chamar “Cerâmica aos sábados”.',{exact:true}).waitFor();assert.equal(renames.length,0);
  await dialog.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Título atualizado.',{exact:true}).waitFor();
- await projectTrigger(page,'Cerâmica aos sábados').waitFor();
+ await projectHeading(page,'Cerâmica aos sábados').waitFor();
  assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(actions.map(action=>[action.actionBinding,action.result.status]),[['rename-binding','completed']]);
  flow.chat=()=>({status:'completed',text:'Seguimos.'});
  await message.fill('Agora a legenda');await message.press('Enter');await page.getByText('Seguimos.',{exact:true}).waitFor();
@@ -179,8 +180,8 @@ test('editar a primeira mensagem preserva a proposta e recusá-la persiste depoi
 test('confirmar o mesmo nome no menu preserva a escolha da pessoa',{skip,timeout:90000},async t=>{
  const {page,idea,chats,projects,errors}=await studio(t);
  await idea.fill(longIdea);await idea.press('Enter');const message=await connectKey(page);
- await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill(projects[0].title);
- await page.getByRole('button',{name:'Salvar nome',exact:true}).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).waitFor({state:'hidden'});
+ await renameProject(page).click();await page.getByLabel('Renomear',{exact:true}).fill(projects[0].title);
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();await page.getByLabel('Renomear',{exact:true}).waitFor({state:'hidden'});
  await message.fill('Seguimos com este nome');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false]);assert.deepEqual(errors,[]);
 });
@@ -196,22 +197,26 @@ test('uma revisão remota de nome impede outra proposta mesmo com texto igual',{
  assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false]);assert.deepEqual(errors,[]);
 });
 
-test('barra, cards e menu cortam o título com reticências e mantêm o nome completo acessível',{skip,timeout:90000},async t=>{
+test('cards e menu cortam o título com reticências e o trilho mantém o nome completo acessível',{skip,timeout:90000},async t=>{
  const title='Oficina de cerâmica para iniciantes aos sábados de manhã no ateliê do bairro, com vagas limitadas, material incluso e café no intervalo';
  const {page,errors}=await studio(t,{projects:[{id:id(70),title,revision:1},{id:id(71),title:'Café',revision:1}]});
  const cut=locator=>locator.evaluate(element=>{const style=getComputedStyle(element);return {ellipsis:style.textOverflow,wrap:style.whiteSpace,clipped:element.scrollWidth>element.clientWidth,text:element.textContent};});
  const shown={ellipsis:'ellipsis',wrap:'nowrap',clipped:true,text:title};
- const card=page.getByRole('button',{name:title});
+ const card=page.getByRole('button',{name:`${title} Abrir projeto`,exact:true});
  assert.equal(await card.getAttribute('title'),title);assert.deepEqual(await cut(card.locator('strong')),shown,'card');
  await card.click();
- const trigger=page.getByRole('heading',{level:1}).getByRole('button',{name:title,exact:true});
- assert.equal(await trigger.getAttribute('title'),title);assert.deepEqual(await cut(trigger.locator('.studio-truncate')),shown,'barra superior');
- assert.ok((await trigger.boundingBox()).width<=1440*0.42+1,'o título não empurra as ações da barra');
- await trigger.click();
- const entry=page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
- assert.equal(await entry.getAttribute('title'),title);assert.deepEqual(await cut(entry),shown,'menu de projetos');
+ await projectHeading(page,title).waitFor();
+ assert.equal(await page.locator('.studio-topbar').getByRole('button',{name:title,exact:true}).count(),0,'o nome longo fica fora das ações do cabeçalho');
+ const railEntry=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
+ assert.equal(await railEntry.getAttribute('title'),title);assert.equal(await railEntry.getAttribute('aria-current'),'page');assert.equal(await railEntry.innerText(),'OC');
+ await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
+ const entry=renameProject(page);
+ assert.equal(await entry.getAttribute('aria-label'),`Renomear projeto ${title}`);assert.deepEqual(await cut(entry.locator('strong')),shown,'menu do projeto');
+ assert.ok((await page.locator('.studio-navigation-shell').boundingBox()).width<=296,'o menu mantém uma largura limitada com título longo');
  await page.keyboard.press('Escape');await page.setViewportSize({width:390,height:844});
- assert.deepEqual(await cut(trigger.locator('.studio-truncate')),shown,'barra superior no celular');
+ await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
+ assert.deepEqual(await cut(entry.locator('strong')),shown,'menu do projeto no celular');
+ assert.equal(await railEntry.getAttribute('title'),title);
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'o título longo não cria rolagem horizontal');
  assert.deepEqual(errors,[]);
 });
@@ -219,9 +224,9 @@ test('barra, cards e menu cortam o título com reticências e mantêm o nome com
 test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e primeiros lotes separados',{skip,timeout:90000},async t=>{
  const firstIdea='Oficina de cerâmica',secondIdea='Aula de gravura';
  const {page,idea,projects,chats,explorations,errors}=await studio(t,{completeExplorations:true,landingIdea:'Uma ideia antiga da entrada'});
- await idea.fill(firstIdea);await idea.press('Enter');await projectTrigger(page,firstIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(firstIdea);
- await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:'Novo projeto',exact:true}).click();
- await page.getByLabel('Nome do projeto',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();await projectTrigger(page,secondIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(secondIdea);
+ await idea.fill(firstIdea);await idea.press('Enter');await projectHeading(page,firstIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(firstIdea);
+ await page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:'Novo projeto',exact:true}).click();
+ await page.getByLabel('Nome do projeto',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();await projectHeading(page,secondIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(secondIdea);
  await page.goto(new URL('/',page.url()).href);await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
  let message=await connectKey(page);assert.equal(await message.inputValue(),'');
  assert.equal(explorations.length,0,'conectar a chave não inicia exploração');
@@ -229,7 +234,7 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
  assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
  await closeSettings(page);await message.fill('Post sobre gravura');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
- await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
+ await page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
  message=await connectKey(page);assert.equal(await message.inputValue(),'');
  await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();

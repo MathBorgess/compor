@@ -14,14 +14,26 @@ const pageSource = `'use client';
 import {useState} from 'react';
 import StudioShell,{CreativeBoard,StudioEmptyBoard,StudioChatPanel} from '../studio-shell';
 export default function Preview(){
- const [stage,setStage]=useState('studio'),[message,setMessage]=useState(''),[title,setTitle]=useState('Planilhas para a rotina'),[art,setArt]=useState(false);
- return <StudioShell stage={stage} projectId="project-planilhas" projectTitle={title} pieceSubtitle="Post para divulgar seu curso / 1080 × 1350" projects={[{id:'project-planilhas',title:'Planilhas para a rotina'},{id:'project-outro',title:'Outro projeto'}]} onOpenProject={project=>setTitle(project.title)} onRenameProject={async next=>setTitle(next)} onNewProject={()=>setStage('projects')} onNavigate={setStage} onTabChange={()=>setStage('studio')} canOpenStudio userLabel="Mavi Almeida" basesCount={3} bases={<div><h2>Referências</h2><p>Três bases locais.</p></div>} marca={<div><h2>Marca do projeto</h2><p>Direção criativa local.</p></div>} viewingArt={art} onCloseArt={()=>setArt(false)} footer="Alterações ainda locais no navegador" canvas={<CreativeBoard title="Vamos encontrar a sua direção."><StudioEmptyBoard onStartIdea={()=>setMessage('Quero divulgar meu curso.')} onAddReference={()=>setMessage('referência')}/><button type="button" onClick={()=>setArt(true)}>Ver arte</button></CreativeBoard>} chat={<StudioChatPanel composer={<form onSubmit={event=>{event.preventDefault();setMessage('Enviada');}}><label className="studio-hint" htmlFor="test-message">Sua mensagem</label><textarea id="test-message" value={message} onChange={event=>setMessage(event.target.value)} placeholder="Peça um ajuste ou conte uma ideia…"/><div className="studio-composer-actions"><span className="studio-hint">Referências locais</span><button className="studio-button">Enviar</button></div></form>}><div className="studio-message" data-role="assistant"><span className="studio-message-label">Compor</span><p>O que você quer criar hoje? Pode me contar do seu jeito.</p></div></StudioChatPanel>}><p>Conteúdo da etapa {stage}</p></StudioShell>;
+ const [stage,setStage]=useState('studio'),[message,setMessage]=useState(''),[art,setArt]=useState(false);
+ return <StudioShell stage={stage} projectId="project-planilhas" projectTitle="Planilhas para a rotina" onNewProject={()=>setStage('projects')} onNavigate={setStage} onTabChange={()=>setStage('studio')} canOpenStudio userLabel="Mavi Almeida" basesCount={3} bases={<div><h2>Referências</h2><p>Três bases locais.</p></div>} marca={<div><h2>Marca do projeto</h2><p>Direção criativa local.</p></div>} viewingArt={art} onCloseArt={()=>setArt(false)} footer="Alterações ainda locais no navegador" canvas={<CreativeBoard title="Vamos encontrar a sua direção."><StudioEmptyBoard onStartIdea={()=>setMessage('Quero divulgar meu curso.')} onAddReference={()=>setMessage('referência')}/><button type="button" onClick={()=>setArt(true)}>Ver arte</button></CreativeBoard>} chat={<StudioChatPanel composer={<form onSubmit={event=>{event.preventDefault();setMessage('Enviada');}}><label className="studio-hint" htmlFor="test-message">Sua mensagem</label><textarea id="test-message" value={message} onChange={event=>setMessage(event.target.value)} placeholder="Peça um ajuste ou conte uma ideia…"/><div className="studio-composer-actions"><span className="studio-hint">Referências locais</span><button className="studio-button">Enviar</button></div></form>}><div className="studio-message" data-role="assistant"><span className="studio-message-label">Compor</span><p>O que você quer criar hoje? Pode me contar do seu jeito.</p></div></StudioChatPanel>}><p>Conteúdo da etapa {stage}</p></StudioShell>;
+}`;
+const navigationSource = `'use client';
+import {useState} from 'react';
+import StudioShell from '../../studio-shell';
+import StudioNavigation from '../../studio-navigation';
+export default function Preview(){
+ const [projects,setProjects]=useState([{id:'project-planilhas',title:'Planilhas para a rotina'},{id:'project-outro',title:'Outro projeto'}]);
+ const [projectId,setProjectId]=useState('project-planilhas');
+ const project=projects.find(item=>item.id===projectId);
+ return <StudioShell guided stage="studio" projectId={projectId} projectTitle={project.title} projects={projects} onOpenProject={next=>setProjectId(next.id)} sidebar={<StudioNavigation projectTitle={project.title} onRenameProject={async title=>setProjects(items=>items.map(item=>item.id===projectId?{...item,title}:item))} actions={[]}/>} canvas={<p>Quadro de {project.title}</p>}/>;
 }`;
 
 test('shell usa ativos originais, mantém navegação por teclado e permite explorar o quadro', { skip: !existsSync(browserPath), timeout: 90000 }, async t => {
   assert.equal(existsSync(fixture), false);
   await mkdir(fixture);
   await writeFile(new URL('page.jsx', fixture), pageSource);
+  await mkdir(new URL('navigation/', fixture));
+  await writeFile(new URL('navigation/page.jsx', fixture), navigationSource);
   const socket = createServer();
   await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port;
@@ -115,17 +127,37 @@ test('shell usa ativos originais, mantém navegação por teclado e permite expl
   await page.getByRole('dialog', { name: 'Marca' }).waitFor();
   await page.mouse.click(during.x + 500, during.y + 80);
   assert.equal(await page.getByRole('dialog', { name: 'Marca' }).count(), 0);
-  await page.getByRole('button', { name: 'Planilhas para a rotina', exact: true }).click();
-  await page.getByRole('button', { name: 'Outro projeto', exact: true }).click();
-  await page.getByRole('button', { name: 'Outro projeto', exact: true }).click();
-  await page.getByLabel('Renomear').fill('Projeto renomeado');
-  await page.getByRole('button', { name: 'Salvar nome', exact: true }).click();
-  await page.getByRole('button', { name: 'Projeto renomeado', exact: true }).waitFor();
-  await page.getByRole('button', { name: 'Projeto renomeado', exact: true }).click();
-  await page.getByLabel('Renomear').focus();
-  await page.keyboard.press('Escape');
-  assert.equal(await page.getByRole('dialog', { name: 'Projetos' }).count(), 0);
-  assert.equal(await page.getByRole('button', { name: 'Projeto renomeado', exact: true }).evaluate(button => button === document.activeElement), true);
+  const navigationPage = await browser.newPage({viewport:{width:1440,height:960}});
+  navigationPage.on('pageerror', error => errors.push(error.message));
+  try {
+    await isolateFixtureHmr(navigationPage, '/studio-visual-test/navigation');
+    await navigationPage.goto(`${origin}/studio-visual-test/navigation`);
+    const rail = navigationPage.getByRole('navigation', {name:'Projetos',exact:true});
+    const first = rail.getByRole('button', {name:'Planilhas para a rotina',exact:true});
+    const second = rail.getByRole('button', {name:'Outro projeto',exact:true});
+    await first.waitFor();
+    assert.equal(await first.getAttribute('aria-current'), 'page');
+    await second.click();
+    assert.equal(await second.getAttribute('aria-current'), 'page');
+    assert.equal(await first.getAttribute('aria-current'), null);
+    const rename = navigationPage.getByRole('button', {name:'Renomear projeto Outro projeto',exact:true});
+    await rename.click();
+    await navigationPage.getByLabel('Renomear', {exact:true}).fill('Projeto renomeado');
+    await navigationPage.getByRole('button', {name:'Salvar nome',exact:true}).click();
+    await navigationPage.getByRole('heading', {name:'Projeto renomeado',exact:true}).waitFor();
+    assert.equal(await rail.getByRole('button', {name:'Projeto renomeado',exact:true}).getAttribute('aria-current'), 'page');
+    const renamed = navigationPage.getByRole('button', {name:'Renomear projeto Projeto renomeado',exact:true});
+    await renamed.click();
+    await navigationPage.getByLabel('Renomear', {exact:true}).fill('Nome cancelado');
+    await navigationPage.keyboard.press('Escape');
+    assert.equal(await navigationPage.getByLabel('Renomear', {exact:true}).count(), 0);
+    assert.equal(await navigationPage.getByRole('heading', {name:'Projeto renomeado',exact:true}).count(), 1);
+    await renamed.focus();
+    await navigationPage.keyboard.press('Escape');
+    const expand = navigationPage.getByRole('button', {name:'Expandir menu',exact:true});
+    assert.equal(await expand.getAttribute('aria-expanded'), 'false');
+    assert.equal(await expand.evaluate(button=>button===document.activeElement), true);
+  } finally { await navigationPage.close(); }
   await page.screenshot({ path: '/tmp/compor-layout-b.png', fullPage: false });
   await page.getByRole('button', { name: 'Recolher conversa', exact: true }).click();
   await page.getByRole('button', { name: 'Abrir conversa', exact: true }).waitFor();

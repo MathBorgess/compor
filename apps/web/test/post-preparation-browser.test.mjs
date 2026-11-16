@@ -57,7 +57,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   assert.deepEqual(initial.messages,[]);
   assert.equal(await page.locator('.studio-topbar').getByRole('button',{name:'Posts do projeto',exact:true}).count(),0);
   const nav=page.getByRole('navigation',{name:'Menu do projeto',exact:true});
-  assert.equal(await nav.locator('button svg').count(),3);assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
+  assert.equal(await nav.locator('button svg').count(),4);assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
   await button('Expandir menu').focus();await page.keyboard.press('Enter');assert.equal(await button('Recolher menu').getAttribute('aria-expanded'),'true');
   await page.keyboard.press('Escape');assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
   await button('Configurações do projeto').click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
@@ -68,9 +68,9 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   assert.equal(Object.keys((await stored()).posts).length,0);
   await page.goto(new URL('/',page.url()).href);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
   await button('Continuar para criação').click();const chat=await openConversation(page);assert.equal(await chat.inputValue(),'');
-  await button('Configurações deste post').click();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
+  await button('Configurações do Post').click();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
   await button('Expandir menu').click();
-  if(width===390){await page.locator('#studio-main').click({position:{x:310,y:12}});assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');}
+  if(width===390){const main=page.locator('#studio-main'),bounds=await main.boundingBox();await main.click({position:{x:bounds.width-12,y:12}});assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');}
   else await button('Recolher menu').click();
   await button('Posts do projeto').click();await button('Criar novo post').click();await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');assert.equal(await action.inputValue(),'');
   await page.getByLabel('Nome do post',{exact:true}).fill('Convite para live');await objective.fill('Inscrições para live gratuita');await action.fill('Inscreva-se pelo link da bio');await button('Continuar para criação').click();await openConversation(page);

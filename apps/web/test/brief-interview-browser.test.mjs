@@ -122,15 +122,15 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  await page.getByRole('button',{name:'Configurações do Post',exact:true}).click();
   try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
   await page.keyboard.press('Escape');
   await closeSettings(page);assert.equal(await page.getByText('Quero divulgar uma aula de cerâmica.', {exact: true}).count(), 1);
   assert.deepEqual(calls.filter(call => call.path !== '/api/studio/explorations').map(call => call.path), ['/api/studio/chat', '/api/studio/action']);
   await page.reload();
-  await page.getByRole('button', {name: /Direção opcional/}).click();
+  await page.getByRole('button',{name:'Configurações do projeto',exact:true}).waitFor();
   await openPostEditor(page);await openConversation(page);await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
-  await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
+  await page.getByRole('button',{name:'Configurações do Post',exact:true}).click();
   try{assert.equal(await page.getByLabel('O que este post deve comunicar?',{exact:true}).inputValue(),'Aula de cerâmica');}catch(error){throw Error(JSON.stringify({dialogs:await page.locator('dialog[open]').allTextContents(),errors}),{cause:error});}
   await page.keyboard.press('Escape');
   await closeSettings(page);assert.equal(await page.getByRole('button', {name: 'Enviar →', exact: true}).isDisabled(), true, 'a chave não é guardada após recarregar');
@@ -245,8 +245,8 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
  await page.setViewportSize({width:390,height:844});await openConversation(page);
  assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
- const overlap=await page.evaluate(()=>{const a=document.querySelector('.guided-chat-minimize')?.getBoundingClientRect(),b=document.querySelector('.studio-chat-details-toggle')?.getBoundingClientRect();return a&&b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});
- assert.equal(overlap,false,'controle de minimizar não cobre os detalhes da conversa');
+ const overlap=await page.evaluate(()=>{const a=document.querySelector('.guided-chat-minimize')?.getBoundingClientRect(),b=document.querySelector('.guided-conversation:not([hidden]) .studio-chat-header h2')?.getBoundingClientRect();return a&&b&&a.left<b.right&&a.right>b.left&&a.top<b.bottom&&a.bottom>b.top;});
+ assert.equal(overlap,false,'controle de minimizar não cobre o título da conversa');
  await page.getByRole('button',{name:'Minimizar conversa',exact:true}).focus();await page.keyboard.press('Enter');
  assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
  const bounds=await page.locator('.guided-workspace').boundingBox();
@@ -273,23 +273,23 @@ test('configurações e bancada de referências mantêm abas, seleção, chat e 
  assert.equal(await dialog.getByRole('button',{name:'Fechar configurações',exact:true}).isVisible(),true);
  await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
  await tabs.getByRole('button',{name:'Referências',exact:true}).click();
- const content=dialog.locator('.reference-workbench-source'),returnAction=dialog.locator('.reference-workbench-return');
+ const content=dialog.locator('.reference-workbench-source'),closeAction=dialog.getByRole('button',{name:'Fechar configurações',exact:true});
  await content.evaluate(element=>element.scrollTop=element.scrollHeight);
- const returnBoundsAfterScroll=await returnAction.boundingBox(),tabsBounds=await tabs.boundingBox();
+ const returnBoundsAfterScroll=await closeAction.boundingBox(),tabsBounds=await tabs.boundingBox();
  assert.ok(tabsBounds.y>=0&&tabsBounds.y+tabsBounds.height<=500,'abas continuam visíveis');
- assert.ok(returnBoundsAfterScroll.y>=0&&returnBoundsAfterScroll.y+returnBoundsAfterScroll.height<=500,'retorno continua visível após rolar as referências');
+ assert.ok(returnBoundsAfterScroll.y>=0&&returnBoundsAfterScroll.y+returnBoundsAfterScroll.height<=500,'fechar continua visível após rolar as referências');
  const composer=dialog.locator('.reference-workbench-conversation .studio-chat-composer');
  const composerBounds=await composer.boundingBox();assert.ok(composerBounds.y>=0&&composerBounds.y+composerBounds.height<=500,`compositor permanece no viewport junto das referências: ${JSON.stringify(composerBounds)}`);
  await page.setViewportSize({width:390,height:400});await assertViewport(390,400);
  const shortContentHeight=await content.evaluate(element=>element.clientHeight);
  assert.ok(shortContentHeight>=60,`conteúdo de referências ainda tem área de rolagem em viewport baixo (${shortContentHeight}px)`);
- const shortReturn=await returnAction.boundingBox();assert.ok(shortReturn.y+shortReturn.height<=400,'retorno continua no viewport baixo');
+ const shortReturn=await closeAction.boundingBox();assert.ok(shortReturn.y+shortReturn.height<=400,'fechar continua no viewport baixo');
  const shortComposer=await composer.boundingBox();assert.ok(shortComposer.y>=0&&shortComposer.y+shortComposer.height<=400,'compositor continua no viewport baixo');
  await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
  const returnBounds=await dialog.getByRole('button',{name:'Fechar configurações',exact:true}).boundingBox();
  assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'fechar permanece acessível em outra aba');
- await closeSettings(page);await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
- assert.ok((await page.getByRole('dialog',{name:'Configurações deste post',exact:true}).boundingBox()).width<390,'diálogo de post mantém dimensão própria');
+ await closeSettings(page);await page.getByRole('button',{name:'Configurações do Post',exact:true}).click();
+ assert.ok((await page.getByRole('dialog',{name:'Configurações do Post',exact:true}).boundingBox()).width<390,'diálogo de post mantém dimensão própria');
  assert.deepEqual(errors,[]);
 });
 

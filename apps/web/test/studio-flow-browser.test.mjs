@@ -166,7 +166,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  const mobileField=await page.getByLabel('Título',{exact:true}).boundingBox();assert.ok(mobileField.x>=0&&mobileField.x+mobileField.width<=390,'the mobile inspector remains readable within the screen');
  await page.screenshot({path:'/tmp/compor-studio-visual-mobile-inspector.png',fullPage:true});
  await page.setViewportSize({width:1440,height:1000});
- await page.reload();await page.getByRole('button',{name:/Projeto sintético/}).click();
+ await page.reload();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).waitFor();
  await openEditor(page);
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Rascunho que permanece local');
  assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true,'key does not survive reload');

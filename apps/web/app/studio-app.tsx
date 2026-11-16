@@ -518,7 +518,8 @@ function ProjectStudio({
       postRecords.some(post => post.pieceId === routePieceId && !post.deleted);
     if (!known && !versionsLoaded) return;
     if (!known || isRemoved(routePieceId)) {
-      sync.done = true;
+      // Keep screen -> URL paused until the list renders, even when the catalog loaded before local state.
+      sync.tried = true;
       closeSettings(); setPostSettingsOpen(false); nextStage("studio");
       local.change(value => updateWorkflow(value, {view:"posts"}));
       onRoutePiece(null, true);

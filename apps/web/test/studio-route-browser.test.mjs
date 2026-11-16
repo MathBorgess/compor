@@ -109,7 +109,7 @@ test('o histórico preserva o projeto e a URL quando a gravação local falha',{
  assert.equal(await page.getByLabel('Objetivo deste post',{exact:true}).inputValue(),'Alteração ainda somente nesta aba');
  await button('Fechar configurações do post').click();
  await page.evaluate(()=>{IDBObjectStore.prototype.put=window.restoreStatePut;delete window.restoreStatePut;});
- await page.getByRole('link',{name:'Compor — página inicial',exact:true}).click();await button('Mentoria ENEM Abrir projeto').waitFor();
+ await page.goBack();await button('Mentoria ENEM Abrir projeto').waitFor();
  await page.goto(origin+postPath);await button('Configurações do Post').click();
  assert.equal(await page.getByLabel('Objetivo deste post',{exact:true}).inputValue(),'Alteração ainda somente nesta aba','a repetição explícita preserva o trabalho antes de sair');
  assert.deepEqual(errors,[]);
