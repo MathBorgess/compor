@@ -1,9 +1,8 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
-import dynamic from "next/dynamic";
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
-const PersonaStep = dynamic(() => import("./persona-step"));
-const StudioDirection = dynamic(() => import("./studio-direction"));
+import PersonaStep from "./persona-step";
+import StudioDirection from "./studio-direction";
 import StudioEditor from "./studio-editor";
 import StudioReview from "./studio-review";
 import VariantCards from "./studio-variant-cards";
@@ -58,7 +57,7 @@ import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
 import { rootRoute, useStudioRoute, type StudioRoute } from "../lib/studio-route";
 import StudioProfile from "./studio-profile";
-const StudioAssets = dynamic(() => import("./studio-assets"), {loading: () => <p role="status">Consultando imagens desta versão…</p>});
+import StudioAssets from "./studio-assets";
 
 import * as z from '../lib/schema.ts';
 import { projectsSchema, projectResponseSchema, versionsSchema, savedVersionSchema, versionSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';

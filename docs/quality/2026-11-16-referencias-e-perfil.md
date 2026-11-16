@@ -39,7 +39,7 @@ A fronteira dinâmica já existente continua em `workspace.tsx → studio-app.ts
 
 O grafo emitido confirma `workspace.tsx → async studio-app.tsx → studio-profile.tsx → profile-contract.ts / profile-local.ts`. Os módulos `profile-store.ts`, `profile-route.ts`, `agent-auth.ts` e o handler `/api/profile` não aparecem como membros emitidos do cliente. Os schemas públicos e a projeção local permanecem no navegador; acesso ao banco e resolução da identidade ficam no servidor.
 
-| Medida final | Valor | Limite |
+| Medida local inicial | Valor | Limite |
 | --- | ---: | ---: |
 | JavaScript inicial da entrada sem sessão | 0 bytes gzip | 250.000 |
 | Todos os chunks JS | 299.969 bytes gzip | 300.000 |
@@ -47,7 +47,19 @@ O grafo emitido confirma `workspace.tsx → async studio-app.tsx → studio-prof
 | TBT, mediana | 0 ms | 200 |
 | CLS, mediana | 0 | 0,1 |
 
-O total deixa **31 bytes de margem local**. A medição Linux precisa ser confirmada antes de publicação; mudanças futuras podem ultrapassar o limite. Não foi elevado o orçamento nem adicionada exceção. Lighthouse mede a entrada sem sessão, não o estúdio autenticado, latência da IA ou qualidade criativa. Não há alegação de ganho de velocidade.
+O total inicial deixou **31 bytes de margem local**. A primeira execução Linux excedeu o limite; o ajuste posterior está registrado abaixo. Não foi elevado o orçamento nem adicionada exceção. Lighthouse mede a entrada sem sessão, não o estúdio autenticado, latência da IA ou qualidade criativa. Não há alegação de ganho de velocidade.
+
+## Ajuste após a primeira execução do PR 58
+
+O [CI inicial](https://github.com/MathBorgess/compor/actions/runs/43904237477) mediu **300.554 bytes gzip** no commit `71c2d62`: 554 acima do limite, com build, checks estáticos e contratos aprovados. A diferença em relação ao macOS reforça a necessidade de medir o build Linux.
+
+A correção consolida `PersonaStep`, `StudioDirection` e `StudioAssets` no módulo do estúdio. Esses três componentes tinham um único importador, `studio-app.tsx`, e suas dependências compartilhadas já eram alcançáveis pelo estúdio. O `dynamic` externo de `workspace.tsx → studio-app.tsx` permanece. Nenhuma condição de montagem, handler, validação, dependência ou orçamento foi alterado. `StudioAssets` conserva seus estados internos de consulta e recuperação; desaparece apenas a espera pelo download de seu chunk separado.
+
+O build local ajustado mede **295.588 bytes gzip**, redução de **4.381 bytes**, com margem de **4.412 bytes**. Os componentes passam a chegar junto com o estúdio; isso não comprova ganho de latência inicial. A decisão usa o total real dos chunks comprimidos com `gzipSync`, igual ao avaliador, e não a soma atribuída do analyzer.
+
+O baseline `references-focused-final` e o snapshot posterior `references-pr58-ci-bundle-after` cobrem o app inteiro. Para os três alvos, a análise usou os importadores diretos, verificou raízes/alternativas e preservou a fronteira assíncrona externa. Não havia outro importador nem efeito de módulo que acessasse rede/storage. Formulários, critérios e cliente HTTP são conteúdo intencional do navegador; não foi movido código de servidor. O relatório completo e os exports separados ficam em `quality-results/references-focused/bundle-ci-candidates.md` e `analyze-ci-bundle-after.jsonl.gz`.
+
+A alteração passou novamente em lint, tipos, build, **30 testes de comportamento focados** (zero falhas/pulos) e no avaliador de performance completo, com cinco navegações. Os casos cobrem persona, critérios, configurações desktop/mobile, primeiro post, autorização, recuperação de imagem, concorrência e preservação de conversa. A comparação do analyzer deduplica outputs/partes e reduziu a atribuição comprimida de 355.864 para 354.304 bytes; esse valor é distinto dos 295.588 bytes do orçamento. A emissão posterior contém 14 outputs cliente, 12 com membership exato e dois de runtime/polyfill; não há output unsupported nem trigger ausente. Nenhum Server Action foi acrescentado e nenhum código de servidor entrou nos três componentes.
 
 ## Proveniência e artefatos
 
@@ -61,7 +73,7 @@ Experience First orientou o espaço dedicado às imagens. Model the Domain mante
 
 ## Próximos passos e limites
 
-- Confirmar o Quality em CI Linux e sua margem de bundle antes de publicar. A validação inicial foi local; em 16/11/2026 Matheus autorizou abrir o PR, acompanhar o CI e reduzir o bundle se necessário, sem aumentar o limite. Merge e publicação em produção permanecem fora deste pedido.
+- Confirmar o Quality em CI Linux sobre o ajuste de bundle abaixo antes de publicar. A validação inicial foi local; em 16/11/2026 Matheus autorizou abrir o PR, acompanhar o CI e reduzir o bundle se necessário, sem aumentar o limite. Merge e publicação em produção permanecem fora deste pedido.
 - Validar a leitura do perfil com Auth/PostgREST reais num ambiente próprio. PGlite e HTTP simulado não comprovam isolamento entre contas reais.
 - A consulta mostra 25 projetos por página e até 500 sinais de cada fonte. Os demais sinais continuam armazenados; paginação individual de sinais ainda não existe.
 - Critérios locais não são sincronizados entre dispositivos. Excluir o projeto não limpa o IndexedDB; limpar o navegador continua sendo uma operação distinta.
