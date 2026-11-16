@@ -1,0 +1,67 @@
+{
+  "schemaVersion": "evaluation/v1",
+  "goalId": "G01",
+  "profile": null,
+  "status": "inconclusivo",
+  "passed": false,
+  "integrity": {
+    "valid": false,
+    "reasons": [
+      "snapshotDigest mismatch"
+    ]
+  },
+  "completion": {
+    "complete": false,
+    "reasons": [
+      "invalid manifest or trusted inputs"
+    ]
+  },
+  "criteria": [
+    {
+      "id": "G01.no-generation-before-intent",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.post-confirmed",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.references-scoped",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.version-reopened",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.facts-preserved",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    },
+    {
+      "id": "G01.waits-enforced",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "reason": "run provenance could not be verified",
+      "checks": []
+    }
+  ],
+  "modelUsage": {
+    "tokens": null,
+    "costUsd": null
+  }
+}

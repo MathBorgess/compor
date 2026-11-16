@@ -1,19 +1,14 @@
 import * as z from '../lib/schema.ts';
-import {postRecordSchema} from '../lib/post-catalog';
-import { pieceContentSchema, approvalSchema } from '../lib/studio-domain';
+import { pieceContentSchema } from '../lib/studio-domain';
+export {versionSchema,versionsSchema,savedVersionSchema,type PieceVersion} from '../lib/studio-piece-contract';
 
 export const projectSchema = z.object({ id: z.string(), title: z.string(), revision:z.optional(z.number()), created_at: z.optional(z.string()) });
 export const projectsSchema = z.object({ projects: z.array(projectSchema) });
 export const projectResponseSchema = z.object({ project: projectSchema });
 export const contentSchema = pieceContentSchema;
-const persistedUnapprovedSchema = z.pipe(z.strictObject({status:z.literal('unapproved'),kind:z.null(),sourceVersion:z.null(),at:z.null()}),z.transform(() => ({status:'unapproved'} as const)));
-export const versionSchema = z.object({ project_id: z.string(), piece_id: z.string(), version: z.number().check(z.int()), content: contentSchema, metadata:z.optional(z.object({revision:z.number(),baseVersion:z.optional(z.nullable(z.number())),approval:z.union([approvalSchema,persistedUnapprovedSchema]),changedDimension:z.optional(z.nullable(z.enum(['style','composition','hook']))),operation:z.optional(z.nullable(z.enum(['create','edit'])))})), created_at: z.optional(z.string()) });
-export const versionsSchema = z.object({ versions: z.array(versionSchema),posts:z._default(z.array(postRecordSchema).check(z.maxLength(1000)),[]) });
 export const markerSchema = z.object({ assetId: z.nullable(z.string()) });
 export const storedImageSchema = z.object({ status: z.string(), assetId: z.optional(z.string()) });
-export const savedVersionSchema = z.discriminatedUnion('status', [z.object({ status: z.literal('saved'), version: versionSchema }), z.object({ status: z.literal('conflict') })]);
 export type Project = z.infer<typeof projectSchema>;
-export type PieceVersion = z.infer<typeof versionSchema>;
 export type Content = z.infer<typeof contentSchema>;
 export type ImageSelection = { blob: Blob; pieceId: string; version: number; creationContext?: NonNullable<import('../lib/studio-domain').StudioDraft['creationContext']> };
 export const uuid = (value: unknown): value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);

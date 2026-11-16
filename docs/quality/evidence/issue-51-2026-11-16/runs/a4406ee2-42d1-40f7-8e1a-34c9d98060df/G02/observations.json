@@ -1,0 +1,115 @@
+{
+  "http": {
+    "createProject": {
+      "status": 201,
+      "body": {
+        "project": {
+          "id": "7250f636-6ad8-40b8-a3bc-1d85ca17bd7f",
+          "title": "G02 — isolamento sintético",
+          "created_at": "2026-11-16T14:27:14.872608+00:00",
+          "revision": 1
+        }
+      }
+    },
+    "ownerGeneration": {
+      "status": 200,
+      "body": {
+        "status": "completed",
+        "requestId": "c0c695e9-a266-4a62-9b88-01507d3fad4d",
+        "imageId": "c0c695e9-a266-4a62-9b88-01507d3fad4d"
+      }
+    },
+    "readProjectAsB": {
+      "status": 404,
+      "body": {
+        "error": "not_found"
+      }
+    },
+    "writeProjectAsB": {
+      "status": 404,
+      "body": {
+        "status": "not_found"
+      }
+    },
+    "readAssetAsB": {
+      "status": 404,
+      "byteLength": 21
+    },
+    "concurrentSecond": {
+      "status": 409,
+      "body": {
+        "status": "busy",
+        "requestId": "6f0a3624-93be-4bde-9db7-3a1d60d22795",
+        "retryAutomatically": false
+      }
+    },
+    "concurrentFirst": {
+      "status": 200,
+      "body": {
+        "status": "completed",
+        "requestId": "e99d9903-e20d-4c59-b8bf-0c160561de3a",
+        "imageId": "e99d9903-e20d-4c59-b8bf-0c160561de3a"
+      }
+    }
+  },
+  "db": {
+    "beforeAttack": {
+      "projects": [
+        {
+          "id": "7250f636-6ad8-40b8-a3bc-1d85ca17bd7f",
+          "owner_id": "11111111-1111-4111-8111-111111111111",
+          "title": "G02 — isolamento sintético",
+          "revision": 1
+        }
+      ],
+      "assets": [
+        {
+          "id": "e925ac89-03d8-4c36-8008-4912cb166033",
+          "bucket_id": "compor-exploration-images",
+          "name": "11111111-1111-4111-8111-111111111111/7250f636-6ad8-40b8-a3bc-1d85ca17bd7f/c0c695e9-a266-4a62-9b88-01507d3fad4d.png",
+          "owner": "11111111-1111-4111-8111-111111111111"
+        }
+      ]
+    },
+    "afterAttack": {
+      "projects": [
+        {
+          "id": "7250f636-6ad8-40b8-a3bc-1d85ca17bd7f",
+          "owner_id": "11111111-1111-4111-8111-111111111111",
+          "title": "G02 — isolamento sintético",
+          "revision": 1
+        }
+      ],
+      "assets": [
+        {
+          "id": "e925ac89-03d8-4c36-8008-4912cb166033",
+          "bucket_id": "compor-exploration-images",
+          "name": "11111111-1111-4111-8111-111111111111/7250f636-6ad8-40b8-a3bc-1d85ca17bd7f/c0c695e9-a266-4a62-9b88-01507d3fad4d.png",
+          "owner": "11111111-1111-4111-8111-111111111111"
+        }
+      ]
+    },
+    "reservationRows": [
+      {
+        "id": "e99d9903-e20d-4c59-b8bf-0c160561de3a",
+        "owner_id": "11111111-1111-4111-8111-111111111111",
+        "project_id": "7250f636-6ad8-40b8-a3bc-1d85ca17bd7f",
+        "state": "completed"
+      }
+    ]
+  },
+  "providerLedger": {
+    "reservationDispatches": [
+      {
+        "kind": "image",
+        "id": "fixture_image_4",
+        "prompt": "Primeiro pedido concorrente sintético.",
+        "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696",
+        "outcome": "returned"
+      }
+    ]
+  },
+  "files": {
+    "ownerImageSha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696"
+  }
+}

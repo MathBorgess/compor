@@ -1,0 +1,295 @@
+{
+  "schemaVersion": "goal/v1",
+  "revision": 1,
+  "requiredProfiles": [
+    "offline"
+  ],
+  "preconditions": [
+    "PostgreSQL and PostgREST run locally with the fixed migrations",
+    "Synthetic identities and external services; egress denied",
+    "The evaluator uses the fixed suite outside the app snapshot"
+  ],
+  "initialState": {
+    "accounts": [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222"
+    ],
+    "projectId": "33333333-3333-4333-8333-333333333333",
+    "postId": "44444444-4444-4444-8444-444444444444"
+  },
+  "authorizedIntents": [
+    "Synthetic account A may create its project and confirm one populated post and one empty post for reference-scope verification",
+    "An explicit synthetic request authorizes the simulated image operation"
+  ],
+  "allowedEffects": [
+    "Ephemeral rows and files scoped to this run",
+    "Calls to the local provider fixture"
+  ],
+  "forbiddenEffects": [
+    "Real network egress or paid calls",
+    "Generation before explicit intent",
+    "Cross-account access",
+    "Automatic repeat after uncertain effect"
+  ],
+  "obstacles": [],
+  "faults": [],
+  "clockPolicy": {
+    "virtual": [
+      "selection stabilization 5000ms",
+      "batch interval 15000ms"
+    ],
+    "real": [
+      "watchdog",
+      "database",
+      "JWT validity"
+    ]
+  },
+  "seed": "compor-issue51-v1",
+  "budgets": {
+    "actions": 80,
+    "requests": 240,
+    "wallTimeMs": 180000,
+    "cycles": 2,
+    "candidates": 1,
+    "concurrency": 1
+  },
+  "suiteRevision": "verification/v1",
+  "id": "G01",
+  "objective": "Prepare a project and post, explicitly request an image, save and reopen its version with facts, references and bytes preserved.",
+  "criteria": [
+    {
+      "id": "G01.no-generation-before-intent",
+      "description": "Opening, reloading and preparing do not dispatch generation.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/createProject/status",
+          "expected": 201
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/openProject/status",
+          "expected": 200
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/reloadProject/status",
+          "expected": 200
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/providerLedger/beforeIntent",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "G01.post-confirmed",
+      "description": "Preparation has no durable post; confirmation creates exactly one post.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/afterPreparation/posts",
+          "expected": 0
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/afterConfirmation/posts",
+          "expected": 1
+        },
+        {
+          "kind": "minimum-length",
+          "artifact": "observations",
+          "path": "/providerLedger/afterExplicitRequest",
+          "expected": 1
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/afterCancellation/posts",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "G01.references-scoped",
+      "description": "Shared and post-local references preserve their scopes.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/controller/references/sharedIds",
+          "expected": 1
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/controller/references/postLocalIds",
+          "expected": 1
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/controller/references/effectiveIds",
+          "expected": 2
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/references/otherPostEffectiveIds",
+          "otherPath": "/controller/references/sharedIds"
+        },
+        {
+          "kind": "includes",
+          "artifact": "observations",
+          "path": "/controller/references/effectiveIds",
+          "otherPath": "/controller/references/sharedIds/0"
+        },
+        {
+          "kind": "includes",
+          "artifact": "observations",
+          "path": "/controller/references/effectiveIds",
+          "otherPath": "/controller/references/postLocalIds/0"
+        }
+      ]
+    },
+    {
+      "id": "G01.version-reopened",
+      "description": "The reopened version references the stored version and actual image bytes.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/versions",
+          "expected": 1
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/reopened/pieceId",
+          "otherPath": "/db/versions/0/piece_id"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/reopened/baseVersion",
+          "otherPath": "/db/versions/0/version"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/reopened/content",
+          "otherPath": "/db/versions/0/content"
+        },
+        {
+          "kind": "file-digest",
+          "artifact": "generated-image",
+          "expectedArtifact": "observations",
+          "expectedPath": "/files/authenticatedImageSha256"
+        }
+      ]
+    },
+    {
+      "id": "G01.facts-preserved",
+      "description": "Declared and still-suggested facts retain their contents and authority after reopening.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "minimum-length",
+          "artifact": "observations",
+          "path": "/controller/declaredFacts",
+          "expected": 1
+        },
+        {
+          "kind": "minimum-length",
+          "artifact": "observations",
+          "path": "/controller/suggestedFacts",
+          "expected": 1
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/declaredFacts",
+          "otherPath": "/controller/reopened/facts"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/suggestedFacts",
+          "otherPath": "/controller/reopened/suggestedFacts"
+        }
+      ]
+    },
+    {
+      "id": "G01.waits-enforced",
+      "description": "Selection waits 5000ms and the batch interval remains 15000ms.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/clock/selectionAt4999",
+          "expected": 0
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/clock/selectionAt5000",
+          "expected": 1
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/clock/batchAt14999/remainingMs",
+          "expected": 1
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/clock/batchAt15000/remainingMs",
+          "expected": 0
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/clock/batchAt14999/error",
+          "expected": "batch_waiting"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/clock/batchAt15000/completed",
+          "expected": 0
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/clock/cancelledEvents",
+          "expected": 0
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/clock/frozenAndResumed/remainingMs",
+          "expected": 11000
+        }
+      ]
+    }
+  ]
+}

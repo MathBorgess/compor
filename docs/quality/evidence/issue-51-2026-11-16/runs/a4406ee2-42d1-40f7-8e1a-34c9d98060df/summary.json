@@ -1,0 +1,37 @@
+{
+  "runId": "a4406ee2-42d1-40f7-8e1a-34c9d98060df",
+  "profile": "offline",
+  "status": "passed",
+  "goals": [
+    {
+      "id": "G01",
+      "status": "atendido",
+      "passed": true,
+      "durationMs": 1762,
+      "failure": false
+    },
+    {
+      "id": "G02",
+      "status": "atendido",
+      "passed": true,
+      "durationMs": 304,
+      "failure": false
+    },
+    {
+      "id": "G03",
+      "status": "atendido",
+      "passed": true,
+      "durationMs": 305,
+      "failure": false
+    }
+  ],
+  "cleanup": {
+    "status": "completed",
+    "failures": []
+  },
+  "tlsWithoutCa": "rejected",
+  "startupMs": 3384,
+  "totalMs": 6078,
+  "containerMemoryPeakBytes": "703156224",
+  "containerCpuStat": "usage_usec 7281396\nuser_usec 6344296\nsystem_usec 937099\ncore_sched.force_idle_usec 0\nnr_periods 64\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0"
+}
