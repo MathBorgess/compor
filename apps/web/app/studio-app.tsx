@@ -1,5 +1,5 @@
 "use client";
-import { useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import { useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import dynamic from "next/dynamic";
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
 const PersonaStep = dynamic(() => import("./persona-step"));
@@ -56,6 +56,7 @@ import {
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat from "./studio-chat";
 import StudioDialog from "./studio-dialog";
+import { rootRoute, useStudioRoute, type StudioRoute } from "../lib/studio-route";
 const StudioAssets = dynamic(() => import("./studio-assets"), {loading: () => <p role="status">Consultando imagens desta versão…</p>});
 
 import * as z from '../lib/schema.ts';
@@ -65,10 +66,16 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
 type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
-type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean};
+type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard};
 type Confirmation={name:StudioActionName;args:StudioAction};
 const renamedProjectSchema=z.extend(projectResponseSchema,{status:z.literal('renamed')});
 const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
+const homeSteps=[['Projeto','Um nome'],['Contexto','Oferta e público'],['IA','Escolha a IA'],['Referências','Opcional'],['Post','Seu pedido']] as const;
+const lastProjectKey=(userId:string)=>`compor:last-project:${userId}`;
+const createdDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+function formatCreated(value?:string){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':createdDate.format(date);}
+function newestProject(projects:Project[]){return projects.reduce<Project|undefined>((best,project)=>!best||(project.created_at??'')>=(best.created_at??'')?project:best,undefined);}
 const settingsSections=[['context','Contexto'],['ai','IA'],['references','Referências'],['direction','Marca e direção'],['materials','Materiais e versões'],['history','Histórico anterior']] as const;
 
 export default function StudioApp({
@@ -102,6 +109,56 @@ export default function StudioApp({
   const deleteLock=useRef(false);
   const seq = useRef(0);
   const focusCreate = useRef(false);
+  const [route, navigate] = useStudioRoute();
+  const selectedRoute = useRef<StudioRoute>(rootRoute);
+  const leaveGuard = useRef<{projectId:string;guard:()=>Promise<boolean>}|null>(null);
+  const registerLeaveGuard = useCallback<RegisterProjectLeaveGuard>((projectId,guard) => {
+    leaveGuard.current = {projectId,guard};
+    return () => { if (leaveGuard.current?.guard === guard) leaveGuard.current = null; };
+  }, []);
+  if (selected && route?.projectId === selected.id) selectedRoute.current = route;
+  const [openedFromUrl, setOpenedFromUrl] = useState(false);
+  // Only the id of the last opened project stays in this browser, to offer it first on the home screen.
+  const [lastOpened, setLastOpened] = useState<string|null>(null);
+  useEffect(() => { try { setLastOpened(localStorage.getItem(lastProjectKey(userId))); } catch { setLastOpened(null); } }, [userId]);
+  function rememberProject(id:string) {
+    setLastOpened(id);
+    try { localStorage.setItem(lastProjectKey(userId), id); } catch { /* the home screen falls back to the newest project */ }
+  }
+  const hasProjects = projects.length > 0;
+  const openedProject = projects.find(project => project.id === lastOpened);
+  const resumeProject = projects.length > 1 ? openedProject ?? newestProject(projects) : undefined;
+  const resume = resumeProject ? { project: resumeProject, opened: resumeProject === openedProject, created: formatCreated(resumeProject.created_at) } : null;
+  function openProject(project:Project, created=false) {
+    rememberProject(project.id);
+    setCreatedProjectId(created ? project.id : null);
+    setOpenedFromUrl(false);
+    setSelected(project);
+    selectedRoute.current = { projectId: project.id, pieceId: null };
+    navigate(selectedRoute.current);
+  }
+  // The URL (initial load or back/forward) chooses the open project once the list is known.
+  useEffect(() => {
+    if (!route) return;
+    if (selected?.id === route.projectId || (route.projectId && state !== "ready")) return;
+    function applyRoute() {
+      if (!route?.projectId) { if (selected) { setSelected(null); void refresh(); } return; }
+      const target = projects.find(project => project.id === route.projectId);
+      if (target) { selectedRoute.current=route; rememberProject(target.id); setCreatedProjectId(null); setOpenedFromUrl(true); setSelected(target); }
+      else { navigate(rootRoute, { replace: true }); setNotice("Este projeto não está disponível na sua conta."); }
+    }
+    if (!selected) { applyRoute(); return; }
+    let cancelled = false;
+    const registered = leaveGuard.current;
+    void (async () => {
+      const preserved = registered?.projectId === selected.id && await registered.guard();
+      if (cancelled) return;
+      // Keep the destination in history so a later Back can retry after storage recovers.
+      if (!preserved) { navigate(selectedRoute.current); return; }
+      applyRoute();
+    })();
+    return () => { cancelled = true; };
+  }, [route, state, projects, selected?.id]);
   async function refresh() {
     const n = ++seq.current;
     setState("loading");
@@ -136,6 +193,7 @@ export default function StudioApp({
     focusCreate.current = true;
     setCreatedProjectId(null);
     setSelected(null);
+    navigate(rootRoute);
     refresh();
   }
   function projectRenamed(project:Project) {
@@ -169,8 +227,7 @@ export default function StudioApp({
       if (!response.ok) throw Error();
       const data = projectResponseSchema.parse(await response.json());
       setProjects((items) => [...items, data.project]);
-      setSelected(data.project);
-      setCreatedProjectId(data.project.id);
+      openProject(data.project, true);
       setProjectName("");
       setState("ready");
     } catch {
@@ -193,10 +250,17 @@ export default function StudioApp({
         onSignOut={onSignOut}
         project={selected}
         projects={projects}
-        onOpenProject={project => {setCreatedProjectId(null);setSelected(project);}}
+        onOpenProject={project => openProject(project)}
         onProjectRenamed={projectRenamed}
         onCreateNew={requestCreate}
-        onBack={() => {setSelected(null);refresh();}}
+        onBack={() => {setSelected(null);navigate(rootRoute);refresh();}}
+        routePieceId={route?.projectId===selected.id?route.pieceId:selectedRoute.current.pieceId}
+        onRoutePiece={(pieceId,replace)=>{
+          selectedRoute.current={projectId:selected.id,pieceId};
+          if(route?.projectId===selected.id)navigate(selectedRoute.current,{replace});
+        }}
+        onRegisterLeaveGuard={registerLeaveGuard}
+        openedFromUrl={openedFromUrl}
         hasApiKey={hasApiKey}
         canUseAI={canUseAI}
         credentialSource={credentialSource}
@@ -223,9 +287,29 @@ export default function StudioApp({
     >
       {recoveryBanner}
       {deleteTarget&&<StudioDialog title="Excluir projeto?" onClose={()=>{if(!deleteLock.current)setDeleteTarget(null);}}><p>Excluir “{deleteTarget.title}” da sua lista de projetos?</p><p>Os posts, imagens e históricos serão preservados internamente. Esta ação não apaga os arquivos definitivamente.</p>{deleteError&&<p role="alert">{deleteError}</p>}<button type="button" className="studio-button-secondary" disabled={state==='deleting'} onClick={()=>setDeleteTarget(null)}>Cancelar</button>{deleteError?<button type="button" className="studio-button" onClick={()=>{setDeleteTarget(null);setDeleteError('');void refresh();}}>Atualizar projetos</button>:<button type="button" className="studio-button" disabled={state==='deleting'} onClick={()=>void deleteProject()}>{state==='deleting'?'Excluindo…':'Excluir projeto'}</button>}</StudioDialog>}
+      <div className="studio-home" data-empty={hasProjects?undefined:'true'}>
+      {resume&&<section className="studio-home-resume" aria-labelledby="resume-title">
+        <div className="studio-home-resume-art" aria-hidden="true"><span/><span/><span/></div>
+        <div className="studio-home-resume-body">
+          <p className="studio-home-eyebrow">{resume.opened?'Aberto por último':'Mais recente'}</p>
+          <h2 id="resume-title" title={resume.project.title}>{resume.project.title}</h2>
+          {resume.created&&<p className="studio-home-meta">Criado em {resume.created}</p>}
+          <button type="button" className="studio-button" disabled={state==='deleting'} onClick={() => openProject(resume.project)}>Continuar projeto</button>
+        </div>
+      </section>}
+      <section className="studio-recent-projects" aria-label="Conversas e projetos anteriores">
+        <h2>{hasProjects?'Todos os projetos':'Seus projetos'}</h2>
+        {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
+        <div className="studio-project-grid">
+          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => openProject(project)}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+        </div>
+      </section>
       <section className="studio-starter" aria-labelledby="starter-title">
-        <h2 id="starter-title">Comece um projeto</h2>
-        <p>Um projeto reúne o contexto, as referências e os posts de uma mesma divulgação. Primeiro vamos prepará-lo; depois você cria cada post.</p>
+        <h2 id="starter-title">{hasProjects?'Novo projeto':'Comece um projeto'}</h2>
+        <p>Você prepara o projeto uma vez e cada post nasce dele. Nenhuma imagem é gerada até você pedir.</p>
+        <ol className="studio-home-steps" aria-label="Etapas de um projeto">
+          {homeSteps.map(([label,detail],index)=><li key={label} aria-current={index===0?'step':undefined}><span aria-hidden="true">{index+1}</span><strong>{label}</strong><small>{detail}</small></li>)}
+        </ol>
         <form onSubmit={create}>
           <label htmlFor="studio-project-name">Nome do projeto</label><p className="studio-hint" id="project-idea-help">Escolha um nome para organizar seus posts. Na próxima etapa, você descreve o contexto do projeto.</p>
           <input type="text" id="studio-project-name" aria-describedby="project-idea-help" maxLength={200} value={projectName} onChange={event => setProjectName(event.target.value)} placeholder="Ex.: Mentoria Veloz — Campanha 1" />
@@ -236,13 +320,7 @@ export default function StudioApp({
         {(state === "error" || uncertain) && <button type="button" onClick={refresh}>Atualizar projetos</button>}
         {uncertain && <button type="button" onClick={() => setUncertain(false)}>Entendi, iniciar outra criação</button>}
       </section>
-      <section className="studio-recent-projects" aria-label="Conversas e projetos anteriores">
-        <h2>Seus projetos</h2>
-        {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
-        <div className="studio-project-grid">
-          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => { setCreatedProjectId(null); setSelected(project); }}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{setDeleteError('');setDeleteTarget(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
-        </div>
-      </section>
+      </div>
     </StudioShell>
   );
 }
@@ -272,6 +350,10 @@ function ProjectStudio({
   accountLabel = "",
   localAccount = false,
   onSignOut,
+  routePieceId,
+  onRoutePiece,
+  openedFromUrl,
+  onRegisterLeaveGuard,
 }: ProjectStudioProps) {
   const session = useStudioState({ userId, projectId: project.id, prepare:initialPrepare,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
@@ -294,6 +376,7 @@ function ProjectStudio({
   const credentialSeen = useRef(credentialEpoch);
   const [stageRestored, setStageRestored] = useState(false);
   const [stage, setStage] = useState<StudioStage>("studio"),
+    [versionsLoaded, setVersionsLoaded] = useState(false),
     [versions, setVersions] = useState<PieceVersion[]>([]),
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
@@ -316,6 +399,15 @@ function ProjectStudio({
     versionsReadSequence=useRef(0);
   stateRef.current = s;
   versionRef.current = versions;
+  useEffect(() => onRegisterLeaveGuard(project.id, async () => {
+    try {
+      if (!session.loading) await session.flush();
+      return active.current;
+    } catch {
+      setNotice("Não foi possível preservar o projeto antes de sair.");
+      return false;
+    }
+  }), [project.id, session.loading, session.flush, onRegisterLeaveGuard]);
   const draft = s ? getCurrentDraft(s) : null;
   useEffect(()=>{
     const pieceId=s?.selection?.pieceId;
@@ -365,14 +457,15 @@ function ProjectStudio({
     if (!response.ok) throw Error("Não foi possível carregar as versões.");
     const data = versionsSchema.parse(await response.json());
     if(data.posts.some(post=>post.projectId!==project.id))throw Error('invalid posts');
-    if (active.current&&readSequence===versionsReadSequence.current){setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
+    if (active.current&&readSequence===versionsReadSequence.current){setVersionsLoaded(true);setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
     return data.versions;
   }
   useEffect(() => {
     active.current = true;
-    refreshVersions().catch(() =>
-      setNotice("As versões não estão disponíveis."),
-    );
+    refreshVersions().catch(() => {
+      setVersionsLoaded(true);
+      setNotice("As versões não estão disponíveis.");
+    });
     return () => {
       active.current = false;
       confirmResolver.current?.(false);
@@ -400,6 +493,46 @@ function ProjectStudio({
       );
     } catch {}
   }, [stage, userId, project.id, Boolean(s)]);
+  // The address bar names the open post (/projetos/<id>/posts/<pieceId>); the reference workspace is not a post.
+  const openPieceId = s && s.workflow.phase === "ready" && (s.workflow.view === "compose" || s.workflow.view === "studio") &&
+    s.selection && s.selection.pieceId !== s.workflow.referencePieceId ? s.selection.pieceId : null;
+  // Opened from the project list, the project resumes its saved screen and the URL follows it.
+  const routeSync = useRef<{target:string|null|undefined;tried:boolean;done:boolean;resume:boolean}>({target:undefined,tried:false,done:false,resume:!openedFromUrl});
+  useEffect(() => { // URL -> screen (initial load, back/forward)
+    const sync = routeSync.current;
+    if (sync.target !== routePieceId) {
+      const resume = sync.target === undefined && sync.resume && routePieceId === null;
+      Object.assign(sync, {target:routePieceId,tried:false,done:resume});
+    }
+    if (s && sync.resume && openPieceId === routePieceId) sync.resume = false; // resumed screen already matches the URL
+    if (sync.done || !s) return;
+    if (openPieceId === routePieceId) { sync.done = true; return; }
+    if (sync.tried || s.workflow.phase !== "ready") { sync.done = true; onRoutePiece(openPieceId, true); return; }
+    if (routePieceId === null) {
+      sync.tried = true;
+      closeSettings(); setPostSettingsOpen(false); nextStage("studio");
+      local.change(value => updateWorkflow(value, {view:"posts"}));
+      return;
+    }
+    const known = s.drafts.some(item => item.pieceId === routePieceId) || versions.some(item => item.piece_id === routePieceId) ||
+      postRecords.some(post => post.pieceId === routePieceId && !post.deleted);
+    if (!known && !versionsLoaded) return;
+    if (!known || isRemoved(routePieceId)) {
+      sync.done = true;
+      closeSettings(); setPostSettingsOpen(false); nextStage("studio");
+      local.change(value => updateWorkflow(value, {view:"posts"}));
+      onRoutePiece(null, true);
+      return;
+    }
+    sync.tried = true;
+    openPost(routePieceId);
+  }, [Boolean(s), routePieceId, openPieceId, versionsLoaded]);
+  useEffect(() => { // screen -> URL
+    const sync = routeSync.current;
+    if (!s || !sync.done || openPieceId === routePieceId) return;
+    onRoutePiece(openPieceId, sync.resume);
+    sync.resume = false;
+  }, [openPieceId]);
   useEffect(() => {
     if (!s || !referenceManifest || !local.storage.current) return;
     let live = true;
@@ -1118,8 +1251,16 @@ function ProjectStudio({
           </div>
         <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
       </>);
+  const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
+  const postVersionLabel=draft?.approval.status==="approved"?"Aprovado":draft?.dirty?"Rascunho":draft?.baseVersion?`Versão ${draft.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Rascunho":"Rascunho";
+  // ADR 0056: nome do post, versão e ações ficam no topo do próprio post; a barra superior é fixa.
   const artwork=(<div className="studio-post-workspace">
-          <div className="studio-post-workspace-header"><button type="button" className="studio-button-secondary" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references');}}>Escolher mais referências</button></div>
+          <div className="studio-post-workspace-header">
+            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span></div>
+            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references');}}>Escolher mais referências</button>
+            <button type="button" className="studio-button-secondary" onClick={()=>setPostSettingsOpen(true)}>Configurações do Post</button>
+            <button type="button" className="studio-button-secondary" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}>Revisar post</button>
+            <button type="button" className="studio-button" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}>{saving?'Salvando…':'Salvar versão'}</button></div></div>
 
           <div className="guided-artwork-editor">
           <details><summary>Usar uma imagem-base própria</summary><label>
@@ -1135,7 +1276,12 @@ function ProjectStudio({
         </div>
         </div>);
   const preparing=s.workflow.phase!=='ready';
-  const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
+  async function renameProject(title:string){
+    try {
+      const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
+      return result.status === "completed";
+    } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
+  }
   const returnToWorkspaceLabel=s.workflow.view==='posts'?'Voltar aos posts':'Voltar ao post';
   async function retainReferenceProposal(conversationId:string) {
     const storage=local.storage.current;
@@ -1174,7 +1320,7 @@ function ProjectStudio({
     upload={<label className="guided-reference-upload">Enviar suas imagens<p>PNG ou JPEG, até 8 MB cada. Limite de 20 imagens por projeto.</p><input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label>}
     proposals={<section className="reference-workbench-proposals">{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds}/></section>}
     conversation={<>{explorationRecovery}<div className="guided-reference-chat"><div className="guided-reference-post-chat" ref={setReferenceChatTarget}/></div></>}
-    onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={()=>{void finishReferences();}} continueLabel={preparing?'Ir para os posts do projeto':returnToWorkspaceLabel}/>;
+    onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={preparing?()=>{void finishReferences();}:undefined} continueLabel={preparing?'Ir para os posts do projeto':undefined}/>;
   const intro=s.workflow.view==='compose'&&!draft?.baseVersion&&!base&&!conversationMessages(s,draft?.pieceId).some(message=>message.role==='user');
   const chatIds=[...new Set([...visitedPosts,...(draft?[draft.pieceId]:[])])].filter(id=>id!==s.workflow.referencePieceId);
   const chats=chatIds.map(id=><div className="guided-conversation" key={id} hidden={id!==draft?.pieceId}>{renderChat(id,id===draft?.pieceId&&intro)}</div>);
@@ -1202,15 +1348,6 @@ function ProjectStudio({
       localAccount={localAccount}
       onSignOut={onSignOut ? signOutSafely : undefined}
       canOpenStudio
-      versionStatus={
-        preparingPost||s.workflow.view==='posts'?'':draft?.approval.status === "approved"
-          ? "Aprovado"
-          : draft?.dirty
-            ? "Rascunho"
-            : draft?.baseVersion
-              ? `Versão ${draft.baseVersion}`
-              : draft?.creationContext?.explorationSource?"v0 · Rascunho":"Rascunho"
-      }
       onTabChange={() => {setDrawer(null);nextStage("studio");}}
       onNewProject={async () => {try {await local.flush();if(active.current) onCreateNew();} catch {setNotice("Não foi possível preservar o projeto antes de sair.");}}}
       onNavigate={async value => {
@@ -1220,15 +1357,9 @@ function ProjectStudio({
       }}
       onReview={() => nextStage("review")}
       guided
-      pieceSubtitle={!preparing&&!preparingPost&&!currentSettings&&s.workflow.view!=='posts'?postTitle:undefined}
-      sidebar={!preparing?<StudioNavigation actions={[
+      sidebar={!preparing?<StudioNavigation projectTitle={projectDetails.title} onRenameProject={renameProject} actions={[
         {id:'posts',label:'Posts do projeto',disabled:creatingPost||deletingPost,onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
         {id:'project',label:'Configurações do projeto',disabled:creatingPost||deletingPost,onClick:()=>setSettings('context')},
-        ...(draft&&s.workflow.view!=='posts'&&!preparingPost?[
-          {id:'post' as const,label:'Configurações deste post',onClick:()=>setPostSettingsOpen(true)},
-          {id:'review' as const,label:'Revisar post',onClick:()=>nextStage('review'),disabled:Boolean(preparingPost),current:stage==='review'},
-          {id:'save' as const,label:saving?'Salvando…':'Salvar versão',onClick:()=>{void saveCurrent();},disabled:saving||Boolean(preparingPost)},
-        ]:[]),
       ]}/>:undefined}
       projectId={project.id}
       projects={projects}
@@ -1236,19 +1367,13 @@ function ProjectStudio({
         try { await local.flush(); if(active.current) onOpenProject(target); }
         catch { setNotice("Não foi possível preservar este projeto antes de trocar."); }
       }}
-      onRenameProject={async title => {
-        try {
-          const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
-          return result.status === "completed";
-        } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
-      }}
       canvas={canvas}
       overlays={
         <>
           <div hidden>{renderChat('references',false,false,true)}</div>
           {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
-          {currentSettings&&<StudioDialog title={currentSettings==='references'&&referenceScope!=='references'?'Referências deste post':'Configurações do projeto'} onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences())return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab);})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='references'?referencePanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}{currentSettings!=='references'&&<button type="button" className="studio-button" onClick={closeSettings}>{s.workflow.view==='posts'?'Voltar aos posts':'Voltar ao post'}</button>}</StudioDialog>}
-          {postSettingsOpen&&draft&&<StudioDialog title="Configurações deste post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}<button type="button" className="studio-button" onClick={()=>setPostSettingsOpen(false)}>Voltar ao post</button></StudioDialog>}
+          {currentSettings&&<StudioDialog title={currentSettings==='references'&&referenceScope!=='references'?'Referências deste post':'Configurações do projeto'} className="studio-modal-framed" closeLabel={currentSettings==='references'&&referenceScope!=='references'?'Fechar referências do post':'Fechar configurações'} onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences())return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab);})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='references'?referencePanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
+          {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
           {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (
             <StudioDialog

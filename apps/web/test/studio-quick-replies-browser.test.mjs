@@ -195,7 +195,10 @@ test('bancada mantém a decisão ativa ao lado do histórico e recolhe leituras 
  await rationale.locator('summary').click();
  assert.equal(await rationale.getByText(reply.recommendation,{exact:true}).isVisible(),true);
  assert.equal(await page.locator('.studio-chat-messages .studio-taste-card').count(),0);
- assert.equal(await page.getByRole('button',{name:'Mostrar detalhes da conversa',exact:true}).getAttribute('aria-expanded'),'false');
+ const context=page.locator('.studio-chat-context');
+ assert.equal(await page.locator('.studio-chat-meta').isVisible(),true,'os controles de contexto permanecem acessíveis na conversa');
+ assert.equal(await context.evaluate(element=>element.open),false,'o contexto permanece recolhido enquanto a decisão está ativa');
+ await context.locator(':scope > summary').click();assert.equal(await context.locator('.studio-context-title').isVisible(),true);await context.locator(':scope > summary').click();
  await decision.getByRole('button',{name:'Concordo',exact:true}).click();await waitForCalls(2);
  await page.getByText('Seguimos por essa direção.',{exact:true}).waitFor();
  assert.equal(await decision.count(),0);

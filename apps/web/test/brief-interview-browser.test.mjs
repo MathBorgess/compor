@@ -264,12 +264,13 @@ test('configurações e bancada de referências mantêm abas, seleção, chat e 
  const tabs=dialog.getByRole('navigation',{name:'Configurações',exact:true});
  async function assertViewport(width,height){
   const bounds=await dialog.boundingBox();
-  assert.ok(Math.abs(bounds.x)<=1&&Math.abs(bounds.y)<=1&&Math.abs(bounds.width-width)<=1&&Math.abs(bounds.height-height)<=1,'configurações preenchem o viewport');
+  const margin=height<=520?0:width>600?32:12;
+  assert.ok(bounds.x>=margin-1&&bounds.y>=margin-1&&bounds.x+bounds.width<=width-margin+1&&bounds.y+bounds.height<=height-margin+1,'configurações abrem como janela dentro do viewport');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth),'a página não rola na horizontal');
  }
  await assertViewport(1440,1000);
  await tabs.getByRole('button',{name:'Contexto',exact:true}).click();
- assert.equal(await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).isVisible(),true);
+ assert.equal(await dialog.getByRole('button',{name:'Fechar configurações',exact:true}).isVisible(),true);
  await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
  await tabs.getByRole('button',{name:'Referências',exact:true}).click();
  const content=dialog.locator('.reference-workbench-source'),returnAction=dialog.locator('.reference-workbench-return');
@@ -285,8 +286,8 @@ test('configurações e bancada de referências mantêm abas, seleção, chat e 
  const shortReturn=await returnAction.boundingBox();assert.ok(shortReturn.y+shortReturn.height<=400,'retorno continua no viewport baixo');
  const shortComposer=await composer.boundingBox();assert.ok(shortComposer.y>=0&&shortComposer.y+shortComposer.height<=400,'compositor continua no viewport baixo');
  await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
- const returnBounds=await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).boundingBox();
- assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'retorno permanece acessível em outra aba');
+ const returnBounds=await dialog.getByRole('button',{name:'Fechar configurações',exact:true}).boundingBox();
+ assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'fechar permanece acessível em outra aba');
  await closeSettings(page);await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
  assert.ok((await page.getByRole('dialog',{name:'Configurações deste post',exact:true}).boundingBox()).width<390,'diálogo de post mantém dimensão própria');
  assert.deepEqual(errors,[]);

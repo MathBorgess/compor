@@ -51,7 +51,7 @@ test('IA do Compor exige intenção nova após disponibilidade e recarga, sem en
     request.onsuccess=()=>{const db=request.result,q=db.transaction('states').objectStore('states').getAll();q.onsuccess=()=>{const saved=q.result.some(row=>row.state?.brief?.offer==='Uma aula de cerâmica');db.close();resolve(saved);};q.onerror=()=>{db.close();resolve(false);};};request.onerror=()=>resolve(false);
   }));
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'disponibilidade e edição do contexto não autorizam gastos');
-  await page.reload();await openProject();
+  await page.goto(new URL('/',page.url()).href);await openProject();
   await page.getByRole('region',{name:'Contexto do projeto',exact:true}).getByText('Uma aula de cerâmica',{exact:true}).waitFor();
   await page.waitForTimeout(1800);assert.equal(creative.length,0,'abrir projeto recuperado com contexto pronto não ativa geração');
   await openSettings(page,'IA');
@@ -67,15 +67,15 @@ test('IA do Compor exige intenção nova após disponibilidade e recarga, sem en
   const pendingId=crypto.randomUUID(),at=new Date().toISOString();
   const unknown=settleAdjustment(prepareAdjustment(stored.state,{requestId:pendingId,messageId:crypto.randomUUID(),instruction:'Pedido anterior ainda não confirmado',createdAt:at,eventId:crypto.randomUUID()}),{requestId:pendingId,status:'unknown',eventId:crypto.randomUUID()});
   async function replaceSaved(state){await page.evaluate(({scope,state})=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,tx=db.transaction('states','readwrite');tx.objectStore('states').put({scope,state});tx.oncomplete=()=>{db.close();localStorage.removeItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001');resolve();};};}),{scope:stored.scope,state});}
-  await replaceSaved(unknown);await page.reload();await openProject();
+  await replaceSaved(unknown);await page.goto(new URL('/',page.url()).href);await openProject();
   await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   await page.waitForTimeout(1800);assert.equal(creative.length,1,'a intenção na fonte nova não inicia imagens enquanto o chat anterior permanece unknown');
   const completed=settleAdjustment(unknown,{requestId:pendingId,status:'completed',eventId:crypto.randomUUID()});
-  await replaceSaved(completed);await page.reload();await openProject();
+  await replaceSaved(completed);await page.goto(new URL('/',page.url()).href);await openProject();
   await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   await page.waitForFunction(()=>Boolean(localStorage.getItem('compor-exploration-not-started:00000000-0000-4000-8000-000000000001')));
   assert.equal(creative.length,2,'o término confirmado do chat libera apenas uma nova ação explícita');
-  available=false;await page.reload();await openProject();await openSettings(page,'IA');
+  available=false;await page.goto(new URL('/',page.url()).href);await openProject();await openSettings(page,'IA');
   await page.getByText('Indisponível no momento',{exact:true}).waitFor();
   assert.equal(await page.getByRole('button',{name:'Escolher depois',exact:true}).isEnabled(),true);
   assert.equal(creative.length,2);assert.deepEqual(errors,[]);

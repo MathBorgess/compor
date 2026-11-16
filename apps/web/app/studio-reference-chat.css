@@ -2,7 +2,6 @@
 .studio-chat-panel[data-reference-workbench='true'] { position:relative;overflow:hidden; }
 .studio-chat-panel[data-reference-workbench='true'] .studio-chat-header { flex:none;min-height:40px;padding:6px 96px 6px 12px;align-items:center; }
 .studio-chat-panel[data-reference-workbench='true'] .studio-chat-header p { display:none; }
-.studio-chat-panel[data-reference-workbench='true'] .studio-chat-details-toggle { top:4px;right:12px;min-height:32px; }
 .studio-chat-panel[data-reference-workbench='true'] .studio-chat-meta { max-height:30%;overflow:auto; }
 .studio-chat-panel[data-reference-workbench='true'] .studio-chat-content { display:grid;grid-template-columns:minmax(0,1fr);flex:1;min-height:0; }
 .studio-chat-panel[data-reference-workbench='true'] .studio-chat-content:has(.studio-reference-question) { grid-template-columns:minmax(0,1.15fr) minmax(300px,1fr); }

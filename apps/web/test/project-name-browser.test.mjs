@@ -40,7 +40,7 @@ test('nome explícito não preenche o contexto nem vira título provisório',{ti
   const stored=()=>page.evaluate(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const db=q.result,r=db.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{db.close();resolve(r.result[0]?.state);};};}));
   for(let i=0;i<50&&!(await stored());i++)await page.waitForTimeout(50);
   assert.equal((await stored()).projectTitleProvisional,false);assert.equal((await stored()).projectIdea,'');
-  await page.reload();await page.getByRole('button',{name:`${title} Abrir projeto`,exact:true}).click();await offer.waitFor();assert.equal(await offer.inputValue(),'');
+  await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:`${title} Abrir projeto`,exact:true}).click();await offer.waitFor();assert.equal(await offer.inputValue(),'');
   await offer.fill('Mentoria de matemática para estudantes do ENEM');await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Voltar',exact:true}).click();assert.equal(await offer.inputValue(),'Mentoria de matemática para estudantes do ENEM');
   await offer.fill('');await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('button',{name:'Voltar',exact:true}).click();assert.equal(await offer.inputValue(),'');assert.deepEqual(errors,[]);
  }finally{await page.close();}

@@ -13,6 +13,10 @@
 .guided-heading p { margin-top:6px; }
 .guided-options { display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px; }
 .guided-options button[aria-pressed='true'] { border-color:var(--studio-cobalt);background:var(--studio-blue-tint); }
+/* Dentro de um modal, `.studio-modal button` pintava as opções de azul com texto branco; elas mantêm a aparência de cartão. */
+.studio-modal .guided-options button.studio-project-card { margin:0;padding:18px;border:1px solid var(--studio-line);border-radius:14px;background:white;color:var(--studio-ink);cursor:pointer; }
+.studio-modal .guided-options button.studio-project-card:hover { border-color:var(--studio-cobalt); }
+.studio-modal .guided-options button.studio-project-card[aria-pressed='true'] { border-color:var(--studio-cobalt);background:var(--studio-blue-tint); }
 .guided-posts,.guided-references { display:grid;gap:18px; }
 .guided-settings-tabs { margin:16px 0 24px; }
 .guided-settings-tabs [aria-pressed='true'] { background:var(--studio-cobalt);color:white; }
@@ -49,7 +53,6 @@
 .guided-workspace[data-chat='minimized'] .guided-chat-area,.guided-workspace[data-chat='minimized'] .guided-divider { display:none; }
 .studio-post-intro .studio-chat-header { padding:28px 24px; }
 .studio-post-intro .studio-chat-header h2 { font-size:24px; }
-.studio-post-intro .studio-chat-details-toggle { display:none; }
 .studio-post-intro .studio-chat-messages:empty { display:none; }
 .studio-post-intro form.studio-chat-composer { flex-direction:column;align-items:stretch;padding:24px;gap:18px; }
 .studio-post-intro .studio-chat-composer > img { display:none; }
@@ -75,13 +78,27 @@
 .guided-context-goal { display:grid;gap:7px;margin:16px 0;font-size:13px;font-weight:500; }
 .studio-modal:has(> .guided-settings-tabs) { position:fixed;inset:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:clamp(12px,2vw,28px);border:0;border-radius:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain; }
 .studio-modal:has(> .guided-settings-tabs)[open] { display:flex;flex-direction:column;gap:12px; }
+/* ADR 0055: Configurações do projeto abre como janela sobre o estúdio, que continua visível nas margens. */
+.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { inset:0;margin:auto;width:min(1180px,calc(100vw - 64px));max-width:none;height:min(880px,calc(100dvh - 64px));max-height:none;border:1px solid var(--studio-line,#dedfd9);border-radius:16px;box-shadow:0 24px 64px #1221433d; }
+.studio-modal > .studio-modal-close { position:sticky;top:0;z-index:4;float:right;display:grid;place-items:center;width:44px;height:44px;margin:-10px -10px 0 12px;padding:0;border:1px solid transparent;border-radius:10px;background:white;color:var(--studio-ink,#2c2d2f);cursor:pointer; }
+/* O X não ocupa linha própria: a margem anula sua altura e o gap da coluna, e o título começa no topo, na altura do X. */
+.studio-modal:has(> .guided-settings-tabs) > .studio-modal-close { order:-1;align-self:flex-end;flex:none;margin:0 0 calc(-44px - 12px); }
+.studio-modal > .studio-modal-close:hover { background:var(--studio-blue-tint,#eef2fc);color:var(--studio-cobalt,#123eab); }
+.studio-modal > .studio-modal-close:focus-visible { outline:2px solid var(--studio-cobalt,#123eab);outline-offset:2px; }
+.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) > h2 { padding-right:52px; }
+/* A bancada usa o creme da página na preparação; dentro da janela branca ela acompanha o fundo do modal. */
+.studio-modal.studio-modal-framed .guided-references.reference-workbench { background:white; }
+/* Marca e direção ocupa toda a largura da janela, como as demais abas. */
+.studio-modal.studio-modal-framed .persona-step,.studio-modal.studio-modal-framed .studio-direction { width:100%;max-width:none;margin:0;box-sizing:border-box; }
+.studio-modal.studio-modal-framed .studio-direction { padding-inline:0; }
+.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) > .guided-settings-tabs { padding-right:52px; }
 .studio-modal:has(> .guided-settings-tabs)>h2 { flex:none;color:var(--studio-cobalt);font-size:clamp(20px,2vw,26px); }
 .studio-modal:has(> .guided-settings-tabs)>.guided-settings-tabs { position:sticky;z-index:3;top:0;flex:none;flex-wrap:nowrap;gap:8px;min-height:48px;margin:0;padding:4px 0 10px;overflow-x:auto;overscroll-behavior-inline:contain;background:white;scroll-padding-inline:12px; }
 .studio-modal:has(> .guided-settings-tabs)>.guided-settings-tabs button { flex:none;margin:0;white-space:nowrap; }
 .studio-modal:has(> .guided-settings-tabs)>:not(h2):not(.guided-settings-tabs):not(.guided-references) { flex:none; }
 .studio-modal:has(> .guided-settings-tabs)>button:last-child { position:sticky;bottom:0;z-index:3;align-self:flex-start;margin-top:auto;background:var(--studio-cobalt);box-shadow:0 -8px 16px #fff; }
 .studio-modal:has(> .guided-references) { overflow:hidden; }
-.studio-modal:has(> .guided-references)>h2 { display:none; }
+.studio-modal:not(.studio-modal-framed):has(> .guided-references)>h2 { display:none; }
 .studio-modal>.guided-references { display:flex;flex:1;flex-direction:column;gap:clamp(8px,1.5vh,16px);min-height:0;max-height:none; }
 .studio-modal .guided-reference-content { overflow-y:auto;min-height:0;overscroll-behavior:contain;padding-right:6px; }
 .studio-modal .guided-references>header,.studio-modal .guided-references>footer { flex-shrink:0; }
@@ -117,6 +134,7 @@
 @media(max-width:600px) {
  .guided-references .reference-exploration { padding:.9rem; }
  .studio-modal:has(> .guided-settings-tabs) { padding:12px; }
+ .studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { width:calc(100vw - 24px);height:calc(100dvh - 24px);border-radius:12px; }
  .guided-references { gap:20px; }
  .guided-references .reference-selection-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
  .guided-reference-tabs button { flex:1 1 120px;min-height:44px;margin:0; }
@@ -126,3 +144,7 @@
 .guided-reference-post-chat { display:flex;min-width:0;min-height:0;width:100%; }
 .guided-reference-post-chat>.studio-chat-panel { width:100%;min-height:0; }
 .studio-modal .guided-reference-chat:has(.guided-reference-post-chat) { height:min(55dvh,620px);min-height:260px; }
+@media(max-height:520px) {
+ /* ADR 0055: em telas baixas a janela ocupa o viewport para manter conversa e retorno visíveis. */
+ .studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none; }
+}

@@ -66,7 +66,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   if(width===390){await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));const menu=await button('Expandir menu').boundingBox(),header=await page.locator('.studio-topbar').boundingBox();assert.ok(menu.y>=header.y+header.height-1,'menu permanece abaixo do cabeçalho durante a rolagem');await button('Expandir menu').click();await page.keyboard.press('Escape');}
   await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const r=q.result.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{q.result.close();resolve(r.result[0]?.state.workflow.pendingPost?.message==='Ensinar uma estratégia de porcentagem');};};}));
   assert.equal(Object.keys((await stored()).posts).length,0);
-  await page.reload();await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
+  await page.goto(new URL('/',page.url()).href);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
   await button('Continuar para criação').click();const chat=await openConversation(page);assert.equal(await chat.inputValue(),'');
   await button('Configurações deste post').click();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
   await button('Expandir menu').click();

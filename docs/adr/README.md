@@ -64,5 +64,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0052](0052-ia-inicial-e-jornada-unica-no-estudio.md) | decisão solicitada; implementação em validação | IA do Compor inicial sem geração automática, conversa minimizável e seleção única de referências |
 | [0053](0053-integracao-da-main-e-decisoes-de-usabilidade.md) | implementado localmente | Integração da main com nomes/exclusão, modais aprovados e histórico de decisões preservado |
 | [0054](0054-bancada-de-referencias-e-rascunho-v0.md) | decisão solicitada; implementação local em validação | Bancada com seleção e conversa, busca e geração distintas, última exploração preservada como v0 sem aprovação |
+| [0055](0055-configuracoes-do-projeto-em-janela-modal.md) | decisão solicitada; implementado localmente | Configurações do projeto como janela modal sobre o estúdio, com X para fechar, substituindo só a dimensão de viewport do ADR 0053 |
+| [0056](0056-navegacao-por-url-e-organizacao-do-estudio.md) | implementado no PR 54; verificação em andamento | URLs de projeto/post, retomada na página inicial, trilho de projetos e ações junto ao post |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

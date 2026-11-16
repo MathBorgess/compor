@@ -470,7 +470,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  const originalVersions=structuredClone(versions);
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('heading',{name:'Referências deste post',exact:true}).waitFor();
- await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();
+ await page.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await page.getByRole('dialog',{name:'Referências deste post',exact:true}).waitFor({state:'hidden'});
  assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Original preservado');
  assert.equal(await page.getByLabel(/^Legenda/).inputValue(),'Legenda preservada ao procurar referências.');
  await page.waitForFunction(()=>document.querySelector('img[alt="Arte integral da versão selecionada"]')?.naturalWidth===96);
@@ -482,7 +482,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  await page.getByRole('button',{name:'Usar como referência: Referência adicional'}).click();
  await page.getByText('Posso seguir com contraste?',{exact:true}).waitFor({timeout:15000});
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1);assert.equal(selected[0].action,'selected');
- await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+ await page.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await page.getByRole('dialog',{name:'Referências deste post',exact:true}).waitFor({state:'hidden'});await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('button',{name:'Selecionada: Referência adicional'}).waitFor();
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
  await page.locator('.reference-selection-tray').getByRole('button',{name:'Remover da seleção: Referência adicional',exact:true}).click();

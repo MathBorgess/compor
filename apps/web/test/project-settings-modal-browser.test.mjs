@@ -20,7 +20,7 @@ after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopA
 
 
 import {openSettings,closeSettings,openPostEditor,openConversation} from './guided-navigation.mjs';
-for(const width of [1440,390])test(`configurações usam modal amplo com abas em ${width}px`,{timeout:90000},async()=>{
+for(const width of [1440,390])test(`configurações usam janela modal com abas em ${width}px`,{timeout:90000},async()=>{
  const page=await browser.newPage({viewport:{width,height:950}});await page.context().addCookies([sessionCookie(origin)]);
  const errors=[],calls=[];page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/auth/session',route=>route.fulfill({json:{state:'connected',userId:alice}}));
@@ -36,12 +36,22 @@ for(const width of [1440,390])test(`configurações usam modal amplo com abas em
  try{
   await page.goto(origin);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await openSettings(page);
   assert.equal(await sections().getByRole('button').count(),6);assert.equal(await sections().getByRole('button',{name:'Contexto',exact:true}).getAttribute('aria-pressed'),'true');
-  const bounds=await panel.boundingBox();assert.ok(Math.abs(bounds.width-width)<=1&&Math.abs(bounds.height-950)<=1,'modal ocupa o viewport');
+  const bounds=await panel.boundingBox(),margin=width>600?32:12;
+  assert.ok(bounds.x>=margin-1&&bounds.y>=margin-1&&bounds.x+bounds.width<=width-margin+1&&bounds.y+bounds.height<=950-margin+1,'modal abre como janela, com o estúdio visível nas margens');
+  assert.ok(Math.abs(bounds.x-(width-bounds.x-bounds.width))<=1&&Math.abs(bounds.y-(950-bounds.y-bounds.height))<=1,'janela centralizada');
+  const close=await panel.getByRole('button',{name:'Fechar configurações',exact:true}).boundingBox();
+  assert.ok(close.x+close.width>bounds.x+bounds.width-80&&close.y<bounds.y+80,'fechar fica no canto superior direito');
+  assert.equal(await panel.getByRole('button',{name:/^Voltar ao/}).count(),0,'sem botão de retorno no rodapé');
   await panel.locator('summary').first().click();await panel.getByLabel('Oferta',{exact:true}).fill('Mentoria de matemática para o ENEM');
   await sections().getByRole('button',{name:'IA',exact:true}).click();await panel.getByRole('heading',{name:'Escolha sua IA',exact:true}).waitFor();
+  const optionColors=await panel.locator('button.studio-project-card').evaluateAll(cards=>cards.map(card=>[getComputedStyle(card).backgroundColor,getComputedStyle(card.querySelector('strong')).color]));
+  assert.ok(optionColors.length===2&&optionColors.every(([background,title])=>title!==background&&title!=='rgb(255, 255, 255)'),`opções de IA legíveis: ${JSON.stringify(optionColors)}`);
   assert.equal(await panel.getByRole('region',{name:'Contexto do projeto',exact:true}).count(),0);
   await sections().getByRole('button',{name:'Marca e direção',exact:true}).click();await panel.getByRole('heading',{name:'Uma direção com significado',exact:true}).waitFor();
+  const tabsWidth=(await sections().boundingBox()).width;
+  for(const selector of ['.persona-step','.studio-direction'])assert.ok(Math.abs((await panel.locator(selector).boundingBox()).width-tabsWidth)<=1,`${selector} ocupa a largura da janela`);
   await sections().getByRole('button',{name:'Referências',exact:true}).click();await panel.getByRole('heading',{name:'Referências do projeto',exact:true}).waitFor();
+  assert.equal(await panel.locator('.reference-workbench').evaluate(element=>getComputedStyle(element).backgroundColor),await panel.evaluate(element=>getComputedStyle(element).backgroundColor),'referências seguem o fundo da janela');
   await panel.getByRole('button',{name:'Enviar imagem',exact:true}).click();
   const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;return canvas.toDataURL('image/png').split(',')[1];});
   await panel.locator('input[type="file"]').setInputFiles({name:'Referencia da mentoria.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});

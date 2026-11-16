@@ -119,8 +119,6 @@ export default function StudioChat({
   useEffect(()=>{if(restoredDraft!==undefined&&!busy&&!pending)setMessageState(restoredDraft);},[restoredDraft]);
   function setMessage(value:string){setMessageState(value);if(onMessageDraftChange)onMessageDraftChange(value);else if(conversationId)ownedDraft.setValue(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
-  const [detailsVisible,setDetailsVisible]=useState(!referenceWorkbench);
-  useEffect(()=>{if(referenceWorkbench)setDetailsVisible(false);},[referenceWorkbench]);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
@@ -958,10 +956,9 @@ export default function StudioChat({
           <h2>{readOnly?"Histórico anterior do projeto":intro?"Vamos criar este post":referenceWorkbench?"Conversa sobre as referências":"Vamos compor juntos"}</h2>
           <p>{intro?"O contexto deste post está preparado. Descreva como você quer a arte.":referenceWorkbench?"Compare, escolha e conte o que quer aproveitar.":"Uma conversa, muitas possibilidades."}</p>
         </div>
-        <button type="button" className="studio-chat-details-toggle" aria-label={detailsVisible?'Ocultar detalhes da conversa':'Mostrar detalhes da conversa'} aria-expanded={detailsVisible} aria-controls={detailsId} onClick={()=>setDetailsVisible(value=>!value)}>Detalhes</button>
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
-      <div id={detailsId} className="studio-chat-meta" hidden={intro||!detailsVisible} onToggle={(event) => {
+      <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
         event.currentTarget.querySelectorAll<HTMLDetailsElement>(":scope > details").forEach((item) => { if (item !== opened) item.open = false; });
