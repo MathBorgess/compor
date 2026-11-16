@@ -61,6 +61,12 @@ O baseline `references-focused-final` e o snapshot posterior `references-pr58-ci
 
 A alteração passou novamente em lint, tipos, build, **30 testes de comportamento focados** (zero falhas/pulos) e no avaliador de performance completo, com cinco navegações. Os casos cobrem persona, critérios, configurações desktop/mobile, primeiro post, autorização, recuperação de imagem, concorrência e preservação de conversa. A comparação do analyzer deduplica outputs/partes e reduziu a atribuição comprimida de 355.864 para 354.304 bytes; esse valor é distinto dos 295.588 bytes do orçamento. A emissão posterior contém 14 outputs cliente, 12 com membership exato e dois de runtime/polyfill; não há output unsupported nem trigger ausente. Nenhum Server Action foi acrescentado e nenhum código de servidor entrou nos três componentes.
 
+## Entrada nas referências a partir da revisão/exportação
+
+A revisão do PR identificou um caminho que o teste anterior não exercitava: abrir Configurações → Referências enquanto a etapa era revisão/exportação fechava a janela, mas a galeria continuava fora da área renderizada. Dois testes Chromium reproduziram a falha, em 1440 e 390 px. A abertura de referências agora muda centralmente a etapa para o estúdio, mantendo o mesmo post e o alcance da seleção.
+
+Os dois testes passaram após a correção. Cobrem revisão e exportação restaurada, preservação da URL/post, título, seleção e rascunho da conversa, além da ausência de geração implícita. Logs locais: `reference-stage-red.log` e `reference-stage-green.log`. A alteração não modifica o carregamento dos módulos ou os limites de performance; o CI mede novamente a revisão final.
+
 ## Proveniência e artefatos
 
 Execução no Codex desktop, macOS/arm64, Node 24.16.0, Next 16.4.4, Chromium 157 e Lighthouse 13.6.0. A variante exata do modelo não foi exposta pelo ambiente. Base Git `f04ee7baa4183b8f2b9bd8ef73983094a3deac66`, branch local `codex/references-focused-profile`; os relatórios de ferramentas indicam essa base, enquanto o código verificado inclui o diff local.

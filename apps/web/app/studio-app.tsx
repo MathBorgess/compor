@@ -385,7 +385,7 @@ function ProjectStudio({
   const session = useStudioState({ userId, projectId: project.id, prepare:initialPrepare,projectIdea:initialObjective }), s=session.state;
   const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
   const [projectIntent, setProjectIntent] = useState(false);
-  const [settingsTab,setSettings]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);
+  const [settingsTab,setSettingsTab]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);
   const [referenceScope,setReferenceScope]=useState('references');
   const [referenceWaits,setReferenceWaits]=useState<Record<string,boolean>>({});
   const reportReferenceWait=useCallback((conversationId:string,waiting:boolean)=>setReferenceWaits(current=>current[conversationId]===waiting?current:{...current,[conversationId]:waiting}),[]);
@@ -656,6 +656,7 @@ function ProjectStudio({
     setNotice("");
     if(value !== "studio") setViewingArt(false);
   }
+  function setSettings(value:typeof settingsTab){if(value==='references')setStage('studio');setSettingsTab(value);}
   function closeSettings(){setSettings(null);setDrawer(null);}
   function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
   function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {

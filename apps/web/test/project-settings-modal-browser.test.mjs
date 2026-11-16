@@ -69,7 +69,22 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
   await button('Minimizar conversa').click();assert.equal(await button('Abrir conversa').getAttribute('aria-expanded'),'false');await button('Abrir conversa').click();assert.equal(await chat.inputValue(),'Rascunho não enviado do meu post');
   await openPostEditor(page);await page.getByLabel('Título',{exact:true}).fill('Uma estratégia de porcentagem');await button('Revisar post').click();await page.getByRole('heading',{name:'Revise seu post',exact:true}).waitFor();
   await openSettings(page,'Contexto');await closeSettings(page);await page.getByRole('heading',{name:'Revise seu post',exact:true}).waitFor();
-  await button('Pedir ajuste no estúdio').click();await openPostEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Uma estratégia de porcentagem');
+  const postUrl=page.url();
+  for(const stage of ['review','export']){
+   if(stage==='export'){
+    await page.evaluate(({alice,project})=>sessionStorage.setItem(`compor-studio-stage:${alice}:${project}`,'export'),{alice,project});
+    await page.reload();await page.getByRole('heading',{name:'Pronto para levar sua ideia adiante',exact:true}).waitFor();
+   }
+   await openSettings(page,'Referências');
+   await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor({timeout:5000});
+   assert.equal(await panel.isVisible(),false);assert.equal(page.url(),postUrl,'abrir referências preserva o post da URL');
+   await references.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
+   await references.getByText('Revisar seleção e alcance',{exact:true}).click();await references.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
+   await closeSettings(page);await openPostEditor(page);
+   assert.equal(page.url(),postUrl,'voltar mantém o mesmo post');
+   assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Uma estratégia de porcentagem');
+   assert.equal(await (await openConversation(page)).inputValue(),'Rascunho não enviado do meu post');
+  }
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(calls.some(call=>call.method==='POST'&&call.path!=='/api/projects'),false);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });
