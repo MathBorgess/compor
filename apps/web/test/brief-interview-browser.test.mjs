@@ -262,8 +262,8 @@ test('referências usam documento com rolagem natural e conversa sob demanda em 
  const {page,origin,errors}=await app(t);await openProject(page,origin);
  for(const height of [500,400]){
   await page.setViewportSize({width:390,height});
-  assert.equal(await page.getByRole('dialog').count(),0);
-  assert.equal(await activeChat(page).count(),0,'a galeria não reserva área para chat');
+  assert.equal(await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).count(),1,'ADR 0059: referências da aba ficam na janela de configurações');
+  assert.equal(await page.locator('.reference-step .studio-chat-panel:visible').count(),0,'a galeria não reserva área para chat');
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
   await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
   const composer=page.locator('.reference-workbench-conversation .studio-chat-composer');await composer.scrollIntoViewIfNeeded();
