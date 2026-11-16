@@ -35,8 +35,6 @@
 .compor-studio[data-chat-presentation='sidebar'] .studio-chat-header h2 { max-width: none; white-space: normal; font-size: 15px; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-chat-header p { display: block; font-size: 12px; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-collapse,
-.compor-studio[data-chat-presentation='sidebar'] .studio-chat-details-toggle { top: 64px; min-height: 44px; }
-.compor-studio[data-chat-presentation='sidebar'] .studio-chat-details-toggle { left: 16px; right: auto; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-chat-panel { overflow-y: auto; overscroll-behavior: contain; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-chat-meta { flex: 0 1 auto; min-height: 0; max-height: 35%; overflow: auto; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-chat-messages { overscroll-behavior: contain; }

@@ -4,7 +4,7 @@ import './reference-workbench.css';
 type Props={
   projectWide:boolean;onScope?:(projectWide:boolean)=>void;
   selection:ReactNode;search:ReactNode;upload:ReactNode;proposals:ReactNode;conversation:ReactNode;
-  onBack?:()=>void;onContinue:()=>void;continueLabel:string;continueDisabled?:boolean;
+  onBack?:()=>void;onContinue?:()=>void;continueLabel?:string;continueDisabled?:boolean;
   onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;
   onPauseProposals?:()=>void;proposalStatus?:string;
 };
@@ -15,7 +15,8 @@ export default function ReferencePanel({projectWide,onScope,selection,search,upl
     <header className="reference-workbench-heading">
       <div><h2>Referências {projectWide?'do projeto':'deste post'}</h2><p>{projectWide?'Compartilhadas com todos os posts.':'Combine referências do projeto e deste post.'} Referências são opcionais.</p></div>
       {onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}
-      <div className="reference-workbench-return">{onBack&&<button type="button" className="studio-button-secondary" onClick={onBack}>Voltar</button>}<button type="button" className="studio-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button></div>
+      {/* Nos modais o X fecha; o retorno próprio só existe na preparação do projeto (ADR 0055). */}
+      {(onBack||onContinue)&&<div className="reference-workbench-return">{onBack&&<button type="button" className="studio-button-secondary" onClick={onBack}>Voltar</button>}{onContinue&&<button type="button" className="studio-button" disabled={continueDisabled} onClick={onContinue}>{continueLabel}</button>}</div>}
     </header>
     <section className="reference-workbench-explore" aria-label="Explorar caminhos visuais">
       <div className="reference-workbench-toolbar">

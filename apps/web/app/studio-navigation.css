@@ -1,7 +1,18 @@
 .studio-navigation-shell { width:64px;flex:0 0 64px;border-right:1px solid var(--studio-line);background:var(--studio-cream); }
-.studio-navigation-shell[data-expanded='true'] { width:244px;flex-basis:244px; }
-.studio-navigation { position:sticky;top:var(--studio-bar);max-height:calc(100dvh - var(--studio-bar));overflow-x:hidden;overflow-y:auto;padding:10px 9px;display:grid;gap:16px;align-content:start; }
+/* Aberto, cabe o rótulo mais longo e a linha de renomear com o ✓ e margem à direita. */
+.studio-navigation-shell[data-expanded='true'] { width:296px;flex-basis:296px; }
+.studio-navigation { position:sticky;top:var(--studio-bar);max-height:calc(100dvh - var(--studio-bar));overflow-x:hidden;overflow-y:auto;padding:10px 9px;display:grid;grid-template-columns:minmax(0,1fr);gap:16px;align-content:start; }
 .studio-navigation-actions { display:grid;gap:8px; }
+/* Projeto atual (ADR 0056): mesma linha nos dois estados; o lápis fica na coluna de ícones e o nome só aparece aberto. */
+.studio-navigation button.studio-navigation-project { height:44px;min-height:44px;padding-block:0; }
+.studio-navigation .studio-navigation-project span { display:flex;flex-direction:column;min-width:0; }
+.studio-navigation .studio-navigation-project small { color:var(--studio-muted);font-size:11px;line-height:1.2; }
+.studio-navigation .studio-navigation-project strong { overflow:hidden;font-size:15px;line-height:1.25;text-overflow:ellipsis;white-space:nowrap; }
+.studio-navigation form.studio-navigation-project { display:flex;align-items:center;gap:12px;min-width:0;min-height:44px;padding:0 4px 0 11px; }
+.studio-navigation form.studio-navigation-project > svg { width:22px;height:22px;flex:0 0 22px;fill:none;stroke:var(--studio-cobalt);stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round; }
+.studio-navigation form.studio-navigation-project input { flex:1;min-width:0;min-height:40px;box-sizing:border-box;padding:6px 10px;border:1px solid var(--studio-line);border-radius:8px;background:white;color:var(--studio-ink);font:inherit; }
+.studio-navigation form.studio-navigation-project .studio-rename-save { flex:none;justify-content:center;width:40px;min-height:40px;padding:0;border-color:var(--studio-cobalt);background:var(--studio-cobalt);color:white; }
+.studio-navigation form.studio-navigation-project .studio-rename-save:disabled { opacity:.45; }
 .studio-navigation button { display:flex;align-items:center;gap:12px;width:100%;min-height:44px;padding:10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--studio-ink);font:inherit;text-align:left;cursor:pointer; }
 .studio-navigation button svg { width:22px;height:22px;flex:0 0 22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round; }
 .studio-navigation button span { line-height:1.3; }
@@ -13,5 +24,5 @@
 @media(max-width:800px) {
  .studio-navigation-shell,.studio-navigation-shell[data-expanded='true'] { width:56px;flex-basis:56px; }
  .studio-navigation { padding:6px 5px; }
- .studio-navigation-shell[data-expanded='true'] .studio-navigation { z-index:20;width:min(244px,85vw);height:calc(100dvh - var(--studio-bar));overflow-y:auto;background:var(--studio-cream);border-right:1px solid var(--studio-line);box-shadow:8px 0 24px #2c2d2f18; }
+ .studio-navigation-shell[data-expanded='true'] .studio-navigation { z-index:20;width:min(296px,85vw);box-sizing:border-box;height:calc(100dvh - var(--studio-bar));overflow-y:auto;background:var(--studio-cream);border-right:1px solid var(--studio-line);box-shadow:8px 0 24px #2c2d2f18; }
 }

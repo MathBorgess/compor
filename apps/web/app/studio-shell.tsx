@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useId, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { Project } from "./studio-ui-types";
 import AccountMenu from "./account-menu";
 import "./studio-shell.css";
@@ -16,10 +16,8 @@ export type StudioShellProps = {
   stage?: StudioStage;
   projectId?: string;
   projectTitle?: string;
-  pieceSubtitle?: string;
   projects?: Project[];
   onOpenProject?: (project: Project) => void;
-  onRenameProject?: (title: string) => boolean | void | Promise<boolean | void>;
   onNavigate?: (stage: StudioStage) => void;
   onTabChange?: (tab: StudioTab) => void;
   onNewProject?: () => void;
@@ -30,7 +28,6 @@ export type StudioShellProps = {
   localAccount?: boolean;
   onSignOut?: () => void | Promise<void>;
   statusText?: string;
-  versionStatus?: string;
   children?: ReactNode;
   canvas?: ReactNode;
   chat?: ReactNode;
@@ -62,6 +59,58 @@ const stageTitles: Partial<Record<StudioStage, string>> = {
   export: "Exportar arte e legenda",
 };
 
+const connectives = new Set(["a", "o", "as", "os", "e", "de", "da", "do", "das", "dos", "em", "na", "no", "nas", "nos", "para", "por", "com", "um", "uma"]);
+/** Up to two initials from the project title, skipping connectives: "Campanha de teste" → "CT", "Mentoria Veloz — Campanha 1" → "MV". */
+export function projectInitials(title: string) {
+  const all = title.normalize("NFC").split(/[^\p{L}\p{N}]+/u).filter(Boolean);
+  const meaningful = all.filter(word => !connectives.has(word.toLocaleLowerCase("pt-BR")));
+  const words = meaningful.length ? meaningful : all;
+  const letters = (words.length > 1 ? words.slice(0, 2).map(word => [...word][0]) : [...(words[0] ?? "?")].slice(0, 2)).join("");
+  return letters.toLocaleUpperCase("pt-BR") || "?";
+}
+
+/** Option C (ADR 0056): every project one click away; the open one stays marked. */
+function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllProjects }: {
+  projects: Project[];
+  projectId: string;
+  onOpenProject?: (project: Project) => void;
+  onNewProject?: () => void;
+  onAllProjects?: () => void;
+}) {
+  return (
+    <nav className="studio-project-rail" aria-label="Projetos">
+      <div className="studio-project-rail-inner">
+      {onAllProjects ? (
+        <button type="button" className="studio-rail-home" aria-label="Todos os projetos" title="Todos os projetos" onClick={onAllProjects}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 3h7v7H3z M14 3h7v7h-7z M3 14h7v7H3z M14 14h7v7h-7z" /></svg>
+        </button>
+      ) : null}
+      <ul>
+        {projects.map(project => (
+          <li key={project.id}>
+            <button
+              type="button"
+              className="studio-rail-project"
+              aria-label={project.title}
+              title={project.title}
+              aria-current={project.id === projectId ? "page" : undefined}
+              onClick={() => { if (project.id !== projectId) onOpenProject?.(project); }}
+            >
+              {projectInitials(project.title)}
+            </button>
+          </li>
+        ))}
+      </ul>
+      {onNewProject ? (
+        <button type="button" className="studio-rail-new" aria-label="Novo projeto" title="Novo projeto" onClick={onNewProject}>
+          <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 5v14M5 12h14" /></svg>
+        </button>
+      ) : null}
+      </div>
+    </nav>
+  );
+}
+
 function layoutKey(projectId: string) {
   return projectId ? `compor-studio-chat-layout:v2:${projectId}` : "";
 }
@@ -70,10 +119,8 @@ export default function StudioShell({
   stage = "projects",
   projectId = "",
   projectTitle = "",
-  pieceSubtitle = "",
   projects = [],
   onOpenProject,
-  onRenameProject,
   onNavigate,
   onTabChange,
   onNewProject,
@@ -84,7 +131,6 @@ export default function StudioShell({
   localAccount = false,
   onSignOut,
   statusText = "",
-  versionStatus = "Rascunho",
   children,
   canvas,
   chat,
@@ -105,9 +151,6 @@ export default function StudioShell({
   onLayoutChange,
   guided = false,
 }: StudioShellProps) {
-  const renameId = useId();
-  const menuRef = useRef<HTMLDivElement>(null);
-  const menuTrigger = useRef<HTMLButtonElement>(null);
   const drawerRef = useRef<HTMLDivElement>(null);
   const basesTrigger = useRef<HTMLButtonElement>(null);
   const marcaTrigger = useRef<HTMLButtonElement>(null);
@@ -177,8 +220,6 @@ export default function StudioShell({
   const showChrome = !guided && (bases != null || marca != null);
   const showChat = Boolean(chat) && isStudio;
   const referenceWorkspace = showChat && conversationFocus;
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [renameValue, setRenameValue] = useState(projectTitle);
   const [barHeight, setBarHeight] = useState(64);
   const [internalDrawer, setInternalDrawer] = useState<StudioDrawer>(null);
   const [persistedCollapsed, setPersistedCollapsed] = useState(true);
@@ -204,10 +245,6 @@ export default function StudioShell({
     return()=>observer.disconnect();
   },[showChat,projectId]);
   const displayedChatHeight=currentChatHeight;
-  const barTitle = projectTitle || stageTitles[stage] || "Estúdio";
-  const canOpenMenu = Boolean(
-    projectTitle || onNewProject || onRenameProject || onNavigate || projects.length,
-  );
 
   function persistCollapse(collapsed: boolean) {
     setPersistedCollapsed(collapsed);
@@ -267,9 +304,6 @@ export default function StudioShell({
   }
 
   useEffect(() => {
-    setRenameValue(projectTitle);
-  }, [projectTitle]);
-  useEffect(() => {
     if (layoutC && chatMessageCount > lastMessageCount.current) setUnread(true);
     if (!layoutC) setUnread(false);
     lastMessageCount.current = chatMessageCount;
@@ -296,25 +330,12 @@ export default function StudioShell({
     return () => observer.disconnect();
   }, []);
   useEffect(() => {
-    if (!menuOpen) return;
-    function onPointerDown(event: PointerEvent) {
-      if (!(event.target instanceof Node) || !menuRef.current?.contains(event.target)) setMenuOpen(false);
-    }
-    document.addEventListener("pointerdown", onPointerDown);
-    return () => document.removeEventListener("pointerdown", onPointerDown);
-  }, [menuOpen]);
-  useEffect(() => {
     if (!activeDrawer) return;
     drawerRef.current?.focus();
   }, [activeDrawer]);
   useEffect(() => {
     function onKey(event: KeyboardEvent) {
       if (event.key !== "Escape" || document.querySelector("dialog[open]")) return;
-      if (menuOpen) {
-        setMenuOpen(false);
-        menuTrigger.current?.focus();
-        return;
-      }
       if (activeDrawer) {
         updateDrawer(null);
         return;
@@ -328,7 +349,7 @@ export default function StudioShell({
     }
     document.addEventListener("keydown", onKey);
     return () => document.removeEventListener("keydown", onKey);
-  }, [menuOpen, activeDrawer, viewingArt, projectId, showChat, layoutC, referenceWorkspace, compactReferences]);
+  }, [activeDrawer, viewingArt, projectId, showChat, layoutC, referenceWorkspace, compactReferences]);
 
   const fallbackActions =
     headerActions || (!guided &&
@@ -357,115 +378,33 @@ export default function StudioShell({
       <a className="studio-skip" href={referenceWorkspace && compactReferences && !layoutC ? "#studio-floating-chat" : "#studio-main"}>
         Ir para o conteúdo
       </a>
+      {/* Barra fixa (ADR 0056): só a marca e a conta. Projetos ficam no trilho; o projeto atual, no menu lateral. */}
       <header className="studio-topbar" ref={barRef}>
         <div className="studio-topbar-start">
-          <div className="studio-brand">
+          {/* A marca leva à página inicial; dentro de um projeto, pelo onNavigate, que preserva o projeto antes de sair. */}
+          <a
+            className="studio-brand"
+            href="/"
+            aria-label="Compor — página inicial"
+            title="Página inicial"
+            onClick={(event) => {
+              if (!onNavigate || event.metaKey || event.ctrlKey || event.shiftKey || event.button !== 0) return;
+              event.preventDefault();
+              onNavigate("projects");
+            }}
+          >
             <span className="studio-logo-mark">
               <img src={`${assets}brand-symbol.svg`} alt="" width="22" height="22" />
             </span>
             <img
               className="studio-wordmark"
               src={`${assets}brand-wordmark.svg`}
-              alt="Compor"
+              alt=""
               width="84"
               height="17"
             />
-          </div>
-          <div className="studio-project-menu" ref={menuRef}>
-            <div className="studio-project-heading">
-              <h1>
-                {canOpenMenu ? (
-                  <button
-                    ref={menuTrigger}
-                    type="button"
-                    className="studio-project-trigger"
-                    title={barTitle}
-                    aria-expanded={menuOpen}
-                    aria-haspopup="dialog"
-                    aria-controls="studio-project-menu"
-                    onClick={() => setMenuOpen((open) => !open)}
-                  >
-                    <span className="studio-truncate">{barTitle}</span>
-                    <span aria-hidden="true">▾</span>
-                  </button>
-                ) : (
-                  barTitle
-                )}
-              </h1>
-              {versionStatus && projectTitle ? (
-                <span className="studio-badge">{versionStatus}</span>
-              ) : null}
-            </div>
-            {pieceSubtitle ? <p className="studio-project-subtitle" title={pieceSubtitle}>{pieceSubtitle}</p> : null}
-            {menuOpen ? (
-              <div id="studio-project-menu" role="dialog" aria-label="Projetos" className="studio-menu-panel">
-                {onNavigate ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onNavigate("projects");
-                    }}
-                  >
-                    Todos os projetos
-                  </button>
-                ) : null}
-                {projects.length > 0 ? (
-                  <div className="studio-menu-projects">
-                    <p>Trocar de projeto</p>
-                    {projects.map((project) => (
-                      <button
-                        type="button"
-                        key={project.id}
-                        title={project.title}
-                        aria-current={project.id === projectId ? "true" : undefined}
-                        onClick={() => {
-                          setMenuOpen(false);
-                          onOpenProject?.(project);
-                        }}
-                      >
-                        {project.title}
-                      </button>
-                    ))}
-                  </div>
-                ) : null}
-                {onNewProject ? (
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setMenuOpen(false);
-                      onNewProject();
-                    }}
-                  >
-                    Novo projeto
-                  </button>
-                ) : null}
-                {onRenameProject && projectTitle ? (
-                  <form
-                    onSubmit={(event) => {
-                      event.preventDefault();
-                      const title = renameValue.trim();
-                      if (!title) return;
-                      Promise.resolve(onRenameProject(title)).then((saved) => {
-                        if (saved !== false) setMenuOpen(false);
-                      });
-                    }}
-                  >
-                    <label htmlFor={renameId}>
-                      Renomear
-                      <input
-                        id={renameId}
-                        value={renameValue}
-                        maxLength={200}
-                        onChange={(event) => setRenameValue(event.target.value)}
-                      />
-                    </label>
-                    <button type="submit">Salvar nome</button>
-                  </form>
-                ) : null}
-              </div>
-            ) : null}
-          </div>
+          </a>
+          <h1 className="studio-visually-hidden">{projectTitle || stageTitles[stage] || "Estúdio"}</h1>
         </div>
         <div className="studio-topbar-end">
           {fallbackActions}
@@ -518,6 +457,15 @@ export default function StudioShell({
         </nav>
       ) : null}
       <div className="studio-frame">
+      {guided && projectId ? (
+        <ProjectRail
+          projects={projects}
+          projectId={projectId}
+          onOpenProject={onOpenProject}
+          onNewProject={onNewProject}
+          onAllProjects={onNavigate ? () => onNavigate("projects") : undefined}
+        />
+      ) : null}
       {sidebar}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         <main id="studio-main" tabIndex={-1} className={isStudio ? "studio-canvas-column" : "studio-page-content"} hidden={referenceWorkspace && compactReferences && !layoutC}>
