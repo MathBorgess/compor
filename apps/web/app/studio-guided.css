@@ -88,6 +88,10 @@
 .studio-modal.studio-modal-framed:has(> .guided-settings-tabs) > h2 { padding-right:52px; }
 /* A bancada usa o creme da página na preparação; dentro da janela branca ela acompanha o fundo do modal. */
 .studio-modal.studio-modal-framed .guided-references.reference-workbench { background:white; }
+/* ADR 0059: a página de referências aberta pela aba do modal ocupa a largura da janela, sem a margem da página dedicada. */
+.studio-modal.studio-modal-framed > .reference-step { width:100%;margin:0;padding:8px 0 0; }
+.studio-modal.studio-modal-framed > .reference-step .reference-workbench-heading { margin-bottom:24px; }
+.studio-modal.studio-modal-framed > .reference-step .reference-workbench-heading h1 { font-size:22px; }
 /* Marca e direção ocupa toda a largura da janela, como as demais abas. */
 .studio-modal.studio-modal-framed .persona-step,.studio-modal.studio-modal-framed .studio-direction { width:100%;max-width:none;margin:0;box-sizing:border-box; }
 .studio-modal.studio-modal-framed .studio-direction { padding-inline:0; }
