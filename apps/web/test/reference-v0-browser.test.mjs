@@ -70,25 +70,25 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true}).fill('Profissionais de criação');await page.getByRole('button',{name:'Continuar para a IA',exact:true}).click();
  await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await page.getByRole('button',{name:'Continuar para referências',exact:true}).click();
  assert.equal(generation.length,0,'entering references does not generate');
- if(entry==='ready-chat'){await page.getByRole('button',{name:'Ir para os posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();}
- await page.getByRole('button',{name:/^Enviar imag(?:em|ens)$/}).click();await page.locator('input[type="file"]').setInputFiles({name:'referencia-antes-da-geracao.png',mimeType:'image/png',buffer:referencePixels});
+ if(entry==='ready-chat'){await page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();}
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');await page.locator('.reference-step input[type="file"]').setInputFiles({name:'referencia-antes-da-geracao.png',mimeType:'image/png',buffer:referencePixels});
  await waitStored(page,value=>value.state?.references.length===1&&value.state.adjustments.every(item=>['completed','failed'].includes(item.status)));
- await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await waitStored(page,value=>value.state?.workflow.latestExplorations?.references?.ordinal===103);
  assert.equal(generation.length,3);await page.getByRole('button',{name:'Pausar exploração',exact:true}).click();
- await page.getByRole('button',{name:'Buscar referências',exact:true}).first().click();await page.getByRole('button',{name:'Permitir nesta sessão',exact:true}).click();
- await page.getByRole('button',{name:'Usar como referência: Editorial acolhedor',exact:true}).click();await page.getByRole('button',{name:'Selecionada: Editorial acolhedor',exact:true}).waitFor();
- await page.getByRole('button',{name:/^Enviar imag(?:em|ens)$/}).click();await page.locator('input[type="file"]').setInputFiles({name:'minha-referencia.png',mimeType:'image/png',buffer:referencePixels});
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');await page.getByRole('button',{name:'Permitir nesta sessão',exact:true}).click();
+ await page.getByRole('checkbox',{name:'Escolher referência: Editorial acolhedor',exact:true}).click();await page.getByRole('checkbox',{name:'Escolher referência: Editorial acolhedor',checked:true,exact:true}).waitFor();
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');await page.locator('.reference-step input[type="file"]').setInputFiles({name:'minha-referencia.png',mimeType:'image/png',buffer:referencePixels});
  await waitStored(page,value=>value.state?.references.length===3&&value.state.adjustments.every(item=>['completed','failed'].includes(item.status)));
  const workspaceId=(await stored(page)).state.workflow.referencePieceId;
  if(entry==='button'){
-  await page.getByRole('button',{name:'Ir para os posts do projeto',exact:true}).click();
-  await page.getByRole('button',{name:'Criar novo post',exact:true}).waitFor();
+  await page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/}).click();
+  await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor();
   const beforeCreation=await stored(page);
   assert.equal(posts.length,0,'references do not register a post');assert.equal(beforeCreation.bytes,null,'the internal reference workspace never becomes the post v0');
   assert.equal(beforeCreation.state.drafts.filter(item=>item.pieceId!==workspaceId).length,0);assert.equal(beforeCreation.state.workflow.referenceHandoff,'references');
-  await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  }else{
+  await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
   await page.locator('.guided-reference-chat').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Crie outro post');await page.locator('.guided-reference-chat').getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor();
   for(let i=0;i<100&&!actionResults.length;i++)await page.waitForTimeout(40);
@@ -106,9 +106,9 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await page.reload();await page.getByAltText('Arte integral da versão selecionada',{exact:true}).waitFor();assert.deepEqual((await stored(page)).bytes,Array.from(generatedPixels));assert.equal(generation.length,3,'transition and reload never call image generation');
  // The post conversation is mounted only once while its references are open.
  const message=page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true});await message.fill('Texto preservado do post');
- await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();const modal=page.getByRole('dialog',{name:'Referências deste post',exact:true});await modal.waitFor();
+ await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();const modal=page.locator('.reference-step');await modal.waitFor();await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
  assert.equal(await page.getByRole('textbox',{name:'Sua mensagem',exact:true}).count(),1);const modalMessage=modal.getByRole('textbox',{name:'Sua mensagem',exact:true});assert.equal(await modalMessage.inputValue(),'Texto preservado do post');await modalMessage.fill('Texto atualizado nas referências');
- await page.keyboard.press('Escape');await modal.waitFor({state:'hidden'});await page.waitForFunction(()=>document.querySelector('.guided-conversation:not([hidden]) textarea')?.value==='Texto atualizado nas referências');assert.equal(await message.inputValue(),'Texto atualizado nas referências');assert.deepEqual((await stored(page)).bytes,Array.from(generatedPixels));
+ await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await modal.waitFor({state:'hidden'});await page.waitForFunction(()=>document.querySelector('.guided-conversation:not([hidden]) textarea')?.value==='Texto atualizado nas referências');assert.equal(await message.inputValue(),'Texto atualizado nas referências');assert.deepEqual((await stored(page)).bytes,Array.from(generatedPixels));
  // An agent request prepares a post without registering or inventing its identity.
  const actionsBefore=actionResults.length,agentPieceId=id(nextAgent);
  await message.fill('Crie outro post');await page.locator('.guided-conversation:not([hidden])').getByRole('button',{name:'Enviar →',exact:true}).click();
@@ -121,7 +121,7 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await waitStored(page,value=>value.state?.selection?.pieceId===agentPieceId&&value.state.workflow.pendingPost===null);assert.equal(posts.length,2);assert.equal(generation.length,3);
  // An in-flight confirmation locks conflicting navigation; B later starts independently.
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
- const settings=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});await settings.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();await settings.getByRole('button',{name:'Fechar configurações',exact:true}).click();await settings.waitFor({state:'hidden'});
+ const settings=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});await settings.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();await page.getByRole('button',{name:'Voltar aos posts',exact:true}).click();await settings.waitFor({state:'hidden'});
  await waitStored(page,value=>value.state?.workflow.referenceHandoff==='references');
  await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await page.getByRole('textbox',{name:'Nome do post',exact:true}).fill('Post A');await page.getByRole('button',{name:'Continuar para criação',exact:true}).click();
  for(let i=0;i<100&&!heldCreation;i++)await page.waitForTimeout(40);assert.ok(heldCreation);

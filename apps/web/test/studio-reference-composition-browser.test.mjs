@@ -83,7 +83,7 @@ async function fixture(t,viewport) {
 const options={skip:!browserPath||!existsSync(browserPath),timeout:45000};
 async function selectAndRead(page,calls){
   await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
-  for(const title of ['Terracota e textura','Forma e calma']){await page.getByRole('button',{name:`Usar como referência: ${title}`}).click();await page.getByRole('button',{name:`Selecionada: ${title}`}).waitFor();}
+  for(const title of ['Terracota e textura','Forma e calma']){await page.getByRole('checkbox',{name:`Escolher referência: ${title}`}).click();await page.getByRole('checkbox',{name:`Escolher referência: ${title}`,checked:true}).waitFor();}
   await page.getByRole('button',{name:'Conectar IA de teste'}).click();
   await page.waitForFunction(()=>document.querySelector('.studio-taste-card'),null,{timeout:12000});
   assert.equal(calls.filter(call=>call.op==='reference_selection').length,1);

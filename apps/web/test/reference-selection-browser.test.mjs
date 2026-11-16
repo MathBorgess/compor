@@ -25,8 +25,8 @@ function Screen(){
  const remove=async match=>{await new Promise(resolve=>setTimeout(resolve,50));update(current.current.filter(item=>!match(item)));};
  return <main>
   <ReferenceSelectionTray items={usingShared?[...references,shared]:references} limit={20} onRemove={id=>id===shared.id?setUsingShared(false):remove(item=>item.id===id)} availableShared={usingShared?[]:[shared]} onUseShared={()=>setUsingShared(true)}/>
-  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica" selectedOrigins={references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onContinue={()=>{}}/>
-  <ExplorationGallery projectId="${project}" completed={0} selectedIds={references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)}/>
+  <ReferenceExploration userId="${user}" projectId="${project}" idea="Oficina de cerâmica" selectedOrigins={references.flatMap(item=>item.source?.originUrl?[item.source.originUrl]:[])} onUseReference={(reference,file)=>add({originUrl:reference.originUrl,board:reference.board,title:reference.title},file)} onRemoveReference={originUrl=>remove(item=>item.source?.originUrl===originUrl)} onContinue={()=>{}}/>
+  <ExplorationGallery projectId="${project}" completed={0} selectedIds={references.flatMap(item=>item.source?.kind==='generated'?[item.source.imageId]:[])} onRemoveReference={imageId=>remove(item=>item.source?.imageId===imageId)} onUseReference={(imageId,file,ordinal)=>add({kind:'generated',projectId:'${project}',imageId,ordinal},file)}/>
  </main>;
 }
 createRoot(document.getElementById('root')).render(<Screen/>);`;
@@ -52,7 +52,7 @@ async function fixture(t,viewport={width:1280,height:900}) {
   });
   await page.goto(origin);
   await page.getByRole('button',{name:'Permitir nesta sessão'}).click();
-  await page.getByRole('button',{name:'Usar como referência: Terracota e textura'}).waitFor();
+  await page.getByRole('checkbox',{name:'Escolher referência: Terracota e textura'}).waitFor();
   return {page};
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
@@ -65,33 +65,34 @@ test('origem, seleção, quantidade e remoção ficam visíveis e o foco não se
  assert.match(await tray.textContent(),/sem aprovar a imagem/);
  assert.equal(await page.locator('.reference-results .reference-source',{hasText:'Pinterest · externa'}).count(),2);
  assert.equal(await page.locator('.studio-exploration-gallery .reference-source',{hasText:'Gerada pelo Compor'}).count(),1);
- // Keyboard selection moves focus to the single removal area.
- await page.getByRole('button',{name:'Usar como referência: Terracota e textura'}).focus();await page.keyboard.press('Enter');
+ // Amplification is independent; keyboard selection keeps focus on the checkbox.
+ await page.getByRole('button',{name:'Ampliar referência: Terracota e textura'}).click();await page.getByRole('dialog',{name:'Terracota e textura'}).waitFor();assert.match(await tray.textContent(),/0 de 20 referências/);await page.keyboard.press('Escape');
+ await page.getByRole('checkbox',{name:'Escolher referência: Terracota e textura'}).focus();await page.keyboard.press('Space');
  await tray.getByRole('button',{name:'Remover da seleção: Terracota e textura'}).waitFor();
- await page.waitForFunction(()=>document.activeElement?.id==='reference-selection-title');
+ await page.waitForFunction(()=>document.activeElement?.getAttribute('aria-label')==='Escolher referência: Terracota e textura');
  assert.equal(await page.locator('.reference-results .reference-remove').count(),0);
  assert.match(await tray.textContent(),/1 de 20 referências/);
  assert.match(await tray.locator('li').first().textContent(),/Pinterest · externa.*Terracota e textura/);
- assert.equal(await page.getByRole('button',{name:'Selecionada: Terracota e textura'}).getAttribute('aria-pressed'),'true');
+ assert.equal(await page.getByRole('checkbox',{name:'Escolher referência: Terracota e textura',checked:true}).isChecked(),true);
  // A generated image is labeled as generated in the selection.
- await page.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).click();
+ await page.getByRole('checkbox',{name:'Escolher imagem 3'}).click();
  await tray.getByText('2',{exact:true}).waitFor();
  assert.match(await tray.locator('li').nth(1).textContent(),/Gerada pelo Compor.*Imagem 3/);
  // Removing from the tray restores availability in the source card.
  await tray.getByRole('button',{name:'Remover da seleção: Terracota e textura'}).click();
- await page.getByRole('button',{name:'Usar como referência: Terracota e textura'}).waitFor();
+ await page.getByRole('checkbox',{name:'Escolher referência: Terracota e textura',checked:false}).waitFor();
  assert.match(await tray.textContent(),/1 de 20 referências/);
  // Removing the last tray item moves focus to the tray heading.
  await tray.getByRole('button',{name:'Remover da seleção: Imagem 3'}).click();
  await tray.getByText('0',{exact:true}).waitFor();
  await page.waitForFunction(()=>document.activeElement?.id==='reference-selection-title');
- assert.equal(await page.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).isEnabled(),true);
+ assert.equal(await page.getByRole('checkbox',{name:'Escolher imagem 3'}).isEnabled(),true);
 });
 
 test('a seleção cabe no celular sem rolagem horizontal da página',options,async t=>{
  const {page}=await fixture(t,{width:390,height:780});
- for(const title of ['Terracota e textura','Cor e contraste']){await page.getByRole('button',{name:`Usar como referência: ${title}`}).click();await page.getByRole('button',{name:`Selecionada: ${title}`}).waitFor();}
- await page.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).click();
+ for(const title of ['Terracota e textura','Cor e contraste']){await page.getByRole('checkbox',{name:`Escolher referência: ${title}`}).click();await page.getByRole('checkbox',{name:`Escolher referência: ${title}`,checked:true}).waitFor();}
+ await page.getByRole('checkbox',{name:'Escolher imagem 3'}).click();
  await page.getByRole('region',{name:'Sua seleção'}).getByText('3',{exact:true}).waitFor();
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),'a página não rola na horizontal');
  const buttons=await page.locator('.reference-selection-list button').evaluateAll(items=>items.map(item=>item.getBoundingClientRect().height));

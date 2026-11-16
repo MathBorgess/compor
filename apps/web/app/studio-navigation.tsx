@@ -4,7 +4,7 @@ import {useEffect,useId,useRef,useState} from 'react';
 import './studio-navigation.css';
 
 type Action = {
-  id:'posts'|'project'|'post'|'review'|'save';
+  id:'posts'|'project'|'post'|'review'|'save'|'delete';
   label:string;
   onClick:()=>void;
   disabled?:boolean;
@@ -17,6 +17,7 @@ const paths={
   review:'M9 3h6v3H9z M9 5H5v16h14V5h-4 M8 14l3 3 5-6',
   save:'M4 3h13l4 4v14H3V3z M7 3v6h10V3 M7 21v-8h10v8',
   rename:'M4 20h4L19 9l-4-4L4 16z M13 7l4 4',
+  delete:'M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6',
 
 };
 export default function StudioNavigation({actions,projectTitle='',onRenameProject}:{actions:Action[];projectTitle?:string;onRenameProject?:(title:string)=>boolean|void|Promise<boolean|void>}) {

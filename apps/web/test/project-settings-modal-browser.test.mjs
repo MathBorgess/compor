@@ -50,15 +50,17 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
   await sections().getByRole('button',{name:'Marca e direção',exact:true}).click();await panel.getByRole('heading',{name:'Uma direção com significado',exact:true}).waitFor();
   const tabsWidth=(await sections().boundingBox()).width;
   for(const selector of ['.persona-step','.studio-direction'])assert.ok(Math.abs((await panel.locator(selector).boundingBox()).width-tabsWidth)<=1,`${selector} ocupa a largura da janela`);
-  await sections().getByRole('button',{name:'Referências',exact:true}).click();await panel.getByRole('heading',{name:'Referências do projeto',exact:true}).waitFor();
-  assert.equal(await panel.locator('.reference-workbench').evaluate(element=>getComputedStyle(element).backgroundColor),await panel.evaluate(element=>getComputedStyle(element).backgroundColor),'referências seguem o fundo da janela');
-  await panel.getByRole('button',{name:'Enviar imagem',exact:true}).click();
+  await sections().getByRole('button',{name:'Referências',exact:true}).click();
+  const references=page.locator('.reference-step');await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor();
+  assert.equal(await panel.isVisible(),false,'referências saem da janela de configurações');
+  await references.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
   const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;return canvas.toDataURL('image/png').split(',')[1];});
-  await panel.locator('input[type="file"]').setInputFiles({name:'Referencia da mentoria.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
-  await panel.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
-  await sections().getByRole('button',{name:'Materiais e versões',exact:true}).click();await panel.getByRole('heading',{name:'Materiais e versões',exact:true}).waitFor();
+  await references.locator('input[type="file"]').setInputFiles({name:'Referencia da mentoria.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+  await references.getByText('Revisar seleção e alcance',{exact:true}).click();await references.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
+  await openSettings(page,'Materiais e versões');await panel.getByRole('heading',{name:'Materiais e versões',exact:true}).waitFor();
   await panel.getByRole('button',{name:'Abrir posts do projeto',exact:true}).waitFor();assert.equal(await panel.getByText('Rascunhos neste navegador',{exact:true}).count(),0);
-  await sections().getByRole('button',{name:'Referências',exact:true}).click();await panel.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
+  await openSettings(page,'Referências');await references.getByText('Revisar seleção e alcance',{exact:true}).click();await references.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
+  await openSettings(page,'Histórico anterior');
   await sections().getByRole('button',{name:'Histórico anterior',exact:true}).click();assert.equal(await panel.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true);
   await sections().getByRole('button',{name:'Contexto',exact:true}).click();await panel.locator('summary').first().click();assert.equal(await panel.getByLabel('Oferta',{exact:true}).inputValue(),'Mentoria de matemática para o ENEM');
   await closeSettings(page);await button('Criar novo post').waitFor();assert.equal(await page.locator('.studio-project-card').count(),0);
@@ -67,7 +69,22 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
   await button('Minimizar conversa').click();assert.equal(await button('Abrir conversa').getAttribute('aria-expanded'),'false');await button('Abrir conversa').click();assert.equal(await chat.inputValue(),'Rascunho não enviado do meu post');
   await openPostEditor(page);await page.getByLabel('Título',{exact:true}).fill('Uma estratégia de porcentagem');await button('Revisar post').click();await page.getByRole('heading',{name:'Revise seu post',exact:true}).waitFor();
   await openSettings(page,'Contexto');await closeSettings(page);await page.getByRole('heading',{name:'Revise seu post',exact:true}).waitFor();
-  await button('Pedir ajuste no estúdio').click();await openPostEditor(page);assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Uma estratégia de porcentagem');
+  const postUrl=page.url();
+  for(const stage of ['review','export']){
+   if(stage==='export'){
+    await page.evaluate(({alice,project})=>sessionStorage.setItem(`compor-studio-stage:${alice}:${project}`,'export'),{alice,project});
+    await page.reload();await page.getByRole('heading',{name:'Pronto para levar sua ideia adiante',exact:true}).waitFor();
+   }
+   await openSettings(page,'Referências');
+   await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor({timeout:5000});
+   assert.equal(await panel.isVisible(),false);assert.equal(page.url(),postUrl,'abrir referências preserva o post da URL');
+   await references.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
+   await references.getByText('Revisar seleção e alcance',{exact:true}).click();await references.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
+   await closeSettings(page);await openPostEditor(page);
+   assert.equal(page.url(),postUrl,'voltar mantém o mesmo post');
+   assert.equal(await page.getByLabel('Título',{exact:true}).inputValue(),'Uma estratégia de porcentagem');
+   assert.equal(await (await openConversation(page)).inputValue(),'Rascunho não enviado do meu post');
+  }
   assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));assert.equal(calls.some(call=>call.method==='POST'&&call.path!=='/api/projects'),false);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });

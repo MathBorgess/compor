@@ -68,4 +68,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0056](0056-navegacao-por-url-e-organizacao-do-estudio.md) | implementado no PR 54; verificação em andamento | URLs de projeto/post, retomada na página inicial, trilho de projetos e ações junto ao post |
 | [0057](0057-verificacao-por-goals-em-tres-camadas.md) | direção e spike local aprovados | Goals para agentes de desenvolvimento/QA, evidência offline/web/integração real, AX explícita e preservação dos delays |
 
+| [0058](0058-referencias-focadas-e-aprendizados-do-perfil.md) | implementado localmente | Referências em página, conversa sob demanda e perfil consultável após exclusão lógica de projetos |
+
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

@@ -16,7 +16,7 @@ export async function finishPreparation(page,{useDefault=false,preparePost=true}
   if(useDefault){await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await page.getByRole('button',{name:'Continuar para referências',exact:true}).click();}
   else await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
  }
- const finish=page.getByRole('button',{name:'Ir para os posts do projeto',exact:true});
+ const finish=page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/});
  if(await finish.isVisible())await finish.click();
  if(preparePost)await beginPost(page);
 }
@@ -44,25 +44,22 @@ export async function openPostEditor(page){
  const variants=page.locator('details.guided-versions');if(await variants.isVisible()&&!await variants.evaluate(el=>el.open))await variants.locator('summary').click();
 }
 export async function openSettings(page,tab='Contexto'){
- const postReferences=page.getByRole('dialog',{name:'Referências deste post',exact:true});
- if(await postReferences.isVisible()){
-  if(tab==='Referências'){
-   await postReferences.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();
-   return page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
-  }
-  await page.keyboard.press('Escape');await postReferences.waitFor({state:'hidden'});
- }
+ const references=page.locator('.reference-step');
+ if(await references.isVisible()){if(tab==='Referências')return references;await closeSettings(page);}
  await finishPreparation(page,{preparePost:false});
  const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
  if(!await panel.isVisible())await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
  await panel.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
- return panel;
+ return tab==='Referências'?page.locator('.reference-step'):panel;
 }
 export async function closeSettings(page){
- const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).or(page.getByRole('dialog',{name:'Referências deste post',exact:true}));
+ const references=page.locator('.reference-step');
+ if(await references.isVisible()){const images=references.getByRole('button',{name:'Voltar às imagens',exact:true});if(await images.isVisible())await images.click();await references.getByRole('button',{name:/^(Voltar ao post|Voltar aos posts|Voltar ao pedido|Preparar primeiro post|Continuar sem referências)$/}).click();await references.waitFor({state:'hidden'});return;}
+ const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
  if(await panel.isVisible()){await page.keyboard.press('Escape');await panel.waitFor({state:'hidden'});}
 }
 export async function openConversation(page){
+ if(await page.locator('.reference-step').isVisible()){const comment=page.getByRole('button',{name:'Comentar seleção',exact:true});if(await comment.isVisible())await comment.click();const message=page.locator('.reference-workbench-conversation').getByRole('textbox',{name:'Sua mensagem',exact:true});await message.waitFor();return message;}
  await beginPost(page);
  const launcher=page.getByRole('button',{name:'Abrir conversa',exact:true});
  const message=page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true});
@@ -72,6 +69,6 @@ export async function openConversation(page){
 
 export async function addProjectReferences(page,files){
  const panel=await openSettings(page,'Referências');
- await panel.getByRole('button',{name:'Enviar imagem',exact:true}).click();
+ await panel.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
  await panel.locator('input[type="file"]').setInputFiles(files);
 }

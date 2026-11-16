@@ -1,29 +1,20 @@
 "use client";
 
-import { useEffect,useRef,useState,type FormEvent } from 'react';
+import { useEffect,useRef,useState,type FormEvent,type ReactNode } from 'react';
 import { referenceHistoryResponseSchema,referenceSearchResponseSchema,type ExploredReference,type ReferenceHistoryEntry } from '../lib/reference-exploration-contract.ts';
 import { grantReferenceConsent,referenceConsentGranted,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
 import './reference-exploration.css';
+import ReferencePreview from './reference-preview';
 
-type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void};
+type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void;onRemoveReference?:(originUrl:string)=>Promise<void>;sourceControl?:ReactNode};
 type SearchState={status:'idle'|'loading'|'empty'|'unavailable'|'ok';references:ExploredReference[]};
-export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue}:Props) {
+export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue,onRemoveReference,sourceControl}:Props) {
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
   const [search,setSearch]=useState<SearchState>({status:'idle',references:[]});
   const [history,setHistory]=useState<{scope:string;references:ReferenceHistoryEntry[]}|null>(null),[historyUnavailable,setHistoryUnavailable]=useState(false);
   const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
   const currentScope=`${userId}:${projectId}`,scope=useRef(currentScope),selectionLock=useRef(false),searchRequest=useRef<AbortController|null>(null);
   scope.current=currentScope;
-  // A selected card becomes inactive; move keyboard focus to its removal action in the selection tray.
-  const pendingFocus=useRef<string|null>(null);
-  const selectedKey=selectedOrigins.join('\n');
-  useEffect(()=>{
-    const pending=pendingFocus.current;if(!pending||!selectedOrigins.includes(pending))return;
-    pendingFocus.current=null;
-    const active=document.activeElement;
-    if(active&&active!==document.body&&document.contains(active)&&!(active instanceof HTMLButtonElement&&active.disabled))return;
-    document.getElementById('reference-selection-title')?.focus();
-  },[selectedKey]);
   const consent=consentOwner===userId;
   const suggestedQuery=idea.trim().slice(0,1000);
   useEffect(()=>()=>{scope.current='';searchRequest.current?.abort();},[]);
@@ -83,11 +74,18 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
       if(!['image/png','image/jpeg'].includes(blob.type)||blob.size>2*1024*1024)throw Error('invalid');
       if(scope.current!==requestedScope)return;
       const file=new File([blob],`referencia-pinterest-${reference.id}.${blob.type==='image/png'?'png':'jpg'}`,{type:blob.type});
-      pendingFocus.current=reference.originUrl;
       await onUseReference(reference,file);
       if(scope.current===requestedScope)setNotice('Referência adicionada à conversa e à Direção neste navegador.');
     } catch {if(scope.current===requestedScope)setNotice('Não foi possível adicionar esta referência. Suas outras imagens foram preservadas.');}
     finally{selectionLock.current=false;if(scope.current===requestedScope)setBusy(false);}
+  }
+  async function removeReference(originUrl:string) {
+    if(!onRemoveReference||selectionLock.current)return;
+    selectionLock.current=true;setBusy(true);setNotice('');
+    const requestedScope=currentScope;
+    try {await onRemoveReference(originUrl);if(scope.current===requestedScope)setNotice('Referência retirada da seleção.');}
+    catch {if(scope.current===requestedScope)setNotice('Não foi possível confirmar a alteração da seleção.');}
+    finally {selectionLock.current=false;if(scope.current===requestedScope)setBusy(false);}
   }
   const ordered=(history?.scope===currentScope?[...history.references]:[]).sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt));
   const knownOrigins=new Set(ordered.map(reference=>reference.originUrl));
@@ -95,13 +93,10 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     return <div className="reference-results">{references.map(item=>{
       const selected=selectedOrigins.includes(item.originUrl);
       return <article key={item.originUrl} data-reference-origin={item.originUrl} data-selected={selected?'true':undefined}>
-        <button type="button" className="reference-image-select" aria-label={`${selected?'Selecionada':'Usar como referência'}: ${item.title}`} aria-pressed={selected} disabled={!consent||busy||selected} onClick={()=>useReference(item)}>
-          {consent?<img src={item.previewUrl} alt="" referrerPolicy="no-referrer" loading="lazy" />:<span className="reference-preview-placeholder">Prévia disponível após sua permissão</span>}
-          <span>{selected?'✓ Selecionada':'Usar como referência'}</span>
-        </button>
-        <span className="reference-source" data-origin="pinterest">Pinterest · externa</span>
-        <a href={item.originUrl} target="_blank" rel="noopener noreferrer">Ver origem no Pinterest</a>
+        {consent?<ReferencePreview src={item.previewUrl} title={item.title} external/>:<span className="reference-preview-placeholder">Prévia disponível após sua permissão</span>}
         <h3>{item.title}</h3>
+        <div className="reference-card-actions"><label className="reference-choice"><input type="checkbox" aria-label={`Escolher referência: ${item.title}`} checked={selected} disabled={!consent||(selected&&!onRemoveReference)} aria-disabled={busy||undefined} onChange={()=>{if(selected)void removeReference(item.originUrl);else void useReference(item);}}/>{selected?'Escolhida':'Escolher'}</label><a href={item.originUrl} target="_blank" rel="noopener noreferrer">Ver origem</a></div>
+        <span className="reference-source" data-origin="pinterest">Pinterest · externa</span>
         <small>A imagem só vai ao modelo depois da sua escolha.</small>
       </article>;
     })}</div>;
@@ -113,6 +108,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
       {consent&&<p className="reference-consent-status">Pinterest permitido nesta sessão. Só as escolhidas entram na conversa.</p>}
     </div>
     <form onSubmit={searchNow}>
+      {sourceControl}
       <label>O que você quer explorar?<input value={query} onChange={event=>setQuery(event.target.value)} maxLength={1000} placeholder="Ex.: tipografia acolhedora para uma aula" /></label>
       <button type="submit" disabled={!query.trim()||!consent||busy||search.status==='loading'}>Buscar referências</button>
     </form>
