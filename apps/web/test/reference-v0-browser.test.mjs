@@ -121,7 +121,7 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await waitStored(page,value=>value.state?.selection?.pieceId===agentPieceId&&value.state.workflow.pendingPost===null);assert.equal(posts.length,2);assert.equal(generation.length,3);
  // An in-flight confirmation locks conflicting navigation; B later starts independently.
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
- const settings=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});await settings.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();await settings.getByRole('button',{name:'Voltar aos posts',exact:true}).click();
+ const settings=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});await settings.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();await settings.getByRole('button',{name:'Fechar configurações',exact:true}).click();await settings.waitFor({state:'hidden'});
  await waitStored(page,value=>value.state?.workflow.referenceHandoff==='references');
  await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await page.getByRole('textbox',{name:'Nome do post',exact:true}).fill('Post A');await page.getByRole('button',{name:'Continuar para criação',exact:true}).click();
  for(let i=0;i<100&&!heldCreation;i++)await page.waitForTimeout(40);assert.ok(heldCreation);
