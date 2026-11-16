@@ -2,11 +2,11 @@
 
 16/11/2026. Registro da implementação autorizada em Q10 do [ADR 0057](../adr/0057-verificacao-por-goals-em-tres-camadas.md). Os três cenários offline passaram em uma execução e em seu replay; cinco controles negativos impediram aprovação. Isso demonstra a fatia descrita abaixo, sem comprovar a experiência completa no navegador ou nos serviços gerenciados.
 
-**Estado deste registro:** ensaio local concluído no snapshot abaixo. A rodada final repetiu positiva, replay e controles negativos depois da correção do encerramento exploratório. O protocolo externo encerrou sem erros e preservou o resultado inconclusivo correspondente à cobertura parcial; os gates locais existentes também passaram. CI e adoção de um novo gate obrigatório continuam decisões separadas.
+**Estado deste registro:** ensaio local concluído. As tabelas iniciais preservam a rodada anterior à integração da `main`; a seção **Preparação do PR** identifica a nova execução e o pacote publicado. A rodada final repetiu positiva, replay e controles negativos depois da correção do encerramento exploratório. O protocolo externo encerrou sem erros e preservou o resultado inconclusivo correspondente à cobertura parcial; os gates locais existentes também passaram. CI e adoção de um novo gate obrigatório continuam decisões separadas.
 
 ## Revisão e ambiente observados
 
-O comando operacional está no [guia do spike](../../scripts/verification/README.md); o desenho alvo permanece no [documento de arquitetura](../design/2026-11-16-issue-51-goals-arquitetura.md). As evidências são locais, em `quality-results/verification/`, e não estão incorporadas a este documento. Para revisão em outro host, é necessário transportar o pacote correspondente, não apenas esta tabela.
+O comando operacional está no [guia do spike](../../scripts/verification/README.md); o desenho alvo permanece no [documento de arquitetura](../design/2026-11-16-issue-51-goals-arquitetura.md). O [pacote versionado de evidências](evidence/issue-51-2026-11-16/README.md) contém a rodada de preparação do PR e permite conferir os hashes e reavaliar os artefatos sem Docker. Os diretórios completos originais permanecem em `quality-results/verification/`. O pacote distingue bytes preservados e diagnósticos com caminhos locais normalizados; não é assinatura nem prova de execução em outro host.
 
 | Âncora comum às regressões abaixo | Valor |
 | --- | --- |
@@ -126,6 +126,32 @@ O gate Chromium completo sucedeu a correção do `fetch` e as reproduções meno
 
 Manter inicialmente a regressão Docker como comando local/manual opcional para mudanças nas fronteiras cobertas. Conservar os gates existentes e os testes rápidos já integrados; não ativar um novo job obrigatório de Docker/CI com base em duas medições locais. A frequência, os recursos e a retenção de artefatos do novo job exigem decisão do proprietário após reprodução no runner de CI e revisão das lacunas.
 
-O ensaio local está concluído dentro da cobertura declarada. Restam a decisão de adoção pelo proprietário, a reprodução no runner de CI antes de qualquer gate obrigatório e a evolução das lacunas de navegador/serviços reais. Mudanças de expectativa continuam revisão separada do proprietário. Estes registros não autorizam push, PR, merge, deploy ou migrations remotas.
+O ensaio local está concluído dentro da cobertura declarada. Em 16/11/2026, após revisar o resultado, Matheus autorizou abrir o PR com arquitetura, spike e evidências, mantendo Docker opcional e as lacunas como próximos passos. Essa autorização permite publicar a branch/PR; merge, deploy e migrations remotas continuam fora deste pedido. Mudanças de expectativa exigem revisão separada do proprietário.
+
+## Preparação do PR
+
+A branch incorporou os nove commits que avançaram a `main` até `c6346eb`, incluindo navegação por URL e modais do estúdio. O ADR de Goals foi renumerado de 0055 para 0057 para preservar os ADRs já publicados. A resolução manteve as rotas e a guarda de persistência da `main`, junto do controlador compartilhado; três testes de navegação/recarga/falha de flush e 18 testes do controlador passaram.
+
+A rodada abaixo executou o código em `6c7775d198fcd2b78e720a4ac3ca525b0958ff69`, snapshot `1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f`, imagem `sha256:437763fd49033df83b4da6b2dc6e5e7d803b04bcced79a76d08710f28f4d1be4`. A suíte `a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4` e os três hashes dos Goals permaneceram iguais aos da rodada anterior. A preparação com camadas disponíveis levou 27.644 ms; não é instalação fria. Os commits posteriores desta publicação acrescentam documentação e evidências, sem alterar o código exercitado.
+
+| Ensaio | Run | Tempo do supervisor | Veredito por Goal | Limpeza |
+| --- | --- | ---: | --- | --- |
+| Positiva | `37652b38-df59-42cb-9c88-b64501844bb0` | 7571 ms | atendido, atendido, atendido | completed |
+| Replay | `a4406ee2-42d1-40f7-8e1a-34c9d98060df` | 6078 ms | atendido, atendido, atendido | completed |
+| Persistência omitida | `1b92ecbb-b60c-4f4c-94dc-426b219b3b7f` | 6106 ms | violado | completed |
+| Exploração externa | `aecdb7ae-b3ef-43a3-b667-2d56eade3b29` | 8964 ms | inconclusivo | completed |
+
+A positiva e o replay preservaram 12 critérios/66 checks atendidos. Os cinco controles negativos impediram aprovação; a exploração concluiu 16 comandos e a limpeza, mantendo G01 inconclusivo por cobertura parcial. Os recibos conferem as 32 migrations, egress negado e rejeição de TLS sem a CA. O pacote publicado acompanha esses runs; os originais anteriores permanecem preservados localmente. Reavaliar o pacote não reexecuta o produto nem constitui evidência de CI.
+
+Após a integração, passaram lint, 59 testes rápidos, 473 testes Node de contratos e 22 Python, tipos, build e cinco medições de performance. O gate Chromium desta revisão passou **487/487 testes, zero skips, em 426.596,12 ms** (`pr-browser.log`), separadamente do resultado anterior de 484 testes. A reavaliação portátil também passou, conferindo os 74 arquivos inventariados. O workflow Quality permanece sem alterações e nenhum job Docker foi adicionado. Estes resultados são locais; o CI da publicação é uma evidência posterior e independente.
+
+## Próximos passos
+
+- [ ] Reproduzir o perfil Docker em Linux/amd64, medir preparação fria e execuções repetidas e propor frequência/recursos. Manter a execução opcional; qualquer exigência nova de gate depende de decisão posterior.
+- [ ] Ligar os mesmos IDs de critérios às jornadas reais do navegador, cobrindo IndexedDB, quota, abas, teclado, foco, anúncios acessíveis e apresentação das esperas de 5 s/15 s. O gate Chromium existente continua obrigatório.
+- [ ] Completar o modo exploratório com upload dos bytes da versão, edição de imagem, espera por condição/cursor e replay de trajetória; uma descoberta só vira gate depois de reprodução determinística e revisão do critério.
+- [ ] Tornar os IDs/seed do estado inicial do Goal operacionais ou revisar explicitamente esse contrato: hoje os IDs efetivos são os observados, não os exemplos de `initialState`.
+- [ ] Exercitar OAuth, Storage, Vault e fornecedores reais em ambiente separado, com credenciais sintéticas quando possível, intenções e limites financeiros aprovados para esse perfil. O ensaio offline não concede essa autorização.
+- [ ] Definir distribuição e revisão da baseline confiável fora do checkout do executor, retenção de evidências e rotação versionada das fixtures. Hash local não protege contra controle irrestrito do host.
 
 As inspirações foram incorporadas como método: ciclo preparar→conduzir→capturar→limpar do [pstack verification](https://github.com/cursor/plugins/blob/bf0c7cd80abdbf7fe47b634978a7d1b4071f71a7/pstack/skills/create-verification-skill/SKILL.md), conclusão verificável por worker e reexecução independente; o [exemplo de verificação de Lauren Tan/Poteto](https://github.com/poteto/verification-skill-example/blob/d5abe70d0d8c671672b6cef4069363f26c488feb/README.md) orientou a separação de contrato, jornadas e evidências. A [descoberta](../design/2026-11-16-issue-51-goals-descoberta.md) registra revisões, limites e atribuição. Não se importou um runtime multiagente nem se demonstrou ganho quantitativo por usar múltiplos modelos.

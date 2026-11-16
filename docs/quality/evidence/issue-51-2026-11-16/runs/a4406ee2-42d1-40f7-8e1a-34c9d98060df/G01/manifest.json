@@ -1,0 +1,46 @@
+{
+  "schemaVersion": "run/v1",
+  "runId": "a4406ee2-42d1-40f7-8e1a-34c9d98060df-G01",
+  "goalId": "G01",
+  "goalRevision": 1,
+  "goalDigest": "5ad8dbbb7959de706d1efaed5e31c94ba3985b674600954b5a138617556cd234",
+  "suiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "appRevision": "6c7775d198fcd2b78e720a4ac3ca525b0958ff69",
+  "snapshotDigest": "1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f",
+  "profile": "offline",
+  "status": "completed",
+  "budgets": {
+    "actions": 80,
+    "requests": 240,
+    "wallTimeMs": 180000,
+    "cycles": 2,
+    "candidates": 1,
+    "concurrency": 1
+  },
+  "usage": {
+    "actions": 16,
+    "requests": 81,
+    "wallTimeMs": 1762,
+    "cycles": 1,
+    "candidates": 1,
+    "concurrency": 1,
+    "modelTokens": null,
+    "modelCostUsd": null
+  },
+  "startedAt": "2026-11-16T14:27:13.081Z",
+  "endedAt": "2026-11-16T14:27:14.848Z",
+  "artifacts": [
+    {
+      "id": "observations",
+      "kind": "observations",
+      "path": "observations.json",
+      "sha256": "1dcbdc7ab424ff48319520565a8910d18019827065aee3b486d9679ae65c8842"
+    },
+    {
+      "id": "generated-image",
+      "path": "generated-image.png",
+      "kind": "file",
+      "sha256": "6bdb77273b74a3b28ea03078989393e3f97ac3c9e85254aca136dfb0ad7e7696"
+    }
+  ]
+}

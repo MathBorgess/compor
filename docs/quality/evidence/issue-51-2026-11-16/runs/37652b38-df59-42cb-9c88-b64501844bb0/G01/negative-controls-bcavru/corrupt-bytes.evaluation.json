@@ -1,0 +1,225 @@
+{
+  "schemaVersion": "evaluation/v1",
+  "runId": "37652b38-df59-42cb-9c88-b64501844bb0-G01",
+  "goalId": "G01",
+  "profile": "offline",
+  "appRevision": "6c7775d198fcd2b78e720a4ac3ca525b0958ff69",
+  "snapshotDigest": "1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f",
+  "goalDigest": "5ad8dbbb7959de706d1efaed5e31c94ba3985b674600954b5a138617556cd234",
+  "suiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "status": "inconclusivo",
+  "passed": false,
+  "integrity": {
+    "valid": false,
+    "reasons": [
+      "generated-image: artifact digest mismatch: generated-image"
+    ]
+  },
+  "completion": {
+    "complete": true,
+    "reasons": []
+  },
+  "criteria": [
+    {
+      "id": "G01.no-generation-before-intent",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/createProject/status",
+          "evidence": "observations#/http/createProject/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/openProject/status",
+          "evidence": "observations#/http/openProject/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/reloadProject/status",
+          "evidence": "observations#/http/reloadProject/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/providerLedger/beforeIntent",
+          "evidence": "observations#/providerLedger/beforeIntent"
+        }
+      ]
+    },
+    {
+      "id": "G01.post-confirmed",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/afterPreparation/posts",
+          "evidence": "observations#/db/afterPreparation/posts"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/afterConfirmation/posts",
+          "evidence": "observations#/db/afterConfirmation/posts"
+        },
+        {
+          "status": "atendido",
+          "reason": "minimum-length comparison at observations#/providerLedger/afterExplicitRequest",
+          "evidence": "observations#/providerLedger/afterExplicitRequest"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/afterCancellation/posts",
+          "evidence": "observations#/db/afterCancellation/posts"
+        }
+      ]
+    },
+    {
+      "id": "G01.references-scoped",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/controller/references/sharedIds",
+          "evidence": "observations#/controller/references/sharedIds"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/controller/references/postLocalIds",
+          "evidence": "observations#/controller/references/postLocalIds"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/controller/references/effectiveIds",
+          "evidence": "observations#/controller/references/effectiveIds"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/references/otherPostEffectiveIds",
+          "evidence": "observations#/controller/references/otherPostEffectiveIds"
+        },
+        {
+          "status": "atendido",
+          "reason": "includes comparison at observations#/controller/references/effectiveIds",
+          "evidence": "observations#/controller/references/effectiveIds"
+        },
+        {
+          "status": "atendido",
+          "reason": "includes comparison at observations#/controller/references/effectiveIds",
+          "evidence": "observations#/controller/references/effectiveIds"
+        }
+      ]
+    },
+    {
+      "id": "G01.version-reopened",
+      "profile": "offline",
+      "status": "inconclusivo",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/versions",
+          "evidence": "observations#/db/versions"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/reopened/pieceId",
+          "evidence": "observations#/controller/reopened/pieceId"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/reopened/baseVersion",
+          "evidence": "observations#/controller/reopened/baseVersion"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/reopened/content",
+          "evidence": "observations#/controller/reopened/content"
+        },
+        {
+          "status": "inconclusivo",
+          "reason": "artifact digest mismatch: generated-image",
+          "evidence": "generated-image"
+        }
+      ]
+    },
+    {
+      "id": "G01.facts-preserved",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "minimum-length comparison at observations#/controller/declaredFacts",
+          "evidence": "observations#/controller/declaredFacts"
+        },
+        {
+          "status": "atendido",
+          "reason": "minimum-length comparison at observations#/controller/suggestedFacts",
+          "evidence": "observations#/controller/suggestedFacts"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/declaredFacts",
+          "evidence": "observations#/controller/declaredFacts"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/suggestedFacts",
+          "evidence": "observations#/controller/suggestedFacts"
+        }
+      ]
+    },
+    {
+      "id": "G01.waits-enforced",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/clock/selectionAt4999",
+          "evidence": "observations#/clock/selectionAt4999"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/clock/selectionAt5000",
+          "evidence": "observations#/clock/selectionAt5000"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/clock/batchAt14999/remainingMs",
+          "evidence": "observations#/clock/batchAt14999/remainingMs"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/clock/batchAt15000/remainingMs",
+          "evidence": "observations#/clock/batchAt15000/remainingMs"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/clock/batchAt14999/error",
+          "evidence": "observations#/clock/batchAt14999/error"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/clock/batchAt15000/completed",
+          "evidence": "observations#/clock/batchAt15000/completed"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/clock/cancelledEvents",
+          "evidence": "observations#/clock/cancelledEvents"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/clock/frozenAndResumed/remainingMs",
+          "evidence": "observations#/clock/frozenAndResumed/remainingMs"
+        }
+      ]
+    }
+  ],
+  "modelUsage": {
+    "tokens": null,
+    "costUsd": null
+  }
+}

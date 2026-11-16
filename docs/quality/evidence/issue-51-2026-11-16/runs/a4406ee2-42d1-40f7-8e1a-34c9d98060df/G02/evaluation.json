@@ -1,0 +1,107 @@
+{
+  "schemaVersion": "evaluation/v1",
+  "runId": "a4406ee2-42d1-40f7-8e1a-34c9d98060df-G02",
+  "goalId": "G02",
+  "profile": "offline",
+  "appRevision": "6c7775d198fcd2b78e720a4ac3ca525b0958ff69",
+  "snapshotDigest": "1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f",
+  "goalDigest": "08e21a9be432eb1e6ef91c244759bf62f67607b52668e3b13dba6077037ad1e2",
+  "suiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "status": "atendido",
+  "passed": true,
+  "integrity": {
+    "valid": true,
+    "reasons": []
+  },
+  "completion": {
+    "complete": true,
+    "reasons": []
+  },
+  "criteria": [
+    {
+      "id": "G02.cross-account-denied",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "one-of comparison at observations#/http/readProjectAsB/status",
+          "evidence": "observations#/http/readProjectAsB/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "one-of comparison at observations#/http/writeProjectAsB/status",
+          "evidence": "observations#/http/writeProjectAsB/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "one-of comparison at observations#/http/readAssetAsB/status",
+          "evidence": "observations#/http/readAssetAsB/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/db/beforeAttack/projects",
+          "evidence": "observations#/db/beforeAttack/projects"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/db/beforeAttack/assets",
+          "evidence": "observations#/db/beforeAttack/assets"
+        }
+      ]
+    },
+    {
+      "id": "G02.reservation-exclusive",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/reservationRows",
+          "evidence": "observations#/db/reservationRows"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/providerLedger/reservationDispatches",
+          "evidence": "observations#/providerLedger/reservationDispatches"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/concurrentFirst/status",
+          "evidence": "observations#/http/concurrentFirst/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/concurrentFirst/body/status",
+          "evidence": "observations#/http/concurrentFirst/body/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/concurrentSecond/status",
+          "evidence": "observations#/http/concurrentSecond/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/concurrentSecond/body/status",
+          "evidence": "observations#/http/concurrentSecond/body/status"
+        }
+      ]
+    },
+    {
+      "id": "G02.private-bytes-scoped",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "file bytes compared with independently observed digest",
+          "evidence": "owner-image"
+        }
+      ]
+    }
+  ],
+  "modelUsage": {
+    "tokens": null,
+    "costUsd": null
+  }
+}

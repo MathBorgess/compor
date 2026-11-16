@@ -1,0 +1,12 @@
+{
+  "snapshotDigest": "1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f",
+  "suiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "appRevision": "6c7775d198fcd2b78e720a4ac3ca525b0958ff69",
+  "runId": "37652b38-df59-42cb-9c88-b64501844bb0",
+  "imageId": "sha256:437763fd49033df83b4da6b2dc6e5e7d803b04bcced79a76d08710f28f4d1be4",
+  "profile": "offline",
+  "trustedSuiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "selected": "all",
+  "mode": "regression",
+  "fault": null
+}

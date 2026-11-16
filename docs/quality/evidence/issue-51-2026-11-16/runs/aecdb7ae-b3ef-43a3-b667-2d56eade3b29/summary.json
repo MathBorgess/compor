@@ -1,0 +1,23 @@
+{
+  "runId": "aecdb7ae-b3ef-43a3-b667-2d56eade3b29",
+  "profile": "offline",
+  "status": "failed",
+  "goals": [
+    {
+      "id": "G01",
+      "status": "inconclusivo",
+      "passed": false,
+      "durationMs": 4782,
+      "failure": false
+    }
+  ],
+  "cleanup": {
+    "status": "completed",
+    "failures": []
+  },
+  "tlsWithoutCa": "rejected",
+  "startupMs": 3580,
+  "totalMs": 8964,
+  "containerMemoryPeakBytes": "675041280",
+  "containerCpuStat": "usage_usec 7494002\nuser_usec 6587990\nsystem_usec 906012\ncore_sched.force_idle_usec 0\nnr_periods 90\nnr_throttled 0\nthrottled_usec 0\nnr_bursts 0\nburst_usec 0"
+}

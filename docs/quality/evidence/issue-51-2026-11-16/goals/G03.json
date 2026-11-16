@@ -1,0 +1,237 @@
+{
+  "schemaVersion": "goal/v1",
+  "revision": 1,
+  "requiredProfiles": [
+    "offline"
+  ],
+  "preconditions": [
+    "PostgreSQL and PostgREST run locally with the fixed migrations",
+    "Synthetic identities and external services; egress denied",
+    "The evaluator uses the fixed suite outside the app snapshot"
+  ],
+  "initialState": {
+    "accounts": [
+      "11111111-1111-4111-8111-111111111111",
+      "22222222-2222-4222-8222-222222222222"
+    ],
+    "projectId": "33333333-3333-4333-8333-333333333333",
+    "postId": "44444444-4444-4444-8444-444444444444"
+  },
+  "authorizedIntents": [
+    "Synthetic account A may create its project and confirm one post",
+    "An explicit synthetic request authorizes the simulated image operation"
+  ],
+  "allowedEffects": [
+    "Ephemeral rows and files scoped to this run",
+    "Calls to the local provider fixture"
+  ],
+  "forbiddenEffects": [
+    "Real network egress or paid calls",
+    "Generation before explicit intent",
+    "Cross-account access",
+    "Automatic repeat after uncertain effect"
+  ],
+  "obstacles": [
+    "Confirmation lost after database persistence",
+    "Provider effect completed before its reply is lost"
+  ],
+  "faults": [
+    {
+      "id": "persisted_completion_reply_lost",
+      "stage": "persistence",
+      "timing": "after effect before caller confirmation"
+    },
+    {
+      "id": "provider_reply_lost",
+      "stage": "provider",
+      "timing": "after provider effect before result bytes are received"
+    }
+  ],
+  "clockPolicy": {
+    "virtual": [
+      "selection stabilization 5000ms",
+      "batch interval 15000ms"
+    ],
+    "real": [
+      "watchdog",
+      "database",
+      "JWT validity"
+    ]
+  },
+  "seed": "compor-issue51-v1",
+  "budgets": {
+    "actions": 80,
+    "requests": 240,
+    "wallTimeMs": 180000,
+    "cycles": 2,
+    "candidates": 1,
+    "concurrency": 1
+  },
+  "suiteRevision": "verification/v1",
+  "id": "G03",
+  "objective": "Recover an already persisted effect while preserving an uncertain provider result, without repeated dispatch after either lost confirmation.",
+  "criteria": [
+    {
+      "id": "G03.persisted-effect-recovered",
+      "description": "Reopening recovers a persisted operation without creating another row.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/persistedReplyLost/status",
+          "expected": 502
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/persistedBeforeReopen",
+          "expected": 1
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/db/persistedBeforeReopen",
+          "otherPath": "/db/persistedAfterReopen"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/controller/persistedReopened/operationId",
+          "otherPath": "/db/persistedAfterReopen/0/id"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/controller/persistedReopened/status",
+          "expected": "completed"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/persistedReopen/status",
+          "expected": 200
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/persistedReplay/status",
+          "expected": 200
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/persistedReplay/body/status",
+          "expected": "completed"
+        }
+      ]
+    },
+    {
+      "id": "G03.provider-result-unknown",
+      "description": "A lost provider response remains unknown to the product after reopening.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/providerReplyLost/status",
+          "expected": 502
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/controller/providerLostAfterReopen/status",
+          "expected": "unknown"
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/providerLedger/unknownBeforeReopen",
+          "expected": 1
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/unknownReopen/status",
+          "expected": 200
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/unknownBeforeReopen",
+          "expected": 1
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/db/unknownBeforeReopen/0/state",
+          "expected": "unknown"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/db/unknownBeforeReopen",
+          "otherPath": "/db/unknownAfterReopen"
+        },
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/db/unknownAssets",
+          "expected": 0
+        }
+      ]
+    },
+    {
+      "id": "G03.no-repeat-after-unknown",
+      "description": "Reopening and advancing time do not repeat either dispatched effect.",
+      "profile": "offline",
+      "required": true,
+      "checks": [
+        {
+          "kind": "length",
+          "artifact": "observations",
+          "path": "/providerLedger/persistedBeforeReopen",
+          "expected": 1
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/providerLedger/persistedBeforeReopen",
+          "otherPath": "/providerLedger/persistedAfterReopen"
+        },
+        {
+          "kind": "same",
+          "artifact": "observations",
+          "path": "/providerLedger/unknownBeforeReopen",
+          "otherPath": "/providerLedger/unknownAfterReopen"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/unknownReplay/status",
+          "expected": 409
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/unknownReplay/body/status",
+          "expected": "unknown"
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/unknownNewRequest/status",
+          "expected": 409
+        },
+        {
+          "kind": "equals",
+          "artifact": "observations",
+          "path": "/http/unknownNewRequest/body/status",
+          "expected": "blocked"
+        }
+      ]
+    }
+  ]
+}

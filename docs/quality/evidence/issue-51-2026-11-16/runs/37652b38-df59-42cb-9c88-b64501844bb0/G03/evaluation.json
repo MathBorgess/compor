@@ -1,0 +1,162 @@
+{
+  "schemaVersion": "evaluation/v1",
+  "runId": "37652b38-df59-42cb-9c88-b64501844bb0-G03",
+  "goalId": "G03",
+  "profile": "offline",
+  "appRevision": "6c7775d198fcd2b78e720a4ac3ca525b0958ff69",
+  "snapshotDigest": "1155e65fb92c92265c93d8e4e9ed1a7e8bdf78f7f6213c65e3464c727e88126f",
+  "goalDigest": "db41fcda59ce2836690d2f86f063b952276b8580c7405ab182df0684628413a8",
+  "suiteDigest": "a154dae2c35079bbd1619319d58116af82c261d3902e8b92c9b8e6b7af9957c4",
+  "status": "atendido",
+  "passed": true,
+  "integrity": {
+    "valid": true,
+    "reasons": []
+  },
+  "completion": {
+    "complete": true,
+    "reasons": []
+  },
+  "criteria": [
+    {
+      "id": "G03.persisted-effect-recovered",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/persistedReplyLost/status",
+          "evidence": "observations#/http/persistedReplyLost/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/persistedBeforeReopen",
+          "evidence": "observations#/db/persistedBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/db/persistedBeforeReopen",
+          "evidence": "observations#/db/persistedBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/controller/persistedReopened/operationId",
+          "evidence": "observations#/controller/persistedReopened/operationId"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/controller/persistedReopened/status",
+          "evidence": "observations#/controller/persistedReopened/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/persistedReopen/status",
+          "evidence": "observations#/http/persistedReopen/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/persistedReplay/status",
+          "evidence": "observations#/http/persistedReplay/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/persistedReplay/body/status",
+          "evidence": "observations#/http/persistedReplay/body/status"
+        }
+      ]
+    },
+    {
+      "id": "G03.provider-result-unknown",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/providerReplyLost/status",
+          "evidence": "observations#/http/providerReplyLost/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/controller/providerLostAfterReopen/status",
+          "evidence": "observations#/controller/providerLostAfterReopen/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/providerLedger/unknownBeforeReopen",
+          "evidence": "observations#/providerLedger/unknownBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/unknownReopen/status",
+          "evidence": "observations#/http/unknownReopen/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/unknownBeforeReopen",
+          "evidence": "observations#/db/unknownBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/db/unknownBeforeReopen/0/state",
+          "evidence": "observations#/db/unknownBeforeReopen/0/state"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/db/unknownBeforeReopen",
+          "evidence": "observations#/db/unknownBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/db/unknownAssets",
+          "evidence": "observations#/db/unknownAssets"
+        }
+      ]
+    },
+    {
+      "id": "G03.no-repeat-after-unknown",
+      "profile": "offline",
+      "status": "atendido",
+      "checks": [
+        {
+          "status": "atendido",
+          "reason": "length comparison at observations#/providerLedger/persistedBeforeReopen",
+          "evidence": "observations#/providerLedger/persistedBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/providerLedger/persistedBeforeReopen",
+          "evidence": "observations#/providerLedger/persistedBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "same comparison at observations#/providerLedger/unknownBeforeReopen",
+          "evidence": "observations#/providerLedger/unknownBeforeReopen"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/unknownReplay/status",
+          "evidence": "observations#/http/unknownReplay/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/unknownReplay/body/status",
+          "evidence": "observations#/http/unknownReplay/body/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/unknownNewRequest/status",
+          "evidence": "observations#/http/unknownNewRequest/status"
+        },
+        {
+          "status": "atendido",
+          "reason": "equals comparison at observations#/http/unknownNewRequest/body/status",
+          "evidence": "observations#/http/unknownNewRequest/body/status"
+        }
+      ]
+    }
+  ],
+  "modelUsage": {
+    "tokens": null,
+    "costUsd": null
+  }
+}
