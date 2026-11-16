@@ -22,17 +22,20 @@ function statusText(entry: QuickReplyEntry, status: QuickReplyStatus, disabled: 
 
 /** A taste reading rendered from the validated contract. Buttons come from a
  * closed list; model text is shown as text only. */
-export default function TasteReadingCard({ entry, status, disabled, renderText, onChoose }: { entry: QuickReplyEntry; status: QuickReplyStatus; disabled: boolean; renderText: (text: string) => ReactNode; onChoose: (option: QuickReplyOption) => void }) {
+export default function TasteReadingCard({ entry, status, disabled, renderText, onChoose, compactHistory = false }: { entry: QuickReplyEntry; status: QuickReplyStatus; disabled: boolean; renderText: (text: string) => ReactNode; onChoose: (option: QuickReplyOption) => void; compactHistory?: boolean }) {
   const id = entry.messageId, questionId = `studio-quick-reply-question-${id}`, recommendationId = `studio-taste-recommendation-${id}`;
   const chosen = status.kind === "answered" ? status.optionId : null;
   const inactive = status.kind !== "active" || disabled;
-  return <article className="studio-message studio-taste-card" data-role="assistant" data-kind="taste-reading" data-state={status.kind}>
+  const rationale = <>
     <span className="studio-message-label">Compor · leitura da sua seleção</span>
     <div className="studio-message-markdown">{renderText(entry.reply.reading)}</div>
     <section className="studio-taste-recommendation" aria-labelledby={recommendationId}>
       <h3 id={recommendationId}>Recomendação</h3>
       <div className="studio-message-markdown">{renderText(entry.reply.recommendation)}</div>
     </section>
+  </>;
+  const content = <>
+    {compactHistory ? <p className="studio-reference-recommendation-summary">{entry.reply.synthesis ?? entry.reply.recommendation}</p> : rationale}
     <p className="studio-taste-question" id={questionId}>{entry.reply.question}</p>
     <div className="studio-quick-replies" role="group" aria-labelledby={questionId}>
       {entry.reply.options.map(option => {
@@ -43,6 +46,13 @@ export default function TasteReadingCard({ entry, status, disabled, renderText, 
         </button>;
       })}
     </div>
-    <p id={`studio-quick-reply-status-${id}`} tabIndex={-1} className="studio-quick-reply-status">{statusText(entry, status, disabled)}</p>
+    {compactHistory && <details className="studio-taste-rationale"><summary>Ver leitura e recomendação</summary>{rationale}</details>}
+  </>;
+  const confirmation = <p id={`studio-quick-reply-status-${id}`} tabIndex={-1} className="studio-quick-reply-status">{statusText(entry, status, disabled)}</p>;
+  return <article className="studio-message studio-taste-card" data-role="assistant" data-kind="taste-reading" data-state={status.kind}>
+    {compactHistory && (status.kind === 'answered' || status.kind === 'obsolete') ? <>
+      <details className="studio-taste-history"><summary>{entry.reply.synthesis ?? 'Leitura anterior da seleção'}</summary>{content}</details>
+      {confirmation}
+    </> : <>{content}{confirmation}</>}
   </article>;
 }

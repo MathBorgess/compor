@@ -96,6 +96,8 @@ async function app(t, {withReferences = false} = {}) {
   return {page, origin, calls, errors, external, images, paging, selectionSignals, referenceSelectionSignals};
 }
 
+const activeChat=page=>page.locator('.studio-chat-panel:visible');
+
 async function openProject(page,origin){
  await page.goto(origin);await page.getByRole('button',{name:/Direção opcional/}).click();
  await openPostEditor(page);await openSettings(page,'Referências');
@@ -103,7 +105,7 @@ async function openProject(page,origin){
 async function openEditorConversation(page){await closeSettings(page);await openPostEditor(page);await openConversation(page);}
 async function connectKey(page,{references=false}={}){
  await connectOwnOpenAiKey(page,`sk-synthetic-${'x'.repeat(30)}`);await closeSettings(page);
- if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();}else await openConversation(page);
+ if(references){await openSettings(page,'Referências');await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();}else await openConversation(page);
 }
 
 test('briefing acontece na conversa e resumo acompanha o que foi registrado', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
@@ -117,7 +119,7 @@ test('briefing acontece na conversa e resumo acompanha o que foi registrado', {s
   assert.equal(await page.getByText('exploração · esboço ilustrativo', {exact: true}).count(), 0);
   assert.ok(calls.every(call => call.path === '/api/studio/explorations' && !call.body), 'abrir o projeto somente consulta explorações anteriores');
   await connectKey(page);
-  await page.getByLabel('Sua mensagem', {exact: true}).fill('Quero divulgar uma aula de cerâmica.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?', {exact: true}).waitFor();
   await page.getByRole('button',{name:'Configurações deste post',exact:true}).click();
@@ -145,13 +147,13 @@ test('conexão e envio ficam acessíveis no celular', {skip: !existsSync(browser
   assert.equal(await input.isVisible(), true);
   await connectKey(page);
   await closeSettings(page);
-  await page.getByLabel('Sua mensagem', {exact: true}).fill('Uma ideia para criar.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Uma ideia para criar.');
   const send = page.getByRole('button', {name: 'Enviar →', exact: true});
   await send.scrollIntoViewIfNeeded();
   const bounds = await send.boundingBox();
   assert.ok(bounds.y >= 0 && bounds.y + bounds.height <= 844);
   await page.waitForFunction(() => {
-    const button = document.querySelector('form.studio-chat-composer button');
+    const button = Array.from(document.querySelectorAll('form.studio-chat-composer button')).find(element=>element.getClientRects().length>0);
     return button instanceof HTMLButtonElement && !button.disabled;
   });
   assert.equal(await send.isEnabled(), true);
@@ -169,13 +171,13 @@ test('respostas exibem Markdown seguro e indicam processamento acessível', {ski
   });
   await openProject(page, origin);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Mostre a direção.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Mostre a direção.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   const status = page.getByRole('status').filter({hasText:'Compor está trabalhando…'});
   await status.waitFor();
   assert.equal(await status.locator('i').first().evaluate(element=>getComputedStyle(element).animationName),'none');
   release();
-  const message=page.locator('article[data-role="assistant"]').last();
+  const message=activeChat(page).locator('article[data-role="assistant"]').last();
   await message.locator('strong').getByText('Direção visual').waitFor();
   assert.deepEqual(await message.locator('li').allTextContents(),['Azul','Amarelo']);
   assert.equal(await message.getByRole('link',{name:'Link seguro'}).getAttribute('href'),'https://example.com/');
@@ -208,7 +210,7 @@ test('no editor, histórico rola e o compositor continua acessível com a conver
  const {page,origin,errors}=await app(t);await page.setViewportSize({width:742,height:720});
  await openProject(page,origin);await openEditorConversation(page);
  const field=await openConversation(page);await field.fill('Rascunho preservado na conexão');
- assert.equal(await page.locator('.studio-chat-messages').evaluate(el=>getComputedStyle(el).overflowY),'auto');
+ assert.equal(await activeChat(page).locator('.studio-chat-messages').evaluate(el=>getComputedStyle(el).overflowY),'auto');
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();
  assert.equal(await page.getByLabel('Chave OpenAI',{exact:true}).evaluate(el=>getComputedStyle(el).borderRadius),'10px');
  await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
@@ -228,7 +230,7 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  const separator=page.getByRole('separator',{name:'Divisão entre conversa e post'});
  const desktop=await page.locator('.guided-workspace').boundingBox();
  const desktopMain=await page.locator('.studio-canvas-column').boundingBox();
- assert.ok(desktop.x<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
+ assert.ok(Math.abs(desktop.x-desktopMain.x)<=1&&Math.abs(desktop.width-desktopMain.width)<=1&&Math.abs(desktop.height-desktopMain.height)<=1&&desktop.y+desktop.height<=1000,'workspace ocupa a largura e altura úteis do desktop');
  const start=Number(await separator.getAttribute('aria-valuenow'));await separator.focus();await page.keyboard.press('ArrowRight');
  assert.equal(Number(await separator.getAttribute('aria-valuenow')),start+3);
  const grip=await separator.boundingBox();await page.mouse.move(grip.x+6,grip.y+100);await page.mouse.down();await page.mouse.move(grip.x+90,grip.y+100,{steps:4});await page.mouse.up();
@@ -249,14 +251,14 @@ test('no editor, divisão e chat minimizável preservam a área completa em desk
  assert.equal(await page.getByRole('region',{name:'Criação do post',exact:true}).isVisible(),true);
  const bounds=await page.locator('.guided-workspace').boundingBox();
  const mobileMain=await page.locator('.studio-canvas-column').boundingBox();
- assert.ok(bounds.x<=1&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport');
+ assert.ok(Math.abs(bounds.x-mobileMain.x)<=1&&bounds.x+bounds.width<=390&&Math.abs(bounds.width-mobileMain.width)<=1&&Math.abs(bounds.height-mobileMain.height)<=1&&bounds.height>0&&bounds.y+bounds.height<=844,'workspace ocupa a largura e altura úteis do celular sem ultrapassar o viewport: '+JSON.stringify({bounds,mobileMain}));
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth));
  await openConversation(page);assert.equal(await page.getByRole('region',{name:'Conversa do post',exact:true}).isVisible(),true);
  assert.equal(await field.inputValue(),'Rascunho preservado ao minimizar');
  assert.deepEqual(errors,[]);
 });
 
-test('configurações do projeto e referências ocupam o viewport com abas e rodapé acessíveis', {skip:!existsSync(browserPath),timeout:90000},async t=>{
+test('configurações e bancada de referências mantêm abas, seleção, chat e retorno no viewport', {skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await openProject(page,origin);
  const dialog=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
  const tabs=dialog.getByRole('navigation',{name:'Configurações',exact:true});
@@ -270,16 +272,18 @@ test('configurações do projeto e referências ocupam o viewport com abas e rod
  assert.equal(await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).isVisible(),true);
  await page.setViewportSize({width:390,height:500});await assertViewport(390,500);
  await tabs.getByRole('button',{name:'Referências',exact:true}).click();
- const content=dialog.locator('.guided-reference-content'),footer=dialog.locator('.guided-references footer');
- assert.ok(await content.evaluate(element=>element.scrollHeight>element.clientHeight),'referências rolam dentro do viewport');
+ const content=dialog.locator('.reference-workbench-source'),returnAction=dialog.locator('.reference-workbench-return');
  await content.evaluate(element=>element.scrollTop=element.scrollHeight);
- const footerBounds=await footer.boundingBox(),tabsBounds=await tabs.boundingBox();
+ const returnBoundsAfterScroll=await returnAction.boundingBox(),tabsBounds=await tabs.boundingBox();
  assert.ok(tabsBounds.y>=0&&tabsBounds.y+tabsBounds.height<=500,'abas continuam visíveis');
- assert.ok(footerBounds.y>=0&&footerBounds.y+footerBounds.height<=500,'rodapé continua visível após rolar as referências');
+ assert.ok(returnBoundsAfterScroll.y>=0&&returnBoundsAfterScroll.y+returnBoundsAfterScroll.height<=500,'retorno continua visível após rolar as referências');
+ const composer=dialog.locator('.reference-workbench-conversation .studio-chat-composer');
+ const composerBounds=await composer.boundingBox();assert.ok(composerBounds.y>=0&&composerBounds.y+composerBounds.height<=500,`compositor permanece no viewport junto das referências: ${JSON.stringify(composerBounds)}`);
  await page.setViewportSize({width:390,height:400});await assertViewport(390,400);
  const shortContentHeight=await content.evaluate(element=>element.clientHeight);
  assert.ok(shortContentHeight>=60,`conteúdo de referências ainda tem área de rolagem em viewport baixo (${shortContentHeight}px)`);
- const shortFooter=await footer.boundingBox();assert.ok(shortFooter.y+shortFooter.height<=400,'rodapé continua no viewport baixo');
+ const shortReturn=await returnAction.boundingBox();assert.ok(shortReturn.y+shortReturn.height<=400,'retorno continua no viewport baixo');
+ const shortComposer=await composer.boundingBox();assert.ok(shortComposer.y>=0&&shortComposer.y+shortComposer.height<=400,'compositor continua no viewport baixo');
  await tabs.getByRole('button',{name:'Materiais e versões',exact:true}).click();
  const returnBounds=await dialog.getByRole('button',{name:'Voltar ao post',exact:true}).boundingBox();
  assert.ok(returnBounds.y>=0&&returnBounds.y+returnBounds.height<=400,'retorno permanece acessível em outra aba');
@@ -292,7 +296,7 @@ test('consultar explorações mostra resultados confirmados, recusados e incerto
   const {page, origin, calls, errors, images} = await app(t);
   images.unshift({id:'00000000-0000-4000-8000-000000000094',project_id:projectId,state:'rejected',created_at:'2026-11-06T12:02:00Z',ordinal:3,batch_id:'00000000-0000-4000-8000-000000000093',batch_position:3});
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   await page.getByRole('button', {name: 'Consultar explorações', exact: true}).click();
   const gallery = page.getByRole('region', {name: 'Explorações de imagem', exact: true});
   await gallery.getByText('Resultado não confirmado.', {exact: true}).waitFor();
@@ -315,23 +319,23 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
   });
   await openProject(page, origin);
   await connectKey(page);
-  const field = page.getByLabel('Sua mensagem', {exact: true});
+  const field = activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true});
   for (let index = 0; index < 3; index++) {
     await field.fill(`Outra ideia ${index}`);
     await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
     await page.getByText(`Resposta Outra ideia ${index}`, {exact: false}).waitFor();
   }
-  const history = page.locator('.studio-chat-messages');
+  const history = activeChat(page).locator('.studio-chat-messages');
   assert.ok(await history.evaluate(element => element.scrollTop > 0), 'a resposta mais recente entra em vista');
   await history.evaluate(element => { element.scrollTop = 0; });
-  await page.waitForFunction(() => document.querySelector('.studio-chat-messages').scrollTop === 0);
+  await page.waitForFunction(element=>element.scrollTop===0,await history.elementHandle());
   await field.fill('Outra ideia 3');
   await page.getByRole('button', {name: 'Enviar →', exact: true}).click();
   await page.getByRole('status').filter({hasText:'Compor está trabalhando…'}).waitFor();
   assert.ok(await history.evaluate(element => element.scrollTop > 0), 'o processamento mostra a conversa recente');
   await history.hover();
   await page.mouse.wheel(0,-100000);
-  await page.waitForFunction(() => document.querySelector('.studio-chat-messages').scrollTop === 0);
+  await page.waitForFunction(element=>element.scrollTop===0,await history.elementHandle());
   await history.evaluate(() => new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve))));
   release();
   await page.getByText('Resposta Outra ideia 3', {exact: false}).waitFor();
@@ -343,7 +347,7 @@ test('chat mostra trabalho recente e respeita leitura anterior durante processam
 test('referência escolhida preserva origem e acompanha o próximo turno da conversa', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors} = await app(t, {withReferences:true});
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
+  await page.getByRole('navigation',{name:'Como adicionar referências',exact:true}).getByRole('button',{name:'Buscar referências',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
@@ -355,7 +359,7 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
   await panel.getByRole('status').waitFor();
   assert.equal(await panel.getByRole('status').textContent(), 'Referência adicionada à conversa e à Direção neste navegador.');
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare essa referência.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Outra ideia: compare essa referência.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare essa referência.',{exact:false}).waitFor();
   const call=calls.find(call=>call.path==='/api/studio/chat');
@@ -367,24 +371,24 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
 });
 
 test('pergunta do turno de seleção pausa a exploração até a pessoa responder ou pedir mais', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
-  const {page, origin, errors} = await app(t, {withReferences:true});
+  const {page, origin, errors,images} = await app(t, {withReferences:true});
   const selections=[],generations=[];
   await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
-  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
+  await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);images.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:Math.max(0,...images.map(item=>item.ordinal))+1,batch_id:body.batch.id,batch_position:body.batch.position});return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
   await openProject(page, origin);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Quero divulgar uma aula de cerâmica.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Quero divulgar uma aula de cerâmica.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
-  await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
-  await page.getByRole('button',{name:'Buscar imagens',exact:true}).click();
+  await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await page.getByRole('navigation',{name:'Como adicionar referências',exact:true}).getByRole('button',{name:'Buscar referências',exact:true}).click();
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');
   await panel.getByRole('button',{name:'Permitir nesta sessão'}).click();
   await panel.getByRole('button',{name:'Buscar referências',exact:true}).click();
   await panel.getByRole('button',{name:'Usar como referência: Tipografia'}).click();
   const recovery=page.locator('.studio-exploration-recovery');
-  await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});
+  try{await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor({timeout:15000});}catch(error){throw Error(`${error.message}\nFluxo: ${JSON.stringify({generations,selections,errors,text:await page.locator('body').innerText()})}`,{cause:error});}
   await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();
   assert.equal(selections.length,1);
   const held=generations.length;assert.ok(held>0,'a exploração já gerava antes da pergunta');
@@ -392,7 +396,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
   await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
   await recovery.waitFor({state:'detached'});
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   assert.deepEqual(errors,[]);
 });
@@ -400,7 +404,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
 test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, calls, errors, selectionSignals} = await app(t);
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   assert.equal(await gallery.getByText('Avaliar esta imagem').count(),0);
   await gallery.getByRole('button',{name:'Usar imagem 1 na conversa e na Direção'}).click();
@@ -410,7 +414,7 @@ test('imagem gerada escolhida mantém origem e segue ao próximo turno', {skip: 
   assert.deepEqual({...selectionSignals[0],id:'id-validado'},{id:'id-validado',projectId,imageId:'00000000-0000-4000-8000-000000000091',action:'selected',comment:'',supersedes:null});
   assert.equal(await gallery.getByRole('button',{name:'Imagem usada 1 na conversa e na Direção'}).isDisabled(),true);
   await connectKey(page);
-  await page.getByLabel('Sua mensagem',{exact:true}).fill('Outra ideia: compare esta exploração.');
+  await activeChat(page).getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Outra ideia: compare esta exploração.');
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Resposta Outra ideia: compare esta exploração.',{exact:false}).waitFor();
   const call=calls.find(call=>call.path==='/api/studio/chat');
@@ -427,7 +431,7 @@ test('último lote aparece primeiro e ordinal não muda quando chegam imagens no
   const first='00000000-0000-4000-8000-000000000201',second='00000000-0000-4000-8000-000000000202';
   images.splice(0,images.length,item(3,second),item(2,first),item(1,first));
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 3 na conversa e na Direção'}).waitFor();
@@ -449,7 +453,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
   images.splice(0,images.length,item(103),item(102),item(101));
   paging.nextBeforeOrdinal=101;paging.older=[{...item(100),batch_id:'00000000-0000-4000-8000-000000000201'},{...item(99),batch_id:'00000000-0000-4000-8000-000000000201'}];
   await openProject(page, origin);
-  await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();
+  await page.getByRole('button',{name:'Ver propostas anteriores',exact:true}).click();
   const gallery=page.getByRole('region',{name:'Explorações de imagem'});
   await gallery.getByRole('button',{name:'Consultar explorações'}).click();
   await gallery.getByRole('button',{name:'Usar imagem 103 na conversa e na Direção'}).waitFor();
@@ -469,7 +473,7 @@ test('carregar páginas antigas preserva seleção e não altera os ordinais ap�
 test('recuperação incerta e reconexão preservam compositor em viewport baixo',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,errors}=await app(t);await page.setViewportSize({width:390,height:400});await openProject(page,origin);await connectKey(page);
  const field=await openConversation(page);await field.fill('Quero divulgar uma aula de cerâmica.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();await field.fill('Meu rascunho continua aqui');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();await page.locator('.studio-exploration-recovery').getByRole('status').waitFor();
  await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar minha chave Conectar/}).click();await page.getByRole('button',{name:'Remover chave'}).click();await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
  assert.equal(await field.inputValue(),'Meu rascunho continua aqui');await field.scrollIntoViewIfNeeded();
  const send=page.getByRole('button',{name:'Enviar →',exact:true});await send.scrollIntoViewIfNeeded();const bounds=await send.boundingBox();assert.ok(bounds.y>=0&&bounds.y+bounds.height<=400);assert.deepEqual(errors,[]);

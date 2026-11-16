@@ -1,28 +1,28 @@
-import * as z from 'zod';
+import * as z from './schema.js';
 
-const text = z.string().optional().default('');
+const text = z._default(z.optional(z.string()),'');
 const criterion = z.object({
   id: z.string(),
   viewpoint: z.enum(['creator', 'recipient']),
   statement: text,
   tension: text,
-  example: z.object({ referenceId: z.string().nullable().optional() }).optional(),
-  counterexample: z.object({ referenceId: z.string().nullable().optional() }).optional(),
+  example: z.optional(z.object({ referenceId: z.optional(z.nullable(z.string())) })),
+  counterexample: z.optional(z.object({ referenceId: z.optional(z.nullable(z.string())) })),
 });
 const inputSchema = z.object({
-  brief: z.object({ offer: text, audience: text, action: text, direction: text }).default({offer:'',audience:'',action:'',direction:''}),
-  persona: z.object({ audience: text, situation: text, need: text }).default({audience:'',situation:'',need:''}),
-  direction: z.object({
-    criteria: z.array(criterion).optional().default([]),
-    decisions: z.array(z.object({
+  brief: z._default(z.object({ offer: text, audience: text, action: text, direction: text }),{offer:'',audience:'',action:'',direction:''}),
+  persona: z._default(z.object({ audience: text, situation: text, need: text }),{audience:'',situation:'',need:''}),
+  direction: z._default(z.object({
+    criteria: z._default(z.optional(z.array(criterion)),[]),
+    decisions: z._default(z.optional(z.array(z.object({
       criterionId: z.string(),
       choice: z.enum(['accept', 'reject', 'reopen']),
       reason: text,
-    })).optional().default([]),
-  }).default({criteria:[],decisions:[]}),
-  references: z.array(z.object({ id: z.string() })).optional().default([]),
-  referenceFeedback: z.array(z.object({ referenceId: z.string(), text: z.string() })).optional().default([]),
-  explicitRequest: z.boolean().optional().default(false),
+    }))),[]),
+  }),{criteria:[],decisions:[]}),
+  references: z._default(z.optional(z.array(z.object({ id: z.string() }))),[]),
+  referenceFeedback: z._default(z.optional(z.array(z.object({ referenceId: z.string(), text: z.string() }))),[]),
+  explicitRequest: z._default(z.optional(z.boolean()),false),
 });
 
 const hasText = (value) => value.trim().length > 0;

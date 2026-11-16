@@ -5,6 +5,7 @@ import type { Project } from "./studio-ui-types";
 import AccountMenu from "./account-menu";
 import "./studio-shell.css";
 import "./studio-reference-workspace.css";
+import "./studio-reference-chat.css";
 
 const assets = "/studio/";
 export type StudioTab = "post" | "moodboard" | "direction" | "facts" | "history";
@@ -36,6 +37,7 @@ export type StudioShellProps = {
   conversationFocus?: boolean;
   chatMessageCount?: number;
   headerActions?: ReactNode;
+  sidebar?: ReactNode;
   context?: ReactNode;
   footer?: ReactNode;
   overlays?: ReactNode;
@@ -89,6 +91,7 @@ export default function StudioShell({
   conversationFocus = false,
   chatMessageCount = 0,
   headerActions,
+  sidebar,
   context,
   footer,
   overlays,
@@ -328,7 +331,7 @@ export default function StudioShell({
   }, [menuOpen, activeDrawer, viewingArt, projectId, showChat, layoutC, referenceWorkspace, compactReferences]);
 
   const fallbackActions =
-    headerActions ||
+    headerActions || (!guided &&
     (stage === "projects" && onNewProject ? (
       <button className="studio-button" type="button" onClick={onNewProject}>
         Novo projeto
@@ -337,7 +340,7 @@ export default function StudioShell({
       <button className="studio-button" type="button" onClick={onReview}>
         Revisar post
       </button>
-    ) : null);
+    ) : null));
 
   return (
     <div
@@ -393,7 +396,7 @@ export default function StudioShell({
                 <span className="studio-badge">{versionStatus}</span>
               ) : null}
             </div>
-            {pieceSubtitle ? <p className="studio-project-subtitle">{pieceSubtitle}</p> : null}
+            {pieceSubtitle ? <p className="studio-project-subtitle" title={pieceSubtitle}>{pieceSubtitle}</p> : null}
             {menuOpen ? (
               <div id="studio-project-menu" role="dialog" aria-label="Projetos" className="studio-menu-panel">
                 {onNavigate ? (
@@ -514,6 +517,8 @@ export default function StudioShell({
           </button>
         </nav>
       ) : null}
+      <div className="studio-frame">
+      {sidebar}
       <div className="studio-body" data-chat={showChat && !layoutC ? "open" : "collapsed"}>
         <main id="studio-main" tabIndex={-1} className={isStudio ? "studio-canvas-column" : "studio-page-content"} hidden={referenceWorkspace && compactReferences && !layoutC}>
           {isStudio ? (canvas ?? children) : children}
@@ -534,6 +539,7 @@ export default function StudioShell({
             </aside>
           </div>
         ) : null}
+      </div>
       </div>
       {showChat && !referenceWorkspace ? (
         <div className="studio-floating-bar" hidden={!layoutC}>

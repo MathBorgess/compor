@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
 import {exploredReferenceSchema,referenceSignalSchema,type ExploredReference} from './reference-exploration-contract.ts';
 type Selection={userId:string;projectId:string;pieceId?:string;reference:ExploredReference;commit:()=>Promise<void>};
 const pendingSchema=z.strictObject({id:z.uuid(),reference:exploredReferenceSchema});

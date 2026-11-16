@@ -108,11 +108,9 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   }
   const approved=ordered.filter(item=>item.approvedVersions>0),selected=ordered.filter(item=>item.approvedVersions===0);
   return <section className="reference-exploration" aria-label="Buscar referências visuais">
-    {approved.length>0&&<section aria-label="Usadas em posts que você aprovou"><h2>Usadas em posts que você aprovou</h2>{cards(approved)}</section>}
-    {selected.length>0&&<section aria-label="Suas referências"><h2>Suas referências</h2>{cards(selected)}</section>}
-    <div><h2>Sugestões do Pinterest</h2>
+    <div className="reference-search-heading"><h2>Sugestões do Pinterest</h2>
       {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button>{onContinue&&<button type="button" onClick={onContinue}>Continuar sem referências</button>}</div>}
-      {consent&&<p>As sugestões partem da sua ideia. Você pode explorar outro assunto.</p>}
+      {consent&&<p className="reference-consent-status">Pinterest permitido nesta sessão. Só as escolhidas entram na conversa.</p>}
     </div>
     <form onSubmit={searchNow}>
       <label>O que você quer explorar?<input value={query} onChange={event=>setQuery(event.target.value)} maxLength={1000} placeholder="Ex.: tipografia acolhedora para uma aula" /></label>
@@ -122,7 +120,11 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     {search.status==='loading'&&<p role="status">Buscando referências…</p>}
     {search.status==='empty'&&<p>Nenhuma referência encontrada. Você pode tentar outro assunto ou continuar conversando.</p>}
     {search.status==='unavailable'&&<p role="status">A busca está indisponível. Você pode continuar sem referências.</p>}
-    {consent&&search.status==='ok'&&cards(search.references.filter(item=>!knownOrigins.has(item.originUrl)))}
+    <div className="reference-result-groups">
+      {approved.length>0&&<section aria-label="Usadas em posts que você aprovou"><h2>Usadas em posts que você aprovou</h2>{cards(approved)}</section>}
+      {selected.length>0&&<section aria-label="Suas referências"><h2>Suas referências</h2>{cards(selected)}</section>}
+      {consent&&search.status==='ok'&&<section aria-label="Sugestões pela sua ideia">{cards(search.references.filter(item=>!knownOrigins.has(item.originUrl)))}</section>}
+    </div>
     {notice&&<p role="status">{notice}</p>}
   </section>;
 }

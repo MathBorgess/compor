@@ -1,26 +1,26 @@
-import * as z from 'zod';
+import * as z from '../lib/schema.ts';
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import type { prepareArtworkInput, ArtworkConversion } from '../lib/studio-artwork-input';
 type ArtworkInput=Awaited<ReturnType<typeof prepareArtworkInput>>;
 
-const usageSchema=z.object({input_tokens:z.number().nullable().optional(),output_tokens:z.number().nullable().optional()});
-const traceSchema=z.object({functionCalls:z.number().optional(),outputs:z.number().optional(),omittedItems:z.number().optional(),items:z.array(z.object({type:z.string(),schemaValid:z.boolean().optional(),errorClass:z.string().optional()})).optional()});
-const common=z.object({error:z.string().optional(),errorCode:z.string().optional(),failurePhase:z.string().optional(),requestId:z.string().optional(),usage:usageSchema.nullable().optional(),itemTrace:traceSchema.optional(),assetId:z.string().optional()});
+const usageSchema=z.object({input_tokens:z.optional(z.nullable(z.number())),output_tokens:z.optional(z.nullable(z.number()))});
+const traceSchema=z.object({functionCalls:z.optional(z.number()),outputs:z.optional(z.number()),omittedItems:z.optional(z.number()),items:z.optional(z.array(z.object({type:z.string(),schemaValid:z.optional(z.boolean()),errorClass:z.optional(z.string())})))});
+const common=z.object({error:z.optional(z.string()),errorCode:z.optional(z.string()),failurePhase:z.optional(z.string()),requestId:z.optional(z.string()),usage:z.optional(z.nullable(usageSchema)),itemTrace:z.optional(traceSchema),assetId:z.optional(z.string())});
 export const chatResponseSchema=z.discriminatedUnion('status',[
  // reply stays unknown here: lib/studio-quick-replies validates it and falls back to text.
- common.extend({status:z.literal('completed'),text:z.string().optional(),reply:z.unknown().optional()}),
- common.extend({status:z.literal('consent_required'),prompt:z.string(),proposal:z.unknown().optional(),attemptId:z.string(),actionBinding:z.string(),declineBinding:z.string().optional()}),
- common.extend({status:z.literal('action_required'),action:z.object({name:z.string(),args:z.unknown()}),actionBinding:z.string()}),
- common.extend({status:z.enum(['running','failed','unknown','accepted'])}),
+ z.extend(common,{status:z.literal('completed'),text:z.optional(z.string()),reply:z.optional(z.unknown())}),
+ z.extend(common,{status:z.literal('consent_required'),prompt:z.string(),proposal:z.optional(z.unknown()),attemptId:z.string(),actionBinding:z.string(),declineBinding:z.optional(z.string())}),
+ z.extend(common,{status:z.literal('action_required'),action:z.object({name:z.string(),args:z.unknown()}),actionBinding:z.string()}),
+ z.extend(common,{status:z.enum(['running','failed','unknown','accepted'])}),
 ]);
-export const errorResponseSchema=common.extend({status:z.string().optional()});
-export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.literal('failed'),error:z.literal('default_credential_unavailable'),failurePhase:z.literal('before_submission'),requestId:z.string().uuid(),retryAutomatically:z.literal(false)});
+export const errorResponseSchema=z.extend(common,{status:z.optional(z.string())});
+export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.literal('failed'),error:z.literal('default_credential_unavailable'),failurePhase:z.literal('before_submission'),requestId:z.string().check(z.uuid()),retryAutomatically:z.literal(false)});
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
 export type Usage=z.infer<typeof usageSchema>;
-export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.number().int()});
+export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.number().check(z.int())});
 export type ImageContext=z.infer<typeof imageContextSchema>;
-export const receiptSchema=z.strictObject({userId:z.string(),projectId:z.string(),requestId:z.string(),pieceId:z.string(),version:z.number().int(),assetId:z.string()});
+export const receiptSchema=z.strictObject({userId:z.string(),projectId:z.string(),requestId:z.string(),pieceId:z.string(),version:z.number().check(z.int()),assetId:z.string()});
 export type ImageReceipt=z.infer<typeof receiptSchema>;
-export const chatMarkerSchema=z.object({requestId:z.string().nullable(),previousAttemptKey:z.string().nullable().optional(),credentialSource:z.enum(['default','byok']).optional(),imageContext:imageContextSchema.nullable().optional(),imageReceipt:receiptSchema.nullable().optional(),imageProtocolVersion:z.literal(1).optional()});
+export const chatMarkerSchema=z.object({requestId:z.nullable(z.string()),previousAttemptKey:z.optional(z.nullable(z.string())),credentialSource:z.optional(z.enum(['default','byok'])),imageContext:z.optional(z.nullable(imageContextSchema)),imageReceipt:z.optional(z.nullable(receiptSchema)),imageProtocolVersion:z.optional(z.literal(1))});
 export type ImageAction=Extract<ChatResponse,{status:'consent_required'}>&{proposal:ImageProposal;artworkInput:ArtworkInput|null;inputError:string;requestId:string;context:ImageContext&{headline:string};canPrepareTransport:boolean;conversions:readonly ArtworkConversion[];sourceFingerprint:string|null};
 export type Inspection={status:'completed'|'failed'|'running'|'action_required'|'consent_required'|'unknown'|'unavailable';authenticationRejected?:boolean;usage:{input_tokens:number|null;output_tokens:number|null}|null;technical:{functionCalls:number|null;outputs:number|null;omittedItems:number|null;validSchemas:number;invalidSchemas:number;errorClasses:string[]}|null};

@@ -1,11 +1,12 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
+import {creationContextSchema} from './studio-domain.ts';
 
 export const BATCH_SIZE=3;
 export const BATCH_DELAY_MS=15_000;
-const sequence=z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER-1);
-const reviewBatch=z.strictObject({batchId:z.string().uuid(),imageIds:z.array(z.string().uuid()).max(BATCH_SIZE)});
-const progressSchema=z.strictObject({sequence,batchId:z.string().uuid(),completed:z.number().int().min(0).max(BATCH_SIZE),nextAt:z.number().int().nonnegative().nullable(),remainingMs:z.number().int().min(0).max(BATCH_DELAY_MS).nullable().default(null),reviewBatches:z.array(reviewBatch).max(2).default([]),reviewedBatchId:z.string().uuid().nullable().default(null),awaitingFeedback:z.boolean().default(false)}).refine(value=>value.completed===BATCH_SIZE ? (value.nextAt!==null)!==(value.remainingMs!==null) : value.nextAt===null&&value.remainingMs===null);
-export const pendingSchema=z.strictObject({projectId:z.string().uuid(),requestId:z.string().uuid(),sequence,batchId:z.string().uuid().optional(),position:z.number().int().min(1).max(BATCH_SIZE).optional()}).refine(value=>(value.batchId===undefined)===(value.position===undefined));
+const sequence=z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER-1));
+const reviewBatch=z.strictObject({batchId:z.string().check(z.uuid()),imageIds:z.array(z.string().check(z.uuid())).check(z.maxLength(BATCH_SIZE))});
+const progressSchema=z.strictObject({sequence,batchId:z.string().check(z.uuid()),completed:z.number().check(z.int()).check(z.minimum(0)).check(z.maximum(BATCH_SIZE)),nextAt:z.nullable(z.number().check(z.int()).check(z.nonnegative())),remainingMs:z._default(z.nullable(z.number().check(z.int()).check(z.minimum(0)).check(z.maximum(BATCH_DELAY_MS))),null),reviewBatches:z._default(z.array(reviewBatch).check(z.maxLength(2)),[]),reviewedBatchId:z._default(z.nullable(z.string().check(z.uuid())),null),awaitingFeedback:z._default(z.boolean(),false)}).check(z.refine(value=>value.completed===BATCH_SIZE ? (value.nextAt!==null)!==(value.remainingMs!==null) : value.nextAt===null&&value.remainingMs===null));
+export const pendingSchema=z.strictObject({projectId:z.string().check(z.uuid()),requestId:z.string().check(z.uuid()),sequence,batchId:z.optional(z.string().check(z.uuid())),position:z.optional(z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(BATCH_SIZE))),conversationId:z.optional(z.union([z.literal('references'),z.uuid()])),creationContext:z.optional(creationContextSchema)}).check(z.refine(value=>(value.batchId===undefined)===(value.position===undefined)));
 export type BatchProgress=z.infer<typeof progressSchema>;
 export type PendingExploration=z.infer<typeof pendingSchema>;
 type StorageReader=Pick<Storage,'getItem'|'setItem'>;

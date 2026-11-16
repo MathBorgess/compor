@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.ts';
 import {referenceSchema, type StudioReference, type StudioState, type StudioScope} from './studio-domain.ts';
 export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview'}
 export interface DraftAssetMetadata extends DraftAssetAddress {mime:string;size:number;width:number;height:number}
@@ -69,7 +69,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     });
   };
   const readState=(input:unknown,scope:string):StudioState|null=>{
-    const record=z.object({scope:z.string(),state:z.unknown()}).optional().parse(input);
+    const record=z.optional(z.object({scope:z.string(),state:z.unknown()})).parse(input);
     if(record===undefined)return null;
     try{if(record.scope!==scope)throw Error();const state=parseStudioState(record.state);if(scopeOf(state)!==scope)throw Error();return state;}catch{throw new StudioStorageError('studio_storage_corrupt');}
   };
@@ -88,7 +88,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
           const existing=readState(request.result,scope);
           if((existing?.revision??null)!==expectedRevision)throw new StudioStorageError('studio_storage_conflict',{currentRevision:existing?.revision});
           if(existing && state.revision<=existing.revision){if(JSON.stringify(existing)===JSON.stringify(state)){done(state);return;}throw new StudioStorageError('studio_storage_invalid');}
-          const previous=z.object({state:z.object({schemaVersion:z.number()}).passthrough()}).optional().parse(request.result);
+          const previous=z.optional(z.object({state:z.catchall(z.object({schemaVersion:z.number()}),z.unknown())})).parse(request.result);
           if(previous&&[1,2].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
           store.put({scope,state});done(state);
         }catch(error){fail(error);}
@@ -142,7 +142,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       request.onsuccess=()=>{try{const state=readState(request.result,scopeKey);if(state&&(state.references.some(item=>item.id===id)||[state.direction,...Object.values(state.posts).map(post=>post.direction)].some(direction=>direction.criteria.some(item=>[item.example.referenceId,item.counterexample.referenceId].includes(id)))||state.drafts.some(draft=>draft.creationContext?.references.some(reference=>reference.id===id))||state.adjustments.some(item=>item.context.references.some(reference=>reference.id===id))))throw new StudioStorageError('studio_reference_in_use');tx.objectStore('references').delete(key);done(true);}catch(error){fail(error);}};
     });
   }
-  function putDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob}):Promise<DraftAssetMetadata> {
+  function putDraftAsset(input:StudioScope & DraftAssetAddress & {file:Blob;ifAbsent?:boolean;expectedRevision?:number}):Promise<DraftAssetMetadata> {
     const task=fileQueue.then(async()=>{
       const scope=scopeOf(input),address=draftAddress(scope,input),file=input.file;
       if(!(file instanceof Blob)||typeof decodeImage!=='function')throw new StudioStorageError('studio_draft_asset_invalid');
@@ -156,10 +156,12 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       }catch{throw new StudioStorageError('studio_draft_asset_invalid');}
       finally{try{image?.close();}catch{}}
       const blob=file.slice(0,file.size,file.type);
-      return transaction<DraftAssetMetadata>(['references','draftAssets'],'readwrite',(tx,done,fail)=>{
+      return transaction<DraftAssetMetadata>(['references','draftAssets','states'],'readwrite',(tx,done,fail)=>{
         const store=tx.objectStore('draftAssets'),referencesRequest=tx.objectStore('references').getAll(),assetsRequest=store.getAll();
         let references:StoredRecord[]|undefined,assets:StoredRecord[]|undefined;
-        const put=()=>{if(!references||!assets)return;try{checkGlobalBudget(references,assets,address.key,metadata.size);store.put({key:address.key,scope,metadata,file:blob});done(Object.freeze(metadata));}catch(error){fail(error);}};
+        let revisionChecked=input.expectedRevision===undefined;
+        const put=()=>{if(!references||!assets||!revisionChecked)return;try{if(input.ifAbsent&&assets.some(record=>record.key===address.key))throw new StudioStorageError('studio_draft_asset_exists');checkGlobalBudget(references,assets,address.key,metadata.size);store.put({key:address.key,scope,metadata,file:blob});done(Object.freeze(metadata));}catch(error){fail(error);}};
+        if(input.expectedRevision!==undefined){const stateRequest=tx.objectStore('states').get(scope);stateRequest.onsuccess=()=>{try{if(!Number.isSafeInteger(input.expectedRevision)||readState(stateRequest.result,scope)?.revision!==input.expectedRevision)throw new StudioStorageError('studio_storage_conflict');revisionChecked=true;put();}catch(error){fail(error);}};}
         referencesRequest.onsuccess=()=>{try{references=parseRecords(referencesRequest.result);put();}catch(error){fail(error);}};
         assetsRequest.onsuccess=()=>{try{assets=parseRecords(assetsRequest.result);put();}catch(error){fail(error);}};
       });

@@ -1,6 +1,7 @@
 import {savePieceSchema,approvePieceSchema} from './web-contracts.ts';
 import type {Actor} from './agent-auth.ts';
 import type {PieceContent} from './studio-domain.ts';
+import type {createPostStore} from './post-store';
 import type {createProjectPieceStore} from './piece-store.ts';
 const reply = (data:unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
 const uuid = (value:unknown):value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -16,7 +17,7 @@ async function parseBody(request:Request):Promise<unknown> {
   finally { await reader.cancel().catch(() => {}); }
   return JSON.parse(new TextDecoder('utf-8', { fatal: true }).decode(Buffer.concat(chunks)));
 }
-export function createPieceRoutes({ appOrigin, resolveActor, ownsProject, pieceStore }: {appOrigin?:string;resolveActor?:()=>Promise<Actor|null>;ownsProject?:(actor:Actor,projectId:string)=>Promise<boolean>;pieceStore?:ReturnType<typeof createProjectPieceStore>} = {}) {
+export function createPieceRoutes({ appOrigin, resolveActor, ownsProject, pieceStore, postStore }: {appOrigin?:string;resolveActor?:()=>Promise<Actor|null>;ownsProject?:(actor:Actor,projectId:string)=>Promise<boolean>;pieceStore?:ReturnType<typeof createProjectPieceStore>;postStore?:ReturnType<typeof createPostStore>} = {}) {
   async function check(projectId:unknown) {
     if (!uuid(projectId)) return { error: 'invalid_request', status: 400 };
     if(!resolveActor||!ownsProject||!pieceStore)throw Error('unavailable');
@@ -31,7 +32,11 @@ export function createPieceRoutes({ appOrigin, resolveActor, ownsProject, pieceS
         const projectId = new URL(request.url).searchParams.get('projectId');
         const auth = await check(projectId);
         if ('error' in auth) return reply({ error: auth.error }, auth.status);
-        return reply({ versions: await auth.pieceStore.listProject({ actor: { userId: auth.actor.userId }, token: auth.actor.token }, auth.projectId) });
+        const context={actor:{userId:auth.actor.userId},token:auth.actor.token};
+        const versions=await auth.pieceStore.listProject(context,auth.projectId);
+        if(!postStore)return reply({versions});
+        const posts=await postStore.list(context,auth.projectId),deleted=new Set(posts.filter(post=>post.deleted).map(post=>post.pieceId));
+        return reply({versions:versions.filter(version=>!deleted.has(version.piece_id)),posts});
       } catch { return reply({ error: 'unavailable' }, 503); }
     },
     async POST(request:Request) {

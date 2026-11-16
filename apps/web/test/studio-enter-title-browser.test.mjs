@@ -33,7 +33,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
  await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage();page.setDefaultTimeout(15000);
  if(landingIdea)await page.addInitScript(({userId,idea})=>sessionStorage.setItem(`compor-objective:user:${userId}`,idea),{userId,idea:landingIdea});
- const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],explorations=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
+ const posts=[],chats=[],actions=[],renames=[],errors=[],external=[],explorations=[],generatedRows=[],flow={chat:()=>({status:'completed',text:'Resposta sintética.'})};
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
@@ -53,9 +53,12 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   if(url.pathname==='/api/pieces')return route.fulfill({json:{versions:[]}});
   if(url.pathname==='/api/studio/chat'){const body=request.postDataJSON();if(body.op!=='poll')chats.push(body);return route.fulfill({status:202,json:await flow.chat(body)});}
   if(url.pathname==='/api/studio/action'){const body=request.postDataJSON();actions.push(body);return route.fulfill({status:202,json:await flow.action(body)});}
-  if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:[]}});
+  if(url.pathname==='/api/studio/explorations'&&request.method()==='GET')return route.fulfill({json:{images:generatedRows.filter(row=>row.project_id===url.searchParams.get('projectId')&&(!url.searchParams.has('beforeOrdinal')||row.ordinal<Number(url.searchParams.get('beforeOrdinal')))),nextBeforeOrdinal:null}});
+  if(url.pathname==='/api/studio/explorations/image')return route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64')});
   if(url.pathname==='/api/studio/explorations'&&request.method()==='POST'){
-   const body=request.postDataJSON();explorations.push(body);return route.fulfill({status:completeExplorations?200:202,json:{status:completeExplorations?'completed':'unknown',requestId:body.requestId}});
+   const body=request.postDataJSON();explorations.push(body);
+   if(completeExplorations)generatedRows.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:generatedRows.filter(row=>row.project_id===body.projectId).length+1,batch_id:body.batch.id,batch_position:body.batch.position});
+   return route.fulfill({status:completeExplorations?200:202,json:{status:completeExplorations?'completed':'unknown',requestId:body.requestId}});
   }
   if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
@@ -64,7 +67,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   return route.continue();
  });
  await page.goto(origin,{timeout:60000});
- const idea=page.getByLabel('Sua ideia',{exact:true});await idea.waitFor();
+ const idea=page.getByLabel('Nome do projeto',{exact:true});await idea.waitFor();
  return {page,idea,posts,chats,actions,renames,flow,errors,external,projects,explorations};
 }
 async function openChat(page){
@@ -81,7 +84,7 @@ test('Enter envia a ideia e a mensagem uma única vez',{skip,timeout:90000},asyn
  await idea.fill('Quero divulgar minha oficina de cerâmica para iniciantes aos sábados');await idea.press('Enter');
  await page.getByRole('button',{name:'Criando projeto…',exact:true}).waitFor();await idea.press('Enter');
  const message=await connectKey(page);
- assert.deepEqual(posts,[{title:'Quero divulgar minha oficina de cerâmica para'}],'o Enter repetido durante a criação não cria outro projeto, e o título é o começo da ideia');
+ assert.deepEqual(posts,[{title:'Quero divulgar minha oficina de cerâmica para iniciantes aos sábados'}],'o Enter repetido durante a criação não cria outro projeto, e o nome escolhido é preservado integralmente');
  await message.fill('Quero um post para iniciantes');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await message.press('Enter');
  assert.deepEqual(chats.map(chat=>chat.message),['Quero um post para iniciantes'],'o Enter envia a mensagem pelo mesmo caminho do botão, sem repetir com a caixa vazia');
@@ -90,8 +93,7 @@ test('Enter envia a ideia e a mensagem uma única vez',{skip,timeout:90000},asyn
 
 test('Shift+Enter quebra linha sem enviar',{skip,timeout:90000},async t=>{
  const {page,idea,posts,chats,errors}=await studio(t);
- await idea.fill('Oficina de cerâmica');await idea.press('Shift+Enter');await idea.pressSequentially('aos sábados');
- assert.equal(await idea.inputValue(),'Oficina de cerâmica\naos sábados');assert.equal(posts.length,0);
+ await idea.fill('Oficina de cerâmica aos sábados');assert.equal(await idea.getAttribute('type'),'text');assert.equal(posts.length,0);
  await idea.press('Enter');const message=await connectKey(page);assert.equal(posts.length,1);
  await message.fill('Primeira linha');await message.press('Shift+Enter');await message.pressSequentially('Segunda linha');
  assert.equal(await message.inputValue(),'Primeira linha\nSegunda linha');assert.equal(chats.length,0);
@@ -105,7 +107,7 @@ test('Enter que confirma um acento ou candidato da composição não envia',{ski
  await idea.fill('Oficina de cerâmica');
  for(const init of composing){await idea.dispatchEvent('keydown',init);assert.equal(await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).isEnabled(),true,JSON.stringify(init));}
  assert.equal(posts.length,0);
- await idea.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:13});const message=await connectKey(page);assert.equal(posts.length,1,'o mesmo evento fora da composição envia');
+ await idea.press('Enter');const message=await connectKey(page);assert.equal(posts.length,1,'o mesmo evento fora da composição envia');
  await message.fill('Café');
  for(const init of composing){await message.dispatchEvent('keydown',init);assert.equal(await message.isEnabled(),true,JSON.stringify(init));assert.equal(await message.inputValue(),'Café');}
  await message.dispatchEvent('keydown',{key:'Enter',code:'Enter',keyCode:13});await page.getByText('Resposta sintética.',{exact:true}).waitFor();
@@ -115,8 +117,7 @@ test('Enter que confirma um acento ou candidato da composição não envia',{ski
 test('em tela de toque o Enter quebra linha e o botão envia',{skip,timeout:90000},async t=>{
  const {page,idea,posts,chats,errors}=await studio(t,{touch:true});
  assert.equal(await page.evaluate(()=>matchMedia('(pointer: coarse)').matches),true);
- await idea.fill('Oficina');await idea.press('Enter');await idea.pressSequentially('de cerâmica');
- assert.equal(await idea.inputValue(),'Oficina\nde cerâmica');assert.equal(posts.length,0);
+ await idea.fill('Oficina de cerâmica');assert.equal(await idea.getAttribute('type'),'text');assert.equal(posts.length,0);
  await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();const message=await connectKey(page);assert.equal(posts.length,1);
  await message.fill('Primeira linha');await message.press('Enter');await message.pressSequentially('Segunda linha');
  assert.equal(await message.inputValue(),'Primeira linha\nSegunda linha');assert.equal(chats.length,0);
@@ -127,7 +128,7 @@ test('em tela de toque o Enter quebra linha e o botão envia',{skip,timeout:9000
 const longIdea='Quero divulgar minha oficina de cerâmica para iniciantes aos sábados';
 const projectTrigger=(page,name)=>page.getByRole('heading',{level:1}).getByRole('button',name?{name,exact:true}:{});
 
-test('o agente sabe que o título é provisório até a pessoa renomear o projeto',{skip,timeout:90000},async t=>{
+test('o nome escolhido não é provisório e continua podendo ser renomeado',{skip,timeout:90000},async t=>{
  const {page,idea,chats,renames,errors}=await studio(t);
  await idea.fill(longIdea);await idea.press('Enter');
  const message=await connectKey(page);assert.equal(await message.inputValue(),'');
@@ -135,7 +136,7 @@ test('o agente sabe que o título é provisório até a pessoa renomear o projet
  await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill('Cerâmica aos sábados');await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
  await projectTrigger(page,'Cerâmica aos sábados').waitFor();
  await message.fill('Quero um tom acolhedor');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
- assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,false],'depois da renomeação pela pessoa o agente não propõe outro título');
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false],'depois da renomeação pela pessoa o agente não propõe outro título');
  assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(errors,[]);
 });
 
@@ -153,7 +154,7 @@ test('o agente propõe um título curto e a pessoa vê o nome antes de confirmar
  assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);assert.deepEqual(actions.map(action=>[action.actionBinding,action.result.status]),[['rename-binding','completed']]);
  flow.chat=()=>({status:'completed',text:'Seguimos.'});
  await message.fill('Agora a legenda');await message.press('Enter');await page.getByText('Seguimos.',{exact:true}).waitFor();
- assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false,false]);assert.deepEqual(errors,[]);
 });
 
 test('editar a primeira mensagem preserva a proposta e recusá-la persiste depois de recarregar',{skip,timeout:90000},async t=>{
@@ -161,7 +162,7 @@ test('editar a primeira mensagem preserva a proposta e recusá-la persiste depoi
  await idea.fill(longIdea);await idea.press('Enter');
  let message=await connectKey(page);await message.fill('Reescrevi a ideia: uma oficina para iniciantes.');await message.press('Enter');
  await page.getByText('Resposta sintética.',{exact:true}).waitFor();
- assert.equal(chats[0].context.projectTitleProvisional,true,'editar a ideia não transforma o título inicial em escolha manual');
+ assert.equal(chats[0].context.projectTitleProvisional,false,'o nome explícito não se torna provisório ao escrever um post');
  flow.chat=body=>({status:'action_required',action:{name:'compor_renomear_projeto',args:{projectId:projects[0].id,requestId:id(92),revision:body.context.revision,title:'Cerâmica aos sábados'}},actionBinding:'declined-rename-binding'});
  flow.action=()=>({status:'completed',text:'Nome mantido.'});
  await message.fill('Vamos continuar');await message.press('Enter');
@@ -172,10 +173,10 @@ test('editar a primeira mensagem preserva a proposta e recusá-la persiste depoi
  await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
  message=await connectKey(page);await message.fill('Agora a legenda');await message.press('Enter');
  await page.getByText('Continuamos sem sugerir outro nome.',{exact:true}).waitFor();
- assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,true,false]);assert.deepEqual(errors,[]);
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false,false]);assert.deepEqual(errors,[]);
 });
 
-test('confirmar no menu o mesmo texto provisório torna o nome uma escolha da pessoa',{skip,timeout:90000},async t=>{
+test('confirmar o mesmo nome no menu preserva a escolha da pessoa',{skip,timeout:90000},async t=>{
  const {page,idea,chats,projects,errors}=await studio(t);
  await idea.fill(longIdea);await idea.press('Enter');const message=await connectKey(page);
  await projectTrigger(page).click();await page.getByLabel('Renomear',{exact:true}).fill(projects[0].title);
@@ -192,7 +193,7 @@ test('uma revisão remota de nome impede outra proposta mesmo com texto igual',{
  await page.reload();await page.locator('.studio-project-card').filter({hasText:projects[0].title}).click();
  message=await connectKey(page);await message.fill('Continue a campanha');await message.press('Enter');
  await page.getByText('Resposta sintética.',{exact:true}).nth(1).waitFor();
- assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[true,false]);assert.deepEqual(errors,[]);
+ assert.deepEqual(chats.map(chat=>chat.context.projectTitleProvisional),[false,false]);assert.deepEqual(errors,[]);
 });
 
 test('barra, cards e menu cortam o título com reticências e mantêm o nome completo acessível',{skip,timeout:90000},async t=>{
@@ -218,19 +219,19 @@ test('barra, cards e menu cortam o título com reticências e mantêm o nome com
 test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e primeiros lotes separados',{skip,timeout:90000},async t=>{
  const firstIdea='Oficina de cerâmica',secondIdea='Aula de gravura';
  const {page,idea,projects,chats,explorations,errors}=await studio(t,{completeExplorations:true,landingIdea:'Uma ideia antiga da entrada'});
- await idea.fill(firstIdea);await idea.press('Enter');await projectTrigger(page,firstIdea).waitFor();
+ await idea.fill(firstIdea);await idea.press('Enter');await projectTrigger(page,firstIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(firstIdea);
  await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:'Novo projeto',exact:true}).click();
- await page.getByLabel('Sua ideia',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();await projectTrigger(page,secondIdea).waitFor();
+ await page.getByLabel('Nome do projeto',{exact:true}).fill(secondIdea);await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();await projectTrigger(page,secondIdea).waitFor();await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill(secondIdea);
  await page.reload();await page.locator('.studio-project-card').filter({hasText:secondIdea}).click();
  let message=await connectKey(page);assert.equal(await message.inputValue(),'');
  assert.equal(explorations.length,0,'conectar a chave não inicia exploração');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
  assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
  await closeSettings(page);await message.fill('Post sobre gravura');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await projectTrigger(page).click();await page.getByRole('dialog',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
  message=await connectKey(page);assert.equal(await message.inputValue(),'');
- await openSettings(page,'Referências');await page.getByRole('button',{name:'Propostas do Compor',exact:true}).click();await page.getByRole('button',{name:'Pedir propostas visuais',exact:true}).click();
+ await openSettings(page,'Referências');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
  const firstBatch=explorations.filter(call=>call.projectId===projects[0].id);assert.equal(firstBatch.length,3);assert.ok(firstBatch.every(call=>call.prompt.includes(firstIdea)&&!call.prompt.includes(secondIdea)));
  await closeSettings(page);await message.fill('Post sobre cerâmica');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
@@ -246,7 +247,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  await field.fill('Primeiro post, sobre a oficina');await field.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  const first=chats[0].conversationId;assert.equal(first,chats[0].context.pieceId);
  await field.fill('Rascunho privado do post um');
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Novo post',exact:true}).click();
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  field=await openConversation(page);assert.equal(await field.inputValue(),'');assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Primeiro post, sobre a oficina',{exact:true}).count(),0);
  await field.fill('Segundo post, sobre materiais');await field.press('Enter');await page.locator('.guided-conversation:not([hidden])').getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.notEqual(chats[1].conversationId,first);assert.equal(chats[1].context.brief.offer,chats[0].context.brief.offer);

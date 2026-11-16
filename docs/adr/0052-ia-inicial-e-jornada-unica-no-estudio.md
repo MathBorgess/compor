@@ -1,7 +1,9 @@
-# ADR 0047 — IA inicial e jornada única no Estúdio
+# ADR 0052 — IA inicial e jornada única no Estúdio
 
 - Estado: decisão solicitada em 15/11/2026; implementação em validação no PR 50.
 - Fonte: pedido de Matheus para usar a IA do Compor por padrão, simplificar a navegação, a seleção de referências e a conversa do post.
+
+Renumerado na integração local para evitar colisão com o ADR 0047 de exclusão de projetos. Este documento veio de `origin/main` como `0047-ia-inicial-e-jornada-unica-no-estudio.md`; sua decisão e fonte histórica foram preservadas.
 
 ## Decisão
 

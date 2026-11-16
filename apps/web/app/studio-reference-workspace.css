@@ -3,7 +3,7 @@
   height: min(100dvh, var(--studio-viewport-height, 100dvh));
   min-height: 0;
 }
-.compor-studio[data-chat-presentation='sidebar'] > :not(.studio-body) { flex-shrink: 0; }
+.compor-studio[data-chat-presentation='sidebar'] > :not(.studio-frame) { flex-shrink: 0; }
 .compor-studio[data-chat-presentation='sidebar'] .studio-body[data-chat='open'] {
   grid-template-columns: minmax(0, 1fr) clamp(340px, 30vw, 420px);
 }

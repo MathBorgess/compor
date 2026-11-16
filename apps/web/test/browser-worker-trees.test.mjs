@@ -12,7 +12,9 @@ async function put(root,path,contents=path) {
 }
 
 async function fixture(t) {
-  const temporary=await mkdtemp(join(tmpdir(),'compor-worker-trees-'));
+  // macOS exposes the temporary directory through /var -> /private/var.
+  // Compare physical worker paths against the same canonical root.
+  const temporary=await realpath(await mkdtemp(join(tmpdir(),'compor-worker-trees-')));
   t.after(()=>rm(temporary,{recursive:true,force:true}));
   const source=join(temporary,'source'),run=join(temporary,'run');
   const files=['package.json','package-lock.json','apps/web/package.json','apps/web/package-lock.json',

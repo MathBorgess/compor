@@ -1,4 +1,4 @@
-import * as z from 'zod';
+import * as z from './schema.js';
 
 // Briefing fields can contain multiple lines and may be longer than the
 // feedback fields. Validate the complete input before making any excerpts so
@@ -7,21 +7,21 @@ const safeText = value => !/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^
 // Reject standalone short keys and long embedded keys while permitting words
 // such as task-flow. Check all content, including omitted excerpts.
 const safeBriefText = value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|(?:^|[^\p{L}\p{N}])sk-[^\s]+|sk-[^\s]{20,}/iu.test(value);
-const briefText = z.string().trim().refine(safeBriefText);
-const factText = z.string().refine(safeBriefText);
-const text = z.string().trim().max(1000).refine(safeText);
+const briefText = z.string().check(z.trim()).check(z.refine(safeBriefText));
+const factText = z.string().check(z.refine(safeBriefText));
+const text = z.string().check(z.trim()).check(z.maxLength(1000)).check(z.refine(safeText));
 const inputSchema = z.strictObject({
-  idea: briefText.optional().default(''),
+  idea: z._default(z.optional(briefText),''),
   offer: briefText,
   audience: briefText,
-  briefAudience: briefText.optional().default(''),
-  facts: z.array(z.strictObject({label:factText.max(80).refine(value=>value.trim().length>0),value:factText.max(4000),status:z.enum(['confirmed','pending','omitted'])})).max(20).optional().default([]),
+  briefAudience: z._default(z.optional(briefText),''),
+  facts: z._default(z.optional(z.array(z.strictObject({label:factText.check(z.maxLength(80)).check(z.refine(value=>value.trim().length>0)),value:factText.check(z.maxLength(4000)),status:z.enum(['confirmed','pending','omitted'])})).check(z.maxLength(20))),[]),
   goal: briefText,
   direction: briefText,
-  accepted: z.array(text.min(1)).max(8),
-  rejected: z.array(text.min(1)).max(8),
-  feedback: z.array(z.strictObject({action:z.enum(['selected','rejected','comment']),comment:text,composition:text,contrast:text})).max(8).default([]),
-  sequence: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+  accepted: z.array(text.check(z.minLength(1))).check(z.maxLength(8)),
+  rejected: z.array(text.check(z.minLength(1))).check(z.maxLength(8)),
+  feedback: z._default(z.array(z.strictObject({action:z.enum(['selected','rejected','comment']),comment:text,composition:text,contrast:text})).check(z.maxLength(8)),[]),
+  sequence: z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER)),
 });
 
 const compositions = [

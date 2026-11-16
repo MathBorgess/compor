@@ -11,6 +11,15 @@
         ],
         "createdAt": "2026-10-27T10:28:07.469Z",
         "reason": "Agent: archived Confluence v11 HTML is a preserved historical snapshot; changing typography would alter the source evidence."
+      },
+      {
+        "rule": "side-tab",
+        "value": "*",
+        "files": [
+          "apps/web/app/studio-shell.css"
+        ],
+        "createdAt": "2026-11-15T23:40:36.529Z",
+        "reason": "Agente: borda preexistente da recomendação em origin/main (828dc60), preservada intencionalmente na reorganização da bancada; este escopo não redesenha a linguagem visual desse bloco."
       }
     ]
   }

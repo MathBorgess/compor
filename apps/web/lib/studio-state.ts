@@ -53,10 +53,16 @@ export function parseStudioState(input: unknown): StudioState {
   for (const field of ['drafts','messages','marks','references','adjustments','events'] as const) if (value[field].length > STUDIO_LIMITS[field]) fail();
   if (!value.drafts.every(item => contextValid({pieceId:item.pieceId,baseVersion:item.baseVersion,expectedLatestVersion:item.expectedLatestVersion}) && contentValid(item.content) && approvalForBase(item.approval,item.baseVersion) && (!item.creationContext || unique(item.creationContext.references)&&item.creationContext.references.every(reference=>referenceInProject(reference,value.projectId))&&item.creationContext.references.reduce((sum,reference)=>sum+reference.size,0)<=STUDIO_LIMITS.referenceTotalBytes)) || !unique(value.drafts, item => `${item.pieceId}:${item.baseVersion}`)) fail();
   if (value.selection !== null && (!value.drafts.some(item => sameDraft(item, value.selection??{})))) fail();
+  if(value.selection&&value.posts[value.selection.pieceId]?.deleted)fail();
+  if(value.workflow.pendingPost&&value.drafts.some(draft=>draft.pieceId===value.workflow.pendingPost?.pieceId))fail();
+  if(value.workflow.referencePieceId!==null&&!value.drafts.some(item=>item.pieceId===value.workflow.referencePieceId&&item.baseVersion===0))fail();
   if (!unique(value.messages) || !value.messages.every(item => uuid(item.id) && (item.role!=='system'||item.text===REFERENCE_SELECTION_EVENT) && text(item.text, 16_000) && iso(item.createdAt) && (item.context === null || contextValid(item.context)))) fail();
   if (!unique(value.marks) || !value.marks.every(markValid) || !value.marks.every(mark => value.drafts.some(draft => sameDraft(draft, mark)))) fail();
   if (!unique(value.references) || !value.references.every(reference => referenceInProject(reference, value.projectId)) || value.references.reduce((sum, item) => sum + item.size, 0) > STUDIO_LIMITS.referenceTotalBytes) fail();
   if (!validatePostSettings(value)) fail();
+  if(Object.keys(value.workflow.latestExplorations??{}).some(scope=>scope!=='references'&&!value.drafts.some(draft=>draft.pieceId===scope)))fail();
+  if(Object.values(value.workflow.latestExplorations??{}).some(candidate=>candidate.creationContext&&(!unique(candidate.creationContext.references)||!candidate.creationContext.references.every(reference=>referenceInProject(reference,value.projectId))||candidate.creationContext.references.reduce((sum,reference)=>sum+reference.size,0)>STUDIO_LIMITS.referenceTotalBytes||candidate.creationContext.explorationSource?.projectId!==undefined&&candidate.creationContext.explorationSource.projectId!==value.projectId)))fail();
+  if(value.drafts.some(draft=>draft.creationContext?.explorationSource&&(draft.creationContext.explorationSource.projectId!==value.projectId||draft.creationContext.explorationSource.conversationId!=='references'&&draft.creationContext.explorationSource.conversationId!==draft.pieceId)))fail();
   if (!unique(value.adjustments) || !value.adjustments.every(item => adjustmentValid(item,value))) fail();
   if (!unique(value.events) || !value.events.every((item,index) => uuid(item.id) && (item.requestId === null || uuid(item.requestId) && value.adjustments.some(request=>request.id===item.requestId)) && item.sequence === index + 1)) fail();
   const actionReceipts=value.actionReceipts;

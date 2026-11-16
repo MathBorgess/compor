@@ -27,6 +27,18 @@ export function createProjectRoutes({ appOrigin, resolveActor, projectStore }: {
     return resolveActor();
   }
   return {
+    async DELETE(request:Request) {
+      if (!appOrigin || request.headers.get('origin') !== appOrigin) return reply({error:'invalid_origin'},403);
+      if (!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??'')) return reply({error:'invalid_request'},400);
+      try {
+        const actor=await authorized();
+        if(!actor?.userId||!actor.token||!projectStore)return reply({error:'unauthorized'},401);
+        let data;
+        try{data=z.strictObject({projectId:z.string().uuid(),expectedRevision:z.number().int().min(1).max(2147483646)}).parse(JSON.parse(await bodyText(request)));}catch{return reply({error:'invalid_request'},400);}
+        const result=await projectStore.remove({actor:{userId:actor.userId},token:actor.token},data);
+        return reply(result,result.status==='conflict'?409:result.status==='not_found'?404:200);
+      }catch{return reply({error:'result_unknown',retryAutomatically:false},502);}
+    },
     async GET() {
       try {
         const actor = await authorized();

@@ -96,11 +96,11 @@ const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),promp
 
 test('chat cria e salva versões com confirmação; imagem usa snapshot novo automaticamente',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,calls,versions,flow,errors,external,explorationPosts}=await app(t);let submits=0;
- flow.chat=body=>body.op==='poll'?{status:'completed',text:'Imagem integrada concluída.'}:++submits===1?action('compor_novo_post',{projectId,requestId:newPiece,revision:body.context.revision},'new'):consent('decline');
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Imagem integrada concluída.'}:++submits===1?action('compor_novo_post',{projectId,requestId:newPiece,revision:body.context.revision},'new'):submits===2?action('compor_editar_peca',{projectId,requestId:id(12),revision:body.context.revision,pieceId:newPiece,baseVersion:0,field:'headline',value:'Título novo inicial'},'edit-one'):consent('decline');
  flow.action=body=>{
   const scope={projectId,revision:body.result.revision};
   switch(body.actionBinding){
-   case 'new':return action('compor_editar_peca',{...scope,requestId:id(12),pieceId:newPiece,baseVersion:0,field:'headline',value:'Título novo inicial'},'edit-one');
+   case 'new':assert.equal(body.result.status,'declined','o agente aguarda o nome e a confirmação antes de criar o post');return {status:'completed',text:'Dê um nome e confirme a criação do novo post.'};
    case 'edit-one':return action('compor_salvar_versao',{...scope,requestId:id(13),pieceId:newPiece,baseVersion:0,expectedLatestVersion:0},'save-one');
    case 'save-one':return action('compor_editar_peca',{...scope,requestId:id(14),pieceId:newPiece,baseVersion:1,field:'headline',value:'Título novo refinado'},'edit-two');
    case 'edit-two':return action('compor_salvar_versao',{...scope,requestId:id(15),pieceId:newPiece,baseVersion:1,expectedLatestVersion:1},'save-two');
@@ -110,12 +110,21 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
   }
  };
  await openOriginal(page,origin);await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Crie outro post, refine e salve antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor();
+ await eventually(()=>stored(page),state=>state?.adjustments[0]?.status==='completed');
+ assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'a preparação do novo post não salva nem gera arte');
+ await page.getByRole('textbox',{name:'Nome do post',exact:true}).fill('Post integrado');
+ await page.getByRole('button',{name:'Continuar para criação',exact:true}).click();
+ await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor({state:'hidden'});
+ await openEditor(page);await openConversation(page);
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Refine e salve este post antes de propor a imagem.');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
  try{await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();}catch(error){throw Error(`${error.message}\nUI: ${await page.locator('body').innerText()}\nAções: ${JSON.stringify(calls.map(call=>({path:call.path,binding:call.body?.actionBinding,result:call.body?.result})))}`,{cause:error});}assert.equal(calls.filter(call=>call.path==='/api/pieces').length,0,'primeiro salvamento espera confirmação explícita');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await eventually(()=>page.getByLabel('Título',{exact:true}).inputValue(),value=>value==='Título novo refinado');await page.getByRole('dialog',{name:'Confirmar alteração no projeto?'}).waitFor();assert.equal(calls.filter(call=>call.path==='/api/pieces').length,1,'segunda versão também espera confirmação');
  await page.getByRole('button',{name:'Confirmar',exact:true}).click();await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor({state:'attached'});
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Original preservado .*Abrir post e conversa$/}).click();await openConversation(page);
- await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();assert.equal((await stored(page)).adjustments[0].status,'completed');
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Título novo refinado .*Abrir post e conversa$/}).click();await openEditor(page);await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ await page.getByText('Dê um nome e confirme a criação do novo post.',{exact:true}).waitFor();assert.equal((await stored(page)).adjustments[0].status,'completed');
+ assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Imagem integrada concluída.',{exact:true}).count(),0,'a resposta da nova peça permanece na conversa dela');
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post integrado .*Abrir post e conversa$/}).click();await openEditor(page);await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]},apiKey});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),1,'Novo post mostra só os cards da nova peça');
  const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
@@ -245,6 +254,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
   return route.fulfill({json:{versions}});
  });
  await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await waiting;
+ await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
  await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Post criado durante a leitura anterior');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  await openDrawer(page,'Bases');
@@ -260,7 +270,7 @@ test('leitura antiga de versões não remove do histórico uma versão salva dur
 test('a conversa gera a arte integral de um rascunho sem exigir salvamento prévio',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,versions,flow,errors,external}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Primeira arte pronta.'}:consent('draft');
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  assert.equal(await page.getByLabel('Preço',{exact:true}).count(),0);assert.equal(await page.getByLabel('Data',{exact:true}).count(),0);
  await page.getByLabel('Título',{exact:true}).fill('Curso de planilhas');await page.getByText('Adicionar outras informações',{exact:true}).click();await page.getByRole('button',{name:'Adicionar preço',exact:true}).click();await page.getByRole('button',{name:'Adicionar data',exact:true}).click();await page.getByLabel('Preço',{exact:true}).fill('R$ 49');await page.getByLabel('Data',{exact:true}).fill('12/12');
  await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);
@@ -346,7 +356,7 @@ test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(b
   const version={project_id:projectId,piece_id:body.pieceId,version:1,content:body.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}};
   versions.push(version);return route.fulfill({json:{status:'saved',version}});
  });
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo persistido');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo persistido');
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('Nova versão salva.',{exact:true}).waitFor();
  const state=await eventually(()=>stored(page),s=>s?.selection?.baseVersion===1);assert.equal(state.drafts.find(d=>d.baseVersion===1).content.headline,'Conteúdo persistido');assert.deepEqual(errors,[]);
 });
@@ -354,7 +364,7 @@ test('formato real da versão salva é aceito pelo estúdio',{skip:!existsSync(b
 test('409 recupera versão idêntica e imagem-base sem perder edição durante consulta',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,versions,calls,errors,flow}=await app(t);let release,entered;
  const gate=new Promise(resolve=>{release=resolve;}),waiting=new Promise(resolve=>{entered=resolve;});
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Conteúdo já salvo');
  const image=await attachImage(page,{mime:'image/png',name:'original.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Conteúdo já salvo'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
@@ -378,7 +388,7 @@ test('409 recupera versão idêntica e imagem-base sem perder edição durante c
 });
 
 test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Minha edição');
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Minha edição');
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Minha edição'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:{...draft.content,headline:'Outra edição'},created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
@@ -386,7 +396,7 @@ test('409 divergente preserva rascunho e exige revisão do histórico',{skip:!ex
  const after=await stored(page);assert.equal(after.selection.baseVersion,0);assert.equal(after.drafts.find(d=>d.pieceId===draft.pieceId&&d.baseVersion===0).content.headline,'Minha edição');assert.deepEqual(errors,[]);
 });
 test('409 com variante de outra aba não adota classificação nem copia a arte antiga',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  await page.getByLabel('Título',{exact:true}).fill('Mesmo texto em outra direção');
  const image=await attachImage(page,{mime:'image/png',name:'origem.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Mesmo texto em outra direção'));
@@ -402,7 +412,7 @@ test('409 com variante de outra aba não adota classificação nem copia a arte 
 });
 
 test('falha ao copiar imagem para versão recuperada não troca a seleção nem perde a origem',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
+ const {page,origin,versions,errors}=await app(t);await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);await page.getByLabel('Título',{exact:true}).fill('Arte preservada');
  const image=await attachImage(page,{mime:'image/png',name:'original.png'});
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Arte preservada'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
@@ -415,7 +425,7 @@ test('falha ao copiar imagem para versão recuperada não troca a seleção nem 
 test('campo sugerido pela IA é preenchido pela pessoa, salvo e incluído na geração',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,versions,flow,errors}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'completed',text:'Arte com local pronta.'}:consent('custom-field');
- await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await openEditor(page);
+ await page.goto(origin);await page.getByRole('button',{name:/Projeto integrado/}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();await openEditor(page);
  await page.waitForFunction(()=>typeof window.__studioNative?.compor_adicionar_campo?.execute==='function');
  const before=await eventually(()=>stored(page),state=>state?.selection?.baseVersion===0),fieldId=id(75);
  const args={projectId,requestId:fieldId,revision:before.revision,pieceId:before.selection.pieceId,baseVersion:0,label:'Local'};

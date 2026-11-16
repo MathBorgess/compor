@@ -8,7 +8,7 @@ const batchSchema=z.strictObject({id,position:z.number().int().min(1).max(3)});
 export type ExplorationBatch=z.infer<typeof batchSchema>;
 export const explorationImageRecordSchema=z.strictObject({id,project_id:id,state:z.enum(['running','unknown','completed','rejected']),created_at:z.string(),ordinal:z.number().int().positive(),batch_id:id.nullable(),batch_position:z.number().int().min(1).max(3).nullable()});
 export type ExplorationImageRecord=z.infer<typeof explorationImageRecordSchema>;
-const input = z.object({projectId:id,requestId:id,prompt:z.string().trim().min(1).max(8000),plan:explorationPlanSchema.optional(),batch:batchSchema.optional()}).strict();
+const input = z.object({projectId:id,requestId:id,prompt:z.string().trim().min(1).max(8000),plan:z.optional(explorationPlanSchema),batch:batchSchema.optional()}).strict();
 const reply = (body:unknown,status:number) => Response.json(body,{status,headers:{'Cache-Control':'no-store'}});
 type Reservation = {state:'running'|'unknown'|'completed'|'rejected'|'busy'|'blocked'|'awaiting_feedback';isNew:boolean};
 // Only the image provider's explicit credential rejection may create this

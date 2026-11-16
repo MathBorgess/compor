@@ -24,6 +24,11 @@ test('rota Next autentica sessão e opera projetos com token da pessoa', async t
       if (req.method === 'POST') { let raw = ''; for await (const chunk of req) raw += chunk; assert.deepEqual(JSON.parse(raw), { title: 'Oficina' }); writes++; }
       return res.end(JSON.stringify([{ id: '11111111-1111-4111-8111-111111111111', owner_id: user, title: 'Oficina', created_at: '2026-11-03T00:00:00Z', revision:1 }]));
     }
+    if(req.url==='/rest/v1/rpc/delete_project_from_list') {
+      let raw='';for await(const chunk of req)raw+=chunk;
+      assert.deepEqual(JSON.parse(raw),{p_project_id:'11111111-1111-4111-8111-111111111111',p_expected_revision:2});
+      return res.end(JSON.stringify({status:'deleted',projectId:'11111111-1111-4111-8111-111111111111'}));
+    }
     if(req.url==='/rest/v1/rpc/rename_project') {
       let raw='';for await(const chunk of req)raw+=chunk;
       assert.deepEqual(JSON.parse(raw),{p_project_id:'11111111-1111-4111-8111-111111111111',p_title:'Novo título',p_expected_revision:1});
@@ -54,4 +59,6 @@ test('rota Next autentica sessão e opera projetos com token da pessoa', async t
   assert.equal(writes, 1);
   const renamed=await fetch(endpoint,{method:'PATCH',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({projectId:'11111111-1111-4111-8111-111111111111',title:'Novo título',expectedRevision:1})});
   assert.equal(renamed.status,200);assert.equal((await renamed.json()).project.revision,2);
+  const deleted=await fetch(endpoint,{method:'DELETE',headers:{Cookie:cookie,Origin:origin,'Content-Type':'application/json'},body:JSON.stringify({projectId:'11111111-1111-4111-8111-111111111111',expectedRevision:2})});
+  assert.equal(deleted.status,200);assert.equal((await deleted.json()).status,'deleted');
 });

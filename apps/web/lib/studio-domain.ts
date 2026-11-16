@@ -1,12 +1,13 @@
-import * as z from 'zod';
+import {postNameText} from './post-catalog';
+import * as z from './schema.ts';
 import { pinOriginSchema } from './reference-exploration-contract.ts';
 import { boardSlugSchema } from './phoenix/catalog.ts';
 
 const id = z.string();
-const creativeFieldText = (limit:number) => z.string().max(limit).refine(value => !/[\u0000-\u001f\u007f]/.test(value) && !/sk-[^\s]+/i.test(value));
-export const creativeFieldSchema = z.strictObject({id:z.string().regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:creativeFieldText(500),origin:z.enum(['user','agent'])});
+const creativeFieldText = (limit:number) => z.string().check(z.maxLength(limit)).check(z.refine(value => !/[\u0000-\u001f\u007f]/.test(value) && !/sk-[^\s]+/i.test(value)));
+export const creativeFieldSchema = z.strictObject({id:z.string().check(z.regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)),label:creativeFieldText(80).check(z.refine(value=>value.trim().length>0)),value:creativeFieldText(500),origin:z.enum(['user','agent'])});
 export type CreativeField = z.infer<typeof creativeFieldSchema>;
-export const pieceContentSchema = z.strictObject({headline:z.string(),price:z.string(),date:z.string(),caption:z.string(),captionOrigin:z.enum(['user','agent']),fields:z.array(creativeFieldSchema).max(20).refine(fields=>new Set(fields.map(field=>field.id.toLowerCase())).size===fields.length).optional()});
+export const pieceContentSchema = z.strictObject({headline:z.string(),price:z.string(),date:z.string(),caption:z.string(),captionOrigin:z.enum(['user','agent']),fields:z.optional(z.array(creativeFieldSchema).check(z.maxLength(20)).check(z.refine(fields=>new Set(fields.map(field=>field.id.toLowerCase())).size===fields.length)))});
 export type PieceContent = z.infer<typeof pieceContentSchema>;
 export const approvalSchema = z.union([z.strictObject({status:z.literal('unapproved')}),z.strictObject({status:z.literal('approved'),kind:z.enum(['explicit','inherited']),sourceVersion:z.number(),at:z.string()})]);
 export type Approval = z.infer<typeof approvalSchema>;
@@ -15,17 +16,17 @@ export type DraftContext = z.infer<typeof draftContextSchema>;
 export type StudioDraft = z.infer<typeof draftSchema>;
 export type Draft = StudioDraft;
 export const referenceSourceSchema = z.union([
-  z.strictObject({originUrl:pinOriginSchema,board:boardSlugSchema,title:z.string().trim().min(1).max(300).optional()}),
-  z.strictObject({kind:z.literal('generated'),projectId:z.string().uuid(),imageId:z.string().uuid(),ordinal:z.number().int().positive().optional()}),
+  z.strictObject({originUrl:pinOriginSchema,board:boardSlugSchema,title:z.optional(z.string().check(z.trim()).check(z.minLength(1)).check(z.maxLength(300)))}),
+  z.strictObject({kind:z.literal('generated'),projectId:z.string().check(z.uuid()),imageId:z.string().check(z.uuid()),ordinal:z.optional(z.number().check(z.int()).check(z.positive()))}),
 ]);
-export const referenceSchema = z.strictObject({id,name:z.string(),mime:z.enum(['image/png','image/jpeg']),size:z.number(),width:z.number(),height:z.number(),source:referenceSourceSchema.optional()});
+export const referenceSchema = z.strictObject({id,name:z.string(),mime:z.enum(['image/png','image/jpeg']),size:z.number(),width:z.number(),height:z.number(),source:z.optional(referenceSourceSchema)});
 export type StudioReference = z.infer<typeof referenceSchema>;
 export type Reference = StudioReference;
 const markBase={id,pieceId:id,baseVersion:z.number(),note:z.string()};
 export const markSchema=z.discriminatedUnion('kind',[z.strictObject({...markBase,kind:z.literal('area'),x:z.number(),y:z.number(),width:z.number(),height:z.number()}),z.strictObject({...markBase,kind:z.literal('element'),elementId:z.string()})]);
 export type StudioMark=z.infer<typeof markSchema>;
 export type Mark=StudioMark;
-export const creativeExampleSchema=z.strictObject({description:z.string(),referenceId:id.nullable()});
+export const creativeExampleSchema=z.strictObject({description:z.string(),referenceId:z.nullable(id)});
 export const criterionSchema=z.strictObject({id,viewpoint:z.enum(['creator','recipient']),dimension:z.enum(['visual','message']),statement:z.string(),example:creativeExampleSchema,counterexample:creativeExampleSchema,provenance:z.enum(['hypothesis','creator_report','buyer_report','public_source']),source:z.string(),tension:z.string()});
 export type CreativeCriterion=z.infer<typeof criterionSchema>;
 export const decisionSchema=z.strictObject({id,criterionId:id,choice:z.enum(['accept','reject','reopen']),reason:z.string(),at:z.string()});
@@ -36,34 +37,37 @@ export const personaSchema=z.strictObject({audience:z.string(),situation:z.strin
 export type Persona=z.infer<typeof personaSchema>;
 export const briefSchema=z.strictObject({offer:z.string(),audience:z.string(),action:z.string(),direction:z.string()});
 export type Brief=z.infer<typeof briefSchema>;
-const postText=z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value));
+const postText=z.string().check(z.maxLength(4000)).check(z.refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value)));
 export const postContextSchema=z.strictObject({objective:postText,message:postText,action:postText});
 export type PostContext=z.infer<typeof postContextSchema>;
-export const creationContextSchema=z.strictObject({postContext:postContextSchema,references:z.array(referenceSchema).max(20)});
-export const draftSchema=draftContextSchema.extend({content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema,creationContext:creationContextSchema.optional()});
-export const postSettingsSchema=postContextSchema.extend({direction:directionSchema.default({criteria:[],decisions:[]}),referenceIds:z.array(z.uuid()).max(20),excludedReferenceIds:z.array(z.uuid()).max(20)});
-export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText(80).refine(value=>value.trim().length>0),value:z.string().max(4000).refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value)),status:z.enum(['confirmed','pending','omitted'])});
+export const completedExplorationSchema=z.strictObject({imageId:z.uuid(),ordinal:z.number().check(z.int()).check(z.positive())});
+const explorationScopeSchema=z.union([z.literal('references'),z.uuid()]);
+export const creationContextSchema=z.strictObject({postContext:postContextSchema,references:z.array(referenceSchema).check(z.maxLength(20)),explorationSource:z.optional(z.extend(completedExplorationSchema,{projectId:z.uuid(),conversationId:explorationScopeSchema}))});
+export const explorationCandidateSchema=z.extend(completedExplorationSchema,{creationContext:z.optional(creationContextSchema)});
+export const draftSchema=z.extend(draftContextSchema,{content:pieceContentSchema,dirty:z.boolean(),approval:approvalSchema,creationContext:z.optional(creationContextSchema)});
+export const postSettingsSchema=z.extend(postContextSchema,{name:z._default(postNameText,''),deleted:z._default(z.boolean(),false),prepared:z._default(z.boolean(),true),direction:z._default(directionSchema,{criteria:[],decisions:[]}),referenceIds:z.array(z.uuid()).check(z.maxLength(20)),excludedReferenceIds:z.array(z.uuid()).check(z.maxLength(20))});
+export const offerFactSchema=z.strictObject({id:z.uuid(),label:creativeFieldText(80).check(z.refine(value=>value.trim().length>0)),value:z.string().check(z.maxLength(4000)).check(z.refine(value=>!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value))),status:z.enum(['confirmed','pending','omitted'])});
 export type OfferFact=z.infer<typeof offerFactSchema>;
 export const requestStatusSchema=z.enum(['pending','in_progress','consent_required','completed','failed','unknown']);
 export type RequestStatus=z.infer<typeof requestStatusSchema>;
-export const conversationIdSchema=z.union([z.literal('references'),z.string().uuid()]);
-export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:draftContextSchema.nullable(),status:requestStatusSchema,conversationId:conversationIdSchema.optional()});
+export const conversationIdSchema=z.union([z.literal('references'),z.string().check(z.uuid())]);
+export const messageSchema=z.strictObject({id,role:z.enum(['user','assistant','system']),text:z.string(),createdAt:z.string(),context:z.nullable(draftContextSchema),status:requestStatusSchema,conversationId:z.optional(conversationIdSchema)});
 export type StudioMessage=z.infer<typeof messageSchema>;
-export const adjustmentContextSchema=draftContextSchema.extend({projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:directionSchema.optional(),conversationId:conversationIdSchema.optional(),postContext:postContextSchema.optional()});
+export const adjustmentContextSchema=z.extend(draftContextSchema,{projectId:id,instruction:z.string(),marks:z.array(markSchema),references:z.array(referenceSchema),approval:approvalSchema,direction:z.optional(directionSchema),conversationId:z.optional(conversationIdSchema),postContext:z.optional(postContextSchema)});
 export type AdjustmentContext=z.infer<typeof adjustmentContextSchema>;
-export const adjustmentResultSchema=z.strictObject({messageId:id.optional(),text:z.string().optional(),assetId:id.optional()});
+export const adjustmentResultSchema=z.strictObject({messageId:z.optional(id),text:z.optional(z.string()),assetId:z.optional(id)});
 export type AdjustmentResult=z.infer<typeof adjustmentResultSchema>;
-export const adjustmentSchema=z.strictObject({id,messageId:id,createdAt:z.string(),status:requestStatusSchema,context:adjustmentContextSchema,result:adjustmentResultSchema.optional()});
+export const adjustmentSchema=z.strictObject({id,messageId:id,createdAt:z.string(),status:requestStatusSchema,context:adjustmentContextSchema,result:z.optional(adjustmentResultSchema)});
 export type Adjustment=z.infer<typeof adjustmentSchema>;
-export const eventSchema=z.strictObject({id,type:z.enum(['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit']),requestId:id.nullable(),sequence:z.number()});
+export const eventSchema=z.strictObject({id,type:z.enum(['context_frozen','operation_in_progress','action_required','operation_completed','operation_failed','outcome_unknown','version_saved','approval_explicit']),requestId:z.nullable(id),sequence:z.number()});
 export type StudioEvent=z.infer<typeof eventSchema>;
-export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.number().optional(),projectId:id.optional(),pieceId:id.nullable().optional(),baseVersion:z.number().nullable().optional(),expectedLatestVersion:z.number().optional(),version:z.number().optional(),unsaved:z.boolean().optional(),local:z.boolean().optional(),title:z.string().optional(),feedbackStatus:z.enum(['recorded','ambiguous','quote_not_found','reference_unavailable']).optional()});
+export const actionResultSchema=z.strictObject({status:z.enum(['completed','declined','unknown','pending_confirmation']),revision:z.optional(z.number()),projectId:z.optional(id),pieceId:z.optional(z.nullable(id)),baseVersion:z.optional(z.nullable(z.number())),expectedLatestVersion:z.optional(z.number()),version:z.optional(z.number()),unsaved:z.optional(z.boolean()),local:z.optional(z.boolean()),title:z.optional(z.string()),feedbackStatus:z.optional(z.enum(['recorded','ambiguous','quote_not_found','reference_unavailable']))});
 export type ActionResult=z.infer<typeof actionResultSchema>;
 export const actionReceiptSchema=z.strictObject({requestId:id,fingerprint:z.string(),result:actionResultSchema});
 export type ActionReceipt=z.infer<typeof actionReceiptSchema>;
-export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','compose','studio']),aiPreference:z.enum(['default','byok','none']),contextStep:z.number().int().min(0).max(2).default(0),contextStarted:z.boolean().default(false),selections:z.record(z.string().uuid(),z.number().int().nonnegative()).default({})});
+export const workflowSchema=z.strictObject({phase:z.enum(['context','ai','references','ready']),view:z.enum(['posts','prepare-post','compose','studio']),referencePieceId:z._default(z.nullable(z.uuid()),null),pendingPost:z._default(z.nullable(z.extend(postContextSchema,{pieceId:z.uuid(),name:postNameText})),null),aiPreference:z.enum(['default','byok','none']),contextStep:z._default(z.number().check(z.int()).check(z.minimum(0)).check(z.maximum(2)),0),contextStarted:z._default(z.boolean(),false),selections:z._default(z.record(z.string().check(z.uuid()),z.number().check(z.int()).check(z.nonnegative())),{}),latestExplorations:z.optional(z.record(explorationScopeSchema,explorationCandidateSchema)),referenceHandoff:z.optional(z.nullable(explorationScopeSchema))});
 export type StudioWorkflow=z.infer<typeof workflowSchema>;
-export const studioStateSchema=z.strictObject({schemaVersion:z.literal(3),projectReferenceIds:z.array(z.uuid()).max(20),posts:z.record(z.uuid(),postSettingsSchema),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z.boolean().default(false),projectIdea:z.string().max(4000).default(''),brief:briefSchema,persona:personaSchema,offerFacts:z.array(offerFactSchema).max(20).refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length).optional(),selection:z.strictObject({pieceId:id,baseVersion:z.number()}).nullable(),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z.array(actionReceiptSchema).default([]),direction:directionSchema.default({criteria:[],decisions:[]})});
+export const studioStateSchema=z.strictObject({schemaVersion:z.literal(3),projectReferenceIds:z.array(z.uuid()).check(z.maxLength(20)),posts:z.record(z.uuid(),postSettingsSchema),workflow:workflowSchema,userId:id,projectId:id,revision:z.number(),projectTitleProvisional:z._default(z.boolean(),false),projectIdea:z._default(z.string().check(z.maxLength(4000)),''),brief:briefSchema,persona:personaSchema,offerFacts:z.optional(z.array(offerFactSchema).check(z.maxLength(20)).check(z.refine(facts=>new Set(facts.map(fact=>fact.id.toLowerCase())).size===facts.length))),selection:z.nullable(z.strictObject({pieceId:id,baseVersion:z.number()})),drafts:z.array(draftSchema),messages:z.array(messageSchema),marks:z.array(markSchema),references:z.array(referenceSchema),adjustments:z.array(adjustmentSchema),events:z.array(eventSchema),actionReceipts:z._default(z.array(actionReceiptSchema),[]),direction:z._default(directionSchema,{criteria:[],decisions:[]})});
 export type StudioState=z.infer<typeof studioStateSchema>;
 export type StudioScope=Pick<StudioState,'userId'|'projectId'>;
 export interface StoredImage {file:Blob;metadata?:unknown}
