@@ -1,11 +1,12 @@
 "use client";
-import { useEffect, useId, useRef, useState, type PointerEvent } from "react";
+import { useEffect, useId, useRef, useState, type PointerEvent, type ReactNode } from "react";
 import "./studio-editor-fields.css";
 
 import { creativeFieldSchema, type Brief, type StudioDraft, type StudioMark, type CreativeField } from "../lib/studio-domain";
 import { suggestedArtworkFields, type OptionalArtworkField } from "../lib/studio-editor-fields.ts";
 type Region = {x: number;y: number;width: number;height: number};
 export type NewMark = Region & {kind: "area"; note: string};
+export type EditorPanel = {id: string; label: string; title: string; className?: string; content: ReactNode};
 const elementLabels: Record<string, string> = { headline: "título", price: "preço", date: "data" };
 
 export default function StudioEditor({
@@ -21,18 +22,21 @@ export default function StudioEditor({
   onApprove,
   onViewArt,
   guided = false,
-}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onApprove?: () => void;onViewArt?: () => void;guided?:boolean}) {
+  panels = [],
+  panelRequest = null,
+}: {draft: StudioDraft | null;brief: Brief;marks?: StudioMark[];base?: Blob | null;onEdit?: (field: "headline"|"price"|"date"|"caption",value: string) => void;onSetField?: (field: CreativeField) => void;onRemoveField?: (id: string) => void;onMark?: (mark: NewMark) => void;onRemoveMark?: (id: string) => void;onApprove?: () => void;onViewArt?: () => void;guided?:boolean;panels?:EditorPanel[];panelRequest?:{id:string;nonce:number}|null}) {
   const [mode, setMode] = useState("select"),
     [region, setRegion] = useState<Region | null>(null),
     [note, setNote] = useState(""),
     [error, setError] = useState(""),
     [addedFields, setAddedFields] = useState<OptionalArtworkField[]>([]),
     [newFieldLabel, setNewFieldLabel] = useState(""),
-    [image, setImage] = useState<{blob:Blob;url:string} | null>(null);
+    [image, setImage] = useState<{blob:Blob;url:string} | null>(null),
+    [openPanels, setOpenPanels] = useState<string[]>([]);
   const url = base && image?.blob === base ? image.url : null;
   const frame = useRef<HTMLDivElement>(null),
     start = useRef<{x:number;y:number} | null>(null);
-  const approvalHint = useId();
+  const approvalHint = useId(), panelId = useId();
   useEffect(() => {
     setRegion(null);
     setAddedFields([]);
@@ -40,6 +44,14 @@ export default function StudioEditor({
     setNote("");
     setError("");
   }, [draft?.pieceId, draft?.baseVersion]);
+  useEffect(() => {
+    if (!panelRequest) return;
+    setOpenPanels(open => open.includes(panelRequest.id) ? open : [...open, panelRequest.id]);
+    requestAnimationFrame(() => document.getElementById(`${panelId}-${panelRequest.id}`)?.focus());
+  }, [panelRequest, panelId]);
+  useEffect(() => {
+    if (guided && region) setOpenPanels(open => open.includes("texts") ? open : [...open, "texts"]);
+  }, [guided, region]);
   useEffect(() => {
     if (!base) {
       setImage(null);
@@ -86,8 +98,25 @@ export default function StudioEditor({
     move(event);
     start.current = null;
   }
+  // ADR 0056: no estúdio guiado, a arte ocupa a altura disponível e os painéis abrem ao lado, sem rolar a criação.
+  const allPanels: EditorPanel[] = [{id: "texts", label: "Textos", title: "Editar textos, legenda e aprovação", className: "studio-post-inspector", content: null}, ...panels];
+  function togglePanel(id: string) {
+    setOpenPanels(open => open.includes(id) ? open.filter(item => item !== id) : [...open, id]);
+  }
+  function wrapFrame(frameView: ReactNode) {
+    return guided ? <div className="studio-frame-stage">{frameView}</div> : frameView;
+  }
+  function wrapInspector(inspector: ReactNode) {
+    if (!guided) return <details className="studio-post-inspector" open><summary>Editar textos, legenda e aprovação</summary>{inspector}</details>;
+    return <aside className="studio-editor-side" aria-label="Painéis do post" hidden={!allPanels.some(panel => openPanels.includes(panel.id))}>
+      {allPanels.map(panel => <section key={panel.id} id={`${panelId}-${panel.id}`} className={`studio-editor-panel ${panel.className ?? ""}`} aria-label={panel.title} tabIndex={-1} hidden={!openPanels.includes(panel.id)}>
+        <div className="studio-editor-panel-heading"><h3>{panel.title}</h3><button type="button" aria-label={`Fechar ${panel.title}`} onClick={() => togglePanel(panel.id)}>×</button></div>
+        {panel.id === "texts" ? inspector : panel.content}
+      </section>)}
+    </aside>;
+  }
   return (
-    <div className="studio-editor">
+    <div className={guided ? "studio-editor is-guided" : "studio-editor"}>
       <div className="studio-canvas-tools">
         <button
           type="button"
@@ -111,11 +140,23 @@ export default function StudioEditor({
         >
           Marcar área
         </button>
-        <span>
+        {guided ? allPanels.map(panel => (
+          <button
+            key={panel.id}
+            type="button"
+            className="studio-panel-toggle"
+            aria-expanded={openPanels.includes(panel.id)}
+            aria-controls={`${panelId}-${panel.id}`}
+            title={panel.title}
+            onClick={() => togglePanel(panel.id)}
+          >
+            {panel.label}
+          </button>
+        )) : <span>
           {draft.approval?.status === "approved" ? "Aprovado" : "Rascunho"}
-        </span>
+        </span>}
       </div>
-      <div
+      {wrapFrame(<div
         ref={frame}
         className={`studio-post-frame ${mode === "area" ? "is-marking" : ""}`}
         onPointerDown={down}
@@ -161,9 +202,8 @@ export default function StudioEditor({
               />
             ),
         )}
-      </div>
-      <details className="studio-post-inspector" open={!guided}>
-        <summary>Editar textos, legenda e aprovação</summary>
+      </div>)}
+      {wrapInspector(<>
         <p className="studio-hint">Estes textos orientam a próxima geração. Alterá-los não modifica os pixels da arte atual.</p>
         <label>
           Título
@@ -335,7 +375,7 @@ export default function StudioEditor({
           <p id={approvalHint} className="studio-hint">Salve a versão para aprovar este post.</p>
         )}
         {error && <p role="alert">{error}</p>}
-      </details>
+      </>)}
     </div>
   );
 }

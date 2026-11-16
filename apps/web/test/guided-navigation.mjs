@@ -38,10 +38,10 @@ export async function openPostEditor(page){
  if(await manual.isVisible())await manual.click();
  const minimize=page.getByRole('button',{name:'Minimizar conversa',exact:true});
  if(page.viewportSize().width<=800&&await minimize.isVisible())await minimize.click();
- const fields=page.getByText('Editar textos, legenda e aprovação',{exact:true});
- if(await fields.isVisible()&&!await page.getByLabel('Título',{exact:true}).isVisible())await fields.click();
+ const fields=page.getByRole('button',{name:'Textos',exact:true});
+ if(await fields.isVisible()&&await fields.getAttribute('aria-expanded')!=='true')await fields.click();
  await page.getByLabel('Título',{exact:true}).waitFor();
- const variants=page.locator('details.guided-versions');if(await variants.isVisible()&&!await variants.evaluate(el=>el.open))await variants.locator('summary').click();
+ const variants=page.getByRole('button',{name:'Versões',exact:true});if(await variants.isVisible()&&await variants.getAttribute('aria-expanded')!=='true')await variants.click();
 }
 export async function openSettings(page,tab='Contexto'){
  const references=page.locator('.reference-step');

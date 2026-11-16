@@ -413,7 +413,8 @@ function ProjectStudio({
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
     [drawer, setDrawer] = useState<StudioDrawer>(null),
-    [viewingArt, setViewingArt] = useState(false);
+    [viewingArt, setViewingArt] = useState(false),
+    [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const stateRef = useRef<StudioState|null>(null),
@@ -1043,6 +1044,18 @@ function ProjectStudio({
   const selectedOrigins = scopedReferences.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);
   const editor = (
     <StudioEditor guided
+      panelRequest={panelRequest}
+      panels={[
+        {id:"base",label:"Imagem-base",title:"Usar uma imagem-base própria",className:"guided-base-upload",content:<label>
+            Imagem-base PNG ou JPEG
+            <input type="file" accept="image/png,image/jpeg" onChange={event => {
+              const file = event.target.files?.[0];
+              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
+              event.target.value = "";
+            }} />
+          </label>},
+        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />},
+      ]}
       draft={draft}
       brief={s.brief}
       base={base}
@@ -1161,7 +1174,7 @@ function ProjectStudio({
             <p>Abra um post para ver seus rascunhos e versões. As referências ficam na aba Referências.</p>
             <div className="guided-actions">
               <button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));}}>Abrir posts do projeto</button>
-              {draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'studio'}));requestAnimationFrame(()=>{const details=document.querySelector<HTMLDetailsElement>('.guided-versions');if(details){details.open=true;details.querySelector('summary')?.focus();}});}}>Ver versões deste post</button>}
+              {draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'studio'}));setPanelRequest({id:'versions',nonce:Date.now()});}}>Ver versões deste post</button>}
               <button type="button" className="studio-button-secondary" onClick={()=>{void refreshVersions().catch(()=>setNotice('Não foi possível atualizar as versões.'));}}>Atualizar versões</button>
             </div>
             {draft&&s.workflow.view!=='posts'&&<StudioAssets
@@ -1194,22 +1207,13 @@ function ProjectStudio({
   const artwork=(<div className="studio-post-workspace">
           <div className="studio-post-workspace-header">
             <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span></div>
-            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}>Escolher mais referências</button>
-            <button type="button" className="studio-button-secondary" onClick={()=>setPostSettingsOpen(true)}>Configurações do Post</button>
-            <button type="button" className="studio-button-secondary" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}>Revisar post</button>
-            <button type="button" className="studio-button" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}>{saving?'Salvando…':'Salvar versão'}</button></div></div>
+            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
+            <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
+            <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
+            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} title="Salvar versão" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
 
           <div className="guided-artwork-editor">
-          <details><summary>Usar uma imagem-base própria</summary><label>
-            Imagem-base PNG ou JPEG
-            <input type="file" accept="image/png,image/jpeg" onChange={event => {
-              const file = event.target.files?.[0];
-              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
-              event.target.value = "";
-            }} />
-          </label></details>
           {editor}
-          <details className="guided-versions"><summary>Versões e variantes deste post</summary>{draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}</details>
         </div>
         </div>);
   const preparing=s.workflow.phase!=='ready';
@@ -1388,4 +1392,8 @@ function ProjectStudio({
       )}
     </StudioShell>
   );
+}
+
+function PostActionIcon({path}:{path:string}) {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={path}/></svg>;
 }
