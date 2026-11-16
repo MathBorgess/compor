@@ -27,11 +27,6 @@
 .guided-workspace { position:relative;display:grid;grid-template-columns:minmax(280px,var(--guided-chat-width)) 12px minmax(0,1fr);width:100%;height:100%;min-width:0;min-height:0; }
 .guided-chat-area,.guided-post-area { min-width:0;min-height:0;overflow:auto; }
 .guided-chat-area { position:relative;border:1px solid var(--studio-line);border-radius:14px;background:white;display:flex;flex-direction:column; }
-/* No editor a conversa é uma coluna encaixada na tela, não um cartão: sem moldura própria, altura total e rolagem só nas mensagens. */
-.guided-workspace[data-view='editor'] .guided-chat-area { border:0;border-right:1px solid var(--studio-line);border-radius:0;overflow:hidden; }
-.guided-workspace[data-view='editor'] .guided-divider::after { display:none; }
-/* Rodapé vazio não deixa uma faixa creme sob a conversa encaixada. */
-.compor-studio[data-guided='true']:has(.guided-workspace[data-view='editor']) .studio-footer:empty { display:none; }
 .guided-chat-minimize { position:absolute;z-index:6;top:4px;right:4px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:white;color:var(--studio-cobalt);font:inherit;font-size:27px;line-height:1; }
 .guided-chat-minimize:hover { background:var(--studio-blue-tint); }
 .compor-studio .guided-chat-launcher { position:absolute;z-index:8;right:clamp(12px,2vw,24px);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 16px;border:1px solid var(--studio-cobalt);border-radius:999px;background:var(--studio-cobalt);box-shadow:0 8px 24px #2c2d2f33;color:white;font:inherit;font-weight:600; }
@@ -39,32 +34,11 @@
 .guided-chat-area .studio-chat-panel { flex:1;min-height:0; }
 .guided-conversation { display:flex;flex:1;min-height:0; }
 .guided-conversation[hidden] { display:none; }
-/* Criação sem rolagem: cabeçalho e ferramentas têm altura própria; a arte 4:5 ocupa o restante e os painéis abrem ao lado. */
-.guided-post-area:has(> .studio-post-workspace) { overflow:hidden; }
-.guided-post-area > .studio-post-workspace { height:100%;grid-template-rows:auto minmax(0,1fr);gap:14px; }
-.guided-artwork-editor { display:grid;min-height:0; }
-.guided-artwork-editor .studio-editor.is-guided { width:100%;height:100%;min-height:0;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr);gap:12px 16px;align-items:stretch; }
-.studio-editor.is-guided .studio-canvas-tools { flex-wrap:wrap;gap:6px; }
-.studio-editor.is-guided .studio-canvas-tools button { min-height:34px;padding:6px 12px; }
-.studio-editor.is-guided .studio-canvas-tools .studio-panel-toggle:nth-child(3) { margin-left:auto; }
-.studio-editor.is-guided .studio-canvas-tools .studio-panel-toggle[aria-expanded='true'] { border-color:var(--studio-cobalt);background:var(--studio-blue-tint);color:var(--studio-cobalt); }
-.studio-frame-stage { display:grid;place-items:center;min-width:0;min-height:0;container-type:size; }
-.studio-editor.is-guided .studio-post-frame { width:min(100cqw,80cqh);height:auto; }
-.studio-editor-side { display:grid;align-content:start;gap:12px;width:min(360px,40vw);min-height:0;overflow:auto;overscroll-behavior:contain; }
-.studio-editor-panel { display:grid;gap:12px;min-width:0;padding:16px;border:1px solid var(--studio-line);border-radius:12px;background:white; }
-.studio-editor-panel-heading { display:flex;align-items:center;justify-content:space-between;gap:8px; }
-.studio-editor-panel-heading h3 { margin:0;font-size:14px; }
-.compor-studio .studio-editor-panel-heading button { display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--studio-muted);font-size:20px;line-height:1; }
-.studio-editor-panel-heading button:hover { background:var(--studio-blue-tint);color:var(--studio-cobalt); }
-.studio-editor-panel.guided-versions .studio-variant-grid { grid-template-columns:minmax(0,1fr); }
-.studio-editor-side[hidden],.studio-editor-side > .studio-editor-panel[hidden] { display:none; }
-@media (max-width:900px) {
-  .guided-post-area:has(> .studio-post-workspace) { overflow:auto; }
-  .guided-post-area > .studio-post-workspace { height:auto; }
-  .guided-artwork-editor .studio-editor.is-guided { height:auto;grid-template-columns:minmax(0,1fr); }
-  .studio-frame-stage { height:min(70dvh,560px); }
-  .studio-editor-side { width:auto;overflow:visible; }
-}
+.guided-artwork-editor { display:grid;gap:18px; }
+.guided-artwork-editor .studio-editor { width:100%;grid-template-columns:minmax(0,1fr); }
+.guided-artwork-editor .studio-post-frame { width:100%;max-width:520px;justify-self:center; }
+.guided-artwork-editor .studio-post-inspector:not([open]) { display:block; }
+.guided-artwork-editor .studio-post-inspector { min-width:0;width:100%; }
 .guided-art-preview > div { overflow:auto;max-height:70dvh; }
 .guided-art-preview img { display:block; }
 .studio-modal:has(.guided-art-preview) { width:min(94vw,1100px);max-width:94vw; }
