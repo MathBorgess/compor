@@ -119,6 +119,10 @@ for(const entry of ['button','chat','ready-chat','project-exit-x','project-exit-
   await page.getByRole('button',{name:'Começar sem IA, no editor',exact:true}).click();await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
   const postModal=page.getByRole('dialog',{name:'Referências deste post',exact:true});
   await postModal.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await postModal.getByRole('button',{name:'Responder',exact:true}).click();
+  await postModal.getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Pode continuar com essa seleção');await postModal.getByRole('button',{name:'Enviar →',exact:true}).click();
+  await postModal.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
+  await postModal.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   await waitStored(page,value=>value.state?.workflow.latestExplorations?.[value.state.selection?.pieceId]?.ordinal===106);
   await postModal.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await postModal.waitFor({state:'hidden'});
   const retained=await waitStored(page,value=>Boolean(value.bytes));assert.deepEqual(retained.bytes,Array.from(generatedPixels));
