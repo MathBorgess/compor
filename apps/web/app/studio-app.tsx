@@ -1234,7 +1234,7 @@ function ProjectStudio({
     if(selected&&storage&&result!=='none'){image=(await storage.getDraftAsset({userId,projectId:project.id},{pieceId:selected.pieceId,baseVersion:selected.baseVersion,kind:'base'}))?.file??null;baseLoadGeneration.current++;setBase(image);}
     return {result,hasImage:Boolean(image)};
   }
-  async function finishReferences() {
+  async function finishReferences(close=true) {
     if(referenceTransitionLock.current)return false;
     referenceTransitionLock.current=true;setReferenceTransition(true);exploration.pause();
     try {
@@ -1254,8 +1254,10 @@ function ProjectStudio({
         if(retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
       }
       if(!active.current||!isAuthenticated())return false;
-      closeSettings();
-      requestAnimationFrame(()=>{const name=document.querySelector<HTMLInputElement>('.guided-post-preparation-fields input');if(name)name.focus();else document.querySelector<HTMLButtonElement>('.studio-post-actions button')?.focus();});
+      if(close){
+        closeSettings();
+        requestAnimationFrame(()=>{const name=document.querySelector<HTMLInputElement>('.guided-post-preparation-fields input');if(name)name.focus();else document.querySelector<HTMLButtonElement>('.studio-post-actions button')?.focus();});
+      }
       return true;
     } catch {setNotice('Não foi possível preservar a proposta para o post. Suas referências continuam aqui; tente continuar novamente.');return false;}
     finally {referenceTransitionLock.current=false;if(active.current)setReferenceTransition(false);}
@@ -1328,8 +1330,8 @@ function ProjectStudio({
           {accountOverlays}
           <div hidden>{renderChat('references',false,false,true)}</div>
           {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
-          {referencesModal&&referencesModalKind==='post'&&<StudioDialog title="Referências deste post" className="studio-modal-framed reference-post-modal" closeLabel="Fechar referências do post" onClose={closeSettings}>{referencePanel}</StudioDialog>}
-          {currentSettings&&(currentSettings!=='references'||referencesModal&&referencesModalKind==='project')&&<StudioDialog title="Configurações do projeto" className="studio-modal-framed" closeLabel="Fechar configurações" onClose={closeSettings}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab,'project');})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:currentSettings==='references'?referencePanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
+          {referencesModal&&referencesModalKind==='post'&&<StudioDialog title="Referências deste post" className="studio-modal-framed reference-post-modal" closeLabel="Fechar referências do post" onClose={()=>{void finishReferences();}}>{referencePanel}</StudioDialog>}
+          {currentSettings&&(currentSettings!=='references'||referencesModal&&referencesModalKind==='project')&&<StudioDialog title="Configurações do projeto" className="studio-modal-framed" closeLabel="Fechar configurações" onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences(false))return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab,'project');})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:currentSettings==='references'?referencePanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
           {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>journey.updatePostContext(draft.pieceId,patch)}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
           {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (

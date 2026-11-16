@@ -20,7 +20,7 @@ async function stored(page){return page.evaluate(async({userId,projectId})=>{
 },{userId,projectId});}
 async function waitStored(page,predicate){for(let i=0;i<150;i++){const value=await stored(page);if(predicate(value))return value;await page.waitForTimeout(40);}throw Error('Persistent v0 state was not observed');}
 
-for(const entry of ['button','chat','ready-chat'])test(`named post keeps generated v0, reload, scoped chat and creation races via ${entry}`,{skip:!existsSync(browserPath),timeout:90000},async t=>{
+for(const entry of ['button','chat','ready-chat','project-exit-x','project-exit-escape','project-exit-tab','post-exit-x'])test(`named post keeps generated v0, reload, scoped chat and creation races via ${entry}`,{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));
  const origin=`http://127.0.0.1:${port}`;let diagnostics='';
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',COMPOR_DEFAULT_OPENAI_ENABLED:'true',APP_ORIGIN:origin}});
@@ -70,7 +70,7 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await page.getByRole('button',{name:'Continuar',exact:true}).click();await page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true}).fill('Profissionais de criação');await page.getByRole('button',{name:'Continuar para a IA',exact:true}).click();
  await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await page.getByRole('button',{name:'Continuar para referências',exact:true}).click();
  assert.equal(generation.length,0,'entering references does not generate');
- if(entry==='ready-chat'){await page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();}
+ if(entry==='ready-chat'||entry.startsWith('project-exit-')){await page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/}).click();await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Referências',exact:true}).click();}
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');await page.locator('.reference-step input[type="file"]').setInputFiles({name:'referencia-antes-da-geracao.png',mimeType:'image/png',buffer:referencePixels});
  await waitStored(page,value=>value.state?.references.length===1&&value.state.adjustments.every(item=>['completed','failed'].includes(item.status)));
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
@@ -81,7 +81,15 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');await page.locator('.reference-step input[type="file"]').setInputFiles({name:'minha-referencia.png',mimeType:'image/png',buffer:referencePixels});
  await waitStored(page,value=>value.state?.references.length===3&&value.state.adjustments.every(item=>['completed','failed'].includes(item.status)));
  const workspaceId=(await stored(page)).state.workflow.referencePieceId;
- if(entry==='button'){
+ if(entry.startsWith('project-exit-')){
+  const settings=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
+  if(entry==='project-exit-x')await settings.getByRole('button',{name:'Fechar configurações',exact:true}).click();
+  if(entry==='project-exit-escape')await page.keyboard.press('Escape');
+  if(entry==='project-exit-tab')await settings.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:'Contexto',exact:true}).click();
+  await waitStored(page,value=>value.state?.workflow.referenceHandoff==='references');
+  if(entry==='project-exit-tab')await settings.getByRole('button',{name:'Fechar configurações',exact:true}).click();
+  await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor();
+ }else if(entry==='button'||entry==='post-exit-x'){
   await page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/}).click();
   await page.getByRole('textbox',{name:'Nome do post',exact:true}).waitFor();
   const beforeCreation=await stored(page);
@@ -104,6 +112,18 @@ for(const entry of ['button','chat','ready-chat'])test(`named post keeps generat
  const draft=seeded.state.drafts.find(item=>item.pieceId===seeded.state.selection.pieceId&&item.baseVersion===0);
  assert.ok(draft);assert.equal(posts.length,1);assert.equal(posts[0].pieceId,draft.pieceId);assert.notEqual(draft.pieceId,workspaceId);assert.equal(posts[0].name,'Convite para colaborar');assert.equal(seeded.state.workflow.referenceHandoff,null);assert.equal(draft.approval.status,'unapproved');assert.equal(draft.creationContext.explorationSource.imageId,generation[2].requestId);assert.equal(draft.creationContext.explorationSource.ordinal,103);assert.deepEqual(draft.creationContext.references,[],'selected references before or after a text-only exploration get no unsupported image attribution');
  await page.reload();await page.getByAltText('Arte integral da versão selecionada',{exact:true}).waitFor();assert.deepEqual((await stored(page)).bytes,Array.from(generatedPixels));assert.equal(generation.length,3,'transition and reload never call image generation');
+ if(entry==='post-exit-x'){
+  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
+  await page.getByRole('textbox',{name:'Nome do post',exact:true}).fill('Post sem imagem');await page.getByRole('button',{name:'Continuar para criação',exact:true}).click();
+  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
+  const postModal=page.getByRole('dialog',{name:'Referências deste post',exact:true});
+  await postModal.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await postModal.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await waitStored(page,value=>value.state?.workflow.latestExplorations?.[value.state.selection?.pieceId]?.ordinal===106);
+  await postModal.getByRole('button',{name:'Fechar referências do post',exact:true}).click();await postModal.waitFor({state:'hidden'});
+  const retained=await waitStored(page,value=>Boolean(value.bytes));assert.deepEqual(retained.bytes,Array.from(generatedPixels));
+  assert.equal(retained.state.drafts.find(item=>item.pieceId===retained.state.selection.pieceId).creationContext.explorationSource.ordinal,106);
+  assert.deepEqual(errors,[]);return;
+ }
  // The post conversation is mounted only once while its references are open.
  const message=page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true});await message.fill('Texto preservado do post');
  await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();const modal=page.locator('.reference-step');await modal.waitFor();await page.getByRole('dialog',{name:'Referências deste post',exact:true}).waitFor();await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
