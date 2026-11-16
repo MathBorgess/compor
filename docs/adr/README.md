@@ -46,7 +46,7 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0040](0040-validacao-argumentos-acoes-estudio.md) | recorded | Argumentos verificados no domínio da prova, com idempotência e BYOK legado preservados |
 | [0041](0041-referencias-com-conversa-lateral.md) | recorded | Referências como conteúdo principal e conversa lateral, com alternância compacta sem sobreposição |
 | [0042](0042-leitura-estruturada-e-respostas-rapidas.md) | recorded | Leitura estruturada com opções fechadas, resposta rápida sem ferramentas e seleção de referências visível |
-| [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; retenção inoperante em 15/11 | Deploy pela integração Git da Vercel; check configurado sem pré-requisito de autoatribuição de domínios |
+| [0043](0043-deploy-vercel-por-integracao-git.md) | accepted; atribuição automática verificada em 16/11 | Deploy pela integração Git da Vercel; check obrigatório e atribuição automática observados, com histórico de 15/11 preservado |
 | [0044](0044-preparacao-guiada-e-estudio-por-post.md) | decisão aprovada; implementação local em verificação | Preparação guiada, início explícito da geração, configurações reunidas e estúdio dividido |
 | [0045](0045-conversas-isoladas-por-post.md) | decisão aprovada; implementação local em verificação | Escopo de conversa por post, provas de continuidade e migração local preservada |
 | [0046](0046-contexto-e-referencias-por-post.md) | decisão aprovada; implementação local em verificação | Objetivo e referências por post, snapshots, migração preservada e sinais com alcance explícito |
