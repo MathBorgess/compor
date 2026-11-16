@@ -10,12 +10,13 @@ import VariantCards from "./studio-variant-cards";
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
-import {updateWorkflow,conversationMessages,postIds,startPostPreparation,completePostPreparation,updatePostPreparation,updateLegacyPostName,cancelPostPreparation,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
+import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
+import {createStudioJourneyController} from '../lib/studio-journey-controller';
 import StudioNavigation from './studio-navigation';
 import {postMutationSchema,postNameSchema,type PostRecord} from '../lib/post-catalog';
 import PostSettings from './studio-post-settings';
 import ReferencePanel from './studio-reference-panel';
-import {addPostCriterion,decidePostCriterion,freezeCreationContext,conversationContext,effectiveReferences,postContext,updatePostContext,selectScopedReference,unselectScopedReference} from '../lib/studio-post-context';
+import {addPostCriterion,decidePostCriterion,freezeCreationContext,conversationContext,effectiveReferences,postContext,updatePostContext} from '../lib/studio-post-context';
 import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
@@ -37,18 +38,13 @@ import {
   addCreativeCriterion,
   recordCreativeDecision,
   createPost,
-  changeStudioState,
-  selectVersion,
   selectDraft,
   getCurrentDraft,
-  samePieceContent,
-  editDraft,
   setCreativeField,
   removeCreativeField,
   addMark,
   removeMark,
   approveDraft,
-  recordSavedVersion,
   recordActionReceipt,
   resolveProjectTitle,
   STUDIO_LIMITS,
@@ -60,7 +56,7 @@ import { rootRoute, useStudioRoute, type StudioRoute } from "../lib/studio-route
 const StudioAssets = dynamic(() => import("./studio-assets"), {loading: () => <p role="status">Consultando imagens desta versão…</p>});
 
 import * as z from '../lib/schema.ts';
-import { projectsSchema, projectResponseSchema, versionsSchema, savedVersionSchema, versionSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
+import { projectsSchema, projectResponseSchema, versionsSchema, versionSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
 import type { StudioState, StudioReference, ActionResult, DraftContext } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
@@ -395,6 +391,7 @@ function ProjectStudio({
     confirmResolver = useRef<((value:boolean)=>void)|null>(null),
     active = useRef(true),
     saveLock = useRef(false),
+    creationLock = useRef(false),
     baseLoadGeneration=useRef(0),
     versionsReadSequence=useRef(0);
   stateRef.current = s;
@@ -629,42 +626,30 @@ function ProjectStudio({
   }
   function closeSettings(){setSettings(null);setDrawer(null);}
   function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
+  const journey=createStudioJourneyController({
+    getState:local.get,change:local.change,flush:local.flush,fetchImpl:fetch,
+    isActive:()=>active.current&&isAuthenticated(),isRemoved,
+    locks:{creation:creationLock,save:saveLock},
+  });
   function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
     if(isRemoved(pieceId))throw Error("Post excluído.");
     closeSettings();
     if(fromAgent)exploration.pause();
-    local.change(value=>{const next=startPostPreparation(value,pieceId);return fromAgent?changeStudioState(next,state=>{state.selection=null;if(state.workflow.phase==='references')state.workflow.phase='ready';if(referencesOpen&&state.workflow.latestExplorations?.[referenceScope])state.workflow.referenceHandoff=referenceScope;}):next;});
+    journey.preparePost(pieceId,{fromAgent,...(referencesOpen?{referenceScope}:{})});
     setBase(null);setViewingArt(false);setStage('studio');
   }
   async function confirmPostCreation(){
-    if(creatingPost)return;
-    const value=local.get(),pieceId=value.workflow.pendingPost?.pieceId??value.selection?.pieceId;
-    const parsed=postNameSchema.safeParse(value.workflow.pendingPost?.name??(pieceId?value.posts[pieceId]?.name:''));
-    if(!pieceId||!parsed.success)return;
-    const plannedHandoff=value.workflow.referenceHandoff,plannedImage=plannedHandoff?value.workflow.latestExplorations?.[plannedHandoff]?.imageId:undefined;
+    if(creatingPost||creationLock.current)return;
     setCreatingPost(true);setNotice('');
-    try{
-      await local.flush();
-      const response=await fetch('/api/posts',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:project.id,pieceId,name:parsed.data})});
-      if(!response.ok)throw Error('unconfirmed');const result=postMutationSchema.parse(await response.json());
-      if(result.status!=='created'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||result.post.name!==parsed.data||result.post.deleted)throw Error('unconfirmed');
-      if(!active.current||!isAuthenticated())return;
-      ++versionsReadSequence.current;
-      setPostRecords(previous=>[...previous.filter(post=>post.pieceId!==pieceId),result.post]);
-      const latest=local.get(),currentPiece=latest.workflow.pendingPost?.pieceId??latest.selection?.pieceId,currentName=latest.workflow.pendingPost?.name??latest.posts[pieceId]?.name;
-      const currentParsedName=postNameSchema.safeParse(currentName);
-      if(currentPiece!==pieceId||!currentParsedName.success||currentParsedName.data!==parsed.data){
-        if(plannedHandoff&&latest.workflow.referenceHandoff===plannedHandoff&&latest.workflow.latestExplorations?.[plannedHandoff]?.imageId===plannedImage)local.change(state=>updateWorkflow(state,{referenceHandoff:null}));
-        await local.flush();setNotice(`O post “${parsed.data}” foi criado. Sua preparação mais recente foi preservada.`);return;
-      }
-      const handoff=plannedHandoff;
-      local.change(state=>updateWorkflow(completePostPreparation(state),{view:'prepare-post'}));await local.flush();
-      const retained=handoff?await retainReferenceProposal(handoff):{result:'none',hasImage:false};
-      if(!active.current||!isAuthenticated())return;
-      local.change(state=>updateWorkflow(state,{view:retained.hasImage?'studio':'compose',referenceHandoff:null}));await local.flush();
-      if(retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
-    }catch{if(active.current)setNotice('Não foi possível confirmar a criação do post. Sua preparação foi mantida. Tente novamente para verificar o mesmo pedido.');}
-    finally{if(active.current)setCreatingPost(false);}
+    const result=await journey.confirmPost({
+      onPostCreated:post=>{++versionsReadSequence.current;setPostRecords(previous=>[...previous.filter(item=>item.pieceId!==post.pieceId),post]);},
+      retainReferenceProposal,
+    });
+    if(!active.current)return;
+    if(result.status==='superseded')setNotice(`O post “${result.post.name}” foi criado. Sua preparação mais recente foi preservada.`);
+    else if(result.status==='unknown')setNotice('Não foi possível confirmar a criação do post. Sua preparação foi mantida. Tente novamente para verificar o mesmo pedido.');
+    else if(result.status==='created'&&result.retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
+    setCreatingPost(false);
   }
   async function confirmPostDeletion(){
     if(!postDeleteTarget||deletingPost)return;
@@ -694,26 +679,8 @@ function ProjectStudio({
     else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);else if(postRecordsRef.current.some(post=>post.pieceId===pieceId&&!post.deleted))local.change(value=>updateWorkflow(createPost(value,{pieceId}),{view:'compose'}));}
   }
   function openVersion(version:PieceVersion) {
-    if(isRemoved(version.piece_id))return;
-    setSettings(null);
-    const latest = versionRef.current
-      .filter((v) => v.piece_id === version.piece_id)
-      .reduce((n, v) => Math.max(n, v.version), 0);
-    local.change((value) =>
-      updateWorkflow(selectVersion(value, {
-        pieceId: version.piece_id,
-        version: version.version,
-        latestVersion: latest,
-        content: version.content,
-        approval:
-          version.metadata?.approval?.status === "approved"
-            ? version.metadata.approval
-            : { status: "unapproved" },
-      }), {view:'studio'}),
-    );
-    setDrawer(null);
-    setViewingArt(false);
-    setStage("studio");
+    if(!journey.openVersion(version,versionRef.current))return;
+    setSettings(null);setDrawer(null);setViewingArt(false);setStage("studio");
   }
   function confirmAction(action:Confirmation) {
     return new Promise<boolean>((resolve) => {
@@ -727,99 +694,30 @@ function ProjectStudio({
     setDialog(null);
   }
   async function saveCurrent(args?:DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>):Promise<ActionResult> {
-    const current = local.get(),
-      d = getCurrentDraft(current);
-    if (!d || saveLock.current) throw Error("save_unavailable");
-    if (
-      args?.pieceId &&
-      (args.pieceId !== d.pieceId ||
-        args.baseVersion !== d.baseVersion ||
-        args.expectedLatestVersion !== d.expectedLatestVersion)
-    )
-      throw Error("context_changed");
-    saveLock.current = true;
-    setSaving(true);
-    setNotice("");
+    if(!getCurrentDraft(local.get())||saveLock.current)throw Error("save_unavailable");
+    setSaving(true);setNotice("");
     try {
-      await local.flush();
-      versionsReadSequence.current++;
-      const response = await fetch("/api/pieces", {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          projectId: project.id,
-          pieceId: d.pieceId,
-          expectedVersion: d.expectedLatestVersion,
-          baseVersion: d.baseVersion,
-          content: d.content,
-          ...(args?.operation?{operation:args.operation}:{}),
-          ...(args?.changedDimension?{changedDimension:args.changedDimension}:{}),
-        }),
-      });
-      const input:unknown = await response.json();
-      if (response.status === 409) {
-        // A previous save may have succeeded even if its response was not recorded locally.
-        // Recover only when the immediately following version has the same base and content.
-        const versions = await refreshVersions();
-        const matching = versions.filter(item => item.piece_id === d.pieceId);
-        const latest = matching.reduce<PieceVersion | null>((previous, item) => !previous || item.version > previous.version ? item : previous, null);
-        if (latest?.version === d.expectedLatestVersion + 1 && latest.metadata?.baseVersion === (d.baseVersion || null) &&
-          samePieceContent(latest.content, d.content) && (latest.metadata?.operation??null)===(args?.operation??null) && (latest.metadata?.changedDimension??null)===(args?.changedDimension??null)) {
-          if (!active.current) return { status: "unknown" };
+      const outcome=await journey.saveCurrent({
+        readVersions:refreshVersions,
+        copyDraftAsset:async(scope,source,target)=>{
           const storage=local.storage.current;
-          if (!storage) throw Error("storage_unavailable");
-          if(!args?.changedDimension)await storage.copyDraftAsset({userId,projectId:project.id},
-            {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
-            {pieceId:d.pieceId,baseVersion:latest.version,kind:'base'});
-          if (!active.current) return { status: "unknown" };
-          local.change(value => recordSavedVersion(value, {
-            pieceId:d.pieceId, baseVersion:d.baseVersion, version:latest.version, content:latest.content,
-            approval:latest.metadata?.approval.status === "approved" ? latest.metadata.approval : {status:"unapproved"},
-            eventId:crypto.randomUUID(),
-          }));
-          await local.flush();
-          setNotice("Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.");
-        } else {
-          setNotice("Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.");
-        }
-        return { status: "unknown" };
-      }
-      const data=savedVersionSchema.parse(input);
-      if (!response.ok || data.status !== "saved") throw Error("save_unknown");
-      if (!active.current) return { status: "unknown" };
-      const storage=local.storage.current;
-      if (!storage) throw Error("storage_unavailable");
-      if(!args?.changedDimension)await storage.copyDraftAsset({userId,projectId:project.id},
-        {pieceId:d.pieceId,baseVersion:d.baseVersion,kind:'base'},
-        {pieceId:d.pieceId,baseVersion:data.version.version,kind:'base'});
-      if (!active.current) return { status: "unknown" };
-      versionsReadSequence.current++;
-      setVersions((items) => [...items.filter(item=>item.piece_id!==data.version.piece_id||item.version!==data.version.version), data.version]);
-      local.change((value) =>
-        recordSavedVersion(value, {
-          pieceId: d.pieceId,
-          baseVersion: d.baseVersion,
-          version: data.version.version,
-          content: data.version.content,
-          approval: data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval : data.version.metadata ? {status:"unapproved"} : undefined,
-          eventId: crypto.randomUUID(),
-        }),
-      );
-      setNotice("Nova versão salva.");
-      return {
-        status: "completed",
-        pieceId: d.pieceId,
-        version: data.version.version,
+          if(!storage)throw Error('storage_unavailable');
+          return storage.copyDraftAsset(scope,source,target);
+        },
+        newEventId:()=>crypto.randomUUID(),
+        onVersionsChanging:()=>{versionsReadSequence.current++;},
+        onVersionSaved:version=>setVersions(items=>[...items.filter(item=>item.piece_id!==version.piece_id||item.version!==version.version),version]),
+      },args);
+      const notices={
+        saved:'Nova versão salva.',
+        recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
+        conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
+        unknown:'O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',
+        inactive:'',
       };
-    } catch {
-      setNotice(
-        "O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.",
-      );
-      return { status: "unknown" };
-    } finally {
-      saveLock.current = false;
-      if (active.current) setSaving(false);
-    }
+      if(outcome.notice!=='inactive')setNotice(notices[outcome.notice]);
+      return outcome.result;
+    } finally {if(active.current)setSaving(false);}
   }
   const handlers:StudioHandlers = {
     compor_contexto: async () => {
@@ -896,9 +794,7 @@ function ProjectStudio({
         d.baseVersion !== args.baseVersion
       )
         throw Error("context_changed");
-      local.change((value) =>
-        editDraft(value, { field: args.field, value: args.value }),
-      );
+      journey.editDraft({field:args.field,value:args.value});
       return { status: "completed", local: true };
     },
     compor_adicionar_campo: async args => {
@@ -1025,7 +921,7 @@ function ProjectStudio({
     const metadata=await storage.putReference({...scope,id:crypto.randomUUID(),file,source});
     try {
       const current=local.get();
-      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId || !local.change(value=>selectScopedReference(value,metadata,target))) throw Error("studio_unavailable");
+      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId || !journey.selectReference(metadata,target)) throw Error("studio_unavailable");
     } catch(error) {
       await storage.removeReference(scope,metadata.id).catch(()=>{});
       throw error;
@@ -1054,7 +950,7 @@ function ProjectStudio({
   }
   async function selectExistingReference(reference:StudioReference,target:string,pin?:ExploredReference) {
     const source=reference.source;
-    const commit=async()=>{local.change(value=>selectScopedReference(value,reference,target));await local.flush();recordReferenceRound(conversationContext(local.get(),target));};
+    const commit=async()=>{journey.selectReference(reference,target);await local.flush();recordReferenceRound(conversationContext(local.get(),target));};
     if(source&&'originUrl' in source&&pin){await recordReferenceSelection({userId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),reference:pin,commit});return;}
     if(source){
       const key=`compor-reference-share:${userId}:${project.id}:${target}:${reference.id}`;
@@ -1072,13 +968,13 @@ function ProjectStudio({
       const current=local.get();
       const reference=current.references.find(item=>item.id===id);
       if(!reference||!current.projectReferenceIds.includes(id))throw Error('reference_unavailable');
-      if(!local.change(value=>selectScopedReference(value,reference,scope)))throw Error('studio_unavailable');
+      if(!journey.selectReference(reference,scope))throw Error('studio_unavailable');
       await local.flush();
       try { recordReferenceRound(conversationContext(local.get(),scope)); } catch {}
     } catch { if(active.current)setNotice('Não foi possível salvar a seleção.'); }
   }
   async function removeFile(id:string) {
-    local.change((value) => unselectScopedReference(value,id,referenceScope));
+    journey.unselectReference(id,referenceScope);
     try {
       await local.flush();
       try { recordReferenceRound(conversationContext(local.get(),referenceScope)); } catch {}
@@ -1116,7 +1012,7 @@ function ProjectStudio({
           m.pieceId === draft?.pieceId && m.baseVersion === draft?.baseVersion,
       )}
       onEdit={(field, value) =>
-        local.change((state) => editDraft(state, { field, value }))
+        journey.editDraft({field,value})
       }
       onSetField={field => local.change(state => setCreativeField(state, field))}
       onRemoveField={id => local.change(state => removeCreativeField(state, id))}
@@ -1331,13 +1227,8 @@ function ProjectStudio({
   const preparingPost=s.workflow.view==='prepare-post';
   const preparedValue=pendingPost??(draft?postContext(s,draft.pieceId):{objective:'',message:'',action:''});
   const preparedName=pendingPost?.name??(draft?s.posts[draft.pieceId]?.name??'':'');
-  const changePreparation=(patch:Partial<typeof preparedValue&{name:string}>)=>local.change(value=>{
-    if(value.workflow.pendingPost)return updatePostPreparation(value,patch);
-    if(!draft)return value;
-    const next=updatePostContext(value,draft.pieceId,patch);
-    return 'name' in patch?updateLegacyPostName(next,draft.pieceId,patch.name??''):next;
-  });
-  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>Escolha um nome para organizar esta peça e defina o que ela deve comunicar.</p><form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}><fieldset className="guided-post-preparation-fields" disabled={creatingPost}><label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" disabled={creatingPost} onChange={event=>changePreparation({name:event.target.value})}/></label><PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/><p className="studio-hint">A chamada para ação é opcional. O post será criado somente ao continuar.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={creatingPost} onClick={()=>{local.change(cancelPostPreparation);showPosts();}}>Cancelar</button><button type="submit" className="studio-button" disabled={creatingPost||!postNameSchema.safeParse(preparedName).success}>{creatingPost?'Criando post…':'Continuar para criação'}</button></div></fieldset></form></section>;
+  const changePreparation=journey.changePreparation;
+  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>Escolha um nome para organizar esta peça e defina o que ela deve comunicar.</p><form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}><fieldset className="guided-post-preparation-fields" disabled={creatingPost}><label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" disabled={creatingPost} onChange={event=>changePreparation({name:event.target.value})}/></label><PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/><p className="studio-hint">A chamada para ação é opcional. O post será criado somente ao continuar.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={creatingPost} onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button><button type="submit" className="studio-button" disabled={creatingPost||!postNameSchema.safeParse(preparedName).success}>{creatingPost?'Criando post…':'Continuar para criação'}</button></div></fieldset></form></section>;
 
   const canvas=<>{pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else openPost(pendingTurn.context.pieceId);}}>Abrir a conversa desse pedido</button></p>}{preparing?<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:s.workflow.phase==='ai'?aiPanel:referencePanel}</>:s.workflow.view==='posts'?<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>:<div className="guided-post-host" style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>}</>;
 
@@ -1375,7 +1266,7 @@ function ProjectStudio({
           <div hidden>{renderChat('references',false,false,true)}</div>
           {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
           {currentSettings&&<StudioDialog title={currentSettings==='references'&&referenceScope!=='references'?'Referências deste post':'Configurações do projeto'} className="studio-modal-framed" closeLabel={currentSettings==='references'&&referenceScope!=='references'?'Fechar referências do post':'Fechar configurações'} onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences())return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab);})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='references'?referencePanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
-          {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>local.change(value=>updatePostContext(value,draft.pieceId,patch))}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
+          {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>journey.updatePostContext(draft.pieceId,patch)}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
           {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (
             <StudioDialog

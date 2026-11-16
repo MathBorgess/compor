@@ -4,7 +4,7 @@ O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull r
 
 | Job | Área | Condição de aprovação | Escopo |
 | --- | --- | --- | --- |
-| Static checks | Sempre | ESLint sem erros ou avisos e testes de `scripts/quality` aprovados. Com a área `site` ligada, também `astro check` e build do site | TypeScript/TSX do app web, JavaScript dos pacotes, scripts de qualidade e site público com seus headers |
+| Static checks | Sempre | ESLint sem erros ou avisos e testes de `scripts/quality` e dos contratos/avaliadores rápidos de `scripts/verification` aprovados. Com a área `site` ligada, também `astro check` e build do site | TypeScript/TSX do app web, JavaScript dos pacotes, scripts de qualidade/verificação e site público com seus headers |
 | Contracts and data isolation | `unit` | Todas as suítes dos pacotes e dos scripts Python aprovadas | Autorização, isolamento, idempotência, persistência, recuperação e contratos com fornecedores simulados |
 | Web types and behavior | `web` | TypeScript estrito, Chromium instalado e toda a suíte web aprovada | Navegação, interação e estados do app com fixtures locais |
 | Production performance | `web` | Build Next de produção e todos os limites abaixo aprovados | Entrada `/` sem sessão, servida sem JavaScript pelo proxy, com configuração pública sintética |
@@ -18,6 +18,10 @@ Os testes de sanitização do protótipo exigem `cwebp` e `dwebp` no `PATH`; o j
 Nos preparos de migração, `READ_COMMIT` identifica os bytes em um commit publicado; `SOURCE_COMMIT` e `SOURCES` preservam os IDs históricos registrados na auditoria. Os hashes e as guardas continuam obrigatórios. Uma regressão executa os preparos em um checkout sem os commits locais antigos e exige os mesmos oito arquivos SQL/proof, byte a byte. Os [hashes preservados e a falha que motivou a separação](migration-pins-2026-11-05.md) estão registrados.
 
 No Ubuntu 24.04, o job de Lighthouse carrega um perfil AppArmor que permite `userns` somente ao caminho exato do Chromium instalado. Isso permite iniciar o sandbox do navegador baixado pelo Playwright, que não usa o caminho coberto pelo perfil do Chrome do sistema. O job mantém AppArmor ativo e não passa `--no-sandbox` ao Lighthouse. A configuração segue a [orientação do Chromium para perfis AppArmor](https://chromium.googlesource.com/chromium/src/+/main/docs/security/apparmor-userns-restrictions.md) e existe somente no runner temporário.
+
+## Perfil offline por Goals
+
+O [spike da issue 51](goals-spike-2026-11-16.md) acrescenta testes rápidos de contratos, integridade da evidência, limites e infraestrutura sintética a `quality:test`. Esses testes não sobem Docker nem chamam serviços pagos. O [replay integrado](../../scripts/verification/README.md), com Next/PostgreSQL/PostgREST reais locais, permanece um comando manual separado: ainda não foi ativado como job ou check obrigatório. Seu sucesso não substitui o gate Chromium nem comprova integração real. Frequência, orçamento de CI e promoção da suíte exigem a avaliação posterior prevista no ADR 0057.
 
 ## Sinais externos da Vercel
 

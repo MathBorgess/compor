@@ -1,0 +1,35 @@
+{
+  "schemaVersion": 1,
+  "verifiedOn": "2026-11-16",
+  "node": {
+    "version": "24.22.3",
+    "image": "node:24.22.3-bookworm-slim@sha256:dc26ae92c9fb15cf6b1d63e20f0944b2efe0f115b20e00be48fb23fceb061c54",
+    "source": "https://registry-1.docker.io/v2/library/node/manifests/24.22.3-bookworm-slim"
+  },
+  "postgres": {
+    "version": "17.12",
+    "image": "postgres:17.12-bookworm@sha256:40865bc877a289da75963d97d72b59633f639fc5af7a4e856bfa3714cae5b536",
+    "source": "https://registry-1.docker.io/v2/library/postgres/manifests/17.12-bookworm"
+  },
+  "postgrest": {
+    "version": "16.5",
+    "source": "https://api.github.com/repos/PostgREST/postgrest/releases/418019108",
+    "release": "https://github.com/PostgREST/postgrest/releases/tag/v16.5",
+    "license": {
+      "url": "https://raw.githubusercontent.com/PostgREST/postgrest/v16.5/LICENSE",
+      "sha256": "1729d66741c5844f47962f91838bae897aa23d7e08272f5f012fca576288fafb"
+    },
+    "assets": {
+      "arm64": {
+        "url": "https://github.com/PostgREST/postgrest/releases/download/v16.5/postgrest-v16.5-linux-static-aarch64.tar.xz",
+        "sha256": "96d75a34c7c095d5f97b87f88042f898192724350861328db9e1509e696ea057",
+        "bytes": 3997716
+      },
+      "x64": {
+        "url": "https://github.com/PostgREST/postgrest/releases/download/v16.5/postgrest-v16.5-linux-static-x86-64.tar.xz",
+        "sha256": "5099e7ada38f9f6846cd87c14c5f158b7c165f1e9959665ad412e61f4dceba95",
+        "bytes": 4520424
+      }
+    }
+  }
+}
