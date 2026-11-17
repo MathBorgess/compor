@@ -112,10 +112,20 @@ export function useExplorationLoop(props: LoopProps) {
           progress=readBatchProgress(localStorage,batchKey(props.projectId),sequenceKey(props.projectId),()=>crypto.randomUUID());
           const prior = localStorage.getItem(pendingKey);
           if (prior !== null) {
+            const explicitlyRequested=resumeRequested.current;
+            resumeRequested.current=false;
             const pending = pendingSchema.parse(JSON.parse(prior));
             if(pending.projectId!==props.projectId){stop('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.');return;}
             if(!pending.conversationId){stop('Há uma exploração antiga sem conversa de origem identificada. O recibo foi preservado; procure ajuda para recuperá-lo.');return;}
             if(pending.conversationId!==(scope??'references')){stop('Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.');return;}
+            if(pending.notStartedReceipt) {
+              if(pending.notStartedReceipt.userId!==props.userId||localStorage.getItem(pendingKey)!==prior){stop('Não foi possível confirmar a origem da resposta. O recibo foi preservado.');return;}
+              if(!explicitlyRequested){stop('O pedido anterior não foi enviado. Peça propostas para consultar essa confirmação.');return;}
+              localStorage.setItem(notStartedKey,'1');
+              localStorage.removeItem(pendingKey);
+              stop('Foi confirmado que o pedido anterior não foi enviado. Peça propostas para tentar novamente.');
+              return;
+            }
             const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId: pending.projectId })}`, { cache: "no-store", signal: cancel.signal });
             if (!response.ok) throw Error("unconfirmed");
             const rows = listSchema.parse(await response.json()).images;
@@ -224,16 +234,22 @@ export function useExplorationLoop(props: LoopProps) {
               setRequestProgress(value=>value?.requestId===requestId?null:value);
             }
             dispatched = false;
-            // Aborting a request is not guaranteed to win the race with its
-            // response. Never reconcile a receipt under a different source.
-            if(!active||!sameCredential())return;
             if ([400,403,404,413,503].includes(response.status) && result.status === "not_started" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              // No server reservation exists to query later. Preserve this
+              // correlated response under the dispatch's original account,
+              // project, conversation and source, without settling a stopped view.
+              const saved=pendingSchema.parse({...pending,notStartedReceipt:{status:'not_started',httpStatus:response.status,requestId,userId:props.userId,credentialSource:source,retryAutomatically:false}});
+              localStorage.setItem(pendingKey,JSON.stringify(saved));
+              if(!active||!sameCredential())return;
               localStorage.setItem(notStartedKey, "1");
               localStorage.removeItem(pendingKey);
               stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto.");
               return;
             }
+            // Aborting a request is not guaranteed to win the race with its
+            // response. Other late results still require server reconciliation.
+            if(!active||!sameCredential())return;
             if ((response.status === 401 || response.status === 409) && result.status === "rejected" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(rejectedKey, "1");
