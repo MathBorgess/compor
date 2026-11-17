@@ -47,6 +47,9 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const same=(await visualInputImages(restored))[0].data===images[0].data&&restored.manifest.entries[0].transport.sha256===hash;
   const wrong=await resumed.loadRequestVisualSnapshot({...rScope,userId:id(10)})===null;
   let duplicateWrite=false;try{await resumed.saveRequestVisualSnapshot(rScope,snapshot);}catch{duplicateWrite=true;}
+  const second=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'}),raceScope={...rScope,requestId:id(30)};
+  const raced=await Promise.allSettled([resumed.saveRequestVisualSnapshot(raceScope,snapshot),second.saveRequestVisualSnapshot(raceScope,snapshot)]);
+  const oneWriter=raced.filter(item=>item.status==='fulfilled').length===1&&raced.filter(item=>item.status==='rejected').length===1;second.close();
   const context={idea:'Ideia',offer:'',audience:'',goal:'',direction:'',offerFacts:[],accepted:[],rejected:[],feedback:[]};
   const prep={version:1,...scope,batchId:id(11),conversationId:id(7),planRequestId:id(12),credentialSource:'byok',context,plan:null,stage:'planning',revision:0,imageIds:[id(13),id(14),id(15)],intentId:id(16),expectedEpoch:0,planSubmitted:false,revocationRequested:false,visualInput:snapshot.manifest};
   let oldPath=false;try{await resumed.createBeforePlanning(prep);}catch(error){oldPath=error.code==='parallel_storage_invalid';}
@@ -62,7 +65,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   await new Promise((resolve,reject)=>{const tx=db.transaction('visualSnapshots','readwrite'),store=tx.objectStore('visualSnapshots'),key=JSON.stringify([scope.userId,scope.projectId,id(11)]),request=store.get(key);request.onsuccess=()=>store.put({...request.result,blobs:[]},key);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   const reread=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'});let evicted=false;try{await reread.loadVisualSnapshot({...scope,batchId:id(11)},id(7));}catch(error){evicted=error.code==='parallel_storage_corrupt';}
   const retained=Boolean(await reread.loadPreparation(scope.userId));reread.close();storage.close();
-  return {onlyLocal,noInfer,optimized,badBudget,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,duplicateWrite,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
+  return {onlyLocal,noInfer,optimized,badBudget,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
  });
  assert.deepEqual(result,Object.fromEntries(Object.keys(result).map(key=>[key,true])));
 });
