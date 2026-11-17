@@ -19,15 +19,16 @@ import './app/style.css';
 import './app/studio-shell.css';
 import './app/studio-guided.css';
 function Screen(){
+ const [project,setProject]=useState('${projectId}'),[enabled,setEnabled]=useState(true);
  const [state]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Oficina de cerâmica'}));
  const [credential,setCredential]=useState({source:'byok',epoch:0});
- const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled:true});
+ const loop=useExplorationLoop({userId:'${userId}',projectId:project,state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled});
  return <div className="compor-studio" data-guided="true"><ReferencePanel projectWide={true} proposalStatus={loop.status} proposalPhase={loop.phase} proposalProgress={loop.progress} proposalsRunning={!loop.blocked&&!loop.paused} onPauseProposals={loop.pause} onRequestProposals={loop.resume} proposalsDisabled={!loop.blocked&&!loop.paused}
  search={<p>Busca de referências</p>} upload={<p>Upload</p>} selection={<p>Seleção</p>} conversation={<p>Conversa preservada</p>}
- proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button></div>;
+ proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport,{unreliableAbort=false}={}){
+async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false}={}){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-exploration-progress',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -36,11 +37,13 @@ async function fixture(t,viewport,{unreliableAbort=false}={}){
  t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const page=await browser.newPage({viewport});page.setDefaultTimeout(5000);
  if(unreliableAbort)await page.addInitScript(()=>{AbortController.prototype.abort=function(){};});
+ if(feedbackPaused)await page.addInitScript(({userId,projectId})=>{localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:6,batchId:'00000000-0000-4000-8000-000000000099',completed:0,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:true}));},{userId,projectId});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
- const pending=[],posts=[];
+ const pending=[],posts=[],resumes=[];
  await page.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));
  await page.route('**/api/studio/explorations**',route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
+  if(path.endsWith('/resume')){resumes.push(route);return;}
   if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
   if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
   if(request.method()==='GET')return route.fulfill({json:{images:posts.map((post,index)=>({id:post.requestId,project_id:projectId,state:post.state,ordinal:index+1,created_at:'2026-11-17T12:00:00Z',batch_id:post.batch.id,batch_position:post.batch.position}))}});
@@ -49,7 +52,7 @@ async function fixture(t,viewport,{unreliableAbort=false}={}){
  await page.clock.install();
  await page.goto('http://127.0.0.1:'+server.address().port);
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
- return {page,posts,pending};
+ return {page,posts,pending,resumes};
 }
 
 test('troca de fonte conserva marcador mesmo quando a resposta vence o cancelamento',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
@@ -62,6 +65,32 @@ test('troca de fonte conserva marcador mesmo quando a resposta vence o cancelame
  await progress.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
  assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'resposta da fonte anterior não liquida o marcador');
  assert.equal(posts.length,1,'a fonte nova não despacha outro pedido');
+});
+
+for(const label of ['Pausar exploração','Fechar referências','Trocar projeto'])test('resposta tardia preserva recibo após '+label,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844},{unreliableAbort:true});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.locator('.reference-exploration-status').getByText('Aguardando imagem 1 de 3.').waitFor();
+ const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+ await page.getByRole('button',{name:label,exact:true}).click();
+ await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}});
+ await page.waitForTimeout(200);
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'resposta tardia não remove recibo');
+ assert.equal(posts.length,1,'nenhuma nova imagem é enviada');
+});
+
+test('pausa durante retomada do gate não é desfeita pela resposta atrasada',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,resumes}=await fixture(t,{width:390,height:844},{feedbackPaused:true});
+ await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Retomar teste'}).click();
+ await page.waitForFunction(()=>document.querySelector('[aria-label="estado de pausa"]')?.textContent==='false');
+ for(let attempts=0;attempts<100&&resumes.length===0;attempts++)await page.waitForTimeout(25);
+ assert.equal(resumes.length,1);
+ await page.getByRole('button',{name:'Pausar teste'}).click();
+ await resumes.shift().fulfill({json:{status:'resumed'}});
+ await page.waitForTimeout(100);
+ assert.equal(await page.getByLabel('estado de pausa').textContent(),'true');
+ assert.equal(posts.length,0,'resposta de retomada não inicia imagem depois da pausa');
 });
 
 for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){

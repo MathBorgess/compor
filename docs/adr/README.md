@@ -73,5 +73,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0060](0060-inspecao-de-tentativa-sem-marcador.md) | implementado localmente | Inspeção restrita de tentativa sem marcador, com prova vinculada à credencial e sem efeitos |
 
 | [0061](0061-lotes-paralelos-e-recibos-de-planejamento.md) | camada de banco implementada localmente; migration remota não aplicada | Reserva atômica de três imagens, prova de planejamento, revisão por lote e exclusão durante pendências |
+| [0062](0062-reconciliacao-explicita-da-exploracao.md) | implementação local em validação | Preservar marcador na interrupção e consultar o mesmo recibo ao voltar antes de novo gesto |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.
