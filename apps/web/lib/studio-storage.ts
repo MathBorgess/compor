@@ -9,7 +9,7 @@ const assetMetadataSchema=z.strictObject({pieceId:z.string(),baseVersion:z.numbe
 const recordSchema=z.object({key:z.string(),scope:z.string(),metadata:z.union([referenceSchema,assetMetadataSchema]),file:z.instanceof(Blob)});
 function parseRecord(input:unknown):StoredRecord {const value=recordSchema.safeParse(input);if(!value.success)throw new StudioStorageError('studio_storage_corrupt');return value.data;}
 function parseRecords(input:unknown):StoredRecord[]{if(!Array.isArray(input))throw new StudioStorageError('studio_storage_corrupt');return input.map(parseRecord);}
-import {studioImageDimensions} from './studio-image.ts';
+import {studioImageDimensions,studioImageDimensionsMatch} from './studio-image.ts';
 import { parseStudioState, STUDIO_LIMITS } from './studio-state.ts';
 
 export class StudioStorageError extends Error {
@@ -102,7 +102,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const jpeg=bytes[0]===255&&bytes[1]===216&&bytes[2]===255;
     if((file.type==='image/png'&&!png)||(file.type==='image/jpeg'&&!jpeg))throw new StudioStorageError('studio_reference_invalid');
     let image;
-    try{const dimensions=await studioImageDimensions(file);image=await decodeImage(file);if(image.width!==dimensions.width||image.height!==dimensions.height)throw Error();const metadata=referenceSchema.parse({id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height,...(source ? {source}: {})});if(!metadataValid(metadata))throw Error();return metadata;}
+    try{const dimensions=await studioImageDimensions(file);image=await decodeImage(file);if(!await studioImageDimensionsMatch(file,dimensions,image))throw Error();const metadata=referenceSchema.parse({id,name:file.name,mime:file.type,size:file.size,width:image.width,height:image.height,...(source ? {source}: {})});if(!metadataValid(metadata))throw Error();return metadata;}
     catch{throw new StudioStorageError('studio_reference_invalid');}
     finally{try{image?.close();}catch{}}
   }
@@ -150,7 +150,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
       try{
         const dimensions=await studioImageDimensions(file);
         image=await decodeImage(file);
-        if(image.width!==dimensions.width||image.height!==dimensions.height)throw Error();
+        if(!await studioImageDimensionsMatch(file,dimensions,image))throw Error();
         metadata={pieceId:address.pieceId,baseVersion:address.baseVersion,kind:address.kind,mime:file.type,size:file.size,width:image.width,height:image.height};
         if(!assetMetadataValid(metadata))throw Error();
       }catch{throw new StudioStorageError('studio_draft_asset_invalid');}

@@ -16,7 +16,7 @@ test('ausência de armazenamento é explícita e nenhum erro expõe o conteúdo'
 test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito e falha atomicamente', {skip:!existsSync(browserPath)},async t=>{
  const server=createServer(async(request,response)=>{
   const name=request.url?.split('?')[0];
-  if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts'].includes(name)){
+  if(['/studio-state.ts','/studio-storage.ts','/studio-image.ts','/studio-artwork-input.ts'].includes(name)){
    response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));
   }else{response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>Teste local de armazenamento</title>');}
  });
@@ -24,7 +24,7 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
  const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const evidence=await page.evaluate(async()=>{
-  const domain=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts');
+  const domain=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts'),{prepareArtworkInput}=await import('/studio-artwork-input.ts');
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const scope={userId:id(1),projectId:id(2)},other={userId:id(3),projectId:id(2)},anotherProject={userId:id(1),projectId:id(4)};
   const repo=createStudioStorage(),second=createStudioStorage();
@@ -65,6 +65,10 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.source=jpegMeta.source?.originUrl==='https://www.pinterest.com/pin/e1_example/'&&(await repo.getReference(scope,id(11))).metadata.source?.board==='behance/typography';
   result.metadata=meta.width===2&&meta.height===3&&jpegMeta.mime==='image/jpeg';
   result.blob=(await repo.getReference(scope,id(10))).file.size===png.size;
+  repo.close();const originalBytes=new Uint8Array(await png.arrayBuffer()),storedBytes=new Uint8Array(await (await repo.getReference(scope,id(10))).file.arrayBuffer());
+  result.pngBytes=originalBytes.length===storedBytes.length&&originalBytes.every((byte,index)=>byte===storedBytes[index]);
+  const prepared=await prepareArtworkInput({proposal:{prompt:'Ajustar a arte',operation:'edit',baseImageId:id(40),referenceIds:[id(10)]},draft:{pieceId:id(40),baseVersion:1,content:{headline:'Oficina',price:'',date:''}},referenceIds:[id(10)],loadBase:()=>repo.getDraftAsset(scope,target),loadReference:referenceId=>repo.getReference(scope,referenceId)});
+  result.pngAttached=prepared.images.length===2&&prepared.images.every(image=>image.mime==='image/png'&&atob(image.data).length===originalBytes.length&&Array.from(atob(image.data),(character,index)=>character.charCodeAt(0)===originalBytes[index]).every(Boolean));
   result.noCrossBlob=await repo.getReference(other,id(10))===null&&await repo.getReference(anotherProject,id(10))===null;
   result.duplicate=await expectError(repo.putReference({...scope,id:id(10),file:new File([jpeg],'replacement.jpg',{type:'image/jpeg'})}),'studio_reference_exists');
   result.invalidType=await expectError(repo.putReference({...scope,id:id(12),file:new File(['<svg/>'],'bad.svg',{type:'image/svg+xml'})}),'studio_reference_invalid');
