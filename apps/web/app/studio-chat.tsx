@@ -39,6 +39,11 @@ async function contextDigest(state:StudioState) {
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
 }
+async function requestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string}) {
+ const {createParallelJournalStore}=await import('../lib/parallel-exploration-journal.ts');
+ const journal=createParallelJournalStore();
+ try{return await journal.loadRequestVisualSnapshot(scope);}finally{journal.close();}
+}
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 type CredentialSource='default'|'byok';
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
@@ -434,17 +439,23 @@ export default function StudioChat({
         throw Error("Não foi possível identificar o post desta proposta.");
       const proposal = parseImageProposal(data.proposal ?? {prompt: data.prompt});
       let artworkInput = null, inputError = '', canPrepareTransport = false, sourceFingerprint: string|null = null;
+      let visualSnapshot:Awaited<ReturnType<typeof requestVisualSnapshot>>=null;
       try {
         const snapshot = getState(), selected = getCurrentDraft(snapshot);
         const source = snapshot.drafts.find(item => item.pieceId === context.pieceId && item.baseVersion === context.baseVersion);
         if (!source || (proposal.operation === 'edit' && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== context.baseVersion))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
-        const prepared = await prepareArtworkTransport({proposal, draft: source, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
+        if(data.visualInputRequired){
+          if(!conversationId)throw Error('Não foi possível recuperar as imagens desta conversa.');
+          visualSnapshot=await requestVisualSnapshot({userId:snapshot.userId,projectId:snapshot.projectId,conversationId,requestId});
+          if(!visualSnapshot)throw Error('As imagens desta solicitação não estão disponíveis neste navegador. Consulte a solicitação sem reenviar.');
+        }
+        const prepared = await prepareArtworkTransport({proposal, draft: source, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(visualSnapshot?{visualSnapshot}:{})});
         artworkInput = prepared.artworkInput;
         sourceFingerprint = prepared.sourceFingerprint;
         if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
       } catch (error) { artworkInput = null; inputError = errorMessage(error); canPrepareTransport = error instanceof ArtworkTransportRequiredError; }
       if (!mounted.current || !credentialIsCurrent() || preparationSequence.current !== preparation) return;
-      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [] };
+      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [],...(visualSnapshot?{visualSnapshot}:{}) };
       setImageAction(action);
       try {
         if (localStorage.getItem(imageRejectedMarker) === requestId) {
@@ -832,7 +843,7 @@ export default function StudioChat({
       const current = getState(), selected = getCurrentDraft(current);
       return isCurrentScope() && current.userId === snapshot.userId && current.projectId === snapshot.projectId && current.revision === snapshot.revision && selected?.pieceId === draft.pieceId && selected?.baseVersion === draft.baseVersion;
     };
-    const options = {proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase};
+    const options = {proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(action.visualSnapshot?{visualSnapshot:action.visualSnapshot}:{})};
     setBusy(true);
     setNotice('Preparando cópias locais para envio…');
     try {
@@ -886,7 +897,7 @@ export default function StudioChat({
     let target = {pieceId: draft.pieceId, version: draft.baseVersion};
     const isCurrentScope=()=>mounted.current&&credentialIsCurrent();
     try {
-      const fingerprint = await artworkSourceFingerprint({proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
+      const fingerprint = await artworkSourceFingerprint({proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(action.visualSnapshot?{visualSnapshot:action.visualSnapshot}:{})});
       if (!isCurrentScope()) return;
       const current = getState(), selected = getCurrentDraft(current);
       if (current.revision !== snapshot.revision || selected?.pieceId !== draft.pieceId || selected?.baseVersion !== draft.baseVersion || fingerprint !== action.sourceFingerprint) {
