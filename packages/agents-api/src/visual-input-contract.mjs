@@ -2,6 +2,10 @@
  * or provenance; dispatch additionally requires server validation of every file. */
 export const MAX_VISUAL_IMAGES = 20;
 export const MAX_VISUAL_IMAGE_BYTES = 2 * 1024 * 1024;
+// Agents input_image.image_url is capped at 1 MiB characters, including the
+// longest data URL prefix (JPEG, 23 chars). Base64 consumes 4*ceil(bytes/3).
+export const MAX_VISUAL_IMAGE_URL_CHARS = 1024 * 1024;
+export const MAX_VISUAL_TRANSPORT_FILE_BYTES = 786414;
 export const MAX_VISUAL_SOURCE_BYTES = 8 * 1024 * 1024;
 export const MAX_VISUAL_REQUEST_BYTES = 3 * 1024 * 1024;
 export const MAX_VISUAL_DIMENSION = 16384;
@@ -15,14 +19,14 @@ function sourceValid(entry) {
   if (entry.inputOrigin === 'local-upload') return entry.source === null;
   if (entry.inputOrigin === 'generated') return exact(entry.source, ['projectId', 'imageId']) && uuid(entry.source.projectId) && uuid(entry.source.imageId);
   if (entry.inputOrigin !== 'external' || !exact(entry.source, ['originUrl', 'board'])) return false;
-  return typeof entry.source.originUrl === 'string' && /^https:\/\/www\.pinterest\.com\/pin\/[A-Za-z0-9_-]{1,160}\/$/.test(entry.source.originUrl) && typeof entry.source.board === 'string' && entry.source.board.length <= 200 && /^[a-z0-9_-]+\/[a-z0-9_-]+$/.test(entry.source.board);
+  return typeof entry.source.originUrl === 'string' && /^https:\/\/www\.pinterest\.com\/pin\/[A-Za-z0-9_-]{1,160}\/$/.test(entry.source.originUrl) && typeof entry.source.board === 'string' && entry.source.board.length <= 200 && /^[a-z0-9_-]+\/[a-z0-9_-]+$/.test(entry.source.board) && !/sk-[^\s]+/i.test(entry.source.originUrl + entry.source.board);
 }
 function entryValid(entry, index, version) {
   const keys = ['id', 'ordinal', 'role', 'inputOrigin', 'original', 'transport', 'transformation', ...(version === 2 ? ['source'] : [])];
   if (!exact(entry, keys) || !uuid(entry.id) || entry.ordinal !== index + 1 || entry.role !== 'reference' || !['none', 'optimized-v1'].includes(entry.transformation)) return false;
   if (version === 1 ? entry.inputOrigin !== 'local-upload' : !sourceValid(entry)) return false;
   const {original, transport} = entry;
-  if (!exact(original, ['sha256', 'mime', 'byteLength']) || !file(original, MAX_VISUAL_SOURCE_BYTES) || !exact(transport, ['sha256', 'mime', 'byteLength', 'width', 'height']) || !file(transport, MAX_VISUAL_IMAGE_BYTES)) return false;
+  if (!exact(original, ['sha256', 'mime', 'byteLength']) || !file(original, MAX_VISUAL_SOURCE_BYTES) || !exact(transport, ['sha256', 'mime', 'byteLength', 'width', 'height']) || !file(transport, MAX_VISUAL_TRANSPORT_FILE_BYTES)) return false;
   if (!integer(transport.width, MAX_VISUAL_DIMENSION) || !integer(transport.height, MAX_VISUAL_DIMENSION) || transport.width * transport.height > MAX_VISUAL_PIXELS) return false;
   return entry.transformation !== 'none' || ['sha256', 'mime', 'byteLength'].every(key => original[key] === transport[key]);
 }

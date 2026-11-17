@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {validateVisualInputManifest,validateVisualReferenceSelection,visualInputMatchesProject} from '../src/visual-input-contract.mjs';
+import {validateVisualInputManifest,validateVisualReferenceSelection,visualInputMatchesProject,MAX_VISUAL_TRANSPORT_FILE_BYTES,MAX_VISUAL_IMAGE_URL_CHARS} from '../src/visual-input-contract.mjs';
 import {parseVisualInput,parseSelectedVisualInput,visualInputDigest} from '../src/visual-input.mjs';
 
 const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
@@ -67,4 +67,14 @@ test('v1 não aceita origens novas e v2 não atribui consentimento/proveniência
  const f=triage();for(const mutate of [x=>x.externalConsent=false,x=>delete x.externalConsent,x=>delete x.entries[1].source,x=>x.entries[1].source.originUrl='https://evil.test/image.png',x=>x.entries[2].source.projectId='bad',x=>x.entries[0].source={projectId:id(17),imageId:id(18)}]){const bad=structuredClone(f.manifest);mutate(bad);assert.equal(validateVisualInputManifest(bad),false);}
  const old=fixture(3).manifest;Object.assign(old.entries[1],{inputOrigin:'external',source:f.manifest.entries[1].source});assert.equal(validateVisualInputManifest(old),false);
  const changed=structuredClone(f.manifest);changed.entries[1].source.originUrl='https://www.pinterest.com/pin/another/';assert.notEqual(visualInputDigest(changed),visualInputDigest(f.manifest));
+ const credential=structuredClone(f.manifest);credential.entries[1].source.originUrl='https://www.pinterest.com/pin/sk-synthetic-secret/';assert.equal(validateVisualInputManifest(credential),false);
+});
+test('orçamento por arquivo cabe no campo image_url mesmo quando soma permite mais',()=>{
+ const f=fixture(1).manifest;
+ for(const n of [MAX_VISUAL_TRANSPORT_FILE_BYTES,MAX_VISUAL_TRANSPORT_FILE_BYTES+1]){
+  f.entries[0].original.byteLength=n;f.entries[0].transport.byteLength=n;
+  assert.equal(validateVisualInputManifest(f),n===MAX_VISUAL_TRANSPORT_FILE_BYTES);
+ }
+ assert.ok('data:image/jpeg;base64,'.length+4*Math.ceil(MAX_VISUAL_TRANSPORT_FILE_BYTES/3)<=MAX_VISUAL_IMAGE_URL_CHARS);
+ assert.ok('data:image/jpeg;base64,'.length+4*Math.ceil((MAX_VISUAL_TRANSPORT_FILE_BYTES+1)/3)>MAX_VISUAL_IMAGE_URL_CHARS);
 });

@@ -12,6 +12,8 @@ export type VisualInputManifest = LocalVisualInputManifest|VisualSelectionManife
 export type VisualReferenceImage = Readonly<{id:string;mime:VisualMime;data:string}>;
 export const MAX_VISUAL_IMAGES:number;
 export const MAX_VISUAL_IMAGE_BYTES:number;
+export const MAX_VISUAL_IMAGE_URL_CHARS:number;
+export const MAX_VISUAL_TRANSPORT_FILE_BYTES:number;
 export const MAX_VISUAL_SOURCE_BYTES:number;
 export const MAX_VISUAL_REQUEST_BYTES:number;
 export const MAX_VISUAL_DIMENSION:number;
