@@ -27,7 +27,7 @@ function Screen(){
  proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport){
+async function fixture(t,viewport,{unreliableAbort=false}={}){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-exploration-progress',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -35,6 +35,7 @@ async function fixture(t,viewport){
  const browser=await chromium.launch({executablePath:browserPath,headless:true});
  t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const page=await browser.newPage({viewport});page.setDefaultTimeout(5000);
+ if(unreliableAbort)await page.addInitScript(()=>{AbortController.prototype.abort=function(){};});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
  const pending=[],posts=[];
  await page.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));
@@ -50,6 +51,18 @@ async function fixture(t,viewport){
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
  return {page,posts,pending};
 }
+
+test('troca de fonte conserva marcador mesmo quando a resposta vence o cancelamento',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844},{unreliableAbort:true});
+ const progress=page.locator('.reference-exploration-status'),markerKey='compor-exploration-pending:'+userId;
+ await progress.getByText('Aguardando imagem 1 de 3.').waitFor();
+ const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+ await page.getByRole('button',{name:'Trocar para IA do Compor',exact:true}).click();
+ await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}});
+ await progress.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'resposta da fonte anterior não liquida o marcador');
+ assert.equal(posts.length,1,'a fonte nova não despacha outro pedido');
+});
 
 for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){
  test('espera de imagem mostra posição e tempo sem prometer sucesso nem reenviar em '+viewport.width,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{

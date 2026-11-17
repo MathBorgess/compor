@@ -111,6 +111,7 @@ export function useExplorationLoop(props: LoopProps) {
             const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId: pending.projectId })}`, { cache: "no-store", signal: cancel.signal });
             if (!response.ok) throw Error("unconfirmed");
             const rows = listSchema.parse(await response.json()).images;
+            if(!active||!sameCredential())return;
             const match = rows.find(row => row.id === pending.requestId && row.project_id === pending.projectId);
             if (match?.state === "rejected") {
               // Persist the pause before removing the receipt: reload or another
@@ -128,6 +129,7 @@ export function useExplorationLoop(props: LoopProps) {
             localStorage.setItem(sequenceKey(pending.projectId),String(reconciled.sequence));
             if(pending.projectId===props.projectId)progress=reconciled;
             if(pending.projectId===props.projectId&&pending.conversationId)await current.current.onCompleted?.(pending.requestId,pending.sequence+1,pending.conversationId,pending.creationContext);
+            if(!sameCredential())return;
             localStorage.removeItem(pendingKey);
           }
           if(progress.awaitingFeedback) {
@@ -210,6 +212,9 @@ export function useExplorationLoop(props: LoopProps) {
               setRequestProgress(value=>value?.requestId===requestId?null:value);
             }
             dispatched = false;
+            // Aborting a request is not guaranteed to win the race with its
+            // response. Never reconcile a receipt under a different source.
+            if(!sameCredential())return;
             if ([400,403,404,413,503].includes(response.status) && result.status === "not_started" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(notStartedKey, "1");
@@ -252,6 +257,7 @@ export function useExplorationLoop(props: LoopProps) {
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
             await current.current.onCompleted?.(requestId,sequence+1,pending.conversationId,pending.creationContext);
+            if(!sameCredential())return;
             localStorage.removeItem(pendingKey);
             setCompleted(value => value + 1);
           }
