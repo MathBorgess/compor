@@ -238,6 +238,7 @@ test('referências são somente PNG/JPEG base64, limitadas e enviadas como input
  const f=fixture();assert.equal((await f.chat(request({...body,referenceImages:[{...image,data:'https://foreign.test/image.png'}]}))).status,400);
  assert.equal((await f.chat(request({...body,referenceImages:Array(22).fill(image)}))).status,400);assert.equal(f.calls.length,0);
  await f.chat(request({...body,referenceImages:[image]}));assert.equal(f.calls[0].body.input[0].content[2].type,'input_image');
+ assert.equal(f.calls[0].body.input[0].content[2].image_url,`data:image/png;base64,${image.data}`,'a sessão gerenciada recebe os mesmos bytes fornecidos');
 });
 test('rejeição definitiva permite novo pedido; resposta HTTP408 preserva a incerteza',async()=>{
  for(const [status,expected]of [[400,'failed'],[408,'unknown']]){

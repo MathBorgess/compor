@@ -28,23 +28,25 @@ export async function referenceImagesForRequest(
     try {
       if (image.width * image.height > 40_000_000)
         throw Error("Referência fora dos limites.");
-      let size = 512,
-        blob;
-      do {
-        const scale = Math.min(1, size / Math.max(image.width, image.height));
-        const canvas = document.createElement("canvas");
-        canvas.width = Math.max(1, Math.round(image.width * scale));
-        canvas.height = Math.max(1, Math.round(image.height * scale));
-        const context = canvas.getContext("2d");
-        if (!context) throw Error("Imagem indisponível.");
-        context.fillStyle = "#ffffff";
-        context.fillRect(0, 0, canvas.width, canvas.height);
-        context.drawImage(image, 0, 0, canvas.width, canvas.height);
-        blob = await new Promise<Blob|null>((resolve) =>
-          canvas.toBlob(resolve, "image/jpeg", 0.7),
-        );
-        size = Math.floor(size / 2);
-      } while (blob && blob.size > 35 * 1024 && size >= 64);
+      let blob:Blob|null = file;
+      if (file.size > 35 * 1024 || image.width > 512 || image.height > 512) {
+        let size = 512;
+        do {
+          const scale = Math.min(1, size / Math.max(image.width, image.height));
+          const canvas = document.createElement("canvas");
+          canvas.width = Math.max(1, Math.round(image.width * scale));
+          canvas.height = Math.max(1, Math.round(image.height * scale));
+          const context = canvas.getContext("2d");
+          if (!context) throw Error("Imagem indisponível.");
+          context.fillStyle = "#ffffff";
+          context.fillRect(0, 0, canvas.width, canvas.height);
+          context.drawImage(image, 0, 0, canvas.width, canvas.height);
+          blob = await new Promise<Blob|null>((resolve) =>
+            canvas.toBlob(resolve, "image/jpeg", 0.7),
+          );
+          size = Math.floor(size / 2);
+        } while (blob && blob.size > 35 * 1024 && size >= 64);
+      }
       if (!blob || blob.size > 35 * 1024)
         throw Error("Não foi possível preparar uma referência.");
       total += blob.size;
@@ -62,7 +64,7 @@ export async function referenceImagesForRequest(
         1_000_000
       )
         throw Error("As referências excederam o limite desta mensagem.");
-      result.push({ id: reference.id, mime: "image/jpeg", data: encoded });
+      result.push({ id: reference.id, mime: blob.type, data: encoded });
     } finally {
       image.close();
     }

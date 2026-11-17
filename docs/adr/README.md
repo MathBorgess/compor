@@ -76,5 +76,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0062](0062-reconciliacao-explicita-da-exploracao.md) | implementação local em validação | Preservar marcador na interrupção e consultar o mesmo recibo ao voltar antes de novo gesto |
 | [0063](0063-epoch-original-da-revogacao.md) | implementado localmente; migration remota não aplicada | Prova imutável do epoch da revogação, replay idempotente e CAS sem adotar atividade posterior de outra aba |
 | [0064](0064-retomada-paralela-vinculada-a-intencao.md) | implementado localmente; migration remota não aplicada | Retomada de feedback paralela com capacidade ativa, CAS e recibo único por intenção |
+| [0065](0065-fidelidade-de-imagens-pequenas-no-chat.md) | implementado localmente | Imagens pequenas preservam bytes e transparência no contexto visual do chat |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.
