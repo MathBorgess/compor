@@ -1279,7 +1279,7 @@ function ProjectStudio({
   const showPosts=()=>{closeSettings();setPostSettingsOpen(false);nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));};
   const pendingPost=s.workflow.pendingPost;
   const preparingPost=s.workflow.view==='prepare-post';
-  const viewingPendingConversation=Boolean(pendingTurn&&pendingTurn.context.conversationId!=='references'&&draft&&pendingTurn.context.pieceId===draft.pieceId&&s.workflow.view!=='posts'&&!preparingPost&&(!chatMinimized||intro));
+  const viewingPendingConversation=Boolean(pendingTurn&&draft&&pendingTurn.context.conversationId===draft.pieceId&&s.workflow.view!=='posts'&&!preparingPost&&(!chatMinimized||intro));
   const preparedValue=pendingPost??(draft?postContext(s,draft.pieceId):{objective:'',message:'',action:''});
   const preparedName=pendingPost?.name??(draft?s.posts[draft.pieceId]?.name??'':'');
   const changePreparation=journey.changePreparation;
@@ -1288,7 +1288,7 @@ function ProjectStudio({
   const canvas=<>
     {referencesOpen&&!referencesModal&&referencePanel}
     <div className="studio-workspace-host" hidden={referencesOpen&&!referencesModal}>
-      {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else{setChatMinimized(false);openPost(pendingTurn.context.pieceId);}}}>Abrir a conversa desse pedido</button></p>}
+      {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(!pendingTurn.context.conversationId){setSettings('history');}else if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else{setChatMinimized(false);openPost(pendingTurn.context.pieceId);}}}>Abrir a conversa desse pedido</button></p>}
       {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:aiPanel}</>}
       {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
       <div className="guided-post-host" hidden={preparing||s.workflow.view==='posts'} style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div className="studio-workspace-view" data-active={!preparing&&!referencesOpen&&s.workflow.view!=='posts'&&!preparingPost} hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} chatMinimized={chatMinimized} onChatMinimizedChange={setChatMinimized} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>
