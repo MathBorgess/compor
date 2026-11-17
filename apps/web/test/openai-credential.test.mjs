@@ -123,3 +123,22 @@ test('polling a managed turn with another credential or source never contacts Op
     assert.equal(response.status,202);assert.equal(body.status,'unknown');assert.equal(body.retryAutomatically,false);assert.equal(providerCalls,0);
   }
 });
+
+test('inspect_pending aceita apenas prova vinculada à fonte e chave originais, sem ações ou conteúdo',async()=>{
+ const secret=Buffer.alloc(32,7),scope={userId,projectId,attemptId,sessionId:'sess_private'};
+ for(const [originalSource,originalKey,requestedSource,requestedKey,legacy,allowed] of [
+  ['byok',ownKey,'byok',ownKey,false,true],['default',defaultKey,'default',defaultKey,false,true],
+  ['byok',ownKey,'byok','sk-'+ 'z'.repeat(30),false,false],['byok',ownKey,'default',defaultKey,false,false],
+  ['default',defaultKey,'byok',ownKey,false,false],['byok',ownKey,'byok',ownKey,true,false],
+ ]){
+  const binding=legacy?createSessionBindings({secret}).issueRecovery(scope):createCredentialSessionBindings({secret,source:originalSource,apiKey:originalKey}).issueRecovery(scope);
+  const {deps}=fixture();
+  const prepared=await prepareOpenAiRequest(request({projectId,requestId:attemptId,op:'inspect_pending',...(requestedSource==='byok'?{apiKey:requestedKey}:{})}),deps,{...options,freshSubmission:true});
+  let calls=0,writes=0;const forbidden=async()=>{writes++;throw Error('unexpected mutation');};
+  const record={state:'running',userId,projectId,attemptId,requestId:attemptId,binding,turnId:'turn_one'};
+  const store={reserve:forbidden,get:async()=>record,bind:forbidden,state:forbidden,claimAction:forbidden,finishAction:forbidden,getAction:forbidden};
+  const handler=createStudioChatHandlers({appOrigin:app,resolveActor:async()=>actor,ownsProject:async()=>true,store,attempts:{bindRecovery:forbidden,finish:forbidden},bindings:createCredentialSessionBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),studioBindings:createCredentialStudioBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),fetch:async(url,init)=>{calls++;assert.equal(init.method??'GET','GET');if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_private',subagent_id:null,status:'waiting'}]});return Response.json({id:'sess_private',status:'requires_action',required_actions:[{type:'function_call',turn_id:'turn_one',name:'generate_image',arguments:{prompt:'PRIVATE_CONTENT'},call_id:'call_one'}]});}});
+  const response=await handler.chat(prepared.request),result=await response.json();
+  assert.deepEqual(result,{status:allowed?'action_required':'unknown',retryAutomatically:false});assert.equal(calls,allowed?2:0);assert.equal(writes,0);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_CONTENT|sk-|call_one|generate_image/);
+ }
+});

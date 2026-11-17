@@ -59,7 +59,10 @@
 .reference-step .exploration-gallery-controls { display:flex;flex-wrap:wrap;gap:16px;align-items:center; }
 .reference-step .studio-previous-explorations { flex-basis:100%; }
 .reference-step .studio-previous-explorations summary { min-height:44px;padding-block:10px;cursor:pointer; }
-.reference-step .reference-exploration-status { display:flex;flex-wrap:wrap;align-items:center;gap:16px;margin-top:24px; }
+.reference-step .reference-exploration-status { display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-block:24px;padding:16px;border:1px solid var(--studio-line);border-radius:10px; }
+.reference-proposal-progress { display:grid;gap:8px;flex:1 1 260px; }
+.reference-proposal-progress > p { margin:0; }
+.reference-proposal-progress [role='timer'] { font-variant-numeric:tabular-nums;color:var(--studio-muted); }
 .reference-step .reference-pending-question { margin-top:24px;padding:16px;background:var(--studio-blue-tint);border-radius:10px; }
 .reference-step-actions { display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-top:32px;padding:24px 0 0;color:var(--studio-ink);font-size:16px;border-top:1px solid var(--studio-line); }
 .reference-selection-summary { display:flex;flex-wrap:wrap;align-items:center;gap:8px 24px; }

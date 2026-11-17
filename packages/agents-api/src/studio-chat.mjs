@@ -164,6 +164,27 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   else{if(page.has_more!==false)throw Error('incomplete turns');candidates=roots;}
   if(!candidates.length)return null;if(candidates.length!==1)throw Error('ambiguous turn');return candidates[0];
  }
+ async function inspectPending(scope,record,key,d){
+  const result=status=>reply({status,retryAutomatically:false});
+  if(record.userId!==scope.actor.userId||record.projectId!==scope.projectId||record.requestId!==scope.requestId||!record.binding||typeof bindings.verifyBoundRecovery!=='function')return result('unknown');
+  try{
+   const verified=bindings.verifyBoundRecovery({token:record.binding,userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId});
+   if(!verified||verified.conversationId!==scope.conversationId||!identifier(verified.sessionId,'sess'))return result('unknown');
+   // ADR 0035: an already failed attempt is terminal and never calls the provider.
+   if(record.state==='failed')return result('failed');
+   if(record.turnId&&!identifier(record.turnId,'turn'))return result('unknown');
+   const session=await get(verified.sessionId,key);
+   if(session.id!==verified.sessionId||!['idle','in_progress','requires_action','failed'].includes(session.status)||!Array.isArray(session.required_actions))return result('unknown');
+   const turn=await rootTurn(verified.sessionId,key,record,d);
+   if(!turn)return result('unknown');
+   if(turn.status==='completed')return result(session.required_actions.some(action=>action?.turn_id===turn.id)?'unknown':'completed');
+   if(turn.status==='failed')return reply({status:'failed',...(turn.error?.code==='usage_limit_exceeded'?{error:'provider_usage_limit'}:{}),retryAutomatically:false});
+   if(turn.status==='cancelled')return result('failed');
+   if(!['queued','in_progress','waiting'].includes(turn.status)||session.status==='failed')return result('unknown');
+   if(session.status==='requires_action')return result(session.required_actions.some(action=>action?.type==='function_call'&&action.turn_id===turn.id)?'action_required':'unknown');
+   return result('running');
+  }catch{return result('unknown');}
+ }
  async function poll(scope,record,key,d){
   rememberRecord(d,scope,record);
   if(record.state==='failed')return reply({status:'failed',retryAutomatically:false});
@@ -181,7 +202,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   d.turnId=turn.id;d.turnStatus=turn.status;d.emit('turn_observed');
   d.phase='turn_state_write';
   if(!record.turnId)await state(scope,record,'running',turn.id);
-  if(['failed','cancelled'].includes(turn.status)){d.phase='turn_finish';await finish(scope,record,'failed',session.usage);return reply({status:'failed',retryAutomatically:false});}
+  if(['failed','cancelled'].includes(turn.status)){
+   d.phase='turn_finish';await finish(scope,record,'failed',session.usage);
+   return reply({status:'failed',...(turn.status==='failed'&&turn.error?.code==='usage_limit_exceeded'?{error:'provider_usage_limit'}:{}),retryAutomatically:false});
+  }
   // A session may already be executing a newer message. The requested turn,
   // never the session's current status, determines a prior request's outcome.
   if(turn.status!=='completed'&&session.status==='requires_action'){
@@ -234,6 +258,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
  async function chat(request){
   const auth=await authorize(request);if(auth.error)return auth.error;const{body,actor,scope}=auth,key=body.apiKey;
   const d=diagnostic(scope.requestId,'store_get');
+  if(body.op==='inspect_pending'){
+   if(Object.keys(body).filter(k=>k!=='conversationId').sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
+   try{const record=await store.get(scope);return record?await inspectPending(scope,record,key,d):reply({status:'unknown',retryAutomatically:false});}catch{return reply({status:'unknown',retryAutomatically:false});}
+  }
   if(body.op==='poll'){
    if(Object.keys(body).filter(k=>k!=='conversationId').sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
    try{const record=await store.get(scope);if(!record)return reply({error:'not_found'},404);return await poll(scope,record,key,d);}catch(error){return unknownReply(d,error);}

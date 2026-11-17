@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormE
 import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
+import {useObjectUrl} from './use-object-url.ts';
 import Markdown from "markdown-to-jsx";
 import {
   prepareAdjustment,
@@ -30,7 +31,7 @@ import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
-import { chatResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
+import { chatResponseSchema, pendingInspectionSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type PendingInspection, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({postContext:state.selection?postContext(state,state.selection.pieceId):undefined,brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
@@ -126,23 +127,24 @@ export default function StudioChat({
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
+  const [orphanNotice,setOrphanNotice]=useState('');
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
-  const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
+  const [referencePreview,setReferencePreview]=useState<{id:string;file:Blob}|null>(null);
   const referenceWaitListener=useRef(onReferenceWait);
   referenceWaitListener.current=onReferenceWait;
   const referenceLoader=useRef(loadReference);
   referenceLoader.current=loadReference;
   const latestReference=state.references.at(-1);
+  const referencePreviewUrl=useObjectUrl(referenceWorkbench&&referencePreview&&referencePreview.id===latestReference?.id?referencePreview.file:null);
   useEffect(()=>{
     setReferencePreview(null);
     if(!referenceWorkbench||!latestReference)return;
-    let active=true,url:string|undefined;
+    let active=true;
     void referenceLoader.current(latestReference.id).then(image=>{
       if(!active||!image)return;
-      url=URL.createObjectURL(image.file);
-      setReferencePreview({id:latestReference.id,url});
+      setReferencePreview({id:latestReference.id,file:image.file});
     }).catch(()=>{ /* The selected reference and its context remain available without a preview. */ });
-    return()=>{active=false;if(url)URL.revokeObjectURL(url);};
+    return()=>{active=false;};
   },[referenceWorkbench,state.userId,state.projectId,conversationId,latestReference?.id]);
   const [currentContext,setCurrentContext]=useState<{value:string;digest:string}|null>(null);
   const attemptSource=useRef<CredentialSource>(credentialSource);
@@ -160,6 +162,7 @@ export default function StudioChat({
     preparationSequence=useRef(0),
     legacyPending=useRef(false),
     inspectionLock=useRef(false),
+    pollLock=useRef<string|null>(null),
     inspectionSequence=useRef(0),
     failedAutomatic=useRef<string|null>(null),
     // Synchronous guard shared by the composer and quick replies: a double click
@@ -173,13 +176,16 @@ export default function StudioChat({
   currentScope.current=scopeMarker;
   const credentialIsCurrent=()=>mounted.current&&activeMarker.current===scopeMarker&&currentScope.current===scopeMarker;
   const sourceMismatch=Boolean(pending&&pendingSource&&pendingSource!==credentialSource);
+  const localBlocked=state.adjustments.some(item=>!['completed','failed'].includes(item.status)&&item.id!==pending);
+  const orphaned=state.adjustments.find(item=>!['completed','failed'].includes(item.status)&&item.context.conversationId===conversationId&&item.id!==pending);
+  useEffect(()=>{setOrphanNotice('');},[orphaned?.id]);
   const authenticationNotice=credentialSource==='default'?'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.':openAIAuthenticationNotice;
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
   // A hidden controller can finish an existing turn, but cannot prepare a new reading.
   // Its own busy update must not invalidate the preparation's visibility epoch.
-  const availability=useRef({message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
+  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
   const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis?1:0);
-  availability.current={message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
+  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
   const quickReplyStorage=quickReplyKey(state.userId,state.projectId,conversationId);
   function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
@@ -236,19 +242,22 @@ export default function StudioChat({
     const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
-    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);
+    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setOrphanNotice('');
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     actionCount.current.clear();
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
       setClosedImageAttempt(uuid(submitted)?submitted:null);
-      const parsed = chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker) ?? "null"));
+      const rawMarker=sessionStorage.getItem(marker);
+      let markerValue:unknown=null;try{markerValue=JSON.parse(rawMarker??'null');}catch{}
+      const parsed = chatMarkerSchema.safeParse(markerValue);
       const value = parsed.success ? parsed.data : null;
+      const usableRequestId=uuid(value?.requestId)?value.requestId:null;
       const originalSource=value?.credentialSource??'byok';
-      attemptSource.current=value?.requestId?originalSource:credentialSource;
-      legacyPending.current=Boolean(value?.requestId && value.imageProtocolVersion !== 1);
-      if (value && typeof value.requestId === "string") {
-        setPending(value.requestId);
+      attemptSource.current=usableRequestId?originalSource:credentialSource;
+      legacyPending.current=Boolean(usableRequestId && value?.imageProtocolVersion !== 1);
+      if (value && usableRequestId) {
+        setPending(usableRequestId);
         setPendingSource(originalSource);
         if(originalSource!==credentialSource)setNotice(sourceNotice(originalSource));
         else if(changed)setNotice('A fonte da IA mudou. Consulte a tentativa anterior antes de continuar.');
@@ -257,7 +266,7 @@ export default function StudioChat({
       setLastCompleted(uuid(previous.current)?previous.current:null);
       imageContext.current=value?.imageContext??null;
       receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
-      if(changed||originalSource!==credentialSource)remember(value?.requestId??null);
+      if(value&&(value.requestId===null||usableRequestId)&&(changed||originalSource!==credentialSource))remember(usableRequestId);
     } catch {}
     return () => {
       mounted.current = false;
@@ -296,10 +305,12 @@ export default function StudioChat({
     window.addEventListener('storage',stored);
     return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
   },[marker]);
-  async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse> {
+  async function api(path:string, body:Record<string,unknown>,mode:'inspection'):Promise<PendingInspection>;
+  async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse>;
+  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
-    if(pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
+    if(mode!=='inspection'&&pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
     const key = getApiKey?.();
     if (credentialSource==='byok'&&!key) throw Error("Conecte sua chave OpenAI para continuar.");
     const controller = new AbortController();
@@ -313,6 +324,7 @@ export default function StudioChat({
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     const input:unknown = await response.json();
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
+    if(mode==='inspection'){if(!response.ok)throw Error('Consulta indisponível.');return pendingInspectionSchema.parse(input);}
     const envelope = errorResponseSchema.parse(input);
     if(response.status===503&&envelope.error==='default_credential_unavailable'){
       const fresh=path==='/api/studio/chat'&&(body.op===undefined||body.op==='submit'||body.op==='reference_selection');
@@ -343,6 +355,20 @@ export default function StudioChat({
           : "Não foi possível concluir a consulta. O resultado pode estar incerto.",
       );
     return chatResponseSchema.parse(input);
+  }
+  async function inspectOrphaned(requestId:string) {
+    if(inspectionLock.current||pollLock.current||busy||!canUseAI||!credentialIsCurrent())return;
+    const sequence=++inspectionSequence.current;inspectionLock.current=true;setBusy(true);setOrphanNotice('');
+    try {
+      const result=await api('/api/studio/chat',{op:'inspect_pending',projectId:state.projectId,requestId},'inspection');
+      if(sequence!==inspectionSequence.current||!credentialIsCurrent()||!getState().adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)))return;
+      if(result.status==='completed')setOrphanNotice('A consulta encontrou um turno concluído. Abra a aba original para verificar a resposta e recuperar o contexto. Nenhuma ação foi repetida.');
+      else if(result.status==='failed'&&result.error==='provider_usage_limit')setOrphanNotice(credentialSource==='default'?'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.':'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.');
+      else if(result.status==='failed')setOrphanNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      else if(result.status==='action_required')setOrphanNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
+      else setOrphanNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');
+    } catch {if(sequence===inspectionSequence.current&&credentialIsCurrent())setOrphanNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');}
+    finally {if(sequence===inspectionSequence.current){inspectionLock.current=false;if(credentialIsCurrent())setBusy(false);}}
   }
   function settle(requestId:string, status:RequestStatus, result?:AdjustmentResult) {
     change((value) =>
@@ -502,7 +528,11 @@ export default function StudioChat({
       remember(null);
       setBusy(false);
       setNotice(
-        data.error==='default_credential_unavailable'&&data.failurePhase==='before_submission'&&data.requestId===requestId
+        data.error==='provider_usage_limit'
+          ? credentialSource==='default'
+            ? 'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.'
+            : 'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.'
+          : data.error==='default_credential_unavailable'&&data.failurePhase==='before_submission'&&data.requestId===requestId
           ? 'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.'
           : data.error === "project_busy" &&
           data.failurePhase === "before_submission" &&
@@ -520,10 +550,12 @@ export default function StudioChat({
       "O resultado ainda não foi confirmado. Consulte a mesma tentativa antes de enviar outro pedido.",
     );
   }
-  async function poll(requestId:string, count = 0) {
+  async function poll(requestId:string, count = 0, afterImageConfirmation = false) {
     if (!credentialIsCurrent()||!canUseAI) return;
+    const nested=afterImageConfirmation&&pollLock.current===requestId;
+    if(inspectionLock.current||(pollLock.current&&!nested)){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),2000);return;}
     if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
-    setBusy(true);
+    pollLock.current=requestId;setBusy(true);
     try {
       const data = await api("/api/studio/chat", {
         op: "poll",
@@ -536,7 +568,7 @@ export default function StudioChat({
         setBusy(false);
         setNotice(errorMessage(e));
       }
-    }
+    } finally {if(!nested)pollLock.current=null;}
   }
   async function inspectLastCompleted(){
     if(!credentialIsCurrent()||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!canUseAI)return;
@@ -552,15 +584,15 @@ export default function StudioChat({
     }
   }
   useEffect(()=>{
-    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
-    const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.message.trim();
+    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
     const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
       if(!lock||!allowed())return;
       const available=availability.current;
-      if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
+      if(!available.hasApiKey||available.busy||available.pending||available.localBlocked||available.message.trim()||inspectionLock.current)return;
       const before=getState();
       if(referenceFingerprint(before)!==referenceSet||referenceContext(before)!==referenceContextValue||!before.references.length||!getCurrentDraft(before)||before.adjustments.some(item=>!['completed','failed'].includes(item.status)))return;
       const existing=referenceRecord(),round=readReferenceRound(before);
@@ -583,7 +615,7 @@ export default function StudioChat({
         if(!next)throw Error('O projeto ainda está carregando.');
         prepared=true;
         await flush();
-        if(!allowed()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest||!allowed()) {
+        if(!allowed(requestId)||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest||!allowed(requestId)) {
           settle(requestId,'failed');prepared=false;return;
         }
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
@@ -602,7 +634,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -610,7 +642,7 @@ export default function StudioChat({
   type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (readOnly || !text.trim() || !canUseAI || busy || pending || submitLock.current || availability.current.busy || availability.current.pending || inspectionLock.current||!credentialIsCurrent()) return false;
+    if (readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
     submitLock.current=true;
     try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
     finally { submitLock.current=false; }
@@ -939,7 +971,7 @@ export default function StudioChat({
         setImageReceipt(receiptRef.current);
         remember(action.requestId);
       }
-      if(isCurrentScope())await poll(action.requestId);
+      if(isCurrentScope())await poll(action.requestId,0,true);
     } catch (e) {
       if (isCurrentScope()) {
         setBusy(false);
@@ -951,7 +983,7 @@ export default function StudioChat({
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
-  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch;
+  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
   const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   const panel=(
@@ -1084,6 +1116,8 @@ export default function StudioChat({
             Consultar esta tentativa
           </button>
         )}
+        {orphaned&&<div className="studio-hint"><p>Uma tentativa anterior está pendente, mas a fonte original da IA não foi preservada nesta aba.</p><p>Escolha nas configurações a fonte usada no pedido e, se necessário, conecte a chave original. Sem acesso a ela, procure a aba original ou solicite ajuda; a tentativa continua preservada. Esta consulta não executa ações nem inicia geração.</p><button type="button" className="studio-button-secondary" disabled={busy||!canUseAI} onClick={()=>{void inspectOrphaned(orphaned.id);}}>{credentialSource==='default'?'Consultar usando IA do Compor':'Consultar usando minha chave OpenAI'}</button>{orphanNotice&&<p role="status">{orphanNotice}</p>}</div>}
+        {localBlocked&&!orphaned&&<p role="status" className="studio-hint">Há um pedido pendente em outra conversa do projeto. Abra essa conversa para consultá-lo.</p>}
         {closedImageAttempt && !pending && !imageAction && <button type="button" className="studio-button-secondary" disabled={busy} onClick={reconcileClosedImage}>Verificar envio anterior</button>}
         {developerMode&&!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
           <button type="button" className="studio-button-secondary" disabled={!canUseAI||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
@@ -1108,7 +1142,7 @@ export default function StudioChat({
       <form className="studio-chat-composer" onSubmit={send}>
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
         {referenceWorkbench&&latestReference&&<span className="studio-reference-composer-context" title={`Última referência escolhida: ${lastReferenceTitle}. A conversa considera toda a seleção.`}>
-          {referencePreview?.id===latestReference.id&&<img src={referencePreview.url} alt="" width="36" height="36"/>}
+          {referencePreviewUrl&&<img src={referencePreviewUrl} alt="" width="36" height="36"/>}
           <span>{lastReferenceTitle}<small>{state.references.length} referências na conversa</small></span>
         </span>}
         <label className="studio-visually-hidden" htmlFor={composerId}>Sua mensagem</label>
@@ -1126,7 +1160,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : intro ? "Criar post" : "Enviar →"}
-            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending)}
+            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
           >
             <span aria-hidden="true">{intro?"Criar post":"↑"}</span>
           </button>

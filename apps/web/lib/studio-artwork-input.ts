@@ -1,7 +1,7 @@
 import type {StudioDraft, StoredImage} from './studio-domain.ts';
 import type {ArtworkImage} from '@compor/agents-api/artwork-input';
 import {parseImageProposal} from '@compor/agents-api/image-proposal';
-import {studioImageDimensions} from './studio-image.ts';
+import {studioImageDimensions,studioImageDimensionsMatch} from './studio-image.ts';
 import {ARTWORK_TRANSPORT_BYTES, artworkImageBudgets, copyArtworkForTransport} from './studio-artwork-transport.ts';
 
 export type ArtworkPreparationOptions = {
@@ -25,7 +25,13 @@ async function artworkSources({proposal: value, draft, referenceIds, loadReferen
   async function attach(id: string, role: ArtworkImage['role'], stored: StoredImage|null|undefined) {
     const file = stored?.file;
     if (!(file instanceof Blob) || (file.type !== 'image/png' && file.type !== 'image/jpeg')) throw Error('Uma imagem desta proposta não está disponível. Reabra a versão ou adicione a referência novamente.');
-    const dimensions = await studioImageDimensions(file);
+    let dimensions = await studioImageDimensions(file);
+    const metadata=stored?.metadata;
+    if(metadata&&typeof metadata==='object'&&'width' in metadata&&'height' in metadata&&typeof metadata.width==='number'&&typeof metadata.height==='number'){
+      const displayed={width:metadata.width,height:metadata.height};
+      if(!await studioImageDimensionsMatch(file,dimensions,displayed))throw Error('Uma imagem desta proposta não está disponível. Reabra a versão ou adicione a referência novamente.');
+      dimensions=displayed;
+    }
     sources.push({id, role, file, ...dimensions});
   }
   if (proposal.operation === 'edit') {

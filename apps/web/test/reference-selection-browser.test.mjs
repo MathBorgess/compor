@@ -2,9 +2,12 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {createServer} from 'node:http';
+import {spawn} from 'node:child_process';
+import {once} from 'node:events';
 import {fileURLToPath} from 'node:url';
 import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
+import {stopApp} from './wait-for-app.mjs';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const user='00000000-0000-4000-8000-000000000001',project='00000000-0000-4000-8000-000000000003',generated='00000000-0000-4000-8000-000000000009';
 const pin=(id,title)=>({id,title,board:'behance/typography',originUrl:`https://www.pinterest.com/pin/${id}/`,previewUrl:`https://i.pinimg.com/236x/${id}.png`});
@@ -35,8 +38,9 @@ async function fixture(t,viewport={width:1280,height:900}) {
   const script=result.outputFiles.find(file=>file.path.endsWith('.js')).text,css=result.outputFiles.find(file=>file.path.endsWith('.css'))?.text??'';
   const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else{res.setHeader('content-type','text/html');res.end('<html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body class="compor-studio" style="margin:0"><main id="root"></main><script type="module" src="/fixture.js"></script></body></html>');}});
   await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
-  const browser=await chromium.launch({executablePath:browserPath,headless:true});
-  t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+  let browser;
+  t.after(async()=>{try{await browser?.close();}finally{server.closeAllConnections();await new Promise(resolve=>server.close(resolve));}});
+  browser=await chromium.launch({executablePath:browserPath,headless:true});
   const page=await browser.newPage({viewport});page.setDefaultTimeout(8000);
   const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
   await page.route('**/*',async route=>{
@@ -110,4 +114,17 @@ test('referência compartilhada excluída volta ao post dentro de Sua seleção'
  assert.equal(await tray.getByRole('button',{name:'Usar neste post: projeto.png'}).count(),0);
  await tray.getByRole('button',{name:'Remover da seleção: projeto.png'}).click();
  await tray.getByRole('button',{name:'Usar neste post: projeto.png'}).waitFor();
+});
+
+test('falha ao iniciar Chromium encerra a fixture sem manter servidor aberto',{timeout:15000},async t=>{
+ const child=spawn(process.execPath,['--import','tsx','--test-name-pattern=^origem, seleção, quantidade e remoção ficam visíveis e o foco não se perde$',fileURLToPath(import.meta.url)],{
+  cwd:fileURLToPath(new URL('../',import.meta.url)),env:{...process.env,BROWSER_EXECUTABLE_PATH:process.execPath},stdio:['ignore','pipe','pipe'],
+ });
+ t.after(()=>stopApp(child,{graceMs:1000}));
+ let output='';for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{output+=chunk;});
+ // Node exists on every test host but rejects Chromium's launch arguments.
+ // Run directly so this process owns the failed fixture, without a nested test worker.
+ const [code,signal]=await once(child,'close',{signal:AbortSignal.timeout(10000)});
+ assert.equal(signal,null);assert.equal(code,1,'a falha de launch continua reprovando o teste');
+ assert.match(output,/browserType\.launch/,'a fixture chegou ao lançamento do navegador');
 });

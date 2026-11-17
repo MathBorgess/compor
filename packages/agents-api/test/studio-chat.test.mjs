@@ -32,8 +32,8 @@ test('novo escopo não adota vínculo legado nem aceita post diferente do contex
  assert.equal((await f.chat(request({...body,requestId:request2,conversationId:attemptId,context:{...body.context,pieceId:request2}}))).status,400);assert.equal(f.calls.length,before);
 });
 function fixture(options={}){
- const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL,answer='Atualização concluída na aba.';
- const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
+ const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',turnError=null,model=AGENT_MODEL,answer='Atualização concluída na aba.';
+ const baseBindings=createSessionBindings({secret:Buffer.alloc(32,7)}),bindings={...baseBindings,...(options.boundInspection?{verifyBoundRecovery:baseBindings.verifyRecovery}:{})},studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
  const store={
   async reserve(c){if(records.has(c.requestId)){const t=records.get(c.requestId);return{status:t.inputDigest===c.inputDigest?'existing':'conflict',turn:t};}if([...records.values()].some(t=>!['completed','failed'].includes(t.state)))return{status:'busy'};const t={requestId:c.requestId,projectId,userId,attemptId:c.requestId===requestId?attemptId:request2,inputDigest:c.inputDigest,state:'starting',binding:null,turnId:null};records.set(c.requestId,t);return{status:'reserved',turn:t};},
   async get(c){return records.get(c.requestId)??null;},
@@ -48,11 +48,13 @@ function fixture(options={}){
   if(url.endsWith('/sessions')&&init.method==='POST')return Response.json({id:options.createdSessionId??'sess_one',status:'in_progress'},{status:201});
   if(url.endsWith('/events'))return new Response(null,{status:202});
   if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:turn,content:[{type:'output_text',text:answer}]}]});
-  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
+  if(url.includes('/turns?')&&options.turnList)return options.turnList(url,init);
+  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState,error:turnError},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
+  if(options.sessionLookup)return options.sessionLookup(url,init);
   return Response.json({id:'sess_one',agent:{model,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
- return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
+ return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'turnError'))turnError=v.turnError;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{
  const f=fixture();let r=await f.chat(request(body));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
@@ -236,6 +238,7 @@ test('referências são somente PNG/JPEG base64, limitadas e enviadas como input
  const f=fixture();assert.equal((await f.chat(request({...body,referenceImages:[{...image,data:'https://foreign.test/image.png'}]}))).status,400);
  assert.equal((await f.chat(request({...body,referenceImages:Array(22).fill(image)}))).status,400);assert.equal(f.calls.length,0);
  await f.chat(request({...body,referenceImages:[image]}));assert.equal(f.calls[0].body.input[0].content[2].type,'input_image');
+ assert.equal(f.calls[0].body.input[0].content[2].image_url,`data:image/png;base64,${image.data}`,'a sessão gerenciada recebe os mesmos bytes fornecidos');
 });
 test('rejeição definitiva permite novo pedido; resposta HTTP408 preserva a incerteza',async()=>{
  for(const [status,expected]of [[400,'failed'],[408,'unknown']]){
@@ -274,6 +277,7 @@ test('HTTP503 ao continuar sessão conserva a tentativa unknown e não repete o 
   calls.push({url,method:init.method??'GET',headers:init.headers});
   if(init.method==='POST'&&url.endsWith('/sessions'))return Response.json({id:'sess_one'},{status:201});
   if(init.method==='POST'&&url.endsWith('/events'))return new Response(`PRIVATE_PROVIDER_BODY ${apiKey}`,{status:503});
+  if(url.includes('/turns?')&&options.turnList)return options.turnList(url,init);
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]});
   if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:'turn_one',content:[{type:'output_text',text:'Resposta concluída.'}]}]});
   return Response.json({id:'sess_one',agent:{model:AGENT_MODEL,tools:AGENT_STUDIO_TOOLS},status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
@@ -381,6 +385,7 @@ test('completed devolve somente trace técnico dos items já consultados e IDs v
    {type:'function_call_output',turn_id:'turn_one',call_id:'call_trace',status:'failed',error:`Tool unavailable ${apiKey} ${story}`,output:JSON.stringify({apiKey,story})},
    {type:'message',turn_id:'turn_one',role:'assistant',status:'completed',phase:'final_answer',content:[{type:'output_text',text:'Resposta sintética final.'}]},
   ]});
+  if(url.includes('/turns?')&&options.turnList)return options.turnList(url,init);
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]});
   return Response.json({id:'sess_one',status:'idle',required_actions:[]});
  }});
@@ -649,4 +654,93 @@ test('sessão de resposta rápida concluída não é reutilizada por uma mensage
  assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0,'nenhuma mensagem foi enviada à sessão sem ferramentas');
  const create=f.calls.find(call=>call.method==='POST'&&call.url?.endsWith('/sessions'));
  assert.equal(create.body.agent.tools.length,AGENT_STUDIO_TOOLS.length);
+});
+
+
+test('limite de uso é exposto somente para código exato de turno failed sem repetir nem revelar erro do provedor',async()=>{
+ const providerMessage=`DETALHE_PRIVADO ${apiKey} cobrança`;
+ for(const [turnState,error,expected] of [
+  ['failed',{code:'usage_limit_exceeded',message:providerMessage},{status:'failed',error:'provider_usage_limit',retryAutomatically:false}],
+  ['failed',{code:'usage_limit_exceeded_extra',message:providerMessage},{status:'failed',retryAutomatically:false}],
+  ['failed',{code:'rate_limit_exceeded',message:providerMessage},{status:'failed',retryAutomatically:false}],
+  ['failed',null,{status:'failed',retryAutomatically:false}],
+  ['cancelled',{code:'usage_limit_exceeded',message:providerMessage},{status:'failed',retryAutomatically:false}],
+ ]){
+  const events=[],f=fixture({onEvent:(name,metadata)=>events.push({name,metadata})});
+  await f.chat(request(body));f.set({status:'failed',turnState,turnError:error});
+  const response=await f.chat(request({op:'poll',apiKey,projectId,requestId})),result=await response.json();
+  assert.equal(response.status,200);assert.deepEqual(result,expected);assert.equal(f.records.get(requestId).state,'failed');
+  const before=f.calls.length;assert.deepEqual(await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json(),{status:'failed',retryAutomatically:false});
+  assert.equal(f.calls.length,before,'nova consulta não chama o fornecedor');
+  assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,1);
+  assert.equal(f.calls.some(call=>call.url?.endsWith('/events')),false);
+  assert.doesNotMatch(JSON.stringify({result,events}),/DETALHE_PRIVADO|sk-synthetic|cobrança/);
+ }
+});
+
+
+test('inspect_pending devolve apenas status e não aplica efeitos no servidor',async()=>{
+ const effects={usage:0,attempt:0,bind:0},events=[];
+ for(const [sessionStatus,turnState,turnError,actions,expected] of [
+  ['in_progress','queued',null,[],'running'],['in_progress','in_progress',null,[],'running'],['in_progress','waiting',null,[],'running'],
+  ['requires_action','waiting',null,[{type:'function_call',turn_id:'turn_one',name:'secret',arguments:{secret:'PRIVATE'},call_id:'call_one'}],'action_required'],
+  ['idle','completed',null,[],'completed'],['failed','failed',{code:'usage_limit_exceeded',message:'PRIVATE'},[],'failed'],
+  ['failed','failed',{code:'usage_limit_exceeded_extra',message:'PRIVATE'},[],'failed'],['idle','cancelled',null,[],'failed'],
+ ]){
+  const f=fixture({boundInspection:true,onEvent:(name,metadata)=>events.push({name,metadata}),usage:{async start(){return true;},async finish(){effects.usage++;}},attempts:{async bindRecovery(){effects.bind++;},async finish(){effects.attempt++;}}});
+  await f.chat(request(body));f.set({status:sessionStatus,turnState,turnError,actions});const before=structuredClone(f.records.get(requestId)),snapshot=structuredClone(effects),n=f.calls.length;
+  const response=await f.chat(request({op:'inspect_pending',apiKey,projectId,requestId}));
+  const result=await response.json();assert.equal(response.status,200);assert.deepEqual(result,{status:expected,retryAutomatically:false,...(turnError?.code==='usage_limit_exceeded'?{error:'provider_usage_limit'}:{})});
+  assert.deepEqual(f.records.get(requestId),before);assert.deepEqual(effects,snapshot);assert.equal(f.calls.length,n+2);assert.ok(f.calls.slice(n).every(call=>call.method==='GET'));
+  assert.doesNotMatch(JSON.stringify({result,events}),/PRIVATE|sk-synthetic/);
+ }
+});
+
+
+test('inspect_pending falha fechado para provas, escopos e estados terminais sem consultar provedor',async t=>{
+ const events=[],logs=[],original=console.info;console.info=value=>logs.push(value);t.after(()=>{console.info=original;});
+ let actor={userId,token:'jwt-synthetic'};const f=fixture({boundInspection:true,resolveActor:async()=>actor,onEvent:(name,metadata)=>events.push({name,metadata})});
+ await f.chat(request(body));const record=f.records.get(requestId),originalRecord=structuredClone(record);
+ for(const [label,edit,restore,query,expected] of [
+  ['outra conversa',()=>{},()=>{},{conversationId:request2},'unknown'],
+  ['outro usuário',()=>{actor={userId:request2,token:'jwt-synthetic'};},()=>{actor={userId,token:'jwt-synthetic'};},{},'unknown'],
+  ['outro projeto',()=>{},()=>{},{projectId:request2},'unknown'],
+  ['conta adulterada',()=>{record.userId=request2;},()=>{record.userId=userId;},{},'unknown'],
+  ['pedido adulterado',()=>{record.requestId=request2;},()=>{record.requestId=requestId;},{},'unknown'],
+  ['prova inválida',()=>{record.binding='v4.bad.signature';},()=>{record.binding=originalRecord.binding;},{},'unknown'],
+  ['sem prova',()=>{record.binding=null;},()=>{record.binding=originalRecord.binding;},{},'unknown'],
+  ['turno inválido',()=>{record.turnId='../turn_one';},()=>{record.turnId=null;},{},'unknown'],
+  ['falha terminal',()=>{record.state='failed';},()=>{record.state='running';},{},'failed'],
+ ]){edit();const before=structuredClone(record),count=f.calls.length;assert.deepEqual(await(await f.chat(request({op:'inspect_pending',apiKey,projectId,requestId,...query}))).json(),{status:expected,retryAutomatically:false},label);assert.deepEqual(record,before,label);assert.equal(f.calls.length,count,label);restore();}
+ assert.doesNotMatch(JSON.stringify({logs,events}),/sk-synthetic|PRIVATE_PROVIDER_BODY/);
+});
+
+test('inspect_pending não divulga respostas nem conclui turnos quando recuperação falha ou diverge',async()=>{
+ const privateText=`PRIVATE_PROVIDER_BODY ${apiKey}`,safe={status:'unknown',retryAutomatically:false};
+ const validTurn={id:'turn_one',session_id:'sess_one',subagent_id:null,status:'in_progress'};
+ const cases=[
+  {sessionLookup:()=>Response.json({error:privateText},{status:401})},{sessionLookup:()=>{throw Error(privateText);}},
+  {sessionLookup:()=>new Response(privateText)},{sessionLookup:()=>Response.json({id:'sess_other',status:'idle',required_actions:[]})},
+  {turnList:()=>Response.json({has_more:false,data:[{...validTurn,id:'turn_other'}]}),known:true},
+  {turnList:()=>Response.json({has_more:false,data:[{...validTurn,session_id:'sess_other'}]})},
+  {turnList:()=>Response.json({has_more:false,data:[{...validTurn,subagent_id:'sub_other'}]})},
+  {turnList:()=>Response.json({has_more:true,data:[validTurn]})},
+  {turnList:()=>Response.json({has_more:false,data:[validTurn,{...validTurn,id:'turn_two'}]})},
+  {turnList:()=>Response.json({has_more:false,data:[{...validTurn,status:'weird'}]})},
+  {sessionLookup:()=>Response.json({id:'sess_one',status:'requires_action',required_actions:[{type:'function_call',turn_id:'turn_other',arguments:privateText}]})},
+  {sessionLookup:()=>Response.json({id:'sess_one',status:'requires_action',required_actions:[{type:'function_call',turn_id:'turn_one',arguments:privateText}]}),turnList:()=>Response.json({has_more:false,data:[{...validTurn,status:'completed'}]})},
+ ];
+ for(const options of cases){
+  const f=fixture({boundInspection:true,...options});await f.chat(request(body));const record=f.records.get(requestId);if(options.known)record.turnId='turn_one';
+  const before=structuredClone(record),n=f.calls.length;const response=await f.chat(request({op:'inspect_pending',apiKey,projectId,requestId}));
+  assert.deepEqual(await response.json(),safe);assert.deepEqual(record,before);assert.ok(f.calls.slice(n).every(call=>call.method==='GET'));
+ }
+});
+
+test('consultas concorrentes são leituras independentes e não persistem o resultado',async()=>{
+ const f=fixture({boundInspection:true});await f.chat(request(body));f.set({status:'idle',turnState:'completed'});
+ const before=structuredClone(f.records.get(requestId)),n=f.calls.length;
+ const results=await Promise.all(Array.from({length:2},()=>f.chat(request({op:'inspect_pending',apiKey,projectId,requestId}))));
+ for(const response of results)assert.deepEqual(await response.json(),{status:'completed',retryAutomatically:false});
+ assert.deepEqual(f.records.get(requestId),before);assert.equal(f.calls.length,n+4);assert.ok(f.calls.slice(n).every(call=>call.method==='GET'));
 });

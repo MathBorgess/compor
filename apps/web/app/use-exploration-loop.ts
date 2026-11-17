@@ -9,7 +9,7 @@ import type { StudioState } from "../lib/studio-domain";
 import {audienceResolution} from '../lib/studio-context.ts';
 import { generatedSignalsSchema,currentGeneratedFeedback } from "../lib/generated-feedback-contract";
 import { markBeforeDispatch } from "../lib/exploration-pending";
-import { pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
+import { BATCH_SIZE,pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
 import { referenceSignalsResponseSchema,currentReferenceFeedback } from "../lib/reference-exploration-contract";
 import {postContext} from '../lib/studio-post-context.ts';
 
@@ -19,6 +19,7 @@ const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(["running", "unknown", "completed", "rejected"]) })).check(z.maxLength(100)) });
 
 type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string;onCompleted?:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void> };
+export type ExplorationProgress = {requestId:string;position:number;total:number;startedAt:number};
 
 function waitForTurn(signal: AbortSignal,delay=3000) {
   return new Promise<void>((resolve, reject) => {
@@ -39,10 +40,12 @@ export function useExplorationLoop(props: LoopProps) {
   const [completed, setCompleted] = useState(0);
   const [phase, setPhase] = useState<'idle'|'generating'|'waiting'|'blocked'>('idle');
   const [countdown, setCountdown] = useState<number|null>(null);
+  const [requestProgress,setRequestProgress]=useState<ExplorationProgress|null>(null);
   const current = useRef(props);
   const stopCurrent = useRef<(() => void) | null>(null);
   const resumeRequested = useRef(false);
   const resumeInFlight = useRef(false);
+  const resumeSequence = useRef(0);
   const questionKey = `compor-exploration-answer:${props.userId}:${props.projectId}`;
   const [resumedQuestion, setResumedQuestion] = useState<{key:string;id:string}|null>(null);
   const question = props.state ? pendingSelectionQuestion(props.state,props.conversationId??'references') : null;
@@ -55,6 +58,10 @@ export function useExplorationLoop(props: LoopProps) {
   waitsForChat.current = unresolvedChat;
   const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
   const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
+
+  useEffect(()=>()=>{resumeSequence.current++;},[props.userId,props.projectId,props.conversationId,props.credentialSource,props.credentialEpoch]);
+  const previousEnabled=useRef(props.enabled);
+  useEffect(()=>{if(previousEnabled.current&&!props.enabled)resumeSequence.current++;previousEnabled.current=props.enabled;},[props.enabled]);
 
   useEffect(() => {
     try {
@@ -74,7 +81,7 @@ export function useExplorationLoop(props: LoopProps) {
     if (!props.enabled || !props.hasApiKey || !ready || paused || blocked || awaitingFeedback || awaitingAnswer || unresolvedChat) return;
     const source = props.credentialSource ?? "byok", epoch = props.credentialEpoch ?? 0;
     const scope=props.conversationId;
-    const sameCredential = () => current.current.conversationId===scope && (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
+    const sameCredential = () => current.current.userId===props.userId && current.current.projectId===props.projectId && current.current.conversationId===scope && current.current.isAuthenticated() && (current.current.credentialSource ?? "byok") === source && (current.current.credentialEpoch ?? 0) === epoch;
     const cancel = new AbortController();
     let active = true;
     let dispatched = false;
@@ -89,13 +96,14 @@ export function useExplorationLoop(props: LoopProps) {
         try { progress=freezeBatchWait(progress,Date.now());localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress)); } catch { /* Preserve stop even when storage fails. */ }
       }
       active = false;
-      // Leaving exploration or waiting for the person's answer lets an already dispatched request settle and reconcile its receipt.
+      // An already dispatched request may settle, but a stopped view leaves its receipt for a later explicit reconciliation.
       if (!dispatched || (current.current.enabled && !waitsForAnswer.current && !waitsForChat.current)) cancel.abort();
     };
     stopCurrent.current = cancelCurrent;
     const stop = (message: string) => { if (active) { setStatus(message); setBlocked(true); setPhase('blocked'); setCountdown(null); } };
     async function run() {
       if (!navigator.locks) { stop("Exploração pausada: este navegador não oferece coordenação entre abas."); return; }
+      setStatus('Preparando as propostas…');
       try {
         await navigator.locks.request(`compor-exploration:${props.userId}`, { signal: cancel.signal }, async () => {
           if (!active) return;
@@ -104,10 +112,24 @@ export function useExplorationLoop(props: LoopProps) {
           progress=readBatchProgress(localStorage,batchKey(props.projectId),sequenceKey(props.projectId),()=>crypto.randomUUID());
           const prior = localStorage.getItem(pendingKey);
           if (prior !== null) {
+            const explicitlyRequested=resumeRequested.current;
+            resumeRequested.current=false;
             const pending = pendingSchema.parse(JSON.parse(prior));
+            if(pending.projectId!==props.projectId){stop('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.');return;}
+            if(!pending.conversationId){stop('Há uma exploração antiga sem conversa de origem identificada. O recibo foi preservado; procure ajuda para recuperá-lo.');return;}
+            if(pending.conversationId!==(scope??'references')){stop('Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.');return;}
+            if(pending.notStartedReceipt) {
+              if(pending.notStartedReceipt.userId!==props.userId||localStorage.getItem(pendingKey)!==prior){stop('Não foi possível confirmar a origem da resposta. O recibo foi preservado.');return;}
+              if(!explicitlyRequested){stop('O pedido anterior não foi enviado. Peça propostas para consultar essa confirmação.');return;}
+              localStorage.setItem(notStartedKey,'1');
+              localStorage.removeItem(pendingKey);
+              stop('Foi confirmado que o pedido anterior não foi enviado. Peça propostas para tentar novamente.');
+              return;
+            }
             const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId: pending.projectId })}`, { cache: "no-store", signal: cancel.signal });
             if (!response.ok) throw Error("unconfirmed");
             const rows = listSchema.parse(await response.json()).images;
+            if(!active||!sameCredential())return;
             const match = rows.find(row => row.id === pending.requestId && row.project_id === pending.projectId);
             if (match?.state === "rejected") {
               // Persist the pause before removing the receipt: reload or another
@@ -120,12 +142,17 @@ export function useExplorationLoop(props: LoopProps) {
             }
             if (!match || match.state !== "completed") { stop("Uma exploração anterior ainda não foi confirmada. Consulte seu estado antes de continuar."); return; }
             const priorProgress=pending.projectId===props.projectId ? progress : readBatchProgress(localStorage,batchKey(pending.projectId),sequenceKey(pending.projectId),()=>crypto.randomUUID());
-            const reconciled=recordBatchCompletion(priorProgress,pending,Date.now());
+            const confirmedAt=Date.now();
+            const reconciled=freezeBatchWait(recordBatchCompletion(priorProgress,pending,confirmedAt),confirmedAt);
             localStorage.setItem(batchKey(pending.projectId),JSON.stringify(reconciled));
             localStorage.setItem(sequenceKey(pending.projectId),String(reconciled.sequence));
             if(pending.projectId===props.projectId)progress=reconciled;
             if(pending.projectId===props.projectId&&pending.conversationId)await current.current.onCompleted?.(pending.requestId,pending.sequence+1,pending.conversationId,pending.creationContext);
+            if(!active||!sameCredential())return;
             localStorage.removeItem(pendingKey);
+            setCompleted(value=>value+1);
+            stop('A tentativa anterior foi confirmada. Peça propostas para continuar.');
+            return;
           }
           if(progress.awaitingFeedback) {
             if(!resumeRequested.current) { if(active)setAwaitingFeedback(true); return; }
@@ -197,17 +224,32 @@ export function useExplorationLoop(props: LoopProps) {
             const marker=JSON.stringify(pending);
             if (!markBeforeDispatch(localStorage,pendingKey,marker,()=>active && !cancel.signal.aborted && current.current.enabled && current.current.isAuthenticated() && current.current.hasApiKey && sameCredential() && current.current.getApiKey() === apiKey)) return;
             setPhase('generating');setCountdown(null);setStatus(`Explorando caminho visual ${sequence + 1}…`);
+            setRequestProgress({requestId,position:batch.position,total:BATCH_SIZE,startedAt:Date.now()});
             dispatched = true;
-            const response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", ...(source === "byok" ? {"x-compor-openai-key": apiKey} : {}), "x-compor-exploration-request-id": requestId }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
-            const result = responseSchema.parse(await response.json());
+            let response:Response,result:z.infer<typeof responseSchema>;
+            try {
+              response = await fetch("/api/studio/explorations", { method: "POST", headers: { "content-type": "application/json", ...(source === "byok" ? {"x-compor-openai-key": apiKey} : {}), "x-compor-exploration-request-id": requestId }, body: JSON.stringify({ projectId: props.projectId, requestId, prompt,plan:{composition,contrast},batch }), signal: cancel.signal });
+              result = responseSchema.parse(await response.json());
+            } finally {
+              setRequestProgress(value=>value?.requestId===requestId?null:value);
+            }
             dispatched = false;
             if ([400,403,404,413,503].includes(response.status) && result.status === "not_started" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              // No server reservation exists to query later. Preserve this
+              // correlated response under the dispatch's original account,
+              // project, conversation and source, without settling a stopped view.
+              const saved=pendingSchema.parse({...pending,notStartedReceipt:{status:'not_started',httpStatus:response.status,requestId,userId:props.userId,credentialSource:source,retryAutomatically:false}});
+              localStorage.setItem(pendingKey,JSON.stringify(saved));
+              if(!active||!sameCredential())return;
               localStorage.setItem(notStartedKey, "1");
               localStorage.removeItem(pendingKey);
               stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto.");
               return;
             }
+            // Aborting a request is not guaranteed to win the race with its
+            // response. Other late results still require server reconciliation.
+            if(!active||!sameCredential())return;
             if ((response.status === 401 || response.status === 409) && result.status === "rejected" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(rejectedKey, "1");
@@ -236,13 +278,15 @@ export function useExplorationLoop(props: LoopProps) {
             if (!response.ok || result.status !== "completed" || result.requestId !== requestId) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
             const completedAt=Date.now();
             progress=recordBatchCompletion(progress,pending,completedAt);
-            // A third image can finish after leaving the references screen.
-            // Its newly created wait must start counting only when the loop
-            // becomes active again, just like an already-running wait.
-            if(!active || !current.current.enabled)progress=freezeBatchWait(progress,completedAt);
+            // The visible delay starts only after the completion callback has
+            // finished; a slow callback or a pause cannot consume that delay.
+            progress=freezeBatchWait(progress,completedAt);
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
             await current.current.onCompleted?.(requestId,sequence+1,pending.conversationId,pending.creationContext);
+            if(!active||!sameCredential())return;
+            progress=resumeBatchWait(progress,Date.now());
+            localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.removeItem(pendingKey);
             setCompleted(value => value + 1);
           }
@@ -259,6 +303,8 @@ export function useExplorationLoop(props: LoopProps) {
 
   async function resume() {
     if(resumeInFlight.current)return;
+    const serial=++resumeSequence.current,source=props.credentialSource??'byok',epoch=props.credentialEpoch??0,scope=props.conversationId;
+    const stillCurrent=()=>resumeSequence.current===serial&&current.current.userId===props.userId&&current.current.projectId===props.projectId&&current.current.conversationId===scope&&(current.current.credentialSource??'byok')===source&&(current.current.credentialEpoch??0)===epoch&&current.current.isAuthenticated()&&(current.current.state?pendingSelectionQuestion(current.current.state,scope??'references'):null)===question;
     try { localStorage.removeItem(`compor-exploration-rejected:${props.userId}`); localStorage.removeItem(`compor-exploration-not-started:${props.userId}`); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.'); return; }
     if(awaitingFeedback) {
@@ -267,16 +313,17 @@ export function useExplorationLoop(props: LoopProps) {
         const response=await fetch('/api/studio/explorations/resume',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:props.projectId})});
         const result=resumeSchema.parse(await response.json());
         if(!response.ok||result.status==='blocked')throw Error('blocked');
-        if(current.current.userId!==props.userId||current.current.projectId!==props.projectId||!current.current.isAuthenticated())return;
+        if(!stillCurrent()||!current.current.enabled)return;
       } catch {
-        setResumeError('Não foi possível retomar. Consulte qualquer geração pendente e tente novamente.');
+        if(stillCurrent())setResumeError('Não foi possível retomar. Consulte qualquer geração pendente e tente novamente.');
         return;
       } finally { resumeInFlight.current=false;setResuming(false); }
     }
+    if(!stillCurrent())return;
     try { if(question)localStorage.setItem(questionKey,question); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
   const running = props.enabled && !awaitingAnswer && !audienceConflict && !unresolvedChat;
-  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, progress:running&&!paused&&phase==='generating'?requestProgress:null, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { resumeSequence.current++;stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }

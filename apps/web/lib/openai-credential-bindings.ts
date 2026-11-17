@@ -61,6 +61,7 @@ export function createCredentialSessionBindings(options:Configuration):Readonly<
     verify:value=>verifyProvider(value,codec.verify,current.verify,legacy?.verify??null),
     issueRecovery:value=>codec.issue(current.issueRecovery(value)),
     verifyRecovery:value=>verifyProvider(value,codec.verify,current.verifyRecovery,legacy?.verifyRecovery??null),
+    verifyBoundRecovery:value=>verifyProvider(value,codec.verify,current.verifyRecovery,null),
     recoveryAttemptKey:stable.recoveryAttemptKey,
     issueAction:value=>codec.issue(current.issueAction(value)),
     verifyAction:value=>verifyProvider(value,codec.verify,current.verifyAction,legacy?.verifyAction??null),

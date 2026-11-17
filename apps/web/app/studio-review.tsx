@@ -4,19 +4,14 @@ import { useEffect, useRef, useState } from "react";
 import type { StudioDraft } from "../lib/studio-domain";
 import { composeStudioPng } from "../lib/studio-compose";
 import { errorMessage } from "./studio-ui-types";
+import {useObjectUrl} from './use-object-url.ts';
 
 export default function StudioReview({ title, draft, base }: {title:string;draft:StudioDraft|null;base:Blob|null}) {
-  const [image, setImage] = useState<{blob:Blob;url:string}|null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState("");
   const generation = useRef(0);
   const locked = useRef(false);
-  const url = image?.blob === base ? image.url : null;
-  useEffect(() => {
-    const value = base ? URL.createObjectURL(base) : null;
-    setImage(base && value ? {blob:base,url:value} : null);
-    return () => { if (value) URL.revokeObjectURL(value); };
-  }, [base]);
+  const url = useObjectUrl(base);
   useEffect(() => {
     generation.current++;
     locked.current = false;
