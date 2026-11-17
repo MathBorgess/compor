@@ -202,7 +202,12 @@ for(const action of ['pause','credential']){
   assert.equal(await progress.getByText('Aguardando imagem 1 de 3.').count(),0);
   assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'interromper a observação não descarta o recibo');
   await page.clock.fastForward(120000);assert.equal(posts.length,1,'pausa ou troca de IA não reenviam o pedido');
+  // Credential changes already show this blocked message. Wait for the new
+  // reconciliation read before changing the fixture's receipt to completed.
+  const reconciled=page.waitForResponse(response=>response.request().method()==='GET'&&new URL(response.url()).pathname==='/api/studio/explorations');
   await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  const receipt=await (await reconciled).json();
+  assert.equal(receipt.images.find(image=>image.id===posts[0].requestId)?.state,'running','a retomada termina a consulta antes da resposta tardia');
   await progress.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
   assert.equal(posts.length,1,'a retomada consulta a tentativa pendente e permanece bloqueada');
   posts[0].state='completed';await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}}).catch(()=>{});
