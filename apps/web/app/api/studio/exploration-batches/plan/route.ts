@@ -15,12 +15,12 @@ const unavailable=()=>Response.json({status:'unavailable',retryAutomatically:fal
  * independently verifiable here. Never activate before the full integration. */
 export async function POST(request:Request){
  const config=authConfig(),secret=agentSigningKey();
- if(process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED!=='true'||!config||!secret)return unavailable();
+ if(!config||!secret)return unavailable();
  return withWebOpenAiCredential(request,config,{bodyLimit:65536,bodyTooLargeStatus:413},async prepared=>{
   if(!prepared.apiKey)return Response.json({error:'invalid_request'},{status:400,headers:{'Cache-Control':'no-store'}});
   let actor;try{actor=prepared.actor??await resolveSupabaseActor(await authClient(config));}catch{return unavailable();}
   const ownsProject=(candidate:NonNullable<typeof actor>,projectId:string)=>ownsSupabaseProject({actor:candidate,projectId,config});
   const planner=createExplorationPlanner({store:createExplorationPlannerStore(config),bindings:createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),provider:createManagedExplorationPlanProvider({apiKey:prepared.apiKey}),authorize:async input=>ownsProject(input.actor,input.projectId)});
-  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,resolveActor:async()=>actor,ownsProject,planner})(prepared.request);
+  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED==='true',resolveActor:async()=>actor,ownsProject,planner})(prepared.request);
  });
 }
