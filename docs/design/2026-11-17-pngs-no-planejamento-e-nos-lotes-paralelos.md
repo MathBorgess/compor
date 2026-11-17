@@ -1,6 +1,6 @@
 # PNGs locais no planejamento e nos lotes paralelos
 
-**Atualização de 17/11/2026:** Matheus aprovou a implementação deste desenho após esclarecer a seleção de uploads locais e aceitar cópias otimizadas. A aprovação não autoriza chamadas pagas adicionais, publicação, migrations remotas ou alteração dos gates.
+**Atualização de 17/11/2026:** Matheus aprovou implementar o desenho e depois ampliou as referências do GPT Image para candidatas externas/geradas já selecionadas pela pessoa e triadas pelo Agents API, preservando todos os uploads selecionados como obrigatórios. O [ADR 0066](../adr/0066-entradas-visuais-e-triagem-vinculadas-ao-pedido.md) registra os contratos v1/v2, a seleção assinada e o bloqueio de candidatos enquanto faltar uma fonte autoritativa de autorização. O texto abaixo preserva a proposta revisada na ocasião; a restrição inicial a uploads foi substituída somente nos termos dessa decisão posterior. Não houve autorização de publicação ou chamada paga.
 
 **Desenho para revisão; não implementado.** Matheus definiu nesta conversa: usar somente imagens carregadas do computador e selecionadas para o pedido; cópia otimizada é aceita; “terra” significa geração de arte. Aplicar a seleção a chat, planejamento e arte, incluindo as três propostas paralelas, exige congelar os arquivos antes do primeiro efeito pago e vincular seu conteúdo e ordem às provas. Enviar somente IDs ou descrições não atende ao pedido. As decisões de produto estão esclarecidas; a implementação aguarda revisão deste desenho.
 

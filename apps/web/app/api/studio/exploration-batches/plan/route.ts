@@ -7,6 +7,7 @@ import {authClient,authConfig} from '../../../../../lib/supabase.ts';
 import {agentSigningKey} from '../../../../../lib/agent-config.ts';
 import {ownsSupabaseProject,resolveSupabaseActor} from '../../../../../lib/agent-auth.ts';
 import {withWebOpenAiCredential} from '../../../../../lib/web-openai-credential.ts';
+import {MAX_VISUAL_REQUEST_BYTES} from '@compor/agents-api/visual-input-contract';
 
 export const runtime='nodejs';
 export const dynamic='force-dynamic';
@@ -17,7 +18,7 @@ const unavailable=()=>Response.json({status:'unavailable',retryAutomatically:fal
 export async function POST(request:Request){
  const config=authConfig(),secret=agentSigningKey();
  if(!config||!secret)return unavailable();
- return withWebOpenAiCredential(request,config,{bodyLimit:65536,bodyTooLargeStatus:413},async prepared=>{
+ return withWebOpenAiCredential(request,config,{bodyLimit:MAX_VISUAL_REQUEST_BYTES,bodyTooLargeStatus:413},async prepared=>{
   if(!prepared.apiKey)return Response.json({error:'invalid_request'},{status:400,headers:{'Cache-Control':'no-store'}});
   let actor;try{actor=prepared.actor??await resolveSupabaseActor(await authClient(config));}catch{return unavailable();}
   const ownsProject=(candidate:NonNullable<typeof actor>,projectId:string)=>ownsSupabaseProject({actor:candidate,projectId,config});

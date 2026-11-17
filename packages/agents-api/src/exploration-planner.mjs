@@ -39,7 +39,7 @@ export function createExplorationPlanner({store,bindings,provider,authorize,auth
   if(visualInput!==undefined&&!visualInputMatchesProject(visualInput,scope.projectId))return null;
   if(input.referenceImages!==undefined&&(!dispatch||visualInput===undefined))return null;
   const permitted=await authorize({actor,projectId:scope.projectId,conversationId:scope.conversationId});if(permitted!==true)return null;
-  const visualAuthorization=visualInput?.version===2&&visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')?{actor,projectId:scope.projectId,conversationId:scope.conversationId,visualInput}:null;
+  const visualAuthorization=visualInput?.version===2&&visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')?{actor,projectId:scope.projectId,conversationId:scope.conversationId,batchId:scope.batchId,requestId:scope.requestId,visualInput}:null;
   if(dispatch&&visualAuthorization&&(typeof authorizeVisualInput!=='function'||await authorizeVisualInput(visualAuthorization)!==true))return null;
   const inputDigest=bindings.digest(digestInput(scope,context,visualInput));
   const completionSecret=bindings.digest({type:'planner-store-capability-v1',scope,inputDigest});

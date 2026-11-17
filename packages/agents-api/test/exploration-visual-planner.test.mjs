@@ -103,3 +103,10 @@ test('revogar admissão de extras não impede GET de plano já vinculado',async(
  const f=fixture(),v=candidates(),raw={...plan,version:2,referenceIds:[v.visualInput.entries[0].id]};f.setObserved({status:'completed',turnId:'turn_visual',plan:raw});await f.build().submit({...scope,...v});
  const p=f.build({authorizeVisualInput:undefined});assert.equal((await p.poll({...scope,visualInput:v.visualInput})).status,'completed');assert.deepEqual(f.counts,{creates:1,reads:1,finishes:1});
 });
+test('plano textual legado nunca ganha prova visual ao acrescentar manifesto vazio',async()=>{
+ const f=fixture(),p=f.build();await p.submit(scope);const result=await p.poll(scope),empty={version:1,policy:'optimized-v1',entries:[]};
+ assert.equal(result.status,'completed');
+ assert.equal(validateCompletedExplorationPlan(result.plan,context,empty),true,'validação estrutural não atesta a entrada do fornecedor');
+ assert.equal(verifyExplorationPlan({bindings:f.bindings,input:{...scope,visualInput:empty},plan:result.plan,token:result.planBinding}),false);
+ assert.equal((await p.poll({...scope,visualInput:empty})).status,'unknown');assert.equal(f.counts.creates,1);assert.equal(f.counts.reads,1);
+});

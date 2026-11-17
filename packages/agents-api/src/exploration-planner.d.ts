@@ -3,7 +3,7 @@ import type {VisualInputManifest,VisualReferenceImage} from './visual-input-cont
 export type PlannerFact={id:string;label:string;value:string;status:'confirmed'|'pending'|'omitted'};
 export type ExplorationPlannerContext={idea:string;offer:string;audience:string;goal:string;direction:string;offerFacts:PlannerFact[];accepted:string[];rejected:string[];feedback:Array<{action:'selected'|'rejected'|'comment';comment:string;composition:string;contrast:string}>};
 export type ExplorationPlannerInput={actor:Actor;projectId:string;conversationId:string;batchId:string;requestId:string;context:ExplorationPlannerContext;visualInput?:VisualInputManifest;referenceImages?:readonly VisualReferenceImage[]};
-export type VisualAuthorizationInput=Pick<ExplorationPlannerInput,'actor'|'projectId'|'conversationId'> & {visualInput:VisualInputManifest};
+export type VisualAuthorizationInput=Pick<ExplorationPlannerInput,'actor'|'projectId'|'conversationId'> & {visualInput:VisualInputManifest;batchId?:string;requestId?:string;intentId?:string};
 export type ExplorationPlanItem={position:number;creativePrompt:string;composition:string;contrast:string;differenceFromOthers:string;prompt:string};
 export type ExplorationPlan={version:1;items:ExplorationPlanItem[]}|{version:2;items:ExplorationPlanItem[];referenceIds:string[]};
 export type PlannerBindings={digest(value:unknown):string;issue(value:Record<string,unknown>):string;verify(token:unknown):unknown};
