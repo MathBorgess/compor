@@ -26,7 +26,7 @@ function Fixture(){const [waiting,setWaiting]=useState(false);const reportWait=u
 function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}
 function choose(fn){change(fn);recordReferenceRound(current.current);}
 return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>setVisible(false)}>Fechar referências</button><button onClick={()=>setVisible(true)}>Abrir referências</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
-<output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat onReferenceWait={reportWait} state={state} conversationId="references" selectedVisualsAvailable={visualMode} allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async id=>({file,metadata:reference(id)})} onUseImage={async()=>true}/></div></main>}
+<output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat onReferenceWait={reportWait} state={state} conversationId="references" selectedVisualsAvailable={visualMode} selectedVisualsRequired={location.search==='?required'} allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async id=>({file,metadata:reference(id)})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 async function setup(t,{feedbackDelayMs=0}={}){
  const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'}});
@@ -73,6 +73,12 @@ test('origem legada desconhecida não dispara análise visual automática',{skip
  const {page,calls,origin}=await setup(t);await page.goto(`${origin}/?visual=1&legacy=1`);await page.getByRole('button',{name:'Conectar'}).click();
  await page.waitForTimeout(5800);assert.equal(calls.length,0);
  const snapshot=JSON.parse(await page.locator('#snapshot').textContent());assert.equal(snapshot.references.length,1);assert.equal(snapshot.references[0].source,undefined);
+});
+test('capacidade visual incompleta bloqueia envio e preserva rascunho',{skip:!existsSync(browserPath),timeout:15000},async t=>{
+ const {page,calls,origin}=await setup(t);await page.goto(`${origin}/?required`);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.getByText(/envio das imagens selecionadas está indisponível/).waitFor();
+ await page.getByLabel('Sua mensagem').fill('Rascunho preservado');assert.equal(await page.getByRole('button',{name:'Enviar →'}).isDisabled(),true);
+ await page.getByLabel('Sua mensagem').press('Enter');await page.waitForTimeout(300);assert.equal(calls.length,0);assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Rascunho preservado');
 });
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
  const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');

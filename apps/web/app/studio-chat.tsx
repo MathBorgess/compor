@@ -119,9 +119,11 @@ export default function StudioChat({
   intro = false,
   referenceWorkbench = false,
   selectedVisualsAvailable = false,
+  selectedVisualsRequired = false,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
+  const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
   const change=(reducer:(value:StudioState)=>StudioState)=>{const next=writeState(reducer);return next?conversationContext(next,conversationId):null;};
@@ -202,9 +204,9 @@ export default function StudioChat({
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
   // A hidden controller can finish an existing turn, but cannot prepare a new reading.
   // Its own busy update must not invalidate the preparation's visibility epoch.
-  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
-  const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis?1:0);
-  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
+  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,visualUnavailable,selectedVisualsAvailable,analysisEpoch:0});
+  const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis||availability.current.visualUnavailable!==visualUnavailable||availability.current.selectedVisualsAvailable!==selectedVisualsAvailable?1:0);
+  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,visualUnavailable,selectedVisualsAvailable,analysisEpoch};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
   const quickReplyStorage=quickReplyKey(state.userId,state.projectId,conversationId);
   function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
@@ -609,9 +611,9 @@ export default function StudioChat({
     }
   }
   useEffect(()=>{
-    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    if(visualUnavailable||readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
-    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
+    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.visualUnavailable&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
     const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
@@ -661,7 +663,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable,visualUnavailable]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -669,7 +671,7 @@ export default function StudioChat({
   type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
+    if (visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
     submitLock.current=true;
     try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
     finally { submitLock.current=false; }
@@ -680,19 +682,21 @@ export default function StudioChat({
     setBusy(true);
     legacyPending.current=false;
     const requestId = crypto.randomUUID(), userMessageId = crypto.randomUUID();
+    const visualMode=selectedVisualsAvailable;
+    const visualIsCurrent=()=>!availability.current.visualUnavailable&&availability.current.selectedVisualsAvailable===visualMode;
     let prepared = false,
       submitted = false;
     try {
       const before = getState();
       const selected=getCurrentDraft(before), storedBase=await loadBase?.();
-      if(!credentialIsCurrent())return;
+      if(!credentialIsCurrent()||!visualIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
       const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
       const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
-      if(!credentialIsCurrent())return;
+      if(!credentialIsCurrent()||!visualIsCurrent())return;
       if (getState().revision !== before.revision)
         throw Error(
           "O contexto mudou enquanto as referências eram preparadas. Revise e envie novamente.",
@@ -713,7 +717,7 @@ export default function StudioChat({
       onPrepared?.(userMessageId);
       imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
-      if(!credentialIsCurrent()){settle(requestId,'failed');return;}
+      if(!credentialIsCurrent()||!visualIsCurrent()){settle(requestId,'failed');return;}
       remember(requestId);
       setPending(requestId);
       setPendingSource(credentialSource);
@@ -1012,7 +1016,7 @@ export default function StudioChat({
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
-  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
+  const readingDisabled=visualUnavailable||readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
   const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source&&latestReference.source.kind==='generated'?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   const panel=(
@@ -1025,6 +1029,7 @@ export default function StudioChat({
         </div>
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
+      {visualUnavailable&&<p role="status" className="studio-hint">O envio das imagens selecionadas está indisponível. Você pode continuar editando e consultar tentativas anteriores.</p>}
       {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos. Referências externas e geradas ainda não estão disponíveis neste fluxo.</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
@@ -1190,7 +1195,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : intro ? "Criar post" : "Enviar →"}
-            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
+            disabled={visualUnavailable || readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
           >
             <span aria-hidden="true">{intro?"Criar post":"↑"}</span>
           </button>
