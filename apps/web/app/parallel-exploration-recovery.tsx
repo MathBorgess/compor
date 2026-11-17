@@ -1,6 +1,6 @@
 "use client";
 
-import {useEffect,useRef,useState} from 'react';
+import React, {useEffect,useRef,useState} from 'react';
 import {createParallelJournalStore,type ParallelPreparation} from '../lib/parallel-exploration-journal.ts';
 import {createParallelExplorationClient} from '../lib/parallel-exploration-client.ts';
 import type {ParallelProgress} from '../lib/parallel-exploration-progress.ts';
@@ -35,7 +35,7 @@ export default function ParallelExplorationRecovery(props:Props){
         setPreparation(result.preparation);
         setNotice(result.status==='completed'?'Plano recuperado. A execução permanece pausada.':result.status==='failed'?'O planejamento anterior terminou sem um plano.':'O planejamento ainda não foi confirmado. Nenhuma nova tentativa foi enviada.');
       }else if(preparation.stage==='executing'){
-        const {snapshot,journal}=await client.inspectBatch(preparation,Date.now(),false);if(!inScope())return;
+        const {snapshot,journal}=await client.inspectBatch(preparation,()=>Date.now(),false);if(!inScope())return;
         setProgress(journal.progress);
         for(const image of [...snapshot.images].filter(item=>item.status==='completed').sort((a,b)=>a.ordinal-b.ordinal)){
           if(!inScope())return;
@@ -46,10 +46,10 @@ export default function ParallelExplorationRecovery(props:Props){
     }catch{if(inScope())setNotice('Não foi possível confirmar a tentativa. Nada foi repetido.');}
     finally{store.close();if(sequence.current===serial){lock.current=false;setBusy(false);}}
   }
-  return <section className="studio-exploration-recovery" aria-label="Tentativa paralela anterior">
+  return <React.Fragment><section className="studio-exploration-recovery" aria-label="Tentativa paralela anterior">
     <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
     {sameProject&&sameConversation&&progress&&<ParallelExplorationProgress progress={progress}/>}
     {sameProject&&sameConversation&&preparation&&['planning','planned','executing'].includes(preparation.stage)&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
     {notice&&<p role="status">{notice}</p>}
-  </section>;
+  </section></React.Fragment>;
 }

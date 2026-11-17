@@ -39,16 +39,17 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
     if(planning||!canInspect()||!['planning','planned'].includes(preparation.stage))throw Error('parallel_not_allowed');
     planning=true;try{return await planRequest(preparation,apiKey);}finally{planning=false;}
   }
-  async function inspectBatch(preparation:ParallelPreparation,now:number,visible:boolean):Promise<{snapshot:BatchSnapshot;journal:ParallelJournal}>{
+  async function inspectBatch(preparation:ParallelPreparation,now:()=>number,visible:boolean|(()=>boolean)):Promise<{snapshot:BatchSnapshot;journal:ParallelJournal}>{
     if(!canInspect()||preparation.stage!=='executing')throw Error('parallel_not_allowed');
     const response=await fetchApi('/api/studio/exploration-batches/status',{method:'POST',headers,body:JSON.stringify({projectId:preparation.projectId,batchId:preparation.batchId})});
     if(!response.ok)throw Error('parallel_unconfirmed');
     const snapshot=statusResponse.parse(await response.json());
+    if(!canInspect())throw Error('parallel_not_allowed');
     const pieceId=preparation.conversationId==='references'?null:preparation.conversationId;
     if(snapshot.batchId!==preparation.batchId||snapshot.projectId!==preparation.projectId||snapshot.pieceId!==pieceId||new Set(snapshot.images.map(image=>image.position)).size!==3||new Set(snapshot.images.map(image=>image.ordinal)).size!==3||snapshot.images.some(image=>image.replacesImageId!==null||preparation.imageIds[image.position-1]!==image.requestId))throw Error('parallel_batch_mismatch');
     const scope={userId:preparation.userId,projectId:preparation.projectId,batchId:preparation.batchId};
     let journal=await store.load(scope);if(!journal)throw Error('parallel_journal_missing');
-    for(const image of snapshot.images)journal=await store.update(scope,journal.revision,{kind:'observe',observation:{requestId:image.requestId,position:image.position,status:image.status,revision:image.revision},now,visible});
+    for(const image of snapshot.images)journal=await store.update(scope,journal.revision,{kind:'observe',observation:{requestId:image.requestId,position:image.position,status:image.status,revision:image.revision},now:now(),visible:typeof visible==='function'?visible():visible});
     return {snapshot,journal};
   }
   return {inspectPlan,inspectBatch};
