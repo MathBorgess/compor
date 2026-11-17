@@ -46,6 +46,7 @@ async function requestVisualSnapshot(scope:{userId:string;projectId:string;conve
 }
 async function prepareRequestVisuals(state:StudioState,conversationId:string|undefined,requestId:string,loadReference:(id:string)=>Promise<StoredImage|null|undefined>) {
  if(!conversationId)throw Error('Abra a conversa deste post para enviar as imagens selecionadas.');
+ if(state.references.some(reference=>reference.source&&('originUrl' in reference.source||reference.source.kind==='generated')))throw Error('Referências externas ou geradas ainda não estão disponíveis neste fluxo. Remova-as para continuar com seus uploads.');
  const [{prepareSelectedVisualCandidates,visualInputImages},{referenceConsentGranted},{createParallelJournalStore},{referenceSchema}]=await Promise.all([import('../lib/selected-visual-input.ts'),import('../lib/reference-session-consent.ts'),import('../lib/parallel-exploration-journal.ts'),import('../lib/studio-domain.ts')]);
  let externalConsent=false;try{externalConsent=referenceConsentGranted(sessionStorage,state.userId);}catch{}
  const snapshot=await prepareSelectedVisualCandidates({references:state.references,projectId:state.projectId,externalConsent,maxBytes:1024*1024,loadReference:async id=>{

@@ -290,7 +290,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(typeof authorizeVisualInput!=='function')return reply({error:'unavailable'},503);
    try{
     const validated=parseVisualInput(body.visualInput,body.visualImages);
-    if(!visualInputMatchesProject(validated.visualInput,scope.projectId)||await authorizeVisualInput({actor,projectId:scope.projectId,conversationId:scope.conversationId,visualInput:validated.visualInput})!==true)return reply({error:'invalid_visual_input'},400);
+    if(!visualInputMatchesProject(validated.visualInput,scope.projectId)||await authorizeVisualInput({actor,projectId:scope.projectId,conversationId:scope.conversationId,context:body.context,visualInput:validated.visualInput})!==true)return reply({error:'invalid_visual_input'},400);
     body.visualInput=validated.visualInput;body.visualImages=validated.referenceImages;
     if(body.referenceImages.some(image=>image.id!==body.context.baseImageId)||body.referenceImages.length>1||body.visualImages.some(image=>image.id===body.context.baseImageId))return reply({error:'invalid_visual_input'},400);
     visualClaim={visualInputDigest:visualInputDigest(body.visualInput),visualReferenceIds:body.visualInput.entries.map(entry=>entry.id),visualRequiredIds:body.visualInput.entries.filter(entry=>entry.inputOrigin==='local-upload').map(entry=>entry.id)};

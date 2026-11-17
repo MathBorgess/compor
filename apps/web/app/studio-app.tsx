@@ -68,7 +68,7 @@ import type { StudioState, StudioReference, ActionResult, DraftContext } from '.
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -89,6 +89,7 @@ export default function StudioApp({
   credentialEpoch = 0,
   defaultAvailable = false,
   parallelAvailable = false,
+  selectedVisualsAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -293,6 +294,7 @@ export default function StudioApp({
         credentialEpoch={credentialEpoch}
         defaultAvailable={defaultAvailable}
         parallelAvailable={parallelAvailable}
+        selectedVisualsAvailable={selectedVisualsAvailable}
         onUseAI={onUseAI}
         onPauseAI={onPauseAI}
         getApiKey={getApiKey}
@@ -368,6 +370,7 @@ function ProjectStudio({
   credentialEpoch = 0,
   defaultAvailable = false,
   parallelAvailable = false,
+  selectedVisualsAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -1169,7 +1172,7 @@ function ProjectStudio({
   );
   const explorationRecovery=<>{referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel} allowReplacement={usingParallel&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted} onContinuePlan={usingParallel&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
-    <StudioChat key={conversationId??"legacy"} conversationId={conversationId} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
+    <StudioChat key={conversationId??"legacy"} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
       state={s}
       projectRevision={projectDetails.revision}
       developerMode={developerMode}
