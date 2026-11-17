@@ -55,7 +55,7 @@ test('seleção triada pelo agente mantém os bytes de uploads, externas e gerad
  };
  const provider=createManagedExplorationPlanProvider({apiKey:key,fetch:agentFetch});
  const intentStore={create:async value=>{if(value.expectedEpoch!==epoch)return {status:'conflict'};expectedDigest=value.intentProofDigest;state='active';return {status:'created',epoch:++epoch};},revoke:async()=>{throw Error('unexpected revoke');},epoch:async()=>({epoch})};
- const auth={authorizeVisualInput:async()=>true,appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async()=>true};
+ const auth={appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async()=>true};
  const manifestDigest=visualInputDigest(v.visualInput),consentHeader=Buffer.alloc(32,42).toString('base64url');
  // The SQL and HTTP bridge tests cover the real mirror and revocation.
  let selectionActive=true;
@@ -84,7 +84,7 @@ test('seleção triada pelo agente mantém os bytes de uploads, externas e gerad
   await releaseImages.promise;
   return Response.json({data:[{b64_json:pngs[0].toString('base64')}]});
  }});
- const batchRoute=createExplorationBatchRoute({appOrigin:origin,visualEnabled:true,resolveActor:async()=>actor,ownsProject:async()=>true,authorizeVisualInput:async()=>true,prepareVisualAuthority,checkVisualDispatch,
+ const batchRoute=createExplorationBatchRoute({appOrigin:origin,visualEnabled:true,resolveActor:async()=>actor,ownsProject:async()=>true,prepareVisualAuthority,checkVisualDispatch,
   verifyPlan:async value=>value.apiKey===key&&verifyExplorationPlan({bindings,input:{actor,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.requestId,context:value.context,visualInput:value.visualInput},plan:value.plan,token:value.token}),
   intentSecret:value=>deriveExplorationIntent(bindings,{...value,purpose:'batch'}).intentSecret,
   intentState:async()=>({state,epoch,revocationEpoch:null}),
