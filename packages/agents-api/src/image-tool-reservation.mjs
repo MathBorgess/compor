@@ -53,9 +53,10 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!uuid.test(row?.declaration_id ?? '') || typeof row?.is_new !== 'boolean') throw new Error('reservation status unknown');
       return { id: row.declaration_id, isNew: row.is_new };
     },
-    async claimExecution({ actor, reservationId }) {
+    async claimExecution({ actor, reservationId, visualAuthority }) {
       if (!uuid.test(reservationId ?? '')) throw new Error('invalid execution');
-      const rows = await rpc('claim_image_tool_execution', actor, { p_reservation_id: reservationId });
+      if(visualAuthority&&(!uuid.test(visualAuthority.requestId??'')||!/^[a-f0-9]{64}$/.test(visualAuthority.manifestDigest)||(visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret))))throw new Error('invalid visual authority');
+      const rows = await rpc(visualAuthority?'claim_image_tool_execution_authorized':'claim_image_tool_execution', actor, { p_reservation_id: reservationId,...(visualAuthority?{p_authority_request_id:visualAuthority.requestId,p_manifest_digest:visualAuthority.manifestDigest,p_consent_secret:visualAuthority.consentSecret}:{}) });
       const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
       if (['busy','blocked'].includes(row?.state) && row.execution_id === null && row.asset_id === null && row.is_new === false) return {state:row.state};
       if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running', 'unknown', 'completed'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
