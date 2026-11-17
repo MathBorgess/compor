@@ -546,3 +546,33 @@ test('limite da IA do Compor oferece chave própria ou edição sem reenviar',{s
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
+
+test('aviso abre o histórico de pedido legado sem reatribuir conversa ou reenviar',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow,errors}=await app(t);
+ flow.chat=()=>({status:'unknown'});
+ await openOriginal(page,origin);
+ const composer=page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true});
+ await composer.fill('Pedido legado sintético');await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).waitFor();
+ await composer.fill('Rascunho que deve permanecer');
+ const state=await eventually(()=>stored(page),value=>Boolean(value?.adjustments[0]));
+ const requestId=state.adjustments[0].id;
+ await page.evaluate(async({userId,projectId,requestId,pieceId})=>{
+  const db=await new Promise((resolve,reject)=>{const r=indexedDB.open('compor-studio-v1');r.onsuccess=()=>resolve(r.result);r.onerror=()=>reject(r.error);});
+  await new Promise((resolve,reject)=>{const tx=db.transaction('states','readwrite'),store=tx.objectStore('states'),r=store.get(JSON.stringify([userId,projectId]));r.onsuccess=()=>{const row=r.result;delete row.state.adjustments.find(a=>a.id===requestId).context.conversationId;for(const message of row.state.messages)if(message.conversationId)delete message.conversationId;store.put(row);};tx.oncomplete=resolve;tx.onerror=()=>reject(tx.error);});db.close();
+  sessionStorage.removeItem(`compor-studio-chat:${userId}:${projectId}:conversation:${pieceId}`);
+ },{userId,projectId,requestId,pieceId:originalPiece});
+ await page.reload();await openEditor(page);await openConversation(page);
+ assert.equal(await composer.inputValue(),'Rascunho que deve permanecer');
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).click();
+ const notice=page.getByRole('status').filter({hasText:'Há um pedido ainda não confirmado.'});await notice.waitFor();
+ await notice.getByRole('button',{name:'Abrir a conversa desse pedido',exact:true}).click();
+ const dialog=page.getByRole('dialog',{name:'Configurações do projeto'});await dialog.waitFor();
+ await dialog.getByText('Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.',{exact:true}).waitFor();
+ await dialog.getByText('Uma tentativa anterior está pendente, mas a fonte original da IA não foi preservada nesta aba.',{exact:true}).waitFor();
+ assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1,'navegar não reenvia nem consulta automaticamente');
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
+ assert.equal((await stored(page)).adjustments[0].context.conversationId,undefined,'não reatribui a conversa antiga');
+ await dialog.getByRole('button',{name:'Fechar configurações',exact:true}).click();await openConversation(page);
+ assert.equal(await composer.inputValue(),'Rascunho que deve permanecer');assert.deepEqual(errors,[]);
+});
