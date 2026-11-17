@@ -17,18 +17,20 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
  return createExplorationBatchRoute({
   appOrigin:config.app,
+  // Kept closed until the planner and intent proof bind the visual manifest.
+  visualEnabled:false,
   resolveActor:async()=>prepared.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:async(actor,projectId)=>ownsSupabaseProject({config,actor,projectId}),
-  verifyPlan:async({actor,apiKey,projectId,conversationId,batchId,requestId,context,plan,token})=>{
+  verifyPlan:async({actor,apiKey,projectId,conversationId,batchId,requestId,context,plan,token,visualInput})=>{
    if(apiKey!==prepared.apiKey||!validateExplorationContext(context))return false;
-   return verifyExplorationPlan({bindings,input:{actor,projectId,conversationId,batchId,requestId,context},plan,token});
+   return verifyExplorationPlan({bindings,input:{actor,projectId,conversationId,batchId,requestId,context,...(visualInput?{visualInput}:{})},plan,token});
   },
-  intentSecret:input=>{if(!validateExplorationContext(input.context))throw Error('invalid context');const scope={actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,intentId:input.intentId,context:input.context};if(input.purpose==='batch')return deriveExplorationIntent(bindings,{...scope,purpose:'batch'}).intentSecret;if(input.position===undefined||input.previousId===undefined)throw Error('invalid intent');return deriveExplorationIntent(bindings,{...scope,purpose:'replacement',position:input.position,previousId:input.previousId}).intentSecret;},
+  intentSecret:input=>{if(!validateExplorationContext(input.context))throw Error('invalid context');const scope={actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,intentId:input.intentId,context:input.context,...(input.visualInput?{visualInput:input.visualInput}:{})};if(input.purpose==='batch')return deriveExplorationIntent(bindings,{...scope,purpose:'batch'}).intentSecret;if(input.position===undefined||input.previousId===undefined)throw Error('invalid intent');return deriveExplorationIntent(bindings,{...scope,purpose:'replacement',position:input.position,previousId:input.previousId}).intentSecret;},
   store:createExplorationBatchStore(config),
   intentState:createExplorationIntentStore(config).state,
-  generate:async(actor,key,prompt)=>{
+  generate:async(actor,key,prompt,images)=>{
    const handler=createImageHandler({authenticate:async()=>actor});
-   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,authorizeGeneration:true})}));
+   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,authorizeGeneration:true,images:images.map(({mime,data})=>({mime,data}))})}));
    return decodeExplorationImage(response);
   },
  });

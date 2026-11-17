@@ -10,13 +10,60 @@ const plan={version:1,items:[1,2,3].map(position=>({position,creativePrompt:`Cam
 const body={projectId:id(2),conversationId:'references',batchId:id(3),intentId:id(10),planRequestId:id(4),context:{idea:'Ideia sintética'},plan,planBinding:'signed-synthetic',imageIds:[id(5),id(6),id(7)]};
 const request=(value=body,headers={},signal)=>new Request(origin+'/api/studio/exploration-batches/execute',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key,...headers},body:JSON.stringify(value),signal});
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject};};
-function fixture(){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true,intent:'active',epoch:1};const store={
+function fixture({visualEnabled=false,authorizeVisualInput}={}){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true,intent:'active',epoch:1};const store={
  reserveBatch:async(...args)=>{calls.push(['reserve',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  replaceRejected:async(...args)=>{calls.push(['replace',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);if(state.planGate)await state.planGate.promise;if(state.planGates?.get(id))await state.planGates.get(id).promise;},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
  finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
- };const route=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async()=>state.proof,intentSecret:()=> 'a'.repeat(64),intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch,revocationEpoch:state.intent==='revoked'?state.epoch:null};},store,generate:async(a,k,prompt)=>{calls.push(['generate',prompt]);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
+ };const route=createExplorationBatchRoute({appOrigin:origin,visualEnabled,authorizeVisualInput,resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async input=>{state.lastVerify=input;return state.proof;},intentSecret:input=>{state.lastIntent=input;return 'a'.repeat(64);},intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch,revocationEpoch:state.intent==='revoked'?state.epoch:null};},store,generate:async(a,k,prompt,images)=>{calls.push(['generate',prompt,images]);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
 const wait=async(predicate)=>{for(let i=0;i<100;i++){if(predicate())return;await new Promise(r=>setTimeout(r,1));}throw Error('condition not reached');};
+function visualFixture(){
+ const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
+ const sha256=createHash('sha256').update(bytes).digest('hex'),original={sha256,mime:'image/png',byteLength:bytes.length};
+ const entries=[1,2].map((ordinal)=>({id:id(100+ordinal),ordinal,role:'reference',inputOrigin:'local-upload',original,transport:{...original,width:1,height:1},transformation:'none'}));
+ return {visualInput:{version:1,policy:'optimized-v1',entries},referenceImages:entries.map(entry=>({id:entry.id,mime:'image/png',data:bytes.toString('base64')}))};
+}
+
+test('as três chamadas usam o conjunto de PNGs validado na ordem e vinculam manifesto à prova',async()=>{
+ const f=fixture({visualEnabled:true}),visual=visualFixture(),promise=f.route.post(request({...body,...visual}));await wait(()=>f.pending.size===3);
+ assert.deepEqual(f.state.lastVerify.visualInput,visual.visualInput);assert.deepEqual(f.state.lastIntent.visualInput,visual.visualInput);
+ const dispatched=f.calls.filter(call=>call[0]==='generate');assert.equal(dispatched.length,3);for(const call of dispatched)assert.deepEqual(call[2],visual.referenceImages);
+ for(const pos of [3,1,2])f.pending.get(`Prompt completo ${pos}`).resolve(new Uint8Array([1]));
+ const result=await (await promise).json();assert.equal(result.status,'completed');assert.doesNotMatch(JSON.stringify(result),/iVBOR|local-upload/);
+});
+test('omissão, bytes trocados, ordem incorreta ou flag desligada não reservam nem geram',async()=>{
+ const visual=visualFixture();
+ for(const changed of [{visualInput:visual.visualInput},{...visual,referenceImages:[...visual.referenceImages].reverse()},{...visual,referenceImages:visual.referenceImages.map((entry,index)=>index?entry:{...entry,data:entry.data.slice(0,-4)+'AAAA'})}]){
+  const f=fixture({visualEnabled:true});const response=await f.route.post(request({...body,...changed}));assert.equal(response.status,400);assert.equal(f.calls.some(call=>call[0]==='reserve'||call[0]==='generate'),false);
+ }
+ const f=fixture();assert.equal((await f.route.post(request({...body,...visual}))).status,503);assert.equal(f.calls.some(call=>call[0]==='reserve'||call[0]==='generate'),false);
+});
+test('reposição preserva mesmo digest visual e envia apenas o filho escolhido',async()=>{
+ const visual=visualFixture(),batch=fixture({visualEnabled:true});batch.state.instant=true;await batch.route.post(request({...body,...visual}));
+ const original=batch.calls.find(call=>call[0]==='reserve')[2],{imageIds,...base}=body;
+ const f=fixture({visualEnabled:true});f.state.instant=true;const response=await f.route.replace(request({...base,...visual,position:2,previousId:imageIds[1],requestId:id(8)}));
+ assert.equal((await response.json()).status,'completed');assert.equal(f.calls.find(call=>call[0]==='replace')[2].promptDigest,original.promptDigests[1]);
+ assert.deepEqual(f.calls.filter(call=>call[0]==='generate').map(call=>call[2]),[visual.referenceImages]);
+});
+test('v2 exige autorização das fontes e envia só a triagem assinada junto aos uploads',async()=>{
+ const visual=visualFixture(),[local,external]=visual.visualInput.entries;
+ visual.visualInput={version:2,policy:'optimized-v1',externalConsent:true,entries:[{...local,source:null},{...external,inputOrigin:'external',source:{originUrl:'https://www.pinterest.com/pin/synthetic/',board:'behance/advertising'}}]};
+ const signedPlan={...plan,version:2,referenceIds:[local.id]};
+ const value={...body,plan:signedPlan,visualInput:visual.visualInput,referenceImages:[visual.referenceImages[0]]};
+ const denied=fixture({visualEnabled:true});assert.equal((await denied.route.post(request(value))).status,403);assert.equal(denied.calls.some(call=>call[0]==='reserve'||call[0]==='generate'),false);
+ const allowed=fixture({visualEnabled:true,authorizeVisualInput:async({actor:who,projectId,conversationId,visualInput})=>who===actor&&projectId===body.projectId&&conversationId==='references'&&visualInput.version===2});allowed.state.instant=true;
+ assert.equal((await (await allowed.route.post(request(value))).json()).status,'completed');
+ assert.equal(allowed.calls.filter(call=>call[0]==='generate').length,3);for(const call of allowed.calls.filter(call=>call[0]==='generate'))assert.deepEqual(call[2],[visual.referenceImages[0]]);
+ const invalid=fixture({visualEnabled:true,authorizeVisualInput:async()=>true});const bad={...value,plan:{...signedPlan,referenceIds:[external.id]},referenceImages:[visual.referenceImages[1]]};
+ assert.equal((await invalid.route.post(request(bad))).status,400);assert.equal(invalid.calls.some(call=>call[0]==='reserve'||call[0]==='generate'),false);
+});
+test('perda da autorização de fonte durante reserva impede filhos ainda não enviados',async()=>{
+ const visual=visualFixture(),[local,external]=visual.visualInput.entries;
+ visual.visualInput={version:2,policy:'optimized-v1',externalConsent:true,entries:[{...local,source:null},{...external,inputOrigin:'external',source:{originUrl:'https://www.pinterest.com/pin/synthetic/',board:'behance/advertising'}}]};
+ let authorized=true;const f=fixture({visualEnabled:true,authorizeVisualInput:async()=>authorized});f.state.instant=true;f.state.planGate=deferred();
+ const pending=f.route.post(request({...body,...visual,plan:{...plan,version:2,referenceIds:[local.id,external.id]}}));await wait(()=>f.calls.filter(call=>call[0]==='plan').length===3);
+ authorized=false;f.state.planGate.resolve();const result=await (await pending).json();assert.equal(result.status,'unknown');assert.equal(f.calls.filter(call=>call[0]==='generate').length,0);assert.equal(f.calls.filter(call=>call[0]==='finish'&&call[2]==='unknown').length,3);
+});
 
 test('revogação durante plan bloqueia as três imagens e preserva as reservas desconhecidas',async()=>{
  const f=fixture();f.state.instant=true;f.state.planGate=deferred();
