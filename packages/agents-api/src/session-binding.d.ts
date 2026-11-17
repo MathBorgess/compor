@@ -3,7 +3,7 @@ import type {ImageProposal} from './image-proposal.js';
 import type {ArtworkInput} from './artwork-input.js';
 export interface ClaimScope {userId:string;projectId:string;attemptId:string}
 export interface SessionClaim extends ClaimScope {sessionId:string}
-export interface RecoveryClaim extends SessionClaim {origin?:'reference_selection';conversationId?:string;visualInputDigest?:string;visualReferenceIds?:string[]}
+export interface RecoveryClaim extends SessionClaim {origin?:'reference_selection';conversationId?:string;visualInputDigest?:string;visualReferenceIds?:string[];visualRequiredIds?:string[]}
 export interface ActionClaim extends SessionClaim {turnId:string;callId:string;proposalDigest:string;visualInputDigest?:string}
 export interface ApprovedActionClaim extends ActionClaim {pieceId:string;version:number;artworkDigest:string}
 export interface SessionBindings {

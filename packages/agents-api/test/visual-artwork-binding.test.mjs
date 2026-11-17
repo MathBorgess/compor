@@ -27,3 +27,20 @@ test('recuperação e aprovação vinculam todas as imagens, ordem, bytes e orig
  for(const changed of [{...artwork,visualInput:undefined},{...artwork,images:[artwork.images[0],artwork.images[1]]},{...artwork,images:[artwork.images[0],artwork.images[2],artwork.images[1]]},{...artwork,images:[artwork.images[0],{...artwork.images[1],data:Buffer.concat([bytes,Buffer.from('x')]).toString('base64')},artwork.images[2]]}])assert.throws(()=>bindings.issueApprovedAction({...scope,actionBinding:action,pieceId:id(4),version:2,artworkInput:changed}));
  const legacy=bindings.issueAction({...scope,turnId:'turn_1',callId:'call_1',proposal});assert.throws(()=>bindings.issueApprovedAction({...scope,actionBinding:legacy,pieceId:id(4),version:2,artworkInput:artwork}));
 });
+
+test('arte v2 exige uploads e aceita somente subconjunto ordenado das demais candidatas',()=>{
+ const extra={...manifest.entries[1],inputOrigin:'generated',source:{projectId:id(2),imageId:id(20)}};
+ const visualInput={version:2,policy:'optimized-v1',externalConsent:false,entries:[{...manifest.entries[0],source:null},extra]};
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),visualInputDigestValue=visualInputDigest(visualInput);
+ const candidateIds=visualInput.entries.map(item=>item.id),requiredIds=[candidateIds[0]];
+ const recovery=bindings.issueRecovery({...scope,visualInputDigest:visualInputDigestValue,visualReferenceIds:candidateIds,visualRequiredIds:requiredIds});
+ assert.deepEqual(bindings.verifyRecovery({...scope,token:recovery}).visualRequiredIds,requiredIds);
+ const selected={...proposal,referenceIds:requiredIds},selectedArtwork={...artwork,visualInput,images:artwork.images.slice(0,2)};
+ assert.doesNotThrow(()=>validateArtworkForProposal(selected,selectedArtwork));
+ assert.doesNotThrow(()=>validateArtworkForProposal(proposal,{...artwork,visualInput}));
+ assert.throws(()=>validateArtworkForProposal({...proposal,referenceIds:[candidateIds[1]]},{...artwork,visualInput,images:[artwork.images[0],artwork.images[2]]}));
+ assert.throws(()=>validateArtworkForProposal({...proposal,referenceIds:[...candidateIds].reverse()},{...artwork,visualInput,images:[artwork.images[0],artwork.images[2],artwork.images[1]]}));
+ assert.throws(()=>bindings.issueRecovery({...scope,visualInputDigest:visualInputDigestValue,visualReferenceIds:candidateIds,visualRequiredIds:[id(99)]}));
+ const action=bindings.issueAction({...scope,turnId:'turn_1',callId:'call_1',proposal:selected,visualInputDigest:visualInputDigestValue});
+ assert.ok(bindings.issueApprovedAction({...scope,actionBinding:action,pieceId:id(4),version:2,artworkInput:selectedArtwork}));
+});

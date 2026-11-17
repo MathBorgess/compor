@@ -48,9 +48,10 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
   // a row, so recovery must not trust its contents without this signature.
   // `origin` signs which reply contract the session was opened with; proofs
   // issued before it existed have none and keep their original contract.
-  function issueRecovery({ userId, projectId, attemptId, sessionId, origin, conversationId, visualInputDigest, visualReferenceIds }) {
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection') || (conversationId !== undefined && conversationId !== 'references' && !uuid(conversationId)) || !visualClaimValid(visualInputDigest,visualReferenceIds)) throw new Error('invalid recovery context');
-    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}), ...(conversationId ? { conversationId } : {}),...(visualInputDigest!==undefined?{visualInputDigest,visualReferences:packIds(visualReferenceIds)}:{}) })).toString('base64url');
+  function issueRecovery({ userId, projectId, attemptId, sessionId, origin, conversationId, visualInputDigest, visualReferenceIds, visualRequiredIds }) {
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection') || (conversationId !== undefined && conversationId !== 'references' && !uuid(conversationId)) || !visualClaimValid(visualInputDigest,visualReferenceIds) || (visualRequiredIds!==undefined&&(!Array.isArray(visualReferenceIds)||!Array.isArray(visualRequiredIds)||new Set(visualRequiredIds).size!==visualRequiredIds.length||visualRequiredIds.some(id=>!visualReferenceIds.includes(id))))) throw new Error('invalid recovery context');
+    const requiredMask=visualRequiredIds?.reduce((mask,id)=>mask|1<<visualReferenceIds.indexOf(id),0);
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}), ...(conversationId ? { conversationId } : {}),...(visualInputDigest!==undefined?{visualInputDigest,visualReferences:packIds(visualReferenceIds)}:{}),...(requiredMask!==undefined?{visualRequired:requiredMask}:{}) })).toString('base64url');
     return `v4.${payload}.${createHmac('sha256', signingKey).update(`v4.${payload}`).digest('base64url')}`;
   }
   function verifyRecovery({ token, userId, projectId, attemptId }) {
@@ -68,8 +69,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       const scoped=value&&Object.hasOwn(value,'conversationId');
       const visual=value&&Object.hasOwn(value,'visualInputDigest');
       const visualReferenceIds=visual?unpackIds(value.visualReferences):undefined;
-      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4)+(scoped?1:0)+(visual?2:0) || !visualClaimValid(value.visualInputDigest,visualReferenceIds) || (scoped&&value.conversationId!=='references'&&!uuid(value.conversationId)) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
-      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}), ...(scoped?{conversationId:value.conversationId}:{}),...(visual?{visualInputDigest:value.visualInputDigest,visualReferenceIds}:{}) };
+      const hasRequired=value&&Object.hasOwn(value,'visualRequired');
+      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4)+(scoped?1:0)+(visual?2:0)+(hasRequired?1:0) || !visualClaimValid(value.visualInputDigest,visualReferenceIds) || (hasRequired&&(!visual||!Number.isSafeInteger(value.visualRequired)||value.visualRequired<0||value.visualRequired>=2**visualReferenceIds.length)) || (scoped&&value.conversationId!=='references'&&!uuid(value.conversationId)) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
+      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}), ...(scoped?{conversationId:value.conversationId}:{}),...(visual?{visualInputDigest:value.visualInputDigest,visualReferenceIds,...(hasRequired?{visualRequiredIds:visualReferenceIds.filter((_,i)=>value.visualRequired&(1<<i))}:{})}:{}) };
     } catch { return null; }
   }
   // Stable per original attempt, but unlinkable without the server secret.
