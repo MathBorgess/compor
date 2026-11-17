@@ -121,7 +121,7 @@ function inputContent(body,includeHistory,sourcePages=[]){
 function headers(key,extra={}){return{Authorization:`Bearer ${key}`,'OpenAI-Beta':'agents=v1',...extra};}
 
 /** A request submits one event or reads the managed turn. No application agent loop. */
-export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,selectedVisualsEnabled=false,authorizeVisualInput,store,attempts,usage,bindings,studioBindings,onEvent,fetch:fetchApi=globalThis.fetch,readPages=readUserPages,now=Date.now}={}){
+export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,selectedVisualsEnabled=false,selectedVisualsRequired=selectedVisualsEnabled,authorizeVisualInput,store,attempts,usage,bindings,studioBindings,onEvent,fetch:fetchApi=globalThis.fetch,readPages=readUserPages,now=Date.now}={}){
  function diagnostic(requestId,phase){
   const startedAt=now(),d={requestId,phase};
   d.emit=(name,extra={})=>{
@@ -279,6 +279,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    if(Object.keys(body).filter(k=>k!=='conversationId').sort().join(',')!=='apiKey,op,projectId,requestId')return reply({error:'invalid_request'},400);
    try{const record=await store.get(scope);if(!record)return reply({error:'not_found'},404);return await poll(scope,record,key,d);}catch(error){return unknownReply(d,error);}
   }
+  if(selectedVisualsRequired&&!selectedVisualsEnabled)return reply({error:'unavailable'},503);
   const allowed=['apiKey','projectId','requestId','message','context','history','previousAttemptKey','op','referenceImages','quickReply','conversationId',...(selectedVisualsEnabled?['visualInput','visualImages']:[])];
   const automatic=body.op==='reference_selection',quick=body.quickReply!==undefined;
   // A quick reply never reuses a tool-enabled session and never rides on the automatic event.

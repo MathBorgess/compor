@@ -31,6 +31,11 @@ test('turno visual exige autorização, bytes íntegros e nenhum envio paralelo 
  assert.equal(created.body.input[0].content.filter(item=>item.type==='input_image').length,1);
  assert.equal(created.body.input[0].content.find(item=>item.type==='input_image').image_url,`data:image/png;base64,${visualImages[0].data}`);
 });
+test('flag visual sem dependências bloqueia novo envio antes da reserva e preserva consulta',async()=>{
+ const f=fixture({selectedVisualsRequired:true,selectedVisualsEnabled:false});
+ assert.equal((await f.chat(request(body))).status,503);assert.equal(f.calls.length,0);assert.equal(f.records.size,0);
+ const response=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal(response.status,404);assert.equal(f.calls.length,0);
+});
 
 test('proposta não recebe prova se o agente omitir upload obrigatório',async()=>{
  const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});

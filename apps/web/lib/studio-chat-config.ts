@@ -8,14 +8,14 @@ import {agentSigningKey} from './agent-config.ts';
 import {createCredentialSessionBindings,createCredentialStudioBindings} from './openai-credential-bindings.ts';
 import type {PreparedOpenAiRequest} from './openai-credential.ts';
 import {resolveSupabaseActor,ownsSupabaseProject,ownsSupabaseVersion} from './agent-auth.ts';
-import {authorizeLocalVisualInput} from './selected-visual-availability.ts';
+import {authorizeLocalVisualInput,selectedVisualsAvailable} from './selected-visual-availability.ts';
 
 export function configuredStudioChat(env=process.env,credential?:Pick<PreparedOpenAiRequest,'source'|'actor'|'apiKey'>){
  const config=authConfig(),secret=agentSigningKey(env);
  if(env.COMPOR_STUDIO_CHAT_ENABLED!=='true'||!config||!secret)return null;
  const credentials={url:config.service,anonKey:config.key};
  return createStudioChatHandlers({appOrigin:config.app,onEvent:recordStudioEvent,
-  selectedVisualsEnabled:env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',authorizeVisualInput:authorizeLocalVisualInput,
+  selectedVisualsEnabled:selectedVisualsAvailable(Boolean(config),env),selectedVisualsRequired:env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',authorizeVisualInput:authorizeLocalVisualInput,
   resolveActor:async()=>credential?.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:args=>ownsSupabaseProject({...args,config}),ownsVersion:args=>ownsSupabaseVersion({...args,config}),
   verifyDurableResult:async({actor,projectId,name,args,result})=>{
