@@ -1025,7 +1025,7 @@ export default function StudioChat({
         </div>
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
-      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos; o agente pode escolher entre as demais referências selecionadas.</p>}
+      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos. Referências externas e geradas ainda não estão disponíveis neste fluxo.</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
