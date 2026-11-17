@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
 import { useAICredentials } from "./use-ai-credentials";
+import { clearReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
 import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
@@ -74,6 +75,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             typeof data.userId === "string" &&
             data.userId
           ) {
+            if(lastConnectedUser.current&&lastConnectedUser.current!==data.userId)clearReferenceAuthorityConsent();
             try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
             // Another account must not inherit the open project/post from the address bar.
             if (lastConnectedUser.current && lastConnectedUser.current !== data.userId && window.location.pathname !== "/") window.history.replaceState(null, "", "/");
@@ -133,6 +135,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             }
             setAuthState("connected");
           } else if (data.state === "signed-out") {
+            clearReferenceAuthorityConsent();
             try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
             clearOpenAIKey();
             setAuthenticatedUser(null);
@@ -214,6 +217,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     signingOut.current=true;
     sessionEpoch.current++;
     activeIdentity.current=null;
+    clearReferenceAuthorityConsent();
     try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
     clearOpenAIKey();
     setAuthState("checking");
