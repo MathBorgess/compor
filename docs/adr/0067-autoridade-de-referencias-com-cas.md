@@ -1,7 +1,7 @@
 # ADR 0067 — Autoridade de referências com CAS e consentimento de sessão
 
 - Data: 17/11/2026.
-- Estado: banco e provas locais implementados; rotas, integração de todos os consumidores e ativação são etapas separadas. Migration remota não aplicada.
+- Estado: banco, rotas e provas locais implementados; integração de todos os consumidores e ativação são etapas separadas. Migration remota não aplicada.
 - Fonte: Matheus aprovou a alternativa A do [desenho de autoridade](../design/2026-11-17-autoridade-de-referencias-externas-e-geradas.md), sem importação automática de seleções legadas nem limpeza de snapshots. A capacidade de consentimento permanece somente em memória da aba.
 
 ## Decisão e dados
@@ -41,3 +41,24 @@ As RPCs legadas continuam disponíveis para os protocolos serial/MCP; não ganha
 Essas provas não validam Auth/PostgREST hospedado, integração completa da UI, CI Linux, deploy, custo nem resultado criativo. Aplicar a migration antes das rotas/consumidores e manter novas operações fechadas até a integração revisada. Rollback operacional desliga novos efeitos e preserva tabelas/recibos/snapshots; não remove dados, não transforma pendências em falhas nem reabre protocolos visuais pelo legado. O inventário de migrations inclui o hash exato desta versão.
 
 Este ADR complementa o 0066 com a fonte autoritativa escolhida. Não substitui a triagem assinada, BYOK em memória, os limites visuais nem a recuperação sem reenvio. A ausência de fonte autoritativa continua bloqueante onde a integração ainda não estiver instalada.
+
+## Interface HTTP implementada localmente
+
+`POST /api/studio/reference-authority/{selection,consent,snapshot}` exige mesma origem, JSON estrito (máximo 512 KiB), identidade verificada e propriedade quando houver projeto. `COMPOR_REFERENCE_AUTHORITY_ENABLED=true` habilita `write`, `grant` e `create`; `read`, `receipt`, `state` e `revoke` continuam disponíveis com a flag desligada. O adapter usa o JWT da pessoa, RPCs fixas, resposta validada e limite de 1 MiB; falha/perda de resposta retorna `unknown`, sem repetição automática. A flag não substitui disponibilidade das dependências nem habilita geração sozinha.
+
+| Caminho/op | Entrada além de `op` | Saída de sucesso |
+| --- | --- | --- |
+| selection/read | `projectId` | `{status:'ready',revision,state}` |
+| selection/write | `projectId,commandId,expectedRevision,state` | `{status:'applied'|'existing',commandId,revision}` |
+| selection/receipt | `projectId,commandId` | `{status:'applied',commandId,revision}` ou `{status:'absent'}` |
+| consent/grant | `consentId` | `{status:'granted',consentId,capability}` ou `{status:'existing',consentId}` sem reemitir segredo |
+| consent/state | `consentId` | `{state:'active'|'revoked'|'absent',consentId}` |
+| consent/revoke | `consentId` | `{status:'revoked',consentId}`, inclusive replay |
+| snapshot/create | `projectId,conversationId,requestId,batchId,purpose,selectionRevision,visualInput,consentId?` | `{status:'created'|'existing',snapshot}` |
+| snapshot/read | `projectId,requestId` | `{status:'found',snapshot}` ou `{status:'absent'}` |
+
+`state` tem `{version:1,references,projectReferenceIds,posts}`. No write, `references` contém `{id,inputOrigin,source}`; no read, `{id,inputOrigin,sourceDigest}`. Posts contêm `{pieceId,referenceIds,excludedReferenceIds}`. Há limite de 500 itens de catálogo e 500 posts; cada lista de seleção/exclusão tem até 20 IDs, sem duplicatas. `conversationId` é `references` ou UUID; `batchId` é nulo só para `artwork`. `snapshot` contém `requestId,projectId,conversationId,batchId,purpose,selectionRevision,manifestDigest,consentId`, sendo consentId nulo quando não há externas. Não inclui segredo nem bytes. As respostas de recibo são verificadas contra os IDs pedidos.
+
+Entradas inválidas retornam 400, falta de identidade 401, consentimento inadequado 403, escopo indisponível 404, conflito 409 e serviço/resultado incerto 503. A resposta perdida depois do commit continua incerta até consultar o mesmo comando/snapshot. `absent` só é produzido após consulta autenticada bem-sucedida, nunca a partir de erro de rede. Consultar metadados não gera imagem nem renova consentimento.
+
+`apps/web/test/reference-authority-route.test.mjs` verifica essas rotas e o adapter, incluindo um bridge HTTP → SQL real no PGlite com perda de resposta após commit, hash canônico, manifesto divergente, revogação e consulta posterior. O bridge simula transporte e Auth; não é uma prova de PostgREST hospedado ou do serviço de identidade real.
