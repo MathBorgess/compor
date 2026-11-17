@@ -143,6 +143,8 @@ A camada de banco para o despacho paralelo aprovado em 17/11 está nas migration
 
 O estúdio contém uma ligação experimental para observação e execução paralela, mas a página não habilita sua capacidade: o valor padrão de `parallelAvailable` é falso. A retomada protegida após o gate de feedback e a interface de reposição explícita de slot recusado ainda não estão ligadas. Não habilite essa ligação antes da revisão da recuperação, dos gates e da validação do backend e das migrations; um recibo incerto permanece bloqueante.
 
+A retomada do gate de feedback no fluxo paralelo passa pelo servidor e por uma RPC protegida com a intenção ativa e seu epoch. O resultado tem recibo consultável independentemente; uma resposta perdida não autoriza repetir a mutação nem despachar geração. Essa operação não substitui a retomada serial histórica.
+
 O MCP remoto também oferece geração e leitura de imagens exploratórias. A chave OpenAI é recebida em cabeçalho efêmero da requisição, fora dos argumentos da ferramenta; sua compatibilidade com um cliente MCP específico exige verificação separada.
 
 `prototypes/compor-mcp` executa stdio com identidade e recursos locais. Phoenix, filesystem e experimentos desse servidor não são capacidades implicitamente disponíveis ao cliente remoto. Ambos usam `packages/agile-deliberation`; as ferramentas de deliberação são puras, não persistem uma aceitação humana nem consultam serviços externos. A [proveniência do código](agile-deliberation.md) identifica o que foi copiado e portado. Ver [ADR 0017](adr/0017-mcp-transportes-e-capacidades.md).

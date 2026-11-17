@@ -12,6 +12,8 @@ import {createExplorationPlannerStore} from '../../apps/web/lib/exploration-plan
 import {createExplorationBatchRoute} from '../../apps/web/lib/exploration-batch-route.ts';
 import {createExplorationBatchStore} from '../../apps/web/lib/exploration-batch-store.ts';
 import {createExplorationRecoveryStatusRoute} from '../../apps/web/lib/exploration-recovery-status-route.ts';
+import {createExplorationParallelResumeRoute} from '../../apps/web/lib/exploration-parallel-resume-route.ts';
+import {createExplorationParallelResumeStore} from '../../apps/web/lib/exploration-parallel-resume-store.ts';
 
 const id=n=>`40000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const owner=id(1),other=id(2),projectId=id(3),pieceId=id(4),batchId=id(5),intentId=id(6),requestId=id(7),freshIntentId=id(8);
@@ -29,16 +31,18 @@ async function fixture(t){
  const db=new PGlite();t.after(()=>db.close());await db.exec(await databaseSql());
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000034_exploration_revocable_intents.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000035_exploration_revocation_epoch.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261117000036_exploration_parallel_review.sql',import.meta.url),'utf8'));
  await db.query('insert into auth.users values($1),($2)',[owner,other]);await db.query('insert into projects(id,owner_id) values($1,$2)',[projectId,owner]);
  await db.query('insert into project_posts(project_id,piece_id,name) values($1,$2,$3)',[projectId,pieceId,'Post sintético']);
  await db.exec('set role authenticated');
- let queue=Promise.resolve(),pauseReserve=null;const calls=[];
+ let queue=Promise.resolve(),pauseReserve=null,pauseResume=null;const calls=[];
  const fetchApi=async(url,options)=>{
   const path=new URL(url).pathname,authorization=options.headers.authorization;
   const who=authorization===`Bearer ${actor.token}`?owner:authorization===`Bearer ${otherActor.token}`?other:null;
   if(!who)return new Response(null,{status:401});
   const name=path.split('/').at(-1);calls.push(name);
   if(name==='reserve_exploration_batch_proven'&&pauseReserve)await pauseReserve;
+  if(name==='resume_exploration_parallel_review'&&pauseResume)await pauseResume;
   const run=async()=>{
    try{
     await db.query("select set_config('request.jwt.claim.sub',$1,false)",[who]);
@@ -48,7 +52,7 @@ async function fixture(t){
     if(path.startsWith('/storage/v1/object/compor-exploration-images/')){
      const name=path.split('/compor-exploration-images/')[1];await db.query('insert into storage.objects(bucket_id,name) values($1,$2)',['compor-exploration-images',name]);return Response.json({});
     }
-    const allow=new Set(['get_exploration_intent_epoch','reserve_exploration_intent','revoke_exploration_intent','get_exploration_intent_state','reserve_exploration_plan','get_exploration_plan','bind_exploration_plan','finish_exploration_plan','reserve_exploration_batch_proven','get_exploration_batch','complete_exploration_image_proven','finish_exploration_image','reject_exploration_image']);
+    const allow=new Set(['get_exploration_intent_epoch','reserve_exploration_intent','revoke_exploration_intent','get_exploration_intent_state','reserve_exploration_plan','get_exploration_plan','bind_exploration_plan','finish_exploration_plan','reserve_exploration_batch_proven','get_exploration_batch','complete_exploration_image_proven','finish_exploration_image','reject_exploration_image','resume_exploration_parallel_review','get_exploration_parallel_review']);
     if(!path.startsWith('/rest/v1/rpc/')||!allow.has(name))throw Error('unexpected route');
     const value=JSON.parse(options.body),names=Object.keys(value);if(names.some(n=>!/^p_[a-z_]+$/.test(n)))throw Error('unexpected argument');
     const args=names.map((n,i)=>`${n} => $${i+1}`).join(','),table=name==='reserve_exploration_batch_proven';
@@ -58,7 +62,7 @@ async function fixture(t){
   };
   const next=queue.then(run,run);queue=next.then(()=>{},()=>{});return next;
  };
- return {db,fetchApi,calls,holdReserve:promise=>{pauseReserve=promise;}};
+ return {db,fetchApi,calls,holdReserve:promise=>{pauseReserve=promise;},holdResume:promise=>{pauseResume=promise;}};
 }
 
 test('adapters reais, JSON PostgREST simulado e migrations preservam intenção e recibos', {timeout:60000},async t=>{
@@ -123,4 +127,30 @@ test('revogação enquanto planos dos filhos aguardam impede os três envios usa
  assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:2,revocationEpoch:2});
  release();assert.equal((await (await pending).json()).status,'unknown');assert.equal(images,0);
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.deepEqual(batch.images.map(image=>image.status),['unknown','unknown','unknown']);
+});
+
+test('retomada paralela usa capability, respeita corrida com revogação e recupera receipt perdida', {timeout:60000},async t=>{
+ const f=await fixture(t),bindings=createExplorationPlannerBindings({secret:Buffer.alloc(32,7),source:'byok',apiKey:key});
+ const intentStore=createExplorationIntentStore(config,f.fetchApi),resumeStore=createExplorationParallelResumeStore(config,f.fetchApi);
+ const auth={appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId};
+ const intentRoute=createExplorationIntentRoute({...auth,store:intentStore});
+ assert.equal((await intentRoute.create(mk({...inputs,intentId,purpose:'batch',expectedEpoch:0,apiKey:key}))).status,200);
+ const route=createExplorationParallelResumeRoute({...auth,allowResume:()=>true,store:resumeStore});
+ const request={...inputs,intentId,expectedEpoch:1,apiKey:key},scope={projectId,intentId};
+ assert.deepEqual(await (await route.status(mk(scope))).json(),{status:'absent',...scope});
+ const wrong=createExplorationParallelResumeRoute({...auth,bindings:createExplorationPlannerBindings({secret:Buffer.alloc(32,7),source:'default',apiKey:key}),allowResume:()=>true,store:resumeStore});
+ assert.equal((await (await wrong.resume(mk(request))).json()).status,'revoked');
+ let release;f.holdResume(new Promise(resolve=>{release=resolve;}));const pending=route.resume(mk(request));
+ for(let i=0;!f.calls.includes('resume_exploration_parallel_review')&&i<2000;i++)await new Promise(resolve=>setTimeout(resolve,1));
+ // The wrong-source call already used this RPC; wait for the second call.
+ for(let i=0;f.calls.filter(name=>name==='resume_exploration_parallel_review').length<2&&i<2000;i++)await new Promise(resolve=>setTimeout(resolve,1));
+ assert.equal(f.calls.filter(name=>name==='resume_exploration_parallel_review').length,2);
+ assert.equal((await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json()).status,'revoked');release();
+ assert.equal((await (await pending).json()).status,'revoked');assert.deepEqual(await (await route.status(mk(scope))).json(),{status:'absent',...scope});
+ f.holdResume(null);assert.equal((await intentRoute.create(mk({...inputs,intentId:freshIntentId,purpose:'batch',expectedEpoch:2,apiKey:key}))).status,200);
+ const fresh={...request,intentId:freshIntentId,expectedEpoch:3},freshScope={projectId,intentId:freshIntentId};
+ const lost=createExplorationParallelResumeRoute({...auth,allowResume:()=>true,store:{...resumeStore,resume:async value=>{await resumeStore.resume(value);throw Error('response lost');}}});
+ assert.equal((await lost.resume(mk(fresh))).status,503);
+ const receipt=await (await route.status(mk(freshScope))).json();assert.equal(receipt.status,'not_paused');assert.equal(receipt.intentEpoch,3);assert.equal(receipt.projectId,projectId);
+ const replay=await (await route.resume(mk(fresh))).json();assert.equal(replay.status,'not_paused');assert.equal(replay.reviewEpoch,receipt.reviewEpoch);
 });
