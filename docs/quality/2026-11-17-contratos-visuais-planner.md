@@ -15,3 +15,9 @@ Os testes de pacotes e rotas são dirigidos e não constituem uma execução com
 ## Limites da evidência
 
 O parser do servidor verifica estrutura/cabeçalhos com limites; não decodifica integralmente pixels nem comprova qualidade. Um hash transportado não prova autoria ou origem do arquivo. Os mocks de `authorizeVisualInput` exercitam a fronteira; não implementam a fonte autoritativa, que continua ausente. Runtimes sem essa porta bloqueiam candidatos externos/gerados. Nenhum teste local comprova CI Linux, dados de contas reais, cobrança ou comportamento visual do modelo.
+
+## Revisão da ordem de verificação antes do envio
+
+Na bancada `compor-visual-dispatch-intent-race`, baseada em `652e19b`, dois testes controlados suspenderam a revalidação de autoridade visual após a reserva, revogaram a intenção e então liberaram a consulta. Antes da correção, lote e reposição ainda enviavam e retornavam `completed`. A consulta da intenção agora acontece após a autoridade visual, como última verificação antes de cada envio. Os dois testes passaram, preservando os recibos como `unknown`, sem envio nem repetição em replay; a suíte da rota passou **21/21**, ESLint do arquivo alterado, tipos estritos sem emissão e `git diff --check` também passaram.
+
+Essa ordem fecha a janela reproduzida entre os dois awaits; não oferece atomicidade entre banco e rede nem cancela uma chamada já admitida pelo fornecedor. A porta autoritativa real continua ausente e os flags não foram alterados. A evidência usa apenas fixtures locais.

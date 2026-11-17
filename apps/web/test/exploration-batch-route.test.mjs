@@ -65,6 +65,25 @@ test('perda da autorização de fonte durante reserva impede filhos ainda não e
  authorized=false;f.state.planGate.resolve();const result=await (await pending).json();assert.equal(result.status,'unknown');assert.equal(f.calls.filter(call=>call[0]==='generate').length,0);assert.equal(f.calls.filter(call=>call[0]==='finish'&&call[2]==='unknown').length,3);
 });
 
+for(const operation of ['post','replace'])test(`revogação durante autoridade visual impede ${operation} antes do envio`,async()=>{
+ const visual=visualFixture(),[local,external]=visual.visualInput.entries;
+ visual.visualInput={version:2,policy:'optimized-v1',externalConsent:true,entries:[{...local,source:null},{...external,inputOrigin:'external',source:{originUrl:'https://www.pinterest.com/pin/synthetic/',board:'behance/advertising'}}]};
+ const authorization=deferred();let checks=0;
+ const f=fixture({visualEnabled:true,authorizeVisualInput:async()=>{checks++;if(checks>1)await authorization.promise;return true;}});f.state.instant=true;
+ const {imageIds,...base}=body;
+ const value={...base,...visual,plan:{...plan,version:2,referenceIds:[local.id,external.id]},...(operation==='post'?{imageIds}:{position:2,previousId:imageIds[1],requestId:id(8)})};
+ const children=operation==='post'?3:1,pending=f.route[operation](request(value));
+ await wait(()=>checks===children+1);
+ f.state.intent='revoked';f.state.epoch++;authorization.resolve();
+ const result=await (await pending).json();assert.equal(result.status,'unknown');
+ assert.equal(f.calls.filter(call=>call[0]==='generate').length,0);
+ assert.equal(f.calls.filter(call=>call[0]==='finish'&&call[2]==='unknown').length,children);
+ // A lost/unknown reservation remains a receipt, never permission to resend.
+ f.state.reservation={state:'unknown',isNew:false};
+ const replay=await f.route[operation](request(value));assert.equal(replay.status,409);
+ assert.equal((await replay.json()).status,'unknown');assert.equal(f.calls.filter(call=>call[0]==='generate').length,0);
+});
+
 test('revogação durante plan bloqueia as três imagens e preserva as reservas desconhecidas',async()=>{
  const f=fixture();f.state.instant=true;f.state.planGate=deferred();
  const pending=f.route.post(request());await wait(()=>f.calls.filter(c=>c[0]==='plan').length===3);

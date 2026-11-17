@@ -82,7 +82,16 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(!reservation.isNew)return reply({status:reservation.state,batchId:input.batchId,retryAutomatically:false},409);
    if(reservation.state!=='running')return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},503);
    const results=await dispatchReservedExplorationBatch(children,{
-    generate:async child=>{const entry=input.plan.items[input.imageIds.indexOf(child.requestId)];if(request.signal.aborted)throw Error('aborted before dispatch');await deps.store.plan(actor,input.projectId,child.requestId,{composition:entry.composition,contrast:entry.contrast});await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest)||request.signal.aborted)throw Error('visual authorization unavailable');try{return await deps.generate(actor,key,child.prompt,visual?.referenceImages??[]);}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}},
+    generate:async child=>{
+     const entry=input.plan.items[input.imageIds.indexOf(child.requestId)];
+     if(request.signal.aborted)throw Error('aborted before dispatch');
+     await deps.store.plan(actor,input.projectId,child.requestId,{composition:entry.composition,contrast:entry.contrast});
+     if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest)||request.signal.aborted)throw Error('visual authorization unavailable');
+     // Source authorization may yield. Observe revocation afterwards, as the
+     // final check before dispatch; this does not make DB and network atomic.
+     await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);
+     try{return await deps.generate(actor,key,child.prompt,visual?.referenceImages??[]);}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}
+    },
     put:(child,bytes)=>deps.store.put(actor,input.projectId,child.requestId,bytes),
     finish:(child,state)=>deps.store.finish(actor,input.projectId,child.requestId,state,child.proof),
     reject:child=>deps.store.reject(actor,input.projectId,child.requestId,child.proof),
@@ -114,8 +123,8 @@ export function createExplorationBatchRoute(deps:Dependencies){
    try{
     if(request.signal.aborted)throw Error('aborted before dispatch');
     await deps.store.plan(actor,input.projectId,input.requestId,{composition:entry.composition,contrast:entry.contrast});
-    await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);
     if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest)||request.signal.aborted)throw Error('visual authorization unavailable');
+    await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);
     let bytes:Uint8Array;try{bytes=await deps.generate(actor,key,entry.prompt,visual?.referenceImages??[]);}catch(error){if(error instanceof ExplorationCredentialsRejected){await deps.store.reject(actor,input.projectId,input.requestId,proof);return reply({status:'rejected',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},200);}throw error;}
     await deps.store.put(actor,input.projectId,input.requestId,bytes);
     await deps.store.finish(actor,input.projectId,input.requestId,'completed',proof);
