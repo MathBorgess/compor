@@ -1,4 +1,4 @@
-import {createHmac,timingSafeEqual} from 'node:crypto';
+import {createHash,createHmac,timingSafeEqual} from 'node:crypto';
 import {validateExplorationContext,validateExplorationPlan,validateCompletedExplorationPlan} from './exploration-plan-contract.mjs';
 export {validateExplorationContext,validateExplorationPlan,validateCompletedExplorationPlan} from './exploration-plan-contract.mjs';
 
@@ -31,12 +31,15 @@ export function createExplorationPlanner({store,bindings,provider,authorize}={})
   const permitted=await authorize({actor:input.actor,projectId:input.projectId,conversationId:input.conversationId});if(permitted!==true)return null;
   const scope={userId:input.actor.userId,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId};
   const inputDigest=bindings.digest({scope,context:input.context});
-  return {scope,inputDigest,db:{actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId}};
+  const completionSecret=bindings.digest({type:'planner-store-capability-v1',scope,inputDigest});
+  if(!/^[0-9a-f]{64}$/.test(completionSecret))throw Error('invalid capability');
+  const completionDigest=createHash('sha256').update(Buffer.from(completionSecret,'hex')).digest('hex');
+  return {scope,inputDigest,completionSecret,completionDigest,db:{actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId}};
  }
  const validRecord=(record,scope,inputDigest)=>object(record)&&record.userId===scope.userId&&record.projectId===scope.projectId&&record.conversationId===scope.conversationId&&record.batchId===scope.batchId&&record.requestId===scope.requestId&&uuid(record.attemptId)&&record.inputDigest===inputDigest;
  async function submit(input){
   let c;try{c=await prepare(input);}catch{return result('unavailable');}if(!c)return result('unavailable');
-  let reservation;try{reservation=await store.reserve({...c.db,userId:c.scope.userId,inputDigest:c.inputDigest});}catch{return result('unknown');}
+  let reservation;try{reservation=await store.reserve({...c.db,userId:c.scope.userId,inputDigest:c.inputDigest,completionDigest:c.completionDigest});}catch{return result('unknown');}
   if(!['reserved','existing','busy','conflict','not_found'].includes(reservation?.status))return result('unknown');
   if(reservation.status==='not_found')return result('unavailable');
   if(reservation.status==='busy'||reservation.status==='conflict')return result(reservation.status);
@@ -48,7 +51,7 @@ export function createExplorationPlanner({store,bindings,provider,authorize}={})
    const created=await provider.create({scope:c.scope,context:{...input.context,offerFacts:confirmed}});
    if(!identifier(created?.sessionId,'sess'))throw Error('invalid provider result');
    const binding=bindings.issue({type:'recovery',...c.scope,attemptId:record.attemptId,inputDigest:c.inputDigest,sessionId:created.sessionId});
-   await store.bind({...c.db,binding});
+   await store.bind({...c.db,binding,completionSecret:c.completionSecret});
    return {...result('running'),requestId:c.scope.requestId};
   }catch{return result('unknown');}
  }
@@ -63,12 +66,12 @@ export function createExplorationPlanner({store,bindings,provider,authorize}={})
   try{
    const observed=await provider.get({sessionId:claim.sessionId});
    if(observed?.status==='running')return result('running');
-   if(observed?.status==='failed'){await store.finish({...c.db,state:'failed'});return result('failed');}
+   if(observed?.status==='failed'){await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
    if(observed?.status!=='completed'||!identifier(observed.turnId,'turn'))return result('unknown');
    const plan=validateExplorationPlan(observed.plan,input.context);
-   if(!plan){await store.finish({...c.db,state:'failed'});return result('failed');}
+   if(!plan){await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
    const planBinding=bindings.issue({type:'plan',...c.scope,attemptId:record.attemptId,inputDigest:c.inputDigest,sessionId:claim.sessionId,turnId:observed.turnId,planDigest:bindings.digest(plan)});
-   await store.finish({...c.db,state:'completed'});
+   await store.finish({...c.db,state:'completed',completionSecret:c.completionSecret});
    return {...result('completed'),requestId:c.scope.requestId,batchId:c.scope.batchId,plan,planBinding};
   }catch{return result('unknown');}
  }

@@ -8,10 +8,10 @@ export type PlannerBindings={digest(value:unknown):string;issue(value:Record<str
 export type PlannerRecord={userId:string;projectId:string;conversationId:string;batchId:string;requestId:string;attemptId:string;inputDigest:string;state:'starting'|'running'|'completed'|'failed'|'unknown';binding:string|null};
 type DbScope=Pick<ExplorationPlannerInput,'actor'|'projectId'|'conversationId'|'batchId'|'requestId'>;
 export interface PlannerStore {
- reserve(input:DbScope & {userId:string;inputDigest:string}):Promise<{status:'reserved'|'existing';record:PlannerRecord}|{status:'busy'|'conflict'|'not_found'}>;
+ reserve(input:DbScope & {userId:string;inputDigest:string;completionDigest:string}):Promise<{status:'reserved'|'existing';record:PlannerRecord}|{status:'busy'|'conflict'|'not_found'}>;
  get(input:DbScope):Promise<PlannerRecord|null>;
- bind(input:DbScope & {binding:string}):Promise<void>;
- finish(input:DbScope & {state:'completed'|'failed'}):Promise<void>;
+ bind(input:DbScope & {binding:string;completionSecret:string}):Promise<void>;
+ finish(input:DbScope & {state:'completed'|'failed';completionSecret:string}):Promise<void>;
 }
 export interface PlannerProvider {
  create(input:{scope:{userId:string;projectId:string;conversationId:string;batchId:string;requestId:string};context:ExplorationPlannerContext}):Promise<{sessionId:string}>;

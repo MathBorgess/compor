@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {createExplorationPlanner,createExplorationPlannerBindings} from '../src/exploration-planner.mjs';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
@@ -8,8 +9,8 @@ const context={idea:'Oficina aberta',offer:'Oficina sintética',audience:'Profes
 const scope={actor:{userId:id(1),token:'synthetic'},projectId:id(2),conversationId:id(3),batchId:id(4),requestId:id(5),context};
 const plan={version:1,items:[1,2,3].map(n=>({position:n,creativePrompt:`Caminho visual ${['editorial','colagem','geometria'][n-1]}`,composition:`Composição ${n}`,contrast:`Contraste ${n}`,differenceFromOthers:`Diferença ${n}`}))};
 function fixture(){
- let record=null,authorized=true,createCount=0,lookupCount=0,result={status:'completed',turnId:'turn_test',plan},createResult={sessionId:'sess_test'};
- const store={async reserve(c){if(record)return record.inputDigest===c.inputDigest?{status:'existing',record}:{status:'conflict'};record={...c,state:'starting',attemptId:id(6),binding:null};return{status:'reserved',record};},async get(){return record;},async bind(c){record.binding=c.binding;record.state='running';},async finish(c){record.state=c.state;}};
+ let record=null,completionDigest=null,authorized=true,createCount=0,lookupCount=0,result={status:'completed',turnId:'turn_test',plan},createResult={sessionId:'sess_test'};
+ const store={async reserve(c){if(record)return record.inputDigest===c.inputDigest?{status:'existing',record}:{status:'conflict'};assert.match(c.completionDigest,/^[0-9a-f]{64}$/);completionDigest=c.completionDigest;const metadata={...c};delete metadata.completionDigest;record={...metadata,state:'starting',attemptId:id(6),binding:null};return{status:'reserved',record};},async get(){return record;},async bind(c){assert.equal(createHash('sha256').update(Buffer.from(c.completionSecret,'hex')).digest('hex'),completionDigest);record.binding=c.binding;record.state='running';},async finish(c){assert.equal(createHash('sha256').update(Buffer.from(c.completionSecret,'hex')).digest('hex'),completionDigest);record.state=c.state;}};
  const provider={async create(){createCount++;if(createResult instanceof Error)throw createResult;return createResult;},async get(){lookupCount++;return result;}};
  const bindings=createExplorationPlannerBindings({secret,source:'byok',apiKey:key});
  const build=(b=bindings)=>createExplorationPlanner({store,bindings:b,provider,authorize:async()=>authorized});
@@ -88,4 +89,20 @@ test('contrato puro valida contexto e plano armazenado sem depender da prova',as
 test('negação de autorização e estado desconhecido não disparam nova sessão',async()=>{
  const f=fixture(),p=f.build();f.setAuthorized(false);assert.equal((await p.submit(scope)).status,'unavailable');assert.deepEqual(f.counts,{createCount:0,lookupCount:0});
  f.setAuthorized(true);await p.submit(scope);f.setResult({status:'unknown'});assert.equal((await p.poll(scope)).status,'unknown');assert.equal((await p.submit(scope)).status,'unknown');assert.equal(f.counts.createCount,1);
+});
+
+test('capacidade é vinculada ao escopo e credencial e não entra no registro ou prova',async()=>{
+ const f=fixture(),p=f.build();const b=createExplorationPlannerBindings({secret,source:'byok',apiKey:key});
+ const exactScope={userId:scope.actor.userId,projectId:scope.projectId,conversationId:scope.conversationId,batchId:scope.batchId,requestId:scope.requestId};
+ const digest=b.digest({scope:exactScope,context}),capability=b.digest({type:'planner-store-capability-v1',scope:exactScope,inputDigest:digest});
+ assert.match(capability,/^[0-9a-f]{64}$/);
+ for(const options of [{secret,source:'default',apiKey:key},{secret,source:'byok',apiKey:`${key}changed`}]){
+  const other=createExplorationPlannerBindings(options),otherDigest=other.digest({scope:exactScope,context});assert.notEqual(other.digest({type:'planner-store-capability-v1',scope:exactScope,inputDigest:otherDigest}),capability);
+ }
+ await p.submit(scope);assert.equal(JSON.stringify(f.record).includes(capability),false);const out=await p.poll(scope);assert.equal(out.status,'completed');assert.equal(out.planBinding.includes(capability),false);
+});
+
+test('duas submissões concorrentes do mesmo pedido não criam sessões adicionais',async()=>{
+ const f=fixture(),p=f.build(),results=await Promise.all([p.submit(scope),p.submit(scope)]);
+ assert.deepEqual(results.map(result=>result.status).sort(),['running','unknown']);assert.equal(f.counts.createCount,1);
 });
