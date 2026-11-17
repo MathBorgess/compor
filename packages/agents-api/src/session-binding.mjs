@@ -1,11 +1,20 @@
 import {isAgentCallId} from './agent-call-id.mjs';
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { imageProposalDigest, artworkInputDigest } from './artwork-input.mjs';
+import { imageProposalDigest, artworkInputDigest, parseArtworkInput } from './artwork-input.mjs';
+import {visualInputDigest as digestVisualInput} from './visual-input.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const sessionIdValid = value => typeof value === 'string' && /^sess_[A-Za-z0-9_-]{1,128}$/.test(value) && !/sk-/i.test(value);
 const callIdValid = (value, prefix) => typeof value === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(value) && !/sk-/i.test(value);
 const lifetime = 10 * 60 * 1000;
+const digestValid=value=>typeof value==='string'&&/^[a-f0-9]{64}$/.test(value);
+const visualClaimValid=(digest,ids)=>digest===undefined&&ids===undefined||digestValid(digest)&&Array.isArray(ids)&&ids.length<=20&&ids.every(uuid)&&new Set(ids.map(id=>id.toLowerCase())).size===ids.length;
+const packIds=ids=>Buffer.concat(ids.map(id=>Buffer.from(id.replaceAll('-',''),'hex'))).toString('base64url');
+function unpackIds(value){
+  if(typeof value!=='string'||!/^[A-Za-z0-9_-]*$/.test(value))throw Error('invalid visual IDs');
+  const bytes=Buffer.from(value,'base64url');if(bytes.toString('base64url')!==value||bytes.length%16||bytes.length>320)throw Error('invalid visual IDs');
+  const ids=[];for(let offset=0;offset<bytes.length;offset+=16){const hex=bytes.subarray(offset,offset+16).toString('hex');ids.push(`${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`);}return ids;
+}
 
 /** Server-only HMAC proof. Not a user credential, durable storage or authorization by itself. */
 export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
@@ -39,9 +48,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
   // a row, so recovery must not trust its contents without this signature.
   // `origin` signs which reply contract the session was opened with; proofs
   // issued before it existed have none and keep their original contract.
-  function issueRecovery({ userId, projectId, attemptId, sessionId, origin, conversationId }) {
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection') || (conversationId !== undefined && conversationId !== 'references' && !uuid(conversationId))) throw new Error('invalid recovery context');
-    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}), ...(conversationId ? { conversationId } : {}) })).toString('base64url');
+  function issueRecovery({ userId, projectId, attemptId, sessionId, origin, conversationId, visualInputDigest, visualReferenceIds }) {
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || (origin !== undefined && origin !== 'reference_selection') || (conversationId !== undefined && conversationId !== 'references' && !uuid(conversationId)) || !visualClaimValid(visualInputDigest,visualReferenceIds)) throw new Error('invalid recovery context');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, ...(origin ? { origin } : {}), ...(conversationId ? { conversationId } : {}),...(visualInputDigest!==undefined?{visualInputDigest,visualReferences:packIds(visualReferenceIds)}:{}) })).toString('base64url');
     return `v4.${payload}.${createHmac('sha256', signingKey).update(`v4.${payload}`).digest('base64url')}`;
   }
   function verifyRecovery({ token, userId, projectId, attemptId }) {
@@ -57,8 +66,10 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       const value = JSON.parse(bytes.toString('utf8'));
       const signedOrigin = value && Object.hasOwn(value, 'origin');
       const scoped=value&&Object.hasOwn(value,'conversationId');
-      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4)+(scoped?1:0) || (scoped&&value.conversationId!=='references'&&!uuid(value.conversationId)) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
-      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}), ...(scoped?{conversationId:value.conversationId}:{}) };
+      const visual=value&&Object.hasOwn(value,'visualInputDigest');
+      const visualReferenceIds=visual?unpackIds(value.visualReferences):undefined;
+      if (!value || Object.keys(value).length !== (signedOrigin ? 5 : 4)+(scoped?1:0)+(visual?2:0) || !visualClaimValid(value.visualInputDigest,visualReferenceIds) || (scoped&&value.conversationId!=='references'&&!uuid(value.conversationId)) || (signedOrigin && value.origin !== 'reference_selection') || value.userId !== userId || value.projectId !== projectId || value.attemptId !== attemptId || !sessionIdValid(value.sessionId)) return null;
+      return { userId, projectId, attemptId, sessionId: value.sessionId, ...(signedOrigin ? { origin: value.origin } : {}), ...(scoped?{conversationId:value.conversationId}:{}),...(visual?{visualInputDigest:value.visualInputDigest,visualReferenceIds}:{}) };
     } catch { return null; }
   }
   // Stable per original attempt, but unlinkable without the server secret.
@@ -70,11 +81,11 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
     const hex = bytes.toString('hex');
     return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20)}`;
   }
-  function issueAction({ userId, projectId, attemptId, sessionId, turnId, callId, prompt, proposal }) {
+  function issueAction({ userId, projectId, attemptId, sessionId, turnId, callId, prompt, proposal, visualInputDigest }) {
     const iat = now();
-    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !isAgentCallId(callId) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
+    if (![userId, projectId, attemptId].every(uuid) || !sessionIdValid(sessionId) || !callIdValid(turnId, 'turn') || !isAgentCallId(callId) || (visualInputDigest!==undefined&&!digestValid(visualInputDigest)) || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid action context');
     const proposalDigest = imageProposalDigest(proposal ?? {prompt});
-    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, turnId, callId, proposalDigest, iat, exp: iat + lifetime })).toString('base64url');
+    const payload = Buffer.from(JSON.stringify({ userId, projectId, attemptId, sessionId, turnId, callId, proposalDigest,...(visualInputDigest!==undefined?{visualInputDigest}:{}), iat, exp: iat + lifetime })).toString('base64url');
     const signature = createHmac('sha256', signingKey).update(`v5.${payload}`).digest('base64url');
     return `v5.${payload}.${signature}`;
   }
@@ -87,8 +98,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual, expected)) return null;
       const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
       const claim = JSON.parse(raw.toString('utf8')); const current = now();
-      if (!claim || Object.keys(claim).length !== 9 || claim.userId !== userId || claim.projectId !== projectId || claim.attemptId !== attemptId || !sessionIdValid(claim.sessionId) || !callIdValid(claim.turnId, 'turn') || !isAgentCallId(claim.callId) || !/^[0-9a-f]{64}$/.test(claim.proposalDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(claim.iat) || !Number.isSafeInteger(claim.exp) || claim.exp !== claim.iat + lifetime || claim.iat > current || current >= claim.exp) return null;
-      return { userId, projectId, attemptId, sessionId: claim.sessionId, turnId: claim.turnId, callId: claim.callId, proposalDigest: claim.proposalDigest };
+      const visual=claim&&Object.hasOwn(claim,'visualInputDigest');
+      if (!claim || Object.keys(claim).length !== 9+(visual?1:0) || (visual&&!digestValid(claim.visualInputDigest)) || claim.userId !== userId || claim.projectId !== projectId || claim.attemptId !== attemptId || !sessionIdValid(claim.sessionId) || !callIdValid(claim.turnId, 'turn') || !isAgentCallId(claim.callId) || !/^[0-9a-f]{64}$/.test(claim.proposalDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(claim.iat) || !Number.isSafeInteger(claim.exp) || claim.exp !== claim.iat + lifetime || claim.iat > current || current >= claim.exp) return null;
+      return { userId, projectId, attemptId, sessionId: claim.sessionId, turnId: claim.turnId, callId: claim.callId, proposalDigest: claim.proposalDigest,...(visual?{visualInputDigest:claim.visualInputDigest}:{}) };
     } catch { return null; }
   }
   // Only trusted server code may issue this proof after checking the actor's explicit
@@ -97,7 +109,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
     const action = verifyAction({ token: actionBinding, userId, projectId, attemptId });
     const iat = now();
     if (!action || !uuid(pieceId) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !Number.isSafeInteger(iat) || iat < 0 || !Number.isSafeInteger(iat + lifetime)) throw new Error('invalid approval context');
-    const artworkDigest = artworkInputDigest(artworkInput);
+    const parsed=parseArtworkInput(artworkInput);
+    if(Boolean(action.visualInputDigest)!==Boolean(parsed.visualInput)||parsed.visualInput&&digestVisualInput(parsed.visualInput)!==action.visualInputDigest)throw Error('visual_input_changed');
+    const artworkDigest = artworkInputDigest(parsed);
     const payload = Buffer.from(JSON.stringify({ ...action, pieceId, version, artworkDigest, iat, exp: iat + lifetime })).toString('base64url');
     return `v6.${payload}.${createHmac('sha256', signingKey).update(`v6.${payload}`).digest('base64url')}`;
   }
@@ -110,8 +124,9 @@ export function createSessionBindings({ secret, now = () => Date.now() } = {}) {
       if (actual.length !== expected.length || actual.toString('base64url') !== parts[2] || !timingSafeEqual(actual,expected)) return null;
       const raw = Buffer.from(parts[1], 'base64url'); if (raw.toString('base64url') !== parts[1]) return null;
       const c = JSON.parse(raw.toString('utf8')), current = now();
-      if (!c || Object.keys(c).length !== 12 || c.userId !== userId || c.projectId !== projectId || c.attemptId !== attemptId || c.pieceId !== pieceId || c.version !== version || !sessionIdValid(c.sessionId) || !callIdValid(c.turnId,'turn') || !isAgentCallId(c.callId) || !/^[0-9a-f]{64}$/.test(c.proposalDigest) || !/^[0-9a-f]{64}$/.test(c.artworkDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(c.iat) || !Number.isSafeInteger(c.exp) || c.exp !== c.iat + lifetime || c.iat > current || current >= c.exp) return null;
-      return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,proposalDigest:c.proposalDigest,artworkDigest:c.artworkDigest };
+      const visual=c&&Object.hasOwn(c,'visualInputDigest');
+      if (!c || Object.keys(c).length !== 12+(visual?1:0) || (visual&&!digestValid(c.visualInputDigest)) || c.userId !== userId || c.projectId !== projectId || c.attemptId !== attemptId || c.pieceId !== pieceId || c.version !== version || !sessionIdValid(c.sessionId) || !callIdValid(c.turnId,'turn') || !isAgentCallId(c.callId) || !/^[0-9a-f]{64}$/.test(c.proposalDigest) || !/^[0-9a-f]{64}$/.test(c.artworkDigest) || !Number.isSafeInteger(current) || !Number.isSafeInteger(c.iat) || !Number.isSafeInteger(c.exp) || c.exp !== c.iat + lifetime || c.iat > current || current >= c.exp) return null;
+      return { userId,projectId,attemptId,pieceId,version,sessionId:c.sessionId,turnId:c.turnId,callId:c.callId,proposalDigest:c.proposalDigest,artworkDigest:c.artworkDigest,...(visual?{visualInputDigest:c.visualInputDigest}:{}) };
     } catch { return null; }
   }
   return Object.freeze({ issue, verify, issueRecovery, verifyRecovery, recoveryAttemptKey, issueAction, verifyAction, issueApprovedAction, verifyApprovedAction });
