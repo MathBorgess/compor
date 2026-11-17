@@ -17,8 +17,11 @@ test('new recovery proofs retain the SQL token grammar while binding the effecti
     const own=bindings(source),proof=own.issueRecovery(session);
     assert.match(proof,/^v4\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+$/);assert.ok(proof.length<=2048);
     assert.equal(own.verifyRecovery({...scope,token:proof}).sessionId,session.sessionId);
+    assert.equal(own.verifyBoundRecovery({...scope,token:proof}).sessionId,session.sessionId);
     assert.equal(bindings(source,anotherKey).verifyRecovery({...scope,token:proof}),null);
+    assert.equal(bindings(source,anotherKey).verifyBoundRecovery({...scope,token:proof}),null);
     assert.equal(bindings(source==='byok'?'default':'byok').verifyRecovery({...scope,token:proof}),null);
+    assert.equal(bindings(source==='byok'?'default':'byok').verifyBoundRecovery({...scope,token:proof}),null);
     assert.doesNotMatch(Buffer.from(proof.split('.')[1],'base64url').toString(),/sk-|SUPABASE|COMPOR_CIN_OPENAI/);
   }
 });
@@ -33,6 +36,7 @@ test('stripping the credential envelope cannot downgrade a new proof into the le
 test('historical unbound BYOK proofs remain compatible but cannot be used with the shared key',()=>{
   const old=createSessionBindings({secret}),proof=old.issueRecovery(session);
   assert.ok(bindings().verifyRecovery({...scope,token:proof}));
+  assert.equal(bindings().verifyBoundRecovery({...scope,token:proof}),null);
   assert.equal(bindings('default').verifyRecovery({...scope,token:proof}),null);
   assert.equal(bindings().recoveryAttemptKey(scope),old.recoveryAttemptKey(scope));
 });

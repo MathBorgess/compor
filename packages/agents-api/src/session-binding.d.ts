@@ -11,6 +11,7 @@ export interface SessionBindings {
  verify(input:ClaimScope & {token:string}):SessionClaim|null;
  issueRecovery(input:RecoveryClaim):string;
  verifyRecovery(input:ClaimScope & {token:string}):RecoveryClaim|null;
+ verifyBoundRecovery?(input:ClaimScope & {token:string}):RecoveryClaim|null;
  recoveryAttemptKey(input:ClaimScope):string;
  issueAction(input:SessionClaim & {turnId:string;callId:string;prompt?:string;proposal?:ImageProposal}):string;
  verifyAction(input:ClaimScope & {token:string}):ActionClaim|null;
