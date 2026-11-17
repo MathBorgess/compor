@@ -93,6 +93,21 @@
       "types": "./src/artwork-input.d.ts",
       "import": "./src/artwork-input.mjs",
       "default": "./src/artwork-input.mjs"
+    },
+    "./exploration-planner": {
+      "types": "./src/exploration-planner.d.ts",
+      "import": "./src/exploration-planner.mjs",
+      "default": "./src/exploration-planner.mjs"
+    },
+    "./exploration-plan-provider": {
+      "types": "./src/exploration-plan-provider.d.ts",
+      "import": "./src/exploration-plan-provider.mjs",
+      "default": "./src/exploration-plan-provider.mjs"
+    },
+    "./exploration-plan-contract": {
+      "types": "./src/exploration-plan-contract.d.ts",
+      "import": "./src/exploration-plan-contract.mjs",
+      "default": "./src/exploration-plan-contract.mjs"
     }
   },
   "scripts": {
