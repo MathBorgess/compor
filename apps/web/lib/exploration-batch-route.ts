@@ -14,19 +14,21 @@ const planSchema=z.discriminatedUnion('version',[z.strictObject({version:z.liter
 const inputSchema=z.strictObject({projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,planRequestId:id,context:z.record(z.string(),z.unknown()),plan:planSchema,planBinding:z.string().min(1).max(8192),visualInput:z.unknown().optional(),referenceImages:z.unknown().optional(),imageIds:z.array(id).length(3).refine(ids=>new Set(ids).size===3)});
 const replacementSchema=inputSchema.omit({imageIds:true}).extend({position:z.number().int().min(1).max(3),previousId:id,requestId:id}).refine(value=>value.previousId!==value.requestId);
 type BatchInput=z.infer<typeof inputSchema>;
+type VisualAuthority={requestId:string;manifestDigest:string;consentSecret:string|null};
+type VisualScope={actor:Actor;projectId:string;conversationId:string;batchId:string;requestId:string;purpose:'parallel'|'replacement';visualInput:VisualInputManifest;consentHeader:string|null};
 const reservationSchema=z.strictObject({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback','cooldown','partial','conflict','revoked']),isNew:z.boolean()});
 const intentEpoch=z.number().int().nonnegative().safe();
 const intentStateSchema=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch:intentEpoch,revocationEpoch:intentEpoch.nullable()}).refine(value=>value.revocationEpoch===null||(value.state==='revoked'&&value.revocationEpoch<=value.epoch));
 type BatchReservation=z.infer<typeof reservationSchema>;
 type BatchStore={
- reserveBatch:(actor:Actor,input:{projectId:string;batchId:string;pieceId:string|null;planDigest:string;intentId:string;intentSecret:string;imageIds:string[];promptDigests:string[];rejectionDigests:string[]})=>Promise<BatchReservation>;
- replaceRejected?:(actor:Actor,input:{projectId:string;batchId:string;position:number;previousId:string;requestId:string;intentId:string;intentSecret:string;promptDigest:string;rejectionDigest:string})=>Promise<BatchReservation>;
+ reserveBatch:(actor:Actor,input:{projectId:string;batchId:string;pieceId:string|null;planDigest:string;intentId:string;intentSecret:string;imageIds:string[];promptDigests:string[];rejectionDigests:string[];visualAuthority?:VisualAuthority})=>Promise<BatchReservation>;
+ replaceRejected?:(actor:Actor,input:{projectId:string;batchId:string;position:number;previousId:string;requestId:string;intentId:string;intentSecret:string;promptDigest:string;rejectionDigest:string;visualAuthority?:VisualAuthority})=>Promise<BatchReservation>;
  plan:(actor:Actor,projectId:string,requestId:string,value:{composition:string;contrast:string})=>Promise<void>;
  put:(actor:Actor,projectId:string,requestId:string,bytes:Uint8Array)=>Promise<void>;
  finish:(actor:Actor,projectId:string,requestId:string,state:'completed'|'unknown',secret:string)=>Promise<void>;
  reject:(actor:Actor,projectId:string,requestId:string,secret:string)=>Promise<void>;
 };
-type Dependencies={appOrigin:string;visualEnabled?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;authorizeVisualInput?:(input:{actor:Actor;projectId:string;conversationId:string;visualInput:VisualInputManifest})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[])=>Promise<Uint8Array>};
+type Dependencies={appOrigin:string;visualEnabled?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;authorizeVisualInput?:(input:{actor:Actor;projectId:string;conversationId:string;visualInput:VisualInputManifest})=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[])=>Promise<Uint8Array>};
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const hash=(value:string|Uint8Array)=>createHash('sha256').update(value).digest('hex');
 async function readBody(request:Request){
@@ -52,8 +54,12 @@ export function createExplorationBatchRoute(deps:Dependencies){
   if(!visualInput||visualInput.version===1||visualInput.entries.every(entry=>entry.inputOrigin==='local-upload'))return true;
   return deps.authorizeVisualInput?await deps.authorizeVisualInput({actor,projectId,conversationId,visualInput})===true:false;
  }
- async function beforeDispatch(actor:Actor,projectId:string,intentId:string,initial:z.infer<typeof intentStateSchema>,signal:AbortSignal){
+ async function beforeDispatch(actor:Actor,projectId:string,intentId:string,initial:z.infer<typeof intentStateSchema>,signal:AbortSignal,visualScope?:VisualScope,authority?:VisualAuthority){
   if(signal.aborted||initial.state!=='active')throw Error('intent unavailable');
+  if(visualScope||authority){
+   if(!visualScope||!authority||!deps.checkVisualDispatch||!await deps.checkVisualDispatch({...visualScope,authority,intentId,intentEpoch:initial.epoch})||signal.aborted)throw Error('visual authority unavailable');
+   return;
+  }
   const current=intentStateSchema.parse(await deps.intentState({actor,projectId,intentId}));
   if(signal.aborted||current.state!=='consumed'||current.epoch!==initial.epoch)throw Error('intent unavailable');
  }
@@ -69,6 +75,12 @@ export function createExplorationBatchRoute(deps:Dependencies){
    let manifest:VisualInputManifest|null;try{manifest=parseManifest(input);if(!manifest&&input.plan.version!==1)throw Error('missing manifest');}catch{return reply({error:'invalid_visual_input'},400);}
    if(manifest&&!deps.visualEnabled)return reply({error:'visual_unavailable'},503);
    try{if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest))return reply({error:'visual_authorization_unavailable'},403);}catch{return reply({error:'visual_authorization_unavailable'},403);}
+   let visualAuthority:VisualAuthority|undefined,visualCheck:VisualScope|undefined;
+   if(manifest){
+    if(!deps.prepareVisualAuthority||!deps.checkVisualDispatch)return reply({error:'visual_authorization_unavailable'},503);
+    visualCheck={actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.planRequestId,purpose:'parallel',visualInput:manifest,consentHeader:request.headers.get('x-compor-reference-consent')};
+    try{const authority=await deps.prepareVisualAuthority(visualCheck);if(!authority||authority.requestId!==visualCheck.requestId||authority.manifestDigest!==visualInputDigest(manifest)||(authority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(authority.consentSecret)))return reply({error:'visual_authorization_unavailable'},403);visualAuthority=authority;}catch{return reply({error:'visual_authorization_unavailable'},503);}
+   }
    const visualScope=manifest?{visualInput:manifest}:{};
    try{if(!await deps.verifyPlan({actor,apiKey:key,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.planRequestId,context:input.context,plan:input.plan,token:input.planBinding,...visualScope}))return reply({error:'invalid_plan'},403);}catch{return reply({error:'invalid_plan'},403);}
    let visual:ReturnType<typeof parseVisualInput>|null;try{visual=manifest?(input.plan.version===2?parseSelectedVisualInput(manifest,input.referenceImages,input.plan.referenceIds):parseVisualInput(manifest,input.referenceImages)):null;}catch{return reply({error:'invalid_visual_input'},400);}
@@ -78,7 +90,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
    const proofs=input.imageIds.map(()=>randomBytes(32).toString('hex'));
    const children=input.plan.items.map((entry,index)=>({requestId:input.imageIds[index],prompt:entry.prompt,proof:proofs[index]}));
    let reservation:BatchReservation;
-   try{reservation=reservationSchema.parse(await deps.store.reserveBatch(actor,{projectId:input.projectId,batchId:input.batchId,pieceId:input.conversationId==='references'?null:input.conversationId,intentId:input.intentId,intentSecret,planDigest:planDigest(input.plan,visual?.visualInput),imageIds:input.imageIds,promptDigests:input.plan.items.map(entry=>promptDigest(entry,input.batchId,visual?.visualInput,input.plan.version===2?input.plan.referenceIds:undefined)),rejectionDigests:proofs.map(proof=>hash(Buffer.from(proof,'hex')))}));}catch{return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},503);}
+   try{reservation=reservationSchema.parse(await deps.store.reserveBatch(actor,{projectId:input.projectId,batchId:input.batchId,pieceId:input.conversationId==='references'?null:input.conversationId,intentId:input.intentId,intentSecret,planDigest:planDigest(input.plan,visual?.visualInput),imageIds:input.imageIds,promptDigests:input.plan.items.map(entry=>promptDigest(entry,input.batchId,visual?.visualInput,input.plan.version===2?input.plan.referenceIds:undefined)),rejectionDigests:proofs.map(proof=>hash(Buffer.from(proof,'hex'))),...(visualAuthority?{visualAuthority}:{})}));}catch{return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},503);}
    if(!reservation.isNew)return reply({status:reservation.state,batchId:input.batchId,retryAutomatically:false},409);
    if(reservation.state!=='running')return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},503);
    const results=await dispatchReservedExplorationBatch(children,{
@@ -86,10 +98,9 @@ export function createExplorationBatchRoute(deps:Dependencies){
      const entry=input.plan.items[input.imageIds.indexOf(child.requestId)];
      if(request.signal.aborted)throw Error('aborted before dispatch');
      await deps.store.plan(actor,input.projectId,child.requestId,{composition:entry.composition,contrast:entry.contrast});
-     if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest)||request.signal.aborted)throw Error('visual authorization unavailable');
-     // Source authorization may yield. Observe revocation afterwards, as the
-     // final check before dispatch; this does not make DB and network atomic.
-     await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);
+     // For visual requests, this single SQL observation checks both revocable
+     // authorities; the subsequent network dispatch is not atomic with SQL.
+     await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal,visualCheck,visualAuthority);
      try{return await deps.generate(actor,key,child.prompt,visual?.referenceImages??[]);}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}
     },
     put:(child,bytes)=>deps.store.put(actor,input.projectId,child.requestId,bytes),
@@ -109,6 +120,12 @@ export function createExplorationBatchRoute(deps:Dependencies){
    let manifest:VisualInputManifest|null;try{manifest=parseManifest(input);if(!manifest&&input.plan.version!==1)throw Error('missing manifest');}catch{return reply({error:'invalid_visual_input'},400);}
    if(manifest&&!deps.visualEnabled)return reply({error:'visual_unavailable'},503);
    try{if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest))return reply({error:'visual_authorization_unavailable'},403);}catch{return reply({error:'visual_authorization_unavailable'},403);}
+   let visualAuthority:VisualAuthority|undefined,visualCheck:VisualScope|undefined;
+   if(manifest){
+    if(!deps.prepareVisualAuthority||!deps.checkVisualDispatch)return reply({error:'visual_authorization_unavailable'},503);
+    visualCheck={actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,purpose:'replacement',visualInput:manifest,consentHeader:request.headers.get('x-compor-reference-consent')};
+    try{const authority=await deps.prepareVisualAuthority(visualCheck);if(!authority||authority.requestId!==visualCheck.requestId||authority.manifestDigest!==visualInputDigest(manifest)||(authority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(authority.consentSecret)))return reply({error:'visual_authorization_unavailable'},403);visualAuthority=authority;}catch{return reply({error:'visual_authorization_unavailable'},503);}
+   }
    const visualScope=manifest?{visualInput:manifest}:{};
    try{if(!await deps.verifyPlan({actor,apiKey:key,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.planRequestId,context:input.context,plan:input.plan,token:input.planBinding,...visualScope}))return reply({error:'invalid_plan'},403);}catch{return reply({error:'invalid_plan'},403);}
    let visual:ReturnType<typeof parseVisualInput>|null;try{visual=manifest?(input.plan.version===2?parseSelectedVisualInput(manifest,input.referenceImages,input.plan.referenceIds):parseVisualInput(manifest,input.referenceImages)):null;}catch{return reply({error:'invalid_visual_input'},400);}
@@ -117,14 +134,13 @@ export function createExplorationBatchRoute(deps:Dependencies){
    let intent:z.infer<typeof intentStateSchema>;try{intent=intentStateSchema.parse(await deps.intentState({actor,projectId:input.projectId,intentId:input.intentId}));}catch{return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);}
    const entry=input.plan.items[input.position-1],proof=randomBytes(32).toString('hex');
    let reservation:BatchReservation;
-   try{reservation=reservationSchema.parse(await deps.store.replaceRejected(actor,{projectId:input.projectId,batchId:input.batchId,position:input.position,previousId:input.previousId,requestId:input.requestId,intentId:input.intentId,intentSecret,promptDigest:promptDigest(entry,input.batchId,visual?.visualInput,input.plan.version===2?input.plan.referenceIds:undefined),rejectionDigest:hash(Buffer.from(proof,'hex'))}));}catch{return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);}
+   try{reservation=reservationSchema.parse(await deps.store.replaceRejected(actor,{projectId:input.projectId,batchId:input.batchId,position:input.position,previousId:input.previousId,requestId:input.requestId,intentId:input.intentId,intentSecret,promptDigest:promptDigest(entry,input.batchId,visual?.visualInput,input.plan.version===2?input.plan.referenceIds:undefined),rejectionDigest:hash(Buffer.from(proof,'hex')),...(visualAuthority?{visualAuthority}:{})}));}catch{return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);}
    if(!reservation.isNew)return reply({status:reservation.state,batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},409);
    if(reservation.state!=='running')return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);
    try{
     if(request.signal.aborted)throw Error('aborted before dispatch');
     await deps.store.plan(actor,input.projectId,input.requestId,{composition:entry.composition,contrast:entry.contrast});
-    if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest)||request.signal.aborted)throw Error('visual authorization unavailable');
-    await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal);
+    await beforeDispatch(actor,input.projectId,input.intentId,intent,request.signal,visualCheck,visualAuthority);
     let bytes:Uint8Array;try{bytes=await deps.generate(actor,key,entry.prompt,visual?.referenceImages??[]);}catch(error){if(error instanceof ExplorationCredentialsRejected){await deps.store.reject(actor,input.projectId,input.requestId,proof);return reply({status:'rejected',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},200);}throw error;}
     await deps.store.put(actor,input.projectId,input.requestId,bytes);
     await deps.store.finish(actor,input.projectId,input.requestId,'completed',proof);

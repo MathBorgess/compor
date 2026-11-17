@@ -7,6 +7,7 @@ import {createStudioBindings} from '../src/studio-chat-bindings.mjs';
 import {AGENT_MODEL} from '../src/agent-model.mjs';
 import {recordStudioEvent} from '../src/studio-telemetry.mjs';
 import {AGENT_STUDIO_TOOLS} from '../src/studio-chat-tools.mjs';
+import {visualInputDigest} from '../src/visual-input.mjs';
 
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',requestId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',request2='55555555-5555-4555-8555-555555555555';
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
@@ -35,6 +36,15 @@ test('flag visual sem dependências bloqueia novo envio antes da reserva e prese
  const f=fixture({selectedVisualsRequired:true,selectedVisualsEnabled:false});
  assert.equal((await f.chat(request(body))).status,503);assert.equal(f.calls.length,0);assert.equal(f.records.size,0);
  const response=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal(response.status,404);assert.equal(f.calls.length,0);
+});
+test('turno visual exige autoridade na reserva e revalida imediatamente antes do fornecedor',async()=>{
+ const input={...body,visualInput,visualImages};
+ const absent=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true,prepareVisualAuthority:async()=>null});
+ assert.equal((await absent.chat(request(input))).status,403);assert.equal(absent.records.size,0);assert.equal(absent.calls.length,0);
+ const denied=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true,checkVisualAuthority:async()=>false});
+ const result=await(await denied.chat(request(input))).json();
+ assert.equal(result.status,'failed');assert.equal(denied.records.get(requestId).state,'failed');
+ assert.equal(denied.calls.filter(call=>call.method==='POST').length,0);
 });
 
 test('proposta não recebe prova se o agente omitir upload obrigatório',async()=>{
@@ -110,7 +120,7 @@ function fixture(options={}){
   if(options.sessionLookup)return options.sessionLookup(url,init);
   return Response.json({id:'sess_one',agent:{model,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
- const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
+ const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,prepareVisualAuthority:async input=>({pieceId:input.conversationId&&input.conversationId!=='references'?input.conversationId:null,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null}),checkVisualAuthority:async()=>true,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
  return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'turnError'))turnError=v.turnError;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{

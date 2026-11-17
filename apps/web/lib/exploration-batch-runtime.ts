@@ -10,15 +10,27 @@ import {createExplorationIntentStore} from './exploration-intent-store.ts';
 import {selectedVisualsAvailable} from './selected-visual-availability.ts';
 import {decodeExplorationImage} from './exploration-image-runtime.ts';
 import type {PreparedOpenAiRequest} from './openai-credential.ts';
+import {visualInputDigest} from '@compor/agents-api/visual-input';
+import {createReferenceAuthorityStore} from './reference-authority-store.ts';
+import {referenceConsentSecret} from './reference-authority-route.ts';
 
 /** Remains disabled until the complete flow and migration have been verified. */
 export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  const config=authConfig(),secret=agentSigningKey();
  if(process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED!=='true'||process.env.COMPOR_PRIVATE_IMAGES_ENABLED!=='true'||!config||!secret||!prepared.apiKey)return null;
  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
+ const referenceAuthority=createReferenceAuthorityStore(config);
  return createExplorationBatchRoute({
   appOrigin:config.app,
   visualEnabled:selectedVisualsAvailable(Boolean(config)),
+  // The route always requires the separately checked, transaction-bound snapshot.
+  authorizeVisualInput:async()=>true,
+  prepareVisualAuthority:async input=>{
+   if(process.env.COMPOR_REFERENCE_AUTHORITY_ENABLED!=='true')return null;
+   const value={requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:referenceConsentSecret(input.consentHeader)};
+   return await referenceAuthority.check(input.actor,{projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,purpose:input.purpose,manifestDigest:value.manifestDigest,consentSecret:value.consentSecret})?value:null;
+  },
+  checkVisualDispatch:async input=>referenceAuthority.checkDispatch(input.actor,{projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,purpose:input.purpose,manifestDigest:input.authority.manifestDigest,consentSecret:input.authority.consentSecret,intentId:input.intentId,intentEpoch:input.intentEpoch,intentState:'consumed'}),
   resolveActor:async()=>prepared.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:async(actor,projectId)=>ownsSupabaseProject({config,actor,projectId}),
   verifyPlan:async({actor,apiKey,projectId,conversationId,batchId,requestId,context,plan,token,visualInput})=>{

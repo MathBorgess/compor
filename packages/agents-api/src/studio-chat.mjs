@@ -121,7 +121,7 @@ function inputContent(body,includeHistory,sourcePages=[]){
 function headers(key,extra={}){return{Authorization:`Bearer ${key}`,'OpenAI-Beta':'agents=v1',...extra};}
 
 /** A request submits one event or reads the managed turn. No application agent loop. */
-export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,selectedVisualsEnabled=false,selectedVisualsRequired=selectedVisualsEnabled,authorizeVisualInput,store,attempts,usage,bindings,studioBindings,onEvent,fetch:fetchApi=globalThis.fetch,readPages=readUserPages,now=Date.now}={}){
+export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,ownsVersion,verifyDurableResult,selectedVisualsEnabled=false,selectedVisualsRequired=selectedVisualsEnabled,authorizeVisualInput,prepareVisualAuthority,checkVisualAuthority,store,attempts,usage,bindings,studioBindings,onEvent,fetch:fetchApi=globalThis.fetch,readPages=readUserPages,now=Date.now}={}){
  function diagnostic(requestId,phase){
   const startedAt=now(),d={requestId,phase};
   d.emit=(name,extra={})=>{
@@ -286,15 +286,18 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   if(quick&&(automatic||!quickReplyValid(body.quickReply)||body.previousAttemptKey!==undefined))return reply({error:'invalid_request'},400);
   if(Object.keys(body).some(k=>!allowed.includes(k))||(body.op!==undefined&&body.op!=='submit'&&!automatic)||(automatic?(body.message!==undefined||body.previousAttemptKey!==undefined||!Array.isArray(body.context?.references)||body.context.references.length===0):(!safeText(body.message,4000)||!body.message.trim()||body.message.includes(key)))||!contextValid(body.context)||!Array.isArray(body.history??[])||(body.history??[]).length>40||!(body.history??[]).every(m=>m&&Object.keys(m).sort().join(',')==='role,text'&&['user','assistant'].includes(m.role)&&safeText(m.text,8000)&&!m.text.includes(key))||(body.previousAttemptKey!==undefined&&!uuid(body.previousAttemptKey)))return reply({error:'invalid_request'},400);
   try{body.referenceImages=validateImages(body.referenceImages);}catch{return reply({error:'invalid_request'},400);}
-  let visualClaim;
+  let visualClaim,visualAuthority;
   if(selectedVisualsEnabled){
-   if(typeof authorizeVisualInput!=='function')return reply({error:'unavailable'},503);
+   if(typeof authorizeVisualInput!=='function'||typeof prepareVisualAuthority!=='function'||typeof checkVisualAuthority!=='function')return reply({error:'unavailable'},503);
    try{
     const validated=parseVisualInput(body.visualInput,body.visualImages);
+    if(!scope.conversationId&&body.context.pieceId)return reply({error:'invalid_visual_input'},400);
     if(!visualInputMatchesProject(validated.visualInput,scope.projectId)||await authorizeVisualInput({actor,projectId:scope.projectId,conversationId:scope.conversationId,context:body.context,visualInput:validated.visualInput})!==true)return reply({error:'invalid_visual_input'},400);
     body.visualInput=validated.visualInput;body.visualImages=validated.referenceImages;
     if(body.referenceImages.some(image=>image.id!==body.context.baseImageId)||body.referenceImages.length>1||body.visualImages.some(image=>image.id===body.context.baseImageId))return reply({error:'invalid_visual_input'},400);
     visualClaim={visualInputDigest:visualInputDigest(body.visualInput),visualReferenceIds:body.visualInput.entries.map(entry=>entry.id),visualRequiredIds:body.visualInput.entries.filter(entry=>entry.inputOrigin==='local-upload').map(entry=>entry.id)};
+    visualAuthority=await prepareVisualAuthority({...scope,visualInput:body.visualInput,consentHeader:request.headers.get('x-compor-reference-consent')});
+    if(!visualAuthority||visualAuthority.manifestDigest!==visualClaim.visualInputDigest||visualAuthority.pieceId!==(scope.conversationId&&scope.conversationId!=='references'?scope.conversationId:null)||(visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret)))return reply({error:'invalid_visual_input'},403);
    }catch{return reply({error:'invalid_visual_input'},400);}
   }
   if(automatic&&(!(selectedVisualsEnabled?body.visualImages:body.referenceImages).length||body.referenceImages.some(image=>!body.context.references.some(reference=>reference.id===image.id))))return reply({error:'invalid_request'},400);
@@ -302,7 +305,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   let record;
   try{
    const inputDigest=studioBindings.digest({...(body.conversationId?{conversationId:body.conversationId}:{}),op:body.op??'submit',message:body.message??null,context:body.context,history:body.history??[],previousAttemptKey:body.previousAttemptKey??null,referenceImages:body.referenceImages,...(visualClaim?{visualInputDigest:visualClaim.visualInputDigest}:{}),...(quick?{quickReply:body.quickReply}:{})});
-   const reserved=await store.reserve({...scope,inputDigest});
+   const reserved=await store.reserve({...scope,inputDigest,...(visualAuthority?{visualAuthority}:{})});
    if(reserved.status==='not_found')return reply({error:'not_found'},404);
    // The reservation refused this new request before inserting metadata or
    // contacting the provider. A conflicting ID may already have been sent.
@@ -340,6 +343,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     const binding=bindings.issueRecovery({userId:actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,...(scope.conversationId?{conversationId:scope.conversationId}:{}),...visualClaim});
     d.sessionId=proof(scope,{...record,binding}).sessionId;
     d.phase='session_bind';await store.bind({...scope,binding,expiresAt,priorTurnId,initialInput,initialOutput});d.phase='recovery_bind';await attempts.bindRecovery({actor,projectId:scope.projectId,attemptId:record.attemptId,binding});
+    if(visualAuthority&&(request.signal.aborted||await checkVisualAuthority({...scope,visualAuthority})!==true||request.signal.aborted))throw Error('visual authority unavailable');
     dispatched=true;
     d.phase='provider_message';
     const r=await fetchApi(`${ROOT}/${sessionId}/events`,{method:'POST',headers:headers(key,{'Content-Type':'application/json','Idempotency-Key':scope.requestId}),body:JSON.stringify({events:[{type:'agent.session.input.message',input:inputContent(body,false,sourcePages)}]}),redirect:'error',signal:AbortSignal.timeout(15000)});
@@ -347,6 +351,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     try{Promise.resolve(r.body?.cancel()).catch(()=>{});}catch{}
    }else{
     const submit=async()=>{
+     if(visualAuthority&&(request.signal.aborted||await checkVisualAuthority({...scope,visualAuthority})!==true||request.signal.aborted))throw Error('visual authority unavailable');
      dispatched=true;
      d.phase='provider_create';
      const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:AGENT_MODEL,instructions:automatic?referenceInstructions:`${instructions}${visualClaim?' Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.':''}${hasLinks?linkTurnInstructions:''}${quick?quickReplyInstructions:''}`,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:automatic||hasLinks||quick?[]:[...AGENT_STUDIO_TOOLS]},environment:{type:'none'},input:inputContent(body,true,sourcePages),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});

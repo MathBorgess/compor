@@ -19,6 +19,6 @@ export function deriveExplorationIntent(bindings:PlannerBindings,input:Explorati
 
 /** Reservation may already be durable; an aborted request must not start a
  * provider call that has not yet been sent. It remains blocked for recovery. */
-export function guardExplorationPlannerProvider(provider:PlannerProvider,signal:AbortSignal):PlannerProvider {
- return {...provider,create:async input=>{if(signal.aborted)throw Error('aborted before dispatch');return provider.create(input);}};
+export function guardExplorationPlannerProvider(provider:PlannerProvider,signal:AbortSignal,authorizeBeforeDispatch?:()=>Promise<boolean>):PlannerProvider {
+ return {...provider,create:async input=>{if(signal.aborted)throw Error('aborted before dispatch');if(authorizeBeforeDispatch&&await authorizeBeforeDispatch()!==true)throw Error('visual authority unavailable');if(signal.aborted)throw Error('aborted before dispatch');return provider.create(input);}};
 }

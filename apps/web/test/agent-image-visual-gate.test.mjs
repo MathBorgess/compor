@@ -21,7 +21,7 @@ function fixture({visual=true,empty=false}={}) {
  const artworkInput={literalText:{headline:'',price:'',date:''},source:null,images:empty?[]:[{id:referenceId,role:'reference',mime:'image/png',data:bytes.toString('base64')}],...(visual?{visualInput:manifest}:{})};
  const proposal={prompt:'Composição sintética',operation:'create',baseImageId:null,referenceIds:empty?[]:[referenceId]};
  const actionBinding=bindings.issueAction({userId:actor.userId,projectId,attemptId,sessionId:'sess_visual',turnId:'turn_visual',callId:'call_visual',proposal,...(visual?{visualInputDigest:visualInputDigest(manifest)}:{})});
- const body={projectId,pieceId,attemptId,version:1,actionBinding,apiKey,explicitApproval:true,artworkInput};
+ const body={projectId,pieceId,attemptId,...(visual?{requestId:referenceId}:{}),version:1,actionBinding,apiKey,explicitApproval:true,artworkInput};
  const ownsVersion=async scope=>scope.actor.userId===actor.userId&&scope.projectId===projectId&&scope.pieceId===pieceId&&scope.version===1;
  return {bindings,body,ownsVersion};
 }
@@ -32,6 +32,7 @@ function route(f,options={}) {
  const handler=createAgentImageRoute({appOrigin:origin,resolveActor:async()=>actor,
   approve:async input=>{calls.push('approve');return approve(input);},
   execute:async input=>{calls.push('execute');assert.ok(f.bindings.verifyApprovedAction({token:input.actionBinding,userId:actor.userId,projectId,pieceId,attemptId,version:1}));return {status:'completed',executionId,toolResult:{output:JSON.stringify({assetId})}};},
+  prepareVisualAuthority:async input=>({requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null}),
   send:async()=>{calls.push('send');return {status:'accepted'};},...options,
  });
  return {handler,calls};
@@ -62,10 +63,21 @@ test('desligamento visual preserva geração legada com anexos e reconciliação
  assert.equal(calls.length,1);assert.equal(calls[0].callId,'call_visual');
 });
 
+test('arte exige snapshot do turno correto antes de aprovar ou executar',async()=>{
+ const f=fixture();
+ for(const options of [
+  {visualEnabled:true,prepareVisualAuthority:undefined},
+  {visualEnabled:true,prepareVisualAuthority:async()=>null},
+  {visualEnabled:true,prepareVisualAuthority:async input=>({requestId:assetId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null})},
+  {visualEnabled:true,prepareVisualAuthority:async input=>({requestId:input.requestId,manifestDigest:'f'.repeat(64),consentSecret:null})},
+ ]){const checked=route(f,options);assert.ok([403,503].includes((await checked.handler(request(f.body))).status));assert.deepEqual(checked.calls,[]);}
+});
+
 test('remover manifesto não converte a prova visual anterior em autorização legada',async()=>{
  const f=fixture(),disabled=route(f,{visualEnabled:false});
  const {visualInput,...artworkInput}=f.body.artworkInput;
  assert.ok(visualInput);
- const response=await disabled.handler(request({...f.body,artworkInput}));
+ const {requestId,...legacyBody}=f.body;
+ const response=await disabled.handler(request({...legacyBody,artworkInput}));
  assert.equal(response.status,403);assert.deepEqual(disabled.calls,['approve']);
 });
