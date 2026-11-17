@@ -62,6 +62,8 @@ export function createParallelDispatcher(options:Options){
   async function resumePlanned(preparation:ParallelPreparation,newIntentId:string,apiKey:string):Promise<void>{
     if(started)throw Error('parallel_already_started');started=true;ensure();
     if(preparation.stage!=='planned'||!preparation.intentId||preparation.expectedEpoch===undefined||!preparation.planSubmitted||(preparation.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(apiKey)))throw Error('parallel_invalid');
+    // The current revoke endpoint does not prove the epoch at which its
+    // tombstone was created. Never adopt the account's later epoch here.
     current=preparation;
     const recovered=await recovery.inspectPlan(current,apiKey);ensure();
     if(recovered.status!=='completed'||!recovered.binding)throw Error('plan_unconfirmed');
@@ -70,11 +72,12 @@ export function createParallelDispatcher(options:Options){
     const state=await intents.inspect(latest);ensure();
     if(state.state==='consumed')throw Error('intent_consumed');
     if(!latest.revocationRequested)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke'});current=latest;ensure();
-    const revoked=state.state==='revoked'?{status:'revoked' as const,epoch:state.epoch}:await intents.revoke(latest);ensure();
+    const revoked=state.state==='revoked'?{status:'revoked' as const,revocationEpoch:state.revocationEpoch}:await intents.revoke(latest);ensure();
     if(revoked.status!=='revoked')throw Error('intent_unconfirmed');
-    if(!latest.revocationConfirmed)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',epoch:revoked.epoch});current=latest;ensure();
+    if(!latest.revocationConfirmed||latest.revocationEpoch===undefined&&revoked.revocationEpoch!=null)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',...(revoked.revocationEpoch==null?{}:{epoch:revoked.revocationEpoch})});current=latest;ensure();
+    if(latest.revocationEpoch===undefined)throw Error('revocation_epoch_unverified');
     const scope={userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId};
-    current=await store.reissuePlannedIntent(scope,latest.revision,newIntentId,latest.revocationEpoch??revoked.epoch);ensure();
+    current=await store.reissuePlannedIntent(scope,latest.revision,newIntentId,latest.revocationEpoch);ensure();
     const createdEpoch=await intents.create(current,apiKey);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:createdEpoch});ensure();
     await executePlanned(current,recovered.binding,apiKey);
@@ -90,7 +93,7 @@ export function createParallelDispatcher(options:Options){
       let latest=await store.loadPreparation(value.userId);
       if(!latest||latest.intentId!==value.intentId)return 'unknown';
       if(!latest.revocationRequested)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke'});
-      if(!latest.revocationConfirmed)current=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',epoch:result.epoch});
+      if(!latest.revocationConfirmed)current=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',...(result.revocationEpoch==null?{}:{epoch:result.revocationEpoch})});
       return 'revoked';
     }catch{return 'unknown';}
   }

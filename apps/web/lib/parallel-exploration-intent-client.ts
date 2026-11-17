@@ -3,9 +3,9 @@ import type {ParallelPreparation} from './parallel-exploration-journal.ts';
 
 const epoch=z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER));
 const epochResponse=z.strictObject({epoch});
-const intentState=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch});
+const intentState=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch,revocationEpoch:z.optional(z.nullable(epoch))});
 const created=z.strictObject({status:z.literal('created'),epoch});
-const revocation=z.strictObject({status:z.enum(['revoked','conflict']),epoch});
+const revocation=z.strictObject({status:z.enum(['revoked','conflict']),epoch,revocationEpoch:z.optional(z.nullable(epoch))});
 const headers={'content-type':'application/json'};
 
 /** These calls never retry a mutation or treat an unconfirmed response as permission. */

@@ -49,22 +49,34 @@ export default function ParallelExplorationRecovery(props:Props){
   }
   async function archive(){
     if(!preparation||!sameProject||!sameConversation||lock.current||!current.current.isAuthenticated()||!navigator.locks)return;
-    if(!preparation.intentId||!(preparation.stage==='failed'||preparation.stage==='planning'&&preparation.planSubmitted===false))return;
+    if(!preparation.intentId||!['planning','planned','executing','failed'].includes(preparation.stage))return;
     const serial=++sequence.current;lock.current=true;setBusy(true);setNotice('');const store=createParallelJournalStore();
     const inScope=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===preparation.conversationId&&current.current.isAuthenticated();
     try{
       await navigator.locks.request(`compor-exploration:${preparation.userId}`,{ifAvailable:true},async lock=>{
         if(!lock||!inScope())throw Error('unavailable');
         let latest=await store.loadPreparation(preparation.userId);
-        if(!latest||latest.intentId!==preparation.intentId||latest.batchId!==preparation.batchId||!(latest.stage==='failed'||latest.stage==='planning'&&latest.planSubmitted===false))throw Error('unavailable');
+        if(!latest||latest.intentId!==preparation.intentId||latest.batchId!==preparation.batchId||!['planning','planned','executing','failed'].includes(latest.stage))throw Error('unavailable');
         const intents=createParallelIntentClient(),observed=await intents.inspect(latest);
         if(!inScope()||observed.state==='consumed')throw Error('unavailable');
         if(!latest.revocationRequested)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke'});
-        const revoked=observed.state==='revoked'?{status:'revoked' as const,epoch:observed.epoch}:await intents.revoke(latest);
+        const revoked=observed.state==='revoked'?{status:'revoked' as const,revocationEpoch:observed.revocationEpoch}:await intents.revoke(latest);
         if(revoked.status!=='revoked')throw Error('unavailable');
         if(!inScope())throw Error('unavailable');
-        if(!latest.revocationConfirmed)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',epoch:revoked.epoch});
-        await store.archiveTerminalPreparation({userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId},latest.revision);
+        if(!latest.revocationConfirmed)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke_confirmed',...(revoked.revocationEpoch==null?{}:{epoch:revoked.revocationEpoch})});
+        const client=createParallelExplorationClient({store,canInspect:inScope});
+        let evidence:'plan_absent'|'plan_failed'|'batch_absent';
+        if(latest.stage==='planning'||latest.stage==='failed'){
+          const status=await client.inspectPlanRecord(latest);
+          if(latest.stage==='planning'&&status==='absent')evidence='plan_absent';
+          else if(latest.stage==='failed'&&status==='failed')evidence='plan_failed';
+          else throw Error('unavailable');
+        }else{
+          if(!await client.inspectBatchAbsent(latest))throw Error('unavailable');
+          evidence='batch_absent';
+        }
+        if(!inScope())throw Error('unavailable');
+        await store.archiveTerminalPreparation({userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId},latest.revision,evidence);
         if(inScope()){setPreparation(null);setProgress(null);setNotice('Tentativa encerrada e preservada no histórico local. Para pedir novas propostas, faça um novo pedido.');}
       });
     }catch{if(inScope())setNotice('Não foi possível confirmar e preservar o encerramento. A tentativa continua bloqueada.');}
@@ -74,7 +86,7 @@ export default function ParallelExplorationRecovery(props:Props){
     <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
     {sameProject&&sameConversation&&progress&&<ParallelExplorationProgress progress={progress}/>}
     {sameProject&&sameConversation&&preparation&&['planning','planned','executing'].includes(preparation.stage)&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
-    {sameProject&&sameConversation&&preparation?.intentId&&(preparation.stage==='failed'||preparation.stage==='planning'&&preparation.planSubmitted===false)&&<button type="button" disabled={busy} onClick={()=>{void archive();}}>Encerrar tentativa anterior</button>}
+    {sameProject&&sameConversation&&preparation?.intentId&&['planning','planned','executing','failed'].includes(preparation.stage)&&<><p>O encerramento revoga a intenção. Se houver efeito ainda não confirmado, a tentativa continua bloqueada.</p><button type="button" disabled={busy} onClick={()=>{void archive();}}>Verificar encerramento da tentativa</button></>}
     {notice&&<p role="status">{notice}</p>}
   </section></React.Fragment>;
 }

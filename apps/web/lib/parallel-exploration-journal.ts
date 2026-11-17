@@ -5,9 +5,9 @@ import {parallelProgressSchema,observeParallelChild,pauseParallelWait,restorePar
 
 const id=z.uuid();
 const scopeSchema=z.strictObject({userId:id,projectId:id,batchId:id});
-const journalSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,intentId:z.optional(id),credentialSource:z.enum(['byok','default']),context:z.unknown(),plan:z.unknown(),revision:z.number().check(z.int()).check(z.nonnegative()),progress:parallelProgressSchema});
+const journalSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,intentId:z.optional(id),credentialSource:z.enum(['byok','default']),context:z.unknown(),creationContext:z.optional(creationContextSchema),plan:z.unknown(),revision:z.number().check(z.int()).check(z.nonnegative()),progress:parallelProgressSchema});
 const epoch=z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER-1));
-const preparationSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,credentialSource:z.enum(['byok','default']),imageIds:z.array(id).check(z.minLength(3)).check(z.maxLength(3)),context:z.unknown(),creationContext:z.optional(creationContextSchema),intentId:z.optional(id),expectedEpoch:z.optional(epoch),intentEpoch:z.optional(epoch),planSubmitted:z.optional(z.boolean()),revocationRequested:z.optional(z.boolean()),revocationConfirmed:z.optional(z.boolean()),revocationEpoch:z.optional(epoch),plan:z.nullable(z.unknown()),stage:z.enum(['planning','planned','executing','completed','failed']),revision:z.number().check(z.int()).check(z.nonnegative())}).check(z.refine(value=>new Set(value.imageIds).size===3&&(value.stage==='planning'||value.stage==='failed'?value.plan===null:value.plan!==null)&&(value.intentId===undefined)===(value.expectedEpoch===undefined)&&(value.intentEpoch===undefined||value.expectedEpoch!==undefined&&value.intentEpoch===value.expectedEpoch+1)&&(!value.planSubmitted||value.intentEpoch!==undefined||value.stage==='planned')&&(!value.revocationConfirmed||value.revocationRequested===true&&value.revocationEpoch!==undefined)&&(value.revocationEpoch===undefined||value.revocationConfirmed===true)));
+const preparationSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,credentialSource:z.enum(['byok','default']),imageIds:z.array(id).check(z.minLength(3)).check(z.maxLength(3)),context:z.unknown(),creationContext:z.optional(creationContextSchema),intentId:z.optional(id),expectedEpoch:z.optional(epoch),intentEpoch:z.optional(epoch),planSubmitted:z.optional(z.boolean()),revocationRequested:z.optional(z.boolean()),revocationConfirmed:z.optional(z.boolean()),revocationEpoch:z.optional(epoch),plan:z.nullable(z.unknown()),stage:z.enum(['planning','planned','executing','completed','failed']),revision:z.number().check(z.int()).check(z.nonnegative())}).check(z.refine(value=>new Set(value.imageIds).size===3&&(value.stage==='planning'||value.stage==='failed'?value.plan===null:value.plan!==null)&&(value.intentId===undefined)===(value.expectedEpoch===undefined)&&(value.intentEpoch===undefined||value.expectedEpoch!==undefined&&value.intentEpoch===value.expectedEpoch+1)&&(!value.planSubmitted||value.intentEpoch!==undefined||value.stage==='planned')&&(!value.revocationConfirmed||value.revocationRequested===true)&&(value.revocationEpoch===undefined||value.revocationConfirmed===true)));
 export type ParallelPreparation=z.infer<typeof preparationSchema>;
 export type ParallelJournal=z.infer<typeof journalSchema>;
 export type ParallelScope=z.infer<typeof scopeSchema>;
@@ -101,7 +101,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
     if(value.revision!==0||value.stage!=='planning'||(value.intentId!==undefined&&(value.planSubmitted!==false||value.revocationRequested!==false)))throw new ParallelJournalError('parallel_storage_invalid');
     return transaction('readwrite',(store,done,abort)=>{const request=store.get(value.userId);request.onsuccess=()=>{if(request.result!==undefined){abort(new ParallelJournalError('parallel_storage_exists'));return;}try{store.add(value,value.userId);done(value);}catch(error){abort(error);}};},'preparations');
   }
-  async function updatePreparation(userId:string,revision:number,operation:{kind:'intent_confirmed';epoch:number}|{kind:'plan_submitted'}|{kind:'revoke'}|{kind:'revoke_confirmed';epoch:number}|{kind:'planned';plan:unknown}|{kind:'executing'}|{kind:'failed'}|{kind:'completed'}):Promise<ParallelPreparation>{
+  async function updatePreparation(userId:string,revision:number,operation:{kind:'intent_confirmed';epoch:number}|{kind:'plan_submitted'}|{kind:'revoke'}|{kind:'revoke_confirmed';epoch?:number}|{kind:'planned';plan:unknown}|{kind:'executing'}|{kind:'failed'}|{kind:'completed'}):Promise<ParallelPreparation>{
     const owner=id.parse(userId);
     if(!Number.isSafeInteger(revision)||revision<0)throw new ParallelJournalError('parallel_storage_invalid');
     return transaction('readwrite',(store,done,abort)=>{const request=store.get(owner);request.onsuccess=()=>{try{
@@ -112,7 +112,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       if(operation.kind==='intent_confirmed'&&['planning','planned'].includes(current.stage)&&current.intentId&&current.expectedEpoch!==undefined&&!current.revocationRequested&&current.intentEpoch===undefined&&operation.epoch===current.expectedEpoch+1)next=parseParallelPreparation({...current,intentEpoch:operation.epoch,revision:revision+1});
       else if(operation.kind==='plan_submitted'&&current.stage==='planning'&&current.intentEpoch!==undefined&&!current.revocationRequested&&!current.planSubmitted)next=parseParallelPreparation({...current,planSubmitted:true,revision:revision+1});
       else if(operation.kind==='revoke'&&current.intentId&&!current.revocationRequested)next=parseParallelPreparation({...current,revocationRequested:true,revision:revision+1});
-      else if(operation.kind==='revoke_confirmed'&&current.intentId&&current.revocationRequested&&!current.revocationConfirmed&&current.expectedEpoch!==undefined&&operation.epoch>current.expectedEpoch)next=parseParallelPreparation({...current,revocationConfirmed:true,revocationEpoch:operation.epoch,revision:revision+1});
+      else if(operation.kind==='revoke_confirmed'&&current.intentId&&current.revocationRequested&&(!current.revocationConfirmed||current.revocationEpoch===undefined&&operation.epoch!==undefined)&&current.expectedEpoch!==undefined&&(operation.epoch===undefined||operation.epoch>current.expectedEpoch))next=parseParallelPreparation({...current,revocationConfirmed:true,...(operation.epoch===undefined?{}:{revocationEpoch:operation.epoch}),revision:revision+1});
       else if(operation.kind==='planned'&&current.stage==='planning'&&(!current.intentId||current.planSubmitted))next=parseParallelPreparation({...current,plan:operation.plan,stage:'planned',revision:revision+1});
       else if(operation.kind==='failed'&&current.stage==='planning')next=parseParallelPreparation({...current,stage:'failed',revision:revision+1});
       else if(operation.kind==='executing'&&current.stage==='planned'&&!current.revocationRequested)next=parseParallelPreparation({...current,stage:'executing',revision:revision+1});
@@ -121,8 +121,8 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       store.put(next,owner);done(next);
     }catch(error){abort(error instanceof ParallelJournalError?error:new ParallelJournalError('parallel_storage_invalid'));}};},'preparations');
   }
-  /** Archive and release only an explicitly revoked terminal/no-submit attempt. */
-  async function archiveTerminalPreparation(scope:ParallelScope,expectedRevision:number):Promise<void>{
+  /** Call only after the matching authenticated status read following confirmed revocation. */
+  async function archiveTerminalPreparation(scope:ParallelScope,expectedRevision:number,evidence:'plan_absent'|'plan_failed'|'batch_absent'):Promise<void>{
     const address=scopeSchema.parse(scope),db=await open();
     return new Promise<void>((resolve,reject)=>{
       let tx:IDBTransaction,failure:ParallelJournalError|null=null;
@@ -132,7 +132,8 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       const live=tx.objectStore('preparations'),request=live.get(address.userId);
       request.onsuccess=()=>{try{
         const value=parseParallelPreparation(request.result);
-        if(value.userId!==address.userId||value.projectId!==address.projectId||value.batchId!==address.batchId||value.revision!==expectedRevision||!value.intentId||!value.revocationConfirmed||!(value.stage==='failed'||value.stage==='planning'&&value.planSubmitted===false))throw new ParallelJournalError('parallel_storage_conflict');
+        const terminal=value.stage==='planning'&&evidence==='plan_absent'||value.stage==='failed'&&evidence==='plan_failed'||(value.stage==='executing'||value.stage==='planned')&&evidence==='batch_absent';
+        if(value.userId!==address.userId||value.projectId!==address.projectId||value.batchId!==address.batchId||value.revision!==expectedRevision||!value.intentId||!value.revocationConfirmed||!terminal)throw new ParallelJournalError('parallel_storage_conflict');
         tx.objectStore('preparationHistory').add(value,JSON.stringify([value.userId,value.batchId,value.intentId]));live.delete(value.userId);
       }catch(error){abort(error);}};
     });
@@ -171,7 +172,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
         const current=parseParallelPreparation(first);
         if(current.userId!==address.userId||current.projectId!==address.projectId||current.batchId!==address.batchId||current.revision!==expectedRevision||current.stage!=='planned'||current.planSubmitted!==true||!current.intentId||current.intentEpoch===undefined||current.revocationRequested)throw new ParallelJournalError('parallel_storage_conflict');
         const progress={children:current.imageIds.map((requestId,index)=>({requestId,position:index+1,status:'unconfirmed',revision:0,confirmedAt:null})),wait:{mode:'none'}};
-        const journal=parseParallelJournal({version:1,...address,conversationId:current.conversationId,planRequestId:current.planRequestId,intentId:current.intentId,credentialSource:current.credentialSource,context:current.context,plan:current.plan,revision:0,progress});
+        const journal=parseParallelJournal({version:1,...address,conversationId:current.conversationId,planRequestId:current.planRequestId,intentId:current.intentId,credentialSource:current.credentialSource,context:current.context,...(current.creationContext?{creationContext:current.creationContext}:{}),plan:current.plan,revision:0,progress});
         if(second!==undefined){const old=parseParallelJournal(second);const comparable={...old,intentId:current.intentId};if(JSON.stringify(comparable)!==JSON.stringify(journal))throw new ParallelJournalError('parallel_storage_conflict');}
         result=parseParallelPreparation({...current,stage:'executing',revision:current.revision+1});journals.put(journal,key(address));preparations.put(result,address.userId);
       }catch(error){abort(error);}};
@@ -183,12 +184,12 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
     const address=scopeSchema.parse(scope),db=await open();
     return new Promise<number>((resolve,reject)=>{
       let tx:IDBTransaction,result:number,failure:ParallelJournalError|null=null;
-      try{tx=db.transaction(['preparations','journals'],'readwrite');}catch(error){reject(failCode(error));return;}
+      try{tx=db.transaction(['preparations','journals','preparationHistory'],'readwrite');}catch(error){reject(failCode(error));return;}
       tx.oncomplete=()=>resolve(result);tx.onerror=()=>{};tx.onabort=()=>reject(failure??failCode(tx.error));
       const abort=()=>{failure=new ParallelJournalError('parallel_storage_conflict');try{tx.abort();}catch{reject(failure);}};
       const preparations=tx.objectStore('preparations'),a=preparations.get(address.userId),b=tx.objectStore('journals').get(key(address));
       let first:unknown,second:unknown,ready=0;
-      const check=()=>{if(++ready!==2)return;try{const preparation=parseParallelPreparation(first),journal=parseParallelJournal(second);if(preparation.userId!==address.userId||preparation.projectId!==address.projectId||preparation.batchId!==address.batchId||preparation.stage!=='executing'||preparation.revision!==expectedRevision||preparation.revocationRequested&&!preparation.revocationConfirmed||preparation.intentEpoch===undefined||journal.intentId!==preparation.intentId||key(scopeFrom(journal))!==key(address)||!parallelWaitElapsed(journal.progress,now,gates))throw Error();result=preparation.revocationEpoch??preparation.intentEpoch;preparations.delete(address.userId);}catch{abort();}};
+      const check=()=>{if(++ready!==2)return;try{const preparation=parseParallelPreparation(first),journal=parseParallelJournal(second);if(preparation.userId!==address.userId||preparation.projectId!==address.projectId||preparation.batchId!==address.batchId||preparation.stage!=='executing'||preparation.revision!==expectedRevision||preparation.revocationRequested&&(!preparation.revocationConfirmed||preparation.revocationEpoch===undefined)||preparation.intentEpoch===undefined||!preparation.intentId||journal.intentId!==preparation.intentId||key(scopeFrom(journal))!==key(address)||!parallelWaitElapsed(journal.progress,now,gates))throw Error();result=preparation.revocationEpoch??preparation.intentEpoch;tx.objectStore('preparationHistory').add(preparation,JSON.stringify([preparation.userId,preparation.batchId,preparation.intentId]));preparations.delete(address.userId);}catch{abort();}};
       a.onsuccess=()=>{first=a.result;check();};b.onsuccess=()=>{second=b.result;check();};
     });
   }

@@ -6,6 +6,8 @@ const id=z.uuid();
 const planResponse=z.object({status:z.enum(['running','completed','failed','unknown','unavailable','busy','conflict']),retryAutomatically:z.literal(false),requestId:z.optional(id),batchId:z.optional(id),plan:z.optional(z.unknown()),planBinding:z.optional(z.string().check(z.minLength(1)).check(z.maxLength(8192)))});
 const statusImage=z.strictObject({requestId:id,status:z.enum(['running','unknown','completed','rejected']),ordinal:z.number().check(z.int()).check(z.positive()).check(z.maximum(Number.MAX_SAFE_INTEGER)),revision:z.number().check(z.int()).check(z.positive()).check(z.maximum(Number.MAX_SAFE_INTEGER)),position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),replacesImageId:z.nullable(id)});
 const statusResponse=z.strictObject({batchId:id,projectId:id,pieceId:z.nullable(id),state:z.enum(['running','unknown','partial','completed']),completedAt:z.nullable(z.string().check(z.maxLength(100))),nextAt:z.nullable(z.string().check(z.maxLength(100))),closedAt:z.nullable(z.string().check(z.maxLength(100))),images:z.array(statusImage).check(z.minLength(3)).check(z.maxLength(3))});
+const absentBatch=z.strictObject({status:z.literal('absent'),projectId:id,batchId:id});
+const planRecord=z.strictObject({status:z.enum(['absent','starting','running','unknown','failed','completed']),projectId:id,conversationId:z.union([id,z.literal('references')]),batchId:id,requestId:id});
 type Store=ReturnType<typeof createParallelJournalStore>;
 export type BatchSnapshot=z.infer<typeof statusResponse>;
 export type PlanningResult={preparation:ParallelPreparation;binding:string|null;status:z.infer<typeof planResponse>['status']};
@@ -55,5 +57,20 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
     for(const image of snapshot.images)journal=await store.update(scope,journal.revision,{kind:'observe',observation:{requestId:image.requestId,position:image.position,status:image.status,revision:image.revision},now:now(),visible:typeof visible==='function'?visible():visible});
     return {snapshot,journal};
   }
-  return {inspectPlan,inspectBatch};
+  async function inspectBatchAbsent(preparation:ParallelPreparation):Promise<boolean>{
+    if(!canInspect())throw Error('parallel_not_allowed');
+    const response=await fetchApi('/api/studio/exploration-batches/status',{method:'POST',headers,body:JSON.stringify({projectId:preparation.projectId,batchId:preparation.batchId})});
+    if(!response.ok||!canInspect())throw Error('parallel_unconfirmed');
+    const value=absentBatch.safeParse(await response.json());
+    return value.success&&value.data.projectId===preparation.projectId&&value.data.batchId===preparation.batchId;
+  }
+  async function inspectPlanRecord(preparation:ParallelPreparation):Promise<z.infer<typeof planRecord>['status']>{
+    if(!canInspect())throw Error('parallel_not_allowed');
+    const response=await fetchApi('/api/studio/exploration-batches/plan/status',{method:'POST',headers,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,requestId:preparation.planRequestId})});
+    if(!response.ok||!canInspect())throw Error('parallel_unconfirmed');
+    const value=planRecord.parse(await response.json());
+    if(value.projectId!==preparation.projectId||value.conversationId!==preparation.conversationId||value.batchId!==preparation.batchId||value.requestId!==preparation.planRequestId)throw Error('parallel_mismatch');
+    return value.status;
+  }
+  return {inspectPlan,inspectBatch,inspectBatchAbsent,inspectPlanRecord};
 }
