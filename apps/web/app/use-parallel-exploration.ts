@@ -2,12 +2,10 @@
 
 import {useEffect,useRef,useState} from 'react';
 import * as z from '../lib/schema.ts';
-import {criterionChoice} from '../lib/studio-direction.ts';
 import {audienceResolution} from '../lib/studio-context.ts';
 import {pendingSelectionQuestion} from '../lib/studio-state.ts';
 import {postContext} from '../lib/studio-post-context.ts';
-import {generatedSignalsSchema,currentGeneratedFeedback} from '../lib/generated-feedback-contract.ts';
-import {referenceSignalsResponseSchema,currentReferenceFeedback} from '../lib/reference-exploration-contract.ts';
+import {parallelExplorationContext} from '../lib/parallel-exploration-context.ts';
 import {createParallelJournalStore,type ParallelPreparation} from '../lib/parallel-exploration-journal.ts';
 import {createParallelIntentClient} from '../lib/parallel-exploration-intent-client.ts';
 import {createParallelDispatcher} from '../lib/parallel-exploration-dispatch.ts';
@@ -61,17 +59,6 @@ export function useParallelExploration(props:Props){
       if(!allowResume){setAwaitingFeedback(true);setStatus('Aguardando sua decisão sobre as propostas.');return 'blocked' as const;}
       return 'resume' as const;
     }
-    async function contextFor(state:StudioState){
-      const paths=['/api/studio/explorations/signals','/api/studio/references/signals'];
-      const local=identity.conversationId!=='references';
-      const read=async(path:string,project:boolean)=>{
-        const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:identity.projectId,scope:project?'project':'account',...(project&&local?{pieceId:identity.conversationId}:{})})});if(!response.ok)throw Error('feedback_unavailable');return response.json();
-      };
-      const [generated,external]=await Promise.all(paths.map(async path=>Promise.all([read(path,false),...(local?[read(path,true)]:[])])));
-      const generatedSignals=generated.flatMap(value=>generatedSignalsSchema.parse(value).signals),referenceSignals=external.flatMap(value=>referenceSignalsResponseSchema.parse(value).signals);
-      const audience=audienceResolution(state);if(audience.status==='conflict')throw Error('audience_conflict');
-      return {idea:current.current.idea,offer:state.brief.offer,audience:audience.value,goal:state.brief.action,direction:state.brief.direction,offerFacts:state.offerFacts??[],accepted:state.direction.criteria.filter(item=>criterionChoice(state.direction,item.id)==='accept').slice(0,4).map(item=>item.statement.slice(0,160)),rejected:state.direction.criteria.filter(item=>criterionChoice(state.direction,item.id)==='reject').slice(0,4).map(item=>item.statement.slice(0,160)),feedback:[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)]};
-    }
     async function watchCompleted(preparation:ParallelPreparation){
       const scope={userId:preparation.userId,projectId:preparation.projectId,batchId:preparation.batchId};
       let journal=await store.loadForRecovery(scope);if(!journal)throw Error('journal_missing');
@@ -116,7 +103,7 @@ export function useParallelExploration(props:Props){
           }
           const state=current.current.getState();if(!state||!valid())return;
           snapshotFingerprint=fingerprint(state,current.current.idea);
-          const context=await contextFor(state);if(!valid())return;
+          const context=await parallelExplorationContext(state,identity.projectId,identity.conversationId,current.current.idea);if(!valid())return;
           if(existing&&JSON.stringify(existing.context)!==JSON.stringify(context)){setStatus('O contexto mudou desde o planejamento. Consulte a tentativa anterior antes de continuar.');setPhase('blocked');return;}
           const preparation=existing??{version:1,userId:identity.userId,projectId:identity.projectId,batchId:crypto.randomUUID(),conversationId:identity.conversationId,planRequestId:crypto.randomUUID(),credentialSource:identity.source,intentId:crypto.randomUUID(),expectedEpoch:nextEpoch,planSubmitted:false,revocationRequested:false,imageIds:[crypto.randomUUID(),crypto.randomUUID(),crypto.randomUUID()],context,creationContext:{postContext:identity.conversationId==='references'?{objective:'',message:'',action:''}:postContext(state,identity.conversationId),references:[]},plan:null,stage:'planning',revision:0};
           if(existing&&existing.credentialSource!==identity.source){setStatus('O plano anterior depende da fonte e chave originais.');setPhase('blocked');return;}
