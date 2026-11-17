@@ -20,7 +20,7 @@ const visualMode=new URLSearchParams(location.search).has('visual');
 window.loadVisual=async requestId=>{const journal=createParallelJournalStore();try{return await journal.loadRequestVisualSnapshot({userId:'${user}',projectId:'${project}',conversationId:'references',requestId});}finally{journal.close();}};
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);
 const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));window.referenceOriginal=Array.from(new Uint8Array(await file.arrayBuffer()));
-const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:visualMode?{kind:'local-upload'}:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
+const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'&&!new URLSearchParams(location.search).has('legacy')?{source:visualMode?{kind:'local-upload'}:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
 function initial(){let state=createPost(createStudioState({userId:'${user}',projectId:'${project}'}),{pieceId:'${piece}'});return addReference(state,reference('${first}'));}
 function Fixture(){const [waiting,setWaiting]=useState(false);const reportWait=useCallback((id,value)=>setWaiting(value),[]);const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
 function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}
@@ -68,6 +68,11 @@ test('erro na persistência visual impede envio e conserva texto',{skip:!existsS
  await page.evaluate(()=>{const original=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='visualSnapshots')throw new DOMException('quota','QuotaExceededError');return original.apply(this,args);};});
  await page.getByLabel('Sua mensagem').fill('Crie com esta imagem');await page.getByLabel('Sua mensagem').press('Enter');
  await page.waitForTimeout(800);assert.equal(calls.length,0);assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Crie com esta imagem');
+});
+test('origem legada desconhecida não dispara análise visual automática',{skip:!existsSync(browserPath),timeout:15000},async t=>{
+ const {page,calls,origin}=await setup(t);await page.goto(`${origin}/?visual=1&legacy=1`);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.waitForTimeout(5800);assert.equal(calls.length,0);
+ const snapshot=JSON.parse(await page.locator('#snapshot').textContent());assert.equal(snapshot.references.length,1);assert.equal(snapshot.references[0].source,undefined);
 });
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
  const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');

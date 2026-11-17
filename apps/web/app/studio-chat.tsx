@@ -620,6 +620,7 @@ export default function StudioChat({
       if(!available.hasApiKey||available.busy||available.pending||available.localBlocked||available.message.trim()||inspectionLock.current)return;
       const before=getState();
       if(referenceFingerprint(before)!==referenceSet||referenceContext(before)!==referenceContextValue||!before.references.length||!getCurrentDraft(before)||before.adjustments.some(item=>!['completed','failed'].includes(item.status)))return;
+      if(selectedVisualsAvailable&&before.references.every(reference=>!reference.source))return;
       const existing=referenceRecord(),round=readReferenceRound(before);
       if(existing===null||!round||round.fingerprint!==referenceSet||existing?.status==='submitted')return;
       let prepared=false,submitted=false;
