@@ -515,3 +515,17 @@ test('pedido incerto permanece sinalizado e recuperável com conversa minimizada
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1,'abrir a conversa não reenvia o pedido');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
 });
+
+test('limite de uso do provedor é informado sem reenviar o pedido',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow,errors,external}=await app(t);
+ flow.chat=body=>body.op==='poll'?{status:'failed',error:'provider_usage_limit'}:{status:'running'};
+ await openOriginal(page,origin);
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Criar uma proposta para o post.');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e o limite da organização OpenAI.',{exact:true}).waitFor();
+ await page.waitForTimeout(2200); // Longer than the chat's two-second poll interval.
+ assert.equal(calls.filter(call=>call.path==='/api/studio/chat'&&call.body.op!=='poll').length,1);
+ assert.equal(calls.filter(call=>call.path==='/api/studio/chat'&&call.body.op==='poll').length,1);
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
