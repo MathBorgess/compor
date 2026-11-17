@@ -44,6 +44,7 @@ jobs:
       - run: npm ci --ignore-scripts
       - run: npm run quality:maintenance
       - run: npm run quality:lint
+      - run: npm ci --ignore-scripts --prefix apps/web
       - run: npm run quality:test
       - name: Check and build the public site
         if: steps.areas.outputs.site != 'false'
