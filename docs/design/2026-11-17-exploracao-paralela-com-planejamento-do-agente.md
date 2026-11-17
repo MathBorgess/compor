@@ -1,5 +1,7 @@
 # Três propostas paralelas com planejamento do agente
 
+**Atualização de 17/11/2026:** Matheus aprovou a implementação do desenho e a proteção contra exclusão de projeto/post enquanto houver lote ativo ou incerto. Confirmou três inícios juntos, intervalo de 15 segundos após o lote completo e reposição de imagem recusada somente por pedido explícito. O texto abaixo preserva o estado da proposta na ocasião da revisão; a aprovação não autoriza, por si só, publicação ou implantação.
+
 **Proposta para revisão de Matheus; não implementada.** O pedido é planejar três caminhos visuais distintos com o agente e iniciar as três gerações do lote juntas. A recomendação é um planejamento separado, seguido de uma reserva atômica do lote e de três chamadas de imagem concorrentes coordenadas pelo servidor. Cada imagem conserva seu recibo, resultado e recuperação. O próximo lote só fica elegível após três conclusões confirmadas e os 15 segundos de intervalo, além das demais condições de autorização e interação.
 
 Data: 17/11/2026. Fonte das decisões: conversa desta tarefa no Codex. Código inspecionado: `148d26a81851d5812d3f9b0f5187211321e02b9b`. Alterações locais não commitadas na worktree de integração não fazem parte desse snapshot. Este documento não autoriza implementação, chamada paga, migration remota, push ou deploy. A aprovação do desenho é a próxima etapa.
