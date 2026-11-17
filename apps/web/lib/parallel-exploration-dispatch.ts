@@ -7,7 +7,7 @@ import {observeParallelBatch} from './parallel-exploration-observer.ts';
 
 const response=z.object({status:z.enum(['running','completed','failed','unknown','unavailable','busy','conflict']),retryAutomatically:z.literal(false),requestId:z.optional(z.uuid()),batchId:z.optional(z.uuid()),plan:z.optional(z.unknown()),planBinding:z.optional(z.string().check(z.minLength(1)).check(z.maxLength(8192)))});
 type Store=ReturnType<typeof createParallelJournalStore>;
-type Options={store:Store;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot;journal:ParallelJournal})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
+type Options={store:Store;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;beforePlan?:(preparation:ParallelPreparation,signal:AbortSignal)=>Promise<void>;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot;journal:ParallelJournal})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
 
 /** One user-authorized attempt; callers hold the account Web Lock and validate all gates. */
 export function createParallelDispatcher(options:Options){
@@ -33,6 +33,7 @@ export function createParallelDispatcher(options:Options){
     current=await store.createBeforePlanning(preparation);ensure();
     const intentEpoch=await intents.create(current,apiKey);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:intentEpoch});ensure();
+    if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     current=await store.updatePreparation(current.userId,current.revision,{kind:'plan_submitted'});ensure();
     onPlanning('planning');
     let plan=await readPlan(current,apiKey,'submit');
@@ -80,6 +81,7 @@ export function createParallelDispatcher(options:Options){
     current=await store.reissuePlannedIntent(scope,latest.revision,newIntentId,latest.revocationEpoch);ensure();
     const createdEpoch=await intents.create(current,apiKey);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:createdEpoch});ensure();
+    if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     await executePlanned(current,recovered.binding,apiKey);
   }
   /** Locally stop first, then request server-side revocation; unknown stays blocked. */

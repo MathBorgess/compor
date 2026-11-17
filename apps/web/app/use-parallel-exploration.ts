@@ -11,6 +11,7 @@ import {referenceSignalsResponseSchema,currentReferenceFeedback} from '../lib/re
 import {createParallelJournalStore,type ParallelPreparation} from '../lib/parallel-exploration-journal.ts';
 import {createParallelIntentClient} from '../lib/parallel-exploration-intent-client.ts';
 import {createParallelDispatcher} from '../lib/parallel-exploration-dispatch.ts';
+import {resumeParallelReview} from '../lib/parallel-exploration-resume-client.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from '../lib/parallel-exploration-client.ts';
 import {parallelWaitElapsed,type ParallelGates,type ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 import type {StudioState} from '../lib/studio-domain.ts';
@@ -56,11 +57,9 @@ export function useParallelExploration(props:Props){
     async function requireGate(allowResume:boolean){
       const reply=await fetch('/api/studio/explorations/status',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:identity.projectId})});
       if(!reply.ok)throw Error('gate_unavailable');const value=gate.parse(await reply.json());if(!valid())throw Error('paused');
-      if(value.status==='active')return true;
-      if(!allowResume){setAwaitingFeedback(true);setStatus('Aguardando sua decisão sobre as propostas.');return false;}
-      // The serial resume endpoint is not fenced by this intent. Until the
-      // parallel endpoint is available, preserve the gate without mutation.
-      setAwaitingFeedback(true);setStatus('A retomada protegida ainda não está disponível.');return false;
+      if(value.status==='active')return 'active' as const;
+      if(!allowResume){setAwaitingFeedback(true);setStatus('Aguardando sua decisão sobre as propostas.');return 'blocked' as const;}
+      return 'resume' as const;
     }
     async function contextFor(state:StudioState){
       const paths=['/api/studio/explorations/signals','/api/studio/references/signals'];
@@ -105,7 +104,7 @@ export function useParallelExploration(props:Props){
         let nextEpoch=capturedEpoch,allowResume=true;
         for(;;){
           if(!valid())return;
-          if(!await requireGate(allowResume))return;allowResume=false;
+          const gateState=await requireGate(allowResume);if(gateState==='blocked')return;
           const existing=await store.loadPreparation(identity.userId);
           if(existing){
             if(existing.projectId!==identity.projectId||existing.conversationId!==identity.conversationId){setStatus('Abra o projeto e a conversa da tentativa anterior para consultá-la.');setPhase('blocked');return;}
@@ -123,7 +122,7 @@ export function useParallelExploration(props:Props){
           if(existing&&existing.credentialSource!==identity.source){setStatus('O plano anterior depende da fonte e chave originais.');setPhase('blocked');return;}
           setProgress(null);
           const seen=new Set<string>();
-          dispatcher=createParallelDispatcher({store,allowed:valid,canInspect:valid,visible:()=>false,onPlanning:value=>{if(active){setPhase('generating');setStatus(value==='planning'?'Planejando três caminhos…':'Aguardando confirmação das propostas…');}},onUnavailable:()=>{if(active)setStatus('Sem confirmação recente. As tentativas continuam preservadas.');},onSnapshot:async({snapshot,journal})=>{
+          dispatcher=createParallelDispatcher({store,allowed:valid,canInspect:valid,visible:()=>false,beforePlan:async(value,signal)=>{if(gateState==='resume'){if(!valid())throw Error('paused');await resumeParallelReview(value,identity.key,signal);if(!valid())throw Error('paused');setAwaitingFeedback(false);}allowResume=false;},onPlanning:value=>{if(active){setPhase('generating');setStatus(value==='planning'?'Planejando três caminhos…':'Aguardando confirmação das propostas…');}},onUnavailable:()=>{if(active)setStatus('Sem confirmação recente. As tentativas continuam preservadas.');},onSnapshot:async({snapshot,journal})=>{
             if(!valid())return;setProgress(journal.progress);last={preparation:await store.loadPreparation(identity.userId)??preparation,snapshot,progress:journal.progress};
             for(const image of [...snapshot.images].filter(item=>item.status==='completed').sort((a,b)=>a.ordinal-b.ordinal))if(!seen.has(image.requestId)&&valid()){await current.current.onCompleted(image.requestId,image.ordinal,identity.conversationId,preparation.creationContext);seen.add(image.requestId);setCompleted(value=>value+1);}
           },sleep:wait,now:Date.now});
@@ -132,11 +131,11 @@ export function useParallelExploration(props:Props){
           dispatcher=null;snapshotFingerprint=null;
           if(!valid())return;
           if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus('Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
-          if(!await requireGate(false))return;
+          if(await requireGate(false)==='blocked')return;
           nextEpoch=await finishWait(last.preparation);last=null;
         }
       });
-    }catch{if(active){setStatus('Não foi possível confirmar esta tentativa. Ela permanece preservada.');setPhase('blocked');stop();}}
+    }catch{if(active){stop();if(run.current?.stop===stop)run.current=null;setStatus('Não foi possível confirmar esta tentativa. Ela permanece preservada.');setPhase('blocked');}}
     finally{active=false;if(runtime.stopping)await runtime.stopping.catch(()=>{});if(runtime.freezing)await runtime.freezing.catch(()=>{});store.close();if(run.current?.stop===stop)run.current=null;pendingStart.current=false;}
   }
   return {start,pause,status,progress,completed,phase,countdown,paused,awaitingFeedback,legacyPending,epochReady,ready,clearLegacyPending:()=>setLegacyPending(false)};
