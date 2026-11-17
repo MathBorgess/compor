@@ -1,0 +1,53 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import {createServer} from 'node:http';
+import {browserModuleSource} from './browser-module-source.mjs';
+import {chromium} from 'playwright-core';
+const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+test('seleção e comando são atômicos e conciliados sem reviver gesto antigo',{skip:!existsSync(browserPath),timeout:30000},async t=>{
+ const modules={'/storage.js':new URL('../lib/studio-storage.ts',import.meta.url),'/state.js':new URL('../lib/studio-state.ts',import.meta.url),'/projection.js':new URL('../lib/reference-selection-projection.ts',import.meta.url),'/coordinator.js':new URL('../lib/reference-selection-coordinator.ts',import.meta.url)};
+ const server=createServer(async(req,res)=>{if(modules[req.url]){res.setHeader('Content-Type','text/javascript');res.end(await browserModuleSource(modules[req.url]));}else res.end('<!doctype html><title>Seleção local</title>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
+ const result=await page.evaluate(async()=>{
+  const {createStudioStorage}=await import('/storage.js'),{createStudioState}=await import('/state.js'),{referenceSelectionPublic}=await import('/projection.js'),{createReferenceSelectionCoordinator}=await import('/coordinator.js');
+  const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,scope={userId:id(1),projectId:id(2)};
+  const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),file=new File([blob],'teste.png',{type:'image/png'});
+  const empty={version:1,references:[],projectReferenceIds:[],posts:[]};let remote={status:'ready',revision:0,state:empty},commands=new Map(),writes=0,mode='normal';
+  const client={read:async()=>structuredClone(remote),receipt:async(_project,commandId)=>commands.get(commandId)??{status:'absent'},write:async(_project,commandId,expected,value)=>{
+   writes++;if(expected!==remote.revision)throw Error('reference_authority_conflict');if(mode==='absent')throw Error('lost before commit');
+   remote={status:'ready',revision:remote.revision+1,state:await referenceSelectionPublic(value)};const receipt={status:'applied',commandId,revision:remote.revision};commands.set(commandId,receipt);
+   if(mode==='advanced')remote={...remote,revision:remote.revision+1};if(mode==='lost')throw Error('lost after commit');return receipt;
+  }};
+  const a=createStudioStorage({name:'compor-studio-coordinator-a'});await a.save(createStudioState(scope),{expectedRevision:null});
+  const refA=await a.putReference({...scope,id:id(10),file,source:{kind:'local-upload'}}),legacy=await a.putReference({...scope,id:id(11),file});
+  let coordinator=createReferenceSelectionCoordinator({store:a,client});const initialized=(await coordinator.observe(scope)).status==='ready';
+  const legacyResult=await coordinator.change(scope,{kind:'select',reference:legacy,target:'references'}),legacySafe=legacyResult.status==='ready'&&writes===0&&(await a.load(scope)).references.some(x=>x.id===legacy.id&&!x.source);
+  mode='lost';const lost=await coordinator.change(scope,{kind:'select',reference:refA,target:'references'});const pendingBefore=await a.readReferenceAuthority(scope),oneWrite=writes===1&&lost.status==='pending'&&!!pendingBefore.pending;a.close();
+  const resumed=createStudioStorage({name:'compor-studio-coordinator-a'});coordinator=createReferenceSelectionCoordinator({store:resumed,client});const restored=await coordinator.reconcile(scope),reconciled=restored.status==='ready'&&restored.revision===1&&writes===1&&(await resumed.readReferenceAuthority(scope)).pending===null;
+  mode='absent';const removed=await coordinator.change(scope,{kind:'unselect',id:refA.id,target:'references'}),afterRemove=await resumed.readReferenceAuthority(scope),receiptMissing=await coordinator.reconcile(scope);const pendingAbsent=removed.status==='pending'&&receiptMissing.status==='pending'&&writes===2&&!!afterRemove.pending&&!afterRemove.state.projectReferenceIds.includes(refA.id);resumed.close();
+  const recovered=createStudioStorage({name:'compor-studio-coordinator-a'}),afterReload=await createReferenceSelectionCoordinator({store:recovered,client}).reconcile(scope),stillPending=afterReload.status==='pending'&&writes===2;recovered.close();
+  remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;mode='normal';
+  const left=createStudioStorage({name:'compor-studio-coordinator-left'}),right=createStudioStorage({name:'compor-studio-coordinator-right'});for(const s of [left,right])await s.save(createStudioState(scope),{expectedRevision:null});
+  const first=await left.putReference({...scope,id:id(20),file,source:{kind:'local-upload'}}),second=await right.putReference({...scope,id:id(21),file,source:{kind:'local-upload'}});
+  const l=createReferenceSelectionCoordinator({store:left,client}),r=createReferenceSelectionCoordinator({store:right,client});await l.observe(scope);await r.observe(scope);
+  const ok=await l.change(scope,{kind:'select',reference:first,target:'references'}),stale=await r.change(scope,{kind:'select',reference:second,target:'references'}),staleState=await right.readReferenceAuthority(scope),afterStale=await r.reconcile(scope);
+  const staleBlocked=ok.status==='ready'&&stale.status==='conflict'&&afterStale.status==='pending'&&!!staleState.pending&&remote.state.references.length===1&&remote.state.references[0].id===first.id&&writes===2;left.close();right.close();
+  remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;mode='advanced';
+  const race=createStudioStorage({name:'compor-studio-coordinator-race'});await race.save(createStudioState(scope),{expectedRevision:null});const raceRef=await race.putReference({...scope,id:id(30),file,source:{kind:'local-upload'}}),c=createReferenceSelectionCoordinator({store:race,client});await c.observe(scope);
+  const advanced=await c.change(scope,{kind:'select',reference:raceRef,target:'references'}),noAdopt=advanced.status==='conflict'&&(await race.readReferenceAuthority(scope)).pending!==null&&writes===1;race.close();
+  remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;mode='normal';
+  const quota=createStudioStorage({name:'compor-studio-coordinator-quota'});await quota.save(createStudioState(scope),{expectedRevision:null});const qRef=await quota.putReference({...scope,id:id(40),file,source:{kind:'local-upload'}}),q=createReferenceSelectionCoordinator({store:quota,client});await q.observe(scope);
+  const oldAdd=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='referenceCommands')throw new DOMException('quota','QuotaExceededError');return oldAdd.apply(this,args);};
+  const failed=await q.change(scope,{kind:'select',reference:qRef,target:'references'});IDBObjectStore.prototype.add=oldAdd;const afterQuota=await quota.readReferenceAuthority(scope),atomic=failed.status==='unavailable'&&writes===0&&afterQuota.pending===null&&afterQuota.state.revision===0&&afterQuota.state.references.length===0;quota.close();
+  remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;mode='normal';
+  const tabA=createStudioStorage({name:'compor-studio-coordinator-tabs'}),tabB=createStudioStorage({name:'compor-studio-coordinator-tabs'});await tabA.save(createStudioState(scope),{expectedRevision:null});
+  const aRef=await tabA.putReference({...scope,id:id(50),file,source:{kind:'local-upload'}}),bRef=await tabA.putReference({...scope,id:id(51),file,source:{kind:'local-upload'}}),ca=createReferenceSelectionCoordinator({store:tabA,client}),cb=createReferenceSelectionCoordinator({store:tabB,client});await ca.observe(scope);
+  const both=await Promise.all([ca.change(scope,{kind:'select',reference:aRef,target:'references'}),cb.change(scope,{kind:'select',reference:bRef,target:'references'})]);
+  const oneTab=writes===1&&both.filter(item=>item.status==='ready').length===1&&both.some(item=>item.status==='pending'||item.status==='conflict');if(!oneTab){let x;try{x=await tabB.readReferenceAuthority(scope);}catch(error){x={code:error.code,message:error.message};}throw Error(JSON.stringify({writes,both,x,remote}));}tabA.close();tabB.close();
+  return {initialized,legacySafe,oneWrite,reconciled,pendingAbsent,stillPending,staleBlocked,noAdopt,atomic,oneTab};
+ });
+ assert.deepEqual(result,{initialized:true,legacySafe:true,oneWrite:true,reconciled:true,pendingAbsent:true,stillPending:true,staleBlocked:true,noAdopt:true,atomic:true,oneTab:true});
+});
