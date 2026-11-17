@@ -18,7 +18,7 @@ export async function finishPreparation(page,{useDefault=false,preparePost=true}
   else await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
   await finish.waitFor({state:'visible'});
  }
- if(await finish.isVisible())await finish.click();
+ if(await finish.isVisible()){await finish.click();await page.locator('.reference-step').waitFor({state:'hidden'});}
  if(preparePost)await beginPost(page);
 }
 async function beginPost(page){

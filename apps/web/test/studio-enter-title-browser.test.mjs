@@ -235,6 +235,7 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
  await closeSettings(page);await message.fill('Post sobre gravura');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
+ await projectHeading(page,firstIdea).waitFor();
  message=await connectKey(page);assert.equal(await message.inputValue(),'');
  await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
