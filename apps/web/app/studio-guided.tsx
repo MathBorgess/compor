@@ -34,12 +34,12 @@ export function ProjectPosts({state,versions,posts,onOpen,onNew,onDelete}:{state
     return <div className="studio-project-entry" key={id}><button className="studio-project-card" onClick={()=>onOpen(id)} aria-current={state.selection?.pieceId===id?'true':undefined}><strong id={`piece-title-${id}`} className="studio-truncate" title={name}>{name}</strong><span>{state.posts[id]?.prepared===false?'Preparação em andamento':current?.dirty?'Alterações neste navegador':last?`${saved.length} ${saved.length===1?'versão salva':'versões salvas'}`:'Rascunho neste navegador'}</span><span>{state.posts[id]?.prepared===false?'Continuar preparação':'Abrir post e conversa'}</span></button><button type="button" className="studio-project-delete" aria-label="Excluir post" aria-describedby={`piece-title-${id}`} title={pending?'Conclua ou verifique o pedido pendente antes de excluir':'Excluir post'} disabled={pending} onClick={()=>onDelete(id,name)}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>;
   })}</div></section>;
 }
-export function GuidedWorkspace({chat,artwork,intro,onManual}:{chat:ReactNode;artwork:ReactNode;intro:boolean;onManual:()=>void}) {
-  const [chatMinimized,setChatMinimized]=useState(false),[width,setWidth]=useState(38);
+export function GuidedWorkspace({chat,artwork,intro,onManual,chatMinimized,onChatMinimizedChange}:{chat:ReactNode;artwork:ReactNode;intro:boolean;onManual:()=>void;chatMinimized:boolean;onChatMinimizedChange:(value:boolean)=>void}) {
+  const [width,setWidth]=useState(38);
   const root=useRef<HTMLDivElement>(null),drag=useRef(false),chatArea=useRef<HTMLElement>(null),launcher=useRef<HTMLButtonElement>(null),toggled=useRef(false);
   useEffect(()=>{if(!toggled.current)return;if(chatMinimized)launcher.current?.focus();else chatArea.current?.focus();},[chatMinimized]);
-  const minimize=()=>{toggled.current=true;setChatMinimized(true);};
-  const reopen=()=>{toggled.current=true;setChatMinimized(false);};
+  const minimize=()=>{toggled.current=true;onChatMinimizedChange(true);};
+  const reopen=()=>{toggled.current=true;onChatMinimizedChange(false);};
   const isMinimized=chatMinimized&&!intro;
   return <div ref={root} className="guided-workspace" data-view={intro?'intro':'editor'} data-chat={isMinimized?'minimized':'open'} style={{'--guided-chat-width':`${width}%`} as CSSProperties}>
     <section ref={chatArea} id="guided-post-chat" tabIndex={-1} className="guided-chat-area" aria-label="Conversa do post">
