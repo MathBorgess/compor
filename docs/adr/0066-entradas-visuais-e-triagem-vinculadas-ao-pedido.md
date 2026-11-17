@@ -1,7 +1,7 @@
 # ADR 0066 — Entradas visuais e triagem vinculadas ao pedido
 
 - Data: 17/11/2026.
-- Estado: implementação local dos contratos, planejador e rotas; integração completa e ativação não comprovadas. Candidatos externos/gerados permanecem bloqueados nos runtimes sem fonte autoritativa.
+- Estado: contratos, planejador, rotas e interface integrados localmente. A ativação remota permanece pendente.
 - Fonte: aprovação do [desenho de PNGs](../design/2026-11-17-pngs-no-planejamento-e-nos-lotes-paralelos.md) e esclarecimentos de Matheus nesta conversa. “Terra” significa geração de arte. Uploads selecionados são obrigatórios; cópia otimizada é aceita. A decisão posterior acrescentou referências externas/geradas já selecionadas pela pessoa, desde que triadas pelo Agents API antes do GPT Image.
 
 ## Contratos e seleção
@@ -10,7 +10,7 @@ O manifesto é separado do texto. Contém IDs, ordinais, origem de ingestão dec
 
 | Formato | Entrada e resultado |
 | --- | --- |
-| Sem manifesto | Caminho textual legado; mantém seus digests e provas. Não aceita anexos soltos. |
+| Sem manifesto | Caminho textual com modo visual desligado. Recibos antigos mantêm seus digests e provas. |
 | Manifesto v1 | Somente `local-upload`, todos obrigatórios. Plano estrutural v1, com prova visual de domínio distinto do legado. |
 | Manifesto v2 | Uploads obrigatórios e candidatos `external`/`generated`, com `source` explícito e declaração `externalConsent`. Externas sem essa declaração são inválidas; declaração verdadeira continua insuficiente para autorização. |
 | Plano v2 | Três itens e `referenceIds` finais: subsequência canônica dos candidatos selecionados, sem duplicatas e contendo todos os uploads. A triagem acontece no mesmo turno do planejamento, sem sessão paga adicional. |
@@ -25,9 +25,9 @@ O manifesto v2 conserva `source:null` para upload, `{originUrl,board}` para refe
 
 Conta autenticada, projeto, conversa, lote, tentativa, fonte/chave e manifesto participam do vínculo; o plano assinado inclui sua seleção final. Contexto e arquivos são copiados antes do primeiro `await` de autorização, evitando alteração posterior ao digest. Nenhuma chave entra no manifesto, nos prompts ou nos metadados operacionais; campos de fonte também recusam padrões de credencial. BYOK e chave padrão preservam suas regras, sem fallback nem reaproveitamento de provas após troca.
 
-Para candidatos v2, a porta de servidor `authorizeVisualInput` precisa confirmar acesso à origem, seleção permitida e consentimento externo aplicável à sessão, além da autorização do projeto. Recebe identidade, escopo e manifesto, sem bytes nem texto criativo. O planejador a consulta antes de reservar e novamente depois da reserva, antes do POST. Intent/resume também a exigem para admitir candidatos. Ausência, erro ou resposta diferente de `true` bloqueiam novos efeitos. Uma perda de autoridade após reserva conserva a pendência; não inventa rejeição do fornecedor.
+O estúdio verifica cada manifesto com o snapshot criado a partir da seleção confirmada no servidor. O [ADR 0067](0067-autoridade-de-referencias-com-cas.md) descreve o vínculo de seleção, os comandos CAS e o consentimento externo. Sinais históricos de Pinterest e imagens geradas ajudam na busca. A autorização para usar os arquivos no modelo exige seleção e snapshot do pedido atual.
 
-**Limitação atual:** essa fonte autoritativa e seu adaptador de runtime não estão implementados. `reference-session-consent.ts` conserva somente uma declaração em `sessionStorage`; as rotas de busca/prévia recebem booleanos. `reference_signals`/`generated_image_signals` têm RLS de titular/projeto e vínculo a imagem concluída no segundo caso, mas admitem inserções pelo cliente; não vinculam seleção atual a bytes ou a consentimento da sessão. Não são usados como aprovação suficiente. Os runtimes sem porta mantêm extras fechados, mesmo com `externalConsent:true`; nenhuma flag é ativada nesta mudança. Preparar mocks com autorização não comprova essa integração.
+As rotas verificam o snapshot antes de reservar. Planejamento, lote, reposição e arte verificam novamente antes do POST ao fornecedor. A perda de autoridade após a reserva conserva a pendência e os recibos. A interface exige revisão explícita se a seleção local divergir da confirmada no servidor.
 
 ## Recuperação, limites e retenção
 
@@ -45,6 +45,6 @@ Preserva os recibos, CAS/revogação, proofs efêmeras, três slots, 15 segundos
 
 Na arte individual, desligar `COMPOR_SELECTED_LOCAL_VISUALS_ENABLED` também recusa novos pedidos com manifesto em `/api/agent/image`, inclusive com prova visual válida emitida antes do desligamento e manifesto vazio. A guarda ocorre antes da aprovação e execução; o caminho legado sem manifesto e a reconciliação de recibos conservam seus contratos. Não cancela operações já admitidas nem transforma resultado desconhecido em recusa confirmada.
 
-Este ADR substitui a restrição textual do primeiro planejador e, para o protocolo v2, a restrição inicial a uploads do desenho de PNGs. A inclusão posterior de extras não elimina a obrigatoriedade dos uploads nem autoriza buscar fontes não selecionadas. Implementação do adaptador autoritativo, interface/persistência completas, verificação do bundle e gates do head integrado continuam etapas separadas.
+Este ADR substitui a restrição textual do primeiro planejador e, para o protocolo v2, a restrição inicial a uploads do desenho de PNGs. A inclusão posterior de extras não elimina a obrigatoriedade dos uploads nem autoriza buscar fontes não selecionadas. O adaptador autoritativo é descrito no ADR 0067.
 
 Testes sintéticos dirigidos cobrem bytes/ordem/subset, omissão de upload, tipos de origem, consentimento declarado insuficiente, limites, troca de conta/escopo/credencial, prova de outro lote, freeze antes de await, falta/perda da porta de autorização, estado desconhecido e poll sem blobs. Nenhuma chamada paga, migration remota, deploy ou validação visual foi executada. As evidências locais ficam em [contratos visuais e planner](../quality/2026-11-17-contratos-visuais-planner.md).

@@ -11,7 +11,7 @@ import {createParallelIntentClient} from '../lib/parallel-exploration-intent-cli
 import {createParallelDispatcher} from '../lib/parallel-exploration-dispatch.ts';
 import {resumeParallelReview} from '../lib/parallel-exploration-resume-client.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from '../lib/parallel-exploration-client.ts';
-import {parallelWaitElapsed,type ParallelGates,type ParallelProgress} from '../lib/parallel-exploration-progress.ts';
+import {PARALLEL_WAIT_MS,parallelWaitElapsed,type ParallelGates,type ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 import type {StudioState} from '../lib/studio-domain.ts';
 import type {StoredReference} from '../lib/studio-storage.ts';
 import {prepareSelectedVisualCandidates} from '../lib/selected-visual-input.ts';
@@ -81,14 +81,20 @@ export function useParallelExploration(props:Props){
       const gates:ParallelGates={visible:true,sessionActive:true,originalCredential:true,generationAllowed:true,questionResolved:true,feedbackAllowed:true,noOtherPending:true};
       journal=await store.update(scope,journal.revision,{kind:'resume',now:Date.now(),gates});
       while(valid()&&!parallelWaitElapsed(journal.progress,Date.now(),gates)){
-        const next=journal.progress.wait.mode==='running'?journal.progress.wait.nextAt:Date.now()+15_000;
+        const next=journal.progress.wait.mode==='running'?journal.progress.wait.nextAt:Date.now()+PARALLEL_WAIT_MS;
         const seconds=Math.max(0,Math.ceil((next-Date.now())/1000));setPhase('waiting');setCountdown(seconds);setStatus(`Próximo lote em ${seconds}s.`);await wait(Math.min(1000,Math.max(1,next-Date.now())));
       }
       if(!valid()){
         if(runtime.freezing)await runtime.freezing.catch(()=>{});else{const saved=await store.load(scope);if(saved)await store.update(scope,saved.revision,{kind:'pause',now:Date.now()});}throw Error('paused');
       }
       const latest=await store.loadPreparation(identity.userId);if(!latest||latest.batchId!==preparation.batchId)throw Error('journal_missing');
-      const nextEpoch=await store.retireCompleted(scope,latest.revision,Date.now(),gates);return nextEpoch;
+      const nextEpoch=await store.retireCompleted(scope,latest.revision,Date.now(),gates);
+      if(valid()){
+        epoch.current=nextEpoch;
+        setCountdown(null);
+        setPhase('idle');
+      }
+      return nextEpoch;
     }
     try{
       if(!navigator.locks)throw Error('locks_unavailable');
@@ -131,7 +137,6 @@ export function useParallelExploration(props:Props){
           dispatcher=null;snapshotFingerprint=null;
           if(!valid())return;
           if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus('Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
-          if(await requireGate(false)==='blocked')return;
           nextEpoch=await finishWait(last.preparation);last=null;
         }
       });

@@ -44,8 +44,12 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
  await page.evaluate(()=>window.releaseCallback());await page.getByText(/Próximo lote em/).waitFor();
  await page.clock.fastForward(14999);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'14.999 ms não iniciam novo lote');
  await page.clock.fastForward(1);await page.waitForFunction(()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2);
- await page.clock.fastForward(3000);await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
+ await page.clock.fastForward(3000);await page.getByText(/Próximo lote em 15s/).waitFor();
+ await page.clock.fastForward(15000);await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
  await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,2,'duas rodadas aguardam decisão');
+ await page.getByRole('button',{name:'Pedir propostas'}).click();await page.waitForFunction(()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===3);
+ const intentions=(await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/intent'));
+ assert.deepEqual(intentions.map(call=>call.body.expectedEpoch),[0,1,2]);
  for(const action of ['Pausar','Trocar fonte','Sair','Perguntar']){
   const context=await browser.newContext();const other=await context.newPage();await other.clock.install();await other.goto(`http://127.0.0.1:${server.address().port}`);await other.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);
   await other.getByRole('button',{name:'Pedir propostas'}).click();await other.getByText('1 de 3 imagens confirmadas.',{exact:true}).waitFor();

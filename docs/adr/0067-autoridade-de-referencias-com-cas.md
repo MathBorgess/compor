@@ -1,7 +1,7 @@
 # ADR 0067 — Autoridade de referências com CAS e consentimento de sessão
 
 - Data: 17/11/2026.
-- Estado: banco, rotas e provas locais implementados; integração de todos os consumidores e ativação são etapas separadas. Migration remota não aplicada.
+- Estado: banco, rotas e consumidores visuais integrados localmente. A aplicação das migrations remotas e a ativação permanecem pendentes.
 - Fonte: Matheus aprovou a alternativa A do [desenho de autoridade](../design/2026-11-17-autoridade-de-referencias-externas-e-geradas.md), sem importação automática de seleções legadas nem limpeza de snapshots. A capacidade de consentimento permanece somente em memória da aba.
 
 ## Decisão e dados
@@ -34,7 +34,7 @@ As wrappers `reserve_exploration_plan_authorized`, `reserve_exploration_batch_au
 
 `check_reference_exploration_dispatch` lê autoridade visual e intenção no mesmo lock: `active` para planejamento e `consumed` para lote/reposição. Estado exigido é escolhido pelo adapter do servidor, não pelo navegador. Antes do POST externo, após os demais awaits, essa rechecagem reduz a janela evitável entre duas consultas. A transação não é atômica com a rede: revogação posterior pode coincidir com um envio já admitido. Nunca converter essa corrida em cancelamento comprovado ou retry automático. `unknown` e resultados tardios conservam os recibos individuais.
 
-As RPCs legadas continuam disponíveis para os protocolos serial/MCP; não ganham autorização visual por existir este banco. Consumidores web visuais precisam usar as wrappers e as guardas antes do fornecedor. A integração precisa testar ausência de fallback legado. A flag proposta `COMPOR_REFERENCE_AUTHORITY_ENABLED` controla novas operações; consultas e revogação devem continuar acessíveis. Nenhuma flag foi ativada neste checkpoint.
+As RPCs legadas continuam disponíveis para os protocolos serial/MCP; não ganham autorização visual por existir este banco. Os consumidores web visuais usam as wrappers e as guardas antes do fornecedor. O modo visual exige manifesto em novas admissões e conserva a consulta dos recibos antigos. A flag `COMPOR_REFERENCE_AUTHORITY_ENABLED` controla novas operações; consultas e revogação devem continuar acessíveis. Nenhuma flag foi ativada neste checkpoint.
 
 ## Evidência e implantação
 
