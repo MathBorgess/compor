@@ -7,6 +7,7 @@ import {authClient,authConfig} from '../../../../../lib/supabase.ts';
 import {agentSigningKey} from '../../../../../lib/agent-config.ts';
 import {ownsSupabaseProject,resolveSupabaseActor} from '../../../../../lib/agent-auth.ts';
 import {withWebOpenAiCredential} from '../../../../../lib/web-openai-credential.ts';
+import {selectedVisualsAvailable} from '../../../../../lib/selected-visual-availability.ts';
 import {MAX_VISUAL_REQUEST_BYTES} from '@compor/agents-api/visual-input-contract';
 
 export const runtime='nodejs';
@@ -24,6 +25,7 @@ export async function POST(request:Request){
   const ownsProject=(candidate:NonNullable<typeof actor>,projectId:string)=>ownsSupabaseProject({actor:candidate,projectId,config});
   const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
   const plannerFor=(intent?:{intentId:string;intentSecret:string})=>createExplorationPlanner({store:createExplorationPlannerStore(config,fetch,intent),bindings,provider:guardExplorationPlannerProvider(createManagedExplorationPlanProvider({apiKey:prepared.apiKey??''}),prepared.request.signal),authorize:async input=>ownsProject(input.actor,input.projectId)});
-  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED==='true',resolveActor:async()=>actor,ownsProject,bindings,plannerFor})(prepared.request);
+  const visualRequired=process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',visualAvailable=selectedVisualsAvailable(Boolean(config));
+  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED==='true'&&(!visualRequired||visualAvailable),visualMode:visualRequired?'required':'disabled',resolveActor:async()=>actor,ownsProject,bindings,plannerFor})(prepared.request);
  });
 }

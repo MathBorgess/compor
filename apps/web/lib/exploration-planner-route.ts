@@ -10,7 +10,7 @@ const schema=z.strictObject({op:z.enum(['submit','poll']),projectId:id,conversat
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const containsCredential=(value:unknown,key:string):boolean=>typeof value==='string'?value.includes(key):Array.isArray(value)?value.some(item=>containsCredential(item,key)):value!==null&&typeof value==='object'?Object.values(value).some(item=>containsCredential(item,key)):false;
 type Planner={submit:(input:ExplorationPlannerInput)=>Promise<PlannerResult>;poll:(input:ExplorationPlannerInput)=>Promise<PlannerResult>};
-type Dependencies={appOrigin:string;apiKey:string;allowSubmit:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;bindings:PlannerBindings;plannerFor:(intent?:{intentId:string;intentSecret:string})=>Planner;authorizeVisualInput?:(input:VisualAuthorizationInput)=>Promise<boolean>};
+type Dependencies={appOrigin:string;apiKey:string;allowSubmit:boolean;visualMode?:'disabled'|'required';resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;bindings:PlannerBindings;plannerFor:(intent?:{intentId:string;intentSecret:string})=>Planner;authorizeVisualInput?:(input:VisualAuthorizationInput)=>Promise<boolean>};
 export function createExplorationPlannerRoute(deps:Dependencies){
  return async(request:Request)=>{
   if(request.method!=='POST')return reply({error:'method_not_allowed'},405);
@@ -24,7 +24,7 @@ export function createExplorationPlannerRoute(deps:Dependencies){
    if(parsed.data.referenceImages!==undefined&&(visualInput===undefined||parsed.data.op==='poll'))throw Error('unbound images');
    if(visualInput!==undefined&&!visualInputMatchesProject(visualInput,parsed.data.projectId))throw Error('invalid visual scope');
   }catch{return reply({error:'invalid_request'},400);}
-  if(parsed.data.op==='submit'&&!deps.allowSubmit)return reply({status:'unavailable',retryAutomatically:false},503);
+  if(parsed.data.op==='submit'&&(!deps.allowSubmit||(deps.visualMode==='disabled'&&visualInput!==undefined)||(deps.visualMode==='required'&&visualInput===undefined)))return reply({status:'unavailable',retryAutomatically:false},503);
   let actor:Actor|null;try{actor=await deps.resolveActor();}catch{return reply({error:'unavailable'},503);}
   if(!actor)return reply({error:'unauthorized'},401);
   try{if(!await deps.ownsProject(actor,parsed.data.projectId))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}

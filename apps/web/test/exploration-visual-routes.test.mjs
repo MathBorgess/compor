@@ -77,3 +77,15 @@ test('porta do servidor recebe escopo e manifesto; projetos diferentes e falhas 
  assert.equal((await createExplorationIntentRoute({...deps,authorizeVisualInput:async()=>{throw Error('offline');}}).create(request(body))).status,503);
  const bad=structuredClone(body);bad.visualInput.entries[0].source.projectId=id(99);assert.equal((await createExplorationIntentRoute(deps).create(request(bad))).status,400);assert.equal(effects,1);assert.equal(authorized,1);
 });
+
+
+test('capacidade visual impede planejar sem execução disponível e não bloqueia consultas legadas',async()=>{
+ let submits=0,polls=0;const plannerFor=()=>({submit:async()=>{submits++;return{status:'running'};},poll:async()=>{polls++;return{status:'unknown'};}});
+ const body={...scope,op:'submit',requestId:id(7),apiKey:key},v=visual();
+ const disabled=createExplorationPlannerRoute({...auth,allowSubmit:true,visualMode:'disabled',plannerFor});
+ assert.equal((await disabled(request({...body,...v}))).status,503);
+ const required=createExplorationPlannerRoute({...auth,allowSubmit:true,visualMode:'required',plannerFor});
+ assert.equal((await required(request(body))).status,503);assert.equal((await required(request({...body,...v}))).status,202);
+ const {intentId,...legacyPoll}=body;assert.equal((await required(request({...legacyPoll,op:'poll'}))).status,202);
+ assert.equal(submits,1);assert.equal(polls,1);
+});

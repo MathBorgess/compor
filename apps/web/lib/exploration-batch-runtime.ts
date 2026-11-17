@@ -7,6 +7,7 @@ import {ownsSupabaseProject,resolveSupabaseActor} from './agent-auth.ts';
 import {createExplorationBatchRoute} from './exploration-batch-route.ts';
 import {createExplorationBatchStore} from './exploration-batch-store.ts';
 import {createExplorationIntentStore} from './exploration-intent-store.ts';
+import {selectedVisualsAvailable} from './selected-visual-availability.ts';
 import {decodeExplorationImage} from './exploration-image-runtime.ts';
 import type {PreparedOpenAiRequest} from './openai-credential.ts';
 
@@ -17,8 +18,7 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
  return createExplorationBatchRoute({
   appOrigin:config.app,
-  // Kept closed until the planner and intent proof bind the visual manifest.
-  visualEnabled:false,
+  visualEnabled:selectedVisualsAvailable(Boolean(config)),
   resolveActor:async()=>prepared.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:async(actor,projectId)=>ownsSupabaseProject({config,actor,projectId}),
   verifyPlan:async({actor,apiKey,projectId,conversationId,batchId,requestId,context,plan,token,visualInput})=>{
