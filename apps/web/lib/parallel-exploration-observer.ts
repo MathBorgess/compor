@@ -12,7 +12,7 @@ export async function observeParallelBatch({inspect,isActive,onObservation,onUna
       const value=await inspect();
       if(!isActive())return;
       await onObservation(value);
-      if(value.snapshot.images.every(image=>image.status==='completed'||image.status==='rejected'))return;
+      if(value.snapshot.images.some(image=>image.status==='unknown')||value.snapshot.images.every(image=>image.status==='completed'||image.status==='rejected'))return;
     }catch{
       if(!isActive())return;
       onUnavailable();

@@ -17,3 +17,8 @@ test('falha de leitura é informada e só a leitura pode ser repetida',async()=>
  await observeParallelBatch({inspect:async()=>{reads++;if(reads===1)throw Error('offline');return{snapshot:{state:'partial',images:[{status:'completed'},{status:'rejected'},{status:'completed'}]},journal:{}};},isActive:()=>true,onObservation:()=>{seen++;},onUnavailable:()=>{failures++;},sleep:async()=>{},intervalMs:1000});
  assert.equal(reads,2);assert.equal(failures,1);assert.equal(seen,1);
 });
+test('resultado desconhecido interrompe observação automática sem repetir efeito',async()=>{
+ let reads=0,seen=0;
+ await observeParallelBatch({inspect:async()=>{reads++;return{snapshot:{state:'unknown',images:[{status:'completed'},{status:'unknown'},{status:'running'}]},journal:{}};},isActive:()=>true,onObservation:()=>{seen++;},onUnavailable:()=>{throw Error('unexpected');},sleep:async()=>{throw Error('não deveria agendar');},intervalMs:1000});
+ assert.equal(reads,1);assert.equal(seen,1);
+});

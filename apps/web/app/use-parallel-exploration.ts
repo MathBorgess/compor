@@ -128,6 +128,7 @@ export function useParallelExploration(props:Props){
             for(const image of [...snapshot.images].filter(item=>item.status==='completed').sort((a,b)=>a.ordinal-b.ordinal))if(!seen.has(image.requestId)&&valid()){await current.current.onCompleted(image.requestId,image.ordinal,identity.conversationId,preparation.creationContext);seen.add(image.requestId);setCompleted(value=>value+1);}
           },sleep:wait,now:Date.now});
           if(existing)await dispatcher.resumePlanned(existing,crypto.randomUUID(),identity.key);else await dispatcher.start(preparation,identity.key);
+          if(last&&last.snapshot.images.some(image=>image.status==='unknown'))await dispatcher.stop();
           dispatcher=null;snapshotFingerprint=null;
           if(!valid())return;
           if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus('Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
