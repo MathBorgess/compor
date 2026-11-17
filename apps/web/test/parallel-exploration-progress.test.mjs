@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {observeParallelChild,parallelWaitElapsed,pauseParallelWait,resumeParallelWait,restoreParallelWait,reconcileParallelGates} from '../lib/parallel-exploration-progress.ts';
+import {observeParallelChild,replaceRejectedParallelChild,parallelWaitElapsed,pauseParallelWait,resumeParallelWait,restoreParallelWait,reconcileParallelGates} from '../lib/parallel-exploration-progress.ts';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const initial=()=>({children:[1,2,3].map(position=>({requestId:id(position),position,status:'unconfirmed',revision:0,confirmedAt:null})),wait:{mode:'none'}});
@@ -38,4 +38,10 @@ test('incerteza, recusa, mensagens atrasadas e conflitos não inventam recibos',
  assert.throws(()=>observeParallelChild(state,{requestId:id(3),position:3,status:'completed',revision:2},40,true));
  assert.throws(()=>observeParallelChild(state,{requestId:id(2),position:1,status:'completed',revision:3},40,true));
  assert.throws(()=>observeParallelChild(state,{requestId:id(2),position:2,status:'completed',revision:2},40,true));
+});
+test('somente um recibo de reposição vinculado a recusa substitui o filho',()=>{
+ let state=initial();state=observeParallelChild(state,{requestId:id(2),position:2,status:'rejected',revision:2},1,false);
+ const replaced=replaceRejectedParallelChild(state,{position:2,previousId:id(2),requestId:id(9),status:'running',revision:1},10,false);
+ assert.equal(replaced.children[1].requestId,id(9));assert.equal(replaced.children[1].status,'running');assert.deepEqual(replaced.wait,{mode:'none'});
+ for(const bad of [{position:1,previousId:id(1),requestId:id(9),status:'running',revision:1},{position:2,previousId:id(2),requestId:id(1),status:'running',revision:1},{position:2,previousId:id(2),requestId:id(9),status:'running',revision:0}])assert.throws(()=>replaceRejectedParallelChild(state,bad,10,false));
 });

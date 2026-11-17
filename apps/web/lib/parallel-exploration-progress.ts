@@ -37,6 +37,15 @@ export function observeParallelChild(progress:ParallelProgress,observation:Paral
   return parallelProgressSchema.parse({children,wait:nextWait});
 }
 
+/** Change a slot only after a matching durable replacement receipt was read. */
+export function replaceRejectedParallelChild(progress:ParallelProgress,observation:{position:number;previousId:string;requestId:string;status:'running'|'unknown'|'completed'|'rejected';revision:number},now:number,visible:boolean):ParallelProgress {
+  const value=z.strictObject({position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),previousId:z.uuid(),requestId:z.uuid(),status:z.enum(['running','unknown','completed','rejected']),revision:z.number().check(z.int()).check(z.positive()).check(z.maximum(Number.MAX_SAFE_INTEGER))}).parse(observation);
+  const before=parallelProgressSchema.parse(progress),old=before.children.find(item=>item.position===value.position);
+  if(!old||old.requestId!==value.previousId||old.status!=='rejected'||before.children.some(item=>item.requestId===value.requestId))throw Error('parallel_replacement_mismatch');
+  const children=before.children.map(item=>item.position===value.position?{requestId:value.requestId,position:value.position,status:'unconfirmed' as const,revision:0,confirmedAt:null}:item);
+  return observeParallelChild(parallelProgressSchema.parse({...before,children}),{requestId:value.requestId,position:value.position,status:value.status,revision:value.revision},now,visible);
+}
+
 export function pauseParallelWait(progress:ParallelProgress,now:number):ParallelProgress {
   const value=parallelProgressSchema.parse(progress),time=validNow(now);
   return value.wait.mode==='running'?parallelProgressSchema.parse({...value,wait:{mode:'paused',remainingMs:Math.max(0,Math.min(PARALLEL_WAIT_MS,value.wait.nextAt-time))}}):value;
