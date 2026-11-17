@@ -53,3 +53,23 @@ No PR, o `Quality gate` do commit `6b41c92115ff944d1ce4926be68f14f8714a4c43` e t
 A Vercel publicou o deployment `dpl_5rrN35TnsWi9ktzougmpMRRWeuHF` para o commit de merge, em estado `READY`, com `compor-ai.vercel.app` entre os aliases. O workflow da `main` concluiu o check `Apply migrations or initialize baseline` com sucesso; o recorte não contém novas migrations. Uma consulta pública à entrada respondeu HTTP 200. Não houve nova geração paga nem validação ponta a ponta autenticada desse deployment; o estado `READY` e o HTTP 200 não comprovam esses fluxos.
 
 Próxima rodada: reconciliar esta branch com a `main` publicada, finalizar a composição da autoridade/snapshot e a UI com CAS, revisar o fence e os WIPs antes de incorporar, completar lotes paralelos e triagem de referências selecionadas, repetir os gates e medir o bundle sem alterar o orçamento. O `409` de produção continua em standby; só retomar a investigação se voltar a ocorrer, conforme pedido de Matheus.
+
+## Retomada sobre a main publicada
+
+A branch local `codex/compor-retomada-visual` integra o checkpoint sobre `2aca180`, a revisão da `main` confirmada no remoto. O código de produção avaliado está em `93d58ca49f3353beeca78663fad62e50dfb6e87a`. Os dois commits seguintes ampliam somente a fixture de revogação no navegador.
+
+- O Agents API devolve três prompts com composições e contrastes distintos. O servidor reserva as três posições e inicia as chamadas ao GPT Image em paralelo. A interface mostra planejamento, espera e recibos por imagem. A contagem de 15 segundos começa após as três confirmações. Duas rodadas sem interação exigem outro pedido antes de gerar.
+- O snapshot registra a seleção confirmada. Uploads selecionados entram obrigatoriamente. Referências externas consentidas e imagens geradas do projeto entram no GPT Image conforme a subsequência assinada pelo agente. O mesmo vínculo vale para a arte individual. O teste de lote verificou três chamadas multipart simultâneas, prompts distintos, bytes e ordem dos anexos, e exclusão do item descartado.
+- Alterações entre abas usam CAS. A migration 38 encerra uma alteração pendente pelo ID antes de permitir uma nova seleção revisada. A 39 protege a retomada visual com o snapshot e a intenção sob a mesma trava. Consultas preservam os recibos, inclusive após retirada de consentimento. Falha parcial ou resultado incerto suspende novos pedidos automáticos.
+
+| Gate local | Resultado |
+| --- | --- |
+| Lint, TypeScript, Next e Astro | Aprovados |
+| Verificações estáticas e migrations | 109/109. Verificações Python específicas do CI também aprovadas |
+| Contratos dos pacotes e scripts | 523 testes Node e 22 Python aprovados |
+| Chromium | 676/676 em `93d58ca`, sem falhas, cancelamentos ou skips. Os três cenários direcionados da fixture ampliada também passaram em `4835887`. |
+| Performance | **Reprovado**. 336.977 bytes gzip no JavaScript total para limite de 300.000 |
+
+No macOS arm64 com Node 24.16.0, as cinco medições Lighthouse registraram 0 B de JavaScript externo na entrada sem sessão, LCP mediano de 620 ms, TBT de 0 ms e CLS de 0,008. O excedente de 36.977 B no total de chunks bloqueia a entrega. Os experimentos de agrupamento e eliminação de código estão na [auditoria de bundle](../quality/2026-11-17-bundle-retomada-visual.md). O orçamento segue o mesmo da `main`.
+
+Os testes usaram fornecedores simulados, PGlite com migrations reais e PostgreSQL local com duas conexões independentes nos ensaios concorrentes de seleção e revogação. A revisão de produção depende do orçamento de bundle, de CI e de verificação autenticada com os serviços reais. Nesta rodada, as flags de produção não foram alteradas e o trabalho ficou local, sem chamadas pagas, migrations remotas ou deploy. O `409 project_busy` de produção segue em standby.
