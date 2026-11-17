@@ -50,7 +50,10 @@ export async function openSettings(page,tab='Contexto'){
  const panel=page.getByRole('dialog',{name:'Configurações do projeto',exact:true});
  if(!await panel.isVisible())await page.getByRole('button',{name:'Configurações do projeto',exact:true}).click();
  await panel.getByRole('navigation',{name:'Configurações',exact:true}).getByRole('button',{name:tab,exact:true}).click();
- return tab==='Referências'?page.locator('.reference-step'):panel;
+ const target=tab==='Referências'?page.locator('.reference-step'):panel;
+ // The next action may switch tabs; do not inspect visibility before React mounts this destination.
+ await target.waitFor();
+ return target;
 }
 export async function closeSettings(page){
  const references=page.locator('.reference-step');
