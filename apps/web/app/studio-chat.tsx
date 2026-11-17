@@ -503,7 +503,9 @@ export default function StudioChat({
       setBusy(false);
       setNotice(
         data.error==='provider_usage_limit'
-          ? 'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e o limite da organização OpenAI.'
+          ? credentialSource==='default'
+            ? 'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.'
+            : 'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.'
           : data.error==='default_credential_unavailable'&&data.failurePhase==='before_submission'&&data.requestId===requestId
           ? 'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.'
           : data.error === "project_busy" &&
