@@ -8,12 +8,12 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const actor={userId:id(1),token:'token-synthetic'},origin='https://compor.test',key='sk-synthetic_abcdefghijklmnopqrstuvwxyz';
 const plan={version:1,items:[1,2,3].map(position=>({position,creativePrompt:`Caminho ${position}`,composition:`Composição ${position}`,contrast:`Contraste ${position}`,differenceFromOthers:`Diferença ${position}`,prompt:`Prompt completo ${position}`}))};
 const body={projectId:id(2),conversationId:'references',batchId:id(3),planRequestId:id(4),context:{idea:'Ideia sintética'},plan,planBinding:'signed-synthetic',imageIds:[id(5),id(6),id(7)]};
-const request=(value=body,headers={})=>new Request(origin+'/api/studio/exploration-batches/execute',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key,...headers},body:JSON.stringify(value)});
+const request=(value=body,headers={},signal)=>new Request(origin+'/api/studio/exploration-batches/execute',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key,...headers},body:JSON.stringify(value),signal});
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject};};
 function fixture(){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true};const store={
  reserveBatch:async(...args)=>{calls.push(['reserve',...args]);return state.reservation;},
  replaceRejected:async(...args)=>{calls.push(['replace',...args]);return state.reservation;},
- plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
+ plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);if(state.planGate)await state.planGate.promise;if(state.planGates?.get(id))await state.planGates.get(id).promise;},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
  finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
  };const route=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async()=>state.proof,store,generate:async(a,k,prompt)=>{calls.push(['generate',prompt]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
 const wait=async(predicate)=>{for(let i=0;i<100;i++){if(predicate())return;await new Promise(r=>setTimeout(r,1));}throw Error('condition not reached');};
@@ -54,6 +54,20 @@ test('reposição interrompe em prova inválida e preserva rejeição ou incerte
 test('reserva repetida nunca despacha nem reemite capacidade',async()=>{
  const f=fixture();f.state.reservation={state:'running',isNew:false};const response=await f.route.post(request()),result=await response.json();
  assert.equal(response.status,409);assert.equal(result.status,'running');assert.equal(f.calls.filter(c=>c[0]==='generate').length,0);
+});
+test('abortar após reserva e antes do envio não inicia imagens e conserva incerteza',async()=>{
+ const f=fixture(),controller=new AbortController();f.state.planGate=deferred();
+ const pending=f.route.post(request(body,{},controller.signal));await wait(()=>f.calls.filter(c=>c[0]==='plan').length===3);
+ controller.abort();f.state.planGate.resolve();const response=await pending,result=await response.json();
+ assert.equal(result.status,'unknown');assert.equal(f.calls.filter(c=>c[0]==='generate').length,0);
+ assert.equal(f.calls.filter(c=>c[0]==='finish'&&c[2]==='unknown').length,3);
+});
+test('abortar após um envio não inventa cancelamento e impede envios ainda pendentes',async()=>{
+ const f=fixture(),controller=new AbortController(),gate=deferred();f.state.planGates=new Map([[id(6),gate],[id(7),gate]]);
+ const pending=f.route.post(request(body,{},controller.signal));await wait(()=>f.pending.size===1);
+ controller.abort();gate.resolve();f.pending.get('Prompt completo 1').resolve(new Uint8Array([1]));
+ const result=await (await pending).json();assert.deepEqual(result.images.map(x=>x.status),['completed','unknown','unknown']);
+ assert.equal(f.calls.filter(c=>c[0]==='generate').length,1);
 });
 
 test('prova ou propriedade incorreta não reserva nem gera',async()=>{

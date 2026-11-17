@@ -40,6 +40,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(JSON.stringify(input).includes(key))return reply({error:'invalid_request'},400);
    let actor:Actor|null;try{actor=await deps.resolveActor();if(!actor||!id.safeParse(actor.userId).success||!actor.token)return reply({error:'unauthorized'},401);if(!await deps.ownsProject(actor,input.projectId))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}
    try{if(!await deps.verifyPlan({actor,apiKey:key,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.planRequestId,context:input.context,plan:input.plan,token:input.planBinding}))return reply({error:'invalid_plan'},403);}catch{return reply({error:'invalid_plan'},403);}
+   if(request.signal.aborted)return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},409);
    const proofs=input.imageIds.map(()=>randomBytes(32).toString('hex'));
    const children=input.plan.items.map((entry,index)=>({requestId:input.imageIds[index],prompt:entry.prompt,proof:proofs[index]}));
    let reservation:BatchReservation;
@@ -47,7 +48,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(!reservation.isNew)return reply({status:reservation.state,batchId:input.batchId,retryAutomatically:false},409);
    if(reservation.state!=='running')return reply({status:'unknown',batchId:input.batchId,retryAutomatically:false},503);
    const results=await dispatchReservedExplorationBatch(children,{
-    generate:async child=>{const entry=input.plan.items[input.imageIds.indexOf(child.requestId)];await deps.store.plan(actor,input.projectId,child.requestId,{composition:entry.composition,contrast:entry.contrast});try{return await deps.generate(actor,key,child.prompt);}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}},
+    generate:async child=>{const entry=input.plan.items[input.imageIds.indexOf(child.requestId)];if(request.signal.aborted)throw Error('aborted before dispatch');await deps.store.plan(actor,input.projectId,child.requestId,{composition:entry.composition,contrast:entry.contrast});if(request.signal.aborted)throw Error('aborted before dispatch');try{return await deps.generate(actor,key,child.prompt);}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}},
     put:(child,bytes)=>deps.store.put(actor,input.projectId,child.requestId,bytes),
     finish:(child,state)=>deps.store.finish(actor,input.projectId,child.requestId,state,child.proof),
     reject:child=>deps.store.reject(actor,input.projectId,child.requestId,child.proof),
@@ -63,13 +64,16 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(JSON.stringify(input).includes(key)||!deps.store.replaceRejected)return reply({error:'invalid_request'},400);
    let actor:Actor|null;try{actor=await deps.resolveActor();if(!actor||!id.safeParse(actor.userId).success||!actor.token)return reply({error:'unauthorized'},401);if(!await deps.ownsProject(actor,input.projectId))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}
    try{if(!await deps.verifyPlan({actor,apiKey:key,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.planRequestId,context:input.context,plan:input.plan,token:input.planBinding}))return reply({error:'invalid_plan'},403);}catch{return reply({error:'invalid_plan'},403);}
+   if(request.signal.aborted)return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},409);
    const entry=input.plan.items[input.position-1],proof=randomBytes(32).toString('hex');
    let reservation:BatchReservation;
    try{reservation=reservationSchema.parse(await deps.store.replaceRejected(actor,{projectId:input.projectId,batchId:input.batchId,position:input.position,previousId:input.previousId,requestId:input.requestId,promptDigest:hash(JSON.stringify({prompt:entry.prompt,plan:{composition:entry.composition,contrast:entry.contrast},batch:{id:input.batchId,position:entry.position}})),rejectionDigest:hash(Buffer.from(proof,'hex'))}));}catch{return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);}
    if(!reservation.isNew)return reply({status:reservation.state,batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},409);
    if(reservation.state!=='running')return reply({status:'unknown',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},503);
    try{
+    if(request.signal.aborted)throw Error('aborted before dispatch');
     await deps.store.plan(actor,input.projectId,input.requestId,{composition:entry.composition,contrast:entry.contrast});
+    if(request.signal.aborted)throw Error('aborted before dispatch');
     let bytes:Uint8Array;try{bytes=await deps.generate(actor,key,entry.prompt);}catch(error){if(error instanceof ExplorationCredentialsRejected){await deps.store.reject(actor,input.projectId,input.requestId,proof);return reply({status:'rejected',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},200);}throw error;}
     await deps.store.put(actor,input.projectId,input.requestId,bytes);
     await deps.store.finish(actor,input.projectId,input.requestId,'completed',proof);
