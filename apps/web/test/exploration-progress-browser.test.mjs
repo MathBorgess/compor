@@ -28,7 +28,7 @@ function Screen(){
  proposals={window.disableGallery?<p>Galeria simulada</p>:<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={()=>{setEnabled(true);void loop.resume();}}>Ativar e retomar</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output><output aria-label="aguarda feedback">{String(loop.awaitingFeedback)}</output></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,startDisabled=false,thirdReceipt=false,otherProject=false,slowDirect=false}={}){
+async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,startDisabled=false,thirdReceipt=false,otherProject=false,slowDirect=false,legacyMarker=false}={}){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-exploration-progress',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -42,6 +42,7 @@ async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,st
  if(thirdReceipt)await page.addInitScript(({userId,projectId})=>{const batchId='00000000-0000-4000-8000-000000000099',requestId='00000000-0000-4000-8000-000000000098';window.slowCompletion=true;localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:2,batchId,completed:2,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:false}));localStorage.setItem(`compor-exploration-pending:${userId}`,JSON.stringify({projectId,requestId,sequence:2,batchId,position:3,conversationId:'references'}));},{userId,projectId});
  if(slowDirect)await page.addInitScript(({userId,projectId})=>{window.slowCompletion=true;localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:2,batchId:'00000000-0000-4000-8000-000000000099',completed:2,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:false}));},{userId,projectId});
  if(otherProject)await page.addInitScript(({userId,projectId})=>{window.startProject='00000000-0000-4000-8000-000000000004';window.disableGallery=true;localStorage.setItem(`compor-exploration-pending:${userId}`,JSON.stringify({projectId,requestId:'00000000-0000-4000-8000-000000000098',sequence:0,batchId:'00000000-0000-4000-8000-000000000099',position:1,conversationId:'references'}));},{userId,projectId});
+ if(legacyMarker)await page.addInitScript(({userId,projectId})=>{window.disableGallery=true;localStorage.setItem(`compor-exploration-pending:${userId}`,JSON.stringify({projectId,requestId:'00000000-0000-4000-8000-000000000098',sequence:0}));},{userId,projectId});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
  const pending=[],posts=[],resumes=[],gets=[];
  await page.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));
@@ -137,6 +138,13 @@ test('recibo de outro projeto não é consultado nem removido fora do projeto de
  await page.getByText('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.',{exact:true}).waitFor();
  assert.equal(gets.length,0);assert.equal(posts.length,0);
  const marker=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`));assert.equal(marker.projectId,projectId);assert.equal(marker.requestId,'00000000-0000-4000-8000-000000000098');
+});
+
+test('marcador legado sem conversa não é atribuído automaticamente a um post',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,gets}=await fixture(t,{width:390,height:844},{legacyMarker:true});
+ await page.getByText('Há uma exploração antiga sem conversa de origem identificada. O recibo foi preservado; procure ajuda para recuperá-lo.',{exact:true}).waitFor();
+ assert.equal(gets.length,0);assert.equal(posts.length,0);
+ const marker=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`));assert.equal(marker.requestId,'00000000-0000-4000-8000-000000000098');assert.equal(Object.hasOwn(marker,'conversationId'),false);
 });
 
 for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){

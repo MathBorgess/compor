@@ -12,6 +12,8 @@ Quando o ciclo que enviou a exploração deixa de estar ativo ou seu escopo/cred
 
 Essa regra substitui somente a reconciliação automática do POST recebido após saída no fluxo sequencial anterior; não altera a quantidade de imagens, os gates de interação, as provas nem os recibos do fornecedor. Uma resposta tardia da RPC de retomada também não desfaz uma pausa ou troca de escopo que ocorreu enquanto ela estava em voo.
 
+Marcadores legados sem conversa de origem não são atribuídos ao post aberto nem removidos por uma consulta de outro escopo. Eles permanecem bloqueados e exigem recuperação assistida com evidência da origem; a ausência desse campo não prova que pertencem às referências gerais.
+
 ## Evidência e limites
 
 Os testes simulam cancelamento ineficaz, respostas tardias, troca de projeto/fonte e retorno com GET; nenhum chama provedor pago. O banco continua sendo a autoridade dos recibos. O navegador não garante cancelar um efeito já iniciado, e perder a resposta não autoriza repetição automática. Validação local não prova o comportamento de produção ou de outros dispositivos.

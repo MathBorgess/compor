@@ -114,7 +114,8 @@ export function useExplorationLoop(props: LoopProps) {
           if (prior !== null) {
             const pending = pendingSchema.parse(JSON.parse(prior));
             if(pending.projectId!==props.projectId){stop('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.');return;}
-            if(pending.conversationId&&pending.conversationId!==(scope??'references')){stop('Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.');return;}
+            if(!pending.conversationId){stop('Há uma exploração antiga sem conversa de origem identificada. O recibo foi preservado; procure ajuda para recuperá-lo.');return;}
+            if(pending.conversationId!==(scope??'references')){stop('Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.');return;}
             const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId: pending.projectId })}`, { cache: "no-store", signal: cancel.signal });
             if (!response.ok) throw Error("unconfirmed");
             const rows = listSchema.parse(await response.json()).images;
