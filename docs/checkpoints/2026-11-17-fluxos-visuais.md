@@ -43,3 +43,13 @@ Os caminhos abaixo são bancadas locais, não parte da entrega. Não apagar nem 
 | `/Users/matheusborges/github/.worktrees/compor-bancada-bundle-nov-17` | Bancada de medições; experimentos anteriores não foram promovidos. | Preservar enquanto as evidências forem úteis; a auditoria versionada contém os números relevantes. |
 
 Uma resposta perdida de comando de seleção sem recibo permanece incerta. Até existir uma solução de fence revisada e testada, manter o bloqueio explícito: não substituir seleção remota, criar novo comando equivalente automaticamente ou presumir que ausência temporária prova que o comando não será aplicado.
+
+## Entrega do recorte concluído
+
+O [PR #60](https://github.com/MathBorgess/compor/pull/60) levou à `main` apenas o recorte de correções sequenciais, chat, Next 16.4.6 e imagens, sem as migrations ou capacidades visuais incompletas acima. O merge é `2aca180384df0daaff2798dff1573461d0d8cde2`; as mudanças de paralelismo e triagem permanecem nesta branch de checkpoint, baseada na `main` anterior, e precisarão ser reconciliadas com a nova `main` antes de uma próxima entrega. As bancadas não commitadas continuam preservadas.
+
+No PR, o `Quality gate` do commit `6b41c92115ff944d1ce4926be68f14f8714a4c43` e todos os jobs aplicáveis passaram, inclusive navegador, isolamento e performance Linux de 298.569/300.000 bytes gzip. A suíte Chromium local anterior passou 526/526, e as correções posteriores de galeria e recibo de não envio tiveram respectivamente 15 e 26 cenários Chromium direcionados aprovados. Essas medições são de recortes/commits diferentes, conforme descrito no PR, e não provam o fluxo real autenticado.
+
+A Vercel publicou o deployment `dpl_5rrN35TnsWi9ktzougmpMRRWeuHF` para o commit de merge, em estado `READY`, com `compor-ai.vercel.app` entre os aliases. O workflow da `main` concluiu o check `Apply migrations or initialize baseline` com sucesso; o recorte não contém novas migrations. Uma consulta pública à entrada respondeu HTTP 200. Não houve nova geração paga nem validação ponta a ponta autenticada desse deployment; o estado `READY` e o HTTP 200 não comprovam esses fluxos.
+
+Próxima rodada: reconciliar esta branch com a `main` publicada, finalizar a composição da autoridade/snapshot e a UI com CAS, revisar o fence e os WIPs antes de incorporar, completar lotes paralelos e triagem de referências selecionadas, repetir os gates e medir o bundle sem alterar o orçamento. O `409` de produção continua em standby; só retomar a investigação se voltar a ocorrer, conforme pedido de Matheus.
