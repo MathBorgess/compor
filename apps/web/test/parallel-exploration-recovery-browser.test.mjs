@@ -53,6 +53,6 @@ test('recuperação visível consulta lote somente por gesto e mostra resultados
  await uncertainPage.getByRole('button',{name:'Verificar encerramento da tentativa'}).click();await uncertainPage.getByText('Não foi possível confirmar e preservar o encerramento. A tentativa continua bloqueada.',{exact:true}).waitFor();
  assert.equal(await uncertainPage.getByRole('button',{name:'Verificar encerramento da tentativa'}).count(),1,'ausência de prova conserva bloqueio');
  const consumedContext=await browser.newContext();t.after(()=>consumedContext.close());const consumedPage=await consumedContext.newPage();await consumedPage.goto(`http://127.0.0.1:${server.address().port}/?consumed`);
- await consumedPage.getByRole('button',{name:'Verificar encerramento da tentativa'}).click();await consumedPage.getByText('Não foi possível confirmar e preservar o encerramento. A tentativa continua bloqueada.',{exact:true}).waitFor();
+ await consumedPage.getByRole('button',{name:'Verificar encerramento da tentativa'}).click();await consumedPage.getByText('A intenção foi revogada. O lote possui recibos; consulte seus resultados antes de continuar.',{exact:true}).waitFor();
  const consumedCalls=await consumedPage.evaluate(()=>window.calls);assert.deepEqual(consumedCalls.map(call=>call.path),['/api/studio/exploration-batches/intent/state','/api/studio/exploration-batches/intent/revoke','/api/studio/exploration-batches/status']);
 });

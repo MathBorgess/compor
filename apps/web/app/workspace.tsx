@@ -13,7 +13,7 @@ import "./studio-shell.css";
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
-export default function Workspace({ loginAvailable, localAuth = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -247,6 +247,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
         >
           <StudioApp
             developerMode={developerMode}
+            parallelAvailable={parallelAvailable}
             key={authenticatedUser}
             userId={authenticatedUser}
             accountLabel={account?.label ?? "Conta conectada"}

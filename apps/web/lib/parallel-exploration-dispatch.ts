@@ -1,13 +1,13 @@
 import * as z from './schema.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
-import {createParallelJournalStore,parseParallelPreparation,type ParallelPreparation} from './parallel-exploration-journal.ts';
+import {createParallelJournalStore,parseParallelPreparation,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
 import {createParallelIntentClient} from './parallel-exploration-intent-client.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
 import {observeParallelBatch} from './parallel-exploration-observer.ts';
 
 const response=z.object({status:z.enum(['running','completed','failed','unknown','unavailable','busy','conflict']),retryAutomatically:z.literal(false),requestId:z.optional(z.uuid()),batchId:z.optional(z.uuid()),plan:z.optional(z.unknown()),planBinding:z.optional(z.string().check(z.minLength(1)).check(z.maxLength(8192)))});
 type Store=ReturnType<typeof createParallelJournalStore>;
-type Options={store:Store;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
+type Options={store:Store;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot;journal:ParallelJournal})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
 
 /** One user-authorized attempt; callers hold the account Web Lock and validate all gates. */
 export function createParallelDispatcher(options:Options){

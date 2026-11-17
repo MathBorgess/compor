@@ -8,7 +8,7 @@ import type {ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 import type {StudioState} from '../lib/studio-domain.ts';
 import {ParallelExplorationProgress} from './parallel-exploration-progress.tsx';
 
-type Props={userId:string;projectId:string;conversationId:string;credentialSource:'byok'|'default';getApiKey:()=>string;isAuthenticated:()=>boolean;onCompleted:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void>};
+type Props={userId:string;projectId:string;conversationId:string;credentialSource:'byok'|'default';getApiKey:()=>string;isAuthenticated:()=>boolean;onContinuePlan?:()=>void;onCompleted:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void>};
 
 /** Read-only recovery. No button starts or repeats a planning or image request. */
 export default function ParallelExplorationRecovery(props:Props){
@@ -72,7 +72,7 @@ export default function ParallelExplorationRecovery(props:Props){
           else if(latest.stage==='failed'&&status==='failed')evidence='plan_failed';
           else throw Error('unavailable');
         }else{
-          if(!await client.inspectBatchAbsent(latest))throw Error('unavailable');
+          if(!await client.inspectBatchAbsent(latest)){if(inScope()){setPreparation(latest);setNotice('A intenção foi revogada. O lote possui recibos; consulte seus resultados antes de continuar.');}return;}
           evidence='batch_absent';
         }
         if(!inScope())throw Error('unavailable');
@@ -86,6 +86,7 @@ export default function ParallelExplorationRecovery(props:Props){
     <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
     {sameProject&&sameConversation&&progress&&<ParallelExplorationProgress progress={progress}/>}
     {sameProject&&sameConversation&&preparation&&['planning','planned','executing'].includes(preparation.stage)&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
+    {sameProject&&sameConversation&&preparation?.stage==='planned'&&props.onContinuePlan&&<><p>Para continuar o mesmo plano, use a fonte e a chave originais; o servidor confirma o vínculo antes da execução.</p><button type="button" disabled={busy||props.credentialSource!==preparation.credentialSource} onClick={props.onContinuePlan}>Continuar mesmo plano</button></>}
     {sameProject&&sameConversation&&preparation?.intentId&&['planning','planned','executing','failed'].includes(preparation.stage)&&<><p>O encerramento revoga a intenção. Se houver efeito ainda não confirmado, a tentativa continua bloqueada.</p><button type="button" disabled={busy} onClick={()=>{void archive();}}>Verificar encerramento da tentativa</button></>}
     {notice&&<p role="status">{notice}</p>}
   </section></React.Fragment>;

@@ -25,6 +25,8 @@ import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import ReferenceSelectionTray from "./reference-selection-tray";
 import { useExplorationLoop } from "./use-exploration-loop";
+import {useParallelExploration} from './use-parallel-exploration';
+import {ParallelExplorationProgress} from './parallel-exploration-progress';
 const ParallelExplorationRecovery=dynamic(()=>import('./parallel-exploration-recovery'));
 import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
@@ -64,7 +66,7 @@ import type { StudioState, StudioReference, ActionResult, DraftContext } from '.
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -84,6 +86,7 @@ export default function StudioApp({
   credentialSource = "byok",
   credentialEpoch = 0,
   defaultAvailable = false,
+  parallelAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -287,6 +290,7 @@ export default function StudioApp({
         credentialSource={credentialSource}
         credentialEpoch={credentialEpoch}
         defaultAvailable={defaultAvailable}
+        parallelAvailable={parallelAvailable}
         onUseAI={onUseAI}
         onPauseAI={onPauseAI}
         getApiKey={getApiKey}
@@ -361,6 +365,7 @@ function ProjectStudio({
   credentialSource = "byok",
   credentialEpoch = 0,
   defaultAvailable = false,
+  parallelAvailable = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -397,6 +402,8 @@ function ProjectStudio({
   const [creatingPost,setCreatingPost]=useState(false),[deletingPost,setDeletingPost]=useState(false);
   const [postDeleteTarget,setPostDeleteTarget]=useState<{pieceId:string;name:string}|null>(null),[postDeleteError,setPostDeleteError]=useState('');
   const [explorationRequested,setExplorationRequested]=useState(false);
+  const parallelGesture=useRef<{source:CredentialSource;epoch:number;scope:string}|null>(null);
+  const previousParallelAvailable=useRef(parallelAvailable);
   const [referenceTransition,setReferenceTransition]=useState(false);
   const referenceTransitionLock=useRef(false);
   const [visitedPosts,setVisitedPosts]=useState<string[]>([]);
@@ -463,7 +470,24 @@ function ProjectStudio({
     }
     await local.flush();
   }
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
+  const parallel=useParallelExploration({userId,projectId:project.id,conversationId:referenceScope,state:s?conversationContext(s,referenceScope):null,getState:()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;},source:credentialSource,credentialEpoch,hasApiKey,getApiKey,isAuthenticated,available:parallelAvailable,visible:stageRestored&&(stage==='studio'||currentSettings==='references')&&referencesOpen,idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea,onCompleted:onExplorationCompleted});
+  const usingParallel=parallelAvailable&&!parallel.legacyPending;
+  const legacyExploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: !usingParallel && !(previousParallelAvailable.current&&!parallelAvailable) && stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
+  useEffect(()=>{if(previousParallelAvailable.current&&!parallelAvailable){parallelGesture.current=null;setExplorationRequested(false);parallel.pause();}previousParallelAvailable.current=parallelAvailable;},[parallelAvailable]);
+  useEffect(()=>{if(!parallelAvailable||!parallel.legacyPending||!legacyExploration.blocked)return;try{if(localStorage.getItem(`compor-exploration-pending:${userId}`)===null){parallel.clearLegacyPending();setExplorationRequested(false);}}catch{/* Preserve the legacy guard when storage is unavailable. */}},[parallelAvailable,parallel.legacyPending,legacyExploration.blocked,userId]);
+  const exploration=usingParallel?{...parallel,blocked:parallel.phase==='blocked',parallelBlocked:false,awaitingAnswer:explorationRequested?false:legacyExploration.awaitingAnswer,resuming:false,resumeError:null,progress:null,resume:parallel.start}:legacyExploration;
+  const parallelStart=useRef(parallel.start);parallelStart.current=parallel.start;
+  useEffect(()=>{
+    const gesture=parallelGesture.current;
+    if(!gesture)return;
+    if(!usingParallel||!referencesOpen||gesture.source!==credentialSource||gesture.epoch!==credentialEpoch||gesture.scope!==referenceScope){parallelGesture.current=null;return;}
+    if(hasApiKey&&explorationRequested&&parallel.epochReady){parallelGesture.current=null;void parallelStart.current();}
+  },[usingParallel,referencesOpen,credentialSource,credentialEpoch,referenceScope,hasApiKey,explorationRequested,parallel.epochReady]);
+  function requestProposals(){
+    if(usingParallel)parallelGesture.current={source:credentialSource,epoch:credentialEpoch,scope:referenceScope};
+    activateAI();setExplorationRequested(true);
+    if(!usingParallel)void exploration.resume();
+  }
   useEffect(() => {
     if (credentialSeen.current === credentialEpoch) return;
     credentialSeen.current = credentialEpoch;
@@ -1134,7 +1158,7 @@ function ProjectStudio({
       }}
     />
   );
-  const explorationRecovery=<>{referencesOpen&&<ParallelExplorationRecovery userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>)}</>;
+  const explorationRecovery=<>{referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted} onContinuePlan={usingParallel&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
     <StudioChat key={conversationId??"legacy"} conversationId={conversationId} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
       state={s}
@@ -1268,11 +1292,11 @@ function ProjectStudio({
   }
   const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
   const aiPanel=<ProjectAI continueLabel={preparing?'Continuar para referências':returnToWorkspaceLabel} preference={s.workflow.aiPreference} source={credentialSource} available={defaultAvailable} canUseAI={canUseAI} keyInput={keyInput} onDefault={()=>{if(credentialSource==='byok')onRemoveKey();local.change(value=>updateWorkflow(value,{aiPreference:'default'}));activateAI();}} onOwn={()=>local.change(value=>updateWorkflow(value,{aiPreference:'byok'}))} onRemove={()=>{onRemoveKey();setProjectIntent(false);exploration.pause();}} onContinue={preparing?nextReferences:closeSettings} onSkip={()=>{continueWithoutAI();if(preparing)nextReferences();else closeSettings();}} onBack={()=>preparing?local.change(value=>updateWorkflow(value,{phase:'context'})):closeSettings()}/>;
-  const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition} onRequestProposals={()=>{activateAI();setExplorationRequested(true);void exploration.resume();}} proposalsDisabled={referenceTransition||!canUseProjectAI||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} proposalsRunning={explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onPauseProposals={exploration.pause} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
+  const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition} onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||!canUseProjectAI||usingParallel&&(!parallel.epochReady||!parallel.ready)||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} proposalsRunning={explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onPauseProposals={()=>{parallelGesture.current=null;exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':usingParallel&&!parallel.ready?'Informe uma ideia ou oferta e resolva o público antes de pedir propostas.':explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
     selection={<ReferenceSelectionTray items={scopedReferences.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url,scopeLabel:s.projectReferenceIds.includes(reference.id)?'Do projeto':'Deste post',removeLabel:referenceScope==='references'?'Remover do projeto':s.projectReferenceIds.includes(reference.id)?'Deixar de usar neste post':'Remover deste post',...(referenceScope!=='references'&&!s.projectReferenceIds.includes(reference.id)?{onShare:()=>{void selectExistingReference(reference,'references').catch(()=>setNotice('Não foi possível confirmar o compartilhamento.'));}}:{})}))} availableShared={referenceScope==='references'?[]:s.references.filter(reference=>s.projectReferenceIds.includes(reference.id)&&!scopedReferences.some(item=>item.id===reference.id)).map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} onUseShared={referenceScope==='references'?undefined:useSharedReference} limit={STUDIO_LIMITS.references} onRemove={async id=>{await removeFile(id);}}/>}
     search={sourceControl=><ReferenceExploration sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceScope==='references'?idea:postContext(s,referenceScope).message||idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
     upload={<label className="guided-reference-upload">Enviar suas imagens<p>PNG ou JPEG, até 8 MB cada. Limite de 20 imagens por projeto.</p><input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label>}
-    proposals={<section className="reference-workbench-proposals">{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} onRemoveReference={async imageId=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'kind' in item.source&&item.source.imageId===imageId);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/></section>}
+    proposals={<section className="reference-workbench-proposals">{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}{usingParallel&&parallel.progress&&<ParallelExplorationProgress progress={parallel.progress}/>}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} onRemoveReference={async imageId=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'kind' in item.source&&item.source.imageId===imageId);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/></section>}
     conversation={<>{explorationRecovery}<div className="guided-reference-chat"><div className="guided-reference-post-chat" ref={setReferenceChatTarget}/></div></>}
     onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={()=>{void finishReferences();}} continueLabel={preparing?(scopedReferences.length?'Preparar primeiro post':'Continuar sem referências'):s.workflow.view==='prepare-post'?'Voltar ao pedido':returnToWorkspaceLabel}/>;
   const intro=s.workflow.view==='compose'&&!draft?.baseVersion&&!base&&!conversationMessages(s,draft?.pieceId).some(message=>message.role==='user');

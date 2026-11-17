@@ -61,8 +61,11 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
     if(!canInspect())throw Error('parallel_not_allowed');
     const response=await fetchApi('/api/studio/exploration-batches/status',{method:'POST',headers,body:JSON.stringify({projectId:preparation.projectId,batchId:preparation.batchId})});
     if(!response.ok||!canInspect())throw Error('parallel_unconfirmed');
-    const value=absentBatch.safeParse(await response.json());
-    return value.success&&value.data.projectId===preparation.projectId&&value.data.batchId===preparation.batchId;
+    const raw:unknown=await response.json(),value=absentBatch.safeParse(raw);
+    if(value.success){if(value.data.projectId!==preparation.projectId||value.data.batchId!==preparation.batchId)throw Error('parallel_mismatch');return true;}
+    const present=statusResponse.parse(raw),piece=preparation.conversationId==='references'?null:preparation.conversationId;
+    if(present.projectId!==preparation.projectId||present.batchId!==preparation.batchId||present.pieceId!==piece||new Set(present.images.map(image=>image.position)).size!==3||present.images.some(image=>preparation.imageIds[image.position-1]!==image.requestId))throw Error('parallel_mismatch');
+    return false;
   }
   async function inspectPlanRecord(preparation:ParallelPreparation):Promise<z.infer<typeof planRecord>['status']>{
     if(!canInspect())throw Error('parallel_not_allowed');
