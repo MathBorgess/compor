@@ -16,7 +16,7 @@ import StudioChat from './app/studio-chat.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);
-const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));window.referenceOriginal=Array.from(new Uint8Array(await file.arrayBuffer()));
 const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
 function initial(){let state=createPost(createStudioState({userId:'${user}',projectId:'${project}'}),{pieceId:'${piece}'});return addReference(state,reference('${first}'));}
 function Fixture(){const [waiting,setWaiting]=useState(false);const reportWait=useCallback((id,value)=>setWaiting(value),[]);const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
@@ -45,6 +45,12 @@ async function setup(t,{feedbackDelayMs=0}={}){
  const waitForAnswer=count=>page.getByText('Posso seguir pela direção sóbria?',{exact:true}).nth(count-1).waitFor();
  return {page,calls,origin,pinSignals,waitForCalls,waitForAnswer,unknown:()=>{answer='unknown';},hold:()=>{answer='hold';},release:()=>{answer='completed';release?.();}};
 }
+test('mensagem de texto inclui o PNG selecionado com os bytes originais pequenos',{skip:!existsSync(browserPath),timeout:20000},async t=>{
+ const {page,calls,origin,waitForCalls}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.getByLabel('Sua mensagem').fill('O que você vê nesta referência?');await page.getByLabel('Sua mensagem').press('Enter');await waitForCalls(1);
+ const request=calls[0];assert.equal(request.message,'O que você vê nesta referência?');assert.equal(request.referenceImages.length,1);assert.equal(request.referenceImages[0].mime,'image/png');assert.equal(request.referenceImages[0].id,first);
+ assert.deepEqual([...Buffer.from(request.referenceImages[0].data,'base64')],await page.evaluate(()=>window.referenceOriginal));
+});
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
  const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');
  await page.waitForTimeout(5500);assert.equal(calls.length,0);
