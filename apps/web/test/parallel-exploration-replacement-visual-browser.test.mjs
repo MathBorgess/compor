@@ -30,15 +30,21 @@ test('reposição visual recupera snapshot vinculado e nunca reenvia resultado i
   if(path.endsWith('/intent/revoke'))return Response.json({status:'revoked',epoch:3,revocationEpoch:3});
   throw Error('unexpected '+path);
  };
- const run=createReplacementRun({preparation:prep,position:2,key,allowed:()=>true,currentContext:async()=>context,onSnapshot:async()=>{},onNotice:value=>window.notices.push(value)});await run.run();window.finished=true;
+ const current=entries.map((entry,index)=>({metadata:{id:entry.id,name:'arquivo '+index,mime:'image/png',size:file.size,width:2,height:2,source:index===1?{originUrl:entry.source.originUrl,board:entry.source.board}:{kind:'local-upload'}},file}));
+ if(location.search==='?removed')current.splice(0,1);
+ if(location.search==='?reordered')current.reverse();
+ if(location.search==='?changed-source')current[1].metadata.source={originUrl:'https://www.pinterest.com/pin/other/',board:'behance/advertising'};
+ if(location.search==='?changed-bytes'){const bytes=new Uint8Array(await file.arrayBuffer());bytes[bytes.length-1]^=1;current[0].file=new Blob([bytes],{type:'image/png'});}
+ const run=createReplacementRun({preparation:prep,position:2,key,allowed:()=>true,currentContext:async()=>context,currentReferences:async()=>current,onSnapshot:async()=>{},onNotice:value=>window.notices.push(value)});await run.run();window.finished=true;
  `},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'});
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(bundled.outputFiles[0].text);}else res.end('<!doctype html><script type="module" src="/fixture.js"></script>');});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
- for(const mode of ['success','missing','lost']){
+ for(const mode of ['success','missing','lost','removed','reordered','changed-source','changed-bytes']){
   const context=await browser.newContext(),page=await context.newPage();const errors=[];page.on('pageerror',error=>errors.push(error.message));await page.goto(`http://127.0.0.1:${server.address().port}/${mode==='success'?'':'?'+mode}`);await page.waitForFunction(()=>window.finished,{timeout:10000});
   const result=await page.evaluate(()=>({calls:window.calls,notices:window.notices,claimBefore:window.claimBefore,submittedBefore:window.submittedBefore}));assert.deepEqual(errors,[]);
   const intents=result.calls.filter(call=>call.path.endsWith('/intent')),replacements=result.calls.filter(call=>call.path.endsWith('/replace'));
   if(mode==='missing'){assert.equal(intents.length,0);assert.equal(replacements.length,0);assert(result.notices.some(value=>value.includes('imagens desta tentativa não estão disponíveis')));}
+  else if(['removed','reordered','changed-source','changed-bytes'].includes(mode)){assert.equal(intents.length,0);assert.equal(replacements.length,0);assert(result.notices.some(value=>value.includes('referências selecionadas mudaram')));}
   else{assert.equal(intents.length,1);assert.equal(replacements.length,1);assert(result.claimBefore&&result.submittedBefore);assert.equal(intents[0].body.visualInput.version,2);assert.deepEqual(replacements[0].body.referenceImages.map(image=>image.id),['00000000-0000-4000-8000-000000000010','00000000-0000-4000-8000-000000000012']);assert.equal(replacements[0].body.planBinding,'memory-proof');if(mode==='lost')assert(result.notices.some(value=>value.includes('ainda não foi confirmada')));}
   await context.close();
  }

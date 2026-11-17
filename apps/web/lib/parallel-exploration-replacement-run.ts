@@ -3,9 +3,28 @@ import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exp
 import {createParallelIntentClient} from './parallel-exploration-intent-client.ts';
 import {createParallelReplacementClient,type ParallelReplacementClaim} from './parallel-exploration-replacement-client.ts';
 import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import {referenceSchema} from './studio-domain.ts';
+import type {StoredReference} from './studio-storage.ts';
+import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 
-type Options={preparation:ParallelPreparation;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
+type Options={preparation:ParallelPreparation;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;currentReferences?:()=>Promise<StoredReference[]>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
+
+async function matchesSelection(manifest:VisualInputManifest,references:StoredReference[]):Promise<boolean>{
+  if(!Array.isArray(references)||references.length!==manifest.entries.length)return false;
+  for(const [index,entry] of manifest.entries.entries()){
+    const reference=references[index],metadata=reference?.metadata,source=metadata?.source,file=reference?.file;
+    if(!referenceSchema.safeParse(metadata).success||metadata.id.toLowerCase()!==entry.id||!(file instanceof Blob)||file.type!==entry.original.mime||file.size!==entry.original.byteLength||metadata.mime!==file.type||metadata.size!==file.size||!source)return false;
+    if(entry.inputOrigin==='local-upload'){
+      if(!('kind' in source)||source.kind!=='local-upload')return false;
+    }else if(entry.inputOrigin==='external'){
+      if(!('originUrl' in source)||source.originUrl!==entry.source.originUrl||source.board!==entry.source.board)return false;
+    }else if(!('kind' in source)||source.kind!=='generated'||source.projectId.toLowerCase()!==entry.source.projectId||source.imageId.toLowerCase()!==entry.source.imageId)return false;
+    const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer())),byte=>byte.toString(16).padStart(2,'0')).join('');
+    if(digest!==entry.original.sha256)return false;
+  }
+  return true;
+}
 
 /** One explicit replacement; the durable claim and submission marker precede the network effect. */
 export function createReplacementRun(options:Options){
@@ -40,6 +59,10 @@ export function createReplacementRun(options:Options){
           try{visualSnapshot=await store.loadVisualSnapshot(scope,preparation.conversationId);}catch{visualSnapshot=null;}
           ensure();
           if(!visualSnapshot||JSON.stringify(parseVisualInputManifest(visualSnapshot.manifest))!==JSON.stringify(parseVisualInputManifest(preparation.visualInput))){onNotice('As imagens desta tentativa não estão disponíveis. A reposição permanece bloqueada.');return;}
+          let same=false;
+          try{if(options.currentReferences)same=await matchesSelection(visualSnapshot.manifest,await options.currentReferences());}catch{/* Preserve the attempt if current references are unavailable. */}
+          ensure();
+          if(!same){onNotice('As referências selecionadas mudaram ou não estão disponíveis. A reposição permanece bloqueada.');return;}
         }
         const observed=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(observed.snapshot,observed.journal);ensure();
         const child=observed.journal.progress.children.find(value=>value.position===position),last=observed.journal.replacements?.at(-1);
