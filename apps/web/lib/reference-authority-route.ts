@@ -14,11 +14,11 @@ const reference=z.discriminatedUnion('inputOrigin',[
 ]);
 const ids=z.array(id).max(20).refine(value=>new Set(value).size===value.length);
 const state=z.strictObject({version:z.literal(1),references:z.array(reference).max(500),projectReferenceIds:ids,posts:z.array(z.strictObject({pieceId:id,referenceIds:ids,excludedReferenceIds:ids})).max(500)}).refine(value=>new Set(value.references.map(x=>x.id)).size===value.references.length&&new Set(value.posts.map(x=>x.pieceId)).size===value.posts.length);
-const selection=z.discriminatedUnion('op',[z.strictObject({op:z.literal('read'),projectId:id}),z.strictObject({op:z.literal('receipt'),projectId:id,commandId:id}),z.strictObject({op:z.literal('write'),projectId:id,commandId:id,expectedRevision:revision.refine(value=>value<Number.MAX_SAFE_INTEGER),state})]);
+const selection=z.discriminatedUnion('op',[z.strictObject({op:z.literal('read'),projectId:id}),z.strictObject({op:z.literal('receipt'),projectId:id,commandId:id}),z.strictObject({op:z.literal('fence'),projectId:id,commandId:id}),z.strictObject({op:z.literal('write'),projectId:id,commandId:id,expectedRevision:revision.refine(value=>value<Number.MAX_SAFE_INTEGER),state})]);
 const consent=z.strictObject({op:z.enum(['grant','state','revoke']),consentId:id});
 const snapshot=z.discriminatedUnion('op',[z.strictObject({op:z.literal('read'),projectId:id,requestId:id}),z.strictObject({op:z.literal('create'),projectId:id,conversationId:z.union([z.literal('references'),id]),requestId:id,batchId:id.nullable(),purpose:z.enum(['parallel','replacement','artwork']),selectionRevision:revision,visualInput:z.unknown(),consentId:id.optional()}).refine(value=>(value.purpose==='artwork')===(value.batchId===null))]);
 const reply=(value:unknown,status=200)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
-const statusCode=(status:string)=>status==='not_found'?404:status==='invalid'?400:status==='conflict'||status==='revoked'?409:status==='unauthorized'?403:status==='unavailable'?503:200;
+const statusCode=(status:string)=>status==='not_found'?404:status==='invalid'?400:status==='conflict'||status==='revoked'||status==='fenced'?409:status==='unauthorized'?403:status==='unavailable'?503:200;
 /** A browser capability is never an OpenAI credential and never enters creative context. */
 export function referenceConsentSecret(value:string|null):string|null{
  if(value===null)return null;if(!/^[A-Za-z0-9_-]{43}$/.test(value))throw Error('invalid capability');
@@ -45,6 +45,7 @@ export function createReferenceAuthorityRoute(deps:Dependencies){
     const data=selection.parse(input);
     if(data.op==='read'){const value=await deps.store.read(actor,data.projectId);return value?reply(value):reply({error:'not_found'},404);}
     if(data.op==='receipt'){const value=await deps.store.receipt(actor,data.projectId,data.commandId);if(value&&value.commandId!==data.commandId)throw Error('wrong receipt');return reply(value??{status:'absent'});}
+    if(data.op==='fence'){const value=await deps.store.fence(actor,data.projectId,data.commandId);if('commandId'in value&&value.commandId!==data.commandId)throw Error('wrong fence');return reply(value,value.status==='fenced'||value.status==='applied'?200:statusCode(value.status));}
     const result=await deps.store.write(actor,data);if('commandId'in result&&result.commandId!==data.commandId)throw Error('wrong receipt');return reply(result,statusCode(result.status));
    }
    if(path==='consent'){

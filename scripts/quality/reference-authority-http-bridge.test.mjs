@@ -15,7 +15,7 @@ const request=(value,headers={})=>new Request(`${origin}/api/studio/reference-au
 async function bridge(t){
  const db=new PGlite();t.after(()=>db.close());await db.exec(await databaseSql());
  await db.exec(`create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);create function auth.jwt()returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant execute on function auth.jwt()to authenticated;`);
- for(const name of ['20261117000034_exploration_revocable_intents.sql','20261117000035_exploration_revocation_epoch.sql','20261117000036_exploration_parallel_review.sql','20261117000037_reference_authority.sql'])await db.exec(await readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
+ for(const name of ['20261117000034_exploration_revocable_intents.sql','20261117000035_exploration_revocation_epoch.sql','20261117000036_exploration_parallel_review.sql','20261117000037_reference_authority.sql','20261117000038_reference_selection_fence.sql'])await db.exec(await readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
  await db.query('insert into auth.users values($1)',[actor.userId]);await db.query('insert into auth.sessions(id,user_id)values($1,$2)',[sessionId,actor.userId]);await db.query('insert into projects(id,owner_id)values($1,$2)',[projectId,actor.userId]);await db.exec('set role authenticated');await db.query("select set_config('request.jwt.claim.sub',$1,false),set_config('request.jwt.claims',$2,false)",[actor.userId,JSON.stringify({sub:actor.userId,session_id:sessionId,exp:Math.floor(Date.now()/1000)+3600})]);
  const calls=[];let loseNext=false;
  const store=createReferenceAuthorityStore(config,async(url,options)=>{assert.equal(options.headers.authorization,`Bearer ${actor.token}`);const name=new URL(url).pathname.split('/').at(-1);assert.match(name,/^[a-z_]+$/);const body=JSON.parse(options.body);calls.push({name,body});const keys=Object.keys(body);for(const key of keys)assert.match(key,/^p_[a-z_]+$/);const args=keys.map(key=>typeof body[key]==='object'&&body[key]!==null?JSON.stringify(body[key]):body[key]);const {rows}=await db.query(`select public.${name}(${keys.map((key,i)=>`${key}=>$${i+1}`).join(',')}) as value`,args);if(loseNext){loseNext=false;throw Error('response lost after commit');}return Response.json(rows[0].value);});
@@ -36,4 +36,16 @@ test('HTTP → adapter → real SQL preserves CAS receipt, canonical snapshot an
  assert.equal((await f.route('consent',request({op:'revoke',consentId}))).status,200);assert.equal(await f.store.check(actor,scope),false);
  assert.equal((await(await f.route('snapshot',request({op:'read',projectId,requestId}))).json()).status,'found');assert.equal((await f.route('snapshot',request({...snapshot,requestId:id(11)},headers))).status,403);
  await f.db.exec('reset role');assert.equal((await f.db.query('select count(*)::int as count from exploration_planning_attempts')).rows[0].count,0);
+});
+
+test('a fenced selection command remains fenced through HTTP and cannot commit on late arrival',async t=>{
+ const f=await bridge(t),command={projectId,commandId};
+ const selection=op=>f.route('selection',request({op,...command}));
+ assert.deepEqual(await(await selection('receipt')).json(),{status:'absent'});
+ f.lose();
+ assert.equal((await selection('fence')).status,503);
+ assert.deepEqual(await(await selection('receipt')).json(),{status:'fenced',commandId});
+ const state={version:1,references:[],projectReferenceIds:[],posts:[]};
+ assert.equal((await f.route('selection',request({op:'write',...command,expectedRevision:0,state}))).status,409);
+ assert.equal((await(await f.route('selection',request({op:'read',projectId}))).json()).revision,0);
 });

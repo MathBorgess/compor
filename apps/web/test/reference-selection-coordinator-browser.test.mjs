@@ -16,8 +16,10 @@ test('seleção e comando são atômicos e conciliados sem reviver gesto antigo'
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,scope={userId:id(1),projectId:id(2)};
   const canvas=document.createElement('canvas');canvas.width=1;canvas.height=1;const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png')),file=new File([blob],'teste.png',{type:'image/png'});
   const empty={version:1,references:[],projectReferenceIds:[],posts:[]};let remote={status:'ready',revision:0,state:empty},commands=new Map(),writes=0,mode='normal';
-  const client={read:async()=>structuredClone(remote),receipt:async(_project,commandId)=>commands.get(commandId)??{status:'absent'},write:async(_project,commandId,expected,value)=>{
-   writes++;if(expected!==remote.revision)throw Error('reference_authority_conflict');if(mode==='absent')throw Error('lost before commit');
+  const client={read:async()=>structuredClone(remote),receipt:async(_project,commandId)=>commands.get(commandId)??{status:'absent'},fence:async(_project,commandId)=>{
+   const receipt=commands.get(commandId)??{status:'fenced',commandId};commands.set(commandId,receipt);return receipt;
+  },write:async(_project,commandId,expected,value)=>{
+   writes++;if(commands.get(commandId)?.status==='fenced')throw Error('reference_authority_conflict');if(expected!==remote.revision)throw Error('reference_authority_conflict');if(mode==='absent')throw Error('lost before commit');
    remote={status:'ready',revision:remote.revision+1,state:await referenceSelectionPublic(value)};const receipt={status:'applied',commandId,revision:remote.revision};commands.set(commandId,receipt);
    if(mode==='advanced')remote={...remote,revision:remote.revision+1};if(mode==='lost')throw Error('lost after commit');return receipt;
   }};
@@ -28,7 +30,16 @@ test('seleção e comando são atômicos e conciliados sem reviver gesto antigo'
   mode='lost';const lost=await coordinator.change(scope,{kind:'select',reference:refA,target:'references'});const pendingBefore=await a.readReferenceAuthority(scope),oneWrite=writes===1&&lost.status==='pending'&&!!pendingBefore.pending;a.close();
   const resumed=createStudioStorage({name:'compor-studio-coordinator-a'});coordinator=createReferenceSelectionCoordinator({store:resumed,client});const restored=await coordinator.reconcile(scope),reconciled=restored.status==='ready'&&restored.revision===1&&writes===1&&(await resumed.readReferenceAuthority(scope)).pending===null;
   mode='absent';const removed=await coordinator.change(scope,{kind:'unselect',id:refA.id,target:'references'}),afterRemove=await resumed.readReferenceAuthority(scope),receiptMissing=await coordinator.reconcile(scope);const pendingAbsent=removed.status==='pending'&&receiptMissing.status==='pending'&&writes===2&&!!afterRemove.pending&&!afterRemove.state.projectReferenceIds.includes(refA.id);resumed.close();
-  const recovered=createStudioStorage({name:'compor-studio-coordinator-a'}),afterReload=await createReferenceSelectionCoordinator({store:recovered,client}).reconcile(scope),stillPending=afterReload.status==='pending'&&writes===2;recovered.close();
+  const recovered=createStudioStorage({name:'compor-studio-coordinator-a'});
+  const recoveredCoordinator=createReferenceSelectionCoordinator({store:recovered,client});
+  const afterReload=await recoveredCoordinator.reconcile(scope),stillPending=afterReload.status==='pending'&&writes===2;
+  const fenced=await recoveredCoordinator.fencePending(scope),review=await recoveredCoordinator.previewAdoption(scope);
+  mode='normal';
+  const lateWriteBlocked=await client.write(scope.projectId,afterRemove.pending.commandId,1,afterRemove.pending.selection).then(()=>false,()=>true);
+  const reviewed=review.status==='review'&&review.review.remote.revision===1&&review.review.remote.state.projectReferenceIds.includes(refA.id)&&review.review.selection.projectReferenceIds.length===0;
+  const explicitlyAdopted=await recoveredCoordinator.adoptCurrent(scope,review.review);
+  const fencedThenAdopted=fenced.status==='conflict'&&lateWriteBlocked&&reviewed&&explicitlyAdopted.status==='ready'&&explicitlyAdopted.revision===2&&remote.state.projectReferenceIds.length===0;
+  recovered.close();
   remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;mode='normal';
   const left=createStudioStorage({name:'compor-studio-coordinator-left'}),right=createStudioStorage({name:'compor-studio-coordinator-right'});for(const s of [left,right])await s.save(createStudioState(scope),{expectedRevision:null});
   const first=await left.putReference({...scope,id:id(20),file,source:{kind:'local-upload'}}),second=await right.putReference({...scope,id:id(21),file,source:{kind:'local-upload'}});
@@ -56,11 +67,10 @@ test('seleção e comando são atômicos e conciliados sem reviver gesto antigo'
   const stalePreview=await ac.adoptCurrent(scope,firstPreview.review),stalePreviewBlocked=stalePreview.status==='conflict'&&writes===0;
   const preview=await ac.previewAdoption(scope),adopt=await ac.adoptCurrent(scope,preview.review),adoptedOnce=preview.status==='review'&&preview.review.unknownSelected[0].id===unknown.id&&adopt.status==='ready'&&writes===1&&remote.state.references.length===1&&remote.state.references[0].id===adopted.id;
   adoption.close();
-  const blocked=createStudioStorage({name:'compor-studio-coordinator-adoption-blocked'});await blocked.save(createStudioState(scope),{expectedRevision:null});const bc=createReferenceSelectionCoordinator({store:blocked,client});const nonemptyBlocked=(await bc.previewAdoption(scope)).status==='conflict'&&writes===1;blocked.close();
   remote={status:'ready',revision:0,state:empty};commands=new Map();writes=0;
   const arace=createStudioStorage({name:'compor-studio-coordinator-adoption-race'});await arace.save(createStudioState(scope),{expectedRevision:null});const ar=await arace.putReference({...scope,id:id(62),file,source:{kind:'local-upload'}}),as=await arace.load(scope);await arace.save({...as,revision:1,references:[ar],projectReferenceIds:[ar.id]},{expectedRevision:0});const arc=createReferenceSelectionCoordinator({store:arace,client}),rv=await arc.previewAdoption(scope);
   remote={status:'ready',revision:1,state:{...empty,projectReferenceIds:[id(99)]}};const raceAdopt=await arc.adoptCurrent(scope,rv.review),raceBlocked=raceAdopt.status==='conflict'&&(await arace.readReferenceAuthority(scope)).pending!==null&&remote.state.projectReferenceIds[0]===id(99);arace.close();
-  return {initialized,legacySafe,oneWrite,reconciled,pendingAbsent,stillPending,staleBlocked,noAdopt,atomic,oneTab,notImported,stalePreviewBlocked,adoptedOnce,nonemptyBlocked,raceBlocked};
+  return {initialized,legacySafe,oneWrite,reconciled,pendingAbsent,stillPending,staleBlocked,noAdopt,atomic,oneTab,notImported,stalePreviewBlocked,adoptedOnce,fencedThenAdopted,raceBlocked};
  });
- assert.deepEqual(result,{initialized:true,legacySafe:true,oneWrite:true,reconciled:true,pendingAbsent:true,stillPending:true,staleBlocked:true,noAdopt:true,atomic:true,oneTab:true,notImported:true,stalePreviewBlocked:true,adoptedOnce:true,nonemptyBlocked:true,raceBlocked:true});
+ assert.deepEqual(result,{initialized:true,legacySafe:true,oneWrite:true,reconciled:true,pendingAbsent:true,stillPending:true,staleBlocked:true,noAdopt:true,atomic:true,oneTab:true,notImported:true,stalePreviewBlocked:true,adoptedOnce:true,fencedThenAdopted:true,raceBlocked:true});
 });

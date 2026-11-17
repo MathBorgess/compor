@@ -150,6 +150,14 @@
     {
       "name": "20261117000037_reference_authority.sql",
       "sha256": "c1dd38cb83d7365c995b79f58399f5d30b55f44fc2ddbad5c64e75054f91d424"
+    },
+    {
+      "name": "20261117000038_reference_selection_fence.sql",
+      "sha256": "7aaae62855faf0b4379a8e5bb6c797dc1f82e9a68241fa4e96f7004d3c407d3b"
+    },
+    {
+      "name": "20261117000039_authorize_visual_parallel_review.sql",
+      "sha256": "c44351c68410d8c742d5791e8022fc08aed6c2185250a93eaefa2fbcf1fd8704"
     }
   ]
 }

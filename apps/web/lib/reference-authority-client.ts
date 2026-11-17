@@ -8,7 +8,8 @@ const post=z.strictObject({pieceId:uuid,referenceIds:z.array(uuid).check(z.maxLe
 const state=z.strictObject({version:z.literal(1),references:z.array(reference).check(z.maxLength(500)),projectReferenceIds:z.array(uuid).check(z.maxLength(20)),posts:z.array(post).check(z.maxLength(500))});
 const readResult=z.strictObject({status:z.literal('ready'),revision,state});
 const commandResult=z.strictObject({status:z.enum(['applied','existing']),commandId:uuid,revision});
-const receiptResult=z.union([z.strictObject({status:z.literal('applied'),commandId:uuid,revision}),z.strictObject({status:z.literal('absent')})]);
+const resolvedCommand=z.union([z.strictObject({status:z.literal('applied'),commandId:uuid,revision}),z.strictObject({status:z.literal('fenced'),commandId:uuid})]);
+const receiptResult=z.union([resolvedCommand,z.strictObject({status:z.literal('absent')})]);
 const consentGrant=z.union([z.strictObject({status:z.literal('granted'),consentId:uuid,capability:z.string().check(z.regex(/^[A-Za-z0-9_-]{42}[AEIMQUYcgkosw048]$/))}),z.strictObject({status:z.literal('existing'),consentId:uuid})]);
 const consentState=z.strictObject({state:z.enum(['active','revoked','absent']),consentId:uuid});
 const consentRevoked=z.strictObject({status:z.literal('revoked'),consentId:uuid});
@@ -34,7 +35,8 @@ export function createReferenceAuthorityClient(fetchApi:typeof fetch=fetch){
  return {
   async read(projectId:string){return readResult.parse(await post('selection',{op:'read',projectId}));},
   async write(projectId:string,commandId:string,expectedRevision:number,value:ReferenceAuthorityWrite){const result=commandResult.parse(await post('selection',{op:'write',projectId,commandId,expectedRevision,state:value}));if(result.commandId!==commandId)throw Error('reference_authority_mismatch');return result;},
-  async receipt(projectId:string,commandId:string){const result=receiptResult.parse(await post('selection',{op:'receipt',projectId,commandId}));if(result.status==='applied'&&result.commandId!==commandId)throw Error('reference_authority_mismatch');return result;},
+  async receipt(projectId:string,commandId:string){const result=receiptResult.parse(await post('selection',{op:'receipt',projectId,commandId}));if(result.status!=='absent'&&result.commandId!==commandId)throw Error('reference_authority_mismatch');return result;},
+  async fence(projectId:string,commandId:string){const result=resolvedCommand.parse(await post('selection',{op:'fence',projectId,commandId}));if(result.commandId!==commandId)throw Error('reference_authority_mismatch');return result;},
   async grant(consentId:string){const result=consentGrant.parse(await post('consent',{op:'grant',consentId}));if(result.consentId!==consentId)throw Error('reference_authority_mismatch');return result;},
   async consentState(consentId:string){const result=consentState.parse(await post('consent',{op:'state',consentId}));if(result.consentId!==consentId)throw Error('reference_authority_mismatch');return result;},
   async createSnapshot(input:ReferenceAuthoritySnapshotInput,capability?:string){const result=snapshotCreate.parse(await post('snapshot',{op:'create',...input},capability));const value=result.snapshot;if(value.requestId!==input.requestId||value.projectId!==input.projectId||value.conversationId!==input.conversationId||value.batchId!==input.batchId||value.purpose!==input.purpose||value.selectionRevision!==input.selectionRevision||value.manifestDigest!==await visualDigest(input.visualInput)||value.consentId!==(input.consentId??null))throw Error('reference_authority_mismatch');return result;},

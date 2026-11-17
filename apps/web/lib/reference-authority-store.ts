@@ -6,7 +6,9 @@ const ref=z.strictObject({id,inputOrigin:z.enum(['local-upload','external','gene
 const post=z.strictObject({pieceId:id,referenceIds:z.array(id).max(20),excludedReferenceIds:z.array(id).max(20)});
 export const referenceAuthorityStateSchema=z.strictObject({version:z.literal(1),references:z.array(ref).max(500),projectReferenceIds:z.array(id).max(20),posts:z.array(post).max(500)});
 export const referenceAuthoritySnapshotSchema=z.strictObject({requestId:id,projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id.nullable(),purpose:z.enum(['parallel','replacement','artwork']),selectionRevision:revision,manifestDigest:digest,consentId:id.nullable()});
-const command=z.union([z.strictObject({status:z.enum(['applied','existing']),commandId:id,revision}),z.strictObject({status:z.enum(['conflict','invalid','unavailable','not_found']),revision:revision.optional()})]);
+const fenced=z.strictObject({status:z.literal('fenced'),commandId:id});
+const receipt=z.union([z.strictObject({status:z.literal('applied'),commandId:id,revision}),fenced]);
+const command=z.union([fenced,z.strictObject({status:z.enum(['applied','existing']),commandId:id,revision}),z.strictObject({status:z.enum(['conflict','invalid','unavailable','not_found']),revision:revision.optional()})]);
 const consent=z.union([z.strictObject({status:z.enum(['granted','existing','revoked']),consentId:id}),z.strictObject({status:z.literal('unavailable')})]);
 const created=z.union([z.strictObject({status:z.enum(['created','existing']),snapshot:referenceAuthoritySnapshotSchema}),z.strictObject({status:z.enum(['conflict','not_found','unavailable','unauthorized'])})]);
 export type ReferenceSnapshotScope={projectId:string;conversationId:string;requestId:string;batchId:string|null;purpose:'parallel'|'replacement'|'artwork';manifestDigest:string;consentSecret:string|null};
@@ -24,7 +26,8 @@ export function createReferenceAuthorityStore(config:Pick<AuthConfig,'service'|'
  return {
   async read(actor:Actor,projectId:string){return z.strictObject({status:z.literal('ready'),revision,state:referenceAuthorityStateSchema}).nullable().parse(await rpc(actor,'get_reference_selection',{p_project_id:projectId}));},
   async write(actor:Actor,value:{projectId:string;commandId:string;expectedRevision:number;state:unknown}){return command.parse(await rpc(actor,'write_reference_selection',{p_project_id:value.projectId,p_command_id:value.commandId,p_expected_revision:value.expectedRevision,p_state:value.state}));},
-  async receipt(actor:Actor,projectId:string,commandId:string){return z.strictObject({status:z.literal('applied'),commandId:id,revision}).nullable().parse(await rpc(actor,'get_reference_selection_command',{p_project_id:projectId,p_command_id:commandId}));},
+  async receipt(actor:Actor,projectId:string,commandId:string){return receipt.nullable().parse(await rpc(actor,'get_reference_selection_command',{p_project_id:projectId,p_command_id:commandId}));},
+  async fence(actor:Actor,projectId:string,commandId:string){return z.union([receipt,z.strictObject({status:z.enum(['conflict','not_found','unavailable'])})]).parse(await rpc(actor,'fence_reference_selection_command',{p_project_id:projectId,p_command_id:commandId}));},
   async grant(actor:Actor,consentId:string,proofDigest:string){return consent.parse(await rpc(actor,'grant_reference_consent',{p_consent_id:consentId,p_proof_digest:proofDigest}));},
   async revoke(actor:Actor,consentId:string){return consent.parse(await rpc(actor,'revoke_reference_consent',{p_consent_id:consentId}));},
   async consentState(actor:Actor,consentId:string){return z.strictObject({state:z.enum(['active','revoked','absent']),consentId:id}).parse(await rpc(actor,'get_reference_consent',{p_consent_id:consentId}));},

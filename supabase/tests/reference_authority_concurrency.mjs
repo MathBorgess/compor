@@ -40,7 +40,7 @@ try{
  const fixture=(await databaseSql()).replace('create role anon; create role authenticated;', ()=>"do $$begin if not exists(select 1 from pg_roles where rolname='anon')then create role anon;end if;if not exists(select 1 from pg_roles where rolname='authenticated')then create role authenticated;end if;end$$;");
  await sql(fixture);
  await sql(`create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);create function auth.jwt()returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant execute on function auth.jwt()to authenticated;`);
- for(const name of ['20261117000034_exploration_revocable_intents.sql','20261117000035_exploration_revocation_epoch.sql','20261117000036_exploration_parallel_review.sql','20261117000037_reference_authority.sql'])await sql(await readFile(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
+ for(const name of ['20261117000034_exploration_revocable_intents.sql','20261117000035_exploration_revocation_epoch.sql','20261117000036_exploration_parallel_review.sql','20261117000037_reference_authority.sql','20261117000038_reference_selection_fence.sql'])await sql(await readFile(new URL(`../migrations/${name}`,import.meta.url),'utf8'));
  await sql(`insert into auth.users values('${owner}');insert into auth.sessions(id,user_id)values('${session}','${owner}');insert into projects(id,owner_id)values('${project}','${owner}');`);
  const cas=await race(write(40,0),write(41,0,{version:1,references:[],projectReferenceIds:[],posts:[]}));assert.match(cas.first,/"status": "applied"/);assert.match(cas.second,/"status": "conflict"/);
  await sql(`${actor}select grant_reference_consent('${consent}','${proof}');${snapshot}`);
@@ -52,5 +52,10 @@ try{
  const reservation=`select reserve_exploration_plan_authorized('${project}',null,'${batch}','${request}','${digest}','${proof}','${intent}','${secret}','${manifestDigest}','${secret}');`;
  const revoked=await race(`select revoke_reference_consent('${consent}');`,reservation);assert.match(revoked.second,/"status": "conflict"/);
  assert.equal((await sql('select count(*) from exploration_planning_attempts;')).trim(),'0');
+ const fenced=await race(`select fence_reference_selection_command('${project}','${id(60)}');`,write(60,1));assert.match(fenced.first,/"status": "fenced"/);assert.match(fenced.second,/"status": "fenced"/);
+ assert.equal((await sql(`select revision from reference_selection_mirrors where project_id='${project}';`)).trim(),'1');
+ const written=await race(write(61,1),`select fence_reference_selection_command('${project}','${id(61)}');`);assert.match(written.first,/"status": "applied"/);assert.match(written.second,/"status": "applied"/);assert.match(written.second,/"revision": 2/);
+ assert.match(await sql(`${actor}select get_reference_selection_command('${project}','${id(60)}');`),/"status": "fenced"/);
+ console.log('PASS: fence/write and write/fence serialize on independent connections; delayed writes never override the tombstone.');
  console.log('PASS: independent connections serialized CAS, admission/revoke and revoke/reserve; zero paid-attempt rows after refusal.');
 }finally{await sql(`drop database ${database};`,'postgres');}

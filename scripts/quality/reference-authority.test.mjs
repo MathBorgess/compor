@@ -17,7 +17,7 @@ async function fixture(t){
  const db=new PGlite();t.after(()=>db.close());await db.exec(await databaseSql());
  for(const name of ['20261117000034_exploration_revocable_intents.sql','20261117000035_exploration_revocation_epoch.sql','20261117000036_exploration_parallel_review.sql'])await db.exec(await readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
  await db.exec(`create table auth.sessions(id uuid primary key,user_id uuid,not_after timestamptz);create function auth.jwt() returns jsonb language sql stable as $$select coalesce(nullif(current_setting('request.jwt.claims',true),''),'{}')::jsonb$$;grant execute on function auth.jwt() to authenticated;`);
- if(process.env.COMPOR_REFERENCE_AUTHORITY_RED!=='1')await db.exec(await readFile(new URL('../../supabase/migrations/20261117000037_reference_authority.sql',import.meta.url),'utf8'));
+ if(process.env.COMPOR_REFERENCE_AUTHORITY_RED!=='1')for(const name of ['20261117000037_reference_authority.sql','20261117000038_reference_selection_fence.sql','20261117000039_authorize_visual_parallel_review.sql'])await db.exec(await readFile(new URL(`../../supabase/migrations/${name}`,import.meta.url),'utf8'));
  await db.query('insert into auth.users values($1),($2)',[owner,other]);await db.query('insert into auth.sessions(id,user_id)values($1,$2),($3,$2),($4,$5)',[session,owner,secondSession,id(90),other]);
  await db.query('insert into projects(id,owner_id)values($1,$2),($3,$4)',[project,owner,otherProject,other]);await db.query("insert into project_posts(project_id,piece_id,name)values($1,$2,'Fixture')",[project,piece]);
  await db.query("insert into exploration_images(id,owner_id,project_id,prompt_digest,state)values($1,$2,$3,$4,'completed')",[id(30),owner,project,digest]);
@@ -167,4 +167,24 @@ test('review: identical content at later revision invalidates snapshot and never
  const f=await fixture(t);await f.write();await f.snapshot();assert.equal(await f.check(),true);
  assert.equal((await f.write(state(),1,id(41))).status,'applied');assert.equal(await f.check(),false);
  assert.equal((await f.write(state(),0,id(42))).status,'conflict');assert.equal((await f.write(state(),0,id(40))).revision,1);assert.equal((await f.read()).revision,2);assert.ok(await f.receipt());
+});
+
+test('visual review cannot reopen the feedback gate after consent revocation; admitted review remains readable',async t=>{
+ const f=await fixture(t),value=state([reference(20,'external')]),intent=id(70);
+ await f.write(value);await f.grant();
+ const snapshot=await f.snapshot(value,{consentId:consent,secret});
+ const manifestDigest=snapshot.snapshot.manifestDigest;
+ await f.scalar("select reserve_exploration_intent($1,null,$2,$3,0,$4,$4,$5,'batch',null,null) as value",[project,batch,intent,digest,proof]);
+ const review=key=>f.scalar('select resume_exploration_parallel_review_authorized($1,null,$2,$3,$4,1,$5,$6,$7) as value',[project,batch,intent,secret,request,manifestDigest,key]);
+ const reviewReceipt=()=>f.scalar('select get_exploration_parallel_review($1,$2) as value',[project,intent]);
+ assert.deepEqual(await review(wrong),{status:'revoked'});
+ await f.db.exec('begin');
+ await f.revoke();
+ assert.deepEqual(await review(secret),{status:'revoked'});
+ assert.equal(await reviewReceipt(),null);
+ await f.db.exec('rollback');
+ const admitted=await review(secret);
+ assert.equal(admitted.status,'not_paused');
+ await f.revoke();
+ assert.deepEqual(await reviewReceipt(),admitted);
 });
