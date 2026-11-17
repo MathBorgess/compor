@@ -27,7 +27,8 @@ export type ParallelJournalUpdate=
 export function parseParallelJournal(input:unknown):ParallelJournal {
   const value=journalSchema.parse(input);
   if(value.visualInput!==undefined&&(!validateVisualInputManifest(value.visualInput)||!visualInputMatchesProject(value.visualInput,value.projectId)))throw Error('parallel_invalid_visual_input');
-  if(!validateExplorationContext(value.context)||!validateCompletedExplorationPlan(value.plan,value.context))throw Error('parallel_invalid_plan');
+  const visualInput=value.visualInput===undefined?undefined:parseVisualInputManifest(value.visualInput);
+  if(!validateExplorationContext(value.context)||!validateCompletedExplorationPlan(value.plan,value.context,visualInput))throw Error('parallel_invalid_plan');
   const heads=new Map<number,string>(),requests=new Set<string>(),intents=new Set<string>();
   for(const [index,claim] of (value.replacements??[]).entries()){
     if((heads.has(claim.position)&&heads.get(claim.position)!==claim.previousId)||requests.has(claim.requestId)||intents.has(claim.intentId)||claim.intentId===value.intentId||(['prepared','submitted'].includes(claim.state)&&index!==(value.replacements?.length??0)-1))throw Error('parallel_invalid_replacement');
@@ -39,7 +40,8 @@ export function parseParallelJournal(input:unknown):ParallelJournal {
 export function parseParallelPreparation(input:unknown):ParallelPreparation {
   const value=preparationSchema.parse(input);
   if(value.visualInput!==undefined&&(!validateVisualInputManifest(value.visualInput)||!visualInputMatchesProject(value.visualInput,value.projectId)))throw Error('parallel_invalid_visual_input');
-  if(!validateExplorationContext(value.context)||(value.plan!==null&&!validateCompletedExplorationPlan(value.plan,value.context)))throw Error('parallel_invalid_plan');
+  const visualInput=value.visualInput===undefined?undefined:parseVisualInputManifest(value.visualInput);
+  if(!validateExplorationContext(value.context)||(value.plan!==null&&!validateCompletedExplorationPlan(value.plan,value.context,visualInput)))throw Error('parallel_invalid_plan');
   return value;
 }
 

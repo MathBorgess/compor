@@ -7,7 +7,7 @@ import {browserModuleSource} from './browser-module-source.mjs';
 
 const chrome=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{skip:!existsSync(chrome)},async t=>{
- const modules={'/visual.js':new URL('../lib/selected-visual-input.ts',import.meta.url),'/journal.js':new URL('../lib/parallel-exploration-journal.ts',import.meta.url),'/state.js':new URL('../lib/studio-state.ts',import.meta.url),'/storage.js':new URL('../lib/studio-storage.ts',import.meta.url)};
+ const modules={'/visual.js':new URL('../lib/selected-visual-input.ts',import.meta.url),'/journal.js':new URL('../lib/parallel-exploration-journal.ts',import.meta.url),'/state.js':new URL('../lib/studio-state.ts',import.meta.url),'/storage.js':new URL('../lib/studio-storage.ts',import.meta.url),'/planner.js':new URL('../../../packages/agents-api/src/exploration-plan-contract.mjs',import.meta.url)};
  const server=createServer(async(req,res)=>{if(modules[req.url]){res.setHeader('Content-Type','text/javascript');res.end(await browserModuleSource(modules[req.url]));}else res.end('<!doctype html><title>Snapshot</title>');});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:chrome,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
@@ -28,7 +28,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   let candidateLoads=[];const candidates=await prepareSelectedVisualCandidates({references:[local,legacy,external,generated],projectId:scope.projectId,externalConsent:true,loadReference:async key=>{candidateLoads.push(key);return storage.getReference(scope,key);}});
   const candidateScope={...scope,conversationId:id(7),requestId:id(31)};
   const candidateJournal=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'});await candidateJournal.saveRequestVisualSnapshot(candidateScope,candidates);candidateJournal.close();
-  const candidateRecovery=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'}),frozenCandidates=await candidateRecovery.loadRequestVisualSnapshot(candidateScope);candidateRecovery.close();
+  const candidateRecovery=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'}),frozenCandidates=await candidateRecovery.loadRequestVisualSnapshot(candidateScope);
   const picked=await selectedVisualInputImages(frozenCandidates,[local.id,generated.id]);
   const triage=candidateLoads.join(',')===[local.id,external.id,generated.id].join(',')&&picked.map(item=>item.id).join(',')===[local.id,generated.id].join(',')&&frozenCandidates.manifest.entries.map(item=>item.inputOrigin).join(',')==='local-upload,external,generated';
   let missingUpload=false,unknownId=false,wrongOrder=false;
@@ -36,6 +36,17 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   try{await selectedVisualInputImages(frozenCandidates,[local.id,id(99)]);}catch{unknownId=true;}
   try{await selectedVisualInputImages(frozenCandidates,[generated.id,local.id]);}catch{wrongOrder=true;}
   let wrongProject=false;try{await prepareSelectedVisualCandidates({references:[generated],projectId:id(99),externalConsent:true,loadReference:async()=>null});}catch{wrongProject=true;}
+  const {validateExplorationPlan}=await import('/planner.js');
+  const visualContext={idea:'Ideia',offer:'',audience:'',goal:'',direction:'',offerFacts:[],accepted:[],rejected:[],feedback:[]};
+  const visualPlan=validateExplorationPlan({version:2,items:[1,2,3].map(position=>({position,creativePrompt:`caminho ${position}`,composition:`composição ${position}`,contrast:`contraste ${position}`,differenceFromOthers:`diferença ${position}`})),referenceIds:[local.id,generated.id]},visualContext,frozenCandidates.manifest);
+  const visualBatch={...scope,batchId:id(40)},visualPrep={version:1,...visualBatch,conversationId:id(7),planRequestId:id(41),credentialSource:'byok',context:visualContext,plan:null,stage:'planning',revision:0,imageIds:[id(42),id(43),id(44)],intentId:id(45),expectedEpoch:0,planSubmitted:false,revocationRequested:false,visualInput:frozenCandidates.manifest};
+  await candidateRecovery.createBeforePlanningWithVisual(visualPrep,frozenCandidates);
+  let vp=await candidateRecovery.updatePreparation(scope.userId,0,{kind:'intent_confirmed',epoch:1});
+  vp=await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'plan_submitted'});
+  let badVisualPlan=false;try{await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'planned',plan:{...visualPlan,referenceIds:[generated.id]}});}catch{badVisualPlan=true;}
+  vp=await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'planned',plan:visualPlan});
+  await candidateRecovery.prepareExecution(visualBatch,vp.revision);
+  const vj=await candidateRecovery.load(visualBatch),visualPlanRetained=JSON.stringify(vj.visualInput)===JSON.stringify(frozenCandidates.manifest)&&JSON.stringify(vj.plan.referenceIds)===JSON.stringify([local.id,generated.id]);candidateRecovery.close();
   const refs=[legacy,local,generated];let loaded=[];
   const snapshot=await prepareSelectedVisualInput({references:refs,loadReference:async key=>{loaded.push(key);return storage.getReference(scope,key);}});
   const images=await visualInputImages(snapshot),hash=snapshot.manifest.entries[0].transport.sha256;
@@ -82,7 +93,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   await new Promise((resolve,reject)=>{const tx=db.transaction('visualSnapshots','readwrite'),store=tx.objectStore('visualSnapshots'),key=JSON.stringify([scope.userId,scope.projectId,id(11)]),request=store.get(key);request.onsuccess=()=>store.put({...request.result,blobs:[]},key);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   const reread=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'});let evicted=false;try{await reread.loadVisualSnapshot({...scope,batchId:id(11)},id(7));}catch(error){evicted=error.code==='parallel_storage_corrupt';}
   const retained=Boolean(await reread.loadPreparation(scope.userId));reread.close();storage.close();
-  return {onlyLocal,noInfer,optimized,badBudget,triage,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
+  return {onlyLocal,noInfer,optimized,badBudget,triage,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,badVisualPlan,visualPlanRetained,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
  });
  assert.deepEqual(result,Object.fromEntries(Object.keys(result).map(key=>[key,true])));
 });
