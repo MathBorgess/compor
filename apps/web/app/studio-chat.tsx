@@ -26,7 +26,7 @@ import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 import {readReferenceAuthorityConsent} from '../lib/reference-authority-consent.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
-import type {VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
+import {assertReferenceVisualCapability,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
@@ -355,6 +355,7 @@ export default function StudioChat({
       if(checkReferenceAuthority&&!await checkReferenceAuthority())throw Error('Consulte a seleção de referências antes de continuar.');
       if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     }
+    if(visual!==undefined&&visualAuthorityHeaders)assertReferenceVisualCapability(state.userId,visual,authorityHeaders);
     const response = await fetch(path, {
       method: "POST",
       headers: { "content-type": "application/json",...authorityHeaders },

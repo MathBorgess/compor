@@ -5,7 +5,7 @@ import {createParallelIntentClient} from './parallel-exploration-intent-client.t
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
 import {observeParallelBatch} from './parallel-exploration-observer.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
-import type {VisualAuthorityScope} from './reference-visual-authority.ts';
+import {assertReferenceVisualCapability,type VisualAuthorityScope} from './reference-visual-authority.ts';
 import {selectedVisualInputImages,visualInputImages,type SelectedVisualInput} from './selected-visual-input.ts';
 
 const response=z.object({status:z.enum(['running','completed','failed','unknown','unavailable','busy','conflict']),retryAutomatically:z.literal(false),requestId:z.optional(z.uuid()),batchId:z.optional(z.uuid()),plan:z.optional(z.unknown()),planBinding:z.optional(z.string().check(z.minLength(1)).check(z.maxLength(8192)))});
@@ -39,6 +39,7 @@ export function createParallelDispatcher(options:Options){
     const snapshot=op==='submit'?await visualSnapshot(value):null;ensure();
     const images=snapshot?await visualInputImages(snapshot):undefined;ensure();
     const visualAuthority=op==='submit'?await authority(value):undefined;ensure();
+    if(visualAuthority&&visual)assertReferenceVisualCapability(value.userId,visual,visualAuthority.headers);
     const result=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers:{...headers,...visualAuthority?.headers},signal:commandAbort.signal,body:JSON.stringify({op,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.planRequestId,context:value.context,...(visual?{visualInput:visual}:{}),...(images?{referenceImages:images}:{}),...credential(value,key),...(op==='submit'?{intentId:value.intentId}:{})})});
     const payload=response.parse(await result.json());
     if(payload.requestId!==undefined&&payload.requestId!==value.planRequestId)throw Error('plan_mismatch');
@@ -80,6 +81,7 @@ export function createParallelDispatcher(options:Options){
     // The command is sent once. Observation is independent, read-only and may
     // display individual receipts before the command itself returns.
     const executionAuthority=await authority(attempt);ensure();
+    if(executionAuthority&&visual)assertReferenceVisualCapability(attempt.userId,visual,executionAuthority.headers);
     const command=fetchApi('/api/studio/exploration-batches/execute',{method:'POST',headers:{...headers,...executionAuthority?.headers,...(attempt.credentialSource==='byok'?{'x-compor-openai-key':apiKey}:{})},signal:commandAbort.signal,body:JSON.stringify({projectId:attempt.projectId,conversationId:attempt.conversationId,batchId:attempt.batchId,intentId:attempt.intentId,planRequestId:attempt.planRequestId,context:attempt.context,plan:attempt.plan,planBinding:binding,imageIds:attempt.imageIds,...(visual?{visualInput:visual,referenceImages:images}:{})})}).catch(()=>null);
     const observation=observeParallelBatch({inspect:()=>recovery.inspectBatch(attempt,now,visible),isActive:()=>active&&canInspect(),onObservation:onSnapshot,onUnavailable,sleep,intervalMs:3000});
     // Stopping observation must not hold the account lock until an already

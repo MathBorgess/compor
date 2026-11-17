@@ -6,6 +6,12 @@ export type VisualAuthorityScope={userId:string;projectId:string;conversationId:
 type Client=Pick<ReturnType<typeof createReferenceAuthorityClient>,'createSnapshot'|'readSnapshot'>;
 type Consent={userId:string;consentId:string;capability:string};
 const containsExternal=(manifest:VisualInputManifest)=>manifest.version===2&&manifest.entries.some(entry=>entry.inputOrigin==='external');
+/** Synchronous final check immediately before a visual effect leaves this tab. */
+export function assertReferenceVisualCapability(userId:string,input:unknown,headers:Record<string,string>){
+ const manifest=parseVisualInputManifest(input);if(!containsExternal(manifest))return;
+ const current=readReferenceAuthorityConsent(userId);
+ if(!current||current.userId!==userId||current.capability!==headers['x-compor-reference-consent'])throw Error('reference_authority_consent_changed');
+}
 async function digest(manifest:VisualInputManifest){
  const bytes=new TextEncoder().encode(`compor-visual-input-v${manifest.version}\0${JSON.stringify(manifest)}`);
  return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');
