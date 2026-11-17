@@ -202,7 +202,17 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       else if(operation.kind==='plan_submitted'&&current.stage==='planning'&&current.intentEpoch!==undefined&&!current.revocationRequested&&!current.planSubmitted)next=parseParallelPreparation({...current,planSubmitted:true,revision:revision+1});
       else if(operation.kind==='revoke'&&current.intentId&&!current.revocationRequested)next=parseParallelPreparation({...current,revocationRequested:true,revision:revision+1});
       else if(operation.kind==='revoke_confirmed'&&current.intentId&&current.revocationRequested&&(!current.revocationConfirmed||current.revocationEpoch===undefined&&operation.epoch!==undefined)&&current.expectedEpoch!==undefined&&(operation.epoch===undefined||operation.epoch>current.expectedEpoch))next=parseParallelPreparation({...current,revocationConfirmed:true,...(operation.epoch===undefined?{}:{revocationEpoch:operation.epoch}),revision:revision+1});
-      else if(operation.kind==='planned'&&current.stage==='planning'&&(!current.intentId||current.planSubmitted))next=parseParallelPreparation({...current,plan:operation.plan,stage:'planned',revision:revision+1});
+      else if(operation.kind==='planned'&&current.stage==='planning'&&(!current.intentId||current.planSubmitted)){
+        let creationContext=current.creationContext;
+        if(current.visualInput!==undefined&&creationContext){
+          const visual=parseVisualInputManifest(current.visualInput);
+          if(!validateExplorationContext(current.context)||!validateCompletedExplorationPlan(operation.plan,current.context,visual))throw Error('parallel_invalid_plan');
+          const ids=operation.plan.version===2?operation.plan.referenceIds:visual.entries.map(entry=>entry.id);
+          if(creationContext.references.length!==visual.entries.length||creationContext.references.some((reference,index)=>reference.id.toLowerCase()!==visual.entries[index].id))throw Error('parallel_visual_context_mismatch');
+          const wanted=new Set(ids);creationContext={...creationContext,references:creationContext.references.filter(reference=>wanted.has(reference.id.toLowerCase()))};
+        }
+        next=parseParallelPreparation({...current,...(creationContext?{creationContext}:{}),plan:operation.plan,stage:'planned',revision:revision+1});
+      }
       else if(operation.kind==='failed'&&current.stage==='planning')next=parseParallelPreparation({...current,stage:'failed',revision:revision+1});
       else if(operation.kind==='executing'&&current.stage==='planned'&&!current.revocationRequested)next=parseParallelPreparation({...current,stage:'executing',revision:revision+1});
       else if(operation.kind==='completed'&&current.stage==='executing')next=parseParallelPreparation({...current,stage:'completed',revision:revision+1});

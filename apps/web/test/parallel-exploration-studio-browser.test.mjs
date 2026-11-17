@@ -15,7 +15,7 @@ const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,userId=id(1)
 test('o estúdio pede lote paralelo apenas pelo gesto, inclusive com IA padrão',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const fixture=await mkdtemp(new URL('../app/parallel-studio-test-',import.meta.url));let child,browser;
  t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(fixture,{recursive:true,force:true});}}});
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';import StudioApp from '../studio-app';export default function Fixture(){return <StudioApp userId="${userId}" hasApiKey={true} canUseAI={true} credentialSource="default" credentialEpoch={0} defaultAvailable={true} parallelAvailable={true} getApiKey={()=>''} keyInput={<span>Conectada</span>} onRemoveKey={()=>{}} initialObjective="Oficina de cerâmica" isAuthenticated={()=>true}/>;}`);
+ await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';import {useEffect,useState} from 'react';import StudioApp from '../studio-app';export default function Fixture(){const [serial,setSerial]=useState(false);useEffect(()=>setSerial(location.search==='?serial'),[]);return <StudioApp userId="${userId}" hasApiKey={true} canUseAI={true} credentialSource="default" credentialEpoch={0} defaultAvailable={true} parallelAvailable={!serial} selectedVisualsRequired={serial} selectedVisualsAvailable={serial} getApiKey={()=>''} keyInput={<span>Conectada</span>} onRemoveKey={()=>{}} initialObjective="Oficina de cerâmica" isAuthenticated={()=>true}/>;}`);
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});
  await waitForApp({url:`${origin}/${basename(fixture)}`,child,signal:t.signal,diagnostics:()=>startup});
@@ -45,5 +45,12 @@ test('o estúdio pede lote paralelo apenas pelo gesto, inclusive com IA padrão'
  try{await page.waitForFunction(()=>document.body.textContent.includes('Aguardando confirmação das propostas'));}catch(error){throw Error(`Estado: ${JSON.stringify({statuses:await page.getByRole('status').allTextContents(),calls:calls.map(({path,body})=>({path,op:body?.op})),errors})}`,{cause:error});}
  assert.equal(calls.filter(call=>call.path.endsWith('/plan')).length,1);assert.equal(calls.filter(call=>call.path.endsWith('/execute')).length,1);
  assert.equal(Object.hasOwn(calls.find(call=>call.path.endsWith('/plan')).body,'apiKey'),false,'IA padrão é resolvida no servidor');
+ const before=calls.length,marker=JSON.stringify({projectId,requestId:id(77),sequence:0,conversationId:'references'});
+ await page.evaluate(({userId,marker})=>localStorage.setItem('compor-exploration-pending:'+userId,marker),{userId,marker});
+ await page.goto(`${origin}/${basename(fixture)}?serial`);await page.getByRole('button',{name:/Projeto paralelo/}).click();await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
+ try{await page.getByRole('button',{name:'Consultar tentativa sequencial'}).click();}catch(error){throw Error(`Estado serial: ${JSON.stringify({body:(await page.locator('body').innerText()).slice(-4500),errors})}`,{cause:error});}await page.getByText(/tentativa anterior ainda não foi confirmada/i).waitFor();
+ assert.equal(await page.evaluate(userId=>localStorage.getItem('compor-exploration-pending:'+userId),userId),marker);
+ assert.equal((await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).isDisabled()),true);
+ assert.equal(calls.slice(before).filter(call=>call.method==='POST'&&(call.path==='/api/studio/explorations'||call.path.endsWith('/plan')||call.path.endsWith('/execute')||call.path.endsWith('/intent'))).length,0);
  assert.deepEqual(errors,[]);
 });

@@ -46,14 +46,14 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const {validateExplorationPlan}=await import('/planner.js');
   const visualContext={idea:'Ideia',offer:'',audience:'',goal:'',direction:'',offerFacts:[],accepted:[],rejected:[],feedback:[]};
   const visualPlan=validateExplorationPlan({version:2,items:[1,2,3].map(position=>({position,creativePrompt:`caminho ${position}`,composition:`composição ${position}`,contrast:`contraste ${position}`,differenceFromOthers:`diferença ${position}`})),referenceIds:[local.id,generated.id]},visualContext,frozenCandidates.manifest);
-  const visualBatch={...scope,batchId:id(40)},visualPrep={version:1,...visualBatch,conversationId:id(7),planRequestId:id(41),credentialSource:'byok',context:visualContext,plan:null,stage:'planning',revision:0,imageIds:[id(42),id(43),id(44)],intentId:id(45),expectedEpoch:0,planSubmitted:false,revocationRequested:false,visualInput:frozenCandidates.manifest};
+  const visualBatch={...scope,batchId:id(40)},visualPrep={version:1,...visualBatch,conversationId:id(7),planRequestId:id(41),credentialSource:'byok',context:visualContext,creationContext:{postContext:{objective:'',message:'',action:''},references:[local,external,generated]},plan:null,stage:'planning',revision:0,imageIds:[id(42),id(43),id(44)],intentId:id(45),expectedEpoch:0,planSubmitted:false,revocationRequested:false,visualInput:frozenCandidates.manifest};
   await candidateRecovery.createBeforePlanningWithVisual(visualPrep,frozenCandidates);
   let vp=await candidateRecovery.updatePreparation(scope.userId,0,{kind:'intent_confirmed',epoch:1});
   vp=await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'plan_submitted'});
   let badVisualPlan=false;try{await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'planned',plan:{...visualPlan,referenceIds:[generated.id]}});}catch{badVisualPlan=true;}
   vp=await candidateRecovery.updatePreparation(scope.userId,vp.revision,{kind:'planned',plan:visualPlan});
   await candidateRecovery.prepareExecution(visualBatch,vp.revision);
-  const vj=await candidateRecovery.load(visualBatch),visualPlanRetained=JSON.stringify(vj.visualInput)===JSON.stringify(frozenCandidates.manifest)&&JSON.stringify(vj.plan.referenceIds)===JSON.stringify([local.id,generated.id]);candidateRecovery.close();
+  const vj=await candidateRecovery.load(visualBatch),visualPlanRetained=JSON.stringify(vj.visualInput)===JSON.stringify(frozenCandidates.manifest)&&JSON.stringify(vj.plan.referenceIds)===JSON.stringify([local.id,generated.id])&&JSON.stringify(vj.creationContext.references.map(item=>item.id))===JSON.stringify([local.id,generated.id]);candidateRecovery.close();
   const refs=[legacy,local,generated];let loaded=[];
   const snapshot=await prepareSelectedVisualInput({references:refs,loadReference:async key=>{loaded.push(key);return storage.getReference(scope,key);}});
   const images=await visualInputImages(snapshot),hash=snapshot.manifest.entries[0].transport.sha256;
