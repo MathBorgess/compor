@@ -10,13 +10,42 @@ const plan={version:1,items:[1,2,3].map(position=>({position,creativePrompt:`Cam
 const body={projectId:id(2),conversationId:'references',batchId:id(3),intentId:id(10),planRequestId:id(4),context:{idea:'Ideia sintética'},plan,planBinding:'signed-synthetic',imageIds:[id(5),id(6),id(7)]};
 const request=(value=body,headers={},signal)=>new Request(origin+'/api/studio/exploration-batches/execute',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key,...headers},body:JSON.stringify(value),signal});
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject};};
-function fixture(){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true};const store={
- reserveBatch:async(...args)=>{calls.push(['reserve',...args]);return state.reservation;},
- replaceRejected:async(...args)=>{calls.push(['replace',...args]);return state.reservation;},
+function fixture(){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true,intent:'active',epoch:1};const store={
+ reserveBatch:async(...args)=>{calls.push(['reserve',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
+ replaceRejected:async(...args)=>{calls.push(['replace',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);if(state.planGate)await state.planGate.promise;if(state.planGates?.get(id))await state.planGates.get(id).promise;},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
  finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
- };const route=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async()=>state.proof,intentSecret:()=> 'a'.repeat(64),store,generate:async(a,k,prompt)=>{calls.push(['generate',prompt]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
+ };const route=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async()=>state.proof,intentSecret:()=> 'a'.repeat(64),intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch};},store,generate:async(a,k,prompt)=>{calls.push(['generate',prompt]);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
 const wait=async(predicate)=>{for(let i=0;i<100;i++){if(predicate())return;await new Promise(r=>setTimeout(r,1));}throw Error('condition not reached');};
+
+test('revogação durante plan bloqueia as três imagens e preserva as reservas desconhecidas',async()=>{
+ const f=fixture();f.state.instant=true;f.state.planGate=deferred();
+ const pending=f.route.post(request());await wait(()=>f.calls.filter(c=>c[0]==='plan').length===3);
+ f.state.intent='revoked';f.state.epoch++;f.state.planGate.resolve();
+ const result=await (await pending).json();assert.equal(result.status,'unknown');assert.equal(f.calls.filter(c=>c[0]==='generate').length,0);assert.equal(f.calls.filter(c=>c[0]==='finish'&&c[2]==='unknown').length,3);
+});
+
+test('leitura inicial indisponível não reserva e usa identidade e escopo autenticados',async()=>{
+ const f=fixture();f.state.intentError=true;
+ const response=await f.route.post(request());assert.equal(response.status,503);assert.equal((await response.json()).status,'unknown');
+ assert.deepEqual(f.calls.filter(c=>c[0]==='intentState').map(c=>c[1]),[{actor,projectId:body.projectId,intentId:body.intentId}]);
+ assert.equal(f.calls.some(c=>c[0]==='reserve'||c[0]==='generate'),false);
+});
+
+test('reposição falha fechada após plan quando intent foi revogada ou epoch mudou',async()=>{
+ const {imageIds,...base}=body,replacement={...base,position:2,previousId:imageIds[1],requestId:id(8)};
+ for(const change of [state=>{state.intent='revoked';state.epoch++;},state=>{state.epoch++;},state=>{state.intentError=true;},state=>{state.intentResult={state:'consumed',epoch:'invalid'};}]){
+  const f=fixture();f.state.instant=true;f.state.planGate=deferred();const pending=f.route.replace(request(replacement));await wait(()=>f.calls.some(c=>c[0]==='plan'));change(f.state);f.state.planGate.resolve();
+  const result=await (await pending).json();assert.equal(result.status,'unknown');assert.equal(f.calls.filter(c=>c[0]==='generate').length,0);assert.equal(f.calls.filter(c=>c[0]==='finish'&&c[2]==='unknown').length,1);assert.doesNotMatch(JSON.stringify(result),/private database detail/);
+ }
+});
+
+test('revogação impede filhos ainda não enviados sem perder o recibo já iniciado',async()=>{
+ const f=fixture();f.state.planGates=new Map([[id(6),deferred()],[id(7),deferred()]]);
+ const pending=f.route.post(request());await wait(()=>f.pending.has('Prompt completo 1')&&f.calls.filter(c=>c[0]==='plan').length===3);
+ f.state.intent='revoked';f.state.epoch++;f.state.planGates.get(id(6)).resolve();f.state.planGates.get(id(7)).resolve();f.pending.get('Prompt completo 1').resolve(new Uint8Array([1]));
+ const result=await (await pending).json();assert.deepEqual(result.images.map(x=>x.status),['completed','unknown','unknown']);assert.equal(f.calls.filter(c=>c[0]==='generate').length,1);assert.equal(f.calls.filter(c=>c[0]==='finish'&&c[2]==='completed').length,1);
+});
 
 test('uma reserva atômica válida inicia as três imagens e confirma independentemente',async()=>{
  const f=fixture(),promise=f.route.post(request());await wait(()=>f.pending.size===3);

@@ -70,7 +70,7 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const plannerRoute=createExplorationPlannerRoute({...auth,allowSubmit:true,plannerFor});
  const batchRoute=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId,
   verifyPlan:async value=>verifyExplorationPlan({bindings,input:{actor,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.requestId,context:value.context},plan:value.plan,token:value.token}),
-  intentSecret:value=>deriveExplorationIntent(bindings,{...value,purpose:'batch'}).intentSecret,store:batchStore,generate:async()=>{images++;return png;}});
+  intentSecret:value=>deriveExplorationIntent(bindings,{...value,purpose:'batch'}).intentSecret,intentState:intentStore.state,store:batchStore,generate:async()=>{images++;return png;}});
  const initialEpoch=await intentRoute.epoch(mk({projectId}));assert.deepEqual(await initialEpoch.json(),{epoch:0});
  const initial=await intentRoute.create(mk({...inputs,intentId,purpose:'batch',expectedEpoch:0,apiKey:key}));assert.deepEqual(await initial.json(),{status:'created',epoch:1});
  const submit=await plannerRoute(mk({...inputs,intentId,requestId,op:'submit',apiKey:key}));assert.equal((await submit.json()).status,'running');
@@ -88,4 +88,28 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.equal(batch.state,'completed');assert.deepEqual(batch.images.map(image=>image.status),['completed','completed','completed']);assert.equal(Date.parse(batch.nextAt)-Date.parse(batch.completedAt),15000);
  const duplicate=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal(duplicate.status,409);assert.equal(images,3);assert.equal(starts,1);
  assert.equal(await batchStore.getBatch(otherActor,projectId,batchId),null,'RLS impede leitura por outra conta');
+});
+
+test('revogação enquanto planos dos filhos aguardam impede os três envios usando as RPCs reais', {timeout:60000},async t=>{
+ const f=await fixture(t),bindings=createExplorationPlannerBindings({secret:Buffer.alloc(32,7),source:'byok',apiKey:key});
+ const intentStore=createExplorationIntentStore(config,f.fetchApi),batchStore=createExplorationBatchStore(config,f.fetchApi);
+ const auth={appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId};
+ const intentRoute=createExplorationIntentRoute({...auth,store:intentStore});
+ assert.equal((await intentRoute.create(mk({...inputs,intentId,purpose:'batch',expectedEpoch:0,apiKey:key}))).status,200);
+ const provider={create:async()=>({sessionId:'sess_bridge'}),get:async()=>({status:'completed',turnId:'turn_bridge',plan:{version:1,items:[1,2,3].map(i=>({position:i,creativePrompt:`Caminho ${i}`,composition:`Composição ${i}`,contrast:`Contraste ${i}`,differenceFromOthers:`Diferença ${i}`}))}})};
+ const plannerFor=intent=>createExplorationPlanner({store:createExplorationPlannerStore(config,f.fetchApi,intent),bindings,provider,authorize:async()=>true});
+ const plannerRoute=createExplorationPlannerRoute({...auth,allowSubmit:true,plannerFor});
+ assert.equal((await (await plannerRoute(mk({...inputs,intentId,requestId,op:'submit',apiKey:key}))).json()).status,'running');
+ assert.equal((await (await plannerRoute(mk({...inputs,requestId,op:'poll',apiKey:key}))).json()).status,'completed');
+ let release,plans=0,images=0;const gate=new Promise(resolve=>{release=resolve;});
+ const route=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:auth.ownsProject,verifyPlan:async()=>true,
+  intentSecret:value=>deriveExplorationIntent(bindings,{...value,purpose:'batch'}).intentSecret,intentState:intentStore.state,
+  store:{...batchStore,plan:async(...args)=>{plans++;await gate;return batchStore.plan(...args);}},generate:async()=>{images++;return png;}});
+ const plan={version:1,items:[1,2,3].map(position=>({position,creativePrompt:`Caminho ${position}`,composition:`Composição ${position}`,contrast:`Contraste ${position}`,differenceFromOthers:`Diferença ${position}`,prompt:`Prompt ${position}`}))};
+ const pending=route.post(mk({...inputs,intentId,planRequestId:requestId,plan,planBinding:'fixture',imageIds:[id(21),id(22),id(23)]},{'x-compor-openai-key':key}));
+ for(let i=0;plans<3&&i<2000;i++)await new Promise(resolve=>setTimeout(resolve,1));
+ assert.equal(plans,3,'a reserva deve atingir os três planos');
+ assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:2});
+ release();assert.equal((await (await pending).json()).status,'unknown');assert.equal(images,0);
+ const batch=await batchStore.getBatch(actor,projectId,batchId);assert.deepEqual(batch.images.map(image=>image.status),['unknown','unknown','unknown']);
 });
