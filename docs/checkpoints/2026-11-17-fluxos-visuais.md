@@ -73,3 +73,21 @@ A branch local `codex/compor-retomada-visual` integra o checkpoint sobre `2aca18
 No macOS arm64 com Node 24.16.0, as cinco medições Lighthouse registraram 0 B de JavaScript externo na entrada sem sessão, LCP mediano de 620 ms, TBT de 0 ms e CLS de 0,008. O excedente de 36.977 B no total de chunks bloqueia a entrega. Os experimentos de agrupamento e eliminação de código estão na [auditoria de bundle](../quality/2026-11-17-bundle-retomada-visual.md). O orçamento segue o mesmo da `main`.
 
 Os testes usaram fornecedores simulados, PGlite com migrations reais e PostgreSQL local com duas conexões independentes nos ensaios concorrentes de seleção e revogação. A revisão de produção depende do orçamento de bundle, de CI e de verificação autenticada com os serviços reais. Nesta rodada, as flags de produção não foram alteradas e o trabalho ficou local, sem chamadas pagas, migrations remotas ou deploy. O `409 project_busy` de produção segue em standby.
+
+## Otimização do bundle para revisão
+
+O build de `1e9774d` reduziu o JavaScript total de **336.977 para 334.949 bytes gzip** em relação a `9fb0367`. A economia de 2.028 bytes preservou o carregamento sob demanda do estúdio autenticado e da recuperação paralela. A codificação Base64 usa um caminho comum, assim como os digests SHA-256. A geração de arte lê o arquivo do snapshot já validado. O chat usa o compilador do mesmo parser Markdown com as opções de sanitização existentes.
+
+A medição soma todos os arquivos JavaScript de `.next/static`, com Node 24.16.0, Next 16.4.6 e o orçamento original de **300.000 bytes**. Em cinco rodadas, a entrada sem sessão apresentou 0 B de JavaScript externo, LCP mediano de 622 ms, TBT de 0 ms e CLS de 0,008. O total continua bloqueando o gate de performance.
+
+### Análise de dependências do cliente
+
+Os snapshots Turbopack `bundle-pr-before-9fb0367` e `bundle-pr-after-1e9774d` cobrem as 49 rotas. A atribuição deduplica cada par de arquivo emitido e caminho do fonte. Dez saídas de cliente expõem seus módulos e duas saídas do runtime e do polyfill carecem dessa informação. Os bytes de ambas entram na medição.
+
+| Fonte e consumidor | Atribuição gzip antes → depois | Evidência |
+| --- | ---: | --- |
+| `next/dynamic` no estúdio e na recuperação | 526 B → 0 B de `preload-chunks`; 422 B → 0 B do shim `async-local-storage` | `React.lazy` conserva as importações acionadas pela renderização e os fallbacks de `Suspense` |
+| `markdown-to-jsx` no chat | 6.386 → 6.282 B | Compilador da mesma dependência, com bloqueio de HTML e regras de links preservados |
+| Cliente de autoridade visual | 782 → 635 B; 279 B compartilhados no novo helper | IDs, seleção, digest e capacidade efêmera continuam no cliente por contrato. Assinatura e verificação de autoridade permanecem no servidor |
+
+A inspeção não encontrou implementação de Server Action própria, SDK administrativo ou provedor de IA no cliente. Os módulos Next de roteamento e o shim removido são infraestrutura do framework. O polyfill `nomodule` continua presente (39.473 bytes gzip no arquivo). Ajustes experimentais de Turbopack renderam no máximo 403 bytes e foram descartados. Compartilhar schemas primitivos aumentou o bundle em 138 bytes e encadear verificações do Zod economizou apenas 8 bytes. Ambos os experimentos foram revertidos.
