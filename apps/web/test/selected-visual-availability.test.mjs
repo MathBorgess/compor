@@ -12,8 +12,8 @@ const entry=n=>({id:id(n),ordinal:n,role:'reference',inputOrigin:'local-upload',
 const visualInput={version:2,policy:'optimized-v1',externalConsent:false,entries:[entry(1),entry(2)]};
 const reference=n=>({id:id(n),source:{kind:'local-upload'}});
 
-test('disponibilidade depende da flag, autenticação, chat, imagens e chave de assinatura',()=>{
- const env={COMPOR_SELECTED_LOCAL_VISUALS_ENABLED:'true',COMPOR_STUDIO_CHAT_ENABLED:'true',COMPOR_PRIVATE_IMAGES_ENABLED:'true',COMPOR_AGENT_ENABLED:'true',COMPOR_AGENT_HMAC_SECRET:Buffer.alloc(32,7).toString('base64url')};
+test('disponibilidade depende das flags de imagens selecionadas e autoridade, autenticação, chat, imagens e assinatura',()=>{
+ const env={COMPOR_SELECTED_LOCAL_VISUALS_ENABLED:'true',COMPOR_REFERENCE_AUTHORITY_ENABLED:'true',COMPOR_STUDIO_CHAT_ENABLED:'true',COMPOR_PRIVATE_IMAGES_ENABLED:'true',COMPOR_AGENT_ENABLED:'true',COMPOR_AGENT_HMAC_SECRET:Buffer.alloc(32,7).toString('base64url')};
  assert.equal(selectedVisualsAvailable(true,env),true);assert.equal(selectedVisualsAvailable(false,env),false);
  for(const key of Object.keys(env))assert.equal(selectedVisualsAvailable(true,{...env,[key]:''}),false,key);
  assert.equal(selectedVisualsAvailable(true,{}),false);

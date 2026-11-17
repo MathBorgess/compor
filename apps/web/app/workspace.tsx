@@ -14,7 +14,7 @@ import "./studio-shell.css";
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
-export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false, referenceAuthorityEnabled = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -254,6 +254,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             parallelAvailable={parallelAvailable}
             selectedVisualsAvailable={selectedVisualsAvailable}
             selectedVisualsRequired={selectedVisualsRequired}
+            referenceAuthorityEnabled={referenceAuthorityEnabled}
             key={authenticatedUser}
             userId={authenticatedUser}
             accountLabel={account?.label ?? "Conta conectada"}

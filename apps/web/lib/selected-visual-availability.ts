@@ -3,7 +3,7 @@ import {validateVisualInputManifest,type VisualInputManifest} from '@compor/agen
 
 /** Capability is exposed only when all server-side image and chat dependencies are configured. */
 export function selectedVisualsAvailable(authConfigured:boolean,env:NodeJS.ProcessEnv=process.env):boolean {
- return authConfigured&&env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true'&&env.COMPOR_STUDIO_CHAT_ENABLED==='true'&&env.COMPOR_PRIVATE_IMAGES_ENABLED==='true'&&agentSigningKey(env)!==null;
+ return authConfigured&&env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true'&&env.COMPOR_REFERENCE_AUTHORITY_ENABLED==='true'&&env.COMPOR_STUDIO_CHAT_ENABLED==='true'&&env.COMPOR_PRIVATE_IMAGES_ENABLED==='true'&&agentSigningKey(env)!==null;
 }
 
 /** The selection is a statement from the authenticated app, not proof of physical file provenance. */
