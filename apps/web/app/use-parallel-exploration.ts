@@ -47,7 +47,11 @@ export function useParallelExploration(props:Props){
     if(pendingStart.current||run.current||!props.available||!props.visible||!pageVisible||!props.hasApiKey||!props.isAuthenticated()||!ready)return;
     const capturedEpoch=epoch.current;
     if(capturedEpoch===null){setStatus('Não foi possível verificar a intenção. Atualize a tela antes de pedir propostas.');return;}
-    pendingStart.current=true;setPaused(false);setLegacyPending(false);
+    pendingStart.current=true;
+    setPaused(false);
+    setLegacyPending(false);
+    setPhase('generating');
+    setStatus('Verificando as condições para gerar propostas…');
     const identity={userId:props.userId,projectId:props.projectId,conversationId:props.conversationId,source:props.source,credentialEpoch:props.credentialEpoch,key:props.getApiKey(),visual:props.selectedVisualsAvailable===true};
     const initial=props.getState(),initialQuestion=initial?pendingSelectionQuestion(initial,identity.conversationId):null;
     let active=true,dispatcher:ReturnType<typeof createParallelDispatcher>|null=null,last:{preparation:ParallelPreparation;snapshot:BatchSnapshot;progress:ParallelProgress}|null=null,snapshotFingerprint:string|null=null;
@@ -100,7 +104,7 @@ export function useParallelExploration(props:Props){
       if(!navigator.locks)throw Error('locks_unavailable');
       await navigator.locks.request(`compor-exploration:${identity.userId}`,{ifAvailable:true},async lock=>{
         if(!lock||!valid())throw Error('busy');
-        if(localStorage.getItem(`compor-exploration-pending:${identity.userId}`)!==null){setLegacyPending(true);setStatus('Há uma exploração anterior a consultar no fluxo original.');return;}
+        if(localStorage.getItem(`compor-exploration-pending:${identity.userId}`)!==null){setPhase('blocked');setLegacyPending(true);setStatus('Há uma exploração anterior a consultar no fluxo original.');return;}
         let nextEpoch=capturedEpoch,allowResume=true;
         for(;;){
           if(!valid())return;
@@ -123,6 +127,7 @@ export function useParallelExploration(props:Props){
           if(existing&&identity.visual&&existing.visualInput===undefined){setStatus('O plano anterior não contém as imagens selecionadas. Consulte a tentativa antes de continuar.');setPhase('blocked');return;}
           if(identity.visual&&!current.current.loadReference)throw Error('visual_storage_unavailable');
           let externalConsent=false;try{externalConsent=Boolean(readReferenceAuthorityConsent(identity.userId))&&referenceConsentGranted(sessionStorage,identity.userId);}catch{}
+          if(identity.visual&&!existing)setStatus('Preparando as referências selecionadas…');
           const visualSnapshot=identity.visual&&!existing?await prepareSelectedVisualCandidates({references:state.references,projectId:identity.projectId,externalConsent,loadReference:current.current.loadReference??(async()=>null)}):undefined;if(!valid())return;
           const preparation=existing??{version:1,userId:identity.userId,projectId:identity.projectId,batchId:crypto.randomUUID(),conversationId:identity.conversationId,planRequestId:crypto.randomUUID(),credentialSource:identity.source,intentId:crypto.randomUUID(),expectedEpoch:nextEpoch,planSubmitted:false,revocationRequested:false,imageIds:[crypto.randomUUID(),crypto.randomUUID(),crypto.randomUUID()],context,...(visualSnapshot?{visualInput:visualSnapshot.manifest}:{}),creationContext:{postContext:identity.conversationId==='references'?{objective:'',message:'',action:''}:postContext(state,identity.conversationId),references:visualSnapshot?state.references.filter(reference=>visualSnapshot.manifest.entries.some(entry=>entry.id===reference.id.toLowerCase())):[]},plan:null,stage:'planning',revision:0};
           if(existing&&existing.credentialSource!==identity.source){setStatus('O plano anterior depende da fonte e chave originais.');setPhase('blocked');return;}
