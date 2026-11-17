@@ -126,7 +126,7 @@ export default function StudioChat({
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
-  const [missingMarker,setMissingMarker]=useState(false);
+  const [orphanNotice,setOrphanNotice]=useState('');
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
   const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
   const referenceWaitListener=useRef(onReferenceWait);
@@ -161,6 +161,7 @@ export default function StudioChat({
     preparationSequence=useRef(0),
     legacyPending=useRef(false),
     inspectionLock=useRef(false),
+    pollLock=useRef(false),
     inspectionSequence=useRef(0),
     failedAutomatic=useRef<string|null>(null),
     // Synchronous guard shared by the composer and quick replies: a double click
@@ -174,14 +175,16 @@ export default function StudioChat({
   currentScope.current=scopeMarker;
   const credentialIsCurrent=()=>mounted.current&&activeMarker.current===scopeMarker&&currentScope.current===scopeMarker;
   const sourceMismatch=Boolean(pending&&pendingSource&&pendingSource!==credentialSource);
-  const orphaned=missingMarker?state.adjustments.find(item=>!['completed','failed'].includes(item.status)&&item.context.conversationId===conversationId):undefined;
+  const localBlocked=state.adjustments.some(item=>!['completed','failed'].includes(item.status)&&item.id!==pending);
+  const orphaned=state.adjustments.find(item=>!['completed','failed'].includes(item.status)&&item.context.conversationId===conversationId&&item.id!==pending);
+  useEffect(()=>{setOrphanNotice('');},[orphaned?.id]);
   const authenticationNotice=credentialSource==='default'?'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.':openAIAuthenticationNotice;
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
   // A hidden controller can finish an existing turn, but cannot prepare a new reading.
   // Its own busy update must not invalidate the preparation's visibility epoch.
-  const availability=useRef({message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
+  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
   const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis?1:0);
-  availability.current={message,busy,pending,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
+  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
   const quickReplyStorage=quickReplyKey(state.userId,state.projectId,conversationId);
   function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
@@ -238,7 +241,7 @@ export default function StudioChat({
     const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
-    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setMissingMarker(false);
+    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setOrphanNotice('');
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     actionCount.current.clear();
     try {
@@ -249,7 +252,6 @@ export default function StudioChat({
       const parsed = chatMarkerSchema.safeParse(markerValue);
       const value = parsed.success ? parsed.data : null;
       const usableRequestId=uuid(value?.requestId)?value.requestId:null;
-      setMissingMarker(!usableRequestId);
       const originalSource=value?.credentialSource??'byok';
       attemptSource.current=usableRequestId?originalSource:credentialSource;
       legacyPending.current=Boolean(usableRequestId && value?.imageProtocolVersion !== 1);
@@ -307,7 +309,7 @@ export default function StudioChat({
   async function api(path:string, body:Record<string,unknown>,mode?:'inspection'):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
-    if(pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
+    if(mode!=='inspection'&&pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
     const key = getApiKey?.();
     if (credentialSource==='byok'&&!key) throw Error("Conecte sua chave OpenAI para continuar.");
     const controller = new AbortController();
@@ -354,17 +356,17 @@ export default function StudioChat({
     return chatResponseSchema.parse(input);
   }
   async function inspectOrphaned(requestId:string) {
-    if(inspectionLock.current||busy||pending||!canUseAI||!credentialIsCurrent())return;
-    const sequence=++inspectionSequence.current;inspectionLock.current=true;setBusy(true);setNotice('');
+    if(inspectionLock.current||pollLock.current||busy||!canUseAI||!credentialIsCurrent())return;
+    const sequence=++inspectionSequence.current;inspectionLock.current=true;setBusy(true);setOrphanNotice('');
     try {
       const result=await api('/api/studio/chat',{op:'inspect_pending',projectId:state.projectId,requestId},'inspection');
       if(sequence!==inspectionSequence.current||!credentialIsCurrent()||!getState().adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)))return;
-      if(result.status==='completed')setNotice('A consulta encontrou um turno concluído. Abra a aba original para verificar a resposta e recuperar o contexto. Nenhuma ação foi repetida.');
-      else if(result.status==='failed'&&result.error==='provider_usage_limit')setNotice(credentialSource==='default'?'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.':'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.');
-      else if(result.status==='failed')setNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
-      else if(result.status==='action_required')setNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
-      else setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');
-    } catch {if(sequence===inspectionSequence.current&&credentialIsCurrent())setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');}
+      if(result.status==='completed')setOrphanNotice('A consulta encontrou um turno concluído. Abra a aba original para verificar a resposta e recuperar o contexto. Nenhuma ação foi repetida.');
+      else if(result.status==='failed'&&result.error==='provider_usage_limit')setOrphanNotice(credentialSource==='default'?'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.':'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.');
+      else if(result.status==='failed')setOrphanNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      else if(result.status==='action_required')setOrphanNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
+      else setOrphanNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');
+    } catch {if(sequence===inspectionSequence.current&&credentialIsCurrent())setOrphanNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');}
     finally {if(sequence===inspectionSequence.current){inspectionLock.current=false;if(credentialIsCurrent())setBusy(false);}}
   }
   function settle(requestId:string, status:RequestStatus, result?:AdjustmentResult) {
@@ -549,8 +551,9 @@ export default function StudioChat({
   }
   async function poll(requestId:string, count = 0) {
     if (!credentialIsCurrent()||!canUseAI) return;
+    if(inspectionLock.current||pollLock.current){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),2000);return;}
     if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
-    setBusy(true);
+    pollLock.current=true;setBusy(true);
     try {
       const data = await api("/api/studio/chat", {
         op: "poll",
@@ -563,7 +566,7 @@ export default function StudioChat({
         setBusy(false);
         setNotice(errorMessage(e));
       }
-    }
+    } finally {pollLock.current=false;}
   }
   async function inspectLastCompleted(){
     if(!credentialIsCurrent()||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!canUseAI)return;
@@ -579,15 +582,15 @@ export default function StudioChat({
     }
   }
   useEffect(()=>{
-    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
-    const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.message.trim();
+    const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.localBlocked&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
     const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
       if(!lock||!allowed())return;
       const available=availability.current;
-      if(!available.hasApiKey||available.busy||available.pending||available.message.trim()||inspectionLock.current)return;
+      if(!available.hasApiKey||available.busy||available.pending||available.localBlocked||available.message.trim()||inspectionLock.current)return;
       const before=getState();
       if(referenceFingerprint(before)!==referenceSet||referenceContext(before)!==referenceContextValue||!before.references.length||!getCurrentDraft(before)||before.adjustments.some(item=>!['completed','failed'].includes(item.status)))return;
       const existing=referenceRecord(),round=readReferenceRound(before);
@@ -629,7 +632,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -637,7 +640,7 @@ export default function StudioChat({
   type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (readOnly || !text.trim() || !canUseAI || busy || pending || submitLock.current || availability.current.busy || availability.current.pending || inspectionLock.current||!credentialIsCurrent()) return false;
+    if (readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
     submitLock.current=true;
     try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
     finally { submitLock.current=false; }
@@ -978,7 +981,7 @@ export default function StudioChat({
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
-  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||inspecting||sourceMismatch;
+  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
   const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   const panel=(
@@ -1111,7 +1114,8 @@ export default function StudioChat({
             Consultar esta tentativa
           </button>
         )}
-        {!pending&&orphaned&&<div className="studio-hint"><p>Uma tentativa anterior está pendente, mas a fonte original da IA não foi preservada nesta aba.</p><p>Escolha nas configurações a fonte usada no pedido e, se necessário, conecte a chave original. Sem acesso a ela, procure a aba original ou solicite ajuda; a tentativa continua preservada. Esta consulta não executa ações nem inicia geração.</p><button type="button" className="studio-button-secondary" disabled={busy||!canUseAI} onClick={()=>{void inspectOrphaned(orphaned.id);}}>{credentialSource==='default'?'Consultar usando IA do Compor':'Consultar usando minha chave OpenAI'}</button></div>}
+        {orphaned&&<div className="studio-hint"><p>Uma tentativa anterior está pendente, mas a fonte original da IA não foi preservada nesta aba.</p><p>Escolha nas configurações a fonte usada no pedido e, se necessário, conecte a chave original. Sem acesso a ela, procure a aba original ou solicite ajuda; a tentativa continua preservada. Esta consulta não executa ações nem inicia geração.</p><button type="button" className="studio-button-secondary" disabled={busy||!canUseAI} onClick={()=>{void inspectOrphaned(orphaned.id);}}>{credentialSource==='default'?'Consultar usando IA do Compor':'Consultar usando minha chave OpenAI'}</button>{orphanNotice&&<p role="status">{orphanNotice}</p>}</div>}
+        {localBlocked&&!orphaned&&<p role="status" className="studio-hint">Há um pedido pendente em outra conversa do projeto. Abra essa conversa para consultá-lo.</p>}
         {closedImageAttempt && !pending && !imageAction && <button type="button" className="studio-button-secondary" disabled={busy} onClick={reconcileClosedImage}>Verificar envio anterior</button>}
         {developerMode&&!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
           <button type="button" className="studio-button-secondary" disabled={!canUseAI||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
@@ -1154,7 +1158,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : intro ? "Criar post" : "Enviar →"}
-            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending)}
+            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
           >
             <span aria-hidden="true">{intro?"Criar post":"↑"}</span>
           </button>
