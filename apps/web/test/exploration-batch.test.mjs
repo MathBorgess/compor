@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {BATCH_DELAY_MS,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback} from '../lib/exploration-batch.ts';
+import {BATCH_DELAY_MS,pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback} from '../lib/exploration-batch.ts';
 
 const projectId='00000000-0000-4000-8000-000000000001',batchId='00000000-0000-4000-8000-000000000002',nextId='00000000-0000-4000-8000-000000000003';
 const makeStorage=()=>{const values=new Map();return {getItem:key=>values.get(key)??null,setItem:(key,value)=>values.set(key,value)};};
@@ -62,4 +62,12 @@ test('marcador antigo preserva sequência; lote ou posição divergentes não av
  assert.equal(recordBatchCompletion(progress,{projectId,requestId:crypto.randomUUID(),sequence:0},0).sequence,1);
  assert.throws(()=>recordBatchCompletion(progress,{...pending(0,1),batchId:nextId},0));
  assert.throws(()=>recordBatchCompletion(progress,pending(0,2),0));
+});
+
+test('recibo de não envio valida correlação, fonte e resposta definitiva sem reinterpretar marcador legado',()=>{
+ const marker={...pending(0,1),conversationId:'references'};
+ assert.deepEqual(pendingSchema.parse(marker),marker);
+ const receipt={status:'not_started',httpStatus:503,requestId:marker.requestId,userId:nextId,credentialSource:'byok',retryAutomatically:false};
+ assert.deepEqual(pendingSchema.parse({...marker,notStartedReceipt:receipt}).notStartedReceipt,receipt);
+ for(const changed of [{requestId:nextId},{httpStatus:502},{retryAutomatically:true},{status:'unknown'},{credentialSource:'unknown'},{userId:'invalid'},{apiKey:'never-store'}])assert.equal(pendingSchema.safeParse({...marker,notStartedReceipt:{...receipt,...changed}}).success,false);
 });

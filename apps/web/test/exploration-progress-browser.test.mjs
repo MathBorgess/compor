@@ -51,7 +51,7 @@ async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,st
   if(path.endsWith('/resume')){resumes.push(route);return;}
   if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
   if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
-  if(request.method()==='GET'){gets.push(request.url());return route.fulfill({json:{images:thirdReceipt?[{id:'00000000-0000-4000-8000-000000000098',project_id:projectId,state:'completed'}]:posts.map((post,index)=>({id:post.requestId,project_id:projectId,state:post.state,ordinal:index+1,created_at:'2026-11-17T12:00:00Z',batch_id:post.batch.id,batch_position:post.batch.position}))}});}
+  if(request.method()==='GET'){gets.push(request.url());return route.fulfill({json:{images:thirdReceipt?[{id:'00000000-0000-4000-8000-000000000098',project_id:projectId,state:'completed'}]:posts.filter(post=>post.state!=='not_started').map((post,index)=>({id:post.requestId,project_id:projectId,state:post.state,ordinal:index+1,created_at:'2026-11-17T12:00:00Z',batch_id:post.batch.id,batch_position:post.batch.position}))}});}
   const body=request.postDataJSON();posts.push({...body,state:'running'});pending.push(route);
  });
  await page.clock.install();
@@ -93,6 +93,109 @@ test('reconciliação concluída atualiza a galeria sem iniciar outra imagem',{s
  assert.equal(posts.length,1,'a reconciliação apenas atualiza a galeria');
  await page.clock.fastForward(120000);
  assert.equal(posts.length,1,'outro envio continua dependendo de novo gesto');
+});
+
+test('não envio confirmado após saída sobrevive à recarga e exige reconciliação explícita',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ const before=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),markerKey));
+ await page.getByRole('button',{name:'Fechar referências',exact:true}).click();
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:503,json:{status:'not_started',requestId:posts[0].requestId,retryAutomatically:false}});
+ await page.waitForFunction(key=>Boolean(JSON.parse(localStorage.getItem(key))?.notStartedReceipt),markerKey);
+ const saved=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),markerKey));
+ assert.deepEqual(saved,{...before,notStartedReceipt:{status:'not_started',httpStatus:503,requestId:before.requestId,userId,credentialSource:'byok',retryAutomatically:false}});
+ assert.doesNotMatch(JSON.stringify(saved),/sk-synthetic/);
+ await page.addInitScript(()=>{window.startDisabled=true;});await page.reload();
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
+ await page.clock.fastForward(120000);
+ assert.deepEqual(JSON.parse(await page.evaluate(key=>localStorage.getItem(key),markerKey)),saved);
+ assert.equal(posts.length,1,'recarga não reenvia nem descarta a confirmação');
+ await page.getByRole('button',{name:'Ativar e retomar',exact:true}).click();
+ await page.getByText('Foi confirmado que o pedido anterior não foi enviado. Peça propostas para tentar novamente.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),null);
+ await page.clock.fastForward(120000);assert.equal(posts.length,1,'reconciliação para antes de novo envio');
+ await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ assert.equal(posts.length,2);assert.notEqual(posts[1].requestId,posts[0].requestId);
+ assert.equal(posts[1].batch.position,1,'um pedido não enviado não avança o lote');
+});
+
+test('troca de fonte preserva origem da confirmação e não a consome automaticamente',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844},{unreliableAbort:true});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Trocar para IA do Compor',exact:true}).click();
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:503,json:{status:'not_started',requestId:posts[0].requestId,retryAutomatically:false}});
+ await page.getByText('O pedido anterior não foi enviado. Peça propostas para consultar essa confirmação.',{exact:true}).waitFor();
+ const saved=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),markerKey));
+ assert.equal(saved.notStartedReceipt.credentialSource,'byok');assert.equal(saved.notStartedReceipt.userId,userId);
+ await page.clock.fastForward(120000);assert.equal(posts.length,1);
+ assert.deepEqual(JSON.parse(await page.evaluate(key=>localStorage.getItem(key),markerKey)),saved);
+ await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+ await page.getByText('Foi confirmado que o pedido anterior não foi enviado. Peça propostas para tentar novamente.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),null);assert.equal(posts.length,1);
+});
+
+for(const variant of ['outro ID','retry permitido','HTTP incerto','resultado desconhecido'])test('resposta tardia sem comprovação preserva marcador: '+variant,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+ await page.getByRole('button',{name:'Fechar referências',exact:true}).click();
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:variant==='HTTP incerto'?502:503,json:{status:variant==='resultado desconhecido'?'unknown':'not_started',requestId:variant==='outro ID'?'00000000-0000-4000-8000-000000000098':posts[0].requestId,retryAutomatically:variant==='retry permitido'}});
+ await page.getByRole('button',{name:'Ativar e retomar',exact:true}).click();
+ await page.getByText('Uma exploração anterior ainda não foi confirmada. Consulte seu estado antes de continuar.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker);
+ await page.clock.fastForward(120000);assert.equal(posts.length,1);
+});
+
+test('confirmação tardia não sobrescreve marcador substituído',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Fechar referências',exact:true}).click();
+ const replacement=await page.evaluate(key=>{const value=JSON.parse(localStorage.getItem(key));value.requestId='00000000-0000-4000-8000-000000000098';const raw=JSON.stringify(value);localStorage.setItem(key,raw);return raw;},markerKey);
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:503,json:{status:'not_started',requestId:posts[0].requestId,retryAutomatically:false}});
+ await page.getByRole('button',{name:'Ativar e retomar',exact:true}).click();
+ await page.getByText('Uma exploração anterior ainda não foi confirmada. Consulte seu estado antes de continuar.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),replacement);assert.equal(posts.length,1);
+});
+
+for(const [field,notice] of [
+ ['userId','Não foi possível confirmar a origem da resposta. O recibo foi preservado.'],
+ ['projectId','Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.'],
+ ['conversationId','Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.'],
+])test('recibo restaurado preserva isolamento de '+field,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Fechar referências',exact:true}).click();
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:503,json:{status:'not_started',requestId:posts[0].requestId,retryAutomatically:false}});
+ await page.waitForFunction(key=>Boolean(JSON.parse(localStorage.getItem(key))?.notStartedReceipt),markerKey);
+ const saved=await page.evaluate(({key,field})=>{const value=JSON.parse(localStorage.getItem(key));(field==='userId'?value.notStartedReceipt:value)[field]='00000000-0000-4000-8000-000000000098';const raw=JSON.stringify(value);localStorage.setItem(key,raw);return raw;},{key:markerKey,field});
+ await page.getByRole('button',{name:'Ativar e retomar',exact:true}).click();
+ await page.getByText(notice,{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),saved);assert.equal(posts.length,1);
+});
+
+test('falha ao persistir confirmação conserva a pendência sem inferir não envio',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844});
+ const markerKey='compor-exploration-pending:'+userId;
+ await page.getByText('Aguardando imagem 1 de 3.',{exact:true}).waitFor();
+ const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+ await page.getByRole('button',{name:'Fechar referências',exact:true}).click();
+ await page.evaluate(key=>{const set=Storage.prototype.setItem;Storage.prototype.setItem=function(name,value){if(name===key&&JSON.parse(value).notStartedReceipt)throw new DOMException('synthetic quota','QuotaExceededError');return set.call(this,name,value);};},markerKey);
+ posts[0].state='not_started';
+ await pending.shift().fulfill({status:503,json:{status:'not_started',requestId:posts[0].requestId,retryAutomatically:false}});
+ await page.getByRole('button',{name:'Ativar e retomar',exact:true}).click();
+ await page.getByText('Uma exploração anterior ainda não foi confirmada. Consulte seu estado antes de continuar.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker);assert.equal(posts.length,1);
 });
 
 for(const label of ['Pausar exploração','Fechar referências','Trocar projeto'])test('resposta tardia preserva recibo após '+label,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
