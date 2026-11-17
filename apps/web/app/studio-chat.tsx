@@ -126,6 +126,7 @@ export default function StudioChat({
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
+  const [missingMarker,setMissingMarker]=useState(false);
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
   const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
   const referenceWaitListener=useRef(onReferenceWait);
@@ -173,6 +174,7 @@ export default function StudioChat({
   currentScope.current=scopeMarker;
   const credentialIsCurrent=()=>mounted.current&&activeMarker.current===scopeMarker&&currentScope.current===scopeMarker;
   const sourceMismatch=Boolean(pending&&pendingSource&&pendingSource!==credentialSource);
+  const orphaned=missingMarker?state.adjustments.find(item=>!['completed','failed'].includes(item.status)&&item.context.conversationId===conversationId):undefined;
   const authenticationNotice=credentialSource==='default'?'A IA do Compor está indisponível. Você pode usar sua chave OpenAI ou continuar editando.':openAIAuthenticationNotice;
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
   // A hidden controller can finish an existing turn, but cannot prepare a new reading.
@@ -236,13 +238,14 @@ export default function StudioChat({
     const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
-    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);
+    activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setMissingMarker(false);
     setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
     actionCount.current.clear();
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
       setClosedImageAttempt(uuid(submitted)?submitted:null);
-      const parsed = chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker) ?? "null"));
+      const rawMarker=sessionStorage.getItem(marker);setMissingMarker(rawMarker===null);
+      const parsed = chatMarkerSchema.safeParse(JSON.parse(rawMarker ?? "null"));
       const value = parsed.success ? parsed.data : null;
       const originalSource=value?.credentialSource??'byok';
       attemptSource.current=value?.requestId?originalSource:credentialSource;
@@ -257,7 +260,7 @@ export default function StudioChat({
       setLastCompleted(uuid(previous.current)?previous.current:null);
       imageContext.current=value?.imageContext??null;
       receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
-      if(changed||originalSource!==credentialSource)remember(value?.requestId??null);
+      if(value&&(changed||originalSource!==credentialSource))remember(value.requestId??null);
     } catch {}
     return () => {
       mounted.current = false;
@@ -343,6 +346,19 @@ export default function StudioChat({
           : "Não foi possível concluir a consulta. O resultado pode estar incerto.",
       );
     return chatResponseSchema.parse(input);
+  }
+  async function inspectOrphaned(requestId:string) {
+    if(inspectionLock.current||busy||pending||!canUseAI||!credentialIsCurrent())return;
+    const sequence=++inspectionSequence.current;inspectionLock.current=true;setBusy(true);setNotice('');
+    try {
+      const result=await api('/api/studio/chat',{op:'poll',projectId:state.projectId,requestId});
+      if(sequence!==inspectionSequence.current||!credentialIsCurrent()||!getState().adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)))return;
+      if(result.status==='completed')setNotice('A consulta encontrou uma resposta concluída. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      else if(result.status==='failed')setNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      else if(result.status==='action_required'||result.status==='consent_required')setNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
+      else setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');
+    } catch {if(sequence===inspectionSequence.current&&credentialIsCurrent())setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');}
+    finally {if(sequence===inspectionSequence.current){inspectionLock.current=false;if(credentialIsCurrent())setBusy(false);}}
   }
   function settle(requestId:string, status:RequestStatus, result?:AdjustmentResult) {
     change((value) =>
@@ -1088,6 +1104,7 @@ export default function StudioChat({
             Consultar esta tentativa
           </button>
         )}
+        {!pending&&orphaned&&<div className="studio-hint"><p>Uma tentativa anterior está pendente, mas a fonte original da IA não foi preservada nesta aba.</p><p>Escolha nas configurações a fonte usada no pedido e, se necessário, conecte a chave original. Sem acesso a ela, procure a aba original ou solicite ajuda; a tentativa continua preservada. Esta consulta não executa ações nem inicia geração.</p><button type="button" className="studio-button-secondary" disabled={busy||!canUseAI} onClick={()=>{void inspectOrphaned(orphaned.id);}}>{credentialSource==='default'?'Consultar usando IA do Compor':'Consultar usando minha chave OpenAI'}</button></div>}
         {closedImageAttempt && !pending && !imageAction && <button type="button" className="studio-button-secondary" disabled={busy} onClick={reconcileClosedImage}>Verificar envio anterior</button>}
         {developerMode&&!pending&&!busy&&lastCompleted&&<div className="studio-attempt-inspection">
           <button type="button" className="studio-button-secondary" disabled={!canUseAI||inspecting} onClick={inspectLastCompleted}>{inspecting?'Consultando estado…':'Consultar estado'}</button>
