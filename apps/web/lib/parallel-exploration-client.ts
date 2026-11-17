@@ -31,7 +31,10 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
       else if(preparation.stage!=='planned'||JSON.stringify(preparation.plan)!==JSON.stringify(result.plan))throw Error('plan_mismatch');
       return {preparation,binding:result.planBinding,status:result.status};
     }
-    if(result.status==='failed'&&preparation.stage==='planning')preparation=await store.updatePreparation(preparation.userId,preparation.revision,{kind:'failed'});
+    if(result.status==='failed'&&preparation.stage==='planning'){
+      if(!response.ok)throw Error('plan_unconfirmed');
+      preparation=await store.updatePreparation(preparation.userId,preparation.revision,{kind:'failed'});
+    }
     return {preparation,binding:null,status:result.status};
   }
   /** A user-requested read of the original planning attempt; never submits a new one. */
