@@ -30,3 +30,13 @@ A prova PostgreSQL abre uma transação que mantém o lock por conta, inicia out
 Foi usado um contêiner próprio sem rede e sem portas, com limite de memória de 256 MiB e dados em tmpfs, na Colima já ativa (2 CPUs/2 GiB). Contêineres anteriores foram preservados. A tarefa não iniciou a VM e não assume sua responsabilidade de desligamento.
 
 A revogação atômica da intenção de geração após pausa/saída é uma alteração posterior identificada na revisão; este commit ainda depende da autorização/contexto verificados pelo backend e não fornece uma capacidade de intenção revogável. Não habilitar o caminho paralelo enquanto essa fronteira e a integração dos endpoints não estiverem verificadas.
+
+## Complemento da revogação (migration34)
+
+A lacuna de revogação descrita acima motivou a segunda migration, sem alterar a33 já entregue. `scripts/quality/exploration-intent.test.mjs` acrescenta quatro cenários: tombstone antes de criação/CAS antigo; criação vencedora com resposta perdida; pausa entre planejamento e despacho/reutilização explícita do plano; capacidade específica de reposição e exclusão de intenção ociosa. Também recusa revogação atrasada que atingiria outra intenção ativa, preserva GET após pausa e impede usar as assinaturas antigas sem intenção.
+
+O gate completo passou **72/72** antes das últimas recusas conservadoras de escopo do revoke; depois delas foram repetidos os testes de intenção e a aplicação integral das migrations. A prova PostgreSQL foi ampliada com cinco disputas sob owner lock: revoke antes de create, create antes de revoke, revoke antigo contra intenção nova, revoke antes de reservar imagens e reserva de imagens antes de revoke. As três imagens da reserva vencedora continuam `running`, sem cancelamento fictício.
+
+O inventário recebeu o hash da migration34 e conta34 migrations, preservando os hashes anteriores. Não houve chamada paga nem aplicação remota. Timeout de revogação sem GET confirmado continua uma limitação explícita, não um sucesso de pausa.
+
+Resultado final do complemento: **7/7** nos quatro cenários de intenção mais três verificações de infraestrutura, cinco disputas adicionais PostgreSQL aprovadas e lint aprovado. A execução ampla anterior permaneceu em **72/72**; após as duas recusas conservadoras foram repetidas as fronteiras afetadas, sem repetir verificações não afetadas.

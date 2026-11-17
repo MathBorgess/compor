@@ -1,6 +1,7 @@
 // Explicit local-only proof; never targets a Supabase URL or host port.
 // Container must be a newly created, task-owned PostgreSQL 17 instance.
 import {spawn} from 'node:child_process';
+import {readFile} from 'node:fs/promises';
 import {setTimeout as delay} from 'node:timers/promises';
 import assert from 'node:assert/strict';
 import {databaseSql} from '../../scripts/quality/fixtures/exploration-parallel-db.mjs';
@@ -53,5 +54,22 @@ try{
  await sql("update exploration_batches set completed_at=now()-interval '16 seconds',next_at=now()-interval '1 second';");
  const deletedFirst=await heldRace(`select delete_project_post('${project}','${piece}');`,reservePlan(id(30),id(31)));
  assert.match(deletedFirst.second,/"status": "not_found"/);
+ await sql(await readFile(new URL('../migrations/20261117000034_exploration_revocable_intents.sql',import.meta.url),'utf8'));
+ const intentPiece=id(3001),intentBatch=id(3002),intentRequest=id(3003);
+ await sql(`insert into project_posts(project_id,piece_id,name)values('${project}','${intentPiece}','Intent fixture');`);
+ const createIntent=(intent,epoch)=>`select reserve_exploration_intent('${project}','${intentPiece}','${intentBatch}','${intent}',${epoch},'${digest}','${digest}',${proof},'batch',null,null);`;
+ const revokeIntent=(intent,epoch)=>`select revoke_exploration_intent('${project}','${intent}',${epoch});`;
+ const planIntent=intent=>`select reserve_exploration_plan('${project}','${intentPiece}','${intentBatch}','${intentRequest}','${digest}',${proof},'${intent}','${secret}');`;
+ const dispatchIntent=intent=>`select row_to_json(r) from reserve_exploration_batch_proven('${project}','${intentBatch}','${intentPiece}','${digest}',array['${id(3101)}'::uuid,'${id(3102)}'::uuid,'${id(3103)}'::uuid],array['${digest}','${digest}','${digest}'],array[${proof},${proof},${proof}],'${intent}','${secret}')r;`;
+ const beforeCreate=await heldRace(revokeIntent(id(3010),0),createIntent(id(3010),0));assert.match(beforeCreate.second,/'?revoked'?/);
+ const afterCreate=await heldRace(createIntent(id(3011),1),revokeIntent(id(3011),1));assert.match(afterCreate.second,/"status": "revoked"/);
+ const newer=await heldRace(createIntent(id(3012),3),revokeIntent(id(3099),2));assert.match(newer.second,/"status": "conflict"/);
+ await sql(actor+planIntent(id(3012))+finishPlan(intentRequest));
+ const beforeDispatch=await heldRace(revokeIntent(id(3012),4),dispatchIntent(id(3012)));assert.match(beforeDispatch.second,/"state":"revoked"/);
+ assert.equal((await sql(`select count(*) from exploration_images where parallel_batch_id='${intentBatch}';`)).trim(),'0');
+ await sql(actor+createIntent(id(3013),5));
+ const afterDispatch=await heldRace(dispatchIntent(id(3013)),revokeIntent(id(3013),6));assert.match(afterDispatch.first,/"is_new":true/);assert.match(afterDispatch.second,/"status": "revoked"/);
+ assert.equal((await sql(`select count(*) from exploration_images where parallel_batch_id='${intentBatch}' and state='running';`)).trim(),'3');
+ console.log('Revocable intent: revoke-before-create, create-before-revoke, stale revoke, revoke-before-dispatch and admitted-dispatch-before-revoke races passed.');
  console.log('PostgreSQL 17: planner race, delete race, batch replay race, three concurrent completions and deleted-scope race passed.');
 }finally{await sql(`drop database ${database} with (force);`,'postgres');}

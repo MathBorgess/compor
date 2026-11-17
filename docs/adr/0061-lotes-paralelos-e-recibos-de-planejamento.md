@@ -69,3 +69,26 @@ A implantação é incremental: aplicar banco após revisão e gate; publicar ba
 Rollback de uma transação de migration restaura o índice antigo, funções e dados. Depois de novos lotes em uso, rollback operacional é desligar novos despachos e preservar esta migration/recuperação; não recriar o índice de um recibo enquanto houver três pendências, não apagar slots e não reabrir unknown. Uma eventual reversão de schema exige procedimento próprio depois de reconciliar cada recibo, sem converter incerteza em falha.
 
 A [evidência local](../quality/2026-11-17-exploracao-paralela-sql.md) distingue PGlite, PostgreSQL concorrente, stubs Auth/Storage e integração ainda não executada. Não foram feitas chamadas pagas, migrations remotas ou deploy.
+
+## Complemento — intenção revogável e compare-and-swap
+
+A revisão de 17/11 identificou que um plano válido poderia continuar autorizando admissão depois de pausa/saída. A migration `20261117000034_exploration_revocable_intents.sql` fecha essa janela no caminho paralelo: acrescenta uma intenção com prova e epoch monotônico da conta. O backend deriva a preimagem vinculando dono, projeto, conversa, lote, intentId, contexto, fonte/credencial e propósito; SQL guarda apenas o compromisso. O segredo não vai ao navegador.
+
+A criação exige `expectedEpoch`. Sob o mesmo owner lock, compara a versão, cria a intenção e avança o epoch. Ler o epoch não autoriza criar: depois de conflito, é necessário novo pedido explícito; não fazer fetch de epoch e retry automático. Replay conserva `active`, `consumed` ou `revoked` e nunca reinstala autoridade ou prova.
+
+| RPC da migration 34 | Parâmetros/resultado |
+| --- | --- |
+| `get_exploration_intent_epoch()` | Epoch atual da própria conta, inicialmente 0; sem mutação |
+| `reserve_exploration_intent` | `p_project_id,p_piece_id,p_batch_id,p_intent_id,p_expected_epoch,p_context_digest,p_credential_digest,p_proof_digest,p_purpose,p_position,p_previous_id`; retorna `{status:'reserved'\|'existing',intent}` ou `busy\|conflict\|revoked\|not_found` |
+| `revoke_exploration_intent` | `p_project_id,p_intent_id,p_expected_epoch`; retorna `{status:'revoked'\|'conflict',epoch}` ou `{status:'not_found'}`; não exige chave/prova antiga |
+| `get_exploration_intent_state` | `p_project_id,p_intent_id`; retorna `{state:'active'\|'consumed'\|'revoked'\|'absent',epoch}` ou `null` fora do escopo próprio; reconcilia timeout sem efeito |
+
+`intent` contém `intentId,userId,projectId,conversationId,batchId,contextDigest,credentialDigest,purpose,position,previousId,state,epoch`. A camada HTTP deve expor somente os metadados necessários, sem digests de vínculo ou prova. `purpose='batch'` exige posição/previousId nulos; `replacement` exige posição e ID atual definitivamente recusado. A intenção para reposição é nova e não autoriza trocar outro slot.
+
+As RPCs de reserva de planner, lote e reposição ganham **dois parâmetros finais**: `p_intent_id,p_intent_secret`. As assinaturas da migration33 sem intenção deixam de ser executáveis por `authenticated`; são chamadas apenas pelas sobrecargas protegidas. Reserva do planner sem capacidade ativa retorna `conflict`; lote/reposição retornam `revoked,false`. A prova é conferida juntamente com o escopo e o epoch dentro da transação. A reserva nova das imagens consome a intenção; a do planejamento conserva-a até despacho ou revogação. GETs, bind/finish do planejamento, conclusões das imagens e replays de recibos existentes continuam disponíveis depois da pausa, sem reenvio.
+
+Revogação antes da criação registra um tombstone e avança o epoch, impedindo a criação atrasada com o snapshot anterior. Se a criação do mesmo ID venceu e sua resposta se perdeu, a revogação aceita o epoch anterior àquela criação ou o epoch confirmado, desde que ainda seja o atual. Se outra intenção já avançou a conta, a revogação antiga retorna `conflict` e não cancela a nova. ID inexistente não cancela outra intenção ativa nem mesmo com epoch atual. Tombstone já confirmado é idempotente. Excluir um escopo sem efeitos pendentes revoga a intenção ativa daquele escopo e preserva os recibos; outras intenções não são afetadas.
+
+Uma nova intenção explicitamente pedida pode admitir um plano já concluído e recuperado do mesmo escopo/contexto, sem refazer planejamento pago. A transação de reserva é o ponto de admissão: se a revogação vence, nada é reservado; se a reserva vence, a pausa posterior não declara cancelamento das chamadas externas e não altera os três recibos para falha.
+
+**Limites:** fechar a aba, perder conectividade ou receber timeout sem confirmar a RPC não comprova revogação. O GET de estado deve resolver essa incerteza. Não foi inventado prazo de lease/heartbeat; um eventual prazo exige política própria e tampouco tornaria o fornecedor atomicamente cancelável. A intenção é proteção do caminho paralelo; o contrato histórico do MCP/serial permanece separado. A feature continua sem ativação de cliente neste trabalho.
