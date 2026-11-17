@@ -121,9 +121,8 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   }
   return <section className="studio-exploration-gallery" aria-label="Explorações de imagem">
     <div className="exploration-gallery-heading"><h2>Explorações de imagem</h2><p>Compare as propostas. Escolher orienta a criação, sem aprovar a arte.</p></div>
-    {phase === "generating" && <p className="exploration-gallery-generating" role="status">Gerando uma imagem do lote…</p>}
     {notice && <p role="status" data-notice={notice.startsWith('Imagem adicionada')?'selected':'error'}>{notice}</p>}
-    {images?.length === 0 && <p>Nenhuma exploração encontrada neste projeto.</p>}
+    {images?.length === 0 && phase !== "generating" && <p>Nenhuma exploração encontrada neste projeto.</p>}
     {latest.length > 0 && <div className="studio-exploration-grid">{latest.map(imageCard)}</div>}
     <div className="exploration-gallery-controls">
       {phase === "waiting" && countdown !== null && <div className="studio-batch-wait" role="timer" aria-label={`Próximo lote em ${countdown} segundos`}><img className="studio-batch-spinner" src="/studio/compor-avatar.svg" alt="" /><span aria-hidden="true">Próximo lote em {countdown}s</span></div>}
