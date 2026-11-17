@@ -2,9 +2,19 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {existsSync} from 'node:fs';
 import {createServer} from 'node:http';
+import {setTimeout as delay} from 'node:timers/promises';
 import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+async function waitForPage(page,predicate,message){
+ const deadline=Date.now()+5000;
+ while(Date.now()<deadline){
+  if(await page.evaluate(predicate))return;
+  await delay(20);
+ }
+ assert.fail(message);
+}
 
 test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',{skip:!existsSync(browserPath),timeout:30000},async t=>{
  const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'parallel-loop-fixture.tsx',loader:'tsx',contents:`
@@ -39,15 +49,15 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
  assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/plan')||call.path.endsWith('/execute')).length,0,'abertura não planeja nem gera');
  await page.getByRole('button',{name:'Pedir propostas'}).click();await page.getByText('1 de 3 imagens confirmadas.',{exact:true}).waitFor();
  assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1);
- await page.evaluate(()=>{window.slowCallback=true;});await page.clock.fastForward(3000);await page.waitForFunction(()=>window.callbackEntered===true);
+ await page.evaluate(()=>{window.slowCallback=true;});await page.clock.fastForward(3000);await waitForPage(page,()=>window.callbackEntered===true,'a última imagem ainda espera o callback');
  await page.clock.fastForward(20000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'callback lento não consome espera visível');
  await page.evaluate(()=>window.releaseCallback());await page.getByText(/Próximo lote em/).waitFor();
  await page.clock.fastForward(14999);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,1,'14.999 ms não iniciam novo lote');
- await page.clock.fastForward(1);await page.waitForFunction(()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2);
+ await page.clock.fastForward(1);await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===2,'o segundo lote começa depois de 15 s');
  await page.clock.fastForward(3000);await page.getByText(/Próximo lote em 15s/).waitFor();
  await page.clock.fastForward(15000);await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
  await page.clock.fastForward(30000);assert.equal((await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/execute')).length,2,'duas rodadas aguardam decisão');
- await page.getByRole('button',{name:'Pedir propostas'}).click();await page.waitForFunction(()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===3);
+ await page.getByRole('button',{name:'Pedir propostas'}).click();await waitForPage(page,()=>window.calls.filter(call=>call.path.endsWith('/execute')).length===3,'o terceiro lote exige novo pedido');
  const intentions=(await page.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/intent'));
  assert.deepEqual(intentions.map(call=>call.body.expectedEpoch),[0,1,2]);
  for(const action of ['Pausar','Trocar fonte','Sair','Perguntar']){
