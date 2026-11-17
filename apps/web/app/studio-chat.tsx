@@ -161,7 +161,7 @@ export default function StudioChat({
     preparationSequence=useRef(0),
     legacyPending=useRef(false),
     inspectionLock=useRef(false),
-    pollLock=useRef(false),
+    pollLock=useRef<string|null>(null),
     inspectionSequence=useRef(0),
     failedAutomatic=useRef<string|null>(null),
     // Synchronous guard shared by the composer and quick replies: a double click
@@ -549,11 +549,12 @@ export default function StudioChat({
       "O resultado ainda não foi confirmado. Consulte a mesma tentativa antes de enviar outro pedido.",
     );
   }
-  async function poll(requestId:string, count = 0) {
+  async function poll(requestId:string, count = 0, afterImageConfirmation = false) {
     if (!credentialIsCurrent()||!canUseAI) return;
-    if(inspectionLock.current||pollLock.current){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),2000);return;}
+    const nested=afterImageConfirmation&&pollLock.current===requestId;
+    if(inspectionLock.current||(pollLock.current&&!nested)){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),2000);return;}
     if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
-    pollLock.current=true;setBusy(true);
+    pollLock.current=requestId;setBusy(true);
     try {
       const data = await api("/api/studio/chat", {
         op: "poll",
@@ -566,7 +567,7 @@ export default function StudioChat({
         setBusy(false);
         setNotice(errorMessage(e));
       }
-    } finally {pollLock.current=false;}
+    } finally {if(!nested)pollLock.current=null;}
   }
   async function inspectLastCompleted(){
     if(!credentialIsCurrent()||pending||busy||inspectionLock.current||!uuid(lastCompleted)||!canUseAI)return;
@@ -584,7 +585,7 @@ export default function StudioChat({
   useEffect(()=>{
     if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
-    const allowed=()=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&!availability.current.localBlocked&&!availability.current.message.trim();
+    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(!availability.current.localBlocked||(ownRequestId!==undefined&&getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId)))&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
     const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
@@ -613,7 +614,7 @@ export default function StudioChat({
         if(!next)throw Error('O projeto ainda está carregando.');
         prepared=true;
         await flush();
-        if(!allowed()||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest||!allowed()) {
+        if(!allowed(requestId)||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch||await contextDigest(getState())!==digest||!allowed(requestId)) {
           settle(requestId,'failed');prepared=false;return;
         }
         localStorage.setItem(referenceMarker,JSON.stringify({fingerprint:referenceSet,context:digest,requestId,status:'submitted',epoch:round.epoch,credentialSource}));
@@ -969,7 +970,7 @@ export default function StudioChat({
         setImageReceipt(receiptRef.current);
         remember(action.requestId);
       }
-      if(isCurrentScope())await poll(action.requestId);
+      if(isCurrentScope())await poll(action.requestId,0,true);
     } catch (e) {
       if (isCurrentScope()) {
         setBusy(false);
