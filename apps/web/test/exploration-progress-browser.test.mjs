@@ -19,16 +19,16 @@ import './app/style.css';
 import './app/studio-shell.css';
 import './app/studio-guided.css';
 function Screen(){
- const [project,setProject]=useState('${projectId}'),[enabled,setEnabled]=useState(true);
+ const [project,setProject]=useState('${projectId}'),[enabled,setEnabled]=useState(!window.startDisabled);
  const [state]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Oficina de cerâmica'}));
  const [credential,setCredential]=useState({source:'byok',epoch:0});
  const loop=useExplorationLoop({userId:'${userId}',projectId:project,state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled});
  return <div className="compor-studio" data-guided="true"><ReferencePanel projectWide={true} proposalStatus={loop.status} proposalPhase={loop.phase} proposalProgress={loop.progress} proposalsRunning={!loop.blocked&&!loop.paused} onPauseProposals={loop.pause} onRequestProposals={loop.resume} proposalsDisabled={!loop.blocked&&!loop.paused}
  search={<p>Busca de referências</p>} upload={<p>Upload</p>} selection={<p>Seleção</p>} conversation={<p>Conversa preservada</p>}
- proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output></div>;
+ proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={()=>{setEnabled(true);void loop.resume();}}>Ativar e retomar</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output><output aria-label="aguarda feedback">{String(loop.awaitingFeedback)}</output></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false}={}){
+async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,startDisabled=false}={}){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-exploration-progress',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -37,6 +37,7 @@ async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false}={
  t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const page=await browser.newPage({viewport});page.setDefaultTimeout(5000);
  if(unreliableAbort)await page.addInitScript(()=>{AbortController.prototype.abort=function(){};});
+ if(startDisabled)await page.addInitScript(()=>{window.startDisabled=true;});
  if(feedbackPaused)await page.addInitScript(({userId,projectId})=>{localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:6,batchId:'00000000-0000-4000-8000-000000000099',completed:0,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:true}));},{userId,projectId});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
  const pending=[],posts=[],resumes=[];
@@ -91,6 +92,18 @@ test('pausa durante retomada do gate não é desfeita pela resposta atrasada',{s
  await page.waitForTimeout(100);
  assert.equal(await page.getByLabel('estado de pausa').textContent(),'true');
  assert.equal(posts.length,0,'resposta de retomada não inicia imagem depois da pausa');
+});
+
+test('habilitar e retomar feedback no mesmo gesto aceita a resposta',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,resumes}=await fixture(t,{width:390,height:844},{feedbackPaused:true,startDisabled:true});
+ await page.getByText('Aguardando sua decisão sobre as propostas.',{exact:true}).waitFor();
+ await page.getByRole('button',{name:'Ativar e retomar'}).click();
+ for(let attempts=0;attempts<100&&resumes.length===0;attempts++)await page.waitForTimeout(25);
+ assert.equal(resumes.length,1);assert.equal(posts.length,0);
+ await resumes.shift().fulfill({json:{status:'resumed'}});
+ await page.waitForFunction(()=>document.querySelector('[aria-label="aguarda feedback"]')?.textContent==='false');
+ for(let attempts=0;attempts<100&&posts.length===0;attempts++)await page.waitForTimeout(25);
+ assert.equal(posts.length,1,'um gesto retomou após confirmação do gate');
 });
 
 for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){

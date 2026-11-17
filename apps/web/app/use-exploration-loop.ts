@@ -59,7 +59,9 @@ export function useExplorationLoop(props: LoopProps) {
   const audienceConflict = props.state ? audienceResolution(props.state).status==='conflict' : false;
   const ready = !audienceConflict && Boolean(props.idea?.trim() || props.state?.brief.offer.trim() || props.state?.brief.direction.trim());
 
-  useEffect(()=>()=>{resumeSequence.current++;},[props.userId,props.projectId,props.conversationId,props.credentialSource,props.credentialEpoch,props.enabled]);
+  useEffect(()=>()=>{resumeSequence.current++;},[props.userId,props.projectId,props.conversationId,props.credentialSource,props.credentialEpoch]);
+  const previousEnabled=useRef(props.enabled);
+  useEffect(()=>{if(previousEnabled.current&&!props.enabled)resumeSequence.current++;previousEnabled.current=props.enabled;},[props.enabled]);
 
   useEffect(() => {
     try {
