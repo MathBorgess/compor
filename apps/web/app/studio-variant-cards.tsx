@@ -7,6 +7,7 @@ import type {StoredImage} from '../lib/studio-domain';
 import type {ImageSelection,PieceVersion} from './studio-ui-types';
 import AssetRecovery from './asset-recovery';
 import './studio-variant-cards.css';
+import {useObjectUrl} from './use-object-url.ts';
 
 type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
 const labels={style:'Estilo',composition:'Composição',hook:'Gancho'};
@@ -40,14 +41,13 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   loader.current=loadLocal;
   const [visible,setVisible]=useState(false);
   const [asset,setAsset]=useState<{scope:string;blob:Blob}|null>(null);
-  const [image,setImage]=useState<{blob:Blob;url:string}|null>(null);
   const [recovery,setRecovery]=useState(false);
-  const [candidate,setCandidate]=useState<{scope:string;blob:Blob;url:string;decoded:boolean}|null>(null);
+  const [candidate,setCandidate]=useState<{scope:string;blob:Blob;decoded:boolean}|null>(null);
   const [notice,setNotice]=useState('');
   const [recovering,setRecovering]=useState(false);
   const sequence=useRef(0),localSequence=useRef(0),read=useRef<AbortController|null>(null);
   const scope=`${userId}:${projectId}:${version.piece_id}:${version.version}`;
-  const blob=asset?.scope===scope?asset.blob:null,url=image?.blob===blob?image.url:null;
+  const blob=asset?.scope===scope?asset.blob:null,url=useObjectUrl(blob),candidateUrl=useObjectUrl(candidate?.scope===scope?candidate.blob:null);
   useEffect(()=>{
     if(!frame.current)return;
     if(!('IntersectionObserver' in window)){setVisible(true);return;}
@@ -61,21 +61,16 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
     return()=>{live=false;};
   },[visible,scope,assetRevision]);
   useEffect(()=>{
-    if(!blob){setImage(null);return;}
-    const object=URL.createObjectURL(blob);setImage({blob,url:object});return()=>URL.revokeObjectURL(object);
-  },[blob]);
-  useEffect(()=>{
     setRecovery(false);setCandidate(null);setNotice('');setRecovering(false);sequence.current++;
     return()=>{sequence.current++;read.current?.abort();};
   },[scope]);
-  useEffect(()=>()=>{if(candidate)URL.revokeObjectURL(candidate.url);},[candidate?.url]);
   async function select(assetId:string){
     const current=++sequence.current;read.current?.abort();const controller=new AbortController();read.current=controller;
     setCandidate(null);setNotice('Consultando a imagem selecionada…');
     try{
       const found=await fetchPrivateImage(new URLSearchParams({projectId,pieceId:version.piece_id,version:String(version.version),assetId}),{signal:controller.signal});
       if(current!==sequence.current||controller.signal.aborted)return;
-      setCandidate({scope,blob:found,url:URL.createObjectURL(found),decoded:false});setNotice('');
+      setCandidate({scope,blob:found,decoded:false});setNotice('');
     }catch{if(current===sequence.current&&!controller.signal.aborted)setNotice('Não foi possível confirmar esta imagem.');}
   }
   async function useCandidate(){
@@ -90,7 +85,7 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
     {url?<img src={url} alt={`Arte da versão ${version.version}`} loading="lazy" />:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
     {!blob&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
     {recovery&&<AssetRecovery userId={userId} projectId={projectId} pieceId={version.piece_id} version={version.version} onSelect={assetId=>void select(assetId)} />}
-    {candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p><img src={candidate.url} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} /><button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}
+    {candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p>{candidateUrl&&<img src={candidateUrl} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} />}<button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}
     {notice&&<p role="status">{notice}</p>}
   </div>;
 }

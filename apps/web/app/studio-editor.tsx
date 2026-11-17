@@ -4,6 +4,7 @@ import "./studio-editor-fields.css";
 
 import { creativeFieldSchema, type Brief, type StudioDraft, type StudioMark, type CreativeField } from "../lib/studio-domain";
 import { suggestedArtworkFields, type OptionalArtworkField } from "../lib/studio-editor-fields.ts";
+import {useObjectUrl} from './use-object-url.ts';
 type Region = {x: number;y: number;width: number;height: number};
 export type NewMark = Region & {kind: "area"; note: string};
 export type EditorPanel = {id: string; label: string; title: string; className?: string; content: ReactNode};
@@ -31,9 +32,8 @@ export default function StudioEditor({
     [error, setError] = useState(""),
     [addedFields, setAddedFields] = useState<OptionalArtworkField[]>([]),
     [newFieldLabel, setNewFieldLabel] = useState(""),
-    [image, setImage] = useState<{blob:Blob;url:string} | null>(null),
     [openPanels, setOpenPanels] = useState<string[]>([]);
-  const url = base && image?.blob === base ? image.url : null;
+  const url = useObjectUrl(base);
   const frame = useRef<HTMLDivElement>(null),
     start = useRef<{x:number;y:number} | null>(null);
   const approvalHint = useId(), panelId = useId();
@@ -52,15 +52,6 @@ export default function StudioEditor({
   useEffect(() => {
     if (guided && region) setOpenPanels(open => open.includes("texts") ? open : [...open, "texts"]);
   }, [guided, region]);
-  useEffect(() => {
-    if (!base) {
-      setImage(null);
-      return;
-    }
-    const object = URL.createObjectURL(base);
-    setImage({blob:base,url:object});
-    return () => URL.revokeObjectURL(object);
-  }, [base]);
   if (!draft)
     return (
       <div className="studio-empty">

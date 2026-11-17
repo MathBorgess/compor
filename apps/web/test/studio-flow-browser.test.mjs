@@ -35,9 +35,11 @@ async function app(t){
  page.setDefaultTimeout(6000);
  await page.exposeFunction('reportRevokedImage',image=>revokedImages.push(image));
  await page.addInitScript(()=>{
+  window.liveObjectUrls=new Set();const create=URL.createObjectURL.bind(URL);URL.createObjectURL=blob=>{const url=create(blob);window.liveObjectUrls.add(url);return url;};
   const revoke=URL.revokeObjectURL.bind(URL);
   URL.revokeObjectURL=url=>{
    for(const image of document.images)if(image.src===url)window.reportRevokedImage({url,alt:image.alt});
+   window.liveObjectUrls.delete(url);
    revoke(url);
   };
  });
@@ -118,6 +120,8 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await page.getByText('Revisar seleção e alcance',{exact:true}).click();
  await page.getByText('reference.png',{exact:true}).waitFor();await page.getByText('reference.jpg',{exact:true}).waitFor();
  await eventually(()=>stored(page),value=>value?.references?.length===2);
+ const storedPng=await page.evaluate(async()=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const records=await new Promise((resolve,reject)=>{const request=db.transaction('references').objectStore('references').getAll();request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});const png=records.find(record=>record.metadata.name==='reference.png');return png?Array.from(new Uint8Array(await png.file.arrayBuffer())):null;}finally{db.close();}});
+ assert.deepEqual(Buffer.from(storedPng),Buffer.from(files.png,'base64'),'PNG selecionado na interface mantém todos os bytes no IndexedDB');
  await page.getByRole('button',{name:'Remover da seleção: reference.png',exact:true}).click();
  await eventually(()=>stored(page),value=>value?.references?.length===1);
  await openDrawer(page,'Bases');
@@ -175,6 +179,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  await closeDrawer(page);
  await chooseFiles(page,'Imagem-base PNG ou JPEG',{name:'artwork.png',mimeType:'image/png',buffer:Buffer.from(files.png,'base64')});
  await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
+ const texts=page.getByRole('button',{name:'Textos',exact:true});if(await texts.getAttribute('aria-expanded')!=='true')await texts.click();
  await page.getByLabel('Legenda',{exact:true}).fill('Legenda pronta para copiar.');
  await page.getByRole('button',{name:'Revisar post',exact:true}).click();
  await page.getByRole('img',{name:'Prévia da arte integral, sem textos adicionados pelo aplicativo',exact:true}).waitFor();
@@ -198,6 +203,7 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  assert.equal(calls.some(call=>call.path==='/api/studio/explorations'),false,'novo post explicitamente pedido abre o editor sem iniciar exploração');
  assert.equal(calls.some(call=>['/api/agent/image','/api/images'].includes(call.path)),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
+ await page.getByRole('button',{name:'Todos os projetos',exact:true}).click();await page.waitForFunction(()=>window.liveObjectUrls.size===0);
 });
 
 test('revalidação de identidade oculta a conta anterior e troca de conta limpa a chave', {skip:!existsSync(browserPath),timeout:60000},async t=>{
