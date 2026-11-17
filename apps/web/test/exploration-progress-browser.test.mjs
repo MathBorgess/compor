@@ -19,16 +19,16 @@ import './app/style.css';
 import './app/studio-shell.css';
 import './app/studio-guided.css';
 function Screen(){
- const [project,setProject]=useState('${projectId}'),[enabled,setEnabled]=useState(!window.startDisabled);
+ const [project,setProject]=useState(window.startProject||'${projectId}'),[enabled,setEnabled]=useState(!window.startDisabled);
  const [state]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Oficina de cerâmica'}));
  const [credential,setCredential]=useState({source:'byok',epoch:0});
- const loop=useExplorationLoop({userId:'${userId}',projectId:project,state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled});
+ const loop=useExplorationLoop({userId:'${userId}',projectId:project,state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,onCompleted:async()=>{if(window.slowCompletion){window.completionEntered=true;await new Promise(resolve=>{window.releaseCompletion=resolve;});}}});
  return <div className="compor-studio" data-guided="true"><ReferencePanel projectWide={true} proposalStatus={loop.status} proposalPhase={loop.phase} proposalProgress={loop.progress} proposalsRunning={!loop.blocked&&!loop.paused} onPauseProposals={loop.pause} onRequestProposals={loop.resume} proposalsDisabled={!loop.blocked&&!loop.paused}
  search={<p>Busca de referências</p>} upload={<p>Upload</p>} selection={<p>Seleção</p>} conversation={<p>Conversa preservada</p>}
- proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={()=>{setEnabled(true);void loop.resume();}}>Ativar e retomar</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output><output aria-label="aguarda feedback">{String(loop.awaitingFeedback)}</output></div>;
+ proposals={window.disableGallery?<p>Galeria simulada</p>:<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Trocar projeto</button><button onClick={()=>setEnabled(false)}>Fechar referências</button><button onClick={loop.resume}>Retomar teste</button><button onClick={()=>{setEnabled(true);void loop.resume();}}>Ativar e retomar</button><button onClick={loop.pause}>Pausar teste</button><output aria-label="estado de pausa">{String(loop.paused)}</output><output aria-label="aguarda feedback">{String(loop.awaitingFeedback)}</output></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,startDisabled=false}={}){
+async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,startDisabled=false,thirdReceipt=false,otherProject=false,slowDirect=false}={}){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-exploration-progress',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -39,21 +39,24 @@ async function fixture(t,viewport,{unreliableAbort=false,feedbackPaused=false,st
  if(unreliableAbort)await page.addInitScript(()=>{AbortController.prototype.abort=function(){};});
  if(startDisabled)await page.addInitScript(()=>{window.startDisabled=true;});
  if(feedbackPaused)await page.addInitScript(({userId,projectId})=>{localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:6,batchId:'00000000-0000-4000-8000-000000000099',completed:0,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:true}));},{userId,projectId});
+ if(thirdReceipt)await page.addInitScript(({userId,projectId})=>{const batchId='00000000-0000-4000-8000-000000000099',requestId='00000000-0000-4000-8000-000000000098';window.slowCompletion=true;localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:2,batchId,completed:2,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:false}));localStorage.setItem(`compor-exploration-pending:${userId}`,JSON.stringify({projectId,requestId,sequence:2,batchId,position:3,conversationId:'references'}));},{userId,projectId});
+ if(slowDirect)await page.addInitScript(({userId,projectId})=>{window.slowCompletion=true;localStorage.setItem(`compor-exploration-batch:${userId}:${projectId}`,JSON.stringify({sequence:2,batchId:'00000000-0000-4000-8000-000000000099',completed:2,nextAt:null,reviewBatches:[],reviewedBatchId:null,awaitingFeedback:false}));},{userId,projectId});
+ if(otherProject)await page.addInitScript(({userId,projectId})=>{window.startProject='00000000-0000-4000-8000-000000000004';window.disableGallery=true;localStorage.setItem(`compor-exploration-pending:${userId}`,JSON.stringify({projectId,requestId:'00000000-0000-4000-8000-000000000098',sequence:0,batchId:'00000000-0000-4000-8000-000000000099',position:1,conversationId:'references'}));},{userId,projectId});
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
- const pending=[],posts=[],resumes=[];
+ const pending=[],posts=[],resumes=[],gets=[];
  await page.route('**/api/studio/references/signals',route=>route.fulfill({json:{signals:[]}}));
  await page.route('**/api/studio/explorations**',route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
   if(path.endsWith('/resume')){resumes.push(route);return;}
   if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
   if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
-  if(request.method()==='GET')return route.fulfill({json:{images:posts.map((post,index)=>({id:post.requestId,project_id:projectId,state:post.state,ordinal:index+1,created_at:'2026-11-17T12:00:00Z',batch_id:post.batch.id,batch_position:post.batch.position}))}});
+  if(request.method()==='GET'){gets.push(request.url());return route.fulfill({json:{images:thirdReceipt?[{id:'00000000-0000-4000-8000-000000000098',project_id:projectId,state:'completed'}]:posts.map((post,index)=>({id:post.requestId,project_id:projectId,state:post.state,ordinal:index+1,created_at:'2026-11-17T12:00:00Z',batch_id:post.batch.id,batch_position:post.batch.position}))}});}
   const body=request.postDataJSON();posts.push({...body,state:'running'});pending.push(route);
  });
  await page.clock.install();
  await page.goto('http://127.0.0.1:'+server.address().port);
  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
- return {page,posts,pending,resumes};
+ return {page,posts,pending,resumes,gets};
 }
 
 test('troca de fonte conserva marcador mesmo quando a resposta vence o cancelamento',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
@@ -104,6 +107,36 @@ test('habilitar e retomar feedback no mesmo gesto aceita a resposta',{skip:!brow
  await page.waitForFunction(()=>document.querySelector('[aria-label="aguarda feedback"]')?.textContent==='false');
  for(let attempts=0;attempts<100&&posts.length===0;attempts++)await page.waitForTimeout(25);
  assert.equal(posts.length,1,'um gesto retomou após confirmação do gate');
+});
+
+test('callback lento não consome espera visível ao recuperar terceira imagem',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts}=await fixture(t,{width:390,height:844},{thirdReceipt:true});
+ await page.waitForFunction(()=>window.completionEntered===true);
+ await page.clock.fastForward(20000);
+ await page.getByRole('button',{name:'Pausar teste'}).click();
+ await page.evaluate(()=>{window.slowCompletion=false;window.releaseCompletion();});
+ const batch=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),`compor-exploration-batch:${userId}:${projectId}`);
+ assert.equal(batch.nextAt,null);assert.equal(batch.remainingMs,15000,'pausa conserva os 15 segundos antes de mostrar contagem');
+ assert.notEqual(await page.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`),null);
+ assert.equal(posts.length,0,'recuperação e callback não geram imagem');
+});
+
+test('callback lento do POST não consome intervalo antes de exibi-lo',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844},{slowDirect:true});
+ await page.locator('.reference-exploration-status').getByText('Aguardando imagem 3 de 3.').waitFor();
+ await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}});
+ await page.waitForFunction(()=>window.completionEntered===true);await page.clock.fastForward(20000);
+ await page.getByRole('button',{name:'Pausar teste'}).click();await page.evaluate(()=>{window.slowCompletion=false;window.releaseCompletion();});
+ const batch=await page.evaluate(key=>JSON.parse(localStorage.getItem(key)),`compor-exploration-batch:${userId}:${projectId}`);
+ assert.equal(batch.nextAt,null);assert.equal(batch.remainingMs,15000);assert.equal(posts.length,1);
+ assert.notEqual(await page.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`),null);
+});
+
+test('recibo de outro projeto não é consultado nem removido fora do projeto de origem',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,gets}=await fixture(t,{width:390,height:844},{otherProject:true});
+ await page.getByText('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.',{exact:true}).waitFor();
+ assert.equal(gets.length,0);assert.equal(posts.length,0);
+ const marker=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),`compor-exploration-pending:${userId}`));assert.equal(marker.projectId,projectId);assert.equal(marker.requestId,'00000000-0000-4000-8000-000000000098');
 });
 
 for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){
