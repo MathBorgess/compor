@@ -20,10 +20,11 @@ import './app/studio-shell.css';
 import './app/studio-guided.css';
 function Screen(){
  const [state]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Oficina de cerâmica'}));
- const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:true,getApiKey:()=>'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',isAuthenticated:()=>true,enabled:true});
+ const [credential,setCredential]=useState({source:'byok',epoch:0});
+ const loop=useExplorationLoop({userId:'${userId}',projectId:'${projectId}',state,getState:()=>state,hasApiKey:true,credentialSource:credential.source,credentialEpoch:credential.epoch,getApiKey:()=>credential.source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled:true});
  return <div className="compor-studio" data-guided="true"><ReferencePanel projectWide={true} proposalStatus={loop.status} proposalPhase={loop.phase} proposalProgress={loop.progress} proposalsRunning={!loop.blocked&&!loop.paused} onPauseProposals={loop.pause} onRequestProposals={loop.resume} proposalsDisabled={!loop.blocked&&!loop.paused}
  search={<p>Busca de referências</p>} upload={<p>Upload</p>} selection={<p>Seleção</p>} conversation={<p>Conversa preservada</p>}
- proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/></div>;
+ proposals={<ExplorationGallery projectId="${projectId}" completed={loop.completed} phase={loop.phase} countdown={loop.countdown} selectedIds={[]} onUseReference={async()=>{}}/>}/><button onClick={()=>setCredential(value=>({source:'default',epoch:value.epoch+1}))}>Trocar para IA do Compor</button></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
 async function fixture(t,viewport){
@@ -65,6 +66,12 @@ for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){
   assert.match(await progress.getByRole('timer').innerText(),/1min 5s/);
   assert.equal(await progress.getByRole('timer').getAttribute('aria-live'),'off','o relógio não anuncia cada segundo');
   assert.equal(posts.length,1,'passar tempo não repete uma operação paga');
+  for(const visualSource of ['search','upload','compor']){
+   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption(visualSource);
+   assert.equal(await progress.getByText('Aguardando imagem 1 de 3.').isVisible(),true,'trocar fonte de referências preserva o andamento');
+   assert.match(await progress.getByRole('timer').innerText(),/1min/,'trocar fonte não reinicia o relógio');
+   assert.equal(posts.length,1,'trocar fonte de referências não pede outra imagem');
+  }
   await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
   assert.equal(await progress.isVisible(),true,'o andamento permanece visível na conversa');
   await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
@@ -81,5 +88,31 @@ for(const viewport of [{width:1440,height:1024},{width:390,height:844}]){
   await progress.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
   assert.equal(posts.length,2,'retomar consulta o recibo incerto e não envia outra geração');
   assert.equal(await page.evaluate(()=>document.documentElement.scrollWidth<=window.innerWidth),true);
+ });
+}
+
+for(const action of ['pause','credential']){
+ test('pedido pendente conserva recibo e encerra indicador ao '+(action==='pause'?'pausar':'trocar a IA'),{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+  const {page,posts,pending}=await fixture(t,{width:390,height:844});
+  const progress=page.locator('.reference-exploration-status');
+  await progress.getByText('Aguardando imagem 1 de 3.').waitFor();
+  await page.clock.fastForward(65000);
+  const markerKey='compor-exploration-pending:'+userId;
+  const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+  assert.equal(JSON.parse(marker).requestId,posts[0].requestId);
+  await page.getByRole('button',{name:action==='pause'?'Pausar exploração':'Trocar para IA do Compor',exact:true}).click();
+  await progress.getByText(action==='pause'?'Exploração pausada.':/exploração anterior ainda não foi confirmada/i).waitFor();
+  assert.equal(await progress.getByRole('timer').count(),0,'uma operação interrompida não conserva relógio de atividade');
+  assert.equal(await progress.getByText('Aguardando imagem 1 de 3.').count(),0);
+  assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'interromper a observação não descarta o recibo');
+  await page.clock.fastForward(120000);assert.equal(posts.length,1,'pausa ou troca de IA não reenviam o pedido');
+  await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await progress.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
+  assert.equal(posts.length,1,'a retomada consulta a tentativa pendente e permanece bloqueada');
+  posts[0].state='completed';await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}}).catch(()=>{});
+  await page.clock.fastForward(120000);
+  assert.equal(posts.length,1,'uma resposta tardia da solicitação interrompida não inicia a próxima imagem');
+  assert.equal(await progress.getByRole('timer').count(),0);
+  assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker,'o resultado tardio ainda exige reconciliação explícita');
  });
 }
