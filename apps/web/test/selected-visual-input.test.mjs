@@ -7,7 +7,7 @@ import {browserModuleSource} from './browser-module-source.mjs';
 
 const chrome=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{skip:!existsSync(chrome)},async t=>{
- const modules={'/visual.js':new URL('../lib/selected-visual-input.ts',import.meta.url),'/journal.js':new URL('../lib/parallel-exploration-journal.ts',import.meta.url),'/state.js':new URL('../lib/studio-state.ts',import.meta.url),'/storage.js':new URL('../lib/studio-storage.ts',import.meta.url),'/planner.js':new URL('../../../packages/agents-api/src/exploration-plan-contract.mjs',import.meta.url)};
+ const modules={'/visual.js':new URL('../lib/selected-visual-input.ts',import.meta.url),'/artwork.js':new URL('../lib/studio-artwork-input.ts',import.meta.url),'/journal.js':new URL('../lib/parallel-exploration-journal.ts',import.meta.url),'/state.js':new URL('../lib/studio-state.ts',import.meta.url),'/storage.js':new URL('../lib/studio-storage.ts',import.meta.url),'/planner.js':new URL('../../../packages/agents-api/src/exploration-plan-contract.mjs',import.meta.url)};
  const server=createServer(async(req,res)=>{if(modules[req.url]){res.setHeader('Content-Type','text/javascript');res.end(await browserModuleSource(modules[req.url]));}else res.end('<!doctype html><title>Snapshot</title>');});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:chrome,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
@@ -16,6 +16,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const {createParallelJournalStore}=await import('/journal.js');
   const {createStudioState,parseStudioState}=await import('/state.js');
   const {createStudioStorage}=await import('/storage.js');
+  const {prepareArtworkTransport}=await import('/artwork.js');
   const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
   const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;canvas.getContext('2d').fillRect(0,0,1,1);
   const blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));const file=new File([blob],'local.png',{type:'image/png'});
@@ -30,6 +31,12 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const candidateJournal=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'});await candidateJournal.saveRequestVisualSnapshot(candidateScope,candidates);candidateJournal.close();
   const candidateRecovery=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'}),frozenCandidates=await candidateRecovery.loadRequestVisualSnapshot(candidateScope);
   const picked=await selectedVisualInputImages(frozenCandidates,[local.id,generated.id]);
+  const draft={pieceId:id(7),baseVersion:1,content:{headline:'',price:'',date:''}};
+  const prepared=await prepareArtworkTransport({draft,proposal:{prompt:'Arte sintética',operation:'edit',baseImageId:draft.pieceId,referenceIds:[local.id,generated.id]},referenceIds:[local.id,external.id,generated.id],loadBase:async()=>({file}),loadReference:async()=>{throw Error('não deve reler originais');},visualSnapshot:frozenCandidates});
+  const artImages=prepared.artworkInput.images,artworkSnapshot=artImages.length===3&&artImages[0].role==='base'&&artImages[1].data===picked[0].data&&artImages[2].data===picked[1].data&&prepared.artworkInput.visualInput.version===2;
+  let artworkMissingUpload=false,artworkCorrupt=false;
+  try{await prepareArtworkTransport({draft,proposal:{prompt:'Arte',operation:'create',baseImageId:null,referenceIds:[generated.id]},referenceIds:[generated.id],visualSnapshot:frozenCandidates});}catch{artworkMissingUpload=true;}
+  try{await prepareArtworkTransport({draft,proposal:{prompt:'Arte',operation:'create',baseImageId:null,referenceIds:[local.id]},referenceIds:[local.id],visualSnapshot:{...frozenCandidates,blobs:[new Blob(['bad'],{type:'image/png'}),...frozenCandidates.blobs.slice(1)]}});}catch{artworkCorrupt=true;}
   const triage=candidateLoads.join(',')===[local.id,external.id,generated.id].join(',')&&picked.map(item=>item.id).join(',')===[local.id,generated.id].join(',')&&frozenCandidates.manifest.entries.map(item=>item.inputOrigin).join(',')==='local-upload,external,generated';
   let missingUpload=false,unknownId=false,wrongOrder=false;
   try{await selectedVisualInputImages(frozenCandidates,[generated.id]);}catch{missingUpload=true;}
@@ -93,7 +100,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   await new Promise((resolve,reject)=>{const tx=db.transaction('visualSnapshots','readwrite'),store=tx.objectStore('visualSnapshots'),key=JSON.stringify([scope.userId,scope.projectId,id(11)]),request=store.get(key);request.onsuccess=()=>store.put({...request.result,blobs:[]},key);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   const reread=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'});let evicted=false;try{await reread.loadVisualSnapshot({...scope,batchId:id(11)},id(7));}catch(error){evicted=error.code==='parallel_storage_corrupt';}
   const retained=Boolean(await reread.loadPreparation(scope.userId));reread.close();storage.close();
-  return {onlyLocal,noInfer,optimized,badBudget,triage,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,badVisualPlan,visualPlanRetained,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
+  return {onlyLocal,noInfer,optimized,badBudget,triage,artworkSnapshot,artworkMissingUpload,artworkCorrupt,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,badVisualPlan,visualPlanRetained,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
  });
  assert.deepEqual(result,Object.fromEntries(Object.keys(result).map(key=>[key,true])));
 });
