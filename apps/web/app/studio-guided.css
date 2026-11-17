@@ -27,6 +27,11 @@
 .guided-workspace { position:relative;display:grid;grid-template-columns:minmax(280px,var(--guided-chat-width)) 12px minmax(0,1fr);width:100%;height:100%;min-width:0;min-height:0; }
 .guided-chat-area,.guided-post-area { min-width:0;min-height:0;overflow:auto; }
 .guided-chat-area { position:relative;border:1px solid var(--studio-line);border-radius:14px;background:white;display:flex;flex-direction:column; }
+/* No editor a conversa é uma coluna encaixada na tela, não um cartão: sem moldura própria, altura total e rolagem só nas mensagens. */
+.guided-workspace[data-view='editor'] .guided-chat-area { border:0;border-right:1px solid var(--studio-line);border-radius:0;overflow:hidden; }
+.guided-workspace[data-view='editor'] .guided-divider::after { display:none; }
+/* Rodapé vazio não deixa uma faixa creme sob a conversa encaixada. */
+.compor-studio[data-guided='true']:has(.guided-workspace[data-view='editor']) .studio-footer:empty { display:none; }
 .guided-chat-minimize { position:absolute;z-index:6;top:4px;right:4px;display:grid;place-items:center;width:44px;height:44px;padding:0;border:0;border-radius:10px;background:white;color:var(--studio-cobalt);font:inherit;font-size:27px;line-height:1; }
 .guided-chat-minimize:hover { background:var(--studio-blue-tint); }
 .compor-studio .guided-chat-launcher { position:absolute;z-index:8;right:clamp(12px,2vw,24px);bottom:max(12px,env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;min-height:48px;padding:10px 16px;border:1px solid var(--studio-cobalt);border-radius:999px;background:var(--studio-cobalt);box-shadow:0 8px 24px #2c2d2f33;color:white;font:inherit;font-weight:600; }
@@ -34,11 +39,32 @@
 .guided-chat-area .studio-chat-panel { flex:1;min-height:0; }
 .guided-conversation { display:flex;flex:1;min-height:0; }
 .guided-conversation[hidden] { display:none; }
-.guided-artwork-editor { display:grid;gap:18px; }
-.guided-artwork-editor .studio-editor { width:100%;grid-template-columns:minmax(0,1fr); }
-.guided-artwork-editor .studio-post-frame { width:100%;max-width:520px;justify-self:center; }
-.guided-artwork-editor .studio-post-inspector:not([open]) { display:block; }
-.guided-artwork-editor .studio-post-inspector { min-width:0;width:100%; }
+/* Criação sem rolagem: cabeçalho e ferramentas têm altura própria; a arte 4:5 ocupa o restante e os painéis abrem ao lado. */
+.guided-post-area:has(> .studio-post-workspace) { overflow:hidden; }
+.guided-post-area > .studio-post-workspace { height:100%;grid-template-rows:auto minmax(0,1fr);gap:14px; }
+.guided-artwork-editor { display:grid;min-height:0; }
+.guided-artwork-editor .studio-editor.is-guided { width:100%;height:100%;min-height:0;grid-template-columns:minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr);gap:12px 16px;align-items:stretch; }
+.studio-editor.is-guided .studio-canvas-tools { flex-wrap:wrap;gap:6px; }
+.studio-editor.is-guided .studio-canvas-tools button { min-height:34px;padding:6px 12px; }
+.studio-editor.is-guided .studio-canvas-tools .studio-panel-toggle:nth-child(3) { margin-left:auto; }
+.studio-editor.is-guided .studio-canvas-tools .studio-panel-toggle[aria-expanded='true'] { border-color:var(--studio-cobalt);background:var(--studio-blue-tint);color:var(--studio-cobalt); }
+.studio-frame-stage { display:grid;place-items:center;min-width:0;min-height:0;container-type:size; }
+.studio-editor.is-guided .studio-post-frame { width:min(100cqw,80cqh);height:auto; }
+.studio-editor-side { display:grid;align-content:start;gap:12px;width:min(360px,40vw);min-height:0;overflow:auto;overscroll-behavior:contain; }
+.studio-editor-panel { display:grid;gap:12px;min-width:0;padding:16px;border:1px solid var(--studio-line);border-radius:12px;background:white; }
+.studio-editor-panel-heading { display:flex;align-items:center;justify-content:space-between;gap:8px; }
+.studio-editor-panel-heading h3 { margin:0;font-size:14px; }
+.compor-studio .studio-editor-panel-heading button { display:grid;place-items:center;width:32px;height:32px;padding:0;border:0;border-radius:8px;background:transparent;color:var(--studio-muted);font-size:20px;line-height:1; }
+.studio-editor-panel-heading button:hover { background:var(--studio-blue-tint);color:var(--studio-cobalt); }
+.studio-editor-panel.guided-versions .studio-variant-grid { grid-template-columns:minmax(0,1fr); }
+.studio-editor-side[hidden],.studio-editor-side > .studio-editor-panel[hidden] { display:none; }
+@media (max-width:900px) {
+  .guided-post-area:has(> .studio-post-workspace) { overflow:auto; }
+  .guided-post-area > .studio-post-workspace { height:auto; }
+  .guided-artwork-editor .studio-editor.is-guided { height:auto;grid-template-columns:minmax(0,1fr); }
+  .studio-frame-stage { height:min(70dvh,560px); }
+  .studio-editor-side { width:auto;overflow:visible; }
+}
 .guided-art-preview > div { overflow:auto;max-height:70dvh; }
 .guided-art-preview img { display:block; }
 .studio-modal:has(.guided-art-preview) { width:min(94vw,1100px);max-width:94vw; }
@@ -76,27 +102,31 @@
 }
 
 .guided-context-goal { display:grid;gap:7px;margin:16px 0;font-size:13px;font-weight:500; }
-.studio-modal:has(> .guided-settings-tabs) { position:fixed;inset:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:clamp(12px,2vw,28px);border:0;border-radius:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain; }
-.studio-modal:has(> .guided-settings-tabs)[open] { display:flex;flex-direction:column;gap:12px; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal) { position:fixed;inset:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;margin:0;padding:clamp(12px,2vw,28px);border:0;border-radius:0;box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)[open] { display:flex;flex-direction:column;gap:12px; }
 /* ADR 0055: Configurações do projeto abre como janela sobre o estúdio, que continua visível nas margens. */
-.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { inset:0;margin:auto;width:min(1180px,calc(100vw - 64px));max-width:none;height:min(880px,calc(100dvh - 64px));max-height:none;border:1px solid var(--studio-line,#dedfd9);border-radius:16px;box-shadow:0 24px 64px #1221433d; }
+.studio-modal.studio-modal-framed:is(:has(> .guided-settings-tabs),.reference-post-modal) { inset:0;margin:auto;width:min(1180px,calc(100vw - 64px));max-width:none;height:min(880px,calc(100dvh - 64px));max-height:none;border:1px solid var(--studio-line,#dedfd9);border-radius:16px;box-shadow:0 24px 64px #1221433d; }
 .studio-modal > .studio-modal-close { position:sticky;top:0;z-index:4;float:right;display:grid;place-items:center;width:44px;height:44px;margin:-10px -10px 0 12px;padding:0;border:1px solid transparent;border-radius:10px;background:white;color:var(--studio-ink,#2c2d2f);cursor:pointer; }
 /* O X não ocupa linha própria: a margem anula sua altura e o gap da coluna, e o título começa no topo, na altura do X. */
-.studio-modal:has(> .guided-settings-tabs) > .studio-modal-close { order:-1;align-self:flex-end;flex:none;margin:0 0 calc(-44px - 12px); }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal) > .studio-modal-close { order:-1;align-self:flex-end;flex:none;margin:0 0 calc(-44px - 12px); }
 .studio-modal > .studio-modal-close:hover { background:var(--studio-blue-tint,#eef2fc);color:var(--studio-cobalt,#123eab); }
 .studio-modal > .studio-modal-close:focus-visible { outline:2px solid var(--studio-cobalt,#123eab);outline-offset:2px; }
-.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) > h2 { padding-right:52px; }
+.studio-modal.studio-modal-framed:is(:has(> .guided-settings-tabs),.reference-post-modal) > h2 { padding-right:52px; }
 /* A bancada usa o creme da página na preparação; dentro da janela branca ela acompanha o fundo do modal. */
 .studio-modal.studio-modal-framed .guided-references.reference-workbench { background:white; }
+/* ADR 0059: as referências abertas pela aba do modal ou por "Escolher mais referências" usam a mesma janela; a página ocupa a largura dela, sem a margem da página dedicada. */
+.studio-modal.studio-modal-framed > .reference-step { width:100%;margin:0;padding:8px 0 0; }
+.studio-modal.studio-modal-framed > .reference-step .reference-workbench-heading { margin-bottom:24px; }
+.studio-modal.studio-modal-framed > .reference-step .reference-workbench-heading h1 { font-size:22px; }
 /* Marca e direção ocupa toda a largura da janela, como as demais abas. */
 .studio-modal.studio-modal-framed .persona-step,.studio-modal.studio-modal-framed .studio-direction { width:100%;max-width:none;margin:0;box-sizing:border-box; }
 .studio-modal.studio-modal-framed .studio-direction { padding-inline:0; }
-.studio-modal.studio-modal-framed:has(> .guided-settings-tabs) > .guided-settings-tabs { padding-right:52px; }
-.studio-modal:has(> .guided-settings-tabs)>h2 { flex:none;color:var(--studio-cobalt);font-size:clamp(20px,2vw,26px); }
-.studio-modal:has(> .guided-settings-tabs)>.guided-settings-tabs { position:sticky;z-index:3;top:0;flex:none;flex-wrap:nowrap;gap:8px;min-height:48px;margin:0;padding:4px 0 10px;overflow-x:auto;overscroll-behavior-inline:contain;background:white;scroll-padding-inline:12px; }
-.studio-modal:has(> .guided-settings-tabs)>.guided-settings-tabs button { flex:none;margin:0;white-space:nowrap; }
-.studio-modal:has(> .guided-settings-tabs)>:not(h2):not(.guided-settings-tabs):not(.guided-references) { flex:none; }
-.studio-modal:has(> .guided-settings-tabs)>button:last-child { position:sticky;bottom:0;z-index:3;align-self:flex-start;margin-top:auto;background:var(--studio-cobalt);box-shadow:0 -8px 16px #fff; }
+.studio-modal.studio-modal-framed:is(:has(> .guided-settings-tabs),.reference-post-modal) > .guided-settings-tabs { padding-right:52px; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)>h2 { flex:none;color:var(--studio-cobalt);font-size:clamp(20px,2vw,26px); }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)>.guided-settings-tabs { position:sticky;z-index:3;top:0;flex:none;flex-wrap:nowrap;gap:8px;min-height:48px;margin:0;padding:4px 0 10px;overflow-x:auto;overscroll-behavior-inline:contain;background:white;scroll-padding-inline:12px; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)>.guided-settings-tabs button { flex:none;margin:0;white-space:nowrap; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)>:not(h2):not(.guided-settings-tabs):not(.guided-references) { flex:none; }
+.studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal)>button:last-child { position:sticky;bottom:0;z-index:3;align-self:flex-start;margin-top:auto;background:var(--studio-cobalt);box-shadow:0 -8px 16px #fff; }
 .studio-modal:has(> .guided-references) { overflow:hidden; }
 .studio-modal:not(.studio-modal-framed):has(> .guided-references)>h2 { display:none; }
 .studio-modal>.guided-references { display:flex;flex:1;flex-direction:column;gap:clamp(8px,1.5vh,16px);min-height:0;max-height:none; }
@@ -133,8 +163,8 @@
 .guided-references footer { border-top:1px solid var(--studio-line,#dedfd9);padding-top:12px;background:white; }
 @media(max-width:600px) {
  .guided-references .reference-exploration { padding:.9rem; }
- .studio-modal:has(> .guided-settings-tabs) { padding:12px; }
- .studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { width:calc(100vw - 24px);height:calc(100dvh - 24px);border-radius:12px; }
+ .studio-modal:is(:has(> .guided-settings-tabs),.reference-post-modal) { padding:12px; }
+ .studio-modal.studio-modal-framed:is(:has(> .guided-settings-tabs),.reference-post-modal) { width:calc(100vw - 24px);height:calc(100dvh - 24px);border-radius:12px; }
  .guided-references { gap:20px; }
  .guided-references .reference-selection-list { grid-template-columns:repeat(2,minmax(0,1fr)); }
  .guided-reference-tabs button { flex:1 1 120px;min-height:44px;margin:0; }
@@ -146,5 +176,5 @@
 .studio-modal .guided-reference-chat:has(.guided-reference-post-chat) { height:min(55dvh,620px);min-height:260px; }
 @media(max-height:520px) {
  /* ADR 0055: em telas baixas a janela ocupa o viewport para manter conversa e retorno visíveis. */
- .studio-modal.studio-modal-framed:has(> .guided-settings-tabs) { width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none; }
+ .studio-modal.studio-modal-framed:is(:has(> .guided-settings-tabs),.reference-post-modal) { width:100vw;height:100dvh;border:0;border-radius:0;box-shadow:none; }
 }

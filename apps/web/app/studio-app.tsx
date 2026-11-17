@@ -384,6 +384,7 @@ function ProjectStudio({
   const [projectIntent, setProjectIntent] = useState(false);
   const [settingsTab,setSettingsTab]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);
   const [referenceScope,setReferenceScope]=useState('references');
+  const [referencesModalKind,setReferencesModalKind]=useState<'project'|'post'|null>(null);
   const [referenceWaits,setReferenceWaits]=useState<Record<string,boolean>>({});
   const reportReferenceWait=useCallback((conversationId:string,waiting:boolean)=>setReferenceWaits(current=>current[conversationId]===waiting?current:{...current,[conversationId]:waiting}),[]);
   const [referenceChatTarget,setReferenceChatTarget]=useState<HTMLDivElement|null>(null);
@@ -412,7 +413,8 @@ function ProjectStudio({
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
     [drawer, setDrawer] = useState<StudioDrawer>(null),
-    [viewingArt, setViewingArt] = useState(false);
+    [viewingArt, setViewingArt] = useState(false),
+    [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
   const stateRef = useRef<StudioState|null>(null),
@@ -443,6 +445,8 @@ function ProjectStudio({
   },[postRecords,s?.selection?.pieceId,s?.adjustments]);
   const currentSettings=settingsTab??(drawer==='marca'?'direction':drawer==='bases'?'materials':null);
   const referencesOpen=s?.workflow.phase==='references'||currentSettings==='references';
+  // ADR 0059: a aba Referências das configurações e "Escolher mais referências" abrem a bancada em janela modal.
+  const referencesModal=referencesModalKind!==null&&currentSettings==='references'&&s?.workflow.phase!=='references';
   useEffect(()=>{if(draft)setVisitedPosts(ids=>ids.includes(draft.pieceId)?ids:[...ids,draft.pieceId]);},[draft?.pieceId]);
   useEffect(()=>{if(!referencesOpen){setExplorationRequested(false);}},[referencesOpen]);
   const idea = studioProjectIdea(s,initialObjective);
@@ -654,7 +658,7 @@ function ProjectStudio({
     setNotice("");
     if(value !== "studio") setViewingArt(false);
   }
-  function setSettings(value:typeof settingsTab){if(value==='references')setStage('studio');setSettingsTab(value);}
+  function setSettings(value:typeof settingsTab,modal:'project'|'post'|null=null){if(value==='references')setStage('studio');setReferencesModalKind(value==='references'?modal:null);setSettingsTab(value);}
   function closeSettings(){setSettings(null);setDrawer(null);}
   function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
   const journey=createStudioJourneyController({
@@ -1040,6 +1044,18 @@ function ProjectStudio({
   const selectedOrigins = scopedReferences.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);
   const editor = (
     <StudioEditor guided
+      panelRequest={panelRequest}
+      panels={[
+        {id:"base",label:"Imagem-base",title:"Usar uma imagem-base própria",className:"guided-base-upload",content:<label>
+            Imagem-base PNG ou JPEG
+            <input type="file" accept="image/png,image/jpeg" onChange={event => {
+              const file = event.target.files?.[0];
+              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
+              event.target.value = "";
+            }} />
+          </label>},
+        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />},
+      ]}
       draft={draft}
       brief={s.brief}
       base={base}
@@ -1158,7 +1174,7 @@ function ProjectStudio({
             <p>Abra um post para ver seus rascunhos e versões. As referências ficam na aba Referências.</p>
             <div className="guided-actions">
               <button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));}}>Abrir posts do projeto</button>
-              {draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'studio'}));requestAnimationFrame(()=>{const details=document.querySelector<HTMLDetailsElement>('.guided-versions');if(details){details.open=true;details.querySelector('summary')?.focus();}});}}>Ver versões deste post</button>}
+              {draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'studio'}));setPanelRequest({id:'versions',nonce:Date.now()});}}>Ver versões deste post</button>}
               <button type="button" className="studio-button-secondary" onClick={()=>{void refreshVersions().catch(()=>setNotice('Não foi possível atualizar as versões.'));}}>Atualizar versões</button>
             </div>
             {draft&&s.workflow.view!=='posts'&&<StudioAssets
@@ -1191,22 +1207,13 @@ function ProjectStudio({
   const artwork=(<div className="studio-post-workspace">
           <div className="studio-post-workspace-header">
             <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span></div>
-            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references');}}>Escolher mais referências</button>
-            <button type="button" className="studio-button-secondary" onClick={()=>setPostSettingsOpen(true)}>Configurações do Post</button>
-            <button type="button" className="studio-button-secondary" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}>Revisar post</button>
-            <button type="button" className="studio-button" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}>{saving?'Salvando…':'Salvar versão'}</button></div></div>
+            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
+            <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
+            <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
+            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} title="Salvar versão" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
 
           <div className="guided-artwork-editor">
-          <details><summary>Usar uma imagem-base própria</summary><label>
-            Imagem-base PNG ou JPEG
-            <input type="file" accept="image/png,image/jpeg" onChange={event => {
-              const file = event.target.files?.[0];
-              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
-              event.target.value = "";
-            }} />
-          </label></details>
           {editor}
-          <details className="guided-versions"><summary>Versões e variantes deste post</summary>{draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />}</details>
         </div>
         </div>);
   const preparing=s.workflow.phase!=='ready';
@@ -1227,7 +1234,7 @@ function ProjectStudio({
     if(selected&&storage&&result!=='none'){image=(await storage.getDraftAsset({userId,projectId:project.id},{pieceId:selected.pieceId,baseVersion:selected.baseVersion,kind:'base'}))?.file??null;baseLoadGeneration.current++;setBase(image);}
     return {result,hasImage:Boolean(image)};
   }
-  async function finishReferences() {
+  async function finishReferences(close=true) {
     if(referenceTransitionLock.current)return false;
     referenceTransitionLock.current=true;setReferenceTransition(true);exploration.pause();
     try {
@@ -1247,8 +1254,10 @@ function ProjectStudio({
         if(retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
       }
       if(!active.current||!isAuthenticated())return false;
-      closeSettings();
-      requestAnimationFrame(()=>{const name=document.querySelector<HTMLInputElement>('.guided-post-preparation-fields input');if(name)name.focus();else document.querySelector<HTMLButtonElement>('.studio-post-actions button')?.focus();});
+      if(close){
+        closeSettings();
+        requestAnimationFrame(()=>{const name=document.querySelector<HTMLInputElement>('.guided-post-preparation-fields input');if(name)name.focus();else document.querySelector<HTMLButtonElement>('.studio-post-actions button')?.focus();});
+      }
       return true;
     } catch {setNotice('Não foi possível preservar a proposta para o post. Suas referências continuam aqui; tente continuar novamente.');return false;}
     finally {referenceTransitionLock.current=false;if(active.current)setReferenceTransition(false);}
@@ -1269,15 +1278,16 @@ function ProjectStudio({
   const showPosts=()=>{closeSettings();setPostSettingsOpen(false);nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));};
   const pendingPost=s.workflow.pendingPost;
   const preparingPost=s.workflow.view==='prepare-post';
+  const viewingPendingConversation=Boolean(pendingTurn&&pendingTurn.context.conversationId!=='references'&&draft&&pendingTurn.context.pieceId===draft.pieceId&&s.workflow.view!=='posts'&&!preparingPost);
   const preparedValue=pendingPost??(draft?postContext(s,draft.pieceId):{objective:'',message:'',action:''});
   const preparedName=pendingPost?.name??(draft?s.posts[draft.pieceId]?.name??'':'');
   const changePreparation=journey.changePreparation;
   const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>Escolha um nome para organizar esta peça e defina o que ela deve comunicar.</p><form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}><fieldset className="guided-post-preparation-fields" disabled={creatingPost}><label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" disabled={creatingPost} onChange={event=>changePreparation({name:event.target.value})}/></label><PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/><p className="studio-hint">A chamada para ação é opcional. O post será criado somente ao continuar.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={creatingPost} onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button><button type="submit" className="studio-button" disabled={creatingPost||!postNameSchema.safeParse(preparedName).success}>{creatingPost?'Criando post…':'Continuar para criação'}</button></div></fieldset></form></section>;
 
   const canvas=<>
-    {referencesOpen&&referencePanel}
-    <div className="studio-workspace-host" hidden={referencesOpen}>
-      {pendingTurn&&!preparing&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else openPost(pendingTurn.context.pieceId);}}>Abrir a conversa desse pedido</button></p>}
+    {referencesOpen&&!referencesModal&&referencePanel}
+    <div className="studio-workspace-host" hidden={referencesOpen&&!referencesModal}>
+      {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else openPost(pendingTurn.context.pieceId);}}>Abrir a conversa desse pedido</button></p>}
       {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:aiPanel}</>}
       {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
       <div className="guided-post-host" hidden={preparing||s.workflow.view==='posts'} style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div className="studio-workspace-view" data-active={!preparing&&!referencesOpen&&s.workflow.view!=='posts'&&!preparingPost} hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>
@@ -1320,7 +1330,8 @@ function ProjectStudio({
           {accountOverlays}
           <div hidden>{renderChat('references',false,false,true)}</div>
           {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
-          {currentSettings&&currentSettings!=='references'&&<StudioDialog title="Configurações do projeto" className="studio-modal-framed" closeLabel="Fechar configurações" onClose={closeSettings}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab);})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
+          {referencesModal&&referencesModalKind==='post'&&<StudioDialog title="Referências deste post" className="studio-modal-framed reference-post-modal" closeLabel="Fechar referências do post" onClose={()=>{void finishReferences();}}>{referencePanel}</StudioDialog>}
+          {currentSettings&&(currentSettings!=='references'||referencesModal&&referencesModalKind==='project')&&<StudioDialog title="Configurações do projeto" className="studio-modal-framed" closeLabel="Fechar configurações" onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences(false))return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab,'project');})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:currentSettings==='references'?referencePanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
           {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>journey.updatePostContext(draft.pieceId,patch)}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
           {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
           {dialog && (
@@ -1383,4 +1394,8 @@ function ProjectStudio({
       )}
     </StudioShell>
   );
+}
+
+function PostActionIcon({path}:{path:string}) {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={path}/></svg>;
 }

@@ -20,7 +20,7 @@ async function stored(page,userId=alice){return page.evaluate(async scope=>{cons
 async function openDrawer(page,name){return openSettings(page,name==='Bases'?'Materiais e versões':'Marca e direção');}
 async function closeDrawer(page){await closeSettings(page);}
 async function openEditor(page){await openPostEditor(page);}
-async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByText('Usar uma imagem-base própria',{exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
+async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByRole('button',{name:'Imagem-base',exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
 
 async function app(t){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));

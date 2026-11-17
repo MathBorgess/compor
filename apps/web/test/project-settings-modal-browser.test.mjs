@@ -51,8 +51,9 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
   const tabsWidth=(await sections().boundingBox()).width;
   for(const selector of ['.persona-step','.studio-direction'])assert.ok(Math.abs((await panel.locator(selector).boundingBox()).width-tabsWidth)<=1,`${selector} ocupa a largura da janela`);
   await sections().getByRole('button',{name:'Referências',exact:true}).click();
-  const references=page.locator('.reference-step');await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor();
-  assert.equal(await panel.isVisible(),false,'referências saem da janela de configurações');
+  const references=panel.locator('.reference-step');await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor();
+  assert.equal(await panel.isVisible(),true,'ADR 0059: referências abertas pela aba ficam dentro da janela de configurações');
+  assert.ok(Math.abs((await references.boundingBox()).width-tabsWidth)<=1,'a bancada ocupa a largura da janela');
   await references.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
   const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;return canvas.toDataURL('image/png').split(',')[1];});
   await references.locator('input[type="file"]').setInputFiles({name:'Referencia da mentoria.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
@@ -77,7 +78,7 @@ for(const width of [1440,390])test(`configurações usam janela modal com abas e
    }
    await openSettings(page,'Referências');
    await references.getByRole('heading',{name:'Escolha o que inspira este post',exact:true}).waitFor({timeout:5000});
-   assert.equal(await panel.isVisible(),false);assert.equal(page.url(),postUrl,'abrir referências preserva o post da URL');
+   assert.equal(await panel.isVisible(),true,'ADR 0059: referências ficam na janela de configurações');assert.equal(page.url(),postUrl,'abrir referências preserva o post da URL');
    await references.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
    await references.getByText('Revisar seleção e alcance',{exact:true}).click();await references.getByText('Referencia da mentoria.png',{exact:true}).waitFor();
    await closeSettings(page);await openPostEditor(page);
