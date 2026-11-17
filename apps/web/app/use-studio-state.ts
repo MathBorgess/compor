@@ -3,6 +3,9 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { createStudioState, type StudioState, type StudioScope } from "../lib/studio-state.ts";
 import { createStudioStorage } from "../lib/studio-storage.ts";
 import { createStudioStateWriter } from "../lib/studio-state-writer.ts";
+import {createReferenceSelectionCoordinator} from '../lib/reference-selection-coordinator.ts';
+import {selectScopedReference,unselectScopedReference} from '../lib/studio-post-context.ts';
+import type {StudioReference} from '../lib/studio-domain.ts';
 
 export function useStudioState({ userId, projectId, projectTitleProvisional = false,projectIdea='',prepare=false }: StudioScope & {projectTitleProvisional?:boolean;projectIdea?:string;prepare?:boolean}) {
   const [state, setState] = useState<StudioState|null>(null),
@@ -91,5 +94,26 @@ export function useStudioState({ userId, projectId, projectTitleProvisional = fa
     [flush],
   );
   const get = useCallback(() => active.current?.state ?? null, []);
-  return { state, error, loading, change, get, flush, storage: repo };
+  const ensureStored = useCallback(async () => {
+    const record=active.current;if(!record?.state||!record.writer)throw Error('local_storage_unavailable');
+    const lease=await record.writer.acquireExternal(record.state);lease.release();
+    if(active.current!==record)throw Error('studio_scope_changed');
+  },[]);
+  const coordinateReference = useCallback(async (selection:{kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string},allowed:()=>boolean) => {
+    const record=active.current;
+    if(!record?.state||!record.writer||!record.repo||!allowed())throw Error('local_storage_unavailable');
+    const lease=await record.writer.acquireExternal(record.state);
+    try{
+      if(active.current!==record||!allowed())throw Error('studio_scope_changed');
+      const coordinator=createReferenceSelectionCoordinator({store:record.repo});
+      return await coordinator.change({userId,projectId},selection,committed=>{
+        const current=record.state;if(!current)throw Error('local_storage_unavailable');
+        const merged=current.revision===lease.baseRevision?committed:selection.kind==='select'?selectScopedReference(current,selection.reference,selection.target):unselectScopedReference(current,selection.id,selection.target);
+        lease.commit(committed,merged===committed?null:merged);
+        record.state=merged;if(active.current===record)setState(merged);
+        if(active.current!==record||!allowed())throw Error('studio_scope_changed');
+      });
+    }finally{lease.release();}
+  },[userId,projectId]);
+  return { state, error, loading, change, get, flush, ensureStored, coordinateReference, storage: repo };
 }

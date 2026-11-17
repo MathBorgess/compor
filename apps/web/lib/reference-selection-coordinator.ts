@@ -1,7 +1,7 @@
 import {referenceSelectionProjection,referenceSelectionPublic} from './reference-selection-projection.ts';
 import {createReferenceAuthorityClient} from './reference-authority-client.ts';
 import {createStudioStorage} from './studio-storage.ts';
-import type {StudioScope,StudioReference} from './studio-domain.ts';
+import type {StudioScope,StudioReference,StudioState} from './studio-domain.ts';
 import type {ReferenceAuthorityWrite} from './reference-authority-client.ts';
 
 type Store=ReturnType<typeof createStudioStorage>;
@@ -72,13 +72,13 @@ export function createReferenceSelectionCoordinator({store,client=createReferenc
   }catch(error){return {status:storageConflict(error)?'conflict':'unavailable'};}
  }
  /** Persist the local gesture and its immutable command before one remote write. */
- async function change(scope:StudioScope,change:Change):Promise<Result>{
+ async function change(scope:StudioScope,change:Change,onLocalCommitted?:(state:StudioState)=>void):Promise<Result>{
   let local;
   try{local=await store.readReferenceAuthority(scope);}catch{return {status:'unavailable'};}
   if(local.pending)return {status:'pending'};
   if(!local.confirmed)return {status:'unavailable'};
   let command;
-  try{({command}=await store.beginReferenceAuthorityChange(scope,{commandId:crypto.randomUUID(),expectedLocalRevision:local.state.revision,expectedRemoteRevision:local.confirmed.revision,change}));}
+  try{const committed=await store.beginReferenceAuthorityChange(scope,{commandId:crypto.randomUUID(),expectedLocalRevision:local.state.revision,expectedRemoteRevision:local.confirmed.revision,change});command=committed.command;onLocalCommitted?.(committed.state);}
   catch(error){return {status:storageConflict(error)?'conflict':'unavailable'};}
   if(!command)return {status:'ready',revision:local.confirmed.revision};
   return publish(scope,command);
