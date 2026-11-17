@@ -93,6 +93,28 @@ test('provider instrui triagem v2 no mesmo turno sem criar outra sessão de aná
  const calls=[],v=candidates(),provider=createManagedExplorationPlanProvider({apiKey:key,fetch:async(url,options)=>{calls.push(JSON.parse(options.body));return Response.json({id:'sess_triage'});}});
  await provider.create({scope,context,...v});assert.equal(calls.length,1);assert.match(calls[0].agent.instructions,/OBRIGATORIAMENTE/);assert.match(calls[0].agent.instructions,/"version":2/);assert.deepEqual(calls[0].agent.tools,[]);assert.equal(calls[0].input[0].content.filter(c=>c.type==='input_image').length,2);
 });
+test('cada imagem recebe a origem do seu item do manifesto em uma seleção mista',async()=>{
+ const v=candidates();
+ const generatedBytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');
+ const original={sha256:createHash('sha256').update(generatedBytes).digest('hex'),mime:'image/png',byteLength:generatedBytes.length};
+ const generated={...v.visualInput.entries[0],id:id(35),inputOrigin:'generated',source:{projectId:scope.projectId,imageId:id(36)},original,transport:{...original,width:1,height:1}};
+ v.visualInput.entries.unshift(generated);
+ v.visualInput.entries.forEach((entry,index)=>{entry.ordinal=index+1;});
+ v.referenceImages.unshift({id:generated.id,mime:original.mime,data:generatedBytes.toString('base64')});
+ let content;
+ const provider=createManagedExplorationPlanProvider({apiKey:key,fetch:async(_url,options)=>{
+  content=JSON.parse(options.body).input[0].content;
+  return Response.json({id:'sess_mixed'});
+ }});
+ await provider.create({context,...v});
+ for(const [index,entry] of v.visualInput.entries.entries()){
+  const label=content[1+2*index];
+  assert.equal(label.type,'input_text');
+  assert.ok(label.text.includes(entry.inputOrigin),entry.inputOrigin);
+  assert.ok(label.text.includes(entry.id),entry.id);
+  assert.deepEqual(content[2+2*index],{type:'input_image',image_url:`data:image/png;base64,${v.referenceImages[index].data}`});
+ }
+});
 test('extras sem autoridade no servidor não reservam; booleano não é autorização',async()=>{
  for(const authorizeVisualInput of [undefined,async()=>false,async()=>{throw Error('unavailable');}]){const f=fixture(),v=candidates(),p=f.build({authorizeVisualInput});assert.equal((await p.submit({...scope,...v})).status,'unavailable');assert.equal(f.record,null);assert.equal(f.counts.creates,0);}
 });
