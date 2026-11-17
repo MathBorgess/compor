@@ -1,0 +1,255 @@
+{
+  "base": {
+    "commit": "8d48357",
+    "total": 332568,
+    "files": [
+      {
+        "path": "chunks/1cjk8lo8zgyle.js",
+        "raw": 432894,
+        "gzip": 125546
+      },
+      {
+        "path": "chunks/2mw8-v21av-1q.js",
+        "raw": 424950,
+        "gzip": 124255
+      },
+      {
+        "path": "chunks/0cz1d0mv5g_q7.js",
+        "raw": 112594,
+        "gzip": 39473
+      },
+      {
+        "path": "chunks/3d-23df19qm0b.js",
+        "raw": 101884,
+        "gzip": 29887
+      },
+      {
+        "path": "chunks/0fjf0kzkqx20d.js",
+        "raw": 17449,
+        "gzip": 5508
+      },
+      {
+        "path": "chunks/turbopack-2u1d16houkiyo.js",
+        "raw": 9974,
+        "gzip": 3909
+      },
+      {
+        "path": "chunks/0mixwvnb2efjp.js",
+        "raw": 13999,
+        "gzip": 3526
+      },
+      {
+        "path": "6Y80KVhPWo2e57sQ8EjFG/_clientMiddlewareManifest.js",
+        "raw": 283,
+        "gzip": 201
+      },
+      {
+        "path": "6Y80KVhPWo2e57sQ8EjFG/_buildManifest.js",
+        "raw": 305,
+        "gzip": 199
+      },
+      {
+        "path": "6Y80KVhPWo2e57sQ8EjFG/_ssgManifest.js",
+        "raw": 80,
+        "gzip": 64
+      }
+    ]
+  },
+  "environment": {
+    "node": "24.16.0",
+    "next": "16.4.6",
+    "host": "macOS",
+    "memoryGiB": 32,
+    "swapBefore": 0
+  },
+  "budget": 300000,
+  "deficit": 32568,
+  "metric": "sum gzipSync bytes of every .js below apps/web/.next/static; no exclusions",
+  "analyzer": {
+    "snapshot": "bundle-integrated-8d48357-before",
+    "exportSha256": "adaf9c779aa0aca7646a3e8ec6679e637fb31e886606219dbee203b524f44523",
+    "routes": 49,
+    "outputs": 12,
+    "coverage": {
+      "exact": 10,
+      "not_a_chunk": 2
+    },
+    "sourceCount": 286,
+    "repeatedSources": [],
+    "groupTriggerJoins": {
+      "joined": 43
+    }
+  },
+  "attribution": [
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/compiled/react-dom/cjs/react-dom-client.production.js",
+      "gzipAttributed": 63931
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/build/polyfills/polyfill-nomodule.js",
+      "gzipAttributed": 39434
+    },
+    {
+      "source": "[project]/apps/web/app/studio-app.tsx",
+      "gzipAttributed": 17131
+    },
+    {
+      "source": "[project]/apps/web/app/studio-chat.tsx",
+      "gzipAttributed": 13915
+    },
+    {
+      "source": "[project]/apps/web/node_modules/zod/v4/core/schemas.js",
+      "gzipAttributed": 9499
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/compiled/react-server-dom-turbopack/cjs/react-server-dom-turbopack-client.browser.production.js",
+      "gzipAttributed": 7792
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/client/components/segment-cache/cache.js",
+      "gzipAttributed": 6414
+    },
+    {
+      "source": "[project]/apps/web/node_modules/markdown-to-jsx/dist/index.modern.js",
+      "gzipAttributed": 6387
+    },
+    {
+      "source": "[project]/apps/web/lib/parallel-exploration-journal.ts",
+      "gzipAttributed": 5514
+    },
+    {
+      "source": "[project]/apps/web/lib/studio-state.ts",
+      "gzipAttributed": 5338
+    },
+    {
+      "source": "[project]/apps/web/node_modules/zod/v4/core/util.js",
+      "gzipAttributed": 4756
+    },
+    {
+      "source": "[project]/apps/web/app/use-exploration-loop.ts",
+      "gzipAttributed": 4692
+    },
+    {
+      "source": "[project]/apps/web/lib/studio-storage.ts",
+      "gzipAttributed": 4610
+    },
+    {
+      "source": "[project]/apps/web/app/studio-shell.tsx",
+      "gzipAttributed": 4283
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/client/components/render-tree.js",
+      "gzipAttributed": 4002
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/client/components/segment-cache/scheduler.js",
+      "gzipAttributed": 3977
+    },
+    {
+      "source": "[project]/apps/web/app/use-parallel-exploration.ts",
+      "gzipAttributed": 3699
+    },
+    {
+      "source": "[project]/apps/web/app/parallel-exploration-recovery.tsx",
+      "gzipAttributed": 3097
+    },
+    {
+      "source": "[project]/apps/web/app/studio-guided.tsx",
+      "gzipAttributed": 3044
+    },
+    {
+      "source": "[project]/apps/web/app/studio-editor.tsx",
+      "gzipAttributed": 3006
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/compiled/react/cjs/react.production.js",
+      "gzipAttributed": 2975
+    },
+    {
+      "source": "[project]/apps/web/app/studio-assets.tsx",
+      "gzipAttributed": 2946
+    },
+    {
+      "source": "[project]/apps/web/app/reference-exploration.tsx",
+      "gzipAttributed": 2861
+    },
+    {
+      "source": "[project]/apps/web/app/workspace.tsx",
+      "gzipAttributed": 2698
+    },
+    {
+      "source": "[project]/apps/web/app/studio-profile.tsx",
+      "gzipAttributed": 2652
+    },
+    {
+      "source": "[project]/apps/web/node_modules/zod/v4/core/regexes.js",
+      "gzipAttributed": 2491
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/lib/constants.js",
+      "gzipAttributed": 2307
+    },
+    {
+      "source": "[project]/apps/web/app/studio-direction.tsx",
+      "gzipAttributed": 2296
+    },
+    {
+      "source": "[project]/apps/web/lib/studio-domain.ts",
+      "gzipAttributed": 2287
+    },
+    {
+      "source": "[project]/apps/web/app/exploration-gallery.tsx",
+      "gzipAttributed": 2270
+    },
+    {
+      "source": "[project]/apps/web/node_modules/@compor/agents-api/src/studio-chat-tools.mjs",
+      "gzipAttributed": 2237
+    },
+    {
+      "source": "[project]/apps/web/lib/selected-visual-input.ts",
+      "gzipAttributed": 2218
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/client/components/router-reducer/reducers/server-action-reducer.js",
+      "gzipAttributed": 2180
+    },
+    {
+      "source": "[project]/apps/web/node_modules/next/dist/client/components/app-router.js",
+      "gzipAttributed": 2128
+    },
+    {
+      "source": "[project]/apps/web/app/studio-reference-panel.tsx",
+      "gzipAttributed": 2086
+    }
+  ],
+  "experiments": [
+    {
+      "change": "explicit Zod Mini exports",
+      "totalGzip": 332568,
+      "delta": 0,
+      "build": "passed",
+      "retained": false
+    },
+    {
+      "change": "pure construction annotations, 82 initializers in 11 schema files",
+      "totalGzip": 332447,
+      "delta": -121,
+      "build": "passed",
+      "retained": false
+    },
+    {
+      "change": "native Turbopack chunking min 10000000, max merge 30000000, max count per group 1",
+      "totalGzip": 332568,
+      "delta": 0,
+      "build": "passed",
+      "retained": false
+    }
+  ],
+  "limitations": [
+    "Analyzer attribution is not measured transfer or a savings estimate.",
+    "No production implementation or feature/compatibility/budget change retained.",
+    "No browser, Lighthouse or paid provider call made for the discarded experiments.",
+    "Two runtime/polyfill outputs lack module membership; source attribution remains available.",
+    "Label propagation yielded one large connected community; no optional target can be removed while preserving all functionality, and deferral cannot remove bytes from the all-files metric."
+  ]
+}
