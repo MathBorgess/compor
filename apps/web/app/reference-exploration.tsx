@@ -13,9 +13,13 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
   const [search,setSearch]=useState<SearchState>({status:'idle',references:[]});
   const [history,setHistory]=useState<{scope:string;references:ReferenceHistoryEntry[]}|null>(null),[historyUnavailable,setHistoryUnavailable]=useState(false);
-  const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[authorityOwner,setAuthorityOwner]=useState<string|null>(null),[authorityBusy,setAuthorityBusy]=useState(false);
+  const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[authorityOwner,setAuthorityOwner]=useState<string|null>(null),[authorityBusyStamp,setAuthorityBusyStamp]=useState<number|null>(null);
   const currentScope=`${userId}:${projectId}`,scope=useRef(currentScope),selectionLock=useRef(false),searchRequest=useRef<AbortController|null>(null);
+  const authorityScope=`${currentScope}:${authorityConsentRequired?'required':'off'}`;
+  const authorityAttempt=useRef({scope:authorityScope,version:0,pending:false});
+  if(authorityAttempt.current.scope!==authorityScope)authorityAttempt.current={scope:authorityScope,version:authorityAttempt.current.version+1,pending:false};
   scope.current=currentScope;
+  const authorityBusy=authorityBusyStamp===authorityAttempt.current.version;
   const consent=consentOwner===userId;
   useEffect(()=>{setAuthorityOwner(readReferenceAuthorityConsent(userId)?userId:null);},[userId,authorityConsentRequired]);
   const suggestedQuery=idea.trim().slice(0,1000);
@@ -60,10 +64,13 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     setConsentOwner(userId);
   }
   async function allowExternalForGeneration(){
-    if(authorityBusy)return;setAuthorityBusy(true);setNotice('');const requestedScope=currentScope;
-    try{await grantReferenceAuthorityConsent(userId);if(scope.current===requestedScope)setAuthorityOwner(userId);}
-    catch{if(scope.current===requestedScope)setNotice('Não foi possível confirmar a permissão para usar referências externas na geração.');}
-    finally{if(scope.current===requestedScope)setAuthorityBusy(false);}
+    if(authorityAttempt.current.pending)return;
+    const requestedScope=currentScope,version=authorityAttempt.current.version;
+    const isCurrent=()=>scope.current===requestedScope&&authorityAttempt.current.version===version;
+    authorityAttempt.current.pending=true;setAuthorityBusyStamp(version);setNotice('');
+    try{await grantReferenceAuthorityConsent(userId,undefined,isCurrent);if(isCurrent())setAuthorityOwner(userId);}
+    catch{if(isCurrent())setNotice('Não foi possível confirmar a permissão para usar referências externas na geração.');}
+    finally{if(isCurrent()){authorityAttempt.current.pending=false;setAuthorityBusyStamp(null);}}
   }
   function searchNow(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!query.trim()||!consent||busy)return;
@@ -114,7 +121,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     <div className="reference-search-heading"><h2>Sugestões do Pinterest</h2>
       {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button>{onContinue&&<button type="button" onClick={onContinue}>Continuar sem referências</button>}</div>}
       {consent&&<p className="reference-consent-status">Pinterest permitido nesta sessão. Só as escolhidas entram na conversa.</p>}
-      {consent&&authorityConsentRequired&&(authorityOwner===userId?<p className="reference-consent-status">Referências externas escolhidas podem orientar a geração nesta página.</p>:<div className="reference-session-consent"><p>Para orientar novas imagens, as referências externas escolhidas podem ser enviadas à OpenAI. Confirme o uso nesta página.</p><button type="button" className="studio-button-secondary" disabled={authorityBusy} onClick={()=>void allowExternalForGeneration()}>{authorityBusy?'Confirmando…':'Permitir uso na geração'}</button></div>)}
+      {consent&&authorityConsentRequired&&(authorityOwner===userId?<p className="reference-consent-status">Referências externas escolhidas podem orientar a geração nesta página.</p>:<div className="reference-session-consent"><p>Para orientar novas imagens, as referências externas escolhidas podem ser enviadas à OpenAI. A sessão do agente mantém estado e não usa retenção zero. Confirme o uso nesta página.</p><button type="button" className="studio-button-secondary" disabled={authorityBusy} onClick={()=>void allowExternalForGeneration()}>{authorityBusy?'Confirmando…':'Permitir uso na geração'}</button></div>)}
     </div>
     <form onSubmit={searchNow}>
       {sourceControl}
