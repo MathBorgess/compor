@@ -1,3 +1,4 @@
+import {imageBase64,sha256Hex} from './browser-bytes.ts';
 import {MAX_VISUAL_TRANSPORT_FILE_BYTES, validateVisualInputManifest, validateVisualReferenceSelection, parseVisualInputManifest, type LocalVisualInputManifest, type VisualInputManifest, type VisualMime} from '@compor/agents-api/visual-input-contract';
 import {referenceSchema, type StudioReference} from './studio-domain.ts';
 import type {StoredReference} from './studio-storage.ts';
@@ -6,8 +7,7 @@ import {studioImageDimensions, studioImageDimensionsMatch} from './studio-image.
 export type SelectedVisualInput = {manifest:VisualInputManifest;blobs:Blob[]};
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const invalid=()=>Error('Não foi possível preparar as imagens selecionadas.');
-const hex=(bytes:ArrayBuffer)=>Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('');
-const hash=async(blob:Blob)=>hex(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer()));
+const hash=async(blob:Blob)=>sha256Hex(await blob.arrayBuffer());
 
 /** Selection is supplied by the current conversation, not reconstructed from the library. */
 export function selectedLocalUploads(references:readonly StudioReference[]):StudioReference[]{
@@ -118,26 +118,34 @@ export async function validateVisualSnapshot(snapshot:SelectedVisualInput):Promi
   }
 }
 
-export async function visualInputImages(snapshot:SelectedVisualInput):Promise<{id:string;mime:VisualMime;data:string}[]>{
-  await validateVisualSnapshot(snapshot);
+async function visualSources(input:SelectedVisualInput,ids?:readonly string[]){
+  if(!Array.isArray(input.blobs))throw invalid();
+  const manifest=parseVisualInputManifest(input.manifest);
+  const blobs=[...input.blobs],selection=ids===undefined?undefined:[...ids];
+  if(selection&&!validateVisualReferenceSelection(manifest,selection))throw invalid();
+  await validateVisualSnapshot({manifest,blobs});
+  const wanted=selection&&new Set(selection);
+  return manifest.entries.flatMap(({id,transport},index)=>!wanted||wanted.has(id)?[{id,mime:transport.mime,width:transport.width,height:transport.height,file:blobs[index]}]:[]);
+}
+
+/** The signed plan determines the subset; this function never rereads today's selection. */
+export function selectedVisualSources(input:SelectedVisualInput,ids:readonly string[]){
+  if(!Array.isArray(ids))throw invalid();
+  return visualSources(input,ids);
+}
+
+async function encodeSources(sources:Awaited<ReturnType<typeof visualSources>>):Promise<{id:string;mime:VisualMime;data:string}[]>{
   const images=[];
-  for(const [index,entry] of snapshot.manifest.entries.entries()){
-    const bytes=new Uint8Array(await snapshot.blobs[index].arrayBuffer());let binary='';for(let offset=0;offset<bytes.length;offset+=32768)binary+=String.fromCharCode(...bytes.subarray(offset,offset+32768));
-    images.push({id:entry.id,mime:entry.transport.mime,data:btoa(binary)});
+  for(const {id,mime,file} of sources){
+    images.push({id,mime,data:await imageBase64(file)});
   }
   return images;
 }
 
-/** The signed plan determines the subset; this function never rereads today's selection. */
-export async function selectedVisualInputImages(input:SelectedVisualInput,ids:readonly string[]):Promise<{id:string;mime:VisualMime;data:string}[]>{
-  const snapshot={manifest:parseVisualInputManifest(input.manifest),blobs:[...input.blobs]},selection=[...ids];
-  if(!validateVisualReferenceSelection(snapshot.manifest,selection))throw invalid();
-  await validateVisualSnapshot(snapshot);
-  const wanted=new Set(selection),images=[];
-  for(const [index,entry] of snapshot.manifest.entries.entries()){
-    if(!wanted.has(entry.id))continue;
-    const bytes=new Uint8Array(await snapshot.blobs[index].arrayBuffer());let binary='';for(let offset=0;offset<bytes.length;offset+=32768)binary+=String.fromCharCode(...bytes.subarray(offset,offset+32768));
-    images.push({id:entry.id,mime:entry.transport.mime,data:btoa(binary)});
-  }
-  return images;
+export async function visualInputImages(snapshot:SelectedVisualInput){
+  return encodeSources(await visualSources(snapshot));
+}
+
+export async function selectedVisualInputImages(snapshot:SelectedVisualInput,ids:readonly string[]){
+  return encodeSources(await selectedVisualSources(snapshot,ids));
 }

@@ -6,7 +6,8 @@ import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import {useObjectUrl} from './use-object-url.ts';
-import Markdown from "markdown-to-jsx";
+import {compiler as compileMarkdown} from "markdown-to-jsx";
+import {sha256Hex} from "../lib/browser-bytes.ts";
 import {
   prepareAdjustment,
   settleAdjustment,
@@ -38,9 +39,8 @@ import { chatResponseSchema, pendingInspectionSchema, errorResponseSchema, defau
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({postContext:state.selection?postContext(state,state.selection.pieceId):undefined,brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
-async function contextDigest(state:StudioState) {
- const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
- return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
+function contextDigest(state:StudioState) {
+ return sha256Hex(referenceContext(state));
 }
 async function requestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string}) {
  const {createParallelJournalStore}=await import('../lib/parallel-exploration-journal.ts');
@@ -65,21 +65,19 @@ type CredentialSource='default'|'byok';
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
 /** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
 function MessageMarkdown({text}:{text:string}) {
-  return <Markdown
-    options={{
-      disableParsingRawHTML: true,
-      sanitizer: (value) => {
-        try {
-          const url = new URL(value);
-          return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
-        } catch { return null; }
-      },
-      overrides: {
-        a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
-        img: ({alt}: {alt?: string}) => <span>{alt}</span>,
-      },
-    }}
-  >{text}</Markdown>;
+  return compileMarkdown(text,{
+    disableParsingRawHTML: true,
+    sanitizer: (value) => {
+      try {
+        const url = new URL(value);
+        return ['https:', 'http:', 'mailto:'].includes(url.protocol) ? url.href : null;
+      } catch { return null; }
+    },
+    overrides: {
+      a: ({href, children}: {href?: string; children?: ReactNode}) => href ? <a href={href} target="_blank" rel="noopener noreferrer">{children}</a> : <>{children}</>,
+      img: ({alt}: {alt?: string}) => <span>{alt}</span>,
+    },
+  });
 }
 function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageReceipt|null{
  const parsed=receiptSchema.safeParse(input);if(!parsed.success)return null;const value=parsed.data;

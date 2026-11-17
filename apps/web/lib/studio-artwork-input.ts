@@ -1,9 +1,10 @@
+import {imageBase64,sha256Hex} from './browser-bytes.ts';
 import type {StudioDraft, StoredImage} from './studio-domain.ts';
 import type {ArtworkImage} from '@compor/agents-api/artwork-input';
 import {parseImageProposal} from '@compor/agents-api/image-proposal';
 import {studioImageDimensions,studioImageDimensionsMatch} from './studio-image.ts';
 import {ARTWORK_TRANSPORT_BYTES, artworkImageBudgets, copyArtworkForTransport} from './studio-artwork-transport.ts';
-import {selectedVisualInputImages,type SelectedVisualInput} from './selected-visual-input.ts';
+import {selectedVisualSources,type SelectedVisualInput} from './selected-visual-input.ts';
 
 export type ArtworkPreparationOptions = {
   proposal: unknown;
@@ -40,14 +41,12 @@ async function artworkSources({proposal: value, draft, referenceIds, loadReferen
     if (proposal.baseImageId !== draft.pieceId || draft.baseVersion < 1) throw Error('Abra uma versão salva com a imagem que deseja editar.');
     await attach(proposal.baseImageId, 'base', await loadBase?.());
   }
-  const visualImages=visualSnapshot?await selectedVisualInputImages(visualSnapshot,proposal.referenceIds):null;
-  for (const [index,id] of proposal.referenceIds.entries()) {
-    if (!referenceIds.includes(id)) throw Error('A proposta usa uma referência que não pertence a este contexto. Peça ao Compor para revisar a seleção.');
-    if(visualImages){
-      const entry=visualSnapshot?.manifest.entries.find(item=>item.id===id),blob=visualSnapshot?.blobs[visualSnapshot.manifest.entries.findIndex(item=>item.id===id)];
-      if(!entry||!blob||visualImages[index]?.id!==id)throw Error('A referência selecionada não está disponível.');
-      sources.push({id,role:'reference',file:blob,width:entry.transport.width,height:entry.transport.height});
-    }else await attach(id, 'reference', await loadReference?.(id));
+  const references=visualSnapshot?await selectedVisualSources(visualSnapshot,proposal.referenceIds):null;
+  if (proposal.referenceIds.some(id=>!referenceIds.includes(id))) throw Error('A proposta usa uma referência que não pertence a este contexto. Peça ao Compor para revisar a seleção.');
+  if (references) {
+    for (const {id,file,width,height} of references) sources.push({id,role:'reference',file,width,height});
+  } else {
+    for (const id of proposal.referenceIds) await attach(id,'reference',await loadReference?.(id));
   }
   return {proposal, sources};
 }
@@ -55,8 +54,7 @@ async function artworkSources({proposal: value, draft, referenceIds, loadReferen
 async function sourceFingerprint(sources: readonly ArtworkSource[]) {
   const manifest = [];
   for (const {id, role, file} of sources) {
-    const digest = await crypto.subtle.digest('SHA-256', await file.arrayBuffer());
-    manifest.push({id, role, mime: file.type, sha256: Array.from(new Uint8Array(digest), byte => byte.toString(16).padStart(2, '0')).join('')});
+    manifest.push({id, role, mime: file.type, sha256:await sha256Hex(await file.arrayBuffer())});
   }
   return JSON.stringify(manifest);
 }
@@ -83,11 +81,9 @@ export async function prepareArtworkTransport(options: ArtworkPreparationOptions
       }));
       file = copy.file;
     }
-    const bytes = new Uint8Array(await file.arrayBuffer());
-    let binary = '';
-    for (let offset = 0; offset < bytes.length; offset += 32768) binary += String.fromCharCode(...bytes.subarray(offset, offset + 32768));
+    const data=await imageBase64(file);
     if (file.type !== 'image/png' && file.type !== 'image/jpeg') throw Error('Formato de imagem não suportado.');
-    images.push(Object.freeze({id: source.id, role: source.role, mime: file.type, data: btoa(binary)}));
+    images.push(Object.freeze({id: source.id, role: source.role, mime: file.type, data}));
   }
   const artworkInput = Object.freeze({
     literalText: Object.freeze({headline: options.draft.content.headline, price: options.draft.content.price, date: options.draft.content.date, ...(options.draft.content.fields !== undefined ? {fields: options.draft.content.fields.map(field => ({...field}))} : {})}),

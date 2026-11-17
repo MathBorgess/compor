@@ -1,3 +1,4 @@
+import {sha256Hex} from './browser-bytes.ts';
 import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
 import {createParallelIntentClient} from './parallel-exploration-intent-client.ts';
@@ -21,7 +22,7 @@ async function matchesSelection(manifest:VisualInputManifest,references:StoredRe
     }else if(entry.inputOrigin==='external'){
       if(!('originUrl' in source)||source.originUrl!==entry.source.originUrl||source.board!==entry.source.board)return false;
     }else if(!('kind' in source)||source.kind!=='generated'||source.projectId.toLowerCase()!==entry.source.projectId||source.imageId.toLowerCase()!==entry.source.imageId)return false;
-    const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await file.arrayBuffer())),byte=>byte.toString(16).padStart(2,'0')).join('');
+    const digest=await sha256Hex(await file.arrayBuffer());
     if(digest!==entry.original.sha256)return false;
   }
   return true;

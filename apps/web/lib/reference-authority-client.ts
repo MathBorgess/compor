@@ -1,3 +1,4 @@
+import {sha256Hex} from './browser-bytes.ts';
 import * as z from './schema.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 
@@ -20,9 +21,9 @@ export type ReferenceAuthoritySnapshotInput={projectId:string;conversationId:str
 export type ReferenceAuthorityWrite={version:1;references:{id:string;inputOrigin:'local-upload'|'external'|'generated';source:null|{originUrl:string;board:string}|{projectId:string;imageId:string}}[];projectReferenceIds:string[];posts:{pieceId:string;referenceIds:string[];excludedReferenceIds:string[]}[]};
 export type ReferenceAuthorityRead=z.infer<typeof readResult>;
 
-async function visualDigest(input:VisualInputManifest){
- const manifest=parseVisualInputManifest(input),bytes=new TextEncoder().encode(`compor-visual-input-v${manifest.version}\0${JSON.stringify(manifest)}`);
- return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');
+export function visualManifestDigest(input:VisualInputManifest){
+ const manifest=parseVisualInputManifest(input);
+ return sha256Hex(`compor-visual-input-v${manifest.version}\0${JSON.stringify(manifest)}`);
 }
 
 /** Each call makes exactly one request. Conflicts and lost replies require explicit reconciliation. */
@@ -39,7 +40,7 @@ export function createReferenceAuthorityClient(fetchApi:typeof fetch=fetch){
   async fence(projectId:string,commandId:string){const result=resolvedCommand.parse(await post('selection',{op:'fence',projectId,commandId}));if(result.commandId!==commandId)throw Error('reference_authority_mismatch');return result;},
   async grant(consentId:string){const result=consentGrant.parse(await post('consent',{op:'grant',consentId}));if(result.consentId!==consentId)throw Error('reference_authority_mismatch');return result;},
   async consentState(consentId:string){const result=consentState.parse(await post('consent',{op:'state',consentId}));if(result.consentId!==consentId)throw Error('reference_authority_mismatch');return result;},
-  async createSnapshot(input:ReferenceAuthoritySnapshotInput,capability?:string){const result=snapshotCreate.parse(await post('snapshot',{op:'create',...input},capability));const value=result.snapshot;if(value.requestId!==input.requestId||value.projectId!==input.projectId||value.conversationId!==input.conversationId||value.batchId!==input.batchId||value.purpose!==input.purpose||value.selectionRevision!==input.selectionRevision||value.manifestDigest!==await visualDigest(input.visualInput)||value.consentId!==(input.consentId??null))throw Error('reference_authority_mismatch');return result;},
+  async createSnapshot(input:ReferenceAuthoritySnapshotInput,capability?:string){const result=snapshotCreate.parse(await post('snapshot',{op:'create',...input},capability));const value=result.snapshot;if(value.requestId!==input.requestId||value.projectId!==input.projectId||value.conversationId!==input.conversationId||value.batchId!==input.batchId||value.purpose!==input.purpose||value.selectionRevision!==input.selectionRevision||value.manifestDigest!==await visualManifestDigest(input.visualInput)||value.consentId!==(input.consentId??null))throw Error('reference_authority_mismatch');return result;},
   async readSnapshot(projectId:string,requestId:string){const result=snapshotRead.parse(await post('snapshot',{op:'read',projectId,requestId}));if(result.status==='found'&&(result.snapshot.projectId!==projectId||result.snapshot.requestId!==requestId))throw Error('reference_authority_mismatch');return result;},
   async revoke(consentId:string){const result=consentRevoked.parse(await post('consent',{op:'revoke',consentId}));if(result.consentId!==consentId)throw Error('reference_authority_mismatch');return result;},
  };

@@ -1,3 +1,4 @@
+import {sha256Hex} from './browser-bytes.ts';
 import * as z from './schema.ts';
 import type {StudioState} from './studio-domain.ts';
 import type {ReferenceAuthorityWrite} from './reference-authority-client.ts';
@@ -28,8 +29,7 @@ export async function referenceSelectionPublic(value:ReferenceAuthorityWrite){
  const state=referenceSelectionWriteSchema.parse(value);
  const references=[];
  for(const item of state.references){
-  const bytes=new TextEncoder().encode(`compor-reference-source-v1\0${JSON.stringify({inputOrigin:item.inputOrigin,source:item.source})}`);
-  const digest=Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),byte=>byte.toString(16).padStart(2,'0')).join('');
+  const digest=await sha256Hex(`compor-reference-source-v1\0${JSON.stringify({inputOrigin:item.inputOrigin,source:item.source})}`);
   references.push({id:item.id,inputOrigin:item.inputOrigin,sourceDigest:digest});
  }
  return {version:1 as const,references,projectReferenceIds:state.projectReferenceIds,posts:state.posts};

@@ -1,5 +1,5 @@
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
-import {createReferenceAuthorityClient} from './reference-authority-client.ts';
+import {createReferenceAuthorityClient,visualManifestDigest} from './reference-authority-client.ts';
 import {readReferenceAuthorityConsent} from './reference-authority-consent.ts';
 
 export type VisualAuthorityScope={userId:string;projectId:string;conversationId:string;requestId:string;batchId:string|null;purpose:'parallel'|'replacement'|'artwork'};
@@ -11,10 +11,6 @@ export function assertReferenceVisualCapability(userId:string,input:unknown,head
  const manifest=parseVisualInputManifest(input);if(!containsExternal(manifest))return;
  const current=readReferenceAuthorityConsent(userId);
  if(!current||current.userId!==userId||current.capability!==headers['x-compor-reference-consent'])throw Error('reference_authority_consent_changed');
-}
-async function digest(manifest:VisualInputManifest){
- const bytes=new TextEncoder().encode(`compor-visual-input-v${manifest.version}\0${JSON.stringify(manifest)}`);
- return Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',bytes)),value=>value.toString(16).padStart(2,'0')).join('');
 }
 /** A snapshot is created once before an effect; consent capability stays in this tab's memory. */
 export function createReferenceVisualAuthority({client=createReferenceAuthorityClient(),readConsent=readReferenceAuthorityConsent,isCurrent}:{client?:Client;readConsent?:(userId:string)=>Consent|null;isCurrent:()=>boolean}){
@@ -33,7 +29,7 @@ export function createReferenceVisualAuthority({client=createReferenceAuthorityC
   ensure();const manifest=parseVisualInputManifest(visualInput),value=consent(scope,manifest);
   if(!value)return {};
   const found=await client.readSnapshot(scope.projectId,scope.requestId);ensure();
-  if(found.status!=='found'||found.snapshot.conversationId!==scope.conversationId||found.snapshot.batchId!==scope.batchId||found.snapshot.purpose!==scope.purpose||found.snapshot.consentId!==value.consentId||found.snapshot.manifestDigest!==await digest(manifest))throw Error('reference_authority_snapshot_unconfirmed');
+  if(found.status!=='found'||found.snapshot.conversationId!==scope.conversationId||found.snapshot.batchId!==scope.batchId||found.snapshot.purpose!==scope.purpose||found.snapshot.consentId!==value.consentId||found.snapshot.manifestDigest!==await visualManifestDigest(manifest))throw Error('reference_authority_snapshot_unconfirmed');
   ensure();const current=consent(scope,manifest);if(!current||current.consentId!==value.consentId||current.capability!==value.capability)throw Error('reference_authority_consent_changed');return {'x-compor-reference-consent':value.capability};
  }
  return {create,headers};

@@ -1,3 +1,4 @@
+import {sha256Hex} from './browser-bytes.ts';
 const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_HTTP_BYTES = 4 * 1024 * 1024;
 const PART_BYTES = 2 * 1024 * 1024;
@@ -43,7 +44,6 @@ export async function fetchPrivateImage(query:URLSearchParams|string,{fetch:fetc
   if(chunks.length!==expectedParts||expectedSize===null)throw Error('incomplete image');
   const image=new Uint8Array(expectedSize);let offset=0;
   for(const bytes of chunks){image.set(bytes,offset);offset+=bytes.length;}
-  const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',image));
-  if([...digest].map(value=>value.toString(16).padStart(2,'0')).join('')!==expectedHash)throw Error('image changed');
+  if(await sha256Hex(image)!==expectedHash)throw Error('image changed');
   return new Blob([image],{type:'image/png'});
 }

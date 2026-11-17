@@ -1,3 +1,4 @@
+import {sha256Hex} from './browser-bytes.ts';
 import type {ActionInputByName,StudioActionName,StudioAction,StudioTool} from '@compor/agents-api/studio-chat-tools';
 import type {ActionResult,ActionReceipt} from './studio-domain.ts';
 export type StudioHandlers = {[Name in StudioActionName]?: (input:ActionInputByName[Name],context:{signal?:AbortSignal;conversationId?:string})=>ActionResult|Promise<ActionResult>};
@@ -55,16 +56,7 @@ export function createStudioTools({
         .sort()
         .map((key) => [key, Reflect.get(args,key)]),
     ]);
-    const fingerprint = [
-      ...new Uint8Array(
-        await crypto.subtle.digest(
-          "SHA-256",
-          new TextEncoder().encode(canonical),
-        ),
-      ),
-    ]
-      .map((byte) => byte.toString(16).padStart(2, "0"))
-      .join("");
+    const fingerprint = await sha256Hex(canonical);
     const receiptKey = `${scope.userId}:${args.projectId}:${args.requestId}`;
     const afterHash=readScope();
     if(disposed||signal?.aborted||afterHash?.userId!==scope.userId||afterHash?.projectId!==scope.projectId)throw Error("context_changed");
