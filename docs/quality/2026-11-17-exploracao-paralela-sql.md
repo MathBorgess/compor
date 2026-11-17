@@ -39,4 +39,18 @@ O gate completo passou **72/72** antes das últimas recusas conservadoras de esc
 
 O inventário recebeu o hash da migration34 e conta34 migrations, preservando os hashes anteriores. Não houve chamada paga nem aplicação remota. Timeout de revogação sem GET confirmado continua uma limitação explícita, não um sucesso de pausa.
 
+## Epoch original da revogação (migration35)
+
+A migration35 preserva `revocation_epoch` nullable no tombstone e devolve `revocationEpoch` separado do epoch atual da conta. Não preenche tombstones históricos. O [ADR 0063](../adr/0063-epoch-original-da-revogacao.md) registra o contrato e a compatibilidade dos adapters.
+
+- Red: os cinco testes novos falharam contra a forma anterior das RPCs, sem `revocationEpoch` (`/tmp/compor-revocation-epoch-red.log`).
+- Green dirigido: **12/12**, incluindo os cinco testes novos, os quatro contratos históricos de intenção e os três testes do inventário/infra (`/tmp/compor-revocation-epoch-green.log`).
+- `npm run quality:test`: **79/79**, aplicando as **35 migrations** com seus hashes e baseline preservados (`/tmp/compor-revocation-epoch-quality.log`).
+- `npm run quality:lint`: passou (`/tmp/compor-revocation-epoch-lint.log`).
+- `COMPOR_PARALLEL_PG_CONTAINER=compor-parallel-sql-epoch35-20261117 node supabase/tests/exploration_parallel_concurrency.mjs`: passou no PostgreSQL **17.12**, em conexões independentes e com barreiras observadas no advisory lock (`/tmp/compor-revocation-epoch-postgres.log`). Inclui revogações duplicadas, replay concorrente com nova intenção, CAS antigo após outra revogação, criação/revogação nas duas ordens e tombstone legado desconhecido; preserva também os ensaios anteriores de lote e exclusão.
+
+O primeiro ensaio concorrente encontrou um erro no parser do teste, que tentou interpretar o marcador da barreira como JSON. O parser passou a selecionar a linha de resultado; o ensaio inteiro foi repetido e aprovado. Não houve alteração de SQL motivada por esse erro.
+
+Ambiente: macOS/arm64, Node **24.16.0**, PostgreSQL em container próprio sem rede nem porta publicada, memória limitada a 256 MiB, sobre Colima já ativo (2 CPUs/2 GiB). Auth/Storage continuam sintéticos; não se executou Supabase remoto, fornecedor pago nem integração de navegador neste complemento. A evidência comprova o comportamento local transacional, não cancelamento de uma chamada externa. Os adapters e a UI são verificados separadamente no head integrado.
+
 Resultado final do complemento: **7/7** nos quatro cenários de intenção mais três verificações de infraestrutura, cinco disputas adicionais PostgreSQL aprovadas e lint aprovado. A execução ampla anterior permaneceu em **72/72**; após as duas recusas conservadoras foram repetidas as fronteiras afetadas, sem repetir verificações não afetadas.

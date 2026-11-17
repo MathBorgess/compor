@@ -138,6 +138,10 @@
     {
       "name": "20261117000034_exploration_revocable_intents.sql",
       "sha256": "ef113e850d4d07fe4c3ca4e1ac80b7a145b7e181055aa2cc4290c6c5e7689bf7"
+    },
+    {
+      "name": "20261117000035_exploration_revocation_epoch.sql",
+      "sha256": "2ce9f22e2d5f1a86b2946f5b7d0161f0dbc4c6f351c552693b83eb9e385fb777"
     }
   ]
 }

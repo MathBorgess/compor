@@ -70,6 +70,26 @@ try{
  await sql(actor+createIntent(id(3013),5));
  const afterDispatch=await heldRace(dispatchIntent(id(3013)),revokeIntent(id(3013),6));assert.match(afterDispatch.first,/"is_new":true/);assert.match(afterDispatch.second,/"status": "revoked"/);
  assert.equal((await sql(`select count(*) from exploration_images where parallel_batch_id='${intentBatch}' and state='running';`)).trim(),'3');
+ await sql(await readFile(new URL('../migrations/20261117000035_exploration_revocation_epoch.sql',import.meta.url),'utf8'));
+ const resultOf=output=>JSON.parse(output.trim().split('\n').filter(line=>line.startsWith('{')).at(-1));
+ assert.deepEqual(resultOf(await sql(actor+revokeIntent(id(3013),6))),{status:'revoked',epoch:7,revocationEpoch:null},'historical tombstone has no invented epoch');
+ await sql(actor+createIntent(id(3020),7));
+ const duplicateRevokes=await heldRace(revokeIntent(id(3020),8),revokeIntent(id(3020),7));
+ assert.deepEqual(resultOf(duplicateRevokes.first),{status:'revoked',epoch:9,revocationEpoch:9});
+ assert.deepEqual(resultOf(duplicateRevokes.second),{status:'revoked',epoch:9,revocationEpoch:9});
+ const newerThenReplay=await heldRace(createIntent(id(3021),9),revokeIntent(id(3020),8));
+ assert.equal(resultOf(newerThenReplay.first).status,'reserved');
+ assert.deepEqual(resultOf(newerThenReplay.second),{status:'revoked',epoch:10,revocationEpoch:9});
+ assert.deepEqual(resultOf(await sql(`${actor}select get_exploration_intent_state('${project}','${id(3021)}');`)),{state:'active',epoch:10,revocationEpoch:null});
+ await sql(actor+revokeIntent(id(3021),10));
+ assert.equal(resultOf(await sql(actor+createIntent(id(3022),9))).status,'conflict','old revocation proof cannot adopt a newer idle epoch');
+ assert.deepEqual(resultOf(await sql(`${actor}select get_exploration_intent_state('${project}','${id(3020)}');`)),{state:'revoked',epoch:11,revocationEpoch:9});
+ const revokeBeforeCreate35=await heldRace(revokeIntent(id(3030),11),createIntent(id(3030),11));
+ assert.deepEqual(resultOf(revokeBeforeCreate35.first),{status:'revoked',epoch:12,revocationEpoch:12});
+ assert.equal(resultOf(revokeBeforeCreate35.second).status,'revoked');
+ const createBeforeRevoke35=await heldRace(createIntent(id(3031),12),revokeIntent(id(3031),12));
+ assert.deepEqual(resultOf(createBeforeRevoke35.second),{status:'revoked',epoch:14,revocationEpoch:14});
+ console.log('Revocation epoch: legacy unknown, duplicate revoke, newer intent versus replay, stale CAS, revoke-before-create and create-before-revoke races passed.');
  console.log('Revocable intent: revoke-before-create, create-before-revoke, stale revoke, revoke-before-dispatch and admitted-dispatch-before-revoke races passed.');
  console.log('PostgreSQL 17: planner race, delete race, batch replay race, three concurrent completions and deleted-scope race passed.');
 }finally{await sql(`drop database ${database} with (force);`,'postgres');}
