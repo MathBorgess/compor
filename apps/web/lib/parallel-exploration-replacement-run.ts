@@ -2,6 +2,7 @@ import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
 import {createParallelIntentClient} from './parallel-exploration-intent-client.ts';
 import {createParallelReplacementClient,type ParallelReplacementClaim} from './parallel-exploration-replacement-client.ts';
+import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
 
 type Options={preparation:ParallelPreparation;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
@@ -34,6 +35,12 @@ export function createReplacementRun(options:Options){
         const context=await options.currentContext();ensure();if(JSON.stringify(context)!==JSON.stringify(preparation.context)){onNotice('O contexto mudou desde o plano. Revise a tentativa antes de pedir novas propostas.');return;}
         const client=createParallelExplorationClient({store,canInspect:valid});
         const planned=await client.inspectPlan(preparation,key);ensure();if(planned.status!=='completed'||!planned.binding)throw Error('plan_unconfirmed');
+        let visualSnapshot;
+        if(preparation.visualInput!==undefined){
+          try{visualSnapshot=await store.loadVisualSnapshot(scope,preparation.conversationId);}catch{visualSnapshot=null;}
+          ensure();
+          if(!visualSnapshot||JSON.stringify(parseVisualInputManifest(visualSnapshot.manifest))!==JSON.stringify(parseVisualInputManifest(preparation.visualInput))){onNotice('As imagens desta tentativa não estão disponíveis. A reposição permanece bloqueada.');return;}
+        }
         const observed=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(observed.snapshot,observed.journal);ensure();
         const child=observed.journal.progress.children.find(value=>value.position===position),last=observed.journal.replacements?.at(-1);
         const epoch=last?(last.revocationRequested?last.revocationConfirmed?last.revocationEpoch:undefined:last.intentEpoch):(preparation.revocationRequested?preparation.revocationConfirmed?preparation.revocationEpoch:undefined:preparation.intentEpoch);
@@ -43,7 +50,7 @@ export function createReplacementRun(options:Options){
         const confirmed=await command.create(preparation,next,key,abort.signal);ensure();journal=await store.updateReplacement(scope,journal.revision,{kind:'intent_confirmed',epoch:confirmed});ensure();
         await store.updateReplacement(scope,journal.revision,{kind:'submitted'});ensure();
         onNotice('Aguardando confirmação da reposição.');
-        let settled=false,checkedAfterSettlement=false;void command.dispatch(preparation,next,planned.binding,key,abort.signal).catch(()=>{}).finally(()=>{settled=true;});
+        let settled=false,checkedAfterSettlement=false;void command.dispatch(preparation,next,planned.binding,key,abort.signal,visualSnapshot??undefined).catch(()=>{}).finally(()=>{settled=true;});
         while(valid()){
           const value=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(value.snapshot,value.journal);ensure();
           const result=value.journal.progress.children.find(item=>item.position===position);
