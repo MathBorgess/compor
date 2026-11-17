@@ -1,5 +1,6 @@
 "use client";
 import { useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import dynamic from 'next/dynamic';
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
 import PersonaStep from "./persona-step";
 import StudioDirection from "./studio-direction";
@@ -24,6 +25,7 @@ import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import ReferenceSelectionTray from "./reference-selection-tray";
 import { useExplorationLoop } from "./use-exploration-loop";
+const ParallelExplorationRecovery=dynamic(()=>import('./parallel-exploration-recovery'));
 import type { CredentialSource } from "./use-ai-credentials";
 import { selectedExplorationKey } from "../lib/exploration-batch";
 import {confirmedExploration,recordCompletedExploration,prepareExplorationDraft} from "../lib/exploration-draft";
@@ -451,7 +453,7 @@ function ProjectStudio({
   useEffect(()=>{if(draft)setVisitedPosts(ids=>ids.includes(draft.pieceId)?ids:[...ids,draft.pieceId]);},[draft?.pieceId]);
   useEffect(()=>{if(!referencesOpen){setExplorationRequested(false);}},[referencesOpen]);
   const idea = studioProjectIdea(s,initialObjective);
-  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:async(imageId,ordinal,conversationId,creationContext)=>{
+  async function onExplorationCompleted(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext']){
     if(!active.current||!isAuthenticated())throw Error("studio_unavailable");
     const state=local.get();
     if(state.workflow.latestExplorations?.[conversationId]?.imageId!==imageId){
@@ -460,7 +462,8 @@ function ProjectStudio({
       local.change(value=>recordCompletedExploration(value,conversationId,{...candidate,...(creationContext?{creationContext}:{})}));
     }
     await local.flush();
-  } });
+  }
+  const exploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
   useEffect(() => {
     if (credentialSeen.current === credentialEpoch) return;
     credentialSeen.current = credentialEpoch;
@@ -1131,7 +1134,7 @@ function ProjectStudio({
       }}
     />
   );
-  const explorationRecovery=(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>);
+  const explorationRecovery=<>{referencesOpen&&<ParallelExplorationRecovery userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={exploration.resume}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={exploration.resume}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={exploration.resume}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
     <StudioChat key={conversationId??"legacy"} conversationId={conversationId} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
       state={s}

@@ -34,6 +34,7 @@ export function useExplorationLoop(props: LoopProps) {
   const [paused, setPaused] = useState(false);
   const [status, setStatus] = useState("Aguardando contexto e conexão.");
   const [blocked, setBlocked] = useState(false);
+  const [parallelBlocked,setParallelBlocked]=useState(false);
   const [awaitingFeedback, setAwaitingFeedback] = useState(false);
   const [resuming, setResuming] = useState(false);
   const [resumeError, setResumeError] = useState<string|null>(null);
@@ -102,6 +103,12 @@ export function useExplorationLoop(props: LoopProps) {
       try {
         await navigator.locks.request(`compor-exploration:${props.userId}`, { signal: cancel.signal }, async () => {
           if (!active) return;
+          // Check inside the same account lock used by the parallel flow.
+          const {createParallelJournalStore}=await import('../lib/parallel-exploration-journal.ts');
+          const journal=createParallelJournalStore();
+          try {if(await journal.loadPreparation(props.userId)){setParallelBlocked(true);stop('Há um lote paralelo anterior a consultar. A exploração sequencial permanece pausada.');return;}setParallelBlocked(false);}
+          finally {journal.close();}
+          if(!active||cancel.signal.aborted)return;
           if (localStorage.getItem(rejectedKey) !== null) { stop("A chave foi recusada. Corrija a conexão e retome a exploração."); return; }
           if (localStorage.getItem(notStartedKey) !== null) { stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto."); return; }
           progress=readBatchProgress(localStorage,batchKey(props.projectId),sequenceKey(props.projectId),()=>crypto.randomUUID());
@@ -287,5 +294,5 @@ export function useExplorationLoop(props: LoopProps) {
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }
   const running = props.enabled && !awaitingAnswer && !audienceConflict && !unresolvedChat;
-  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, progress:running&&!paused&&phase==='generating'?requestProgress:null, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
+  return { status: audienceConflict ? "Escolha qual público usar na faixa de contexto." : awaitingFeedback ? "Aguardando sua decisão sobre as propostas." : awaitingAnswer && !blocked ? "A exploração aguarda sua resposta no chat." : unresolvedChat ? "Há um pedido no chat ainda não confirmado. Consulte essa tentativa antes de explorar." : blocked ? status : paused ? "Exploração pausada." : !props.enabled ? "Exploração disponível na tela de referências." : !props.hasApiKey ? props.canUseAI ? "Aguardando seu pedido para começar." : "Conecte sua IA para explorar." : !ready ? "Aguardando uma ideia no briefing." : status, paused, blocked, parallelBlocked, awaitingFeedback, awaitingAnswer, resuming, resumeError, completed, progress:running&&!paused&&phase==='generating'?requestProgress:null, phase: running ? phase : 'idle' as const, countdown: running ? countdown : null, pause: () => { stopCurrent.current?.(); setPaused(true); setPhase('idle'); setCountdown(null); }, resume };
 }
