@@ -19,6 +19,8 @@ async function fixtureSource(){
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import StudioChat from './app/studio-chat.tsx';
+import {prepareSelectedVisualCandidates} from './lib/selected-visual-input.ts';
+import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';
 import {createStudioState,selectVersion,selectDraft,prepareAdjustment,parseStudioState,recordSavedVersion,getCurrentDraft} from './lib/studio-state.ts';
 const ids=${JSON.stringify({userId,projectId,requestId,pieceId,refId,otherPiece})};
 const content={headline:'Oficina de cerâmica',price:'R$ 129,90',date:'12/12',caption:'Legenda separada',captionOrigin:'user'};
@@ -29,6 +31,8 @@ for(let index=0;index<pixels.data.length;index+=4){const value=random();pixels.d
 ctx.putImageData(pixels,0,0);
 const original=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
 const reference=new Blob([Uint8Array.from(atob('${png}'),char=>char.charCodeAt(0))],{type:'image/png'});
+const authorityMode=new URLSearchParams(location.search).has('authority');const referenceMetadata={id:ids.refId,name:'Referência original',mime:'image/png',size:reference.size,width:1,height:1,source:{kind:'local-upload'}};
+window.saveVisual=async()=>{const visual=await prepareSelectedVisualCandidates({references:[referenceMetadata],projectId:ids.projectId,externalConsent:false,loadReference:async()=>({file:reference,metadata:referenceMetadata})});const store=createParallelJournalStore();try{await store.saveRequestVisualSnapshot({userId:ids.userId,projectId:ids.projectId,conversationId:ids.pieceId,requestId:ids.requestId},visual);}finally{store.close();}};window.authorityScopes=[];
 const images=new Map([['${pieceId}:1',original],['${otherPiece}:1',reference]]);
 const digest=async blob=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())),n=>n.toString(16).padStart(2,'0')).join('');
 window.__transport={originalHash:await digest(original),originalSize:original.size,original,images,digest};
@@ -40,7 +44,7 @@ window.createImageBitmap=(...args)=>window.__holdDecode?new Promise((resolve,rej
 function initial(user=ids.userId,project=ids.projectId){
  let state=selectVersion(createStudioState({userId:user,projectId:project}),{pieceId:ids.otherPiece,version:1,latestVersion:1,content:{...content,headline:'Outro post'}});
  state=selectVersion(state,{pieceId:ids.pieceId,version:1,latestVersion:1,content});
- state=parseStudioState({...state,references:[{id:ids.refId,name:'Referência original',mime:'image/png',size:reference.size,width:1,height:1}]});
+ state=parseStudioState({...state,...(authorityMode?{projectReferenceIds:[ids.refId]}:{}),references:[authorityMode?referenceMetadata:{id:ids.refId,name:'Referência original',mime:'image/png',size:reference.size,width:1,height:1}]});
  return prepareAdjustment(state,{requestId:ids.requestId,messageId:'${id(10)}',instruction:'Refine esta arte',createdAt:'2026-11-05T00:00:00.000Z',eventId:'${id(11)}'});
 }
 function Fixture(){
@@ -55,7 +59,7 @@ function Fixture(){
   <button onClick={()=>scope(ids.userId,'${id(13)}')}>Outro projeto</button>
   <button onClick={()=>{images.set(ids.pieceId+':1',reference);}}>Trocar imagem na mesma versão</button>
   <output data-testid="source-size">{original.size}</output>
-  <StudioChat state={state} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey getApiKey={()=>'sk-synthetic-${'x'.repeat(30)}'} loadBase={loadBase} loadReference={async()=>({file:reference})} prepareImageVersion={save} onUseImage={async({blob,pieceId,version})=>{images.set(pieceId+':'+version,blob);return true;}}/>
+  <StudioChat {...(authorityMode?{conversationId:ids.pieceId,checkReferenceAuthority:async()=>true,createVisualAuthoritySnapshot:async()=>{},visualAuthorityHeaders:async(scope)=>{window.authorityScopes.push(scope);return {'x-compor-reference-consent':'synthetic-visual-consent'};}}:{})} state={state} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey getApiKey={()=>'sk-synthetic-${'x'.repeat(30)}'} loadBase={loadBase} loadReference={async()=>({file:reference})} prepareImageVersion={save} onUseImage={async({blob,pieceId,version})=>{images.set(pieceId+':'+version,blob);return true;}}/>
  </main>;
 }
 createRoot(document.getElementById('root')).render(<Fixture/>);
@@ -138,4 +142,14 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
  await page.getByText('Não foi possível recuperar as imagens desta conversa.',{exact:true}).waitFor();
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'snapshots ausentes não autorizam nova imagem');
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+
+test('arte visual usa snapshot do turno, id original e capability somente no efeito',{skip:!existsSync(browserPath),timeout:90000},async t=>{
+ const source=await fixtureSource(),server=createServer((request,response)=>{if(request.url==='/fixture.js'){response.setHeader('Content-Type','text/javascript');response.end(source);}else if(request.url?.endsWith('.svg')){response.setHeader('Content-Type','image/svg+xml');response.end('<svg xmlns="http://www.w3.org/2000/svg"/>');}else response.end('<!doctype html><div id="root"></div><script type="module" src="/fixture.js"></script>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+ const page=await browser.newPage();page.setDefaultTimeout(8000);const calls=[];let generated=false;await page.addInitScript(({marker,requestId,pieceId})=>sessionStorage.setItem(marker+':conversation:'+pieceId,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId,baseVersion:1}})),{marker,requestId,pieceId});
+ await page.route('**/api/**',async route=>{const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body,headers:request.headers()});if(url.pathname==='/api/studio/chat')return route.fulfill({status:202,json:generated?{status:'completed',text:'Nova arte armazenada.'}:{status:'consent_required',attemptId:id(20),prompt:proposal.prompt,proposal,actionBinding:'synthetic-binding',declineBinding:'synthetic-decline',visualInputRequired:true}});if(url.pathname==='/api/agent/image'){generated=true;return route.fulfill({status:202,json:{status:'accepted',assetId}});}if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:Buffer.from(png,'base64')});throw Error('unexpected API');});
+ await page.goto(`${origin}/?authority=1`);await page.getByTestId('source-size').waitFor();await page.evaluate(()=>window.saveVisual());await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByRole('button',{name:'Preparar cópia para edição',exact:true}).click();await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();
+ const image=calls.find(call=>call.path==='/api/agent/image'),poll=calls.find(call=>call.path==='/api/studio/chat');assert.equal(poll.headers['x-compor-reference-consent'],undefined);assert.equal(image.headers['x-compor-reference-consent'],'synthetic-visual-consent');assert.equal(image.body.requestId,requestId);assert.equal(image.body.artworkInput.visualInput.entries[0].id,refId);assert.deepEqual(image.body.artworkInput.images.filter(item=>item.role==='reference').map(item=>item.id),[refId]);assert.equal(JSON.stringify(image.body).includes('synthetic-visual-consent'),false);const scopes=await page.evaluate(()=>window.authorityScopes);assert.equal(scopes[0].requestId,requestId);assert.equal(scopes[0].purpose,'artwork');assert.equal(scopes[0].conversationId,pieceId);
 });
