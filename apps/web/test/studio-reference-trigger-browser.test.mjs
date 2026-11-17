@@ -15,15 +15,18 @@ import {createRoot} from 'react-dom/client';
 import StudioChat from './app/studio-chat.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
+import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';
+const visualMode=new URLSearchParams(location.search).has('visual');
+window.loadVisual=async requestId=>{const journal=createParallelJournalStore();try{return await journal.loadRequestVisualSnapshot({userId:'${user}',projectId:'${project}',conversationId:'references',requestId});}finally{journal.close();}};
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);
 const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));window.referenceOriginal=Array.from(new Uint8Array(await file.arrayBuffer()));
-const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
+const reference=id=>({id,name:'Referência',mime:'image/png',size:file.size,width:4,height:4,...(id==='${first}'?{source:visualMode?{kind:'local-upload'}:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography'}}:{})});
 function initial(){let state=createPost(createStudioState({userId:'${user}',projectId:'${project}'}),{pieceId:'${piece}'});return addReference(state,reference('${first}'));}
 function Fixture(){const [waiting,setWaiting]=useState(false);const reportWait=useCallback((id,value)=>setWaiting(value),[]);const [key,setKey]=useState(false),[visible,setVisible]=useState(true),[state,setState]=useState(initial),current=useRef(state),tools=useRef({execute:async()=>{throw Error('unexpected tool');}});
 function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}
 function choose(fn){change(fn);recordReferenceRound(current.current);}
 return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>setVisible(false)}>Fechar referências</button><button onClick={()=>setVisible(true)}>Abrir referências</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
-<output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat onReferenceWait={reportWait} state={state} conversationId="references" allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async()=>({file})} onUseImage={async()=>true}/></div></main>}
+<output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat onReferenceWait={reportWait} state={state} conversationId="references" selectedVisualsAvailable={visualMode} allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async id=>({file,metadata:reference(id)})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
 async function setup(t,{feedbackDelayMs=0}={}){
  const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'}});
@@ -32,7 +35,7 @@ async function setup(t,{feedbackDelayMs=0}={}){
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const context=await browser.newContext(),page=await context.newPage();page.setDefaultTimeout(7000);const calls=[],pinSignals=[],dispatches=new EventEmitter();let answer='completed',release,delayedFeedback=false;
  await context.route('**/api/studio/**/signals',async route=>{if(feedbackDelayMs&&!delayedFeedback){delayedFeedback=true;await new Promise(resolve=>setTimeout(resolve,feedbackDelayMs));}return route.fulfill({json:{signals:route.request().url().includes('/references/')?pinSignals:[]}});});
- await page.context().route('**/api/studio/chat',async route=>{const body=route.request().postDataJSON();calls.push(body);dispatches.emit('dispatch');if(answer==='unknown')return route.abort('failed');if(answer==='hold')await new Promise(resolve=>{release=resolve;});return route.fulfill({json:{status:'completed',text:'As referências parecem editoriais.\n\n**Recomendação:** Uma direção sóbria, porque combina com a oferta.\n\nPosso seguir pela direção sóbria?'}});});
+ await page.context().route('**/api/studio/chat',async route=>{const body=route.request().postDataJSON();if(body.visualInput)body.snapshotBeforeDispatch=await page.evaluate(async id=>Boolean(await window.loadVisual(id)),body.requestId);calls.push(body);dispatches.emit('dispatch');if(answer==='unknown')return route.abort('failed');if(answer==='hold')await new Promise(resolve=>{release=resolve;});return route.fulfill({json:{status:'completed',text:'As referências parecem editoriais.\n\n**Recomendação:** Uma direção sóbria, porque combina com a oferta.\n\nPosso seguir pela direção sóbria?'}});});
  function waitForCalls(count,timeoutMs=7000){
   if(calls.length>=count)return Promise.resolve();
   return new Promise((resolve,reject)=>{
@@ -50,6 +53,21 @@ test('mensagem de texto inclui o PNG selecionado com os bytes originais pequenos
  await page.getByLabel('Sua mensagem').fill('O que você vê nesta referência?');await page.getByLabel('Sua mensagem').press('Enter');await waitForCalls(1);
  const request=calls[0];assert.equal(request.message,'O que você vê nesta referência?');assert.equal(request.referenceImages.length,1);assert.equal(request.referenceImages[0].mime,'image/png');assert.equal(request.referenceImages[0].id,first);
  assert.deepEqual([...Buffer.from(request.referenceImages[0].data,'base64')],await page.evaluate(()=>window.referenceOriginal));
+});
+test('turno visual congela PNG antes do envio e informa destino e retenção',{skip:!existsSync(browserPath),timeout:20000},async t=>{
+ const {page,calls,origin,waitForCalls}=await setup(t);await page.goto(`${origin}/?visual=1`);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.getByText(/cópias otimizadas, são enviadas à OpenAI/).waitFor();
+ await page.getByLabel('Sua mensagem').fill('Crie com esta imagem');await page.getByLabel('Sua mensagem').press('Enter');await waitForCalls(1);
+ const sent=calls[0];assert.equal(sent.snapshotBeforeDispatch,true);assert.equal(sent.visualInput.version,2);assert.equal(sent.visualInput.entries[0].inputOrigin,'local-upload');assert.equal(sent.referenceImages.length,0);
+ assert.deepEqual([...Buffer.from(sent.visualImages[0].data,'base64')],await page.evaluate(()=>window.referenceOriginal));
+ const persisted=await page.evaluate(async requestId=>{const result=await window.loadVisual(requestId);return {id:result.manifest.entries[0].id,bytes:Array.from(new Uint8Array(await result.blobs[0].arrayBuffer()))};},sent.requestId);
+ assert.equal(persisted.id,first);assert.deepEqual(persisted.bytes,await page.evaluate(()=>window.referenceOriginal));
+});
+test('erro na persistência visual impede envio e conserva texto',{skip:!existsSync(browserPath),timeout:20000},async t=>{
+ const {page,calls,origin}=await setup(t);await page.goto(`${origin}/?visual=1`);await page.getByRole('button',{name:'Conectar'}).click();
+ await page.evaluate(()=>{const original=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='visualSnapshots')throw new DOMException('quota','QuotaExceededError');return original.apply(this,args);};});
+ await page.getByLabel('Sua mensagem').fill('Crie com esta imagem');await page.getByLabel('Sua mensagem').press('Enter');
+ await page.waitForTimeout(800);assert.equal(calls.length,0);assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Crie com esta imagem');
 });
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
  const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');

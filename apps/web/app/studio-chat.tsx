@@ -44,6 +44,18 @@ async function requestVisualSnapshot(scope:{userId:string;projectId:string;conve
  const journal=createParallelJournalStore();
  try{return await journal.loadRequestVisualSnapshot(scope);}finally{journal.close();}
 }
+async function prepareRequestVisuals(state:StudioState,conversationId:string|undefined,requestId:string,loadReference:(id:string)=>Promise<StoredImage|null|undefined>) {
+ if(!conversationId)throw Error('Abra a conversa deste post para enviar as imagens selecionadas.');
+ const [{prepareSelectedVisualCandidates,visualInputImages},{referenceConsentGranted},{createParallelJournalStore},{referenceSchema}]=await Promise.all([import('../lib/selected-visual-input.ts'),import('../lib/reference-session-consent.ts'),import('../lib/parallel-exploration-journal.ts'),import('../lib/studio-domain.ts')]);
+ let externalConsent=false;try{externalConsent=referenceConsentGranted(sessionStorage,state.userId);}catch{}
+ const snapshot=await prepareSelectedVisualCandidates({references:state.references,projectId:state.projectId,externalConsent,maxBytes:1024*1024,loadReference:async id=>{
+  const stored=await loadReference(id),metadata=referenceSchema.safeParse(stored?.metadata);
+  return stored&&metadata.success?{file:stored.file,metadata:metadata.data}:null;
+ }});
+ const visualImages=await visualInputImages(snapshot),journal=createParallelJournalStore();
+ try{await journal.saveRequestVisualSnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId},snapshot);}finally{journal.close();}
+ return {visualInput:snapshot.manifest,visualImages};
+}
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 type CredentialSource='default'|'byok';
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
@@ -105,8 +117,9 @@ export default function StudioChat({
   onReferenceWait,
   intro = false,
   referenceWorkbench = false,
+  selectedVisualsAvailable = false,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
@@ -619,7 +632,8 @@ export default function StudioChat({
         const feedback=await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
-        const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
+        const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+        const referenceImages=selectedVisualsAvailable?[]:await referenceImagesForRequest(before.references,loadReference,20);
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         attemptSource.current=credentialSource;
         const next=change(value=>prepareAdjustment(value,{requestId,messageId:crypto.randomUUID(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',conversationId,createdAt:new Date().toISOString(),eventId:crypto.randomUUID()}));
@@ -634,7 +648,7 @@ export default function StudioChat({
         const draft=getCurrentDraft(next);
         const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
-        const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
+        const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages,...(visuals??{})});
         await handle(data,requestId);
       } catch(error) {
         if(credentialIsCurrent()){
@@ -645,7 +659,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -673,7 +687,8 @@ export default function StudioChat({
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
-      const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
+      const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+      const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
       if(!credentialIsCurrent())return;
       if (getState().revision !== before.revision)
@@ -739,6 +754,7 @@ export default function StudioChat({
           .slice(-30)
           .map(({ role, text }) => ({ role, text })),
         referenceImages,
+        ...(visuals??{}),
         // A quick reply starts a text-only turn; it never resumes a tool-enabled session.
         ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
       });
@@ -1007,6 +1023,7 @@ export default function StudioChat({
         </div>
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
+      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos; o agente pode escolher entre as demais referências selecionadas.</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
