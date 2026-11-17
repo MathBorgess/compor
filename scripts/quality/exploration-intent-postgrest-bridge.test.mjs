@@ -11,6 +11,7 @@ import {createExplorationPlannerRoute} from '../../apps/web/lib/exploration-plan
 import {createExplorationPlannerStore} from '../../apps/web/lib/exploration-planner-store.ts';
 import {createExplorationBatchRoute} from '../../apps/web/lib/exploration-batch-route.ts';
 import {createExplorationBatchStore} from '../../apps/web/lib/exploration-batch-store.ts';
+import {createExplorationRecoveryStatusRoute} from '../../apps/web/lib/exploration-recovery-status-route.ts';
 
 const id=n=>`40000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const owner=id(1),other=id(2),projectId=id(3),pieceId=id(4),batchId=id(5),intentId=id(6),requestId=id(7),freshIntentId=id(8);
@@ -63,6 +64,10 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const f=await fixture(t),bindings=createExplorationPlannerBindings({secret:Buffer.alloc(32,7),source:'byok',apiKey:key});
  const intentStore=createExplorationIntentStore(config,f.fetchApi),batchStore=createExplorationBatchStore(config,f.fetchApi);
  const auth={appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId};
+ const statusRoute=createExplorationRecoveryStatusRoute({...auth,getBatch:batchStore.getBatch,getPlan:createExplorationPlannerStore(config,f.fetchApi).get});
+ const statusScope={projectId,conversationId:pieceId,batchId,requestId};
+ assert.deepEqual(await (await statusRoute.plan(mk(statusScope))).json(),{status:'absent',...statusScope});
+ assert.deepEqual(await (await statusRoute.batch(mk({projectId,batchId}))).json(),{status:'absent',projectId,batchId});
  const intentRoute=createExplorationIntentRoute({...auth,store:intentStore});
  let starts=0,images=0;
  const provider={create:async()=>{starts++;return{sessionId:'sess_bridge'};},get:async()=>({status:'completed',turnId:'turn_bridge',plan:{version:1,items:[1,2,3].map(i=>({position:i,creativePrompt:`Caminho ${i}`,composition:`Composição ${i}`,contrast:`Contraste ${i}`,differenceFromOthers:`Diferença ${i}`}))}})};
@@ -75,6 +80,8 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const initial=await intentRoute.create(mk({...inputs,intentId,purpose:'batch',expectedEpoch:0,apiKey:key}));assert.deepEqual(await initial.json(),{status:'created',epoch:1});
  const submit=await plannerRoute(mk({...inputs,intentId,requestId,op:'submit',apiKey:key}));assert.equal((await submit.json()).status,'running');
  const poll=await plannerRoute(mk({...inputs,requestId,op:'poll',apiKey:key})),out=await poll.json();assert.equal(out.status,'completed');
+ const plannerStatus=await (await statusRoute.plan(mk(statusScope))).json();assert.deepEqual(plannerStatus,{status:'completed',...statusScope});assert.doesNotMatch(JSON.stringify(plannerStatus),/binding|digest|sess_bridge/);
+ assert.equal((await statusRoute.plan(mk({...statusScope,conversationId:'references'}))).status,503);
  const pollAgain=await plannerRoute(mk({...inputs,requestId,op:'poll',apiKey:key}));assert.equal((await pollAgain.json()).status,'completed');assert.equal(starts,1);
  const execute={...inputs,intentId,planRequestId:requestId,plan:out.plan,planBinding:out.planBinding,imageIds:[id(21),id(22),id(23)]},headers={'x-compor-openai-key':key};
  assert.equal((await batchRoute.post(mk({...execute,context:{...context,idea:'Alterado'}},headers))).status,403);assert.equal(images,0);
@@ -86,6 +93,7 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const fresh=await intentRoute.create(mk({...inputs,intentId:freshIntentId,purpose:'batch',expectedEpoch:2,apiKey:key}));assert.deepEqual(await fresh.json(),{status:'created',epoch:3});
  const completed=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal((await completed.json()).status,'completed');assert.equal(images,3);
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.equal(batch.state,'completed');assert.deepEqual(batch.images.map(image=>image.status),['completed','completed','completed']);assert.equal(Date.parse(batch.nextAt)-Date.parse(batch.completedAt),15000);
+ assert.equal((await (await statusRoute.batch(mk({projectId,batchId}))).json()).state,'completed');
  const duplicate=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal(duplicate.status,409);assert.equal(images,3);assert.equal(starts,1);
  assert.equal(await batchStore.getBatch(otherActor,projectId,batchId),null,'RLS impede leitura por outra conta');
 });
