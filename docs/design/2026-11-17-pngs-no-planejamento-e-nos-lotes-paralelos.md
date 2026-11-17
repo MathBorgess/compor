@@ -1,5 +1,7 @@
 # PNGs locais no planejamento e nos lotes paralelos
 
+**Atualização de 17/11/2026:** Matheus aprovou a implementação deste desenho após esclarecer a seleção de uploads locais e aceitar cópias otimizadas. A aprovação não autoriza chamadas pagas adicionais, publicação, migrations remotas ou alteração dos gates.
+
 **Desenho para revisão; não implementado.** Matheus definiu nesta conversa: usar somente imagens carregadas do computador e selecionadas para o pedido; cópia otimizada é aceita; “terra” significa geração de arte. Aplicar a seleção a chat, planejamento e arte, incluindo as três propostas paralelas, exige congelar os arquivos antes do primeiro efeito pago e vincular seu conteúdo e ordem às provas. Enviar somente IDs ou descrições não atende ao pedido. As decisões de produto estão esclarecidas; a implementação aguarda revisão deste desenho.
 
 Data: 17/11/2026. Fonte: pedido nesta conversa do Codex para preparar o desenho antes da implementação. Base inspecionada: `b1a20d8`, complementada pela leitura dos commits integrados `df21a87` (fidelidade do chat) e `df07ff4` (orientação EXIF). Este documento não autoriza chamadas pagas, publicação, migrations remotas ou mudança de gates. Os caminhos abaixo descrevem código local, não comportamento comprovado em produção; as diferenças posteriores à base estão identificadas.
