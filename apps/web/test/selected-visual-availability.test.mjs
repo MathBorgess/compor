@@ -5,6 +5,7 @@ import {createStudioChatHandlers} from '@compor/agents-api/studio-chat';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
 import {createHash} from 'node:crypto';
+import {visualInputDigest} from '@compor/agents-api/visual-input';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const file={sha256:'a'.repeat(64),mime:'image/png',byteLength:42};
@@ -26,7 +27,7 @@ test('handler autenticado valida snapshot e recusa extras antes de reservar ou c
  const body={apiKey:'sk-synthetic_abcdefghijklmnopqrstuvwxyz',projectId:id(8),requestId:id(9),conversationId:id(7),message:'Criar arte',context:{revision:1,pieceId:id(7),references:[reference(1)]},visualInput:input,visualImages:[{id:id(1),mime:'image/png',data:bytes.toString('base64')}]};
  const calls=[],record={attemptId:id(10),state:'starting',binding:null};
  const store={async reserve(){calls.push('reserve');return {status:'reserved',turn:record};},async get(){return record;},async bind(){},async state(){},async claimAction(){},async finishAction(){},async getAction(){}};
- const handler=createStudioChatHandlers({appOrigin:'https://compor.test',resolveActor:async()=>({userId:id(6),token:'jwt'}),ownsProject:async()=>true,selectedVisualsEnabled:true,authorizeVisualInput:authorizeLocalVisualInput,store,attempts:{async bindRecovery(){},async finish(){}},bindings:createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings:createStudioBindings({secret:Buffer.alloc(32,7)}),fetch:async(_url,options)=>{calls.push(JSON.parse(options.body));return Response.json({id:'sess_test'},{status:201});}});
+ const handler=createStudioChatHandlers({appOrigin:'https://compor.test',resolveActor:async()=>({userId:id(6),token:'jwt'}),ownsProject:async()=>true,selectedVisualsEnabled:true,authorizeVisualInput:authorizeLocalVisualInput,prepareVisualAuthority:async input=>({pieceId:input.conversationId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null}),checkVisualAuthority:async()=>true,store,attempts:{async bindRecovery(){},async finish(){}},bindings:createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings:createStudioBindings({secret:Buffer.alloc(32,7)}),fetch:async(_url,options)=>{calls.push(JSON.parse(options.body));return Response.json({id:'sess_test'},{status:201});}});
  const request=value=>new Request('https://compor.test/api/studio/chat',{method:'POST',headers:{origin:'https://compor.test','content-type':'application/json'},body:JSON.stringify(value)});
  const extra={...body,context:{...body.context,references:[reference(1),{id:id(2),source:{kind:'generated',projectId:id(8),imageId:id(3)}}]}};
  assert.equal((await handler.chat(request(extra))).status,400);assert.deepEqual(calls,[]);
