@@ -32,7 +32,7 @@ test('posts anteriores não precisam repetir preparação',()=>{
  const restored=parseStudioState(old);assert.equal(restored.posts[id(3)].prepared,true);assert.equal(restored.workflow.referencePieceId,null);assert.equal(restored.workflow.view,'studio');
 });
 test('preparação é explícita e a ideia não é uma mensagem ou autorização',()=>{
- const state=initial();assert.equal(state.schemaVersion,3);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'default');assert.deepEqual(state.messages,[]);
+ const state=initial();assert.equal(state.schemaVersion,4);assert.equal(state.workflow.phase,'context');assert.equal(state.workflow.aiPreference,'default');assert.deepEqual(state.messages,[]);
  const next=updateWorkflow(state,{phase:'ready'});assert.equal(next.workflow.phase,'ready');assert.equal(next.workflow.aiPreference,'default');assert.deepEqual(next.messages,[]);assert.equal(next.projectIdea,'Uma oficina');
  const skipped=updateWorkflow(state,{aiPreference:'none'});assert.equal(parseStudioState(skipped).workflow.aiPreference,'none','escolha explícita sem IA persiste');
 });

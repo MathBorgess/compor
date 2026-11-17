@@ -1,0 +1,83 @@
+{
+  "schemaVersion": 1,
+  "commit": "93f3d7ecaf4abb25bcf5e0c61175c01b0b4fda80",
+  "date": "2026-11-17",
+  "nextVersion": "16.4.6",
+  "nodeVersion": "24.16.0",
+  "scope": "sum gzipSync per JavaScript file in .next/static after production build",
+  "totalGzipBytes": 334267,
+  "budgetBytes": 300000,
+  "files": [
+    {
+      "file": "chunks/1g48trpo0h3rx.js",
+      "bytes": 104683
+    },
+    {
+      "file": "chunks/1g39-jfxtbrsb.js",
+      "bytes": 71763
+    },
+    {
+      "file": "chunks/1h6swb4ytg1ad.js",
+      "bytes": 48433
+    },
+    {
+      "file": "chunks/0cz1d0mv5g_q7.js",
+      "bytes": 39473
+    },
+    {
+      "file": "chunks/12u991w2o-_av.js",
+      "bytes": 21847
+    },
+    {
+      "file": "chunks/3i4y4td93o9sn.js",
+      "bytes": 13997
+    },
+    {
+      "file": "chunks/0k0w_1b326st5.js",
+      "bytes": 8304
+    },
+    {
+      "file": "chunks/31d_wc_z4mbs4.js",
+      "bytes": 7296
+    },
+    {
+      "file": "chunks/0fjf0kzkqx20d.js",
+      "bytes": 5508
+    },
+    {
+      "file": "chunks/0sdr6_mz14mll.js",
+      "bytes": 5064
+    },
+    {
+      "file": "chunks/turbopack-2u1d16houkiyo.js",
+      "bytes": 3909
+    },
+    {
+      "file": "chunks/0mixwvnb2efjp.js",
+      "bytes": 3526
+    },
+    {
+      "file": "8zBYJxRufVukj52EyG9CT/_clientMiddlewareManifest.js",
+      "bytes": 201
+    },
+    {
+      "file": "8zBYJxRufVukj52EyG9CT/_buildManifest.js",
+      "bytes": 199
+    },
+    {
+      "file": "8zBYJxRufVukj52EyG9CT/_ssgManifest.js",
+      "bytes": 64
+    }
+  ],
+  "analyzer": {
+    "snapshot": "authority-audit-93f3d7e",
+    "exportSha256": "c0e8bbea82c6649690f2a6623743cc9e44088ab9119a32f7a64630a6d80ea7d4",
+    "routeCount": 49,
+    "clientOutputCount": 17,
+    "coverage": {
+      "exact": 15,
+      "not_a_chunk": 2
+    }
+  },
+  "acceptedChanges": []
+}

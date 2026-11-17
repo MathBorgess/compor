@@ -11,6 +11,7 @@ import { authClient, authConfig } from '../../../../lib/supabase';
 import { resolveSupabaseActor, ownsSupabaseVersion } from '../../../../lib/agent-auth.ts';
 import { agentSigningKey } from '../../../../lib/agent-config.ts';
 import { createAgentImageRoute } from '../../../../lib/agent-image-route.ts';
+import { selectedVisualsAvailable } from '../../../../lib/selected-visual-availability.ts';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -27,7 +28,7 @@ async function handle(request:Request,credential?:Pick<PreparedOpenAiRequest,'so
  const approve=createImageToolApproval({bindings,ownsVersion});
  const execute=createImageToolExecution({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key}),appOrigin:config.app,imageHandler:createImageHandler({authenticate}),imageStorageHandler:createPrivateImageHandler({appOrigin:config.app,supabaseUrl:config.service,publishableKey:config.key,authenticate})});
  const send=createImageToolResultSender({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key})});
- return createAgentImageRoute({appOrigin:config.app,resolveActor,approve,execute,send})(request);
+ return createAgentImageRoute({appOrigin:config.app,resolveActor,approve,execute,send,visualEnabled:selectedVisualsAvailable(Boolean(config))})(request);
 }
 
 export async function POST(request:Request) {

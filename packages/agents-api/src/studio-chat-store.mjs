@@ -12,7 +12,7 @@ export function createStudioStore({url,anonKey,fetch:fetchApi=globalThis.fetch}=
   if(!r.ok)throw Error('studio metadata unavailable');return r.json();
  }
  return {
-  async reserve(c){const r=await rpc('reserve_studio_turn',c,{p_input_digest:c.inputDigest});if(!['reserved','existing','busy','conflict','not_found'].includes(r?.status))throw Error('invalid reservation');return {...r,...(r.turn?{turn:turn(r.turn)}:{})};},
+  async reserve(c){const visual=c.visualAuthority;if(visual&&(!/^[a-f0-9]{64}$/.test(visual.manifestDigest)||(visual.pieceId!==null&&!uuid(visual.pieceId))||(visual.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visual.consentSecret))))throw Error('invalid visual authority');const r=await rpc(visual?'reserve_studio_turn_authorized':'reserve_studio_turn',c,{p_input_digest:c.inputDigest,...(visual?{p_piece_id:visual.pieceId,p_manifest_digest:visual.manifestDigest,p_consent_secret:visual.consentSecret}:{})});if(!['reserved','existing','busy','conflict','not_found'].includes(r?.status))throw Error('invalid reservation');return {...r,...(r.turn?{turn:turn(r.turn)}:{})};},
   async get(c){const r=await rpc('get_studio_turn',c);return r===null?null:turn(r);},
   async bind(c){if(await rpc('bind_studio_session',c,{p_binding:c.binding,p_expires_at:c.expiresAt,p_prior_turn_id:c.priorTurnId??null,p_initial_input:c.initialInput??null,p_initial_output:c.initialOutput??null})!==true)throw Error('studio binding unavailable');},
   async state(c){if(await rpc('set_studio_turn_state',c,{p_state:c.state,p_turn_id:c.turnId??null})!==true)throw Error('studio state unavailable');},

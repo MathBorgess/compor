@@ -2,20 +2,26 @@
 
 import { useEffect,useRef,useState,type FormEvent,type ReactNode } from 'react';
 import { referenceHistoryResponseSchema,referenceSearchResponseSchema,type ExploredReference,type ReferenceHistoryEntry } from '../lib/reference-exploration-contract.ts';
+import { grantReferenceAuthorityConsent,readReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
 import { grantReferenceConsent,referenceConsentGranted,syncReferenceConsentAccount } from '../lib/reference-session-consent.ts';
 import './reference-exploration.css';
 import ReferencePreview from './reference-preview';
 
-type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void;onRemoveReference?:(originUrl:string)=>Promise<void>;sourceControl?:ReactNode};
+type Props={userId:string;projectId:string;idea:string;selectedOrigins:string[];onUseReference:(reference:ExploredReference,file:File)=>Promise<void>;onContinue?:()=>void;onRemoveReference?:(originUrl:string)=>Promise<void>;sourceControl?:ReactNode;authorityConsentRequired?:boolean};
 type SearchState={status:'idle'|'loading'|'empty'|'unavailable'|'ok';references:ExploredReference[]};
-export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue,onRemoveReference,sourceControl}:Props) {
+export default function ReferenceExploration({userId,projectId,idea,selectedOrigins,onUseReference,onContinue,onRemoveReference,sourceControl,authorityConsentRequired=false}:Props) {
   const [query,setQuery]=useState(''),[consentOwner,setConsentOwner]=useState<string|null>(null);
   const [search,setSearch]=useState<SearchState>({status:'idle',references:[]});
   const [history,setHistory]=useState<{scope:string;references:ReferenceHistoryEntry[]}|null>(null),[historyUnavailable,setHistoryUnavailable]=useState(false);
-  const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false);
+  const [notice,setNotice]=useState(''),[busy,setBusy]=useState(false),[authorityOwner,setAuthorityOwner]=useState<string|null>(null),[authorityBusyStamp,setAuthorityBusyStamp]=useState<number|null>(null);
   const currentScope=`${userId}:${projectId}`,scope=useRef(currentScope),selectionLock=useRef(false),searchRequest=useRef<AbortController|null>(null);
+  const authorityScope=`${currentScope}:${authorityConsentRequired?'required':'off'}`;
+  const authorityAttempt=useRef({scope:authorityScope,version:0,pending:false});
+  if(authorityAttempt.current.scope!==authorityScope)authorityAttempt.current={scope:authorityScope,version:authorityAttempt.current.version+1,pending:false};
   scope.current=currentScope;
+  const authorityBusy=authorityBusyStamp===authorityAttempt.current.version;
   const consent=consentOwner===userId;
+  useEffect(()=>{setAuthorityOwner(readReferenceAuthorityConsent(userId)?userId:null);},[userId,authorityConsentRequired]);
   const suggestedQuery=idea.trim().slice(0,1000);
   useEffect(()=>()=>{scope.current='';searchRequest.current?.abort();},[]);
   useEffect(()=>{
@@ -56,6 +62,15 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
   function allowSession() {
     try {grantReferenceConsent(sessionStorage,userId);} catch { /* Explicit consent remains valid while this screen is open. */ }
     setConsentOwner(userId);
+  }
+  async function allowExternalForGeneration(){
+    if(authorityAttempt.current.pending)return;
+    const requestedScope=currentScope,version=authorityAttempt.current.version;
+    const isCurrent=()=>scope.current===requestedScope&&authorityAttempt.current.version===version;
+    authorityAttempt.current.pending=true;setAuthorityBusyStamp(version);setNotice('');
+    try{await grantReferenceAuthorityConsent(userId,undefined,isCurrent);if(isCurrent())setAuthorityOwner(userId);}
+    catch{if(isCurrent())setNotice('Não foi possível confirmar a permissão para usar referências externas na geração.');}
+    finally{if(isCurrent()){authorityAttempt.current.pending=false;setAuthorityBusyStamp(null);}}
   }
   function searchNow(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();if(!query.trim()||!consent||busy)return;
@@ -106,6 +121,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     <div className="reference-search-heading"><h2>Sugestões do Pinterest</h2>
       {!consent&&<div className="reference-session-consent"><p>O Compor pode consultar o Pinterest e carregar prévias para esta sessão. As imagens só guiam o post quando você as escolhe.</p><button type="button" className="studio-button-secondary" onClick={allowSession}>Permitir nesta sessão</button>{onContinue&&<button type="button" onClick={onContinue}>Continuar sem referências</button>}</div>}
       {consent&&<p className="reference-consent-status">Pinterest permitido nesta sessão. Só as escolhidas entram na conversa.</p>}
+      {consent&&authorityConsentRequired&&(authorityOwner===userId?<p className="reference-consent-status">Referências externas escolhidas podem orientar a geração nesta página.</p>:<div className="reference-session-consent"><p>Para orientar novas imagens, as referências externas escolhidas podem ser enviadas à OpenAI. A sessão do agente mantém estado e não usa retenção zero. Confirme o uso nesta página.</p><button type="button" className="studio-button-secondary" disabled={authorityBusy} onClick={()=>void allowExternalForGeneration()}>{authorityBusy?'Confirmando…':'Permitir uso na geração'}</button></div>)}
     </div>
     <form onSubmit={searchNow}>
       {sourceControl}

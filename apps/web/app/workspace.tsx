@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
 import { useAICredentials } from "./use-ai-credentials";
+import { clearReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
 import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
@@ -13,7 +14,7 @@ import "./studio-shell.css";
 const StudioApp = dynamic(() => import("./studio-app"), {
   loading: () => <p role="status">Abrindo sua conversa…</p>,
 });
-export default function Workspace({ loginAvailable, localAuth = false, developerMode = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean }) {
+export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
@@ -74,6 +75,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             typeof data.userId === "string" &&
             data.userId
           ) {
+            if(lastConnectedUser.current&&lastConnectedUser.current!==data.userId)clearReferenceAuthorityConsent();
             try { syncReferenceConsentAccount(sessionStorage,data.userId); } catch {}
             // Another account must not inherit the open project/post from the address bar.
             if (lastConnectedUser.current && lastConnectedUser.current !== data.userId && window.location.pathname !== "/") window.history.replaceState(null, "", "/");
@@ -133,6 +135,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             }
             setAuthState("connected");
           } else if (data.state === "signed-out") {
+            clearReferenceAuthorityConsent();
             try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
             clearOpenAIKey();
             setAuthenticatedUser(null);
@@ -214,6 +217,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     signingOut.current=true;
     sessionEpoch.current++;
     activeIdentity.current=null;
+    clearReferenceAuthorityConsent();
     try { syncReferenceConsentAccount(sessionStorage,null); } catch {}
     clearOpenAIKey();
     setAuthState("checking");
@@ -247,6 +251,9 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
         >
           <StudioApp
             developerMode={developerMode}
+            parallelAvailable={parallelAvailable}
+            selectedVisualsAvailable={selectedVisualsAvailable}
+            selectedVisualsRequired={selectedVisualsRequired}
             key={authenticatedUser}
             userId={authenticatedUser}
             accountLabel={account?.label ?? "Conta conectada"}

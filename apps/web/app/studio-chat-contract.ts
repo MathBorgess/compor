@@ -1,6 +1,7 @@
 import * as z from '../lib/schema.ts';
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import type { prepareArtworkInput, ArtworkConversion } from '../lib/studio-artwork-input';
+import type {SelectedVisualInput} from '../lib/selected-visual-input';
 type ArtworkInput=Awaited<ReturnType<typeof prepareArtworkInput>>;
 
 const usageSchema=z.object({input_tokens:z.optional(z.nullable(z.number())),output_tokens:z.optional(z.nullable(z.number()))});
@@ -9,7 +10,7 @@ const common=z.object({error:z.optional(z.string()),errorCode:z.optional(z.strin
 export const chatResponseSchema=z.discriminatedUnion('status',[
  // reply stays unknown here: lib/studio-quick-replies validates it and falls back to text.
  z.extend(common,{status:z.literal('completed'),text:z.optional(z.string()),reply:z.optional(z.unknown())}),
- z.extend(common,{status:z.literal('consent_required'),prompt:z.string(),proposal:z.optional(z.unknown()),attemptId:z.string(),actionBinding:z.string(),declineBinding:z.optional(z.string())}),
+ z.extend(common,{status:z.literal('consent_required'),prompt:z.string(),proposal:z.optional(z.unknown()),attemptId:z.string(),actionBinding:z.string(),declineBinding:z.optional(z.string()),visualInputRequired:z.optional(z.literal(true))}),
  z.extend(common,{status:z.literal('action_required'),action:z.object({name:z.string(),args:z.unknown()}),actionBinding:z.string()}),
  z.extend(common,{status:z.enum(['running','failed','unknown','accepted'])}),
 ]);
@@ -24,5 +25,5 @@ export type ImageContext=z.infer<typeof imageContextSchema>;
 export const receiptSchema=z.strictObject({userId:z.string(),projectId:z.string(),requestId:z.string(),pieceId:z.string(),version:z.number().check(z.int()),assetId:z.string()});
 export type ImageReceipt=z.infer<typeof receiptSchema>;
 export const chatMarkerSchema=z.object({requestId:z.nullable(z.string()),previousAttemptKey:z.optional(z.nullable(z.string())),credentialSource:z.optional(z.enum(['default','byok'])),imageContext:z.optional(z.nullable(imageContextSchema)),imageReceipt:z.optional(z.nullable(receiptSchema)),imageProtocolVersion:z.optional(z.literal(1))});
-export type ImageAction=Extract<ChatResponse,{status:'consent_required'}>&{proposal:ImageProposal;artworkInput:ArtworkInput|null;inputError:string;requestId:string;context:ImageContext&{headline:string};canPrepareTransport:boolean;conversions:readonly ArtworkConversion[];sourceFingerprint:string|null};
+export type ImageAction=Extract<ChatResponse,{status:'consent_required'}>&{proposal:ImageProposal;artworkInput:ArtworkInput|null;inputError:string;requestId:string;context:ImageContext&{headline:string};canPrepareTransport:boolean;conversions:readonly ArtworkConversion[];sourceFingerprint:string|null;visualSnapshot?:SelectedVisualInput};
 export type Inspection={status:'completed'|'failed'|'running'|'action_required'|'consent_required'|'unknown'|'unavailable';authenticationRejected?:boolean;usage:{input_tokens:number|null;output_tokens:number|null}|null;technical:{functionCalls:number|null;outputs:number|null;omittedItems:number|null;validSchemas:number;invalidSchemas:number;errorClasses:string[]}|null};

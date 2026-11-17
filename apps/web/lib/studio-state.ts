@@ -3,7 +3,7 @@ export type * from './studio-domain.ts';
 import { parseDirection, proposeCriterion, decideCriterion } from './studio-direction.ts';
 import {conversationDirection,effectiveReferences,emptyPostSettings,postContext,validatePostSettings} from './studio-post-context.ts';
 import { audienceResolution } from './studio-context.ts';
-export const STUDIO_SCHEMA_VERSION = 3;
+export const STUDIO_SCHEMA_VERSION = 4;
 export const REFERENCE_SELECTION_EVENT = 'A seleção de referências ficou estável.';
 export const STUDIO_LIMITS = Object.freeze({ messages: 200, drafts: 100, marks: 200, references: 20, adjustments: 100, events: 500, actionReceipts: 200, stateBytes: 512 * 1024, referenceBytes: 8 * 1024 * 1024, referenceTotalBytes: 64 * 1024 * 1024, localFiles: 500, localFileBytes: 256 * 1024 * 1024 });
 
@@ -28,7 +28,7 @@ const approvalForBase = (value: Approval,baseVersion: number) => approvalValid(v
 const sameDraft = (a: Partial<Pick<StudioDraft,"pieceId"|"baseVersion">>, b: Partial<Pick<StudioDraft,"pieceId"|"baseVersion">>) => a.pieceId === b.pieceId && a.baseVersion === b.baseVersion;
 const contextValid = (value: DraftContext) => uuid(value.pieceId) && integer(value.baseVersion) && integer(value.expectedLatestVersion) && value.baseVersion <= value.expectedLatestVersion;
 const referenceValid = (value: StudioReference) => (!value.source || referenceSourceSchema.safeParse(value.source).success) && uuid(value.id) && text(value.name, 200, false) && ['image/png','image/jpeg'].includes(value.mime) && integer(value.size, 1) && value.size <= STUDIO_LIMITS.referenceBytes && integer(value.width, 1) && integer(value.height, 1) && value.width * value.height <= 40_000_000;
-const referenceInProject = (value: StudioReference, projectId: string) => referenceValid(value) && (!value.source || !('kind' in value.source) || value.source.projectId === projectId);
+const referenceInProject = (value: StudioReference, projectId: string) => referenceValid(value) && (!value.source || !('kind' in value.source) || value.source.kind !== 'generated' || value.source.projectId === projectId);
 const markValid = (value: StudioMark) => uuid(value.id) && uuid(value.pieceId) && integer(value.baseVersion) && text(value.note, 2000) && (value.kind === 'area' ? (['x','y','width','height'] as const).every(key => Number.isFinite(value[key]) && value[key] >= 0 && value[key] <= 1) && value.width > 0 && value.height > 0 && value.x + value.width <= 1.000000001 && value.y + value.height <= 1.000000001 : value.kind === 'element' && text(value.elementId, 100, false));
 const freeze = <T>(value: T): T => { if (value && typeof value === 'object') { Object.values(value).forEach(freeze); Object.freeze(value); } return value; };
 const clone = <T>(value: T): T => structuredClone(value);
@@ -42,7 +42,8 @@ const sameActionResult = (left: ActionResult,right: ActionResult) => Object.keys
 export function parseStudioState(input: unknown): StudioState {
   if (!plain(input)) fail();
   const legacy = input.schemaVersion === 1 ? {...input,schemaVersion:2,workflow:{phase:'ready',view:'posts',aiPreference:'none'}} : input;
-  const candidate = legacy.schemaVersion === 2 ? {...legacy,schemaVersion:3,projectReferenceIds:Array.isArray(legacy.references)?legacy.references.map(item=>plain(item)?item.id:null):[],posts:{}} : legacy;
+  const v3 = legacy.schemaVersion === 2 ? {...legacy,schemaVersion:3,projectReferenceIds:Array.isArray(legacy.references)?legacy.references.map(item=>plain(item)?item.id:null):[],posts:{}} : legacy;
+  const candidate = v3.schemaVersion === 3 ? {...v3,schemaVersion:4} : v3;
   const shape = studioStateSchema.safeParse(candidate);
   if (!shape.success) fail();
   const value = shape.data;
@@ -90,7 +91,7 @@ export function changeStudioState(state: StudioState, action: (state: StudioStat
 function current(state: StudioState) { const draft = state.drafts.find(item => state.selection && sameDraft(item, state.selection)); if (!draft) throw new StudioStateError('studio_no_selection'); return draft; }
 function event(state: StudioState, type: StudioEvent["type"], requestId: string|null, id: string) { if (!uuid(id)) fail(); if (state.events.length >= STUDIO_LIMITS.events) throw new StudioStateError('studio_state_limit'); state.events.push({id,type,requestId,sequence:state.events.length + 1}); }
 
-export function createStudioState({userId,projectId,projectTitleProvisional=false,projectIdea='',prepare=false}: {userId:string;projectId:string;projectTitleProvisional?:boolean;projectIdea?:string;prepare?:boolean}) { return parseStudioState({schemaVersion:3,posts:{},projectReferenceIds:[],workflow:{phase:prepare?'context':'ready',view:prepare?'compose':'posts',aiPreference:'default'},userId,projectId,revision:0,projectTitleProvisional,projectIdea,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
+export function createStudioState({userId,projectId,projectTitleProvisional=false,projectIdea='',prepare=false}: {userId:string;projectId:string;projectTitleProvisional?:boolean;projectIdea?:string;prepare?:boolean}) { return parseStudioState({schemaVersion:4,posts:{},projectReferenceIds:[],workflow:{phase:prepare?'context':'ready',view:prepare?'compose':'posts',aiPreference:'default'},userId,projectId,revision:0,projectTitleProvisional,projectIdea,brief:{offer:'',audience:'',action:'',direction:''},persona:{audience:'',situation:'',need:'',culturalReferences:'',claims:[]},selection:null,drafts:[],messages:[],marks:[],references:[],adjustments:[],events:[]}); }
 /** A proposed or manually chosen name never becomes provisional again. */
 export function resolveProjectTitle(state: StudioState) { return state.projectTitleProvisional ? changeStudioState(state,next=>{next.projectTitleProvisional=false;}) : state; }
 export const getCurrentDraft = (state: StudioState) => { parseStudioState(state); return state.selection ? freeze(clone(current(state))) : null; };

@@ -76,14 +76,14 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
  const browser=await chromium.launch({executablePath:browserPath,headless:true});
  t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const page=await browser.newPage();page.setDefaultTimeout(8000);
- const calls=[],errors=[],external=[];let generated=false;
+ const calls=[],errors=[],external=[];let generated=false,requireVisual=false;
  page.on('pageerror',error=>errors.push(error.message));
  page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.addInitScript(({marker,requestId,pieceId})=>sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId,baseVersion:1}})),{marker,requestId,pieceId});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;
   calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
-  if(url.pathname==='/api/studio/chat')return route.fulfill({status:202,json:generated?{status:'completed',text:'Nova arte armazenada.'}:{status:'consent_required',attemptId:id(20),prompt:proposal.prompt,proposal,actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}});
+  if(url.pathname==='/api/studio/chat')return route.fulfill({status:202,json:generated?{status:'completed',text:'Nova arte armazenada.'}:{status:'consent_required',attemptId:id(20),prompt:proposal.prompt,proposal,actionBinding:'synthetic-binding',declineBinding:'synthetic-decline',...(requireVisual?{visualInputRequired:true}:{})}});
   if(url.pathname==='/api/agent/image'){generated=true;return route.fulfill({status:202,json:{status:'accepted',assetId}});}
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:Buffer.from(png,'base64')});
   throw Error('unexpected API');
@@ -133,5 +133,9 @@ test('cópia explícita permite editar PNG acima de 2 MiB e descarta preparaçõ
   assert.equal(await page.evaluate(()=>window.__confirmationEnabled),false,action+' não deve publicar a cópia antiga');
   assert.equal(calls.length,start,action+' durante preparação não provoca geração');
  }
+ requireVisual=true;generated=false;await page.goto(origin);
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.getByText('Não foi possível recuperar as imagens desta conversa.',{exact:true}).waitFor();
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,1,'snapshots ausentes não autorizam nova imagem');
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

@@ -140,7 +140,7 @@ test('migração arquiva schema 1 atomicamente, conserva blobs e recusa cliente 
   repo.close();return{oldClosed,quota,rollback,backup,legacy,stored,blob:await asset.file.text(),refused};
  });
  assert.equal(result.oldClosed,true);assert.equal(result.quota,'studio_storage_quota');assert.equal(result.rollback,true);
- assert.deepEqual(result.backup,result.legacy);assert.equal(result.stored.schemaVersion,3);assert.equal(result.stored.brief.offer,'Nova oferta');
+ assert.deepEqual(result.backup,result.legacy);assert.equal(result.stored.schemaVersion,4);assert.equal(result.stored.brief.offer,'Nova oferta');
  assert.equal(result.stored.messages[0].text,'Conversa anterior preservada');assert.equal(result.blob,'original bytes');assert.equal(result.refused,'VersionError');
 });
 
@@ -165,4 +165,23 @@ test('schema 2 é arquivado com CAS e quota atômicos sem substituir o arquivo d
  });
  assert.equal(evidence.conflict,'studio_storage_conflict');assert.equal(evidence.quota,'studio_storage_quota');assert.equal(evidence.rollback,true);
  assert.deepEqual(evidence.archives[0].state,evidence.state);assert.deepEqual(evidence.legacy,[evidence.oldest]);assert.equal(evidence.loaded.brief.audience,'Estudantes ');assert.equal(evidence.loaded.brief.action,'Venda antiga');assert.deepEqual(evidence.loaded.posts,{});
+});
+
+test('schema 3 arquiva estado sem atribuir upload ao legado e fecha leitura antiga',{skip:!existsSync(browserPath)},async t=>{
+ const server=createServer(async(req,res)=>{const name=req.url?.split('?')[0];if(['/studio-state.ts','/studio-storage.ts'].includes(name)){res.setHeader('content-type','text/javascript');res.end(await browserModuleSource(new URL(`../lib${name}`,import.meta.url)));}else res.end('<!doctype html>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
+ const result=await page.evaluate(async()=>{
+  const {createStudioState}=await import('/studio-state.ts'),{createStudioStorage}=await import('/studio-storage.ts');
+  const scope={userId:crypto.randomUUID(),projectId:crypto.randomUUID()},name='compor-studio-schema-three',key=JSON.stringify([scope.userId,scope.projectId]);
+  const base=createStudioState(scope),legacy={...base,schemaVersion:3};
+  const old=await new Promise((resolve,reject)=>{const req=indexedDB.open(name,4);req.onupgradeneeded=()=>{req.result.createObjectStore('states',{keyPath:'scope'});req.result.createObjectStore('legacyStates',{keyPath:'scope'});req.result.createObjectStore('stateArchives',{keyPath:'key'});req.result.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');req.result.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  await new Promise((resolve,reject)=>{const tx=old.transaction('states','readwrite');tx.objectStore('states').put({scope:key,state:legacy});tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});let closed=false;old.onversionchange=()=>{old.close();closed=true;};
+  const repo=createStudioStorage({name}),current=await repo.load(scope);await repo.save({...current,revision:1},{expectedRevision:0});repo.close();
+  const db=await new Promise((resolve,reject)=>{const req=indexedDB.open(name);req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  const archive=await new Promise((resolve,reject)=>{const req=db.transaction('stateArchives').objectStore('stateArchives').get(JSON.stringify([key,3]));req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});db.close();
+  let refused=false;await new Promise(resolve=>{const req=indexedDB.open(name,4);req.onerror=()=>{refused=req.error.name==='VersionError';resolve();};req.onsuccess=()=>{req.result.close();resolve();};});
+  return {closed,refused,version:current.schemaVersion,archive:JSON.stringify(archive.state)===JSON.stringify(legacy)};
+ });
+ assert.deepEqual(result,{closed:true,refused:true,version:4,archive:true});
 });

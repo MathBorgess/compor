@@ -12,7 +12,7 @@ async function readJson(request:Request):Promise<unknown> {
   try {for(;;){const {value,done}=await reader.read();if(done)break;n+=value.byteLength;if(n>MAX_ARTWORK_REQUEST_BYTES)throw Error('large');chunks.push(value);}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks)));}
   finally {try {Promise.resolve(reader.cancel()).catch(()=>{});} catch {} try {reader.releaseLock();} catch {}}
 }
-export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,send}: {appOrigin?:string;resolveActor?:()=>Promise<Actor|null>;approve?:ReturnType<typeof createImageToolApproval>;execute?:ReturnType<typeof createImageToolExecution>;send?:ReturnType<typeof createImageToolResultSender>}={}) {
+export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,send,visualEnabled=false}: {appOrigin?:string;resolveActor?:()=>Promise<Actor|null>;approve?:ReturnType<typeof createImageToolApproval>;execute?:ReturnType<typeof createImageToolExecution>;send?:ReturnType<typeof createImageToolResultSender>;visualEnabled?:boolean}={}) {
  return async (request:Request) => {
   if(request.method!=='POST')return reply({error:'method_not_allowed'},405);
   if(!appOrigin || typeof resolveActor!=='function'||typeof approve!=='function'||typeof execute!=='function'||typeof send!=='function')return reply({error:'unavailable'},503);
@@ -21,6 +21,7 @@ export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,se
   let data,actor,artworkInput;
   try {data=inputSchema.parse(await readJson(request));artworkInput=parseArtworkInput(data.artworkInput);} catch{return reply({error:'invalid_request'},400);}
   if(![data?.projectId,data?.pieceId,data?.attemptId].every(uuid) || !Number.isSafeInteger(data.version) || data.version<1 || data.version>2147483647 || data.explicitApproval!==true || typeof data.actionBinding!=='string' || data.actionBinding.length>2048 || !/^sk-[^\s]{20,300}$/.test(data.apiKey??''))return reply({error:'invalid_request'},400);
+  if(artworkInput.visualInput&&!visualEnabled)return reply({error:'unavailable'},503);
   try {actor=await resolveActor();} catch{return reply({error:'unavailable'},503);}
   if(!actor||!uuid(actor.userId) || typeof actor?.token!=='string' || !/^[^\s]{1,8192}$/.test(actor.token))return reply({error:'unauthorized'},401);
   const context={actor,projectId:data.projectId,pieceId:data.pieceId,version:data.version,attemptId:data.attemptId};

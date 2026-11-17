@@ -39,6 +39,24 @@ async function contextDigest(state:StudioState) {
  const bytes=await crypto.subtle.digest('SHA-256',new TextEncoder().encode(referenceContext(state)));
  return Array.from(new Uint8Array(bytes),value=>value.toString(16).padStart(2,'0')).join('');
 }
+async function requestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string}) {
+ const {createParallelJournalStore}=await import('../lib/parallel-exploration-journal.ts');
+ const journal=createParallelJournalStore();
+ try{return await journal.loadRequestVisualSnapshot(scope);}finally{journal.close();}
+}
+async function prepareRequestVisuals(state:StudioState,conversationId:string|undefined,requestId:string,loadReference:(id:string)=>Promise<StoredImage|null|undefined>) {
+ if(!conversationId)throw Error('Abra a conversa deste post para enviar as imagens selecionadas.');
+ if(state.references.some(reference=>reference.source&&('originUrl' in reference.source||reference.source.kind==='generated')))throw Error('Referências externas ou geradas ainda não estão disponíveis neste fluxo. Remova-as para continuar com seus uploads.');
+ const [{prepareSelectedVisualCandidates,visualInputImages},{referenceConsentGranted},{createParallelJournalStore},{referenceSchema}]=await Promise.all([import('../lib/selected-visual-input.ts'),import('../lib/reference-session-consent.ts'),import('../lib/parallel-exploration-journal.ts'),import('../lib/studio-domain.ts')]);
+ let externalConsent=false;try{externalConsent=referenceConsentGranted(sessionStorage,state.userId);}catch{}
+ const snapshot=await prepareSelectedVisualCandidates({references:state.references,projectId:state.projectId,externalConsent,maxBytes:1024*1024,loadReference:async id=>{
+  const stored=await loadReference(id),metadata=referenceSchema.safeParse(stored?.metadata);
+  return stored&&metadata.success?{file:stored.file,metadata:metadata.data}:null;
+ }});
+ const visualImages=await visualInputImages(snapshot),journal=createParallelJournalStore();
+ try{await journal.saveRequestVisualSnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId},snapshot);}finally{journal.close();}
+ return {visualInput:snapshot.manifest,visualImages};
+}
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
 type CredentialSource='default'|'byok';
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
@@ -100,9 +118,12 @@ export default function StudioChat({
   onReferenceWait,
   intro = false,
   referenceWorkbench = false,
+  selectedVisualsAvailable = false,
+  selectedVisualsRequired = false,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
+  const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
   const getState=()=>conversationContext(readState(),conversationId);
   const change=(reducer:(value:StudioState)=>StudioState)=>{const next=writeState(reducer);return next?conversationContext(next,conversationId):null;};
@@ -183,9 +204,9 @@ export default function StudioChat({
   const referenceMarker = `compor-reference-review:${state.userId}:${state.projectId}${conversationId?":"+conversationId:""}`;
   // A hidden controller can finish an existing turn, but cannot prepare a new reading.
   // Its own busy update must not invalidate the preparation's visibility epoch.
-  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch:0});
-  const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis?1:0);
-  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,analysisEpoch};
+  const availability=useRef({message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,visualUnavailable,selectedVisualsAvailable,analysisEpoch:0});
+  const analysisEpoch=availability.current.analysisEpoch+(availability.current.readOnly!==readOnly||availability.current.allowReferenceAnalysis!==allowReferenceAnalysis||availability.current.visualUnavailable!==visualUnavailable||availability.current.selectedVisualsAvailable!==selectedVisualsAvailable?1:0);
+  availability.current={message,busy,pending,localBlocked,hasApiKey,readOnly,allowReferenceAnalysis,visualUnavailable,selectedVisualsAvailable,analysisEpoch};
   const referenceSet=referenceFingerprint(state), referenceContextValue=referenceContext(state);
   const quickReplyStorage=quickReplyKey(state.userId,state.projectId,conversationId);
   function refreshQuickReplies(){try{setQuickReplies(readQuickReplies(localStorage,quickReplyStorage));}catch{setQuickReplies([]);}}
@@ -434,17 +455,23 @@ export default function StudioChat({
         throw Error("Não foi possível identificar o post desta proposta.");
       const proposal = parseImageProposal(data.proposal ?? {prompt: data.prompt});
       let artworkInput = null, inputError = '', canPrepareTransport = false, sourceFingerprint: string|null = null;
+      let visualSnapshot:Awaited<ReturnType<typeof requestVisualSnapshot>>=null;
       try {
         const snapshot = getState(), selected = getCurrentDraft(snapshot);
         const source = snapshot.drafts.find(item => item.pieceId === context.pieceId && item.baseVersion === context.baseVersion);
         if (!source || (proposal.operation === 'edit' && (selected?.pieceId !== context.pieceId || selected?.baseVersion !== context.baseVersion))) throw Error('Abra a versão indicada para revisar as imagens desta proposta.');
-        const prepared = await prepareArtworkTransport({proposal, draft: source, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
+        if(data.visualInputRequired){
+          if(!conversationId)throw Error('Não foi possível recuperar as imagens desta conversa.');
+          visualSnapshot=await requestVisualSnapshot({userId:snapshot.userId,projectId:snapshot.projectId,conversationId,requestId});
+          if(!visualSnapshot)throw Error('As imagens desta solicitação não estão disponíveis neste navegador. Consulte a solicitação sem reenviar.');
+        }
+        const prepared = await prepareArtworkTransport({proposal, draft: source, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(visualSnapshot?{visualSnapshot}:{})});
         artworkInput = prepared.artworkInput;
         sourceFingerprint = prepared.sourceFingerprint;
         if (getState().revision !== snapshot.revision) throw Error('O contexto mudou enquanto a proposta era preparada. Consulte a mesma proposta para revisar.');
       } catch (error) { artworkInput = null; inputError = errorMessage(error); canPrepareTransport = error instanceof ArtworkTransportRequiredError; }
       if (!mounted.current || !credentialIsCurrent() || preparationSequence.current !== preparation) return;
-      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [] };
+      const action = { ...data, proposal, artworkInput, inputError, requestId, context, canPrepareTransport, sourceFingerprint, conversions: [],...(visualSnapshot?{visualSnapshot}:{}) };
       setImageAction(action);
       try {
         if (localStorage.getItem(imageRejectedMarker) === requestId) {
@@ -584,9 +611,9 @@ export default function StudioChat({
     }
   }
   useEffect(()=>{
-    if(readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    if(visualUnavailable||readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
-    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
+    const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.visualUnavailable&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
     reportWait(true);
     const cancelReading=scheduleSelectionReading(()=>{ reportWait(false);void navigator.locks.request(referenceMarker,{ifAvailable:true},async lock=>{
@@ -595,6 +622,7 @@ export default function StudioChat({
       if(!available.hasApiKey||available.busy||available.pending||available.localBlocked||available.message.trim()||inspectionLock.current)return;
       const before=getState();
       if(referenceFingerprint(before)!==referenceSet||referenceContext(before)!==referenceContextValue||!before.references.length||!getCurrentDraft(before)||before.adjustments.some(item=>!['completed','failed'].includes(item.status)))return;
+      if(selectedVisualsAvailable&&before.references.every(reference=>!reference.source))return;
       const existing=referenceRecord(),round=readReferenceRound(before);
       if(existing===null||!round||round.fingerprint!==referenceSet||existing?.status==='submitted')return;
       let prepared=false,submitted=false;
@@ -608,7 +636,8 @@ export default function StudioChat({
         const feedback=await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
-        const referenceImages=await referenceImagesForRequest(before.references,loadReference,20);
+        const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+        const referenceImages=selectedVisualsAvailable?[]:await referenceImagesForRequest(before.references,loadReference,20);
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         attemptSource.current=credentialSource;
         const next=change(value=>prepareAdjustment(value,{requestId,messageId:crypto.randomUUID(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',conversationId,createdAt:new Date().toISOString(),eventId:crypto.randomUUID()}));
@@ -623,7 +652,7 @@ export default function StudioChat({
         const draft=getCurrentDraft(next);
         const context={revision:next.revision,pieceId:draft?.pieceId??null,baseVersion:draft?.baseVersion??0,expectedLatestVersion:draft?.expectedLatestVersion??0,content:draft?.content??null,approval:draft?.approval??null,baseImageId:null,brief:next.brief,persona:next.persona,...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),direction:next.direction,readiness,referenceFeedback:feedback.referenceFeedback,accountReferenceHints:feedback.accountHints,feedbackAvailability:feedback.availability,marks:next.marks.filter(mark=>mark.pieceId===draft?.pieceId&&mark.baseVersion===draft?.baseVersion),references:next.references} satisfies StudioContext;
         submitted=true;
-        const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages});
+        const data=await api('/api/studio/chat',{op:'reference_selection',projectId:state.projectId,requestId,context,history:conversationMessages(before,conversationId).filter(item=>item.role!=='system').slice(-30).map(({role,text})=>({role,text})),referenceImages,...(visuals??{})});
         await handle(data,requestId);
       } catch(error) {
         if(credentialIsCurrent()){
@@ -634,7 +663,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable,visualUnavailable]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -642,7 +671,7 @@ export default function StudioChat({
   type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
+    if (visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
     submitLock.current=true;
     try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
     finally { submitLock.current=false; }
@@ -653,18 +682,21 @@ export default function StudioChat({
     setBusy(true);
     legacyPending.current=false;
     const requestId = crypto.randomUUID(), userMessageId = crypto.randomUUID();
+    const visualMode=selectedVisualsAvailable;
+    const visualIsCurrent=()=>!availability.current.visualUnavailable&&availability.current.selectedVisualsAvailable===visualMode;
     let prepared = false,
       submitted = false;
     try {
       const before = getState();
       const selected=getCurrentDraft(before), storedBase=await loadBase?.();
-      if(!credentialIsCurrent())return;
+      if(!credentialIsCurrent()||!visualIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
-      const visualReferences=[...before.references,...(baseId?[{id:baseId}]:[])];
+      const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+      const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
-      if(!credentialIsCurrent())return;
+      if(!credentialIsCurrent()||!visualIsCurrent())return;
       if (getState().revision !== before.revision)
         throw Error(
           "O contexto mudou enquanto as referências eram preparadas. Revise e envie novamente.",
@@ -685,7 +717,7 @@ export default function StudioChat({
       onPrepared?.(userMessageId);
       imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
-      if(!credentialIsCurrent()){settle(requestId,'failed');return;}
+      if(!credentialIsCurrent()||!visualIsCurrent()){settle(requestId,'failed');return;}
       remember(requestId);
       setPending(requestId);
       setPendingSource(credentialSource);
@@ -728,6 +760,7 @@ export default function StudioChat({
           .slice(-30)
           .map(({ role, text }) => ({ role, text })),
         referenceImages,
+        ...(visuals??{}),
         // A quick reply starts a text-only turn; it never resumes a tool-enabled session.
         ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
       });
@@ -832,7 +865,7 @@ export default function StudioChat({
       const current = getState(), selected = getCurrentDraft(current);
       return isCurrentScope() && current.userId === snapshot.userId && current.projectId === snapshot.projectId && current.revision === snapshot.revision && selected?.pieceId === draft.pieceId && selected?.baseVersion === draft.baseVersion;
     };
-    const options = {proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase};
+    const options = {proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(action.visualSnapshot?{visualSnapshot:action.visualSnapshot}:{})};
     setBusy(true);
     setNotice('Preparando cópias locais para envio…');
     try {
@@ -886,7 +919,7 @@ export default function StudioChat({
     let target = {pieceId: draft.pieceId, version: draft.baseVersion};
     const isCurrentScope=()=>mounted.current&&credentialIsCurrent();
     try {
-      const fingerprint = await artworkSourceFingerprint({proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase});
+      const fingerprint = await artworkSourceFingerprint({proposal: action.proposal, draft, referenceIds: snapshot.references.map(item => item.id), loadReference, loadBase,...(action.visualSnapshot?{visualSnapshot:action.visualSnapshot}:{})});
       if (!isCurrentScope()) return;
       const current = getState(), selected = getCurrentDraft(current);
       if (current.revision !== snapshot.revision || selected?.pieceId !== draft.pieceId || selected?.baseVersion !== draft.baseVersion || fingerprint !== action.sourceFingerprint) {
@@ -983,8 +1016,8 @@ export default function StudioChat({
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
-  const readingDisabled=readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
-  const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
+  const readingDisabled=visualUnavailable||readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
+  const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source&&latestReference.source.kind==='generated'?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   const panel=(
     <section className={intro?"studio-chat-panel studio-post-intro":"studio-chat-panel"} data-reference-workbench={referenceWorkbench?'true':undefined} aria-label={conversationId==='references'?'Conversa sobre referências':conversationId?'Conversa deste post':'Conversa do projeto'}>
@@ -996,6 +1029,8 @@ export default function StudioChat({
         </div>
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
+      {visualUnavailable&&<p role="status" className="studio-hint">O envio das imagens selecionadas está indisponível. Você pode continuar editando e consultar tentativas anteriores.</p>}
+      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos. Referências externas e geradas ainda não estão disponíveis neste fluxo.</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
@@ -1160,7 +1195,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : intro ? "Criar post" : "Enviar →"}
-            disabled={readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
+            disabled={visualUnavailable || readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
           >
             <span aria-hidden="true">{intro?"Criar post":"↑"}</span>
           </button>

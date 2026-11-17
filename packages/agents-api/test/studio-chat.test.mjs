@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import {createStudioChatHandlers} from '../src/studio-chat.mjs';
 import {createSessionBindings} from '../src/session-binding.mjs';
 import {createStudioBindings} from '../src/studio-chat-bindings.mjs';
@@ -11,6 +12,62 @@ const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-422
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
 const request=(body,origin=app)=>new Request(app+'/api/studio/chat',{method:'POST',headers:{origin,'content-type':'application/json'},body:JSON.stringify(body)});
 const body={apiKey,projectId,requestId,message:'Atualize a oferta para oficina fictícia',context:{revision:1,pieceId:null,brief:{offer:'Oficina'}},history:[]};
+const visualBytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
+const visualFile={sha256:createHash('sha256').update(visualBytes).digest('hex'),mime:'image/png',byteLength:visualBytes.length};
+const visualInput={version:2,policy:'optimized-v1',externalConsent:false,entries:[{id:request2,ordinal:1,role:'reference',inputOrigin:'local-upload',source:null,original:visualFile,transport:{...visualFile,width:1,height:1},transformation:'none'}]};
+const visualImages=[{id:request2,mime:'image/png',data:visualBytes.toString('base64')}];
+
+test('turno visual exige autorização, bytes íntegros e nenhum envio paralelo de referência não comprovada',async()=>{
+ const input={...body,visualInput,visualImages};
+ for(const options of [{selectedVisualsEnabled:true},{selectedVisualsEnabled:true,authorizeVisualInput:async()=>false}]){
+  const f=fixture(options),response=await f.chat(request(input));assert.ok([400,503].includes(response.status));assert.equal(f.calls.length,0);assert.equal(f.records.size,0);
+ }
+ const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});
+ assert.equal((await f.chat(request({...input,visualImages:[]}))).status,400);
+ assert.equal((await f.chat(request({...input,referenceImages:visualImages}))).status,400);
+ assert.equal(f.calls.length,0);assert.equal(f.records.size,0);
+ assert.equal((await f.chat(request(input))).status,202);
+ const created=f.calls.find(call=>call.method==='POST');
+ assert.equal(created.body.input[0].content.filter(item=>item.type==='input_image').length,1);
+ assert.equal(created.body.input[0].content.find(item=>item.type==='input_image').image_url,`data:image/png;base64,${visualImages[0].data}`);
+});
+test('flag visual sem dependências bloqueia novo envio antes da reserva e preserva consulta',async()=>{
+ const f=fixture({selectedVisualsRequired:true,selectedVisualsEnabled:false});
+ assert.equal((await f.chat(request(body))).status,503);assert.equal(f.calls.length,0);assert.equal(f.records.size,0);
+ const response=await f.chat(request({op:'poll',apiKey,projectId,requestId}));assert.equal(response.status,404);assert.equal(f.calls.length,0);
+});
+
+test('proposta não recebe prova se o agente omitir upload obrigatório',async()=>{
+ const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});
+ assert.equal((await f.chat(request({...body,visualInput,visualImages}))).status,202);
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:'call_image',arguments:{prompt:'Formas azuis',operation:'create',baseImageId:null,referenceIds:[]}}]});
+ const response=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(response.status,'failed');assert.equal(response.error,'invalid_studio_action');assert.equal(response.actionBinding,undefined);
+ assert.equal(f.calls.filter(call=>call.method==='POST').length,1);
+});
+
+test('proposta com upload obrigatório recebe prova vinculada ao manifesto',async()=>{
+ const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});
+ await f.chat(request({...body,visualInput,visualImages}));
+ f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:'call_image',arguments:{prompt:'Formas azuis',operation:'create',baseImageId:null,referenceIds:[request2]}}]});
+ const response=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+ assert.equal(response.status,'consent_required');
+ const claim=createSessionBindings({secret:Buffer.alloc(32,7)}).verifyAction({token:response.actionBinding,userId,projectId,attemptId});
+ assert.match(claim.visualInputDigest,/^[0-9a-f]{64}$/);
+});
+
+test('triagem assina somente candidatas autorizadas, na ordem, e pode omitir uma imagem gerada',async()=>{
+ const extraId='66666666-6666-4666-8666-666666666666';
+ const withExtra={...visualInput,entries:[...visualInput.entries,{...visualInput.entries[0],id:extraId,ordinal:2,inputOrigin:'generated',source:{projectId,imageId:attemptId}}]};
+ const images=[...visualImages,{...visualImages[0],id:extraId}];
+ for(const [ids,expected] of [[[request2],'consent_required'],[[request2,extraId],'consent_required'],[[extraId],'failed'],[[extraId,request2],'failed'],[[request2,userId],'failed']]){
+  const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});
+  assert.equal((await f.chat(request({...body,visualInput:withExtra,visualImages:images}))).status,202);
+  f.set({status:'requires_action',turnState:'waiting',actions:[{type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:'call_image',arguments:{prompt:'Formas azuis',operation:'create',baseImageId:null,referenceIds:ids}}]});
+  const response=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();
+  assert.equal(response.status,expected);
+ }
+});
 
 test('conversas do mesmo projeto não consultam nem reutilizam a sessão de outro post',async()=>{
  const f=fixture(),first={...body,conversationId:attemptId,context:{...body.context,pieceId:attemptId}};

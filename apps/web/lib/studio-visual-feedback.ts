@@ -9,7 +9,7 @@ function explicitReference(reference:StudioReference,message:string) {
   if(message.includes(reference.id))return true;
   if(!source)return false;
   if('kind' in source) {
-    return source.ordinal!==undefined && new RegExp(`\\b(?:imagem|refer[eê]ncia|proposta)\\s*#?${source.ordinal}\\b`,'i').test(message);
+    return source.kind==='generated' && source.ordinal!==undefined && new RegExp(`\\b(?:imagem|refer[eê]ncia|proposta)\\s*#?${source.ordinal}\\b`,'i').test(message);
   }
   return Boolean(source.title && source.title.length>=4 && message.toLocaleLowerCase('pt-BR').includes(source.title.toLocaleLowerCase('pt-BR')));
 }
@@ -45,7 +45,7 @@ export async function recordVisualFeedback(state:StudioState,args:Input,fetchApi
   const message=adjustment.context.instruction;
   const quote=args.quote.trim();
   if(!quote||!message.includes(quote))return {status:'completed',feedbackStatus:'quote_not_found'};
-  const references=adjustment.context.references.filter(item=>Boolean(item.source));
+  const references=adjustment.context.references.filter(item=>Boolean(item.source)&&(!item.source||!('kind' in item.source)||item.source.kind==='generated'));
   const reference=references.find(item=>item.id===args.referenceId);
   if(!reference?.source)return {status:'completed',feedbackStatus:'reference_unavailable'};
   if(references.length>1) {
@@ -54,6 +54,7 @@ export async function recordVisualFeedback(state:StudioState,args:Input,fetchApi
   }
   const common={id:args.requestId,projectId:args.projectId,...(adjustment.context.conversationId&&adjustment.context.conversationId!=='references'?{pieceId:adjustment.context.conversationId}:{}),action:args.action,comment:quote,supersedes:null};
   const source=reference.source;
+  if('kind' in source && source.kind!=='generated')return {status:'completed',feedbackStatus:'reference_unavailable'};
   const generated='kind' in source;
   if(generated && source.projectId!==args.projectId)return {status:'completed',feedbackStatus:'reference_unavailable'};
   const body=generated ? {...common,imageId:source.imageId} : {...common,originUrl:source.originUrl,board:source.board};

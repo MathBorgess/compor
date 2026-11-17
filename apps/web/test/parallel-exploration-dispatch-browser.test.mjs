@@ -1,0 +1,74 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import {createServer} from 'node:http';
+import {chromium} from 'playwright-core';
+import {browserModuleSource} from './browser-module-source.mjs';
+
+const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+test('um despacho mostra recibos progressivos e uma pausa revoga antes de novos efeitos',{skip:!existsSync(browserPath)},async t=>{
+ const server=createServer(async(request,response)=>{const files={'/dispatch.js':'../lib/parallel-exploration-dispatch.ts','/journal.js':'../lib/parallel-exploration-journal.ts','/visual.js':'../lib/selected-visual-input.ts','/planner.js':'../../../packages/agents-api/src/exploration-plan-contract.mjs'};if(files[request.url]){response.setHeader('Content-Type','text/javascript');response.end(await browserModuleSource(new URL(files[request.url],import.meta.url)));}else{response.setHeader('Content-Type','text/html');response.end('<!doctype html><title>Despacho simulado</title>');}});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
+ const result=await page.evaluate(async()=>{
+  const {createParallelDispatcher}=await import('/dispatch.js'),{createParallelJournalStore}=await import('/journal.js'),{validateExplorationPlan}=await import('/planner.js');
+  const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,key=`sk-synthetic-${'x'.repeat(30)}`;
+  const context={idea:'Oficina',offer:'',audience:'',goal:'',direction:'',offerFacts:[],accepted:[],rejected:[],feedback:[]};
+  const plan=validateExplorationPlan({version:1,items:[1,2,3].map(position=>({position,creativePrompt:`caminho ${position}`,composition:`composição ${position}`,contrast:`contraste ${position}`,differenceFromOthers:`diferença ${position}`}))},context);
+  const input={version:1,userId:id(1),projectId:id(2),batchId:id(3),conversationId:id(4),planRequestId:id(5),credentialSource:'byok',intentId:id(9),expectedEpoch:0,planSubmitted:false,revocationRequested:false,imageIds:[id(6),id(7),id(8)],context,plan:null,stage:'planning',revision:0};
+  const store=createParallelJournalStore(),calls=[];let releaseExecute,releaseSleep,firstSeen,firstCount=0,completedBeforeCommand=false,commandDone=false,checks=[];
+  const executeGate=new Promise(resolve=>{releaseExecute=resolve;}),sleepGate=new Promise(resolve=>{releaseSleep=resolve;}),first=new Promise(resolve=>{firstSeen=resolve;});
+  const images=status=>[1,2,3].map(position=>({requestId:id(position+5),position,status:status(position),ordinal:position,revision:status(position)==='completed'?2:1,replacesImageId:null}));
+  const fetchApi=async(path,options)=>{
+    const body=JSON.parse(options.body);calls.push({path,op:body.op});const saved=await store.loadPreparation(input.userId);
+    if(path.endsWith('/intent')){checks.push(saved?.intentId===input.intentId);return Response.json({status:'created',epoch:1});}
+    if(path.endsWith('/plan')){checks.push(Boolean(saved?.planSubmitted));return Response.json(body.op==='submit'?{status:'running',retryAutomatically:false,requestId:input.planRequestId}:{status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof'});}
+    if(path.endsWith('/execute')){checks.push(saved?.stage==='executing'&&Boolean(await store.load({userId:input.userId,projectId:input.projectId,batchId:input.batchId})));await executeGate;commandDone=true;return Response.json({status:'completed'});}
+    if(path.endsWith('/status')){firstCount++;const complete=firstCount>1;return Response.json({batchId:input.batchId,projectId:input.projectId,pieceId:input.conversationId,state:complete?'completed':'running',completedAt:null,nextAt:null,closedAt:null,images:images(position=>complete||position===3?'completed':'running')});}
+    throw Error('unexpected');
+  };
+  const dispatcher=createParallelDispatcher({store,fetchApi,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:({snapshot})=>{if(snapshot.images.some(image=>image.status==='completed')){completedBeforeCommand=!commandDone;firstSeen();}},sleep:async()=>{if(firstCount>0)await sleepGate;},now:()=>1000});
+  const started=dispatcher.start(input,key);await first;releaseSleep();await started;
+  const record=await store.loadPreparation(input.userId);const noSecret=!JSON.stringify(record).includes(key)&&!JSON.stringify(record).includes('proof');releaseExecute();
+  const store2=createParallelJournalStore({name:'compor-parallel-exploration-pause'});let releaseIntent,notifyIntent;const entered=new Promise(resolve=>{notifyIntent=resolve;}),delay=new Promise(resolve=>{releaseIntent=resolve;}),secondCalls=[];
+  const secondFetch=async(path)=>{secondCalls.push(path);if(path.endsWith('/intent')){notifyIntent();await delay;return Response.json({status:'created',epoch:1});}if(path.endsWith('/revoke'))return Response.json({status:'revoked',epoch:1,revocationEpoch:1});throw Error('unexpected effect');};
+  const paused=createParallelDispatcher({store:store2,fetchApi:secondFetch,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>{},now:()=>1000});
+  const attempt=paused.start(input,key).catch(()=>{});await entered;const stopped=await paused.stop();releaseIntent();await attempt;
+  const store3=createParallelJournalStore({name:'compor-parallel-exploration-reserved'});let releaseReserved,notifyReserved,providerCalls=0;
+  const reserved=new Promise(resolve=>{notifyReserved=resolve;}),reservedGate=new Promise(resolve=>{releaseReserved=resolve;});
+  const thirdFetch=async(path,options)=>{const body=JSON.parse(options.body);if(path.endsWith('/intent'))return Response.json({status:'created',epoch:1});if(path.endsWith('/plan'))return Response.json({status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof'});if(path.endsWith('/revoke'))return Response.json({status:'revoked',epoch:2,revocationEpoch:2});if(path.endsWith('/execute')){notifyReserved();await reservedGate;if(!options.signal.aborted)providerCalls++;return Response.json({status:'unknown'});}if(path.endsWith('/status'))return Response.json({batchId:input.batchId,projectId:input.projectId,pieceId:input.conversationId,state:'running',completedAt:null,nextAt:null,closedAt:null,images:images(()=> 'running')});throw Error('unexpected');};
+  const afterReserve=createParallelDispatcher({store:store3,fetchApi:thirdFetch,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>new Promise(resolve=>setTimeout(resolve,20)),now:()=>1000});
+  const third=afterReserve.start(input,key).catch(()=>{});await reserved;await afterReserve.stop();releaseReserved();await third;
+  const store4=createParallelJournalStore({name:'compor-parallel-exploration-reissue'});let planned=await store4.createBeforePlanning(input);
+  planned=await store4.updatePreparation(planned.userId,planned.revision,{kind:'intent_confirmed',epoch:1});planned=await store4.updatePreparation(planned.userId,planned.revision,{kind:'plan_submitted'});planned=await store4.updatePreparation(planned.userId,planned.revision,{kind:'planned',plan});
+  const reissueCalls=[];const reissueFetch=async(path,options)=>{const body=JSON.parse(options.body);reissueCalls.push({path,op:body.op});if(path.endsWith('/plan'))return Response.json({status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof'});if(path.endsWith('/intent/state'))return Response.json({state:'active',epoch:1,revocationEpoch:null});if(path.endsWith('/intent/revoke'))return Response.json({status:'revoked',epoch:2,revocationEpoch:2});if(path.endsWith('/intent'))return Response.json({status:'created',epoch:3});if(path.endsWith('/execute'))return Response.json({status:'completed'});if(path.endsWith('/status'))return Response.json({batchId:input.batchId,projectId:input.projectId,pieceId:input.conversationId,state:'completed',completedAt:null,nextAt:null,closedAt:null,images:images(()=> 'completed')});throw Error('unexpected');};
+  const resumed=createParallelDispatcher({store:store4,fetchApi:reissueFetch,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>{},now:()=>1000});
+  await resumed.resumePlanned(planned,id(10),key);const afterReissue=await store4.loadPreparation(input.userId);
+  const store5=createParallelJournalStore({name:'compor-parallel-exploration-epoch-unknown'});let old=await store5.createBeforePlanning(input);
+  old=await store5.updatePreparation(old.userId,old.revision,{kind:'intent_confirmed',epoch:1});old=await store5.updatePreparation(old.userId,old.revision,{kind:'plan_submitted'});old=await store5.updatePreparation(old.userId,old.revision,{kind:'planned',plan});
+  const unknownCalls=[];const unknownFetch=async(path,options)=>{unknownCalls.push(path);if(path.endsWith('/plan'))return Response.json({status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof'});if(path.endsWith('/intent/state'))return Response.json({state:'revoked',epoch:99,revocationEpoch:null});throw Error('unexpected effect');};
+  const unknown=createParallelDispatcher({store:store5,fetchApi:unknownFetch,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>{},now:()=>1000});
+  let unverifiedEpochBlocked=false;try{await unknown.resumePlanned(old,id(10),key);}catch{unverifiedEpochBlocked=true;}
+  const {prepareSelectedVisualCandidates}=await import('/visual.js');
+  const canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;canvas.getContext('2d').fillRect(0,0,2,2);
+  const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));
+  const reference={id:id(11),name:'Upload',mime:'image/png',size:file.size,width:2,height:2,source:{kind:'local-upload'}};
+  const visual=await prepareSelectedVisualCandidates({references:[reference],projectId:input.projectId,externalConsent:false,loadReference:async()=>({metadata:reference,file})});
+  const visualPlan=validateExplorationPlan({version:2,items:[1,2,3].map(position=>({position,creativePrompt:`caminho ${position}`,composition:`composição ${position}`,contrast:`contraste ${position}`,differenceFromOthers:`diferença ${position}`})),referenceIds:[reference.id]},context,visual.manifest);
+  const visualStore=createParallelJournalStore({name:'compor-parallel-exploration-dispatch-visual'}),visualCalls=[];
+  const visualFetch=async(path,options)=>{const body=JSON.parse(options.body),saved=await visualStore.loadPreparation(input.userId);visualCalls.push({path,body,saved:Boolean(saved&&await visualStore.loadVisualSnapshot({userId:input.userId,projectId:input.projectId,batchId:input.batchId},input.conversationId))});
+    if(path.endsWith('/intent'))return Response.json({status:'created',epoch:1});
+    if(path.endsWith('/plan'))return Response.json({status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan:visualPlan,planBinding:'proof'});
+    if(path.endsWith('/execute'))return Response.json({status:'completed'});
+    if(path.endsWith('/status'))return Response.json({batchId:input.batchId,projectId:input.projectId,pieceId:input.conversationId,state:'completed',completedAt:null,nextAt:null,closedAt:null,images:images(()=> 'completed')});throw Error('unexpected');};
+  const visualDispatcher=createParallelDispatcher({store:visualStore,fetchApi:visualFetch,allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>{},now:()=>1000});
+  await visualDispatcher.start({...input,visualInput:visual.manifest},key,visual);
+  const submitted=visualCalls.find(call=>call.path.endsWith('/plan')),executed=visualCalls.find(call=>call.path.endsWith('/execute'));
+  const visualBound=visualCalls.every(call=>call.saved)&&visualCalls.find(call=>call.path.endsWith('/intent')).body.visualInput.entries[0].id===reference.id&&submitted.body.referenceImages[0].data===executed.body.referenceImages[0].data&&executed.body.plan.referenceIds[0]===reference.id;
+  const corruptStore=createParallelJournalStore({name:'compor-parallel-exploration-corrupt-visual'});let corruptEffects=0;
+  const corruptDispatcher=createParallelDispatcher({store:corruptStore,fetchApi:async()=>{corruptEffects++;throw Error('unexpected');},allowed:()=>true,canInspect:()=>true,visible:()=>true,onPlanning:()=>{},onUnavailable:()=>{},onSnapshot:()=>{},sleep:async()=>{},now:()=>1000});
+  let corruptBlocked=false;try{await corruptDispatcher.start({...input,visualInput:visual.manifest},key,{...visual,blobs:[new Blob(['corrupt'],{type:'image/png'})]});}catch{corruptBlocked=true;}
+  return {checks,completedBeforeCommand,executeCalls:calls.filter(call=>call.path.endsWith('/execute')).length,submitCalls:calls.filter(call=>call.op==='submit').length,planPolls:calls.filter(call=>call.op==='poll').length,observations:firstCount,noSecret,stopped,blocked:(await store2.loadPreparation(input.userId)).revocationRequested,secondPaid:secondCalls.some(path=>path.endsWith('/plan')||path.endsWith('/execute')),providerCalls,thirdBlocked:(await store3.loadPreparation(input.userId)).stage==='executing',reissuePolls:reissueCalls.filter(call=>call.op==='poll').length,reissueSubmits:reissueCalls.filter(call=>call.op==='submit').length,reissueExecutes:reissueCalls.filter(call=>call.path.endsWith('/execute')).length,oldIntentArchived:Boolean(await store4.loadArchivedPreparation({userId:input.userId,projectId:input.projectId,batchId:input.batchId},input.intentId)),newIntent:afterReissue.intentId,unverifiedEpochBlocked,unknownEffects:unknownCalls.some(path=>path.endsWith('/intent')||path.endsWith('/execute')),visualBound,corruptBlocked,corruptEffects};
+ });
+ assert.deepEqual(result,{checks:[true,true,true,true],completedBeforeCommand:true,executeCalls:1,submitCalls:1,planPolls:1,observations:2,noSecret:true,stopped:'revoked',blocked:true,secondPaid:false,providerCalls:0,thirdBlocked:true,reissuePolls:1,reissueSubmits:0,reissueExecutes:1,oldIntentArchived:true,newIntent:'00000000-0000-4000-8000-000000000010',unverifiedEpochBlocked:true,unknownEffects:false,visualBound:true,corruptBlocked:true,corruptEffects:0});
+});

@@ -12,11 +12,12 @@ export async function finishPreparation(page,{useDefault=false,preparePost=true}
   if(!await next.isVisible())break;
   await next.click();
  }
+ const finish=page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/});
  if(await page.getByRole('heading',{name:'Escolha sua IA',exact:true}).isVisible()){
   if(useDefault){await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await page.getByRole('button',{name:'Continuar para referências',exact:true}).click();}
   else await page.getByRole('button',{name:'Escolher depois',exact:true}).click();
+  await finish.waitFor({state:'visible'});
  }
- const finish=page.getByRole('button',{name:/^(Preparar primeiro post|Continuar sem referências)$/});
  if(await finish.isVisible())await finish.click();
  if(preparePost)await beginPost(page);
 }
