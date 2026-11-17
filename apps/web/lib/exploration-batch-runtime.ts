@@ -23,8 +23,7 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  return createExplorationBatchRoute({
   appOrigin:config.app,
   visualEnabled:selectedVisualsAvailable(Boolean(config)),
-  // The route always requires the separately checked, transaction-bound snapshot.
-  authorizeVisualInput:async()=>true,
+  visualRequired:process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',
   prepareVisualAuthority:async input=>{
    if(process.env.COMPOR_REFERENCE_AUTHORITY_ENABLED!=='true')return null;
    const value={requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:referenceConsentSecret(input.consentHeader)};

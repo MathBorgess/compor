@@ -47,6 +47,6 @@ export async function POST(request:Request){
    return await authorityStore.check(input.actor,{projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,purpose:'parallel',...authority})?authority:null;
   };
   const visualRequired=process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',visualAvailable=selectedVisualsAvailable(Boolean(config));
-  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:parallelExplorationAvailable(Boolean(config))&&(!visualRequired||visualAvailable),visualMode:visualRequired?'required':'disabled',resolveActor:async()=>actor,ownsProject,bindings,plannerFor,prepareVisualAuthority,authorizeVisualInput:async()=>true})(prepared.request);
+  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:parallelExplorationAvailable(Boolean(config))&&(!visualRequired||visualAvailable),visualMode:visualRequired?'required':'disabled',resolveActor:async()=>actor,ownsProject,bindings,plannerFor,prepareVisualAuthority})(prepared.request);
  });
 }

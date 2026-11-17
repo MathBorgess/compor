@@ -63,6 +63,21 @@ test('arte visual exige autoridade exata e falha fechada se revogada após claim
  assert.equal((await execute({...context,apiKey,actionBinding:proof,visualAuthority})).status,'unknown');assert.equal(claims,1);assert.equal(images,0);assert.equal(unknown,1);
 });
 
+test('cancelamento durante rechecagem da arte preserva claim desconhecida sem enviar',async()=>{
+ const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),actor={userId:scope.userId,token:'jwt-test'},apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz';
+ const action=bindings.issueAction({...scope,turnId:'turn_1',callId:'call_1',proposal,visualInputDigest:visualInputDigest(manifest)});
+ const context={actor,projectId:scope.projectId,pieceId:id(4),version:2,attemptId:scope.attemptId,explicitApproval:true,artworkInput:artwork};
+ const proof=await createImageToolApproval({bindings,ownsVersion:async()=>true})({...context,actionBinding:action});
+ let release,entered,images=0,unknown=0;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const execute=createImageToolExecution({bindings,ownsVersion:async()=>true,appOrigin:'https://compor.test',checkVisualAuthority:async()=>{entered();await gate;return true;},
+  fetch:async()=>Response.json({id:scope.sessionId,status:'requires_action',required_actions:[{type:'function_call',name:'generate_image',turn_id:'turn_1',call_id:'call_1',arguments:proposal}]}),
+  reservations:{reserve:async()=>({id:id(7),state:'reserved'}),declareConsent:async()=>{},claimExecution:async()=>({id:id(8),assetId:id(9),state:'running',isNew:true}),completeExecution:async()=>{},markExecutionUnknown:async()=>{unknown++;}},
+  imageHandler:async()=>{images++;return Response.json({});},imageStorageHandler:async()=>Response.json({})});
+ const controller=new AbortController(),visualAuthority={requestId:id(11),manifestDigest:visualInputDigest(manifest),consentSecret:null};
+ const result=execute({...context,apiKey,actionBinding:proof,visualAuthority,signal:controller.signal});await started;controller.abort();release();
+ assert.equal((await result).status,'unknown');assert.equal(images,0);assert.equal(unknown,1);
+});
+
 test('arte v2 exige uploads e aceita somente subconjunto ordenado das demais candidatas',()=>{
  const extra={...manifest.entries[1],inputOrigin:'generated',source:{projectId:id(2),imageId:id(20)}};
  const visualInput={version:2,policy:'optimized-v1',externalConsent:false,entries:[{...manifest.entries[0],source:null},extra]};

@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
-import type {PlannerBindings,VisualAuthorizationInput} from '@compor/agents-api/exploration-planner';
+import type {PlannerBindings} from '@compor/agents-api/exploration-planner';
 import type {Actor} from './agent-auth.ts';
 import {deriveExplorationIntent} from './exploration-intent.ts';
 import type {ExplorationIntentScope} from './exploration-intent.ts';
@@ -17,7 +17,7 @@ export type IntentStore={
  epoch:(value:{actor:Actor;projectId:string})=>Promise<{epoch:number}>;
  state:(value:{actor:Actor;projectId:string;intentId:string})=>Promise<{state:'active'|'consumed'|'revoked'|'absent';epoch:number;revocationEpoch:number|null}|null>;
 };
-type Deps={appOrigin:string;apiKey?:string;bindings?:PlannerBindings;allowCreate:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:IntentStore;authorizeVisualInput?:(input:VisualAuthorizationInput)=>Promise<boolean>;prepareVisualAuthority?:(input:VisualAuthorityScope)=>Promise<VisualAuthority|null>};
+type Deps={appOrigin:string;apiKey?:string;bindings?:PlannerBindings;allowCreate:boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:IntentStore;prepareVisualAuthority?:(input:VisualAuthorityScope)=>Promise<VisualAuthority|null>};
 async function body(request:Request,limit:number):Promise<unknown>{
  if(!request.body)throw Error('missing');const reader=request.body.getReader(),chunks:Uint8Array[]=[];let size=0;
  try{for(;;){const {value,done}=await reader.read();if(done)break;size+=value.byteLength;if(size>limit)throw Error('large');chunks.push(value);}return JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))) as unknown;}finally{await reader.cancel().catch(()=>{});}
@@ -37,6 +37,7 @@ export function createExplorationIntentRoute(deps:Deps){
    const validatedContext=parsed.data.context;const data=parsed.data;if(data.purpose==='batch'?(data.position!==undefined||data.previousId!==undefined):(data.position===undefined||data.previousId===undefined))return reply({error:'invalid_request'},400);
    let visualInput:VisualInputManifest|undefined;try{if(data.visualInput!==undefined)visualInput=parseVisualInputManifest(data.visualInput);}catch{return reply({error:'invalid_request'},400);}
    if((visualInput===undefined)!==(data.authorityRequestId===undefined))return reply({error:'invalid_request'},400);
+   if(!visualInput&&deps.visualRequired)return reply({status:'unavailable',retryAutomatically:false},503);
    if(visualInput!==undefined&&!visualInputMatchesProject(visualInput,data.projectId))return reply({error:'invalid_request'},400);
    if(!deps.allowCreate)return reply({status:'unavailable'},503);
    try{
@@ -46,7 +47,6 @@ export function createExplorationIntentRoute(deps:Deps){
      const authority=await deps.prepareVisualAuthority({actor,projectId:data.projectId,conversationId:data.conversationId,batchId:data.batchId,requestId:data.authorityRequestId,purpose:data.purpose==='batch'?'parallel':'replacement',visualInput,consentHeader:request.headers.get('x-compor-reference-consent')});
      if(!authority||authority.requestId!==data.authorityRequestId||authority.manifestDigest!==visualInputDigest(visualInput)||(authority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(authority.consentSecret)))return reply({error:'visual_references_not_authorized',retryAutomatically:false},403);
     }
-    if(visualInput?.version===2&&visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')&&(!deps.authorizeVisualInput||await deps.authorizeVisualInput({actor,projectId:data.projectId,conversationId:data.conversationId,batchId:data.batchId,intentId:data.intentId,visualInput})!==true))return reply({error:'visual_references_not_authorized',retryAutomatically:false},403);
     const scope={actor,projectId:data.projectId,conversationId:data.conversationId,batchId:data.batchId,intentId:data.intentId,context:validatedContext,...(visualInput===undefined?{}:{visualInput})};
     let intention:ExplorationIntentScope;
     if(data.purpose==='batch')intention={...scope,purpose:'batch'};

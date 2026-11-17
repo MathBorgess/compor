@@ -46,6 +46,13 @@ test('turno visual exige autoridade na reserva e revalida imediatamente antes do
  assert.equal(result.status,'failed');assert.equal(denied.records.get(requestId).state,'failed');
  assert.equal(denied.calls.filter(call=>call.method==='POST').length,0);
 });
+test('cancelamento durante rechecagem visual não inicia turno pago nem desfaz recibo',async()=>{
+ let release,entered;const gate=new Promise(resolve=>{release=resolve;}),started=new Promise(resolve=>{entered=resolve;});
+ const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true,checkVisualAuthority:async()=>{entered();await gate;return true;}});
+ const controller=new AbortController(),req=new Request(`${app}/api/studio/chat`,{method:'POST',headers:{origin:app,'content-type':'application/json'},body:JSON.stringify({...body,visualInput,visualImages}),signal:controller.signal});
+ const pending=f.chat(req);await started;controller.abort();release();const response=await pending;
+ assert.equal((await response.json()).status,'failed');assert.equal(f.records.get(requestId).state,'failed');assert.equal(f.calls.filter(call=>call.method==='POST').length,0);
+});
 
 test('proposta não recebe prova se o agente omitir upload obrigatório',async()=>{
  const f=fixture({selectedVisualsEnabled:true,authorizeVisualInput:async()=>true});

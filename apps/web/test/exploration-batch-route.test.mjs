@@ -11,13 +11,13 @@ const plan={version:1,items:[1,2,3].map(position=>({position,creativePrompt:`Cam
 const body={projectId:id(2),conversationId:'references',batchId:id(3),intentId:id(10),planRequestId:id(4),context:{idea:'Ideia sintética'},plan,planBinding:'signed-synthetic',imageIds:[id(5),id(6),id(7)]};
 const request=(value=body,headers={},signal)=>new Request(origin+'/api/studio/exploration-batches/execute',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key,...headers},body:JSON.stringify(value),signal});
 const deferred=()=>{let resolve,reject;const promise=new Promise((a,b)=>{resolve=a;reject=b});return {promise,resolve,reject};};
-function fixture({visualEnabled=false,authorizeVisualInput}={}){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true,intent:'active',epoch:1};const store={
+function fixture({visualEnabled=false,visualRequired=false,authorizeVisualInput}={}){const calls=[],pending=new Map(),state={reservation:{state:'running',isNew:true},permitted:true,proof:true,intent:'active',epoch:1};const store={
  reserveBatch:async(...args)=>{calls.push(['reserve',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  replaceRejected:async(...args)=>{calls.push(['replace',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);if(state.planGate)await state.planGate.promise;if(state.planGates?.get(id))await state.planGates.get(id).promise;},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
  finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
- };const route=createExplorationBatchRoute({appOrigin:origin,visualEnabled,authorizeVisualInput,
- prepareVisualAuthority:async input=>{calls.push(['authority',input]);return state.authorityDenied?null:{requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null};},
+ };const route=createExplorationBatchRoute({appOrigin:origin,visualEnabled,visualRequired,
+ prepareVisualAuthority:async input=>{calls.push(['authority',input]);if(state.authorityDenied)return null;if(input.visualInput.version===2&&input.visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')&&(!authorizeVisualInput||!await authorizeVisualInput(input)))return null;return {requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null};},
  checkVisualDispatch:async input=>{calls.push(['dispatchAuthority',input]);if(input.visualInput.version===2&&input.visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')&&authorizeVisualInput&&!await authorizeVisualInput(input))return false;return !state.intentError&&state.intent==='consumed'&&state.epoch===input.intentEpoch&&!state.dispatchDenied;},
  resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async input=>{state.lastVerify=input;return state.proof;},intentSecret:input=>{state.lastIntent=input;return 'a'.repeat(64);},intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch,revocationEpoch:state.intent==='revoked'?state.epoch:null};},store,generate:async(a,k,prompt,images)=>{calls.push(['generate',prompt,images]);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
 const wait=async(predicate)=>{for(let i=0;i<100;i++){if(predicate())return;await new Promise(r=>setTimeout(r,1));}throw Error('condition not reached');};
@@ -48,6 +48,12 @@ test('autoridade visual ausente ou revogada bloqueia reserva; revogação poster
  const reserve=revoked.calls.find(call=>call[0]==='reserve')[2];
  assert.deepEqual(reserve.visualAuthority,{requestId:body.planRequestId,manifestDigest:visualInputDigest(visual.visualInput),consentSecret:null});
  assert.ok(revoked.calls.filter(call=>call[0]==='dispatchAuthority').every(call=>call[1].intentEpoch===1&&call[1].purpose==='parallel'));
+});
+test('flag visual obrigatória bloqueia batch e reposição legados sem reservar',async()=>{
+ const f=fixture({visualEnabled:true,visualRequired:true}),{imageIds,...base}=body;
+ assert.equal((await f.route.post(request(body))).status,503);
+ assert.equal((await f.route.replace(request({...base,position:1,previousId:imageIds[0],requestId:id(8)}))).status,503);
+ assert.equal(f.calls.some(call=>call[0]==='reserve'||call[0]==='replace'||call[0]==='generate'),false);
 });
 test('omissão, bytes trocados, ordem incorreta ou flag desligada não reservam nem geram',async()=>{
  const visual=visualFixture();

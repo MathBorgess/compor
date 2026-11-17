@@ -1,6 +1,6 @@
 import {z} from 'zod';
 import {validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
-import type {ExplorationPlannerInput,PlannerResult,PlannerBindings,VisualAuthorizationInput} from '@compor/agents-api/exploration-planner';
+import type {ExplorationPlannerInput,PlannerResult,PlannerBindings} from '@compor/agents-api/exploration-planner';
 import type {Actor} from './agent-auth.ts';
 import {deriveExplorationIntent} from './exploration-intent.ts';
 import {parseVisualInputManifest,visualInputMatchesProject,MAX_VISUAL_REQUEST_BYTES,type VisualInputManifest,type VisualReferenceImage} from '@compor/agents-api/visual-input-contract';
@@ -12,7 +12,7 @@ const containsCredential=(value:unknown,key:string):boolean=>typeof value==='str
 type Planner={submit:(input:ExplorationPlannerInput)=>Promise<PlannerResult>;poll:(input:ExplorationPlannerInput)=>Promise<PlannerResult>};
 type VisualAuthority={manifestDigest:string;consentSecret:string|null};
 type PlannerScope={actor:Actor;projectId:string;conversationId:string;batchId:string;requestId:string};
-type Dependencies={appOrigin:string;apiKey:string;allowSubmit:boolean;visualMode?:'disabled'|'required';resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;bindings:PlannerBindings;plannerFor:(intent?:{intentId:string;intentSecret:string;visualAuthority?:VisualAuthority;scope:PlannerScope})=>Planner;authorizeVisualInput?:(input:VisualAuthorizationInput)=>Promise<boolean>;prepareVisualAuthority?:(input:PlannerScope & {visualInput:VisualInputManifest;consentHeader:string|null})=>Promise<VisualAuthority|null>};
+type Dependencies={appOrigin:string;apiKey:string;allowSubmit:boolean;visualMode?:'disabled'|'required';resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;bindings:PlannerBindings;plannerFor:(intent?:{intentId:string;intentSecret:string;visualAuthority?:VisualAuthority;scope:PlannerScope})=>Planner;prepareVisualAuthority?:(input:PlannerScope & {visualInput:VisualInputManifest;consentHeader:string|null})=>Promise<VisualAuthority|null>};
 export function createExplorationPlannerRoute(deps:Dependencies){
  return async(request:Request)=>{
   if(request.method!=='POST')return reply({error:'method_not_allowed'},405);
@@ -35,9 +35,6 @@ export function createExplorationPlannerRoute(deps:Dependencies){
   if(parsed.data.op==='submit'&&visualInput!==undefined){
    if(!deps.prepareVisualAuthority)return reply({status:'unavailable',retryAutomatically:false},503);
    try{const authority=await deps.prepareVisualAuthority({actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,visualInput,consentHeader:request.headers.get('x-compor-reference-consent')});if(!authority||authority.manifestDigest!==visualInputDigest(visualInput)||(authority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(authority.consentSecret)))return reply({error:'visual_references_not_authorized',retryAutomatically:false},403);visualAuthority=authority;}catch{return reply({status:'unavailable',retryAutomatically:false},503);}
-  }
-  if(parsed.data.op==='submit'&&visualInput?.version===2&&visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')){
-   try{if(!deps.authorizeVisualInput||await deps.authorizeVisualInput({actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,intentId:parsed.data.intentId,visualInput})!==true)return reply({error:'visual_references_not_authorized',retryAutomatically:false},403);}catch{return reply({status:'unavailable',retryAutomatically:false},503);}
   }
   try{let planner:Planner;if(parsed.data.op==='submit'){if(!parsed.data.intentId)return reply({error:'invalid_request'},400);const capability=deriveExplorationIntent(deps.bindings,{...input,intentId:parsed.data.intentId,purpose:'batch'});planner=deps.plannerFor({intentId:parsed.data.intentId,intentSecret:capability.intentSecret,...(visualAuthority?{visualAuthority}:{}),scope:{actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId}});}else planner=deps.plannerFor();const result=await planner[parsed.data.op](input);const status=result.status==='running'||result.status==='unknown'?202:result.status==='conflict'||result.status==='busy'?409:result.status==='unavailable'?503:200;return reply(result,status);}catch{return reply({status:'unknown',retryAutomatically:false},503);}
  };

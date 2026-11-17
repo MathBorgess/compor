@@ -74,6 +74,13 @@ test('adapters usam JWT da conta e RPC transacional de retomada para manifesto a
  const disabled=createVisualAuthority(config,false,fetch);assert.equal(await disabled({...scope,actor,requestId:id(6),purpose:'parallel',visualInput:v.visualInput,consentHeader:null}),null);assert.equal(calls.length,2);
 });
 
+test('modo visual obrigatório bloqueia intenção e retomada sem manifesto',async()=>{
+ let effects=0;const intent=createExplorationIntentRoute({...auth,allowCreate:true,visualRequired:true,store:{create:async()=>{effects++;return{status:'created',epoch:1};}}});
+ const resume=createExplorationParallelResumeRoute({...auth,allowResume:()=>true,visualRequired:true,store:{resume:async()=>{effects++;return{status:'resumed',intentEpoch:1,reviewEpoch:1};}}});
+ assert.equal((await intent.create(request({...scope,purpose:'batch',expectedEpoch:0,apiKey:key}))).status,503);
+ assert.equal((await resume.resume(request({...scope,expectedEpoch:1,apiKey:key}))).status,503);assert.equal(effects,0);
+});
+
 test('intent/resume/submit antigos sem porta autoritativa não admitem extras; poll continua',async()=>{
  const v=visual();v.visualInput.version=2;v.visualInput.externalConsent=true;Object.assign(v.visualInput.entries[0],{inputOrigin:'external',source:{originUrl:'https://www.pinterest.com/pin/synthetic/',board:'behance/advertising'}});
  let effects=0,polls=0;
@@ -89,10 +96,10 @@ test('intent/resume/submit antigos sem porta autoritativa não admitem extras; p
 });
 test('porta do servidor recebe escopo e manifesto; projetos diferentes e falhas fecham antes do efeito',async()=>{
  const v=visual();v.visualInput.version=2;v.visualInput.externalConsent=false;Object.assign(v.visualInput.entries[0],{inputOrigin:'generated',source:{projectId:scope.projectId,imageId:id(90)}});
- let authorized=0,effects=0;const deps={...auth,allowCreate:true,prepareVisualAuthority,authorizeVisualInput:async input=>{authorized++;assert.equal(input.actor.userId,actor.userId);assert.equal(input.projectId,scope.projectId);assert.deepEqual(input.visualInput,v.visualInput);return true;},store:{create:async()=>{effects++;return{status:'created',epoch:1};}}};
+ let authorized=0,effects=0;const deps={...auth,allowCreate:true,prepareVisualAuthority:async input=>{authorized++;assert.equal(input.actor.userId,actor.userId);assert.equal(input.projectId,scope.projectId);assert.deepEqual(input.visualInput,v.visualInput);return prepareVisualAuthority(input);},store:{create:async()=>{effects++;return{status:'created',epoch:1};}}};
  const body={...scope,purpose:'batch',expectedEpoch:0,apiKey:key,visualInput:v.visualInput,authorityRequestId:id(7)};assert.equal((await createExplorationIntentRoute(deps).create(request(body))).status,200);assert.equal(authorized,1);assert.equal(effects,1);
- assert.equal((await createExplorationIntentRoute({...deps,authorizeVisualInput:async()=>false}).create(request(body))).status,403);
- assert.equal((await createExplorationIntentRoute({...deps,authorizeVisualInput:async()=>{throw Error('offline');}}).create(request(body))).status,503);
+ assert.equal((await createExplorationIntentRoute({...deps,prepareVisualAuthority:async()=>null}).create(request(body))).status,403);
+ assert.equal((await createExplorationIntentRoute({...deps,prepareVisualAuthority:async()=>{throw Error('offline');}}).create(request(body))).status,503);
  const bad=structuredClone(body);bad.visualInput.entries[0].source.projectId=id(99);assert.equal((await createExplorationIntentRoute(deps).create(request(bad))).status,400);assert.equal(effects,1);assert.equal(authorized,1);
 });
 

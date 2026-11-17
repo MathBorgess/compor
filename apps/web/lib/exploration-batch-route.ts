@@ -28,7 +28,7 @@ type BatchStore={
  finish:(actor:Actor,projectId:string,requestId:string,state:'completed'|'unknown',secret:string)=>Promise<void>;
  reject:(actor:Actor,projectId:string,requestId:string,secret:string)=>Promise<void>;
 };
-type Dependencies={appOrigin:string;visualEnabled?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;authorizeVisualInput?:(input:{actor:Actor;projectId:string;conversationId:string;visualInput:VisualInputManifest})=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[])=>Promise<Uint8Array>};
+type Dependencies={appOrigin:string;visualEnabled?:boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[])=>Promise<Uint8Array>};
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const hash=(value:string|Uint8Array)=>createHash('sha256').update(value).digest('hex');
 async function readBody(request:Request){
@@ -50,10 +50,6 @@ function promptDigest(entry:BatchInput['plan']['items'][number],batchId:string,v
 
 /** HTTP adapter: plan proof and durable reservation precede any image call. */
 export function createExplorationBatchRoute(deps:Dependencies){
- async function authorizeExtras(actor:Actor,projectId:string,conversationId:string,visualInput:VisualInputManifest|null){
-  if(!visualInput||visualInput.version===1||visualInput.entries.every(entry=>entry.inputOrigin==='local-upload'))return true;
-  return deps.authorizeVisualInput?await deps.authorizeVisualInput({actor,projectId,conversationId,visualInput})===true:false;
- }
  async function beforeDispatch(actor:Actor,projectId:string,intentId:string,initial:z.infer<typeof intentStateSchema>,signal:AbortSignal,visualScope?:VisualScope,authority?:VisualAuthority){
   if(signal.aborted||initial.state!=='active')throw Error('intent unavailable');
   if(visualScope||authority){
@@ -73,8 +69,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(JSON.stringify(input).includes(key))return reply({error:'invalid_request'},400);
    let actor:Actor|null;try{actor=await deps.resolveActor();if(!actor||!id.safeParse(actor.userId).success||!actor.token)return reply({error:'unauthorized'},401);if(!await deps.ownsProject(actor,input.projectId))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}
    let manifest:VisualInputManifest|null;try{manifest=parseManifest(input);if(!manifest&&input.plan.version!==1)throw Error('missing manifest');}catch{return reply({error:'invalid_visual_input'},400);}
-   if(manifest&&!deps.visualEnabled)return reply({error:'visual_unavailable'},503);
-   try{if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest))return reply({error:'visual_authorization_unavailable'},403);}catch{return reply({error:'visual_authorization_unavailable'},403);}
+   if((manifest&&!deps.visualEnabled)||(!manifest&&deps.visualRequired))return reply({error:'visual_unavailable'},503);
    let visualAuthority:VisualAuthority|undefined,visualCheck:VisualScope|undefined;
    if(manifest){
     if(!deps.prepareVisualAuthority||!deps.checkVisualDispatch)return reply({error:'visual_authorization_unavailable'},503);
@@ -118,8 +113,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
    if(JSON.stringify(input).includes(key)||!deps.store.replaceRejected)return reply({error:'invalid_request'},400);
    let actor:Actor|null;try{actor=await deps.resolveActor();if(!actor||!id.safeParse(actor.userId).success||!actor.token)return reply({error:'unauthorized'},401);if(!await deps.ownsProject(actor,input.projectId))return reply({error:'not_found'},404);}catch{return reply({error:'unavailable'},503);}
    let manifest:VisualInputManifest|null;try{manifest=parseManifest(input);if(!manifest&&input.plan.version!==1)throw Error('missing manifest');}catch{return reply({error:'invalid_visual_input'},400);}
-   if(manifest&&!deps.visualEnabled)return reply({error:'visual_unavailable'},503);
-   try{if(!await authorizeExtras(actor,input.projectId,input.conversationId,manifest))return reply({error:'visual_authorization_unavailable'},403);}catch{return reply({error:'visual_authorization_unavailable'},403);}
+   if((manifest&&!deps.visualEnabled)||(!manifest&&deps.visualRequired))return reply({error:'visual_unavailable'},503);
    let visualAuthority:VisualAuthority|undefined,visualCheck:VisualScope|undefined;
    if(manifest){
     if(!deps.prepareVisualAuthority||!deps.checkVisualDispatch)return reply({error:'visual_authorization_unavailable'},503);

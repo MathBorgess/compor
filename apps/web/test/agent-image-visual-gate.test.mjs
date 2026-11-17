@@ -63,6 +63,13 @@ test('desligamento visual preserva geração legada com anexos e reconciliação
  assert.equal(calls.length,1);assert.equal(calls[0].callId,'call_visual');
 });
 
+test('modo visual exigido não admite arte legada sem manifesto',async()=>{
+ const f=fixture({visual:false}),enabled=route(f,{visualEnabled:true,visualRequired:true});
+ assert.equal((await enabled.handler(request(f.body))).status,503);assert.deepEqual(enabled.calls,[]);
+ const unavailable=route(f,{visualEnabled:false,visualRequired:true});
+ assert.equal((await unavailable.handler(request(f.body))).status,503);assert.deepEqual(unavailable.calls,[]);
+});
+
 test('arte exige snapshot do turno correto antes de aprovar ou executar',async()=>{
  const f=fixture();
  for(const options of [
