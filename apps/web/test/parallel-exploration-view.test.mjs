@@ -11,5 +11,9 @@ test('três posições preservam sua ordem e mostram estados sem alegar atividad
  const html=renderToStaticMarkup(React.createElement(ParallelExplorationProgress,{progress,renderConfirmedImage:requestId=>{rendered.push(requestId);return React.createElement('span',null,'Imagem local');}}));
  assert.match(html,/1 de 3 imagens confirmadas/);assert.ok(html.indexOf('Proposta 1')<html.indexOf('Proposta 2'));assert.ok(html.indexOf('Proposta 2')<html.indexOf('Proposta 3'));
  assert.match(html,/Resultado desconhecido/);assert.match(html,/Envio recusado/);assert.match(html,/não será repetida automaticamente/);assert.deepEqual(rendered,[id(3)]);
- assert.doesNotMatch(html,/processando|gerando|em andamento/i);
+ assert.doesNotMatch(html,/processando|gerando|em andamento|studio-batch-spinner/i);
+ const pending={...progress,children:progress.children.map(item=>item.position===1?{...item,status:'running'}:item)};
+ const loading=renderToStaticMarkup(React.createElement(ParallelExplorationProgress,{progress:pending}));
+ assert.match(loading,/Aguardando a imagem/);
+ assert.equal((loading.match(/class="studio-batch-spinner"/g)??[]).length,1);
 });
