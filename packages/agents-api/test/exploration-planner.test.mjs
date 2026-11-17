@@ -11,7 +11,7 @@ const plan={version:1,items:[1,2,3].map(n=>({position:n,creativePrompt:`Caminho 
 function fixture(){
  let record=null,completionDigest=null,authorized=true,createCount=0,lookupCount=0,result={status:'completed',turnId:'turn_test',plan},createResult={sessionId:'sess_test'};
  const store={async reserve(c){if(record)return record.inputDigest===c.inputDigest?{status:'existing',record}:{status:'conflict'};assert.match(c.completionDigest,/^[0-9a-f]{64}$/);completionDigest=c.completionDigest;const metadata={...c};delete metadata.completionDigest;record={...metadata,state:'starting',attemptId:id(6),binding:null};return{status:'reserved',record};},async get(){return record;},async bind(c){assert.equal(createHash('sha256').update(Buffer.from(c.completionSecret,'hex')).digest('hex'),completionDigest);record.binding=c.binding;record.state='running';},async finish(c){assert.equal(createHash('sha256').update(Buffer.from(c.completionSecret,'hex')).digest('hex'),completionDigest);record.state=c.state;}};
- const provider={async create(){createCount++;if(createResult instanceof Error)throw createResult;return createResult;},async get(){lookupCount++;return result;}};
+ const provider={async create(){createCount++;if(createResult instanceof Error)throw createResult;return createResult;},async get(){lookupCount++;if(result instanceof Error)throw result;return result;}};
  const bindings=createExplorationPlannerBindings({secret,source:'byok',apiKey:key});
  const build=(b=bindings)=>createExplorationPlanner({store,bindings:b,provider,authorize:async()=>authorized});
  return {build,store,get record(){return record;},get counts(){return {createCount,lookupCount};},setAuthorized(v){authorized=v;},setResult(v){result=v;},setCreate(v){createResult=v;}};
@@ -105,4 +105,16 @@ test('capacidade é vinculada ao escopo e credencial e não entra no registro ou
 test('duas submissões concorrentes do mesmo pedido não criam sessões adicionais',async()=>{
  const f=fixture(),p=f.build(),results=await Promise.all([p.submit(scope),p.submit(scope)]);
  assert.deepEqual(results.map(result=>result.status).sort(),['running','unknown']);assert.equal(f.counts.createCount,1);
+});
+
+test('resposta concluída perdida é recuperada sem repetir finalização nem criação',async()=>{
+ const f=fixture();let finishes=0,reads=0;const originalFinish=f.store.finish;
+ f.store.finish=async input=>{finishes++;if(finishes>1)throw Error('capability consumed');await originalFinish(input);};
+ const p=f.build();await p.submit(scope);const first=await p.poll(scope);assert.equal(first.status,'completed');
+ const recovered=await p.poll(scope);assert.equal(recovered.status,'completed');assert.deepEqual(recovered.plan,first.plan);assert.equal(recovered.planBinding,first.planBinding);assert.equal(finishes,1);
+ f.setResult(Error('provider unavailable'));assert.equal((await p.poll(scope)).status,'unknown');assert.equal(f.record.state,'completed');
+ f.setResult({status:'unknown'});assert.equal((await p.poll(scope)).status,'unknown');assert.equal(f.record.state,'completed');
+ f.setResult({status:'failed'});assert.equal((await p.poll(scope)).status,'unknown');assert.equal(f.record.state,'completed');
+ f.setResult({status:'completed',turnId:'turn_test',plan:null});assert.equal((await p.poll(scope)).status,'unknown');assert.equal(f.record.state,'completed');
+ reads=f.counts.lookupCount;assert.equal(finishes,1);assert.equal(reads,6);assert.equal(f.counts.createCount,1);
 });

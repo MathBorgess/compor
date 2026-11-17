@@ -65,13 +65,13 @@ export function createExplorationPlanner({store,bindings,provider,authorize}={})
   if(!object(claim)||!Object.entries(expected).every(([k,v])=>claim[k]===v)||Object.keys(claim).length!==Object.keys(expected).length+1||!identifier(claim.sessionId,'sess'))return result('unknown');
   try{
    const observed=await provider.get({sessionId:claim.sessionId});
-   if(observed?.status==='running')return result('running');
-   if(observed?.status==='failed'){await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
+   if(observed?.status==='running')return result(record.state==='completed'?'unknown':'running');
+   if(observed?.status==='failed'){if(record.state==='completed')return result('unknown');await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
    if(observed?.status!=='completed'||!identifier(observed.turnId,'turn'))return result('unknown');
    const plan=validateExplorationPlan(observed.plan,input.context);
-   if(!plan){await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
+   if(!plan){if(record.state==='completed')return result('unknown');await store.finish({...c.db,state:'failed',completionSecret:c.completionSecret});return result('failed');}
    const planBinding=bindings.issue({type:'plan',...c.scope,attemptId:record.attemptId,inputDigest:c.inputDigest,sessionId:claim.sessionId,turnId:observed.turnId,planDigest:bindings.digest(plan)});
-   await store.finish({...c.db,state:'completed',completionSecret:c.completionSecret});
+   if(record.state!=='completed')await store.finish({...c.db,state:'completed',completionSecret:c.completionSecret});
    return {...result('completed'),requestId:c.scope.requestId,batchId:c.scope.batchId,plan,planBinding};
   }catch{return result('unknown');}
  }
