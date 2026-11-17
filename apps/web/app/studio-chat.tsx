@@ -359,7 +359,7 @@ export default function StudioChat({
     try {
       const result=await api('/api/studio/chat',{op:'inspect_pending',projectId:state.projectId,requestId},'inspection');
       if(sequence!==inspectionSequence.current||!credentialIsCurrent()||!getState().adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)))return;
-      if(result.status==='completed')setNotice('A consulta encontrou uma resposta concluída. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      if(result.status==='completed')setNotice('A consulta encontrou um turno concluído. Abra a aba original para verificar a resposta e recuperar o contexto. Nenhuma ação foi repetida.');
       else if(result.status==='failed'&&result.error==='provider_usage_limit')setNotice(credentialSource==='default'?'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.':'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.');
       else if(result.status==='failed')setNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
       else if(result.status==='action_required')setNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
