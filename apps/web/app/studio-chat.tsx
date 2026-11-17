@@ -24,6 +24,9 @@ import { submitOnEnter } from "../lib/submit-on-enter.ts";
 import {offerContext} from '../lib/studio-context.ts';
 import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
+import {readReferenceAuthorityConsent} from '../lib/reference-authority-consent.ts';
+import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import type {VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
 import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
@@ -44,11 +47,11 @@ async function requestVisualSnapshot(scope:{userId:string;projectId:string;conve
  const journal=createParallelJournalStore();
  try{return await journal.loadRequestVisualSnapshot(scope);}finally{journal.close();}
 }
-async function prepareRequestVisuals(state:StudioState,conversationId:string|undefined,requestId:string,loadReference:(id:string)=>Promise<StoredImage|null|undefined>) {
+async function prepareRequestVisuals(state:StudioState,conversationId:string|undefined,requestId:string,loadReference:(id:string)=>Promise<StoredImage|null|undefined>,allowAuthorizedExtras:boolean) {
  if(!conversationId)throw Error('Abra a conversa deste post para enviar as imagens selecionadas.');
- if(state.references.some(reference=>reference.source&&('originUrl' in reference.source||reference.source.kind==='generated')))throw Error('Referências externas ou geradas ainda não estão disponíveis neste fluxo. Remova-as para continuar com seus uploads.');
+ if(!allowAuthorizedExtras&&state.references.some(reference=>reference.source&&('originUrl' in reference.source||reference.source.kind==='generated')))throw Error('Referências externas ou geradas ainda não estão disponíveis neste fluxo. Remova-as para continuar com seus uploads.');
  const [{prepareSelectedVisualCandidates,visualInputImages},{referenceConsentGranted},{createParallelJournalStore},{referenceSchema}]=await Promise.all([import('../lib/selected-visual-input.ts'),import('../lib/reference-session-consent.ts'),import('../lib/parallel-exploration-journal.ts'),import('../lib/studio-domain.ts')]);
- let externalConsent=false;try{externalConsent=referenceConsentGranted(sessionStorage,state.userId);}catch{}
+ let externalConsent=false;try{externalConsent=referenceConsentGranted(sessionStorage,state.userId)&&Boolean(readReferenceAuthorityConsent(state.userId));}catch{}
  const snapshot=await prepareSelectedVisualCandidates({references:state.references,projectId:state.projectId,externalConsent,maxBytes:1024*1024,loadReference:async id=>{
   const stored=await loadReference(id),metadata=referenceSchema.safeParse(stored?.metadata);
   return stored&&metadata.success?{file:stored.file,metadata:metadata.data}:null;
@@ -120,8 +123,12 @@ export default function StudioChat({
   referenceWorkbench = false,
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
+  referenceAuthorityBlocked = false,
+  checkReferenceAuthority,
+  createVisualAuthoritySnapshot,
+  visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:()=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -331,14 +338,26 @@ export default function StudioChat({
   async function api(path:string, body:Record<string,unknown>,mode?:'inspection'):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
+    const effect=path==='/api/agent/image'||path==='/api/studio/action'||path==='/api/studio/chat'&&body.op!=='poll'&&body.op!=='inspect_pending';
+    if(effect&&checkReferenceAuthority){const allowed=await checkReferenceAuthority();if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');if(!allowed)throw Error('Consulte a seleção de referências antes de continuar.');}
     if(mode!=='inspection'&&pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
     const key = getApiKey?.();
     if (credentialSource==='byok'&&!key) throw Error("Conecte sua chave OpenAI para continuar.");
     const controller = new AbortController();
     request.current = controller;
+    let authorityHeaders:Record<string,string>={};
+    const artwork=body.artworkInput&&typeof body.artworkInput==='object'&&'visualInput' in body.artworkInput?body.artworkInput.visualInput:undefined;
+    const visual=path==='/api/agent/image'?artwork:path==='/api/studio/chat'&&effect?body.visualInput:undefined;
+    if(visual!==undefined&&visualAuthorityHeaders){
+      if(!conversationId||typeof body.requestId!=='string')throw Error('Não foi possível confirmar a tentativa visual.');
+      authorityHeaders=await visualAuthorityHeaders({userId:state.userId,projectId:state.projectId,conversationId,requestId:body.requestId,batchId:null,purpose:'artwork'},parseVisualInputManifest(visual));
+      if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
+      if(checkReferenceAuthority&&!await checkReferenceAuthority())throw Error('Consulte a seleção de referências antes de continuar.');
+      if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
+    }
     const response = await fetch(path, {
       method: "POST",
-      headers: { "content-type": "application/json" },
+      headers: { "content-type": "application/json",...authorityHeaders },
       body: JSON.stringify({ ...body, ...(conversationId&&path.startsWith("/api/studio/")?{conversationId}:{}), ...(credentialSource==='byok'?{apiKey:key}:{}) }),
       signal: controller.signal,
     });
@@ -408,6 +427,7 @@ export default function StudioChat({
       setNotice('Este pedido pertence ao histórico anterior. Seus dados foram preservados; consulte o resultado antes de fazer um novo pedido na conversa do post.');
       return;
     }
+    if((data.status==='action_required'||data.status==='consent_required')&&checkReferenceAuthority){const allowed=await checkReferenceAuthority();if(!credentialIsCurrent())return;if(!allowed){setBusy(false);setNotice('Consulte a seleção de referências antes de executar esta ação.');return;}}
     const automatic=automaticRequest(requestId);
     if(automatic&&(data.status==='consent_required'||data.status==='action_required')) {
       setBusy(false);setNotice('A resposta precisa ser consultada antes de continuar.');return;
@@ -611,7 +631,7 @@ export default function StudioChat({
     }
   }
   useEffect(()=>{
-    if(visualUnavailable||readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
+    if(referenceAuthorityBlocked||visualUnavailable||readOnly||!allowReferenceAnalysis||!hasApiKey||busy||pending||localBlocked||message.trim()||referenceSet==='[]'||!navigator.locks) return;
     const epoch=availability.current.analysisEpoch;
     const allowed=(ownRequestId?:string)=>availability.current.analysisEpoch===epoch&&mounted.current&&credentialIsCurrent()&&!availability.current.visualUnavailable&&!availability.current.readOnly&&availability.current.allowReferenceAnalysis&&availability.current.hasApiKey&&(ownRequestId===undefined?!availability.current.localBlocked:getState().adjustments.every(item=>['completed','failed'].includes(item.status)||item.id===ownRequestId))&&!availability.current.message.trim();
     const reportWait=(waiting:boolean)=>{if(conversationId)referenceWaitListener.current?.(conversationId,waiting);};
@@ -630,13 +650,16 @@ export default function StudioChat({
       const requestId=crypto.randomUUID();
       availability.current.busy=true;setBusy(true);setNotice('');
       try {
+        if(checkReferenceAuthority&&!await checkReferenceAuthority())return;
+        if(!allowed())return;
         const digest=await contextDigest(before);
         if(!allowed())return;
         if(!canStartReferenceRound({record:existing,round,fingerprint:referenceSet,context:digest,failed:failedAutomatic.current===identity}))return;
         const feedback=await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId);
         const readiness=assessReadiness({brief:before.brief,persona:before.persona,direction:before.direction,references:before.references,referenceFeedback:feedback.referenceFeedback});
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
-        const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+        const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference,Boolean(createVisualAuthoritySnapshot)):null;
+      if(visuals&&createVisualAuthoritySnapshot){if(!conversationId)throw Error('Abra a conversa para confirmar a seleção.');await createVisualAuthoritySnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId,batchId:null,purpose:'artwork'},visuals.visualInput);}
         const referenceImages=selectedVisualsAvailable?[]:await referenceImagesForRequest(before.references,loadReference,20);
         if(!allowed()||getState().revision!==before.revision||referenceFingerprint(getState())!==referenceSet||readReferenceRound(getState())?.epoch!==round.epoch)return;
         attemptSource.current=credentialSource;
@@ -663,7 +686,7 @@ export default function StudioChat({
       } finally { if(!submitted&&credentialIsCurrent()){availability.current.busy=false;setBusy(false);} }
     });});
     return ()=>{cancelReading();reportWait(false);};
-  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable,visualUnavailable]);
+  },[referenceSet,referenceContextValue,roundRevision,hasApiKey,busy,pending,localBlocked,message,marker,credentialSource,credentialEpoch,readOnly,allowReferenceAnalysis,selectedVisualsAvailable,visualUnavailable,referenceAuthorityBlocked]);
   async function send(event:FormEvent<HTMLFormElement>) {
     event.preventDefault();
     await submitText(message,{fromComposer:true});
@@ -671,10 +694,13 @@ export default function StudioChat({
   type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
+    if (referenceAuthorityBlocked || visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
     submitLock.current=true;
-    try { return await submitLocked(text,{fromComposer,quickReply,onPrepared}); }
-    finally { submitLock.current=false; }
+    try {
+      if(checkReferenceAuthority){const allowed=await checkReferenceAuthority();if(!credentialIsCurrent())return false;if(!allowed){setNotice('Consulte a seleção de referências antes de enviar.');return false;}}
+      if(!credentialIsCurrent()||availability.current.busy||availability.current.pending||availability.current.localBlocked||availability.current.readOnly||availability.current.visualUnavailable||inspectionLock.current)return false;
+      return await submitLocked(text,{fromComposer,quickReply,onPrepared});
+    } finally { submitLock.current=false; }
   }
   async function submitLocked(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
     onUseAI?.();
@@ -693,7 +719,8 @@ export default function StudioChat({
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
-      const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference):null;
+      const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference,Boolean(createVisualAuthoritySnapshot)):null;
+      if(visuals&&createVisualAuthoritySnapshot){if(!conversationId)throw Error('Abra a conversa para confirmar a seleção.');await createVisualAuthoritySnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId,batchId:null,purpose:'artwork'},visuals.visualInput);}
       const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
       if(!credentialIsCurrent()||!visualIsCurrent())return;
@@ -959,6 +986,7 @@ export default function StudioChat({
           pieceId: target.pieceId,
           version: target.version,
           attemptId: action.attemptId,
+          ...(action.artworkInput.visualInput&&createVisualAuthoritySnapshot?{requestId:action.requestId}:{}),
           actionBinding: action.actionBinding,
           explicitApproval: true,
           artworkInput: action.artworkInput,
@@ -1016,7 +1044,7 @@ export default function StudioChat({
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
-  const readingDisabled=visualUnavailable||readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
+  const readingDisabled=referenceAuthorityBlocked||visualUnavailable||readOnly||!canUseAI||busy||Boolean(pending)||localBlocked||inspecting||sourceMismatch;
   const lastReferenceTitle=latestReference?.source&&'originUrl' in latestReference.source?latestReference.source.title??latestReference.name:latestReference?.source&&'kind' in latestReference.source&&latestReference.source.kind==='generated'?`Imagem ${latestReference.source.ordinal??'do Compor'}`:latestReference?.name;
   const readingCard=(entry:QuickReplyEntry)=><TasteReadingCard key={entry.messageId} entry={entry} status={quickReplyStatus(entry,visibleMessages,readingContext)} disabled={readingDisabled} compactHistory={referenceWorkbench} renderText={text=><MessageMarkdown text={text}/>} onChoose={option=>{void chooseQuickReply(entry,option);}}/>;
   const panel=(
@@ -1195,7 +1223,7 @@ export default function StudioChat({
           <button
             className="studio-button"
             aria-label={busy ? "Trabalhando…" : intro ? "Criar post" : "Enviar →"}
-            disabled={visualUnavailable || readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
+            disabled={referenceAuthorityBlocked || visualUnavailable || readOnly || !message.trim() || !canUseAI || busy || inspecting || Boolean(pending) || localBlocked}
           >
             <span aria-hidden="true">{intro?"Criar post":"↑"}</span>
           </button>

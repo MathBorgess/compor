@@ -4,12 +4,13 @@ import {createParallelJournalStore,parseParallelPreparation,type ParallelPrepara
 import {createParallelIntentClient} from './parallel-exploration-intent-client.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
 import {observeParallelBatch} from './parallel-exploration-observer.ts';
-import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import type {VisualAuthorityScope} from './reference-visual-authority.ts';
 import {selectedVisualInputImages,visualInputImages,type SelectedVisualInput} from './selected-visual-input.ts';
 
 const response=z.object({status:z.enum(['running','completed','failed','unknown','unavailable','busy','conflict']),retryAutomatically:z.literal(false),requestId:z.optional(z.uuid()),batchId:z.optional(z.uuid()),plan:z.optional(z.unknown()),planBinding:z.optional(z.string().check(z.minLength(1)).check(z.maxLength(8192)))});
 type Store=ReturnType<typeof createParallelJournalStore>;
-type Options={store:Store;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;beforePlan?:(preparation:ParallelPreparation,signal:AbortSignal)=>Promise<void>;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot;journal:ParallelJournal})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
+type Options={store:Store;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;fetchApi?:typeof fetch;allowed:()=>boolean;canInspect:()=>boolean;visible:()=>boolean;beforePlan?:(preparation:ParallelPreparation,signal:AbortSignal)=>Promise<void>;onPlanning:(status:string)=>void;onSnapshot:(value:{snapshot:BatchSnapshot;journal:ParallelJournal})=>void|Promise<void>;onUnavailable:()=>void;sleep:(ms:number)=>Promise<void>;now:()=>number};
 
 /** One user-authorized attempt; callers hold the account Web Lock and validate all gates. */
 export function createParallelDispatcher(options:Options){
@@ -21,6 +22,12 @@ export function createParallelDispatcher(options:Options){
   const stillAllowed=()=>active&&allowed();
   const ensure=()=>{if(!stillAllowed())throw Error('parallel_paused');};
   const credential=(value:ParallelPreparation,key:string)=>value.credentialSource==='byok'?{apiKey:key}:{};
+  function authorityScope(value:ParallelPreparation):VisualAuthorityScope{return {userId:value.userId,projectId:value.projectId,conversationId:value.conversationId,requestId:value.planRequestId,batchId:value.batchId,purpose:'parallel'};}
+  async function authority(value:ParallelPreparation){
+    if(value.visualInput===undefined||!options.visualAuthorityHeaders)return undefined;
+    const authorityHeaders=await options.visualAuthorityHeaders(authorityScope(value),parseVisualInputManifest(value.visualInput));ensure();
+    return {requestId:value.planRequestId,headers:authorityHeaders};
+  }
   async function visualSnapshot(value:ParallelPreparation){
     if(value.visualInput===undefined)return null;
     const snapshot=await store.loadVisualSnapshot({userId:value.userId,projectId:value.projectId,batchId:value.batchId},value.conversationId);
@@ -31,7 +38,8 @@ export function createParallelDispatcher(options:Options){
     const visual=value.visualInput===undefined?undefined:parseVisualInputManifest(value.visualInput);
     const snapshot=op==='submit'?await visualSnapshot(value):null;ensure();
     const images=snapshot?await visualInputImages(snapshot):undefined;ensure();
-    const result=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers,signal:commandAbort.signal,body:JSON.stringify({op,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.planRequestId,context:value.context,...(visual?{visualInput:visual}:{}),...(images?{referenceImages:images}:{}),...credential(value,key),...(op==='submit'?{intentId:value.intentId}:{})})});
+    const visualAuthority=op==='submit'?await authority(value):undefined;ensure();
+    const result=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers:{...headers,...visualAuthority?.headers},signal:commandAbort.signal,body:JSON.stringify({op,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.planRequestId,context:value.context,...(visual?{visualInput:visual}:{}),...(images?{referenceImages:images}:{}),...credential(value,key),...(op==='submit'?{intentId:value.intentId}:{})})});
     const payload=response.parse(await result.json());
     if(payload.requestId!==undefined&&payload.requestId!==value.planRequestId)throw Error('plan_mismatch');
     if(payload.status==='completed'&&(!result.ok||payload.batchId!==value.batchId||payload.requestId!==value.planRequestId||!payload.planBinding||!validateExplorationContext(value.context)||!validateCompletedExplorationPlan(payload.plan,value.context,visual)))throw Error('plan_mismatch');
@@ -43,7 +51,9 @@ export function createParallelDispatcher(options:Options){
     if(!preparation.intentId||preparation.expectedEpoch===undefined||preparation.stage!=='planning'||preparation.planSubmitted||preparation.revocationRequested||(preparation.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(apiKey)))throw Error('parallel_invalid');
     if(Boolean(snapshot)!==(preparation.visualInput!==undefined))throw Error('visual_snapshot_unavailable');
     current=snapshot?await store.createBeforePlanningWithVisual(preparation,snapshot):await store.createBeforePlanning(preparation);ensure();
-    const intentEpoch=await intents.create(current,apiKey);ensure();
+    if(snapshot&&options.createVisualAuthoritySnapshot){await options.createVisualAuthoritySnapshot(authorityScope(current),snapshot.manifest);ensure();}
+    const intentAuthority=await authority(current);ensure();
+    const intentEpoch=await intents.create(current,apiKey,intentAuthority);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:intentEpoch});ensure();
     if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     current=await store.updatePreparation(current.userId,current.revision,{kind:'plan_submitted'});ensure();
@@ -69,7 +79,8 @@ export function createParallelDispatcher(options:Options){
     onPlanning('executing');
     // The command is sent once. Observation is independent, read-only and may
     // display individual receipts before the command itself returns.
-    const command=fetchApi('/api/studio/exploration-batches/execute',{method:'POST',headers:{...headers,...(attempt.credentialSource==='byok'?{'x-compor-openai-key':apiKey}:{})},signal:commandAbort.signal,body:JSON.stringify({projectId:attempt.projectId,conversationId:attempt.conversationId,batchId:attempt.batchId,intentId:attempt.intentId,planRequestId:attempt.planRequestId,context:attempt.context,plan:attempt.plan,planBinding:binding,imageIds:attempt.imageIds,...(visual?{visualInput:visual,referenceImages:images}:{})})}).catch(()=>null);
+    const executionAuthority=await authority(attempt);ensure();
+    const command=fetchApi('/api/studio/exploration-batches/execute',{method:'POST',headers:{...headers,...executionAuthority?.headers,...(attempt.credentialSource==='byok'?{'x-compor-openai-key':apiKey}:{})},signal:commandAbort.signal,body:JSON.stringify({projectId:attempt.projectId,conversationId:attempt.conversationId,batchId:attempt.batchId,intentId:attempt.intentId,planRequestId:attempt.planRequestId,context:attempt.context,plan:attempt.plan,planBinding:binding,imageIds:attempt.imageIds,...(visual?{visualInput:visual,referenceImages:images}:{})})}).catch(()=>null);
     const observation=observeParallelBatch({inspect:()=>recovery.inspectBatch(attempt,now,visible),isActive:()=>active&&canInspect(),onObservation:onSnapshot,onUnavailable,sleep,intervalMs:3000});
     // Stopping observation must not hold the account lock until an already
     // dispatched server request returns. Its outcome remains in the journal.
@@ -97,7 +108,8 @@ export function createParallelDispatcher(options:Options){
     if(latest.revocationEpoch===undefined)throw Error('revocation_epoch_unverified');
     const scope={userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId};
     current=await store.reissuePlannedIntent(scope,latest.revision,newIntentId,latest.revocationEpoch);ensure();
-    const createdEpoch=await intents.create(current,apiKey);ensure();
+    const resumedAuthority=await authority(current);ensure();
+    const createdEpoch=await intents.create(current,apiKey,resumedAuthority);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:createdEpoch});ensure();
     if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     await executePlanned(current,recovered.binding,apiKey);

@@ -8,9 +8,11 @@ import {createReplacementRun} from '../lib/parallel-exploration-replacement-run.
 import type {ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 import type {StudioState} from '../lib/studio-domain.ts';
 import type {StoredReference} from '../lib/studio-storage.ts';
+import type {VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
+import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {ParallelExplorationProgress} from './parallel-exploration-progress.tsx';
 
-type Props={userId:string;projectId:string;conversationId:string;credentialSource:'byok'|'default';credentialEpoch?:number;replacementAvailable?:boolean;allowReplacement?:boolean;generationFingerprint?:string;getReplacementContext?:()=>Promise<unknown>;getReplacementReferences?:()=>Promise<StoredReference[]>;getApiKey:()=>string;isAuthenticated:()=>boolean;onContinuePlan?:()=>void;onCompleted:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void>};
+type Props={createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;userId:string;projectId:string;conversationId:string;credentialSource:'byok'|'default';credentialEpoch?:number;replacementAvailable?:boolean;allowReplacement?:boolean;generationFingerprint?:string;getReplacementContext?:()=>Promise<unknown>;getReplacementReferences?:()=>Promise<StoredReference[]>;getApiKey:()=>string;isAuthenticated:()=>boolean;onContinuePlan?:()=>void;onCompleted:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void>};
 
 /** Read-only recovery. No button starts or repeats a planning or image request. */
 export default function ParallelExplorationRecovery(props:Props){
@@ -34,7 +36,7 @@ export default function ParallelExplorationRecovery(props:Props){
     const key=props.getApiKey(),source=props.credentialSource,credentialEpoch=props.credentialEpoch,fingerprint=props.generationFingerprint,serial=++sequence.current;
     const valid=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===preparation.conversationId&&current.current.credentialSource===source&&current.current.credentialEpoch===credentialEpoch&&current.current.generationFingerprint===fingerprint&&current.current.getApiKey()===key&&Boolean(current.current.allowReplacement)&&current.current.isAuthenticated()&&document.visibilityState==='visible'&&document.hasFocus();
     lock.current=true;setBusy(true);setNotice('');
-    const run=createReplacementRun({preparation,position,key,allowed:valid,currentContext:props.getReplacementContext,currentReferences:props.getReplacementReferences,onNotice:value=>{if(valid())setNotice(value);},onSnapshot:async(snapshot,journal)=>{if(!valid())return;setProgress(journal.progress);for(const image of snapshot.images.filter(item=>item.status==='completed').sort((a,b)=>a.ordinal-b.ordinal)){if(!valid())return;await current.current.onCompleted(image.requestId,image.ordinal,preparation.conversationId,preparation.creationContext);}}});
+    const run=createReplacementRun({preparation,position,key,allowed:valid,...(props.createVisualAuthoritySnapshot?{createVisualAuthoritySnapshot:props.createVisualAuthoritySnapshot}:{}),...(props.visualAuthorityHeaders?{visualAuthorityHeaders:props.visualAuthorityHeaders}:{}),currentContext:props.getReplacementContext,currentReferences:props.getReplacementReferences,onNotice:value=>{if(valid())setNotice(value);},onSnapshot:async(snapshot,journal)=>{if(!valid())return;setProgress(journal.progress);for(const image of snapshot.images.filter(item=>item.status==='completed').sort((a,b)=>a.ordinal-b.ordinal)){if(!valid())return;await current.current.onCompleted(image.requestId,image.ordinal,preparation.conversationId,preparation.creationContext);}}});
     replacing.current={stop:run.stop,valid};
     try{await run.run();}finally{if(replacing.current?.stop===run.stop)replacing.current=null;if(sequence.current===serial){lock.current=false;setBusy(false);}}
   }

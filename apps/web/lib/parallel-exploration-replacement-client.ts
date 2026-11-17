@@ -15,14 +15,14 @@ export function createParallelReplacementClient(fetchApi:typeof fetch=fetch){
     if(preparation.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(key))throw Error('credential_unavailable');
     return preparation.credentialSource==='byok'?{apiKey:key}:{};
   }
-  async function create(preparation:ParallelPreparation,input:ParallelReplacementClaim,key:string,signal:AbortSignal):Promise<number>{
+  async function create(preparation:ParallelPreparation,input:ParallelReplacementClaim,key:string,signal:AbortSignal,authority?:{requestId:string;headers:Record<string,string>}):Promise<number>{
     const claim=claimSchema.parse(input);if(claim.previousId===claim.requestId)throw Error('replacement_invalid');
     const visualInput=preparation.visualInput===undefined?undefined:parseVisualInputManifest(preparation.visualInput);
-    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers:{'content-type':'application/json'},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,purpose:'replacement',position:claim.position,previousId:claim.previousId,context:preparation.context,expectedEpoch:claim.expectedEpoch,...(visualInput?{visualInput}:{}),...credential(preparation,key)})});
+    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers:{'content-type':'application/json',...authority?.headers},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),purpose:'replacement',position:claim.position,previousId:claim.previousId,context:preparation.context,expectedEpoch:claim.expectedEpoch,...(visualInput?{visualInput}:{}),...credential(preparation,key)})});
     if(!response.ok)throw Error('intent_unconfirmed');const receipt=created.parse(await response.json());
     if(receipt.epoch!==claim.expectedEpoch+1)throw Error('intent_unconfirmed');return receipt.epoch;
   }
-  async function dispatch(preparation:ParallelPreparation,input:ParallelReplacementClaim,binding:string,key:string,signal:AbortSignal,snapshot?:SelectedVisualInput):Promise<void>{
+  async function dispatch(preparation:ParallelPreparation,input:ParallelReplacementClaim,binding:string,key:string,signal:AbortSignal,snapshot?:SelectedVisualInput,authority?:{requestId:string;headers:Record<string,string>}):Promise<void>{
     const claim=claimSchema.parse(input);if(!binding||claim.previousId===claim.requestId||preparation.stage!=='executing'||preparation.plan===null)throw Error('replacement_invalid');
     credential(preparation,key);
     let visual;
@@ -33,7 +33,7 @@ export function createParallelReplacementClient(fetchApi:typeof fetch=fetch){
       visual={visualInput,referenceImages:await selectedVisualInputImages(snapshot,ids)};
     }else if(snapshot)throw Error('replacement_invalid');
     if(signal.aborted)throw Error('replacement_paused');
-    const response=await fetchApi('/api/studio/exploration-batches/replace',{method:'POST',headers:{'content-type':'application/json',...(preparation.credentialSource==='byok'?{'x-compor-openai-key':key}:{})},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,planRequestId:preparation.planRequestId,context:preparation.context,plan:preparation.plan,planBinding:binding,position:claim.position,previousId:claim.previousId,requestId:claim.requestId,...visual})});
+    const response=await fetchApi('/api/studio/exploration-batches/replace',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...(preparation.credentialSource==='byok'?{'x-compor-openai-key':key}:{})},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,planRequestId:preparation.planRequestId,context:preparation.context,plan:preparation.plan,planBinding:binding,position:claim.position,previousId:claim.previousId,requestId:claim.requestId,...visual})});
     if(!response.ok)throw Error('replacement_unconfirmed');
     const receipt=z.object({status:z.enum(['completed','unknown','rejected','running']),batchId:id,requestId:id,retryAutomatically:z.literal(false)}).parse(await response.json());
     if(receipt.batchId!==preparation.batchId||receipt.requestId!==claim.requestId)throw Error('replacement_unconfirmed');

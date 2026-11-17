@@ -21,6 +21,9 @@ import ContextStrip from "./context-strip";
 import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
+import {createReferenceSelectionCoordinator,type ReferenceAdoptionReview} from '../lib/reference-selection-coordinator.ts';
+import {createReferenceVisualAuthority,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
+import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import type { ApprovedReference } from "../lib/web-contracts";
 import ExplorationGallery from "./exploration-gallery";
 import ReferenceSelectionTray from "./reference-selection-tray";
@@ -68,7 +71,7 @@ import type { StudioState, StudioReference, ActionResult, DraftContext } from '.
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -91,6 +94,7 @@ export default function StudioApp({
   parallelAvailable = false,
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
+  referenceAuthorityEnabled = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -297,6 +301,7 @@ export default function StudioApp({
         parallelAvailable={parallelAvailable}
         selectedVisualsAvailable={selectedVisualsAvailable}
         selectedVisualsRequired={selectedVisualsRequired}
+        referenceAuthorityEnabled={referenceAuthorityEnabled}
         onUseAI={onUseAI}
         onPauseAI={onPauseAI}
         getApiKey={getApiKey}
@@ -374,6 +379,7 @@ function ProjectStudio({
   parallelAvailable = false,
   selectedVisualsAvailable = false,
   selectedVisualsRequired = false,
+  referenceAuthorityEnabled = false,
   onUseAI,
   onPauseAI,
   getApiKey,
@@ -453,6 +459,58 @@ function ProjectStudio({
     creationLock = useRef(false),
     baseLoadGeneration=useRef(0),
     versionsReadSequence=useRef(0);
+  const [authorityStatus,setAuthorityStatus]=useState<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking');
+  const [authorityReview,setAuthorityReview]=useState<ReferenceAdoptionReview|null>(null);
+  const authorityCurrent=useRef<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking'),authorityLock=useRef(false);
+  function reportAuthority(status:typeof authorityCurrent.current){authorityCurrent.current=status;if(active.current)setAuthorityStatus(status);}
+  useEffect(()=>{
+    if(!referenceAuthorityEnabled){reportAuthority('ready');return;}
+    if(session.loading)return;
+    let live=true;reportAuthority('checking');
+    void (async()=>{try{await session.ensureStored();const store=session.storage.current;if(!store)throw Error('storage');const coordinator=createReferenceSelectionCoordinator({store});let result=await coordinator.readiness({userId,projectId:project.id});if(result.status==='unavailable')result=await coordinator.observe({userId,projectId:project.id});if(live)reportAuthority(result.status);}catch{if(live)reportAuthority('unavailable');}})();
+    return()=>{live=false;};
+  },[referenceAuthorityEnabled,session.loading,userId,project.id]);
+  async function checkReferenceAuthority(){
+    if(!referenceAuthorityEnabled)return true;
+    if(authorityLock.current||authorityCurrent.current!=='ready'||!active.current||!isAuthenticated())return false;
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error('storage');const result=await createReferenceSelectionCoordinator({store}).readiness({userId,projectId:project.id});if(!active.current||authorityLock.current||!isAuthenticated())return false;reportAuthority(result.status);return result.status==='ready';}catch{reportAuthority('unavailable');return false;}
+  }
+  function visualAuthority(scope:VisualAuthorityScope){
+    return createReferenceVisualAuthority({isCurrent:()=>active.current&&isAuthenticated()&&scope.userId===userId&&scope.projectId===project.id&&session.get()?.userId===userId&&session.get()?.projectId===project.id});
+  }
+  async function createVisualAuthoritySnapshot(scope:VisualAuthorityScope,manifest:VisualInputManifest){
+    if(!await checkReferenceAuthority())throw Error('Consulte a seleção de referências antes de continuar.');
+    const store=session.storage.current;if(!store)throw Error('reference_authority_unavailable');
+    const status=await createReferenceSelectionCoordinator({store}).readiness({userId,projectId:project.id});
+    if(status.status!=='ready'||authorityLock.current)throw Error('reference_authority_unavailable');
+    await visualAuthority(scope).create(scope,manifest,status.revision);
+  }
+  async function visualAuthorityHeaders(scope:VisualAuthorityScope,manifest:VisualInputManifest){if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');const headers=await visualAuthority(scope).headers(scope,manifest);if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');return headers;}
+  async function coordinateSelection(selection:{kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string}){
+    if(!referenceAuthorityEnabled){const result=selection.kind==='select'?journey.selectReference(selection.reference,selection.target):journey.unselectReference(selection.id,selection.target);if(!result)throw Error('studio_unavailable');await session.flush();return;}
+    if(authorityLock.current||authorityCurrent.current!=='ready'||!isAuthenticated())throw Error('reference_authority_unavailable');
+    authorityLock.current=true;reportAuthority('pending');
+    let completed=false;
+    try{const result=await session.coordinateReference(selection,()=>active.current&&isAuthenticated());completed=true;reportAuthority(result.status);if(result.status!=='ready')throw Error('reference_authority_unconfirmed');}
+    catch(error){if(!completed)reportAuthority('unavailable');throw error;}
+    finally{authorityLock.current=false;}
+  }
+  async function inspectAuthority(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).reconcile({userId,projectId:project.id});reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function fenceAuthorityPending(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).fencePending({userId,projectId:project.id});reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function previewAuthorityAdoption(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).previewAdoption({userId,projectId:project.id});if(result.status==='review')setAuthorityReview(result.review);else reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function confirmAuthorityAdoption(){
+    if(authorityLock.current||!authorityReview)return;authorityLock.current=true;reportAuthority('pending');
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).adoptCurrent({userId,projectId:project.id},authorityReview);setAuthorityReview(null);reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
   stateRef.current = s;
   versionRef.current = versions;
   useEffect(() => onRegisterLeaveGuard(project.id, async () => {
@@ -487,9 +545,9 @@ function ProjectStudio({
     }
     await local.flush();
   }
-  const parallel=useParallelExploration({userId,projectId:project.id,conversationId:referenceScope,state:s?conversationContext(s,referenceScope):null,getState:()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;},source:credentialSource,credentialEpoch,hasApiKey,getApiKey,isAuthenticated,available:parallelAvailable&&!visualUnavailable,selectedVisualsAvailable,selectedVisualsRequired,loadReference:id=>local.storage.current?.getReference({userId,projectId:project.id},id)??Promise.resolve(null),visible:stageRestored&&(stage==='studio'||currentSettings==='references')&&referencesOpen,idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea,onCompleted:onExplorationCompleted});
+  const parallel=useParallelExploration({userId,projectId:project.id,conversationId:referenceScope,state:s?conversationContext(s,referenceScope):null,getState:()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;},source:credentialSource,credentialEpoch,hasApiKey,getApiKey,isAuthenticated,available:parallelAvailable&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready'),selectedVisualsAvailable,selectedVisualsRequired,...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{}),loadReference:id=>local.storage.current?.getReference({userId,projectId:project.id},id)??Promise.resolve(null),visible:stageRestored&&(stage==='studio'||currentSettings==='references')&&referencesOpen,idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea,onCompleted:onExplorationCompleted});
   const usingParallel=parallelAvailable&&!parallel.legacyPending;
-  const legacyExploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: !selectedVisualsRequired && !usingParallel && !(previousParallelAvailable.current&&!parallelAvailable) && stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
+  const legacyExploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: !referenceAuthorityEnabled && !selectedVisualsRequired && !usingParallel && !(previousParallelAvailable.current&&!parallelAvailable) && stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
   useEffect(()=>{if(previousParallelAvailable.current&&!parallelAvailable){parallelGesture.current=null;setExplorationRequested(false);parallel.pause();}previousParallelAvailable.current=parallelAvailable;},[parallelAvailable]);
   useEffect(()=>{if(!parallelAvailable||!parallel.legacyPending||!legacyExploration.blocked)return;try{if(localStorage.getItem(`compor-exploration-pending:${userId}`)===null){parallel.clearLegacyPending();setExplorationRequested(false);}}catch{/* Preserve the legacy guard when storage is unavailable. */}},[parallelAvailable,parallel.legacyPending,legacyExploration.blocked,userId]);
   const exploration=usingParallel?{...parallel,blocked:parallel.phase==='blocked',parallelBlocked:false,awaitingAnswer:explorationRequested?false:legacyExploration.awaitingAnswer,resuming:false,resumeError:null,progress:null,resume:parallel.start}:legacyExploration;
@@ -503,9 +561,7 @@ function ProjectStudio({
   function requestProposals(){
     if(visualUnavailable){setNotice('O envio das imagens selecionadas está indisponível. Você pode continuar editando e consultar tentativas anteriores.');return;}
     if(selectedVisualsRequired&&!usingParallel){setNotice('A exploração com imagens selecionadas está indisponível. Consulte tentativas anteriores ou continue editando.');return;}
-    if(usingParallel)parallelGesture.current={source:credentialSource,epoch:credentialEpoch,scope:referenceScope};
-    activateAI();setExplorationRequested(true);
-    if(!usingParallel)void exploration.resume();
+    void (async()=>{if(!await checkReferenceAuthority()){setNotice('Consulte a seleção de referências antes de pedir novas propostas.');return;}if(usingParallel)parallelGesture.current={source:credentialSource,epoch:credentialEpoch,scope:referenceScope};activateAI();setExplorationRequested(true);if(!usingParallel)void exploration.resume();})();
   }
   async function inspectLegacyExploration(){
     const scope=referenceScope;setSerialInspection('Consultando tentativa anterior…');
@@ -1024,22 +1080,24 @@ function ProjectStudio({
     const metadata=await storage.putReference({...scope,id:crypto.randomUUID(),file,source});
     try {
       const current=local.get();
-      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId || !journey.selectReference(metadata,target)) throw Error("studio_unavailable");
+      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId) throw Error("studio_unavailable");
+      await coordinateSelection({kind:'select',reference:metadata,target});
     } catch(error) {
-      await storage.removeReference(scope,metadata.id).catch(()=>{});
+      if(!referenceAuthorityEnabled)await storage.removeReference(scope,metadata.id).catch(()=>{});
       throw error;
     }
     await local.flush();
     try { recordReferenceRound(conversationContext(local.get(),referenceScope)); } catch {}
   }
   async function useExploredReference(reference:ExploredReference,file:File) {
-    if(!isAuthenticated())throw Error('studio_unavailable');
+    if(!isAuthenticated()||!await checkReferenceAuthority())throw Error('studio_unavailable');
     const existing=local.get().references.find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===reference.originUrl);
     if(existing){await selectExistingReference(existing,referenceScope,reference);return;}
     const target=referenceScope;
     await recordReferenceSelection({userId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),reference,commit:()=>storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file,target)});
   }
   async function useGeneratedReference(imageId:string,file:File,ordinal?:number) {
+    if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');
     const existing=local.get().references.find(item=>item.source&&'kind' in item.source&&item.source.kind==='generated'&&item.source.imageId===imageId);
     if(existing){await selectExistingReference(existing,referenceScope);return;}
     const target=referenceScope;
@@ -1052,8 +1110,9 @@ function ProjectStudio({
     localStorage.setItem(selectedExplorationKey(userId,project.id,imageId),'1');
   }
   async function selectExistingReference(reference:StudioReference,target:string,pin?:ExploredReference) {
+    if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');
     const source=reference.source;
-    const commit=async()=>{journey.selectReference(reference,target);await local.flush();recordReferenceRound(conversationContext(local.get(),target));};
+    const commit=async()=>{await coordinateSelection({kind:'select',reference,target});recordReferenceRound(conversationContext(local.get(),target));};
     if(source&&'originUrl' in source&&pin){await recordReferenceSelection({userId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),reference:pin,commit});return;}
     if(source&&('originUrl' in source||source.kind==='generated')){
       const key=`compor-reference-share:${userId}:${project.id}:${target}:${reference.id}`;
@@ -1071,14 +1130,17 @@ function ProjectStudio({
       const current=local.get();
       const reference=current.references.find(item=>item.id===id);
       if(!reference||!current.projectReferenceIds.includes(id))throw Error('reference_unavailable');
-      if(!journey.selectReference(reference,scope))throw Error('studio_unavailable');
-      await local.flush();
+      await coordinateSelection({kind:'select',reference,target:scope});
       try { recordReferenceRound(conversationContext(local.get(),scope)); } catch {}
     } catch { if(active.current)setNotice('Não foi possível salvar a seleção.'); }
   }
   async function removeFile(id:string):Promise<boolean> {
     const scope=referenceScope,before=local.get(),reference=before.references.find(item=>item.id===id);
     if(!reference)return false;
+    if(referenceAuthorityEnabled){
+      try{await coordinateSelection({kind:'unselect',id,target:scope});recordReferenceRound(conversationContext(local.get(),scope));if(!local.get().references.some(item=>item.id===id))await local.storage.current?.removeReference({userId,projectId:project.id},id);if(active.current)setNotice('Referência retirada da seleção.');return true;}
+      catch{if(active.current)setNotice('Não foi possível confirmar a alteração. Consulte o estado da seleção antes de continuar.');return false;}
+    }
     journey.unselectReference(id,scope);
     try {await local.flush();}
     catch {
@@ -1198,9 +1260,9 @@ function ProjectStudio({
       }}
     />
   );
-  const explorationRecovery=<>{referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={usingParallel&&!visualUnavailable&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted} onContinuePlan={usingParallel&&!visualUnavailable&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
+  const explorationRecovery=<>{referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted} onContinuePlan={usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
-    <StudioChat key={conversationId??"legacy"} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
+    <StudioChat key={conversationId??"legacy"} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
       state={s}
       projectRevision={projectDetails.revision}
       developerMode={developerMode}
@@ -1331,10 +1393,14 @@ function ProjectStudio({
     finally {referenceTransitionLock.current=false;if(active.current)setReferenceTransition(false);}
   }
   const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
+  const authorityPanel=referenceAuthorityEnabled&&<div className="studio-exploration-recovery" aria-label="Estado da seleção de referências">
+    {authorityStatus==='ready'?<p>Seleção de referências confirmada.</p>:<><p role="status">{authorityStatus==='checking'?'Verificando a seleção de referências…':authorityStatus==='pending'?'A seleção ainda precisa ser confirmada. Novas gerações estão pausadas.':authorityStatus==='conflict'?'A seleção deste navegador diverge da seleção confirmada. Novas gerações estão pausadas.':'Não foi possível verificar a seleção. Novas gerações estão pausadas.'}</p><button type="button" onClick={()=>void inspectAuthority()}>Consultar confirmação</button>{authorityStatus==='pending'&&<button type="button" onClick={()=>void fenceAuthorityPending()}>Encerrar tentativa de alteração pendente</button>}{authorityStatus==='conflict'&&<button type="button" onClick={()=>void previewAuthorityAdoption()}>Revisar seleção deste navegador</button>}</>}
+    {authorityReview&&<section aria-label="Revisão da seleção local"><p>Confirme se deseja publicar a seleção deste navegador no lugar da seleção remota revisada. Qualquer alteração concorrente impede a publicação.</p><h3>Seleção remota · revisão {authorityReview.remote.revision}</h3><ul>{authorityReview.remote.state.references.map(reference=>{const posts=authorityReview.remote.state.posts.filter(post=>post.referenceIds.includes(reference.id)).map(post=>post.pieceId),excluded=authorityReview.remote.state.posts.filter(post=>post.excludedReferenceIds.includes(reference.id)).map(post=>post.pieceId);return <li key={reference.id}>{reference.id} · {reference.inputOrigin==='local-upload'?'upload':reference.inputOrigin==='external'?'externa':'gerada'} · {authorityReview.remote.state.projectReferenceIds.includes(reference.id)?'selecionada no projeto':'não selecionada no projeto'}{posts.length?` · posts: ${posts.join(', ')}`:''}{excluded.length?` · excluída dos posts: ${excluded.join(', ')}`:''}</li>;})}</ul><p>Somente na seleção remota: {authorityReview.remote.state.references.filter(item=>!authorityReview.selection.references.some(reference=>reference.id===item.id)).map(item=>item.id).join(', ')||'nenhuma'}.</p><p>Somente neste navegador: {authorityReview.selection.references.filter(item=>!authorityReview.remote.state.references.some(reference=>reference.id===item.id)).map(item=>item.id).join(', ')||'nenhuma'}.</p><h3>Seleção deste navegador</h3><p>Itens de origem desconhecida não serão incluídos.</p><ul>{authorityReview.selection.references.map(reference=>{const posts=authorityReview.selection.posts.filter(post=>post.referenceIds.includes(reference.id)).map(post=>s.posts[post.pieceId]?.name||post.pieceId),excluded=authorityReview.selection.posts.filter(post=>post.excludedReferenceIds.includes(reference.id)).map(post=>s.posts[post.pieceId]?.name||post.pieceId);return <li key={reference.id}>{s.references.find(item=>item.id.toLowerCase()===reference.id)?.name??reference.id} ({reference.id}) · {reference.inputOrigin==='local-upload'?'upload':reference.inputOrigin==='external'?'externa':'gerada'} · {authorityReview.selection.projectReferenceIds.includes(reference.id)?'selecionada no projeto':'não selecionada no projeto'}{posts.length?` · posts: ${posts.join(', ')}`:''}{excluded.length?` · excluída dos posts: ${excluded.join(', ')}`:''}</li>;})}</ul>{authorityReview.unknownSelected.length>0&&<p>Não incluídas por origem desconhecida: {authorityReview.unknownSelected.map(item=>item.name).join(', ')}.</p>}<button type="button" onClick={()=>void confirmAuthorityAdoption()}>Confirmar seleção revisada</button><button type="button" onClick={()=>setAuthorityReview(null)}>Cancelar</button></section>}
+  </div>;
   const aiPanel=<ProjectAI continueLabel={preparing?'Continuar para referências':returnToWorkspaceLabel} preference={s.workflow.aiPreference} source={credentialSource} available={defaultAvailable} canUseAI={canUseAI} keyInput={keyInput} onDefault={()=>{if(credentialSource==='byok')onRemoveKey();local.change(value=>updateWorkflow(value,{aiPreference:'default'}));activateAI();}} onOwn={()=>local.change(value=>updateWorkflow(value,{aiPreference:'byok'}))} onRemove={()=>{onRemoveKey();setProjectIntent(false);exploration.pause();}} onContinue={preparing?nextReferences:closeSettings} onSkip={()=>{continueWithoutAI();if(preparing)nextReferences();else closeSettings();}} onBack={()=>preparing?local.change(value=>updateWorkflow(value,{phase:'context'})):closeSettings()}/>;
-  const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition} onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||!canUseProjectAI||selectedVisualsRequired&&!usingParallel||usingParallel&&(!parallel.epochReady||!parallel.ready)||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} proposalsRunning={explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onPauseProposals={()=>{parallelGesture.current=null;exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':usingParallel&&!parallel.ready?'Informe uma ideia ou oferta e resolva o público antes de pedir propostas.':explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
-    selection={<ReferenceSelectionTray items={scopedReferences.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url,scopeLabel:s.projectReferenceIds.includes(reference.id)?'Do projeto':'Deste post',removeLabel:referenceScope==='references'?'Remover do projeto':s.projectReferenceIds.includes(reference.id)?'Deixar de usar neste post':'Remover deste post',...(referenceScope!=='references'&&!s.projectReferenceIds.includes(reference.id)?{onShare:()=>{void selectExistingReference(reference,'references').catch(()=>setNotice('Não foi possível confirmar o compartilhamento.'));}}:{})}))} availableShared={referenceScope==='references'?[]:s.references.filter(reference=>s.projectReferenceIds.includes(reference.id)&&!scopedReferences.some(item=>item.id===reference.id)).map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} onUseShared={referenceScope==='references'?undefined:useSharedReference} limit={STUDIO_LIMITS.references} onRemove={async id=>{await removeFile(id);}}/>}
-    search={sourceControl=><ReferenceExploration sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceScope==='references'?idea:postContext(s,referenceScope).message||idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
+  const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition} onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||!canUseProjectAI||referenceAuthorityEnabled&&authorityStatus!=='ready'||selectedVisualsRequired&&!usingParallel||usingParallel&&(!parallel.epochReady||!parallel.ready)||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} proposalsRunning={explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onPauseProposals={()=>{parallelGesture.current=null;exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':usingParallel&&!parallel.ready?'Informe uma ideia ou oferta e resolva o público antes de pedir propostas.':explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
+    selection={<>{authorityPanel}<ReferenceSelectionTray items={scopedReferences.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url,scopeLabel:s.projectReferenceIds.includes(reference.id)?'Do projeto':'Deste post',removeLabel:referenceScope==='references'?'Remover do projeto':s.projectReferenceIds.includes(reference.id)?'Deixar de usar neste post':'Remover deste post',...(referenceScope!=='references'&&!s.projectReferenceIds.includes(reference.id)?{onShare:()=>{void selectExistingReference(reference,'references').catch(()=>setNotice('Não foi possível confirmar o compartilhamento.'));}}:{})}))} availableShared={referenceScope==='references'?[]:s.references.filter(reference=>s.projectReferenceIds.includes(reference.id)&&!scopedReferences.some(item=>item.id===reference.id)).map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} onUseShared={referenceScope==='references'?undefined:useSharedReference} limit={STUDIO_LIMITS.references} onRemove={async id=>{await removeFile(id);}}/></>}
+    search={sourceControl=><ReferenceExploration authorityConsentRequired={referenceAuthorityEnabled} sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceScope==='references'?idea:postContext(s,referenceScope).message||idea} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
     upload={<label className="guided-reference-upload">Enviar suas imagens<p>PNG ou JPEG, até 8 MB cada. Limite de 20 imagens por projeto.</p><input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label>}
     proposals={<section className="reference-workbench-proposals">{referencesOpen&&selectedVisualsRequired&&!usingParallel&&<div className="studio-exploration-recovery"><p>A exploração com imagens selecionadas está indisponível. Você ainda pode consultar uma tentativa anterior.</p><button type="button" onClick={()=>void inspectLegacyExploration()}>Consultar tentativa sequencial</button>{serialInspection&&<p role="status">{serialInspection}</p>}</div>}{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}{usingParallel&&selectedVisualsAvailable&&scopedReferences.some(reference=>reference.source&&'kind' in reference.source&&reference.source.kind==='local-upload')&&<p>As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento e em cada uma das três imagens do lote. A sessão do agente mantém estado e não usa retenção zero.</p>}{usingParallel&&parallel.progress&&<ParallelExplorationProgress progress={parallel.progress}/>}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} onRemoveReference={async imageId=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'kind' in item.source&&item.source.kind==='generated'&&item.source.imageId===imageId);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/></section>}
     conversation={<>{explorationRecovery}<div className="guided-reference-chat"><div className="guided-reference-post-chat" ref={setReferenceChatTarget}/></div></>}

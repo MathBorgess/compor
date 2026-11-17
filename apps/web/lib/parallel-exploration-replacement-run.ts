@@ -6,8 +6,9 @@ import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract
 import {referenceSchema} from './studio-domain.ts';
 import type {StoredReference} from './studio-storage.ts';
 import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import type {VisualAuthorityScope} from './reference-visual-authority.ts';
 
-type Options={preparation:ParallelPreparation;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;currentReferences?:()=>Promise<StoredReference[]>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
+type Options={preparation:ParallelPreparation;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;currentReferences?:()=>Promise<StoredReference[]>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 
 async function matchesSelection(manifest:VisualInputManifest,references:StoredReference[]):Promise<boolean>{
@@ -70,10 +71,14 @@ export function createReplacementRun(options:Options){
         if(!child||child.status!=='rejected'||epoch===undefined)throw Error('replacement_unavailable');
         const next={position,previousId:child.requestId,requestId:crypto.randomUUID(),intentId:crypto.randomUUID(),expectedEpoch:epoch};
         let journal=await store.prepareReplacement(scope,observed.journal.revision,next);claim=next;ensure();
-        const confirmed=await command.create(preparation,next,key,abort.signal);ensure();journal=await store.updateReplacement(scope,journal.revision,{kind:'intent_confirmed',epoch:confirmed});ensure();
+        const visualScope:VisualAuthorityScope={userId:preparation.userId,projectId:preparation.projectId,conversationId:preparation.conversationId,requestId:next.requestId,batchId:preparation.batchId,purpose:'replacement'};
+        if(visualSnapshot&&options.createVisualAuthoritySnapshot){await options.createVisualAuthoritySnapshot(visualScope,visualSnapshot.manifest);ensure();}
+        const authority=visualSnapshot&&options.visualAuthorityHeaders?{requestId:next.requestId,headers:await options.visualAuthorityHeaders(visualScope,visualSnapshot.manifest)}:undefined;ensure();
+        const confirmed=await command.create(preparation,next,key,abort.signal,authority);ensure();journal=await store.updateReplacement(scope,journal.revision,{kind:'intent_confirmed',epoch:confirmed});ensure();
         await store.updateReplacement(scope,journal.revision,{kind:'submitted'});ensure();
         onNotice('Aguardando confirmação da reposição.');
-        let settled=false,checkedAfterSettlement=false;void command.dispatch(preparation,next,planned.binding,key,abort.signal,visualSnapshot??undefined).catch(()=>{}).finally(()=>{settled=true;});
+        const dispatchAuthority=visualSnapshot&&options.visualAuthorityHeaders?{requestId:next.requestId,headers:await options.visualAuthorityHeaders(visualScope,visualSnapshot.manifest)}:undefined;ensure();
+        let settled=false,checkedAfterSettlement=false;void command.dispatch(preparation,next,planned.binding,key,abort.signal,visualSnapshot??undefined,dispatchAuthority).catch(()=>{}).finally(()=>{settled=true;});
         while(valid()){
           const value=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(value.snapshot,value.journal);ensure();
           const result=value.journal.progress.children.find(item=>item.position===position);

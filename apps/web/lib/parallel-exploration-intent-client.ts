@@ -14,10 +14,10 @@ export function createParallelIntentClient(fetchApi:typeof fetch=fetch){
     const response=await fetchApi('/api/studio/exploration-batches/intent/epoch',{method:'POST',headers,body:JSON.stringify({projectId})});
     if(!response.ok)throw Error('intent_unavailable');return epochResponse.parse(await response.json()).epoch;
   }
-  async function create(preparation:ParallelPreparation,apiKey:string):Promise<number>{
+  async function create(preparation:ParallelPreparation,apiKey:string,authority?:{requestId:string;headers:Record<string,string>}):Promise<number>{
     if(!preparation.intentId||preparation.expectedEpoch===undefined||preparation.revocationRequested)throw Error('intent_invalid');
     if(preparation.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(apiKey))throw Error('credential_unavailable');
-    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:preparation.intentId,purpose:'batch',context:preparation.context,expectedEpoch:preparation.expectedEpoch,...(preparation.visualInput===undefined?{}:{visualInput:preparation.visualInput}),...(preparation.credentialSource==='byok'?{apiKey}:{})})});
+    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers:{...headers,...authority?.headers},body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:preparation.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),purpose:'batch',context:preparation.context,expectedEpoch:preparation.expectedEpoch,...(preparation.visualInput===undefined?{}:{visualInput:preparation.visualInput}),...(preparation.credentialSource==='byok'?{apiKey}:{})})});
     if(!response.ok)throw Error('intent_unconfirmed');
     const value=created.parse(await response.json());
     if(value.epoch!==preparation.expectedEpoch+1)throw Error('intent_unconfirmed');
