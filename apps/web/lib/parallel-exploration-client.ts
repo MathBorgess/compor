@@ -1,5 +1,6 @@
 import * as z from './schema.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
+import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
 
 const id=z.uuid();
@@ -24,16 +25,16 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
     return {};
   }
   async function planRequest(preparation:ParallelPreparation,apiKey:string):Promise<PlanningResult>{
-    const response=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers,body:JSON.stringify({op:'poll',projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,requestId:preparation.planRequestId,context:preparation.context,...credential(preparation,apiKey)})});
+    const response=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers,body:JSON.stringify({op:'poll',projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,requestId:preparation.planRequestId,context:preparation.context,...(preparation.visualInput===undefined?{}:{visualInput:preparation.visualInput}),...credential(preparation,apiKey)})});
     const result=planResponse.parse(await response.json());
     if(result.requestId!==undefined&&result.requestId!==preparation.planRequestId)throw Error('plan_mismatch');
     if(result.status==='completed'){
-      if(!response.ok||result.requestId!==preparation.planRequestId||result.batchId!==preparation.batchId||!result.planBinding||!validateExplorationContext(preparation.context)||!validateCompletedExplorationPlan(result.plan,preparation.context))throw Error('plan_mismatch');
+      if(!response.ok||result.requestId!==preparation.planRequestId||result.batchId!==preparation.batchId||!result.planBinding||!validateExplorationContext(preparation.context)||!validateCompletedExplorationPlan(result.plan,preparation.context,preparation.visualInput===undefined?undefined:parseVisualInputManifest(preparation.visualInput)))throw Error('plan_mismatch');
       if(preparation.stage==='planning')preparation=await store.updatePreparation(preparation.userId,preparation.revision,{kind:'planned',plan:result.plan});
       else if(!['planned','executing'].includes(preparation.stage)||JSON.stringify(preparation.plan)!==JSON.stringify(result.plan))throw Error('plan_mismatch');
       if(preparation.stage==='executing'){
         const journal=await store.load({userId:preparation.userId,projectId:preparation.projectId,batchId:preparation.batchId});
-        if(!canInspect()||!journal||journal.conversationId!==preparation.conversationId||journal.planRequestId!==preparation.planRequestId||journal.credentialSource!==preparation.credentialSource||JSON.stringify(journal.context)!==JSON.stringify(preparation.context)||JSON.stringify(journal.plan)!==JSON.stringify(result.plan))throw Error('plan_mismatch');
+        if(!canInspect()||!journal||journal.conversationId!==preparation.conversationId||journal.planRequestId!==preparation.planRequestId||journal.credentialSource!==preparation.credentialSource||JSON.stringify(journal.context)!==JSON.stringify(preparation.context)||JSON.stringify(journal.visualInput)!==JSON.stringify(preparation.visualInput)||JSON.stringify(journal.plan)!==JSON.stringify(result.plan))throw Error('plan_mismatch');
       }
       return {preparation,binding:result.planBinding,status:result.status};
     }
