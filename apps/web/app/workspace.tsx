@@ -1,19 +1,16 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { parseSessionState } from "../lib/session-state";
 import { useAICredentials } from "./use-ai-credentials";
 import { clearReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
 import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
-import dynamic from "next/dynamic";
 import BrandSymbol from "./brand-symbol";
 import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content";
 import "./entry.css";
 import "./studio-shell.css";
 
-const StudioApp = dynamic(() => import("./studio-app"), {
-  loading: () => <p role="status">Abrindo sua conversa…</p>,
-});
+const StudioApp = lazy(() => import("./studio-app"));
 export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false, referenceAuthorityEnabled = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean }) {
   const [objective, setObjective] = useState("");
   const [authState, setAuthState] = useState("checking");
@@ -249,42 +246,44 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
           inert={authState !== "connected"}
           data-testid="studio-auth-boundary"
         >
-          <StudioApp
-            developerMode={developerMode}
-            parallelAvailable={parallelAvailable}
-            selectedVisualsAvailable={selectedVisualsAvailable}
-            selectedVisualsRequired={selectedVisualsRequired}
-            referenceAuthorityEnabled={referenceAuthorityEnabled}
-            key={authenticatedUser}
-            userId={authenticatedUser}
-            accountLabel={account?.label ?? "Conta conectada"}
-            localAccount={account?.local ?? localAuth}
-            onSignOut={signOut}
-            initialObjective={objective}
-            isAuthenticated={() =>
-              activeIdentity.current === `user:${authenticatedUser}`
-            }
-            hasApiKey={credentials.hasApiKey}
-            canUseAI={credentials.canUseAI}
-            credentialSource={credentials.source}
-            credentialEpoch={credentials.epoch}
-            defaultAvailable={credentials.defaultAvailable}
-            onUseAI={credentials.useAI}
-            onPauseAI={credentials.pauseAI}
-            getApiKey={credentials.getApiKey}
-            onRemoveKey={credentials.useDefault}
-            recoveryBanner={
-              hasPendingDraft ? (
-                <div role="status">
-                  <p>Há um rascunho anterior preservado neste navegador.</p>
-                  <button onClick={recoverPending}>
-                    Recuperar rascunho anterior
-                  </button>
-                </div>
-              ) : null
-            }
-            keyInput={credentials.keyInput}
-          />
+          <Suspense fallback={<p role="status">Abrindo sua conversa…</p>}>
+            <StudioApp
+              developerMode={developerMode}
+              parallelAvailable={parallelAvailable}
+              selectedVisualsAvailable={selectedVisualsAvailable}
+              selectedVisualsRequired={selectedVisualsRequired}
+              referenceAuthorityEnabled={referenceAuthorityEnabled}
+              key={authenticatedUser}
+              userId={authenticatedUser}
+              accountLabel={account?.label ?? "Conta conectada"}
+              localAccount={account?.local ?? localAuth}
+              onSignOut={signOut}
+              initialObjective={objective}
+              isAuthenticated={() =>
+                activeIdentity.current === `user:${authenticatedUser}`
+              }
+              hasApiKey={credentials.hasApiKey}
+              canUseAI={credentials.canUseAI}
+              credentialSource={credentials.source}
+              credentialEpoch={credentials.epoch}
+              defaultAvailable={credentials.defaultAvailable}
+              onUseAI={credentials.useAI}
+              onPauseAI={credentials.pauseAI}
+              getApiKey={credentials.getApiKey}
+              onRemoveKey={credentials.useDefault}
+              recoveryBanner={
+                hasPendingDraft ? (
+                  <div role="status">
+                    <p>Há um rascunho anterior preservado neste navegador.</p>
+                    <button onClick={recoverPending}>
+                      Recuperar rascunho anterior
+                    </button>
+                  </div>
+                ) : null
+              }
+              keyInput={credentials.keyInput}
+            />
+          </Suspense>
         </div>
       </>
     );
