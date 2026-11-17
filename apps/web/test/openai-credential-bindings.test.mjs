@@ -26,6 +26,15 @@ test('new recovery proofs retain the SQL token grammar while binding the effecti
   }
 });
 
+test('a recovery proof with twenty visual references fits the persisted binding and remains credential-bound',()=>{
+  const ids=Array.from({length:20},(_,i)=>`aaaaaaaa-aaaa-4aaa-8aaa-${String(i).padStart(12,'0')}`);
+  const own=bindings(),proof=own.issueRecovery({...session,visualInputDigest:'a'.repeat(64),visualReferenceIds:ids});
+  assert.ok(proof.length<=2048,`proof length ${proof.length} exceeds SQL limit`);
+  assert.deepEqual(own.verifyBoundRecovery({...scope,token:proof}).visualReferenceIds,ids);
+  assert.equal(bindings('byok',anotherKey).verifyBoundRecovery({...scope,token:proof}),null);
+  assert.equal(bindings('default').verifyBoundRecovery({...scope,token:proof}),null);
+});
+
 test('stripping the credential envelope cannot downgrade a new proof into the legacy BYOK path',()=>{
   const own=bindings(),proof=own.issueRecovery(session),bare=inner(proof);
   assert.equal(own.verifyRecovery({...scope,token:bare}),null);

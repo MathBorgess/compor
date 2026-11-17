@@ -4,17 +4,17 @@ import type { StudioReference } from "../lib/studio-domain.ts";
 import "./reference-exploration.css";
 
 type Item = StudioReference & { url?: string;scopeLabel?:string;removeLabel?:string;onShare?:()=>void };
-export type ReferenceOrigin = "pinterest" | "generated" | "upload";
+export type ReferenceOrigin = "pinterest" | "generated" | "upload" | "unknown";
 export function referenceOrigin(reference: StudioReference): ReferenceOrigin {
   if (reference.source && "originUrl" in reference.source) return "pinterest";
-  if (reference.source && "kind" in reference.source) return "generated";
-  return "upload";
+  if (reference.source && "kind" in reference.source) return reference.source.kind==='generated'?"generated":"upload";
+  return "unknown";
 }
-export const REFERENCE_ORIGIN_LABEL: Record<ReferenceOrigin, string> = { pinterest: "Pinterest · externa", generated: "Gerada pelo Compor", upload: "Enviada por você" };
+export const REFERENCE_ORIGIN_LABEL: Record<ReferenceOrigin, string> = { pinterest: "Pinterest · externa", generated: "Gerada pelo Compor", upload: "Enviada por você", unknown:"Origem desconhecida · reanexe para incluir" };
 function referenceTitle(reference: StudioReference) {
   const source = reference.source;
   if (source && "originUrl" in source) return source.title ?? "Referência do Pinterest";
-  if (source && "kind" in source) return source.ordinal ? `Imagem ${source.ordinal}` : "Imagem gerada";
+  if (source && "kind" in source && source.kind==='generated') return source.ordinal ? `Imagem ${source.ordinal}` : "Imagem gerada";
   return reference.name;
 }
 
