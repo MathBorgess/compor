@@ -27,7 +27,7 @@ export default function ParallelExplorationRecovery(props:Props){
     if(!preparation||!sameProject||!sameConversation||lock.current||!current.current.isAuthenticated())return;
     if(['planning','planned'].includes(preparation.stage)&&current.current.credentialSource!==preparation.credentialSource){setNotice('Escolha a fonte de IA usada no planejamento para consultar a tentativa original.');return;}
     const serial=++sequence.current;lock.current=true;setBusy(true);setNotice('');const store=createParallelJournalStore();
-    const inScope=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===preparation.conversationId&&current.current.isAuthenticated();
+    const inScope=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===preparation.conversationId&&current.current.isAuthenticated()&&(preparation.stage==='executing'||current.current.credentialSource===preparation.credentialSource);
     const client=createParallelExplorationClient({store,canInspect:inScope});
     try{
       if(preparation.stage==='planning'||preparation.stage==='planned'){
