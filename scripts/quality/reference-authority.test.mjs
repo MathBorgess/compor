@@ -146,3 +146,25 @@ test('deleting another post does not erase the mirror or revoke unrelated select
  assert.equal((await f.read()).state.posts.length,1,'no automatic selection cleanup');
  assert.equal((await f.snapshot(value,{requestId:id(50),pieceId:piece})).status,'not_found');
 });
+
+test('review: foreign session, account, scope and revoked capability never authorize the existing snapshot',async t=>{
+ const f=await fixture(t),value=state([reference(20,'external')]);await f.write(value);await f.grant();await f.snapshot(value,{consentId:consent,secret});
+ assert.equal(await f.check({secret}),true);
+ await f.actor(owner,id(90));assert.equal(await f.check({secret}),false);
+ await f.actor(other,id(90));assert.equal(await f.check({secret}),false);assert.equal(await f.receipt(),null);assert.equal(await f.scalar('select get_reference_selection_command($1,$2) as value',[project,id(40)]),null);
+ await f.actor();assert.equal(await f.check({secret,projectId:otherProject}),false);assert.equal(await f.check({secret,pieceId:piece}),false);assert.equal(await f.check({secret,batchId:id(99)}),false);
+ await f.revoke();assert.equal((await f.grant()).status,'revoked');assert.equal(await f.check({secret}),false);assert.ok(await f.receipt());
+});
+test('review: all authority tables and internal helpers deny direct authenticated mutation or invocation',async t=>{
+ const f=await fixture(t);
+ for(const table of ['reference_selection_mirrors','reference_selection_commands','reference_consent_sessions','reference_authority_snapshots']){
+  await assert.rejects(f.db.exec(`delete from ${table}`),error=>error.code==='42501');
+ }
+ for(const sql of ['select current_reference_session()',"select reference_source_record('{}'::jsonb)","select reference_effective_entries('{}'::jsonb,null)"]){await assert.rejects(f.db.exec(sql),error=>error.code==='42501');}
+ await f.db.exec('set role anon');await assert.rejects(f.db.query('select get_reference_selection($1)',[project]),error=>error.code==='42501');
+});
+test('review: identical content at later revision invalidates snapshot and never resurrects old CAS',async t=>{
+ const f=await fixture(t);await f.write();await f.snapshot();assert.equal(await f.check(),true);
+ assert.equal((await f.write(state(),1,id(41))).status,'applied');assert.equal(await f.check(),false);
+ assert.equal((await f.write(state(),0,id(42))).status,'conflict');assert.equal((await f.write(state(),0,id(40))).revision,1);assert.equal((await f.read()).revision,2);assert.ok(await f.receipt());
+});
