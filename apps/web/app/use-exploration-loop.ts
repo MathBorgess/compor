@@ -120,6 +120,8 @@ export function useExplorationLoop(props: LoopProps) {
           const prior = localStorage.getItem(pendingKey);
           if (prior !== null) {
             const pending = pendingSchema.parse(JSON.parse(prior));
+            if(pending.projectId!==props.projectId){stop('Há uma exploração anterior em outro projeto. Abra o projeto de origem para consultar o recibo.');return;}
+            if(pending.conversationId&&pending.conversationId!==(scope??'references')){stop('Há uma exploração anterior em outra conversa. Abra a conversa de origem para consultar o recibo.');return;}
             const response = await fetch(`/api/studio/explorations?${new URLSearchParams({ projectId: pending.projectId })}`, { cache: "no-store", signal: cancel.signal });
             if (!response.ok) throw Error("unconfirmed");
             const rows = listSchema.parse(await response.json()).images;
@@ -136,7 +138,8 @@ export function useExplorationLoop(props: LoopProps) {
             }
             if (!match || match.state !== "completed") { stop("Uma exploração anterior ainda não foi confirmada. Consulte seu estado antes de continuar."); return; }
             const priorProgress=pending.projectId===props.projectId ? progress : readBatchProgress(localStorage,batchKey(pending.projectId),sequenceKey(pending.projectId),()=>crypto.randomUUID());
-            const reconciled=recordBatchCompletion(priorProgress,pending,Date.now());
+            const confirmedAt=Date.now();
+            const reconciled=freezeBatchWait(recordBatchCompletion(priorProgress,pending,confirmedAt),confirmedAt);
             localStorage.setItem(batchKey(pending.projectId),JSON.stringify(reconciled));
             localStorage.setItem(sequenceKey(pending.projectId),String(reconciled.sequence));
             if(pending.projectId===props.projectId)progress=reconciled;
@@ -264,14 +267,15 @@ export function useExplorationLoop(props: LoopProps) {
             if (!response.ok || result.status !== "completed" || result.requestId !== requestId) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
             const completedAt=Date.now();
             progress=recordBatchCompletion(progress,pending,completedAt);
-            // A third image can finish after leaving the references screen.
-            // Its newly created wait must start counting only when the loop
-            // becomes active again, just like an already-running wait.
-            if(!active || !current.current.enabled)progress=freezeBatchWait(progress,completedAt);
+            // The visible delay starts only after the completion callback has
+            // finished; a slow callback or a pause cannot consume that delay.
+            progress=freezeBatchWait(progress,completedAt);
             localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.setItem(sequenceKey(props.projectId), String(progress.sequence));
             await current.current.onCompleted?.(requestId,sequence+1,pending.conversationId,pending.creationContext);
             if(!active||!sameCredential())return;
+            progress=resumeBatchWait(progress,Date.now());
+            localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
             localStorage.removeItem(pendingKey);
             setCompleted(value => value + 1);
           }
