@@ -33,7 +33,7 @@ async function openCurrentVersion(page,version){
  await openEditor(page);
 }
 async function chooseFiles(page,label,files){if(label==='Adicionar PNG ou JPEG'){await addProjectReferences(page,files);return;}if(label==='Imagem-base PNG ou JPEG'&&!await page.getByLabel(label,{exact:true}).isVisible())await page.getByRole('button',{name:'Imagem-base',exact:true}).click();const [chooser]=await Promise.all([page.waitForEvent('filechooser'),page.getByLabel(label,{exact:true}).click()]);await chooser.setFiles(files);}
-async function app(t){
+async function app(t,{defaultAvailable=false}={}){
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const recordStartup=chunk=>{const output=startup+chunk;startup=output.length>6000?output.slice(0,4500)+output.slice(-1500):output;};
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'https://example.supabase.co',SUPABASE_PUBLISHABLE_KEY:'sb_publishable_test',APP_ORIGIN:origin}});child.stdout.on('data',recordStartup);child.stderr.on('data',recordStartup);
@@ -48,7 +48,7 @@ async function app(t){
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());if(url.origin!==origin){external.push(url.origin);return route.abort();}
   if(url.pathname==='/auth/session')return route.fulfill({json:{state:'connected',userId}});
-  if(url.pathname==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
+  if(url.pathname==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable}});
   if (url.pathname === '/api/studio/explorations/signals') return route.fulfill({json:{signals:[]}});
   if (url.pathname === '/api/studio/explorations/status') return route.fulfill({json:{status:'active'}});
   if (url.pathname === '/api/studio/references/signals') {
@@ -522,10 +522,27 @@ test('limite de uso do provedor é informado sem reenviar o pedido',{skip:!exist
  await openOriginal(page,origin);
  await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Criar uma proposta para o post.');
  await page.getByRole('button',{name:'Enviar →',exact:true}).click();
- await page.getByText('A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e o limite da organização OpenAI.',{exact:true}).waitFor();
+ await page.getByText('A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.',{exact:true}).waitFor();
  await page.waitForTimeout(2200); // Longer than the chat's two-second poll interval.
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat'&&call.body.op!=='poll').length,1);
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat'&&call.body.op==='poll').length,1);
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('limite da IA do Compor oferece chave própria ou edição sem reenviar',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow,errors,external}=await app(t,{defaultAvailable:true});
+ flow.chat=body=>body.op==='poll'?{status:'failed',error:'provider_usage_limit'}:{status:'running'};
+ await openOriginal(page,origin,{key:false});
+ await openSettings(page,'IA');await page.getByRole('button',{name:/^Usar a IA do Compor/}).click();await closeSettings(page);
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Criar uma proposta para o post.');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ await page.getByText('A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.',{exact:true}).waitFor();
+ await page.waitForTimeout(2200);
+ const chats=calls.filter(call=>call.path==='/api/studio/chat');
+ assert.equal(chats.filter(call=>call.body.op!=='poll').length,1);
+ assert.equal(chats.filter(call=>call.body.op==='poll').length,1);
+ assert.ok(chats.every(call=>!Object.hasOwn(call.body,'apiKey')),'a chave padrão não é enviada ao navegador');
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
