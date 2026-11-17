@@ -498,3 +498,20 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  assert.equal(selected.length,2);assert.notEqual(selected[0].id,selected[1].id);
  assert.deepEqual(errors,[]);
 });
+
+test('pedido incerto permanece sinalizado e recuperável com conversa minimizada',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow}=await app(t);
+ flow.chat=()=>({status:'unknown'});
+ await openOriginal(page,origin);
+ await page.locator('.guided-conversation:not([hidden])').getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Pedido particular de teste');
+ await page.getByRole('button',{name:'Enviar →',exact:true}).click();
+ const consult=page.getByRole('button',{name:'Consultar esta tentativa',exact:true});await consult.waitFor();
+ await page.getByRole('button',{name:'Minimizar conversa',exact:true}).click();
+ const notice=page.getByRole('status').filter({hasText:'Há um pedido ainda não confirmado.'});
+ await notice.waitFor();assert.equal(await notice.innerText(),'Há um pedido ainda não confirmado. Abrir a conversa desse pedido');
+ assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);
+ await notice.getByRole('button',{name:'Abrir a conversa desse pedido',exact:true}).click();
+ await consult.waitFor();assert.equal(await notice.count(),0);
+ assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1,'abrir a conversa não reenvia o pedido');
+ assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
+});
