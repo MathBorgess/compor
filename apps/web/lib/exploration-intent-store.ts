@@ -5,7 +5,8 @@ import type {IntentStore} from './exploration-intent-route.ts';
 const id=z.string().uuid(),digest=z.string().regex(/^[a-f0-9]{64}$/),epoch=z.number().int().nonnegative().safe();
 const row=z.strictObject({userId:id,projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,contextDigest:digest,credentialDigest:digest,purpose:z.enum(['batch','replacement']),position:z.number().int().min(1).max(3).nullable(),previousId:id.nullable(),state:z.enum(['active','revoked','consumed']),epoch});
 const createResponse=z.discriminatedUnion('status',[z.strictObject({status:z.enum(['reserved','existing']),intent:row}),z.strictObject({status:z.enum(['conflict','busy','revoked','not_found'])})]);
-const revokeResponse=z.discriminatedUnion('status',[z.strictObject({status:z.enum(['revoked','conflict']),epoch}),z.strictObject({status:z.literal('not_found')})]);
+const revokeResponse=z.discriminatedUnion('status',[z.strictObject({status:z.literal('revoked'),epoch,revocationEpoch:epoch.nullable()}),z.strictObject({status:z.literal('conflict'),epoch}),z.strictObject({status:z.literal('not_found')})]).refine(value=>value.status!=='revoked'||value.revocationEpoch===null||value.revocationEpoch<=value.epoch);
+const stateResponse=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch,revocationEpoch:epoch.nullable()}).refine(value=>value.revocationEpoch===null||(value.state==='revoked'&&value.revocationEpoch<=value.epoch));
 export function createExplorationIntentStore(config:Pick<AuthConfig,'service'|'key'>,fetchApi:typeof fetch=fetch):IntentStore{
  async function rpc(actor:Actor,name:string,args:Record<string,string|number|null>){
   if(!id.safeParse(actor.userId).success||!/^\S{1,8192}$/.test(actor.token))throw Error('invalid actor');
@@ -22,7 +23,7 @@ export function createExplorationIntentStore(config:Pick<AuthConfig,'service'|'k
    return {status:result.status==='reserved'?'created':'existing',epoch:r.epoch};
   },
   async revoke(value){return revokeResponse.parse(await rpc(value.actor,'revoke_exploration_intent',{p_project_id:value.projectId,p_intent_id:value.intentId,p_expected_epoch:value.expectedEpoch}));},
-  async state(value){const result=await rpc(value.actor,'get_exploration_intent_state',{p_project_id:value.projectId,p_intent_id:value.intentId});return result===null?null:z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch}).parse(result);},
+  async state(value){const result=await rpc(value.actor,'get_exploration_intent_state',{p_project_id:value.projectId,p_intent_id:value.intentId});return result===null?null:stateResponse.parse(result);},
   async epoch(value){return {epoch:epoch.parse(await rpc(value.actor,'get_exploration_intent_epoch',{}))};},
  };
 }

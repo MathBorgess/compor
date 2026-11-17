@@ -12,7 +12,8 @@ const inputSchema=z.strictObject({projectId:id,conversationId:z.union([z.literal
 const replacementSchema=inputSchema.omit({imageIds:true}).extend({position:z.number().int().min(1).max(3),previousId:id,requestId:id}).refine(value=>value.previousId!==value.requestId);
 type BatchInput=z.infer<typeof inputSchema>;
 const reservationSchema=z.strictObject({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback','cooldown','partial','conflict','revoked']),isNew:z.boolean()});
-const intentStateSchema=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch:z.number().int().nonnegative().safe()});
+const intentEpoch=z.number().int().nonnegative().safe();
+const intentStateSchema=z.strictObject({state:z.enum(['active','consumed','revoked','absent']),epoch:intentEpoch,revocationEpoch:intentEpoch.nullable()}).refine(value=>value.revocationEpoch===null||(value.state==='revoked'&&value.revocationEpoch<=value.epoch));
 type BatchReservation=z.infer<typeof reservationSchema>;
 type BatchStore={
  reserveBatch:(actor:Actor,input:{projectId:string;batchId:string;pieceId:string|null;planDigest:string;intentId:string;intentSecret:string;imageIds:string[];promptDigests:string[];rejectionDigests:string[]})=>Promise<BatchReservation>;

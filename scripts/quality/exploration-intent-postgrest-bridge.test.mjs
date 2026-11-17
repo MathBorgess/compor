@@ -28,6 +28,7 @@ const png=new Uint8Array([137,80,78,71,13,10,26,10]);
 async function fixture(t){
  const db=new PGlite();t.after(()=>db.close());await db.exec(await databaseSql());
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000034_exploration_revocable_intents.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261117000035_exploration_revocation_epoch.sql',import.meta.url),'utf8'));
  await db.query('insert into auth.users values($1),($2)',[owner,other]);await db.query('insert into projects(id,owner_id) values($1,$2)',[projectId,owner]);
  await db.query('insert into project_posts(project_id,piece_id,name) values($1,$2,$3)',[projectId,pieceId,'Post sintético']);
  await db.exec('set role authenticated');
@@ -87,10 +88,12 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  assert.equal((await batchRoute.post(mk({...execute,context:{...context,idea:'Alterado'}},headers))).status,403);assert.equal(images,0);
  let release;const gate=new Promise(resolve=>{release=resolve;});f.holdReserve(gate);
  const pending=batchRoute.post(mk(execute,headers));while(!f.calls.includes('reserve_exploration_batch_proven'))await new Promise(resolve=>setTimeout(resolve,1));
- const revoked=await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}));assert.deepEqual(await revoked.json(),{status:'revoked',epoch:2});
+ const revoked=await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}));assert.deepEqual(await revoked.json(),{status:'revoked',epoch:2,revocationEpoch:2});
  release();const stopped=await pending;assert.equal(stopped.status,409);assert.equal((await stopped.json()).status,'revoked');assert.equal(images,0);
  f.holdReserve(null);const stale=await intentRoute.create(mk({...inputs,intentId:freshIntentId,purpose:'batch',expectedEpoch:0,apiKey:key}));assert.equal(stale.status,409);
  const fresh=await intentRoute.create(mk({...inputs,intentId:freshIntentId,purpose:'batch',expectedEpoch:2,apiKey:key}));assert.deepEqual(await fresh.json(),{status:'created',epoch:3});
+ assert.deepEqual(await (await intentRoute.state(mk({projectId,intentId}))).json(),{state:'revoked',epoch:3,revocationEpoch:2});
+ assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:3,revocationEpoch:2});
  const completed=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal((await completed.json()).status,'completed');assert.equal(images,3);
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.equal(batch.state,'completed');assert.deepEqual(batch.images.map(image=>image.status),['completed','completed','completed']);assert.equal(Date.parse(batch.nextAt)-Date.parse(batch.completedAt),15000);
  assert.equal((await (await statusRoute.batch(mk({projectId,batchId}))).json()).state,'completed');
@@ -117,7 +120,7 @@ test('revogação enquanto planos dos filhos aguardam impede os três envios usa
  const pending=route.post(mk({...inputs,intentId,planRequestId:requestId,plan,planBinding:'fixture',imageIds:[id(21),id(22),id(23)]},{'x-compor-openai-key':key}));
  for(let i=0;plans<3&&i<2000;i++)await new Promise(resolve=>setTimeout(resolve,1));
  assert.equal(plans,3,'a reserva deve atingir os três planos');
- assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:2});
+ assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:2,revocationEpoch:2});
  release();assert.equal((await (await pending).json()).status,'unknown');assert.equal(images,0);
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.deepEqual(batch.images.map(image=>image.status),['unknown','unknown','unknown']);
 });

@@ -10,9 +10,9 @@ const projectSchema=z.strictObject({projectId:id}),stateSchema=projectSchema.ext
 const contains=(value:unknown,key:string):boolean=>typeof value==='string'?value.includes(key):Array.isArray(value)?value.some(v=>contains(v,key)):value!==null&&typeof value==='object'?Object.values(value).some(v=>contains(v,key)):false;
 export type IntentStore={
  create:(value:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;purpose:'batch'|'replacement';position:number|null;previousId:string|null;expectedEpoch:number;contextDigest:string;credentialDigest:string;intentProofDigest:string})=>Promise<{status:'created'|'existing';epoch:number}|{status:'conflict'|'busy'|'revoked'|'not_found'}>;
- revoke:(value:{actor:Actor;projectId:string;intentId:string;expectedEpoch:number})=>Promise<{status:'revoked'|'conflict';epoch:number}|{status:'not_found'}>;
+ revoke:(value:{actor:Actor;projectId:string;intentId:string;expectedEpoch:number})=>Promise<{status:'revoked';epoch:number;revocationEpoch:number|null}|{status:'conflict';epoch:number}|{status:'not_found'}>;
  epoch:(value:{actor:Actor;projectId:string})=>Promise<{epoch:number}>;
- state:(value:{actor:Actor;projectId:string;intentId:string})=>Promise<{state:'active'|'consumed'|'revoked'|'absent';epoch:number}|null>;
+ state:(value:{actor:Actor;projectId:string;intentId:string})=>Promise<{state:'active'|'consumed'|'revoked'|'absent';epoch:number;revocationEpoch:number|null}|null>;
 };
 type Deps={appOrigin:string;apiKey?:string;bindings?:PlannerBindings;allowCreate:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:IntentStore};
 async function body(request:Request,limit:number):Promise<unknown>{
