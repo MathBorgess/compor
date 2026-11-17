@@ -58,7 +58,7 @@ export default function ParallelExplorationRecovery(props:Props){
         let latest=await store.loadPreparation(preparation.userId);
         if(!latest||latest.intentId!==preparation.intentId||latest.batchId!==preparation.batchId||!['planning','planned','executing','failed'].includes(latest.stage))throw Error('unavailable');
         const intents=createParallelIntentClient(),observed=await intents.inspect(latest);
-        if(!inScope()||observed.state==='consumed')throw Error('unavailable');
+        if(!inScope())throw Error('unavailable');
         if(!latest.revocationRequested)latest=await store.updatePreparation(latest.userId,latest.revision,{kind:'revoke'});
         const revoked=observed.state==='revoked'?{status:'revoked' as const,revocationEpoch:observed.revocationEpoch}:await intents.revoke(latest);
         if(revoked.status!=='revoked')throw Error('unavailable');
