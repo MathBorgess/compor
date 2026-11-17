@@ -1,6 +1,8 @@
 // Project agent instructions are owner-managed; Next.js must not rewrite them.
 const nextConfig = {
   agentRules: false,
+  // Reduce production chunk overhead; see the measured cache trade-off in docs/quality.
+  experimental: { turbopackChunking: { minChunkSize: 1000000, maxMergeChunkSize: 3000000 } },
   // Browser tests run two files at once; test/next-dist-dir.mjs gives each its own dist dir.
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
   // Project and post URLs render the single studio page; lib/studio-route.ts reads the path on the client.
