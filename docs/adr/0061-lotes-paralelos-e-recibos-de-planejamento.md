@@ -74,6 +74,8 @@ A [evidência local](../quality/2026-11-17-exploracao-paralela-sql.md) distingue
 
 > Complementado em 17/11/2026 pelo [ADR 0063](0063-epoch-original-da-revogacao.md): a migration35 acrescenta `revocationEpoch` às respostas de revogação/estado. `epoch` atual não prova o epoch original de uma revogação; tombstones legados permanecem desconhecidos.
 
+> O [ADR 0064](0064-retomada-paralela-vinculada-a-intencao.md) acrescenta a retomada do gate paralela sob intenção ativa/CAS e um recibo único por intenção. O caminho serial/MCP mantém seu contrato histórico.
+
 A revisão de 17/11 identificou que um plano válido poderia continuar autorizando admissão depois de pausa/saída. A migration `20261117000034_exploration_revocable_intents.sql` fecha essa janela no caminho paralelo: acrescenta uma intenção com prova e epoch monotônico da conta. O backend deriva a preimagem vinculando dono, projeto, conversa, lote, intentId, contexto, fonte/credencial e propósito; SQL guarda apenas o compromisso. O segredo não vai ao navegador.
 
 A criação exige `expectedEpoch`. Sob o mesmo owner lock, compara a versão, cria a intenção e avança o epoch. Ler o epoch não autoriza criar: depois de conflito, é necessário novo pedido explícito; não fazer fetch de epoch e retry automático. Replay conserva `active`, `consumed` ou `revoked` e nunca reinstala autoridade ou prova.

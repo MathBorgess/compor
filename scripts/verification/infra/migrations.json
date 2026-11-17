@@ -142,6 +142,10 @@
     {
       "name": "20261117000035_exploration_revocation_epoch.sql",
       "sha256": "2ce9f22e2d5f1a86b2946f5b7d0161f0dbc4c6f351c552693b83eb9e385fb777"
+    },
+    {
+      "name": "20261117000036_exploration_parallel_review.sql",
+      "sha256": "9cb0fced4eacb562babbd896c6b265f213e9554ebd0fb813713510eb7897bddb"
     }
   ]
 }

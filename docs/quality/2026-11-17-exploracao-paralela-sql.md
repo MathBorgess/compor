@@ -53,4 +53,16 @@ O primeiro ensaio concorrente encontrou um erro no parser do teste, que tentou i
 
 Ambiente: macOS/arm64, Node **24.16.0**, PostgreSQL em container próprio sem rede nem porta publicada, memória limitada a 256 MiB, sobre Colima já ativo (2 CPUs/2 GiB). Auth/Storage continuam sintéticos; não se executou Supabase remoto, fornecedor pago nem integração de navegador neste complemento. A evidência comprova o comportamento local transacional, não cancelamento de uma chamada externa. Os adapters e a UI são verificados separadamente no head integrado.
 
+## Retomada paralela protegida (migration36)
+
+O [ADR 0064](../adr/0064-retomada-paralela-vinculada-a-intencao.md) registra a nova RPC com capacidade ativa, CAS e recibo por intenção. O contrato serial/MCP permanece intacto.
+
+- Red: os seis testes novos falharam antes da implementação das novas RPCs (`/tmp/compor-parallel-review-red.log`).
+- Green: **6/6 regressões** (`/tmp/compor-parallel-review-green.log`), cobrindo revogação antes/depois da retomada, negação de admissão posterior, provas/escopos/CAS, isolamento, replay sem liberar outro ciclo, `not_paused`, planner ativo/desconhecido, rollback e exclusão lógica.
+- `npm run quality:test`: **85/85**, incluindo aplicação das **36 migrations** e verificação dos hashes anteriores (`/tmp/compor-parallel-review-quality.log`).
+- `npm run quality:lint`: passou (`/tmp/compor-parallel-review-lint.log`).
+- `COMPOR_PARALLEL_PG_CONTAINER=compor-parallel-sql-review36-20261117 node supabase/tests/exploration_parallel_concurrency.mjs`: passou no PostgreSQL **17.12** com conexões independentes (`/tmp/compor-parallel-review-postgres.log`). As barreiras confirmam espera na trava da conta nas duas ordens de retomada/revogação e na duplicação de retomada. O recibo permanece recuperável, a admissão pela intenção revogada é recusada e replay não limpa um gate posterior. Os ensaios anteriores também passaram.
+
+O container deste complemento foi isolado, sem rede/portas, limitado a 256 MiB e identificado exclusivamente para a tarefa; o Colima já existente foi preservado. Auth/Storage continuam sintéticos. Não foi executada integração remota, chamada paga, navegador ou deploy neste complemento; endpoint e cliente são verificados no head integrado. O caminho legado permanece capaz de retomar seu gate mediante seu contrato histórico, e não foi apresentado como protegido pela nova capacidade.
+
 Resultado final do complemento: **7/7** nos quatro cenários de intenção mais três verificações de infraestrutura, cinco disputas adicionais PostgreSQL aprovadas e lint aprovado. A execução ampla anterior permaneceu em **72/72**; após as duas recusas conservadoras foram repetidas as fronteiras afetadas, sem repetir verificações não afetadas.
