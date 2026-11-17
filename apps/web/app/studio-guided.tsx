@@ -5,6 +5,7 @@ import type {PieceVersion} from './studio-ui-types';
 import './studio-guided.css';
 import type {PostRecord} from '../lib/post-catalog';
 import {postIds} from '../lib/studio-workflow';
+import {useObjectUrl} from './use-object-url.ts';
 
 const steps=['Contexto','IA','Referências'];
 export function PreparationSteps({phase}:{phase:StudioWorkflow['phase']}) {
@@ -52,7 +53,6 @@ export function GuidedWorkspace({chat,artwork,intro,onManual,chatMinimized,onCha
   </div>;
 }
 export function GuidedArtPreview({image}:{image:Blob}) {
-  const [url,setUrl]=useState(''),[zoom,setZoom]=useState(100);
-  useEffect(()=>{const next=URL.createObjectURL(image);setUrl(next);return()=>URL.revokeObjectURL(next);},[image]);
+  const url=useObjectUrl(image),[zoom,setZoom]=useState(100);
   return <div className="guided-art-preview"><label>Zoom da arte {zoom}%<input type="range" min={25} max={200} step={5} value={zoom} onChange={event=>setZoom(Number(event.target.value))}/></label><div>{url&&<img src={url} alt="Arte integral do post" style={{width:`${zoom}%`,maxWidth:'none'}}/>}</div></div>;
 }

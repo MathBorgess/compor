@@ -26,6 +26,7 @@ import ExplorationGallery from "./exploration-gallery";
 import ReferenceSelectionTray from "./reference-selection-tray";
 import { useExplorationLoop } from "./use-exploration-loop";
 import {useParallelExploration} from './use-parallel-exploration';
+import {releaseObjectUrl} from './release-object-url.ts';
 import {parallelExplorationContext} from '../lib/parallel-exploration-context';
 import {ParallelExplorationProgress} from './parallel-exploration-progress';
 const ParallelExplorationRecovery=dynamic(()=>import('./parallel-exploration-recovery'));
@@ -419,7 +420,7 @@ function ProjectStudio({
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
     [base, setBase] = useState<Blob|null>(null),
-    [referenceImages, setReferenceImages] = useState<{manifest:string;items:(StudioReference & {url:string})[]}|null>(null),
+    [referenceImages, setReferenceImages] = useState<{manifest:string;generation:number;items:(StudioReference & {url:string})[]}|null>(null),
     [proposal, setProposal] = useState<{prompt:string}|null>(null),
     [dialog, setDialog] = useState<Confirmation|null>(null),
     [projectDetails, setProjectDetails] = useState(project),
@@ -428,6 +429,12 @@ function ProjectStudio({
     [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
   const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
   const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
+  const referenceUrls=useRef(new Map<string,number>()),referenceUrlGeneration=useRef(0),referenceUrlCleanup=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>{
+    if(referenceUrlCleanup.current!==null){clearTimeout(referenceUrlCleanup.current);referenceUrlCleanup.current=null;}
+    return()=>{referenceUrlCleanup.current=setTimeout(()=>{for(const url of referenceUrls.current.keys())releaseObjectUrl(url);referenceUrls.current.clear();},0);};
+  },[]);
+  useEffect(()=>{if(!referenceImages)return;for(const [url,generation] of referenceUrls.current){if(generation<referenceImages.generation){releaseObjectUrl(url);referenceUrls.current.delete(url);}}},[referenceImages]);
   const stateRef = useRef<StudioState|null>(null),
     versionRef = useRef<PieceVersion[]>([]),
     toolsRef = useRef<ReturnType<typeof createStudioTools>|null>(null),
@@ -596,8 +603,9 @@ function ProjectStudio({
   }, [openPieceId]);
   useEffect(() => {
     if (!s || !referenceManifest || !local.storage.current) return;
-    let live = true;
+    let live = true,published=false;
     const urls:string[] = [];
+    const generation=++referenceUrlGeneration.current;
     const storage=local.storage.current;
     Promise.all(
       s.references.map(async (ref) => {
@@ -607,22 +615,22 @@ function ProjectStudio({
         );
         if (!value || !live) return null;
         const url = URL.createObjectURL(value.file);
-        urls.push(url);
+        urls.push(url);referenceUrls.current.set(url,generation);
         return { ...ref, url };
       }),
     )
       .then((items) => {
-        if (live) setReferenceImages({manifest:referenceManifest,items:items.filter((item): item is StudioReference & {url:string} => item !== null)});
+        if (live){published=true;setReferenceImages({manifest:referenceManifest,generation,items:items.filter((item): item is StudioReference & {url:string} => item !== null)});}
       })
       .catch(() => {
-        if (live)
+        if (live){live=false;urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
           setNotice(
             "Não foi possível recuperar as referências deste navegador.",
-          );
+          );}
       });
     return () => {
       live = false;
-      urls.forEach((url) => URL.revokeObjectURL(url));
+      if(!published)urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
     };
   }, [referenceManifest, project.id, userId]);
   useEffect(() => {

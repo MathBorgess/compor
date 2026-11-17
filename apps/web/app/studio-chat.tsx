@@ -5,6 +5,7 @@ import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormE
 import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
+import {useObjectUrl} from './use-object-url.ts';
 import Markdown from "markdown-to-jsx";
 import {
   prepareAdjustment,
@@ -128,22 +129,22 @@ export default function StudioChat({
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
   const [orphanNotice,setOrphanNotice]=useState('');
   const [quickReplies,setQuickReplies]=useState<QuickReplyEntry[]>([]);
-  const [referencePreview,setReferencePreview]=useState<{id:string;url:string}|null>(null);
+  const [referencePreview,setReferencePreview]=useState<{id:string;file:Blob}|null>(null);
   const referenceWaitListener=useRef(onReferenceWait);
   referenceWaitListener.current=onReferenceWait;
   const referenceLoader=useRef(loadReference);
   referenceLoader.current=loadReference;
   const latestReference=state.references.at(-1);
+  const referencePreviewUrl=useObjectUrl(referenceWorkbench&&referencePreview&&referencePreview.id===latestReference?.id?referencePreview.file:null);
   useEffect(()=>{
     setReferencePreview(null);
     if(!referenceWorkbench||!latestReference)return;
-    let active=true,url:string|undefined;
+    let active=true;
     void referenceLoader.current(latestReference.id).then(image=>{
       if(!active||!image)return;
-      url=URL.createObjectURL(image.file);
-      setReferencePreview({id:latestReference.id,url});
+      setReferencePreview({id:latestReference.id,file:image.file});
     }).catch(()=>{ /* The selected reference and its context remain available without a preview. */ });
-    return()=>{active=false;if(url)URL.revokeObjectURL(url);};
+    return()=>{active=false;};
   },[referenceWorkbench,state.userId,state.projectId,conversationId,latestReference?.id]);
   const [currentContext,setCurrentContext]=useState<{value:string;digest:string}|null>(null);
   const attemptSource=useRef<CredentialSource>(credentialSource);
@@ -1141,7 +1142,7 @@ export default function StudioChat({
       <form className="studio-chat-composer" onSubmit={send}>
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
         {referenceWorkbench&&latestReference&&<span className="studio-reference-composer-context" title={`Última referência escolhida: ${lastReferenceTitle}. A conversa considera toda a seleção.`}>
-          {referencePreview?.id===latestReference.id&&<img src={referencePreview.url} alt="" width="36" height="36"/>}
+          {referencePreviewUrl&&<img src={referencePreviewUrl} alt="" width="36" height="36"/>}
           <span>{lastReferenceTitle}<small>{state.references.length} referências na conversa</small></span>
         </span>}
         <label className="studio-visually-hidden" htmlFor={composerId}>Sua mensagem</label>
