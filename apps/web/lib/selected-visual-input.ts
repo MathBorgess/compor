@@ -1,4 +1,4 @@
-import {validateVisualInputManifest, validateVisualReferenceSelection, parseVisualInputManifest, type LocalVisualInputManifest, type VisualInputManifest, type VisualMime} from '@compor/agents-api/visual-input-contract';
+import {MAX_VISUAL_TRANSPORT_FILE_BYTES, validateVisualInputManifest, validateVisualReferenceSelection, parseVisualInputManifest, type LocalVisualInputManifest, type VisualInputManifest, type VisualMime} from '@compor/agents-api/visual-input-contract';
 import {referenceSchema, type StudioReference} from './studio-domain.ts';
 import type {StoredReference} from './studio-storage.ts';
 import {studioImageDimensions, studioImageDimensionsMatch} from './studio-image.ts';
@@ -59,7 +59,7 @@ async function prepareVisualEntries(selected:StudioReference[],loadReference:Pre
   }
   let remaining=maxBytes,count=sources.length;
   const budgets=sources.map(item=>item.file.size);
-  for(const {size,index} of sources.map((item,index)=>({size:item.file.size,index})).sort((a,b)=>a.size-b.size)){const budget=Math.min(size,Math.floor(remaining/count));budgets[index]=budget;remaining-=budget;count--;}
+  for(const {size,index} of sources.map((item,index)=>({size:item.file.size,index})).sort((a,b)=>a.size-b.size)){const budget=Math.min(size,MAX_VISUAL_TRANSPORT_FILE_BYTES,Math.floor(remaining/count));budgets[index]=budget;remaining-=budget;count--;}
   if(budgets.some(budget=>budget<1))throw invalid();
   const entries:Array<LocalVisualInputManifest['entries'][number]>=[],blobs:Blob[]=[];
   for(const [index,{reference,file}] of sources.entries()){

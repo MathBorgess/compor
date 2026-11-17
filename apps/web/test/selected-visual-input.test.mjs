@@ -66,6 +66,12 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const reduced=await prepareSelectedVisualInput({references:[largeRef],maxBytes:8192,loadReference:key=>storage.getReference(scope,key)});
   const bitmap=await createImageBitmap(reduced.blobs[0]),check=document.createElement('canvas');check.width=bitmap.width;check.height=bitmap.height;check.getContext('2d').drawImage(bitmap,0,0);bitmap.close();
   const optimized=reduced.blobs[0].size<=8192&&reduced.blobs[0].type==='image/png'&&reduced.manifest.entries[0].transformation==='optimized-v1'&&check.getContext('2d').getImageData(0,0,1,1).data[3]<255;
+  const big=document.createElement('canvas');big.width=900;big.height=900;const bigCtx=big.getContext('2d'),bigPixels=bigCtx.createImageData(900,900);let bigSeed=42;
+  for(let i=0;i<bigPixels.data.length;i+=4){bigSeed=(bigSeed*1664525+1013904223)>>>0;bigPixels.data[i]=bigSeed>>>24;bigPixels.data[i+1]=bigSeed>>>16;bigPixels.data[i+2]=bigSeed>>>8;bigPixels.data[i+3]=255;}bigCtx.putImageData(bigPixels,0,0);
+  const bigBlob=await new Promise(resolve=>big.toBlob(resolve,'image/png'));const bigFile=new File([bigBlob],'big.png',{type:'image/png'});
+  const bigRef=await storage.putReference({...scope,id:id(22),file:bigFile,source:{kind:'local-upload'}});
+  const capped=await prepareSelectedVisualInput({references:[bigRef],loadReference:key=>storage.getReference(scope,key)});
+  const perImage=bigFile.size>786414&&capped.blobs[0].size<=786414&&capped.manifest.entries[0].transformation==='optimized-v1';if(!perImage)throw Error(`sizes ${bigFile.size} ${capped.blobs[0].size} ${capped.manifest.entries[0].transformation}`);
   let badBudget=false;try{await prepareSelectedVisualInput({references:[],maxBytes:3*1024*1024,loadReference:async()=>null});}catch{badBudget=true;}
   let duplicate=false;try{selectedLocalUploads([local,local]);}catch{duplicate=true;}
   const empty=await prepareSelectedVisualInput({references:[legacy],loadReference:async()=>{throw Error('unexpected');}});
@@ -100,7 +106,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   await new Promise((resolve,reject)=>{const tx=db.transaction('visualSnapshots','readwrite'),store=tx.objectStore('visualSnapshots'),key=JSON.stringify([scope.userId,scope.projectId,id(11)]),request=store.get(key);request.onsuccess=()=>store.put({...request.result,blobs:[]},key);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   const reread=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'});let evicted=false;try{await reread.loadVisualSnapshot({...scope,batchId:id(11)},id(7));}catch(error){evicted=error.code==='parallel_storage_corrupt';}
   const retained=Boolean(await reread.loadPreparation(scope.userId));reread.close();storage.close();
-  return {onlyLocal,noInfer,optimized,badBudget,triage,artworkSnapshot,artworkMissingUpload,artworkCorrupt,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,badVisualPlan,visualPlanRetained,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
+  return {onlyLocal,noInfer,optimized,perImage,badBudget,triage,artworkSnapshot,artworkMissingUpload,artworkCorrupt,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,badVisualPlan,visualPlanRetained,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
  });
  assert.deepEqual(result,Object.fromEntries(Object.keys(result).map(key=>[key,true])));
 });
