@@ -79,4 +79,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0065](0065-fidelidade-de-imagens-pequenas-no-chat.md) | implementado localmente | Imagens pequenas preservam bytes e transparência no contexto visual do chat |
 | [0066](0066-entradas-visuais-e-triagem-vinculadas-ao-pedido.md) | contratos/planner locais; candidatos bloqueados sem fonte autoritativa | Manifesto visual versionado, uploads obrigatórios, triagem assinada e recuperação sem reenvio |
 
+| [0067](0067-autoridade-de-referencias-com-cas.md) | banco/provas locais; integração e ativação separadas | Espelho explícito com CAS, consentimento de sessão em memória e admissão visual transacional |
+
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

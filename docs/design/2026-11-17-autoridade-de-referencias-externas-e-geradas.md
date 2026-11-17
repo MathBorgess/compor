@@ -1,5 +1,7 @@
 # Autoridade de seleção para referências externas e geradas
 
+> Atualização de 17/11/2026: Matheus aprovou a alternativa A, sem importar seleção legada ou limpar snapshots automaticamente. A capacidade visual fica somente em memória, vinculada à sessão autenticada válida, sem TTL arbitrário; reload exige novo gesto. O [ADR 0067](../adr/0067-autoridade-de-referencias-com-cas.md) registra a implementação local do banco, os limites e as etapas de integração. As alternativas abaixo preservam o desenho anterior à decisão.
+
 **Proposta para revisão; não implementada nem autorizada para ativação.** Em 17/11/2026 Matheus esclareceu que os uploads selecionados continuam obrigatórios e que o agente pode triar, para GPT Image, referências externas ou geradas que a pessoa também selecionou. As externas continuam sujeitas ao consentimento da sessão. O conjunto escolhido deve ser recuperável e vinculado à prova. Isso complementa o [desenho dos PNGs](2026-11-17-pngs-no-planejamento-e-nos-lotes-paralelos.md), cuja restrição anterior a uploads não previa esses candidatos opcionais.
 
 Esta proposta não altera a seleção nem cria uma permissão nova. O objetivo é escolher como o servidor pode distinguir candidatos efetivamente autorizados dos declarados pelo navegador antes de permitir novos efeitos. Até a escolha, manter candidatos externos e gerados bloqueados; uploads e consultas de recuperação continuam seguindo seus próprios contratos. Nenhuma chamada paga ou alteração remota foi feita para este documento.

@@ -146,6 +146,10 @@
     {
       "name": "20261117000036_exploration_parallel_review.sql",
       "sha256": "9cb0fced4eacb562babbd896c6b265f213e9554ebd0fb813713510eb7897bddb"
+    },
+    {
+      "name": "20261117000037_reference_authority.sql",
+      "sha256": "c1dd38cb83d7365c995b79f58399f5d30b55f44fc2ddbad5c64e75054f91d424"
     }
   ]
 }
