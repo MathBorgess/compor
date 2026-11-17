@@ -5,10 +5,10 @@ export type ExplorationPlannerInput={actor:Actor;projectId:string;conversationId
 export type ExplorationPlanItem={position:number;creativePrompt:string;composition:string;contrast:string;differenceFromOthers:string;prompt:string};
 export type ExplorationPlan={version:1;items:ExplorationPlanItem[]};
 export type PlannerBindings={digest(value:unknown):string;issue(value:Record<string,unknown>):string;verify(token:unknown):unknown};
-export type PlannerRecord={userId:string;projectId:string;requestId:string;attemptId:string;inputDigest:string;state:'starting'|'running'|'completed'|'failed'|'unknown';binding:string|null};
+export type PlannerRecord={userId:string;projectId:string;conversationId:string;batchId:string;requestId:string;attemptId:string;inputDigest:string;state:'starting'|'running'|'completed'|'failed'|'unknown';binding:string|null};
 type DbScope=Pick<ExplorationPlannerInput,'actor'|'projectId'|'conversationId'|'batchId'|'requestId'>;
 export interface PlannerStore {
- reserve(input:DbScope & {userId:string;inputDigest:string}):Promise<{status:'reserved'|'existing';record:PlannerRecord}|{status:'busy'|'conflict'}>;
+ reserve(input:DbScope & {userId:string;inputDigest:string}):Promise<{status:'reserved'|'existing';record:PlannerRecord}|{status:'busy'|'conflict'|'not_found'}>;
  get(input:DbScope):Promise<PlannerRecord|null>;
  bind(input:DbScope & {binding:string}):Promise<void>;
  finish(input:DbScope & {state:'completed'|'failed'}):Promise<void>;

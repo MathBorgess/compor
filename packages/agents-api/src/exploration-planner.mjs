@@ -33,11 +33,12 @@ export function createExplorationPlanner({store,bindings,provider,authorize}={})
   const inputDigest=bindings.digest({scope,context:input.context});
   return {scope,inputDigest,db:{actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId}};
  }
- const validRecord=(record,scope,inputDigest)=>object(record)&&record.userId===scope.userId&&record.projectId===scope.projectId&&record.requestId===scope.requestId&&uuid(record.attemptId)&&record.inputDigest===inputDigest;
+ const validRecord=(record,scope,inputDigest)=>object(record)&&record.userId===scope.userId&&record.projectId===scope.projectId&&record.conversationId===scope.conversationId&&record.batchId===scope.batchId&&record.requestId===scope.requestId&&uuid(record.attemptId)&&record.inputDigest===inputDigest;
  async function submit(input){
   let c;try{c=await prepare(input);}catch{return result('unavailable');}if(!c)return result('unavailable');
   let reservation;try{reservation=await store.reserve({...c.db,userId:c.scope.userId,inputDigest:c.inputDigest});}catch{return result('unknown');}
-  if(!['reserved','existing','busy','conflict'].includes(reservation?.status))return result('unknown');
+  if(!['reserved','existing','busy','conflict','not_found'].includes(reservation?.status))return result('unknown');
+  if(reservation.status==='not_found')return result('unavailable');
   if(reservation.status==='busy'||reservation.status==='conflict')return result(reservation.status);
   const record=reservation.record;if(!validRecord(record,c.scope,c.inputDigest))return result('unknown');
   if(reservation.status==='existing')return result(record.state==='failed'?'failed':'unknown');
