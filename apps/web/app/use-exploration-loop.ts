@@ -140,6 +140,7 @@ export function useExplorationLoop(props: LoopProps) {
             if(pending.projectId===props.projectId&&pending.conversationId)await current.current.onCompleted?.(pending.requestId,pending.sequence+1,pending.conversationId,pending.creationContext);
             if(!active||!sameCredential())return;
             localStorage.removeItem(pendingKey);
+            setCompleted(value=>value+1);
             stop('A tentativa anterior foi confirmada. Peça propostas para continuar.');
             return;
           }

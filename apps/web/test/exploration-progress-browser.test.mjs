@@ -72,6 +72,29 @@ test('troca de fonte conserva marcador mesmo quando a resposta vence o cancelame
  assert.equal(posts.length,1,'a fonte nova não despacha outro pedido');
 });
 
+test('reconciliação concluída atualiza a galeria sem iniciar outra imagem',{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
+ const {page,posts,pending}=await fixture(t,{width:390,height:844},{unreliableAbort:true});
+ const progress=page.locator('.reference-exploration-status'),gallery=page.getByRole('region',{name:'Explorações de imagem'}),markerKey='compor-exploration-pending:'+userId;
+ await progress.getByText('Aguardando imagem 1 de 3.').waitFor();
+ await gallery.getByRole('button',{name:'Consultar explorações',exact:true}).waitFor();
+ assert.equal(await gallery.getByRole('checkbox',{name:'Escolher imagem 1',exact:true}).count(),0);
+ const marker=await page.evaluate(key=>localStorage.getItem(key),markerKey);
+ await page.getByRole('button',{name:'Pausar exploração',exact:true}).click();
+ posts[0].state='completed';
+ await pending.shift().fulfill({json:{status:'completed',requestId:posts[0].requestId}});
+ await progress.getByText('Exploração pausada.',{exact:true}).waitFor();
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),marker);
+ assert.equal(await gallery.getByRole('checkbox',{name:'Escolher imagem 1',exact:true}).count(),0,'a resposta tardia não reconcilia sozinha');
+ await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+ await progress.getByText('A tentativa anterior foi confirmada. Peça propostas para continuar.',{exact:true}).waitFor();
+ await gallery.getByRole('checkbox',{name:'Escolher imagem 1',exact:true}).waitFor();
+ assert.equal(await gallery.getByRole('checkbox',{name:'Escolher imagem 1',exact:true}).isEnabled(),true,'a imagem recuperada já pode ser escolhida sem refresh manual');
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),markerKey),null);
+ assert.equal(posts.length,1,'a reconciliação apenas atualiza a galeria');
+ await page.clock.fastForward(120000);
+ assert.equal(posts.length,1,'outro envio continua dependendo de novo gesto');
+});
+
 for(const label of ['Pausar exploração','Fechar referências','Trocar projeto'])test('resposta tardia preserva recibo após '+label,{skip:!browserPath||!existsSync(browserPath),timeout:30000},async t=>{
  const {page,posts,pending}=await fixture(t,{width:390,height:844},{unreliableAbort:true});
  const markerKey='compor-exploration-pending:'+userId;
