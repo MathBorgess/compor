@@ -30,7 +30,7 @@ test('concessão perdida nunca fabrica ou reemite capability; estado e revogaç�
 test('snapshot valida escopo e consulta recibo sem reenviar capability',async()=>{
  const calls=[],input={projectId:id(1),conversationId:'references',requestId:id(2),batchId:id(4),purpose:'parallel',selectionRevision:3,visualInput:{version:1,policy:'optimized-v1',entries:[]},consentId:id(3)},snapshot={projectId:input.projectId,conversationId:input.conversationId,requestId:input.requestId,batchId:input.batchId,purpose:input.purpose,selectionRevision:3,manifestDigest:'a'.repeat(64),consentId:id(3)};
  const client=createReferenceAuthorityClient(async(_url,options)=>{const body=JSON.parse(options.body);calls.push({body,headers:options.headers});return json({status:body.op==='create'?'created':'found',snapshot});});
- assert.equal((await client.createSnapshot(input,'x'.repeat(43))).status,'created');assert.equal((await client.readSnapshot(id(1),id(2))).status,'found');
- assert.equal(calls[0].headers['x-compor-reference-consent'],'x'.repeat(43));assert.equal(calls[1].headers['x-compor-reference-consent'],undefined);assert.equal(JSON.stringify(calls[0].body).includes('x'.repeat(43)),false);
+ assert.equal((await client.createSnapshot(input,'A'.repeat(43))).status,'created');assert.equal((await client.readSnapshot(id(1),id(2))).status,'found');
+ assert.equal(calls[0].headers['x-compor-reference-consent'],'A'.repeat(43));assert.equal(calls[1].headers['x-compor-reference-consent'],undefined);assert.equal(JSON.stringify(calls[0].body).includes('A'.repeat(43)),false);
  const wrong=createReferenceAuthorityClient(async()=>json({status:'created',snapshot:{...snapshot,projectId:id(99)}}));await assert.rejects(wrong.createSnapshot(input),/reference_authority_mismatch/);
 });
