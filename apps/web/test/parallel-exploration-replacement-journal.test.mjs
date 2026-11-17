@@ -33,8 +33,19 @@ test('reposição mantém claim durável, recibos, vínculo do plano e CAS após
   let wrongEvidence=false;try{await store.abandonReplacement(scope,journal.revision,{position:2,requestId:id(20),status:'rejected',revision:2});}catch{wrongEvidence=true;}
   journal=await store.abandonReplacement(scope,journal.revision,{position:2,requestId:used.requestId,status:'rejected',revision:2});const abandoned=journal.replacements.at(-1).state==='abandoned';
   const before=JSON.stringify(journal),oldPut=IDBObjectStore.prototype.put;IDBObjectStore.prototype.put=function(...args){if(this.name==='journals')throw new DOMException('quota','QuotaExceededError');return oldPut.apply(this,args);};let quota=false;try{await store.prepareReplacement(scope,journal.revision,{position:2,previousId:used.requestId,requestId:id(22),intentId:id(23),expectedEpoch:3});}catch{quota=true;}IDBObjectStore.prototype.put=oldPut;
-  const unchanged=JSON.stringify(await store.load(scope))===before;store.close();second.close();const saved=await createParallelJournalStore().load(scope);
-  return {badEpoch,one,pendingBlocked,observed,preserved,stale,wrongEvidence,abandoned,quota,unchanged,reloaded:saved.replacements.length===2,binding:recovered.binding==='proof-memory',noSecrets:!JSON.stringify(saved).includes(key)&&!JSON.stringify(saved).includes('proof-memory')};
+  const unchanged=JSON.stringify(await store.load(scope))===before;store.close();second.close();const resumed=createParallelJournalStore();const saved=await resumed.load(scope);
+  journal=await resumed.prepareReplacement(scope,saved.revision,{position:2,previousId:used.requestId,requestId:id(22),intentId:id(23),expectedEpoch:3});
+  journal=await resumed.updateReplacement(scope,journal.revision,{kind:'intent_confirmed',epoch:4});journal=await resumed.updateReplacement(scope,journal.revision,{kind:'submitted'});
+  images=images.map(image=>image.position===2?{...image,requestId:id(22),status:'completed',revision:2,replacesImageId:used.requestId}:image);
+  const finalClient=createParallelExplorationClient({store:resumed,fetchApi:api,canInspect:()=>true});journal=(await finalClient.inspectBatch(prep,()=>3000,false)).journal;
+  const gates={visible:true,sessionActive:true,originalCredential:true,generationAllowed:true,questionResolved:true,feedbackAllowed:true,noOtherPending:true};
+  journal=await resumed.update(scope,journal.revision,{kind:'resume',now:4000,gates});
+  let early=false;try{await resumed.retireCompleted(scope,prep.revision,18999,gates);}catch{early=true;}
+  journal=await resumed.updateReplacement(scope,journal.revision,{kind:'revoke'});
+  let uncertain=false;try{await resumed.retireCompleted(scope,prep.revision,19000,gates);}catch{uncertain=true;}
+  journal=await resumed.updateReplacement(scope,journal.revision,{kind:'revoke_confirmed',epoch:5});
+  const nextEpoch=await resumed.retireCompleted(scope,prep.revision,19000,gates);
+  return {badEpoch,one,pendingBlocked,observed,preserved,stale,wrongEvidence,abandoned,quota,unchanged,reloaded:saved.replacements.length===2,binding:recovered.binding==='proof-memory',noSecrets:!JSON.stringify(saved).includes(key)&&!JSON.stringify(saved).includes('proof-memory'),early,uncertain,nextEpoch};
  });
- assert.deepEqual(result,{badEpoch:true,one:true,pendingBlocked:true,observed:true,preserved:true,stale:true,wrongEvidence:true,abandoned:true,quota:true,unchanged:true,reloaded:true,binding:true,noSecrets:true});
+ assert.deepEqual(result,{badEpoch:true,one:true,pendingBlocked:true,observed:true,preserved:true,stale:true,wrongEvidence:true,abandoned:true,quota:true,unchanged:true,reloaded:true,binding:true,noSecrets:true,early:true,uncertain:true,nextEpoch:5});
 });

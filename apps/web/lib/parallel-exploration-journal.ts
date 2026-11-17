@@ -198,7 +198,12 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       const abort=()=>{failure=new ParallelJournalError('parallel_storage_conflict');try{tx.abort();}catch{reject(failure);}};
       const preparations=tx.objectStore('preparations'),a=preparations.get(address.userId),b=tx.objectStore('journals').get(key(address));
       let first:unknown,second:unknown,ready=0;
-      const check=()=>{if(++ready!==2)return;try{const preparation=parseParallelPreparation(first),journal=parseParallelJournal(second);if(preparation.userId!==address.userId||preparation.projectId!==address.projectId||preparation.batchId!==address.batchId||preparation.stage!=='executing'||preparation.revision!==expectedRevision||preparation.revocationRequested&&(!preparation.revocationConfirmed||preparation.revocationEpoch===undefined)||preparation.intentEpoch===undefined||!preparation.intentId||journal.intentId!==preparation.intentId||key(scopeFrom(journal))!==key(address)||!parallelWaitElapsed(journal.progress,now,gates))throw Error();result=preparation.revocationEpoch??preparation.intentEpoch;tx.objectStore('preparationHistory').add(preparation,JSON.stringify([preparation.userId,preparation.batchId,preparation.intentId]));preparations.delete(address.userId);}catch{abort();}};
+      const check=()=>{if(++ready!==2)return;try{
+        const preparation=parseParallelPreparation(first),journal=parseParallelJournal(second),last=journal.replacements?.at(-1);
+        const lastEpoch=last?(last.revocationRequested?last.revocationConfirmed?last.revocationEpoch:undefined:last.intentEpoch):(preparation.revocationRequested?preparation.revocationConfirmed?preparation.revocationEpoch:undefined:preparation.intentEpoch);
+        if(preparation.userId!==address.userId||preparation.projectId!==address.projectId||preparation.batchId!==address.batchId||preparation.stage!=='executing'||preparation.revision!==expectedRevision||preparation.revocationRequested&&(!preparation.revocationConfirmed||preparation.revocationEpoch===undefined)||preparation.intentEpoch===undefined||!preparation.intentId||journal.intentId!==preparation.intentId||key(scopeFrom(journal))!==key(address)||last&&last.state!=='observed'||lastEpoch===undefined||!parallelWaitElapsed(journal.progress,now,gates))throw Error();
+        result=lastEpoch;tx.objectStore('preparationHistory').add(preparation,JSON.stringify([preparation.userId,preparation.batchId,preparation.intentId]));preparations.delete(address.userId);
+      }catch{abort();}};
       a.onsuccess=()=>{first=a.result;check();};b.onsuccess=()=>{second=b.result;check();};
     });
   }
