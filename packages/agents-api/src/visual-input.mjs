@@ -1,5 +1,5 @@
 import {createHash} from 'node:crypto';
-import {parseVisualInputManifest,MAX_VISUAL_IMAGE_BYTES,MAX_VISUAL_DIMENSION,MAX_VISUAL_PIXELS} from './visual-input-contract.mjs';
+import {parseVisualInputManifest,validateVisualReferenceSelection,MAX_VISUAL_IMAGE_BYTES,MAX_VISUAL_DIMENSION,MAX_VISUAL_PIXELS} from './visual-input-contract.mjs';
 const hash = bytes => createHash('sha256').update(bytes).digest('hex');
 const exact = (value, keys) => value !== null && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).sort().join(',') === keys.slice().sort().join(',');
 
@@ -73,16 +73,25 @@ function dimensionsMatch(bytes, expected) {
   return actual.width === expected.width && actual.height === expected.height || actual.rotated && actual.width === expected.height && actual.height === expected.width;
 }
 export function visualInputDigest(value) {
-  return hash(`compor-visual-input-v1\0${JSON.stringify(parseVisualInputManifest(value))}`);
+  const manifest = parseVisualInputManifest(value);
+  return hash(`compor-visual-input-v${manifest.version}\0${JSON.stringify(manifest)}`);
 }
 /** Validates the whole ordered transport, never a subset. Original hashes are
  * declarations when only transformed bytes are supplied, not proven ancestry. */
 export function parseVisualInput(manifest, images) {
   const visualInput = parseVisualInputManifest(manifest);
-  if (!Array.isArray(images) || images.length !== visualInput.entries.length) throw Error('invalid_visual_images');
+  return parseSelectedVisualInput(visualInput, images, visualInput.entries.map(entry => entry.id));
+}
+/** Only call after verifying the plan/action proof binding referenceIds to this
+ * manifest and request. This function validates content, not authorization. */
+export function parseSelectedVisualInput(manifest, images, referenceIds) {
+  const visualInput = parseVisualInputManifest(manifest);
+  if (!validateVisualReferenceSelection(visualInput, referenceIds)) throw Error('invalid_visual_selection');
+  const entries = visualInput.entries.filter(entry => referenceIds.includes(entry.id));
+  if (!Array.isArray(images) || images.length !== entries.length) throw Error('invalid_visual_images');
   let size = 0;
   const referenceImages = images.map((image, index) => {
-    const entry = visualInput.entries[index];
+    const entry = entries[index];
     if (!exact(image, ['id', 'mime', 'data']) || image.id !== entry.id || image.mime !== entry.transport.mime || typeof image.data !== 'string' || image.data.length > 2_800_000 || !/^[A-Za-z0-9+/]+={0,2}$/.test(image.data)) throw Error('invalid_visual_image');
     const bytes = Buffer.from(image.data, 'base64'); size += bytes.length;
     if (bytes.toString('base64') !== image.data || bytes.length !== entry.transport.byteLength || size > MAX_VISUAL_IMAGE_BYTES || hash(bytes) !== entry.transport.sha256 || !dimensionsMatch(bytes, entry.transport)) throw Error('visual_images_changed');

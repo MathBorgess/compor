@@ -1,8 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
-import {validateVisualInputManifest} from '../src/visual-input-contract.mjs';
-import {parseVisualInput,visualInputDigest} from '../src/visual-input.mjs';
+import {validateVisualInputManifest,validateVisualReferenceSelection,visualInputMatchesProject} from '../src/visual-input-contract.mjs';
+import {parseVisualInput,parseSelectedVisualInput,visualInputDigest} from '../src/visual-input.mjs';
 
 const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 const sha256=value=>createHash('sha256').update(value).digest('hex');
@@ -45,4 +45,26 @@ test('hash correspondente não torna cabeçalho, truncamento ou dimensão falsa 
  }
  const f=fixture(1);f.manifest.entries[0].transport.width=2;assert.throws(()=>parseVisualInput(f.manifest,f.images));
  const malformed=fixture(1);malformed.images[0].data=malformed.images[0].data.replace(/=+$/,'');assert.throws(()=>parseVisualInput(malformed.manifest,malformed.images));
+});
+
+function triage(){
+ const f=fixture(3);f.manifest.version=2;f.manifest.externalConsent=true;
+ f.manifest.entries[0].source=null;
+ Object.assign(f.manifest.entries[1],{inputOrigin:'external',source:{originUrl:'https://www.pinterest.com/pin/synthetic/',board:'behance/advertising'}});
+ Object.assign(f.manifest.entries[2],{inputOrigin:'generated',source:{projectId:id(17),imageId:id(18)}});
+ return f;
+}
+test('v2 separa uploads obrigatórios de candidatos e valida o subset exato em ordem',()=>{
+ const f=triage(),ids=[id(1),id(3)];assert.equal(validateVisualInputManifest(f.manifest),true);
+ assert.equal(validateVisualReferenceSelection(f.manifest,ids),true);assert.equal(visualInputMatchesProject(f.manifest,id(17)),true);assert.equal(visualInputMatchesProject(f.manifest,id(19)),false);
+ assert.deepEqual(parseSelectedVisualInput(f.manifest,[f.images[0],f.images[2]],ids).referenceImages,[f.images[0],f.images[2]]);
+ assert.throws(()=>parseSelectedVisualInput(f.manifest,f.images,ids));
+ for(const bad of [[],[id(2)],[id(3),id(1)],[id(1),id(1)],[id(1),id(99)]])assert.equal(validateVisualReferenceSelection(f.manifest,bad),false);
+ assert.equal(validateVisualReferenceSelection(f.manifest,[id(1)]),true);
+ assert.equal(parseVisualInput(f.manifest,f.images).referenceImages.length,3);
+});
+test('v1 não aceita origens novas e v2 não atribui consentimento/proveniência ausentes',()=>{
+ const f=triage();for(const mutate of [x=>x.externalConsent=false,x=>delete x.externalConsent,x=>delete x.entries[1].source,x=>x.entries[1].source.originUrl='https://evil.test/image.png',x=>x.entries[2].source.projectId='bad',x=>x.entries[0].source={projectId:id(17),imageId:id(18)}]){const bad=structuredClone(f.manifest);mutate(bad);assert.equal(validateVisualInputManifest(bad),false);}
+ const old=fixture(3).manifest;Object.assign(old.entries[1],{inputOrigin:'external',source:f.manifest.entries[1].source});assert.equal(validateVisualInputManifest(old),false);
+ const changed=structuredClone(f.manifest);changed.entries[1].source.originUrl='https://www.pinterest.com/pin/another/';assert.notEqual(visualInputDigest(changed),visualInputDigest(f.manifest));
 });
