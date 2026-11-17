@@ -2,11 +2,13 @@ import {referenceSelectionProjection,referenceSelectionPublic} from './reference
 import {createReferenceAuthorityClient} from './reference-authority-client.ts';
 import {createStudioStorage} from './studio-storage.ts';
 import type {StudioScope,StudioReference} from './studio-domain.ts';
+import type {ReferenceAuthorityWrite} from './reference-authority-client.ts';
 
 type Store=ReturnType<typeof createStudioStorage>;
 type Client=Pick<ReturnType<typeof createReferenceAuthorityClient>,'read'|'write'|'receipt'>;
 type Change={kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string};
 type Result={status:'ready';revision:number}|{status:'pending'|'conflict'|'unavailable'};
+export type ReferenceAdoptionReview={localRevision:number;selection:ReferenceAuthorityWrite;unknownSelected:{id:string;name:string}[]};
 const storageConflict=(error:unknown)=>Boolean(error&&typeof error==='object'&&'code' in error&&error.code==='studio_storage_conflict');
 
 /** No paid action is sent here. A pending or mismatched selection is never ready. */
@@ -44,6 +46,31 @@ export function createReferenceSelectionCoordinator({store,client=createReferenc
    return {status:'ready',revision:receipt.revision};
   }catch(error){return {status:storageConflict(error)?'conflict':'pending'};}
  }
+ /** Preview never publishes or invents provenance. It is available only for a genuinely empty mirror. */
+ async function previewAdoption(scope:StudioScope):Promise<{status:'review';review:ReferenceAdoptionReview}|{status:'pending'|'conflict'|'unavailable'}>{
+  try{
+   const local=await store.readReferenceAuthority(scope);if(local.pending)return {status:'pending'};if(local.confirmed)return {status:'conflict'};
+   const remote=await client.read(scope.projectId),empty={version:1,references:[],projectReferenceIds:[],posts:[]};
+   if(remote.revision!==0||JSON.stringify(remote.state)!==JSON.stringify(empty))return {status:'conflict'};
+   const selection=referenceSelectionProjection(local.state);if(JSON.stringify(selection)===JSON.stringify(empty))return {status:'unavailable'};
+   const selected=new Set([...local.state.projectReferenceIds,...Object.values(local.state.posts).flatMap(post=>post.referenceIds)]);
+   return {status:'review',review:{localRevision:local.state.revision,selection,unknownSelected:local.state.references.filter(item=>!item.source&&selected.has(item.id)).map(({id,name})=>({id,name}))}};
+  }catch{return {status:'unavailable'};}
+ }
+ async function publish(scope:StudioScope,command:NonNullable<Awaited<ReturnType<Store['readReferenceAuthority']>>['pending']>):Promise<Result>{
+  try{
+   const receipt=await client.write(scope.projectId,command.commandId,command.expectedRemoteRevision,command.selection);
+   if(receipt.revision!==command.expectedRemoteRevision+1)return {status:'conflict'};
+  }catch(error){return {status:error instanceof Error&&error.message==='reference_authority_conflict'?'conflict':'pending'};}
+  return reconcile(scope);
+ }
+ /** Call only after a person reviews this exact preview; CAS rejects any intervening edit. */
+ async function adoptCurrent(scope:StudioScope,review:ReferenceAdoptionReview):Promise<Result>{
+  try{
+   const command=await store.beginReferenceAuthorityAdoption(scope,{commandId:crypto.randomUUID(),expectedLocalRevision:review.localRevision,selection:review.selection});
+   return publish(scope,command);
+  }catch(error){return {status:storageConflict(error)?'conflict':'unavailable'};}
+ }
  /** Persist the local gesture and its immutable command before one remote write. */
  async function change(scope:StudioScope,change:Change):Promise<Result>{
   let local;
@@ -54,11 +81,7 @@ export function createReferenceSelectionCoordinator({store,client=createReferenc
   try{({command}=await store.beginReferenceAuthorityChange(scope,{commandId:crypto.randomUUID(),expectedLocalRevision:local.state.revision,expectedRemoteRevision:local.confirmed.revision,change}));}
   catch(error){return {status:storageConflict(error)?'conflict':'unavailable'};}
   if(!command)return {status:'ready',revision:local.confirmed.revision};
-  try{
-   const receipt=await client.write(scope.projectId,command.commandId,command.expectedRemoteRevision,command.selection);
-   if(receipt.revision!==command.expectedRemoteRevision+1)return {status:'conflict'};
-  }catch(error){return {status:error instanceof Error&&error.message==='reference_authority_conflict'?'conflict':'pending'};}
-  return reconcile(scope);
+  return publish(scope,command);
  }
- return {readiness,observe,reconcile,change};
+ return {readiness,observe,reconcile,previewAdoption,adoptCurrent,change};
 }

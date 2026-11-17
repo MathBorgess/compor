@@ -120,6 +120,23 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     });
   }
   type ReferenceChange={kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string};
+  /** Explicitly adopt the reviewed local selection only against an empty remote revision. */
+  async function beginReferenceAuthorityAdoption(scope:StudioScope,{commandId,expectedLocalRevision,selection}:{commandId:string;expectedLocalRevision:number;selection:z.infer<typeof referenceSelectionWriteSchema>}){
+    const address=scopeOf(scope),expected=referenceSelectionWriteSchema.parse(selection);
+    if(!uuid(commandId)||!Number.isSafeInteger(expectedLocalRevision)||expectedLocalRevision<0)throw new StudioStorageError('studio_storage_invalid');
+    return transaction<AuthorityCommand>(['states','referenceCommands','referenceSync'],'readwrite',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address),tx.objectStore('referenceSync').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{
+        const state=readState(requests[0].result,address);
+        if(!state||state.revision!==expectedLocalRevision||requests[1].result!==undefined||requests[2].result!==undefined||JSON.stringify(referenceSelectionProjection(state))!==JSON.stringify(expected))throw new StudioStorageError('studio_storage_conflict');
+        const empty=referenceSelectionWriteSchema.parse({version:1,references:[],projectReferenceIds:[],posts:[]});
+        if(JSON.stringify(expected)===JSON.stringify(empty))throw new StudioStorageError('studio_storage_invalid');
+        const command=authorityRecord.parse({scope:address,commandId,expectedRemoteRevision:0,localRevision:state.revision,selection:expected});
+        tx.objectStore('referenceSync').add({scope:address,revision:0,selection:empty});tx.objectStore('referenceCommands').add(command);done(command);
+      }catch(error){fail(error);}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
   async function beginReferenceAuthorityChange(scope:StudioScope,{commandId,expectedLocalRevision,expectedRemoteRevision,change}:{commandId:string;expectedLocalRevision:number;expectedRemoteRevision:number;change:ReferenceChange}){
     const address=scopeOf(scope);
     if(!uuid(commandId)||!Number.isSafeInteger(expectedLocalRevision)||expectedLocalRevision<0||!Number.isSafeInteger(expectedRemoteRevision)||expectedRemoteRevision<0||expectedRemoteRevision>=Number.MAX_SAFE_INTEGER||!change||!['select','unselect'].includes(change.kind)||(change.target!=='references'&&!uuid(change.target)))throw new StudioStorageError('studio_storage_invalid');
@@ -265,5 +282,5 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const address=draftAddress(scopeOf(scope),input);
     return transaction(['draftAssets'],'readwrite',(tx,done)=>{tx.objectStore('draftAssets').delete(address.key);done(true);});
   }
-  return Object.freeze({load,save,readReferenceAuthority,establishReferenceAuthority,beginReferenceAuthorityChange,confirmReferenceAuthorityChange,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
+  return Object.freeze({load,save,readReferenceAuthority,establishReferenceAuthority,beginReferenceAuthorityAdoption,beginReferenceAuthorityChange,confirmReferenceAuthorityChange,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
 }
