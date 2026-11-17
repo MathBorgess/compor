@@ -194,6 +194,9 @@ test('proposta de imagem mantém a origem quando a pessoa troca de post enquanto
  await page.getByText('Imagem preservada na origem.',{exact:true}).waitFor();
  await page.getByText('Imagem gerada e adicionada a este post · versão 2.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].body.pieceId,originalPiece);assert.equal(generated[0].body.version,2);assert.equal(versions.find(version=>version.piece_id===originalPiece&&version.version===1).content.headline,'Original preservado');
+ const polls=calls.filter(call=>call.path==='/api/studio/chat'&&call.body.op==='poll');
+ assert.equal(new Set(polls.map(call=>call.body.requestId)).size,1,'a confirmação consulta somente a tentativa original');
+ assert.ok(calls.lastIndexOf(polls.at(-1))>calls.indexOf(generated[0]),'consulta o resultado depois da confirmação da imagem');
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -482,6 +485,7 @@ test('escolher mais referências preserva post e conversa e cada escolha inicia 
  await page.getByRole('checkbox',{name:'Escolher referência: Referência adicional'}).click();
  await openConversation(page);await page.getByText('Posso seguir com contraste?',{exact:true}).waitFor({timeout:15000});
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1);assert.equal(selected[0].action,'selected');await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();
+ await eventually(()=>stored(page),state=>state?.adjustments.some(item=>item.id===selectionTurns[0].requestId&&item.status==='completed'));
  await page.getByRole('button',{name:'Voltar ao post',exact:true}).click();await page.locator('.reference-step').waitFor({state:'hidden'});await page.getByRole('button',{name:'Escolher mais referências',exact:true}).click();
  await page.getByRole('checkbox',{name:'Escolher referência: Referência adicional',checked:true}).waitFor();
  assert.equal(selected.length,1);assert.equal(selectionTurns.length,1,'reabrir a seleção não repete a iniciativa');
