@@ -1,5 +1,7 @@
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
+import {validateVisualInputManifest, parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import * as z from './schema.ts';
+import {validateVisualSnapshot, type SelectedVisualInput} from './selected-visual-input.ts';
 import {creationContextSchema} from './studio-domain.ts';
 import {parallelProgressSchema,observeParallelChild,replaceRejectedParallelChild,pauseParallelWait,restoreParallelWait,resumeParallelWait,reconcileParallelGates,parallelWaitElapsed,type ParallelObservation,type ParallelGates} from './parallel-exploration-progress.ts';
 
@@ -8,7 +10,7 @@ const scopeSchema=z.strictObject({userId:id,projectId:id,batchId:id});
 const epoch=z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER-1));
 const replacementSchema=z.strictObject({position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),previousId:id,requestId:id,intentId:id,expectedEpoch:epoch,intentEpoch:z.optional(epoch),state:z.enum(['prepared','submitted','observed','abandoned']),revocationRequested:z.boolean(),revocationConfirmed:z.boolean(),revocationEpoch:z.optional(epoch)}).check(z.refine(value=>value.previousId!==value.requestId&&(value.intentEpoch===undefined||value.intentEpoch===value.expectedEpoch+1)&&(!['submitted','observed'].includes(value.state)||value.intentEpoch!==undefined)&&(!value.revocationConfirmed||value.revocationRequested)&&(value.revocationEpoch===undefined||value.revocationConfirmed)));
 const journalSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,intentId:z.optional(id),credentialSource:z.enum(['byok','default']),context:z.unknown(),creationContext:z.optional(creationContextSchema),plan:z.unknown(),revision:z.number().check(z.int()).check(z.nonnegative()),progress:parallelProgressSchema,replacements:z.optional(z.array(replacementSchema))});
-const preparationSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,credentialSource:z.enum(['byok','default']),imageIds:z.array(id).check(z.minLength(3)).check(z.maxLength(3)),context:z.unknown(),creationContext:z.optional(creationContextSchema),intentId:z.optional(id),expectedEpoch:z.optional(epoch),intentEpoch:z.optional(epoch),planSubmitted:z.optional(z.boolean()),revocationRequested:z.optional(z.boolean()),revocationConfirmed:z.optional(z.boolean()),revocationEpoch:z.optional(epoch),plan:z.nullable(z.unknown()),stage:z.enum(['planning','planned','executing','completed','failed']),revision:z.number().check(z.int()).check(z.nonnegative())}).check(z.refine(value=>new Set(value.imageIds).size===3&&(value.stage==='planning'||value.stage==='failed'?value.plan===null:value.plan!==null)&&(value.intentId===undefined)===(value.expectedEpoch===undefined)&&(value.intentEpoch===undefined||value.expectedEpoch!==undefined&&value.intentEpoch===value.expectedEpoch+1)&&(!value.planSubmitted||value.intentEpoch!==undefined||value.stage==='planned')&&(!value.revocationConfirmed||value.revocationRequested===true)&&(value.revocationEpoch===undefined||value.revocationConfirmed===true)));
+const preparationSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,credentialSource:z.enum(['byok','default']),imageIds:z.array(id).check(z.minLength(3)).check(z.maxLength(3)),context:z.unknown(),visualInput:z.optional(z.unknown()),creationContext:z.optional(creationContextSchema),intentId:z.optional(id),expectedEpoch:z.optional(epoch),intentEpoch:z.optional(epoch),planSubmitted:z.optional(z.boolean()),revocationRequested:z.optional(z.boolean()),revocationConfirmed:z.optional(z.boolean()),revocationEpoch:z.optional(epoch),plan:z.nullable(z.unknown()),stage:z.enum(['planning','planned','executing','completed','failed']),revision:z.number().check(z.int()).check(z.nonnegative())}).check(z.refine(value=>new Set(value.imageIds).size===3&&(value.stage==='planning'||value.stage==='failed'?value.plan===null:value.plan!==null)&&(value.intentId===undefined)===(value.expectedEpoch===undefined)&&(value.intentEpoch===undefined||value.expectedEpoch!==undefined&&value.intentEpoch===value.expectedEpoch+1)&&(!value.planSubmitted||value.intentEpoch!==undefined||value.stage==='planned')&&(!value.revocationConfirmed||value.revocationRequested===true)&&(value.revocationEpoch===undefined||value.revocationConfirmed===true)));
 export type ParallelPreparation=z.infer<typeof preparationSchema>;
 export type ParallelJournal=z.infer<typeof journalSchema>;
 export type ParallelScope=z.infer<typeof scopeSchema>;
@@ -35,6 +37,7 @@ export function parseParallelJournal(input:unknown):ParallelJournal {
 }
 export function parseParallelPreparation(input:unknown):ParallelPreparation {
   const value=preparationSchema.parse(input);
+  if(value.visualInput!==undefined&&!validateVisualInputManifest(value.visualInput))throw Error('parallel_invalid_visual_input');
   if(!validateExplorationContext(value.context)||(value.plan!==null&&!validateCompletedExplorationPlan(value.plan,value.context)))throw Error('parallel_invalid_plan');
   return value;
 }
@@ -61,8 +64,8 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
     opening=new Promise<IDBDatabase>((resolve,reject)=>{
       let request:IDBOpenDBRequest,settled=false;
       const rejectOnce=(error:unknown)=>{if(!settled){settled=true;reject(failCode(error));}};
-      try{request=indexedDB.open(name,3);}catch(error){rejectOnce(error);return;}
-      request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('journals'))request.result.createObjectStore('journals');if(!request.result.objectStoreNames.contains('preparations'))request.result.createObjectStore('preparations');if(!request.result.objectStoreNames.contains('preparationHistory'))request.result.createObjectStore('preparationHistory');};
+      try{request=indexedDB.open(name,4);}catch(error){rejectOnce(error);return;}
+      request.onupgradeneeded=()=>{if(!request.result.objectStoreNames.contains('journals'))request.result.createObjectStore('journals');if(!request.result.objectStoreNames.contains('preparations'))request.result.createObjectStore('preparations');if(!request.result.objectStoreNames.contains('preparationHistory'))request.result.createObjectStore('preparationHistory');if(!request.result.objectStoreNames.contains('visualSnapshots'))request.result.createObjectStore('visualSnapshots');};
       request.onerror=()=>rejectOnce(request.error);
       request.onblocked=()=>rejectOnce(new ParallelJournalError('parallel_storage_blocked'));
       request.onsuccess=()=>{const db=request.result;if(settled){db.close();return;}settled=true;connection=db;db.onversionchange=()=>{db.close();if(connection===db)connection=null;};resolve(db);};
@@ -107,8 +110,82 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
   /** The owner-wide record is committed before the paid planning request. */
   async function createBeforePlanning(input:unknown):Promise<ParallelPreparation>{
     let value:ParallelPreparation;try{value=parseParallelPreparation(input);}catch{throw new ParallelJournalError('parallel_storage_invalid');}
-    if(value.revision!==0||value.stage!=='planning'||(value.intentId!==undefined&&(value.planSubmitted!==false||value.revocationRequested!==false)))throw new ParallelJournalError('parallel_storage_invalid');
+    if(value.visualInput!==undefined||value.revision!==0||value.stage!=='planning'||(value.intentId!==undefined&&(value.planSubmitted!==false||value.revocationRequested!==false)))throw new ParallelJournalError('parallel_storage_invalid');
     return transaction('readwrite',(store,done,abort)=>{const request=store.get(value.userId);request.onsuccess=()=>{if(request.result!==undefined){abort(new ParallelJournalError('parallel_storage_exists'));return;}try{store.add(value,value.userId);done(value);}catch(error){abort(error);}};},'preparations');
+  }
+  /** Commit the owner-wide preparation and immutable transport blobs together. */
+  async function createBeforePlanningWithVisual(input:unknown,snapshot:SelectedVisualInput):Promise<ParallelPreparation>{
+    let value:ParallelPreparation;
+    try{
+      value=parseParallelPreparation(structuredClone(input));
+      if(value.visualInput===undefined||JSON.stringify(value.visualInput)!==JSON.stringify(snapshot.manifest)||value.revision!==0||value.stage!=='planning'||(value.intentId!==undefined&&(value.planSubmitted!==false||value.revocationRequested!==false)))throw Error();
+      snapshot={manifest:parseVisualInputManifest(snapshot.manifest),blobs:[...snapshot.blobs]};
+      await validateVisualSnapshot(snapshot);
+    }catch{throw new ParallelJournalError('parallel_storage_invalid');}
+    value={...value,visualInput:snapshot.manifest};
+    const db=await open(),address=key(value),record={userId:value.userId,projectId:value.projectId,batchId:value.batchId,conversationId:value.conversationId,manifest:snapshot.manifest,blobs:snapshot.blobs};
+    return new Promise<ParallelPreparation>((resolve,reject)=>{
+      let tx:IDBTransaction,failure:ParallelJournalError|null=null;
+      try{tx=db.transaction(['preparations','visualSnapshots'],'readwrite');}catch(error){reject(failCode(error));return;}
+      tx.oncomplete=()=>resolve(value);tx.onerror=()=>{};tx.onabort=()=>reject(failure??failCode(tx.error));
+      const abort=(error:unknown)=>{failure=failCode(error);try{tx.abort();}catch{reject(failure);}};
+      const preparations=tx.objectStore('preparations'),snapshots=tx.objectStore('visualSnapshots');
+      const existing=preparations.get(value.userId),all=snapshots.getAll();let checked=false,records:unknown[]|undefined;
+      const commit=()=>{if(!checked||!records)return;try{
+        let bytes=0,files=0;
+        for(const item of records){
+          if(!item||typeof item!=='object'||!('blobs' in item)||!Array.isArray(item.blobs)||item.blobs.some(blob=>!(blob instanceof Blob)))throw new ParallelJournalError('parallel_storage_corrupt');
+          files+=item.blobs.length;bytes+=item.blobs.reduce((sum,blob)=>sum+blob.size,0);
+        }
+        if(files+snapshot.blobs.length>500||bytes+snapshot.blobs.reduce((sum,blob)=>sum+blob.size,0)>256*1024*1024)throw new ParallelJournalError('parallel_storage_quota');
+        preparations.add(value,value.userId);snapshots.add(record,address);
+      }catch(error){abort(error);}};
+      existing.onsuccess=()=>{if(existing.result!==undefined){abort(new ParallelJournalError('parallel_storage_exists'));return;}checked=true;commit();};
+      all.onsuccess=()=>{records=all.result;commit();};
+    });
+  }
+  /** Missing or corrupt bytes do not prevent the separate read-only receipt path. */
+  async function loadVisualSnapshot(scope:ParallelScope,conversationId:string):Promise<SelectedVisualInput|null>{
+    const address=scopeSchema.parse(scope);
+    if(conversationId!=='references'&&!id.safeParse(conversationId).success)throw new ParallelJournalError('parallel_storage_invalid');
+    const raw=await transaction('readonly',(store,done)=>{const request=store.get(key(address));request.onsuccess=()=>done(request.result);},'visualSnapshots');
+    if(raw===undefined)return null;
+    if(!raw||typeof raw!=='object'||!('userId' in raw)||!('projectId' in raw)||!('batchId' in raw)||!('conversationId' in raw)||!('manifest' in raw)||!('blobs' in raw)||raw.userId!==address.userId||raw.projectId!==address.projectId||raw.batchId!==address.batchId||raw.conversationId!==conversationId)throw new ParallelJournalError('parallel_storage_corrupt');
+    try{
+      if(!Array.isArray(raw.blobs)||raw.blobs.some(blob=>!(blob instanceof Blob)))throw Error();
+      const snapshot={manifest:parseVisualInputManifest(raw.manifest),blobs:raw.blobs};
+      await validateVisualSnapshot(snapshot);return snapshot;
+    }catch{throw new ParallelJournalError('parallel_storage_corrupt');}
+  }
+  /** Standalone request snapshot for chat/artwork, committed before their separate journal permits dispatch. */
+  async function saveRequestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string},input:SelectedVisualInput):Promise<void>{
+    const parsed=z.strictObject({userId:id,projectId:id,conversationId:z.union([id,z.literal('references')]),requestId:id}).parse(scope);
+    let snapshot:SelectedVisualInput;
+    try{snapshot={manifest:parseVisualInputManifest(input.manifest),blobs:[...input.blobs]};await validateVisualSnapshot(snapshot);}catch{throw new ParallelJournalError('parallel_storage_invalid');}
+    const address=JSON.stringify([parsed.userId,parsed.projectId,parsed.conversationId,parsed.requestId]);
+    return transaction('readwrite',(store,done,abort)=>{
+      const request=store.getAll();request.onsuccess=()=>{try{
+        const records:unknown[]=request.result;let bytes=0,files=0;
+        for(const item of records){
+          if(!item||typeof item!=='object'||!('blobs' in item)||!Array.isArray(item.blobs)||item.blobs.some(blob=>!(blob instanceof Blob)))throw new ParallelJournalError('parallel_storage_corrupt');
+          files+=item.blobs.length;bytes+=item.blobs.reduce((sum,blob)=>sum+blob.size,0);
+        }
+        if(files+snapshot.blobs.length>500||bytes+snapshot.blobs.reduce((sum,blob)=>sum+blob.size,0)>256*1024*1024)throw new ParallelJournalError('parallel_storage_quota');
+        store.add({...parsed,...snapshot},address);done();
+      }catch(error){abort(error);}};
+    },'visualSnapshots');
+  }
+  async function loadRequestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string}):Promise<SelectedVisualInput|null>{
+    const parsed=z.strictObject({userId:id,projectId:id,conversationId:z.union([id,z.literal('references')]),requestId:id}).parse(scope);
+    const address=JSON.stringify([parsed.userId,parsed.projectId,parsed.conversationId,parsed.requestId]);
+    const raw=await transaction('readonly',(store,done)=>{const request=store.get(address);request.onsuccess=()=>done(request.result);},'visualSnapshots');
+    if(raw===undefined)return null;
+    if(!raw||typeof raw!=='object'||!('userId' in raw)||!('projectId' in raw)||!('conversationId' in raw)||!('requestId' in raw)||!('manifest' in raw)||!('blobs' in raw)||raw.userId!==parsed.userId||raw.projectId!==parsed.projectId||raw.conversationId!==parsed.conversationId||raw.requestId!==parsed.requestId)throw new ParallelJournalError('parallel_storage_corrupt');
+    try{
+      if(!Array.isArray(raw.blobs)||raw.blobs.some(blob=>!(blob instanceof Blob)))throw Error();
+      const snapshot={manifest:parseVisualInputManifest(raw.manifest),blobs:raw.blobs};
+      await validateVisualSnapshot(snapshot);return snapshot;
+    }catch{throw new ParallelJournalError('parallel_storage_corrupt');}
   }
   async function updatePreparation(userId:string,revision:number,operation:{kind:'intent_confirmed';epoch:number}|{kind:'plan_submitted'}|{kind:'revoke'}|{kind:'revoke_confirmed';epoch?:number}|{kind:'planned';plan:unknown}|{kind:'executing'}|{kind:'failed'}|{kind:'completed'}):Promise<ParallelPreparation>{
     const owner=id.parse(userId);
@@ -278,5 +355,5 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
       }catch(error){abort(error instanceof ParallelJournalError?error:new ParallelJournalError('parallel_storage_invalid'));}};
     });
   }
-  return {load,loadForRecovery,createBeforeDispatch,loadPreparation,createBeforePlanning,updatePreparation,archiveTerminalPreparation,loadArchivedPreparation,reissuePlannedIntent,prepareExecution,retireCompleted,prepareReplacement,updateReplacement,abandonReplacement,update,close:()=>{connection?.close();connection=null;}};
+  return {load,loadForRecovery,createBeforeDispatch,loadPreparation,createBeforePlanning,createBeforePlanningWithVisual,loadVisualSnapshot,saveRequestVisualSnapshot,loadRequestVisualSnapshot,updatePreparation,archiveTerminalPreparation,loadArchivedPreparation,reissuePlannedIntent,prepareExecution,retireCompleted,prepareReplacement,updateReplacement,abandonReplacement,update,close:()=>{connection?.close();connection=null;}};
 }

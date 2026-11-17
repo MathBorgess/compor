@@ -20,6 +20,7 @@ export function matchReadinessFeedback(projectId:string,references:StudioReferen
     const source=reference.source;
     if(!source)continue;
     if('kind' in source) {
+      if(source.kind!=='generated')continue;
       if(source.projectId!==projectId)continue;
       const signal=generatedActive.find(item=>item.imageId===source.imageId&&item.comment.trim());
       if(signal)referenceFeedback.push({referenceId:reference.id,text:signal.comment});

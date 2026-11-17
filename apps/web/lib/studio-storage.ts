@@ -32,7 +32,7 @@ function checkGlobalBudget(references:StoredRecord[],assets:StoredRecord[],repla
 }
 
 /**
- * Browser-only content. IDB v4 retains state/reference/draft asset stores and archives schemas 1 and 2 before their first converted save.
+ * Browser-only content. IDB v5 retains state/reference/draft asset stores and archives schemas 1–3 before their first converted save.
  * References and draft assets share an atomic 256 MiB / 500 blob budget for this database;
  * existing per-project reference limits still apply. Quota errors never evict content.
  * State is limited to 512 KiB per project, without a global project/state count limit.
@@ -48,7 +48,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     opening=new Promise<IDBDatabase>((resolve,reject)=>{
       let request:IDBOpenDBRequest,settled=false;
       const rejectOnce=(error:unknown)=>{if(!settled){settled=true;reject(storageError(error));}};
-      try{request=indexedDB.open(name,4);}catch(error){rejectOnce(error);return;}
+      try{request=indexedDB.open(name,5);}catch(error){rejectOnce(error);return;}
       request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'scope'});if(!db.objectStoreNames.contains('legacyStates'))db.createObjectStore('legacyStates',{keyPath:'scope'});if(!db.objectStoreNames.contains('stateArchives'))db.createObjectStore('stateArchives',{keyPath:'key'});if(!db.objectStoreNames.contains('references'))db.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('draftAssets'))db.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};
       request.onerror=()=>rejectOnce(request.error);
       request.onblocked=()=>rejectOnce(new StudioStorageError('studio_storage_blocked'));
@@ -89,7 +89,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
           if((existing?.revision??null)!==expectedRevision)throw new StudioStorageError('studio_storage_conflict',{currentRevision:existing?.revision});
           if(existing && state.revision<=existing.revision){if(JSON.stringify(existing)===JSON.stringify(state)){done(state);return;}throw new StudioStorageError('studio_storage_invalid');}
           const previous=z.optional(z.object({state:z.catchall(z.object({schemaVersion:z.number()}),z.unknown())})).parse(request.result);
-          if(previous&&[1,2].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
+          if(previous&&[1,2,3].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
           store.put({scope,state});done(state);
         }catch(error){fail(error);}
       };
