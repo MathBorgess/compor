@@ -104,6 +104,16 @@
       "import": "./src/exploration-plan-provider.mjs",
       "default": "./src/exploration-plan-provider.mjs"
     },
+    "./visual-input-contract": {
+      "types": "./src/visual-input-contract.d.ts",
+      "import": "./src/visual-input-contract.mjs",
+      "default": "./src/visual-input-contract.mjs"
+    },
+    "./visual-input": {
+      "types": "./src/visual-input.d.ts",
+      "import": "./src/visual-input.mjs",
+      "default": "./src/visual-input.mjs"
+    },
     "./exploration-plan-contract": {
       "types": "./src/exploration-plan-contract.d.ts",
       "import": "./src/exploration-plan-contract.mjs",

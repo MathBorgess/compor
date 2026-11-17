@@ -1,0 +1,13 @@
+export type VisualMime = 'image/png'|'image/jpeg';
+export type VisualFileDescriptor = Readonly<{sha256:string;mime:VisualMime;byteLength:number}>;
+export type VisualInputEntry = Readonly<{id:string;ordinal:number;role:'reference';inputOrigin:'local-upload';original:VisualFileDescriptor;transport:VisualFileDescriptor & Readonly<{width:number;height:number}>;transformation:'none'|'optimized-v1'}>;
+export type VisualInputManifest = Readonly<{version:1;policy:'optimized-v1';entries:readonly VisualInputEntry[]}>;
+export type VisualReferenceImage = Readonly<{id:string;mime:VisualMime;data:string}>;
+export const MAX_VISUAL_IMAGES:number;
+export const MAX_VISUAL_IMAGE_BYTES:number;
+export const MAX_VISUAL_SOURCE_BYTES:number;
+export const MAX_VISUAL_REQUEST_BYTES:number;
+export const MAX_VISUAL_DIMENSION:number;
+export const MAX_VISUAL_PIXELS:number;
+export function validateVisualInputManifest(value:unknown):value is VisualInputManifest;
+export function parseVisualInputManifest(value:unknown):VisualInputManifest;
