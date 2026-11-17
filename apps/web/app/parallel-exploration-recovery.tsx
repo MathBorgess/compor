@@ -72,12 +72,12 @@ export default function ParallelExplorationRecovery(props:Props){
         if(!latest||latest.intentId!==preparation.intentId||latest.batchId!==preparation.batchId||!['planning','planned','executing','failed'].includes(latest.stage))throw Error('unavailable');
         if(latest.stage==='executing'){
           const scope={userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId};let journal=await store.load(scope);let replacement=journal?.replacements?.at(-1);
-          if(journal&&replacement&&['prepared','submitted'].includes(replacement.state)){
+          if(journal&&replacement&&['prepared','submitted','observed'].includes(replacement.state)){
             const replacementIntent={...latest,intentId:replacement.intentId,expectedEpoch:replacement.expectedEpoch,intentEpoch:replacement.intentEpoch};
             const intents=createParallelIntentClient(),observed=await intents.inspect(replacementIntent);if(!inScope())throw Error('unavailable');
             if(!replacement.revocationRequested)journal=await store.updateReplacement(scope,journal.revision,{kind:'revoke'});
             const revoked=observed.state==='revoked'?{status:'revoked' as const,revocationEpoch:observed.revocationEpoch}:await intents.revoke(replacementIntent);if(revoked.status!=='revoked'||!inScope())throw Error('unavailable');
-            replacement=journal.replacements?.at(-1);if(!replacement?.revocationConfirmed)journal=await store.updateReplacement(scope,journal.revision,{kind:'revoke_confirmed',...(revoked.revocationEpoch==null?{}:{epoch:revoked.revocationEpoch})});
+            replacement=journal.replacements?.at(-1);if(!replacement?.revocationConfirmed||replacement.revocationEpoch===undefined&&revoked.revocationEpoch!=null)journal=await store.updateReplacement(scope,journal.revision,{kind:'revoke_confirmed',...(revoked.revocationEpoch==null?{}:{epoch:revoked.revocationEpoch})});
             const client=createParallelExplorationClient({store,canInspect:inScope}),result=await client.inspectBatch(latest,Date.now,false);if(!inScope())throw Error('unavailable');
             journal=result.journal;replacement=journal.replacements?.at(-1);
             const image=result.snapshot.images.find(item=>item.position===replacement?.position);
