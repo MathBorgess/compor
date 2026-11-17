@@ -30,7 +30,7 @@ import { createStudioTools } from '../lib/studio-tools';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
-import { chatResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
+import { chatResponseSchema, pendingInspectionSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type PendingInspection, type ImageAction, type ImageContext, type ImageReceipt, type Usage, type Inspection } from './studio-chat-contract';
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({postContext:state.selection?postContext(state,state.selection.pieceId):undefined,brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
@@ -244,14 +244,17 @@ export default function StudioChat({
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
       setClosedImageAttempt(uuid(submitted)?submitted:null);
-      const rawMarker=sessionStorage.getItem(marker);setMissingMarker(rawMarker===null);
-      const parsed = chatMarkerSchema.safeParse(JSON.parse(rawMarker ?? "null"));
+      const rawMarker=sessionStorage.getItem(marker);
+      let markerValue:unknown=null;try{markerValue=JSON.parse(rawMarker??'null');}catch{}
+      const parsed = chatMarkerSchema.safeParse(markerValue);
       const value = parsed.success ? parsed.data : null;
+      const usableRequestId=uuid(value?.requestId)?value.requestId:null;
+      setMissingMarker(!usableRequestId);
       const originalSource=value?.credentialSource??'byok';
-      attemptSource.current=value?.requestId?originalSource:credentialSource;
-      legacyPending.current=Boolean(value?.requestId && value.imageProtocolVersion !== 1);
-      if (value && typeof value.requestId === "string") {
-        setPending(value.requestId);
+      attemptSource.current=usableRequestId?originalSource:credentialSource;
+      legacyPending.current=Boolean(usableRequestId && value?.imageProtocolVersion !== 1);
+      if (value && usableRequestId) {
+        setPending(usableRequestId);
         setPendingSource(originalSource);
         if(originalSource!==credentialSource)setNotice(sourceNotice(originalSource));
         else if(changed)setNotice('A fonte da IA mudou. Consulte a tentativa anterior antes de continuar.');
@@ -260,7 +263,7 @@ export default function StudioChat({
       setLastCompleted(uuid(previous.current)?previous.current:null);
       imageContext.current=value?.imageContext??null;
       receiptRef.current=imageReceiptFor(value?.imageReceipt,state.userId,state.projectId);setImageReceipt(receiptRef.current);
-      if(value&&(changed||originalSource!==credentialSource))remember(value.requestId??null);
+      if(value&&(value.requestId===null||usableRequestId)&&(changed||originalSource!==credentialSource))remember(usableRequestId);
     } catch {}
     return () => {
       mounted.current = false;
@@ -299,7 +302,9 @@ export default function StudioChat({
     window.addEventListener('storage',stored);
     return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
   },[marker]);
-  async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse> {
+  async function api(path:string, body:Record<string,unknown>,mode:'inspection'):Promise<PendingInspection>;
+  async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse>;
+  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
     if(pending&&attemptSource.current!==credentialSource)throw Error(sourceNotice(attemptSource.current));
@@ -316,6 +321,7 @@ export default function StudioChat({
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     const input:unknown = await response.json();
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
+    if(mode==='inspection'){if(!response.ok)throw Error('Consulta indisponível.');return pendingInspectionSchema.parse(input);}
     const envelope = errorResponseSchema.parse(input);
     if(response.status===503&&envelope.error==='default_credential_unavailable'){
       const fresh=path==='/api/studio/chat'&&(body.op===undefined||body.op==='submit'||body.op==='reference_selection');
@@ -351,11 +357,12 @@ export default function StudioChat({
     if(inspectionLock.current||busy||pending||!canUseAI||!credentialIsCurrent())return;
     const sequence=++inspectionSequence.current;inspectionLock.current=true;setBusy(true);setNotice('');
     try {
-      const result=await api('/api/studio/chat',{op:'poll',projectId:state.projectId,requestId});
+      const result=await api('/api/studio/chat',{op:'inspect_pending',projectId:state.projectId,requestId},'inspection');
       if(sequence!==inspectionSequence.current||!credentialIsCurrent()||!getState().adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)))return;
       if(result.status==='completed')setNotice('A consulta encontrou uma resposta concluída. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
+      else if(result.status==='failed'&&result.error==='provider_usage_limit')setNotice(credentialSource==='default'?'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.':'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.');
       else if(result.status==='failed')setNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
-      else if(result.status==='action_required'||result.status==='consent_required')setNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
+      else if(result.status==='action_required')setNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
       else setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');
     } catch {if(sequence===inspectionSequence.current&&credentialIsCurrent())setNotice('Não foi possível confirmar esta tentativa. Use a fonte e a chave originais; nenhuma ação foi repetida.');}
     finally {if(sequence===inspectionSequence.current){inspectionLock.current=false;if(credentialIsCurrent())setBusy(false);}}

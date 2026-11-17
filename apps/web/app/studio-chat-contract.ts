@@ -16,6 +16,8 @@ export const chatResponseSchema=z.discriminatedUnion('status',[
 export const errorResponseSchema=z.extend(common,{status:z.optional(z.string())});
 export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.literal('failed'),error:z.literal('default_credential_unavailable'),failurePhase:z.literal('before_submission'),requestId:z.string().check(z.uuid()),retryAutomatically:z.literal(false)});
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
+export const pendingInspectionSchema=z.strictObject({status:z.enum(['running','action_required','completed','failed','unknown']),retryAutomatically:z.literal(false),error:z.optional(z.literal('provider_usage_limit'))}).check(z.refine(value=>value.error===undefined||value.status==='failed'));
+export type PendingInspection=z.infer<typeof pendingInspectionSchema>;
 export type Usage=z.infer<typeof usageSchema>;
 export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.number().check(z.int())});
 export type ImageContext=z.infer<typeof imageContextSchema>;
