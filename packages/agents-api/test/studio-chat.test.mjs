@@ -32,7 +32,7 @@ test('novo escopo não adota vínculo legado nem aceita post diferente do contex
  assert.equal((await f.chat(request({...body,requestId:request2,conversationId:attemptId,context:{...body.context,pieceId:request2}}))).status,400);assert.equal(f.calls.length,before);
 });
 function fixture(options={}){
- const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',model=AGENT_MODEL,answer='Atualização concluída na aba.';
+ const records=new Map(),calls=[],claims=new Map();let status='in_progress',actions=[],turn='turn_one',turnState='in_progress',turnError=null,model=AGENT_MODEL,answer='Atualização concluída na aba.';
  const bindings=createSessionBindings({secret:Buffer.alloc(32,7)}),studioBindings=createStudioBindings({secret:Buffer.alloc(32,7)});
  const store={
   async reserve(c){if(records.has(c.requestId)){const t=records.get(c.requestId);return{status:t.inputDigest===c.inputDigest?'existing':'conflict',turn:t};}if([...records.values()].some(t=>!['completed','failed'].includes(t.state)))return{status:'busy'};const t={requestId:c.requestId,projectId,userId,attemptId:c.requestId===requestId?attemptId:request2,inputDigest:c.inputDigest,state:'starting',binding:null,turnId:null};records.set(c.requestId,t);return{status:'reserved',turn:t};},
@@ -48,11 +48,11 @@ function fixture(options={}){
   if(url.endsWith('/sessions')&&init.method==='POST')return Response.json({id:options.createdSessionId??'sess_one',status:'in_progress'},{status:201});
   if(url.endsWith('/events'))return new Response(null,{status:202});
   if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:turn,content:[{type:'output_text',text:answer}]}]});
-  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
+  if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState,error:turnError},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
   return Response.json({id:'sess_one',agent:{model,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
- return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
+ return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'turnError'))turnError=v.turnError;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
 }
 test('submit cria uma sessão assíncrona e repetição consulta sem nova geração',async()=>{
  const f=fixture();let r=await f.chat(request(body));assert.equal(r.status,202);assert.equal((await r.json()).status,'running');
@@ -649,4 +649,26 @@ test('sessão de resposta rápida concluída não é reutilizada por uma mensage
  assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0,'nenhuma mensagem foi enviada à sessão sem ferramentas');
  const create=f.calls.find(call=>call.method==='POST'&&call.url?.endsWith('/sessions'));
  assert.equal(create.body.agent.tools.length,AGENT_STUDIO_TOOLS.length);
+});
+
+
+test('limite de uso é exposto somente para código exato de turno failed sem repetir nem revelar erro do provedor',async()=>{
+ const providerMessage=`DETALHE_PRIVADO ${apiKey} cobrança`;
+ for(const [turnState,error,expected] of [
+  ['failed',{code:'usage_limit_exceeded',message:providerMessage},{status:'failed',error:'provider_usage_limit',retryAutomatically:false}],
+  ['failed',{code:'usage_limit_exceeded_extra',message:providerMessage},{status:'failed',retryAutomatically:false}],
+  ['failed',{code:'rate_limit_exceeded',message:providerMessage},{status:'failed',retryAutomatically:false}],
+  ['failed',null,{status:'failed',retryAutomatically:false}],
+  ['cancelled',{code:'usage_limit_exceeded',message:providerMessage},{status:'failed',retryAutomatically:false}],
+ ]){
+  const events=[],f=fixture({onEvent:(name,metadata)=>events.push({name,metadata})});
+  await f.chat(request(body));f.set({status:'failed',turnState,turnError:error});
+  const response=await f.chat(request({op:'poll',apiKey,projectId,requestId})),result=await response.json();
+  assert.equal(response.status,200);assert.deepEqual(result,expected);assert.equal(f.records.get(requestId).state,'failed');
+  const before=f.calls.length;assert.deepEqual(await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json(),{status:'failed',retryAutomatically:false});
+  assert.equal(f.calls.length,before,'nova consulta não chama o fornecedor');
+  assert.equal(f.calls.filter(call=>call.method==='POST'&&call.url?.endsWith('/sessions')).length,1);
+  assert.equal(f.calls.some(call=>call.url?.endsWith('/events')),false);
+  assert.doesNotMatch(JSON.stringify({result,events}),/DETALHE_PRIVADO|sk-synthetic|cobrança/);
+ }
 });

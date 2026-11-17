@@ -181,7 +181,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   d.turnId=turn.id;d.turnStatus=turn.status;d.emit('turn_observed');
   d.phase='turn_state_write';
   if(!record.turnId)await state(scope,record,'running',turn.id);
-  if(['failed','cancelled'].includes(turn.status)){d.phase='turn_finish';await finish(scope,record,'failed',session.usage);return reply({status:'failed',retryAutomatically:false});}
+  if(['failed','cancelled'].includes(turn.status)){
+   d.phase='turn_finish';await finish(scope,record,'failed',session.usage);
+   return reply({status:'failed',...(turn.status==='failed'&&turn.error?.code==='usage_limit_exceeded'?{error:'provider_usage_limit'}:{}),retryAutomatically:false});
+  }
   // A session may already be executing a newer message. The requested turn,
   // never the session's current status, determines a prior request's outcome.
   if(turn.status!=='completed'&&session.status==='requires_action'){
