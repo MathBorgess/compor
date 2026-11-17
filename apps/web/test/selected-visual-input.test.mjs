@@ -12,7 +12,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
  const browser=await chromium.launch({executablePath:chrome,headless:true});t.after(()=>browser.close());const page=await browser.newPage();await page.goto(`http://127.0.0.1:${server.address().port}`);
  const result=await page.evaluate(async()=>{
-  const {prepareSelectedVisualInput,selectedLocalUploads,visualInputImages}=await import('/visual.js');
+  const {prepareSelectedVisualInput,prepareSelectedVisualCandidates,selectedVisualInputImages,selectedLocalUploads,visualInputImages}=await import('/visual.js');
   const {createParallelJournalStore}=await import('/journal.js');
   const {createStudioState,parseStudioState}=await import('/state.js');
   const {createStudioStorage}=await import('/storage.js');
@@ -23,6 +23,19 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   const local=await storage.putReference({...scope,id:id(3),file,source:{kind:'local-upload'}});
   const legacy=await storage.putReference({...scope,id:id(4),file});
   const generated=await storage.putReference({...scope,id:id(5),file,source:{kind:'generated',projectId:id(2),imageId:id(6)}});
+  const external=await storage.putReference({...scope,id:id(21),file,source:{originUrl:'https://www.pinterest.com/pin/123/',board:'behance/advertising'}});
+  let consentDenied=false;try{await prepareSelectedVisualCandidates({references:[external],projectId:scope.projectId,externalConsent:false,loadReference:async()=>{throw Error('must not read');}});}catch{consentDenied=true;}
+  let candidateLoads=[];const candidates=await prepareSelectedVisualCandidates({references:[local,legacy,external,generated],projectId:scope.projectId,externalConsent:true,loadReference:async key=>{candidateLoads.push(key);return storage.getReference(scope,key);}});
+  const candidateScope={...scope,conversationId:id(7),requestId:id(31)};
+  const candidateJournal=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'});await candidateJournal.saveRequestVisualSnapshot(candidateScope,candidates);candidateJournal.close();
+  const candidateRecovery=createParallelJournalStore({name:'compor-parallel-exploration-candidate-test'}),frozenCandidates=await candidateRecovery.loadRequestVisualSnapshot(candidateScope);candidateRecovery.close();
+  const picked=await selectedVisualInputImages(frozenCandidates,[local.id,generated.id]);
+  const triage=candidateLoads.join(',')===[local.id,external.id,generated.id].join(',')&&picked.map(item=>item.id).join(',')===[local.id,generated.id].join(',')&&frozenCandidates.manifest.entries.map(item=>item.inputOrigin).join(',')==='local-upload,external,generated';
+  let missingUpload=false,unknownId=false,wrongOrder=false;
+  try{await selectedVisualInputImages(frozenCandidates,[generated.id]);}catch{missingUpload=true;}
+  try{await selectedVisualInputImages(frozenCandidates,[local.id,id(99)]);}catch{unknownId=true;}
+  try{await selectedVisualInputImages(frozenCandidates,[generated.id,local.id]);}catch{wrongOrder=true;}
+  let wrongProject=false;try{await prepareSelectedVisualCandidates({references:[generated],projectId:id(99),externalConsent:true,loadReference:async()=>null});}catch{wrongProject=true;}
   const refs=[legacy,local,generated];let loaded=[];
   const snapshot=await prepareSelectedVisualInput({references:refs,loadReference:async key=>{loaded.push(key);return storage.getReference(scope,key);}});
   const images=await visualInputImages(snapshot),hash=snapshot.manifest.entries[0].transport.sha256;
@@ -41,8 +54,12 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   let mismatch=false;try{await prepareSelectedVisualInput({references:[local],loadReference:async()=>({metadata:legacy,file})});}catch{mismatch=true;}
   const state=createStudioState(scope),migrated=parseStudioState({...state,schemaVersion:3,references:[legacy],projectReferenceIds:[legacy.id]});
   const legacyUnknown=migrated.schemaVersion===4&&!migrated.references[0].source;
-  const journal=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'}),rScope={...scope,conversationId:id(7),requestId:id(8)};
+  const journalName='compor-parallel-exploration-visual-test';
+  const oldJournal=await new Promise((resolve,reject)=>{const req=indexedDB.open(journalName,3);req.onupgradeneeded=()=>{req.result.createObjectStore('journals');req.result.createObjectStore('preparations');req.result.createObjectStore('preparationHistory');};req.onsuccess=()=>resolve(req.result);req.onerror=()=>reject(req.error);});
+  let oldJournalClosed=false;oldJournal.onversionchange=()=>{oldJournal.close();oldJournalClosed=true;};
+  const journal=createParallelJournalStore({name:journalName}),rScope={...scope,conversationId:id(7),requestId:id(8)};
   await journal.saveRequestVisualSnapshot(rScope,snapshot);journal.close();
+  let oldJournalRefused=false;await new Promise(resolve=>{const req=indexedDB.open(journalName,3);req.onerror=()=>{oldJournalRefused=req.error.name==='VersionError';resolve();};req.onsuccess=()=>{req.result.close();resolve();};});
   const resumed=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'}),restored=await resumed.loadRequestVisualSnapshot(rScope);
   const same=(await visualInputImages(restored))[0].data===images[0].data&&restored.manifest.entries[0].transport.sha256===hash;
   const wrong=await resumed.loadRequestVisualSnapshot({...rScope,userId:id(10)})===null;
@@ -65,7 +82,7 @@ test('seleção local e snapshots imutáveis preservam bytes, escopo e quota',{s
   await new Promise((resolve,reject)=>{const tx=db.transaction('visualSnapshots','readwrite'),store=tx.objectStore('visualSnapshots'),key=JSON.stringify([scope.userId,scope.projectId,id(11)]),request=store.get(key);request.onsuccess=()=>store.put({...request.result,blobs:[]},key);tx.oncomplete=resolve;tx.onabort=()=>reject(tx.error);});db.close();
   const reread=createParallelJournalStore({name:'compor-parallel-exploration-visual-test'});let evicted=false;try{await reread.loadVisualSnapshot({...scope,batchId:id(11)},id(7));}catch(error){evicted=error.code==='parallel_storage_corrupt';}
   const retained=Boolean(await reread.loadPreparation(scope.userId));reread.close();storage.close();
-  return {onlyLocal,noInfer,optimized,badBudget,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
+  return {onlyLocal,noInfer,optimized,badBudget,triage,consentDenied,missingUpload,unknownId,wrongOrder,wrongProject,duplicate,empty:empty.manifest.entries.length===0,mismatch,legacyUnknown,same,wrong,oldJournalClosed,oldJournalRefused,duplicateWrite,oneWriter,oldPath,quota,atomic,batch:batch.manifest.entries[0].transport.sha256===hash,cross,corrupt,evicted,retained};
  });
  assert.deepEqual(result,Object.fromEntries(Object.keys(result).map(key=>[key,true])));
 });

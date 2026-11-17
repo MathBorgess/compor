@@ -1,5 +1,5 @@
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
-import {validateVisualInputManifest, parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import {validateVisualInputManifest, parseVisualInputManifest, visualInputMatchesProject} from '@compor/agents-api/visual-input-contract';
 import * as z from './schema.ts';
 import {validateVisualSnapshot, type SelectedVisualInput} from './selected-visual-input.ts';
 import {creationContextSchema} from './studio-domain.ts';
@@ -9,7 +9,7 @@ const id=z.uuid();
 const scopeSchema=z.strictObject({userId:id,projectId:id,batchId:id});
 const epoch=z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER-1));
 const replacementSchema=z.strictObject({position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),previousId:id,requestId:id,intentId:id,expectedEpoch:epoch,intentEpoch:z.optional(epoch),state:z.enum(['prepared','submitted','observed','abandoned']),revocationRequested:z.boolean(),revocationConfirmed:z.boolean(),revocationEpoch:z.optional(epoch)}).check(z.refine(value=>value.previousId!==value.requestId&&(value.intentEpoch===undefined||value.intentEpoch===value.expectedEpoch+1)&&(!['submitted','observed'].includes(value.state)||value.intentEpoch!==undefined)&&(!value.revocationConfirmed||value.revocationRequested)&&(value.revocationEpoch===undefined||value.revocationConfirmed)));
-const journalSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,intentId:z.optional(id),credentialSource:z.enum(['byok','default']),context:z.unknown(),creationContext:z.optional(creationContextSchema),plan:z.unknown(),revision:z.number().check(z.int()).check(z.nonnegative()),progress:parallelProgressSchema,replacements:z.optional(z.array(replacementSchema))});
+const journalSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,intentId:z.optional(id),credentialSource:z.enum(['byok','default']),context:z.unknown(),visualInput:z.optional(z.unknown()),creationContext:z.optional(creationContextSchema),plan:z.unknown(),revision:z.number().check(z.int()).check(z.nonnegative()),progress:parallelProgressSchema,replacements:z.optional(z.array(replacementSchema))});
 const preparationSchema=z.strictObject({version:z.literal(1),userId:id,projectId:id,batchId:id,conversationId:z.union([id,z.literal('references')]),planRequestId:id,credentialSource:z.enum(['byok','default']),imageIds:z.array(id).check(z.minLength(3)).check(z.maxLength(3)),context:z.unknown(),visualInput:z.optional(z.unknown()),creationContext:z.optional(creationContextSchema),intentId:z.optional(id),expectedEpoch:z.optional(epoch),intentEpoch:z.optional(epoch),planSubmitted:z.optional(z.boolean()),revocationRequested:z.optional(z.boolean()),revocationConfirmed:z.optional(z.boolean()),revocationEpoch:z.optional(epoch),plan:z.nullable(z.unknown()),stage:z.enum(['planning','planned','executing','completed','failed']),revision:z.number().check(z.int()).check(z.nonnegative())}).check(z.refine(value=>new Set(value.imageIds).size===3&&(value.stage==='planning'||value.stage==='failed'?value.plan===null:value.plan!==null)&&(value.intentId===undefined)===(value.expectedEpoch===undefined)&&(value.intentEpoch===undefined||value.expectedEpoch!==undefined&&value.intentEpoch===value.expectedEpoch+1)&&(!value.planSubmitted||value.intentEpoch!==undefined||value.stage==='planned')&&(!value.revocationConfirmed||value.revocationRequested===true)&&(value.revocationEpoch===undefined||value.revocationConfirmed===true)));
 export type ParallelPreparation=z.infer<typeof preparationSchema>;
 export type ParallelJournal=z.infer<typeof journalSchema>;
@@ -26,6 +26,7 @@ export type ParallelJournalUpdate=
 /** Creative context stays local; authentication, tokens and planBinding are rejected by the strict schema. */
 export function parseParallelJournal(input:unknown):ParallelJournal {
   const value=journalSchema.parse(input);
+  if(value.visualInput!==undefined&&(!validateVisualInputManifest(value.visualInput)||!visualInputMatchesProject(value.visualInput,value.projectId)))throw Error('parallel_invalid_visual_input');
   if(!validateExplorationContext(value.context)||!validateCompletedExplorationPlan(value.plan,value.context))throw Error('parallel_invalid_plan');
   const heads=new Map<number,string>(),requests=new Set<string>(),intents=new Set<string>();
   for(const [index,claim] of (value.replacements??[]).entries()){
@@ -37,7 +38,7 @@ export function parseParallelJournal(input:unknown):ParallelJournal {
 }
 export function parseParallelPreparation(input:unknown):ParallelPreparation {
   const value=preparationSchema.parse(input);
-  if(value.visualInput!==undefined&&!validateVisualInputManifest(value.visualInput))throw Error('parallel_invalid_visual_input');
+  if(value.visualInput!==undefined&&(!validateVisualInputManifest(value.visualInput)||!visualInputMatchesProject(value.visualInput,value.projectId)))throw Error('parallel_invalid_visual_input');
   if(!validateExplorationContext(value.context)||(value.plan!==null&&!validateCompletedExplorationPlan(value.plan,value.context)))throw Error('parallel_invalid_plan');
   return value;
 }
@@ -97,7 +98,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
   }
   async function createBeforeDispatch(input:unknown):Promise<ParallelJournal>{
     let value:ParallelJournal;try{value=parseParallelJournal(input);}catch{throw new ParallelJournalError('parallel_storage_invalid');}
-    if(value.revision!==0||value.progress.wait.mode!=='none'||value.progress.children.some(item=>item.status!=='unconfirmed'||item.revision!==0))throw new ParallelJournalError('parallel_storage_invalid');
+    if(value.visualInput!==undefined||value.revision!==0||value.progress.wait.mode!=='none'||value.progress.children.some(item=>item.status!=='unconfirmed'||item.revision!==0))throw new ParallelJournalError('parallel_storage_invalid');
     return transaction('readwrite',(store,done,abort)=>{
       const address=key(scopeFrom(value)),request=store.get(address);
       request.onsuccess=()=>{if(request.result!==undefined){abort(new ParallelJournalError('parallel_storage_exists'));return;}try{store.add(value,address);done(value);}catch(error){abort(error);}};
@@ -154,14 +155,14 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
     try{
       if(!Array.isArray(raw.blobs)||raw.blobs.some(blob=>!(blob instanceof Blob)))throw Error();
       const snapshot={manifest:parseVisualInputManifest(raw.manifest),blobs:raw.blobs};
-      await validateVisualSnapshot(snapshot);return snapshot;
+      if(!visualInputMatchesProject(snapshot.manifest,address.projectId))throw Error();await validateVisualSnapshot(snapshot);return snapshot;
     }catch{throw new ParallelJournalError('parallel_storage_corrupt');}
   }
   /** Standalone request snapshot for chat/artwork, committed before their separate journal permits dispatch. */
   async function saveRequestVisualSnapshot(scope:{userId:string;projectId:string;conversationId:string;requestId:string},input:SelectedVisualInput):Promise<void>{
     const parsed=z.strictObject({userId:id,projectId:id,conversationId:z.union([id,z.literal('references')]),requestId:id}).parse(scope);
     let snapshot:SelectedVisualInput;
-    try{snapshot={manifest:parseVisualInputManifest(input.manifest),blobs:[...input.blobs]};await validateVisualSnapshot(snapshot);}catch{throw new ParallelJournalError('parallel_storage_invalid');}
+    try{snapshot={manifest:parseVisualInputManifest(input.manifest),blobs:[...input.blobs]};if(!visualInputMatchesProject(snapshot.manifest,parsed.projectId))throw Error();await validateVisualSnapshot(snapshot);}catch{throw new ParallelJournalError('parallel_storage_invalid');}
     const address=JSON.stringify([parsed.userId,parsed.projectId,parsed.conversationId,parsed.requestId]);
     return transaction('readwrite',(store,done,abort)=>{
       const request=store.getAll();request.onsuccess=()=>{try{
@@ -184,7 +185,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
     try{
       if(!Array.isArray(raw.blobs)||raw.blobs.some(blob=>!(blob instanceof Blob)))throw Error();
       const snapshot={manifest:parseVisualInputManifest(raw.manifest),blobs:raw.blobs};
-      await validateVisualSnapshot(snapshot);return snapshot;
+      if(!visualInputMatchesProject(snapshot.manifest,parsed.projectId))throw Error();await validateVisualSnapshot(snapshot);return snapshot;
     }catch{throw new ParallelJournalError('parallel_storage_corrupt');}
   }
   async function updatePreparation(userId:string,revision:number,operation:{kind:'intent_confirmed';epoch:number}|{kind:'plan_submitted'}|{kind:'revoke'}|{kind:'revoke_confirmed';epoch?:number}|{kind:'planned';plan:unknown}|{kind:'executing'}|{kind:'failed'}|{kind:'completed'}):Promise<ParallelPreparation>{
@@ -258,7 +259,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
         const current=parseParallelPreparation(first);
         if(current.userId!==address.userId||current.projectId!==address.projectId||current.batchId!==address.batchId||current.revision!==expectedRevision||current.stage!=='planned'||current.planSubmitted!==true||!current.intentId||current.intentEpoch===undefined||current.revocationRequested)throw new ParallelJournalError('parallel_storage_conflict');
         const progress={children:current.imageIds.map((requestId,index)=>({requestId,position:index+1,status:'unconfirmed',revision:0,confirmedAt:null})),wait:{mode:'none'}};
-        const journal=parseParallelJournal({version:1,...address,conversationId:current.conversationId,planRequestId:current.planRequestId,intentId:current.intentId,credentialSource:current.credentialSource,context:current.context,...(current.creationContext?{creationContext:current.creationContext}:{}),plan:current.plan,revision:0,progress});
+        const journal=parseParallelJournal({version:1,...address,conversationId:current.conversationId,planRequestId:current.planRequestId,intentId:current.intentId,credentialSource:current.credentialSource,context:current.context,...(current.visualInput!==undefined?{visualInput:current.visualInput}:{}),...(current.creationContext?{creationContext:current.creationContext}:{}),plan:current.plan,revision:0,progress});
         if(second!==undefined){const old=parseParallelJournal(second);const comparable={...old,intentId:current.intentId};if(JSON.stringify(comparable)!==JSON.stringify(journal))throw new ParallelJournalError('parallel_storage_conflict');}
         result=parseParallelPreparation({...current,stage:'executing',revision:current.revision+1});journals.put(journal,key(address));preparations.put(result,address.userId);
       }catch(error){abort(error);}};
