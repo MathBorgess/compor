@@ -3,12 +3,12 @@ import type {Actor} from './agent-auth.ts';
 import type {AuthConfig} from './supabase.ts';
 import {createExplorationImageStore} from './exploration-image-store.ts';
 
-const reservation=z.array(z.strictObject({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback','cooldown','partial','conflict']),is_new:z.boolean()})).length(1);
+const reservation=z.array(z.strictObject({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback','cooldown','partial','conflict','revoked']),is_new:z.boolean()})).length(1);
 const timestamp=z.string().max(100);
 const batch=z.strictObject({batch_id:z.string().uuid(),project_id:z.string().uuid(),piece_id:z.string().uuid().nullable(),plan_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['running','unknown','partial','completed']),created_at:timestamp,updated_at:timestamp,completed_at:timestamp.nullable(),next_at:timestamp.nullable(),closed_at:timestamp.nullable(),images:z.array(z.strictObject({id:z.string().uuid(),project_id:z.string().uuid(),prompt_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['running','unknown','completed','rejected']),ordinal:z.number().int().positive().safe(),revision:z.number().int().positive().safe(),batch_position:z.number().int().min(1).max(3),replaces_image_id:z.string().uuid().nullable(),created_at:timestamp,updated_at:timestamp})).length(3)});
 type Reservation={state:z.infer<typeof reservation>[number]['state'];isNew:boolean};
-export type BatchReservationInput={projectId:string;batchId:string;pieceId:string|null;planDigest:string;imageIds:string[];promptDigests:string[];rejectionDigests:string[]};
-export type ReplacementInput={projectId:string;batchId:string;position:number;previousId:string;requestId:string;promptDigest:string;rejectionDigest:string};
+export type BatchReservationInput={projectId:string;batchId:string;pieceId:string|null;planDigest:string;intentId:string;intentSecret:string;imageIds:string[];promptDigests:string[];rejectionDigests:string[]};
+export type ReplacementInput={projectId:string;batchId:string;position:number;previousId:string;requestId:string;intentId:string;intentSecret:string;promptDigest:string;rejectionDigest:string};
 
 /** Uses the person's token and the existing RLS-scoped image store. */
 export function createExplorationBatchStore(config:AuthConfig,fetchApi:typeof fetch=fetch){
@@ -31,10 +31,10 @@ export function createExplorationBatchStore(config:AuthConfig,fetchApi:typeof fe
    return {batchId:row.batch_id,projectId:row.project_id,pieceId:row.piece_id,state:row.state,completedAt:row.completed_at,nextAt:row.next_at,closedAt:row.closed_at,images:row.images.map(image=>({requestId:image.id,status:image.state,ordinal:image.ordinal,revision:image.revision,position:image.batch_position,replacesImageId:image.replaces_image_id}))};
   },
   async reserveBatch(actor:Actor,value:BatchReservationInput):Promise<Reservation>{
-   return parseReservation(await rpc(actor,'reserve_exploration_batch_proven',{p_project_id:value.projectId,p_batch_id:value.batchId,p_piece_id:value.pieceId,p_plan_digest:value.planDigest,p_image_ids:value.imageIds,p_prompt_digests:value.promptDigests,p_rejection_digests:value.rejectionDigests}));
+   return parseReservation(await rpc(actor,'reserve_exploration_batch_proven',{p_project_id:value.projectId,p_batch_id:value.batchId,p_piece_id:value.pieceId,p_plan_digest:value.planDigest,p_image_ids:value.imageIds,p_prompt_digests:value.promptDigests,p_rejection_digests:value.rejectionDigests,p_intent_id:value.intentId,p_intent_secret:value.intentSecret}));
   },
   async replaceRejected(actor:Actor,value:ReplacementInput):Promise<Reservation>{
-   return parseReservation(await rpc(actor,'replace_rejected_exploration_batch_slot_proven',{p_project_id:value.projectId,p_batch_id:value.batchId,p_position:value.position,p_previous_id:value.previousId,p_id:value.requestId,p_prompt_digest:value.promptDigest,p_rejection_digest:value.rejectionDigest}));
+   return parseReservation(await rpc(actor,'replace_rejected_exploration_batch_slot_proven',{p_project_id:value.projectId,p_batch_id:value.batchId,p_position:value.position,p_previous_id:value.previousId,p_id:value.requestId,p_prompt_digest:value.promptDigest,p_rejection_digest:value.rejectionDigest,p_intent_id:value.intentId,p_intent_secret:value.intentSecret}));
   },
  };
 }

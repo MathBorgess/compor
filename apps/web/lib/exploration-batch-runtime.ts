@@ -1,5 +1,6 @@
 import {createImageHandler} from '@compor/images-api';
 import {createExplorationPlannerBindings,validateExplorationContext,verifyExplorationPlan} from '@compor/agents-api/exploration-planner';
+import {deriveExplorationIntent} from './exploration-intent.ts';
 import {agentSigningKey} from './agent-config.ts';
 import {authClient,authConfig} from './supabase.ts';
 import {ownsSupabaseProject,resolveSupabaseActor} from './agent-auth.ts';
@@ -21,6 +22,7 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
    if(apiKey!==prepared.apiKey||!validateExplorationContext(context))return false;
    return verifyExplorationPlan({bindings,input:{actor,projectId,conversationId,batchId,requestId,context},plan,token});
   },
+  intentSecret:input=>{if(!validateExplorationContext(input.context))throw Error('invalid context');const scope={actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,intentId:input.intentId,context:input.context};if(input.purpose==='batch')return deriveExplorationIntent(bindings,{...scope,purpose:'batch'}).intentSecret;if(input.position===undefined||input.previousId===undefined)throw Error('invalid intent');return deriveExplorationIntent(bindings,{...scope,purpose:'replacement',position:input.position,previousId:input.previousId}).intentSecret;},
   store:createExplorationBatchStore(config),
   generate:async(actor,key,prompt)=>{
    const handler=createImageHandler({authenticate:async()=>actor});

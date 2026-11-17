@@ -1,6 +1,7 @@
 import {createExplorationPlanner,createExplorationPlannerBindings} from '@compor/agents-api/exploration-planner';
 import {createManagedExplorationPlanProvider} from '@compor/agents-api/exploration-plan-provider';
 import {createExplorationPlannerStore} from '../../../../../lib/exploration-planner-store.ts';
+import {guardExplorationPlannerProvider} from '../../../../../lib/exploration-intent.ts';
 import {createExplorationPlannerRoute} from '../../../../../lib/exploration-planner-route.ts';
 import {authClient,authConfig} from '../../../../../lib/supabase.ts';
 import {agentSigningKey} from '../../../../../lib/agent-config.ts';
@@ -20,7 +21,8 @@ export async function POST(request:Request){
   if(!prepared.apiKey)return Response.json({error:'invalid_request'},{status:400,headers:{'Cache-Control':'no-store'}});
   let actor;try{actor=prepared.actor??await resolveSupabaseActor(await authClient(config));}catch{return unavailable();}
   const ownsProject=(candidate:NonNullable<typeof actor>,projectId:string)=>ownsSupabaseProject({actor:candidate,projectId,config});
-  const planner=createExplorationPlanner({store:createExplorationPlannerStore(config),bindings:createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),provider:createManagedExplorationPlanProvider({apiKey:prepared.apiKey}),authorize:async input=>ownsProject(input.actor,input.projectId)});
-  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED==='true',resolveActor:async()=>actor,ownsProject,planner})(prepared.request);
+  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
+  const plannerFor=(intent?:{intentId:string;intentSecret:string})=>createExplorationPlanner({store:createExplorationPlannerStore(config,fetch,intent),bindings,provider:guardExplorationPlannerProvider(createManagedExplorationPlanProvider({apiKey:prepared.apiKey??''}),prepared.request.signal),authorize:async input=>ownsProject(input.actor,input.projectId)});
+  return createExplorationPlannerRoute({appOrigin:config.app,apiKey:prepared.apiKey,allowSubmit:process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED==='true',resolveActor:async()=>actor,ownsProject,bindings,plannerFor})(prepared.request);
  });
 }
