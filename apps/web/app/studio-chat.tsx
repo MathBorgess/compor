@@ -1058,7 +1058,7 @@ export default function StudioChat({
       </header>
       {intro&&!canUseAI&&<p className="studio-hint">Para criar pela conversa, escolha sua IA nas configurações do projeto. Você também pode começar pelo editor.</p>}
       {visualUnavailable&&<p role="status" className="studio-hint">O envio das imagens selecionadas está indisponível. Você pode continuar editando e consultar tentativas anteriores.</p>}
-      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos. Referências externas e geradas ainda não estão disponíveis neste fluxo.</p>}
+      {selectedVisualsAvailable&&state.references.some(reference=>reference.source)&&<p className="studio-hint">As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI para orientar o pedido. A sessão do agente mantém estado e não usa retenção zero. Na criação, os uploads escolhidos são incluídos. {createVisualAuthoritySnapshot?'O agente pode escolher entre as referências externas autorizadas e imagens geradas selecionadas para usar na arte.':'Referências externas e geradas ainda não estão disponíveis neste fluxo.'}</p>}
       <div id={detailsId} className="studio-chat-meta" hidden={intro} onToggle={(event) => {
         const opened = event.target;
         if (!(opened instanceof HTMLDetailsElement) || !opened.open || opened.parentElement !== event.currentTarget) return;
