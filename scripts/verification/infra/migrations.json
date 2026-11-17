@@ -130,6 +130,10 @@
     {
       "name": "20261115000031_project_posts.sql",
       "sha256": "cb7a80ee14619edcd37275e16e55a67544eb3b30cc3e509da38f2bb6851a2a2b"
+    },
+    {
+      "name": "20261117000033_exploration_parallel_batches.sql",
+      "sha256": "107213c617c6679ecfe0ec027d27c442913bf787bef9ff4da1a812947b9d9b9e"
     }
   ]
 }

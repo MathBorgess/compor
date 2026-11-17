@@ -1,0 +1,57 @@
+// Explicit local-only proof; never targets a Supabase URL or host port.
+// Container must be a newly created, task-owned PostgreSQL 17 instance.
+import {spawn} from 'node:child_process';
+import {setTimeout as delay} from 'node:timers/promises';
+import assert from 'node:assert/strict';
+import {databaseSql} from '../../scripts/quality/fixtures/exploration-parallel-db.mjs';
+const container=process.env.COMPOR_PARALLEL_PG_CONTAINER;
+if(!container?.startsWith('compor-parallel-sql-'))throw Error('Set COMPOR_PARALLEL_PG_CONTAINER to a task-owned isolated container.');
+const database=`parallel_proof_${process.pid}`;
+function connection(db=database){
+ const child=spawn('docker',['--context','colima','exec','-i',container,'psql','-X','-qAt','-v','ON_ERROR_STOP=1','-U','postgres','-d',db],{stdio:['pipe','pipe','pipe']});
+ let output='',error='';const listeners=[];
+ child.stdout.on('data',chunk=>{output+=chunk;for(const fn of listeners)fn(output);});child.stderr.on('data',chunk=>{error+=chunk;});
+ const done=new Promise((resolve,reject)=>{child.on('error',reject);child.on('close',code=>code===0?resolve(output):reject(Error(error||`psql exited ${code}`)));});
+ return {child,done,wait:marker=>new Promise((resolve,reject)=>{const timer=setTimeout(()=>reject(Error('Barrier timed out')),5000);const check=text=>{if(text.includes(marker)){clearTimeout(timer);resolve();}};listeners.push(check);check(output);done.catch(reject);})};
+}
+function sql(query,db=database){const c=connection(db);c.child.stdin.end(query);return c.done;}
+const id=n=>`20000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+const owner=id(1),project=id(2),piece=id(3),digest='a'.repeat(64),secret='12'.repeat(32);
+const proof="encode(sha256(decode('"+secret+"','hex')),'hex')";
+const actor=`set role authenticated; select set_config('request.jwt.claim.sub','${owner}',false);`;
+const reservePlan=(batch,request,scope=project)=>`select reserve_exploration_plan('${scope}','${piece}','${batch}','${request}','${digest}',${proof});`;
+const finishPlan=request=>`select bind_exploration_plan('${project}','${request}','v4.fixture.binding','${secret}');select finish_exploration_plan('${project}','${request}','completed','${secret}');`;
+const reserve=(batch,images)=>`select row_to_json(r) from reserve_exploration_batch_proven('${project}','${batch}','${piece}','${digest}',array[${images.map(x=>`'${x}'::uuid`).join(',')}],array['${digest}','${digest}','${digest}'],array[${proof},${proof},${proof}]) r;`;
+async function heldRace(first,second){
+ const c=connection();c.child.stdin.write(`begin;${actor}${first}select 'proof-lock-held';\n`);await c.wait('proof-lock-held');
+ const competing=sql(`${actor}set application_name='compor-parallel-contender';${second}`);
+ try{
+  let blocked=false;for(let i=0;i<100;i++){const observed=await sql("select count(*) from pg_stat_activity where application_name='compor-parallel-contender' and wait_event='advisory';");if(observed.trim()==='1'){blocked=true;break;}await delay(10);}
+  assert.equal(blocked,true,'independent transaction must wait on the owner advisory lock');
+ }finally{c.child.stdin.end('commit;\n');}
+ return {first:await c.done,second:await competing};
+}
+await sql(`create database ${database};`,'postgres');
+try{
+ await sql((await databaseSql()).replace('create role anon; create role authenticated;', ()=>"do $$begin if not exists(select 1 from pg_roles where rolname='anon') then create role anon; end if; if not exists(select 1 from pg_roles where rolname='authenticated') then create role authenticated; end if; end$$;"));
+ await sql(`insert into auth.users values('${owner}');insert into projects(id,owner_id)values('${project}','${owner}');insert into project_posts(project_id,piece_id,name)values('${project}','${piece}','Fixture');`);
+ const plannerRace=await heldRace(reservePlan(id(10),id(11)),reservePlan(id(20),id(21)));
+ assert.match(plannerRace.first,/"status": "reserved"/);assert.match(plannerRace.second,/"status": "busy"/);
+ const deleteRace=await heldRace(`select get_exploration_plan('${project}','${id(11)}');select pg_advisory_xact_lock(hashtextextended('${owner}',0));`,`select delete_project_post('${project}','${piece}');`);
+ assert.match(deleteRace.second,/"status": "pending"/);
+ await sql(actor+finishPlan(id(11))+reservePlan(id(20),id(21))+finishPlan(id(21)));
+ const images=[id(101),id(102),id(103)],batch=id(10);
+ const batchRace=await heldRace(reserve(batch,images),reserve(batch,images));
+ assert.match(batchRace.first,/"is_new":true/);assert.match(batchRace.second,/"is_new":false/);
+ const otherBatch=await heldRace(reserve(batch,images),reserve(id(20),[id(201),id(202),id(203)]));assert.match(otherBatch.second,/"state":"busy"/);
+ assert.equal((await sql('select count(*) from exploration_images;')).trim(),'3');
+ const completed=await Promise.all([...images].reverse().map(image=>sql(`${actor}insert into storage.objects(bucket_id,name)values('compor-exploration-images','${owner}/${project}/${image}.png');select complete_exploration_image_proven('${project}','${image}','${secret}');`)));
+ assert.equal(completed.length,3);
+ const state=JSON.parse((await sql(`${actor}select get_exploration_batch('${project}','${batch}');`)).trim().split('\n').at(-1));
+ assert.equal(state.state,'completed');assert.deepEqual(state.images.map(x=>x.revision),[2,2,2]);assert.equal(Date.parse(state.next_at)-Date.parse(state.completed_at),15000);
+ assert.equal((await sql('select unattended_batches from exploration_review_gates;')).trim(),'1');
+ await sql("update exploration_batches set completed_at=now()-interval '16 seconds',next_at=now()-interval '1 second';");
+ const deletedFirst=await heldRace(`select delete_project_post('${project}','${piece}');`,reservePlan(id(30),id(31)));
+ assert.match(deletedFirst.second,/"status": "not_found"/);
+ console.log('PostgreSQL 17: planner race, delete race, batch replay race, three concurrent completions and deleted-scope race passed.');
+}finally{await sql(`drop database ${database} with (force);`,'postgres');}
