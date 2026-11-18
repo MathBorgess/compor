@@ -56,6 +56,8 @@ def read_group(directory):
     receipts=[]
     for row,observed in zip(rows,replay):
         if row['id']!=observed['id']: raise ValueError('Índices fora de ordem')
+        original_receipts=(directory/row['id']/'receipts.json').read_bytes()
+        planning_sessions={s['sessionId'] for s in json.loads(original_receipts) if s.get('sessionId')}
         failure=None
         diagnostic=directory/row['id']/'invalid.json'
         if diagnostic.is_file():
@@ -66,7 +68,7 @@ def read_group(directory):
                      'rejectedOutputSha256':sha((directory/row['id']/'rejected-plan.json').read_bytes())}
         receipts.append({'id':row['id'],'references':observed.get('selected'),'bytesPerImage':observed.get('expectedInputBytes'),'rejection':failure,
                          'planSha256':sha((directory/row['id']/'plan.json').read_bytes()) if row.get('plan') else None,
-                         'receiptsSha256':sha((directory/row['id']/'receipts.json').read_bytes()),
+                         'receiptsSha256':sha(original_receipts),'planningSessionsObserved':len(planning_sessions),
                          'slots':[{'position':s['position'],'state':s['state'],'sha256':s.get('sha256'),
                                    'deliveryConfirmed':obs['delivered']} for s,obs in zip(row['slots'],observed['slots'])]})
     return {'round':complete['round'],'revision':complete['revision'],'indexSha256':sha(index.read_bytes()),
@@ -81,7 +83,7 @@ def close(root):
     for r in rounds:
         if len(r['receipts'])!=5 or not 0<=r['plans']<=5 or not 0<=r['images']<=15:
             raise ValueError('Grupo excede o protocolo autorizado')
-        r['coverage']={'plannedCases':5,'imageSlots':15,
+        r['coverage']={'plannedCases':5,'planningSessionsObserved':sum(c['planningSessionsObserved'] for c in r['receipts']),'imageSlots':15,
                        'confirmedPlans':sum(c['planSha256'] is not None for c in r['receipts']),
                        'confirmedImages':sum(s['sha256'] is not None and s['state'] in ('complete','completed') for c in r['receipts'] for s in c['slots'])}
     comparisons=[]
