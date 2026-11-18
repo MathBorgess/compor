@@ -1,4 +1,4 @@
-// apps/web$ node --import tsx ../../scripts/evals/pr61/briefing/group.mjs <empty-output-dir>
+// apps/web$ node --import tsx ../../scripts/evals/pr61/briefing/group.mjs <empty-output-dir> [--count 3|4|5]
 import assert from 'node:assert/strict';
 import {randomUUID,createHash} from 'node:crypto';
 import {mkdir, mkdtemp, readFile, writeFile} from 'node:fs/promises';
@@ -10,7 +10,9 @@ import {studioProjectIdea} from '../../../../apps/web/lib/studio-project-idea.ts
 import {parallelExplorationContext} from '../../../../apps/web/lib/parallel-exploration-context.ts';
 import {PERSONA_SKILL_INSTRUCTIONS} from '../../../../packages/agents-api/src/studio-persona-skill.mjs';
 import {scenarios,rubric} from './group-cases.mjs';
+import {selectCases} from './group-selection.mjs';
 
+const selected = selectCases(scenarios,process.argv.slice(3));
 const dest=resolve(process.argv[2]);
 await mkdir(dest,{recursive:false});
 const scratch=await mkdtemp(join(tmpdir(),'compor-briefing-model-'));
@@ -42,8 +44,8 @@ async function run(scenario){
   await writeFile(join(dest,id+'.json'),JSON.stringify({record,evidence},null,2)+'\n');
   return {record,evidence};
 }
-const rows=await Promise.all(scenarios.map(run));
-assert.equal(new Set(rows.map(row=>row.record.threadId)).size,5);
+const rows=await Promise.all(selected.map(run));
+assert.equal(new Set(rows.map(row=>row.record.threadId)).size,selected.length);
 const packet={marco:'Briefing inicial',rubrica:rubric,instrucoes:'Julgue a resposta ao pedido, um ponto por dimensão e cite a evidência curta por falha. Aprovação individual: ao menos 5/6, incluindo oferta, comprador/destinatário e fidelidade, e nenhum fato comercial inventado. Registre à parte se a ideia está disponível no contexto do plano; não pontue ausência de dado não informado como invenção.',casos:rows.map(x=>x.evidence).sort((a,b)=>a.blindId.localeCompare(b.blindId))};
 await writeFile(join(dest,'blind.json'),JSON.stringify(packet,null,2)+'\n');
-await writeFile(join(dest,'private.json'),JSON.stringify({casesSha256:hash(JSON.stringify(scenarios)),skillSha256:hash(PERSONA_SKILL_INSTRUCTIONS),rows:rows.map(x=>x.record)},null,2)+'\n');
+await writeFile(join(dest,'private.json'),JSON.stringify({selectedIds:selected.map(item=>item.id),casesSha256:hash(JSON.stringify(scenarios)),skillSha256:hash(PERSONA_SKILL_INSTRUCTIONS),rows:rows.map(x=>x.record)},null,2)+'\n');

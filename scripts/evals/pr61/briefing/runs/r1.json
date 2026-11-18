@@ -1,0 +1,280 @@
+{
+  "rodada": "r1",
+  "commit": "d313c73",
+  "hashCasos": "c0e75da08d12bb319e49c673eec8305d973a317d088d89a4cb0c77b3aae21434",
+  "hashPacoteCego": "dfd6c44f5f5f0579ba7446460be92d76642f477cd75ff206f33e324cb9fbe473",
+  "hashParecer": "2c4115f742f7085260b85cabcfee997b8ba23c58e089da0e1b50afeedb02a769",
+  "juiz": {
+    "model": "gpt-6.2-sol",
+    "thread": "01a1ee87-91ed-7b23-ac2b-ccfecf204c20",
+    "tools": 0
+  },
+  "casos": [
+    {
+      "caso": "B1",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "B1",
+        "blindId": "78e75272-05bd-4d32-a379-bb7bc266ae36",
+        "threadId": "01a1ee87-3f58-7770-a7dc-816ded7b0239",
+        "promptSha256": "c819b8d781389242b676ae86cbcffd89e1170d226cf144abb416cffdfd1c86bc",
+        "answerSha256": "852d0bcc38f112868ed6d0b12e5b7d26d26aa8521dbe1fb27a0dd6279be1dabd",
+        "idea": "",
+        "offerInPlan": true,
+        "audienceInPlan": true,
+        "goalInPlan": true,
+        "usage": {
+          "input_tokens": 22682,
+          "cached_input_tokens": 13696,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 339,
+          "reasoning_output_tokens": 0
+        }
+      },
+      "entrega": {
+        "blindId": "78e75272-05bd-4d32-a379-bb7bc266ae36",
+        "pedido": {
+          "offer": "Trama de Aula, quatro encontros ao vivo e revisão de um plano de aula.",
+          "audience": "Coordenações de escolas compram a mentoria para professores que vão preparar o primeiro curso curto.",
+          "action": "Solicitar a ementa por mensagem.",
+          "request": "Quero o briefing de divulgação da mentoria. Nosso único dado de escuta é que um professor disse “não sei por onde começar”. Ainda não definimos preço."
+        },
+        "contextoNoPlano": {
+          "ideia": "",
+          "oferta": "Trama de Aula, quatro encontros ao vivo e revisão de um plano de aula.",
+          "público": "Coordenações de escolas compram a mentoria para professores que vão preparar o primeiro curso curto.",
+          "ação": "Solicitar a ementa por mensagem."
+        },
+        "resposta": "# Briefing de divulgação | Trama de Aula\n\n**Objetivo**  \nLevar coordenações escolares a pedir a ementa por mensagem.\n\n**Quem compra e quem participa**  \nAs coordenações escolares compram a mentoria. Os professores participam enquanto preparam seu primeiro curso curto. A divulgação fala com quem decide a compra e mostra o que a mentoria oferece ao professor.\n\n**O que sabemos**\n\n- **Relato do criador.** A Trama de Aula oferece quatro encontros ao vivo e a revisão de um plano de aula. O preço ainda está em aberto.\n- **Relato de um professor, transmitido pelo criador.** “Não sei por onde começar”. É o único dado de escuta e vem de um participante em potencial. A fala diz respeito à dificuldade de começar e, sozinha, não revela como a coordenação decide a compra.\n- **Hipótese de comunicação.** Apresentar a mentoria como apoio para preparar o primeiro curso curto pode ajudar a coordenação a entender quando oferecê-la aos professores. A hipótese parte da fala do professor e do formato declarado da mentoria.\n- **Em aberto.** O preço, os critérios de compra da coordenação e as dúvidas que ela gostaria de esclarecer na ementa.\n- **Fontes públicas.** Nenhuma consultada.\n\n**Sugestão de texto para sua revisão**\n\nSua escola tem professores preparando o primeiro curso curto? A **Trama de Aula** é uma mentoria para apoiar essa preparação, com quatro encontros ao vivo e a revisão de um plano de aula.\n\n**Peça a ementa por mensagem.**"
+      },
+      "juizo": {
+        "blindId": "78e75272-05bd-4d32-a379-bb7bc266ae36",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "O briefing orienta a coordenação a pedir a ementa por mensagem e mostra o que os professores recebem para preparar o primeiro curso curto: quatro encontros ao vivo e a revisão de um plano de aula. A dificuldade de começar é atribuída a um único professor, os critérios de compra ficam em aberto e nenhum preço é apresentado. Campo ideia no plano: vazio.",
+        "correcao": "Na abertura da peça, nomeie a coordenação escolar como destinatária e mantenha os professores como participantes da mentoria."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "B2",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "B2",
+        "blindId": "81b75fb7-cfd2-4654-9030-ff6bdfd76aab",
+        "threadId": "01a1ee87-3f59-7592-9453-b2ff82df2a80",
+        "promptSha256": "37c4ebe796d9635ac8f3f9f11fbcc87f876c25f1eb5ba68e20afc3a048a2138e",
+        "answerSha256": "42e64fede00379f782224c2ac1f489ab3014fd0f9dfe39b7d7a506d71cb5e0e3",
+        "idea": "",
+        "offerInPlan": true,
+        "audienceInPlan": true,
+        "goalInPlan": true,
+        "usage": {
+          "input_tokens": 22683,
+          "cached_input_tokens": 20096,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 206,
+          "reasoning_output_tokens": 0
+        }
+      },
+      "entrega": {
+        "blindId": "81b75fb7-cfd2-4654-9030-ff6bdfd76aab",
+        "pedido": {
+          "offer": "Volta de Pote registra empréstimos e devoluções de embalagens. Ainda está em piloto.",
+          "audience": "Pequenos produtores de refeições que emprestam potes; a equipe da cozinha usará o registro.",
+          "action": "Convite a conhecer o piloto.",
+          "request": "Preciso explicar a ferramenta de um jeito direto. Não tenho clientes pagantes nem números de economia. Sou a criadora, não represento quem compra."
+        },
+        "contextoNoPlano": {
+          "ideia": "",
+          "oferta": "Volta de Pote registra empréstimos e devoluções de embalagens. Ainda está em piloto.",
+          "público": "Pequenos produtores de refeições que emprestam potes; a equipe da cozinha usará o registro.",
+          "ação": "Convite a conhecer o piloto."
+        },
+        "resposta": "“Você empresta potes aos seus clientes? O Volta de Pote é uma ferramenta para sua equipe de cozinha registrar quais potes foram emprestados e quais foram devolvidos. A ferramenta ainda está em piloto. Conheça o Volta de Pote.”\n\n**Base do briefing**\n\n- **Relato da criadora.** O público pretendido são pequenos produtores de refeições que emprestam potes. A equipe da cozinha usará o registro. O Volta de Pote está em piloto, ainda não tem clientes pagantes e não há números de economia.\n- **Relato de comprador e fontes públicas.** Nenhum relato ou fonte pública foi fornecido.\n- **Hipótese de comunicação.** Abrir com a pergunta sobre empréstimo de potes pode ajudar o público a reconhecer a situação. A pergunta parte do perfil descrito pela criadora.\n- **Em aberto.** Quem decide pela compra, como o controle é feito hoje e o que motivaria a adoção."
+      },
+      "juizo": {
+        "blindId": "81b75fb7-cfd2-4654-9030-ff6bdfd76aab",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "O texto convida a conhecer a ferramenta, informa que ela está em piloto e explica a utilidade do registro para a equipe da cozinha. A base atribui o perfil do público à criadora, deixa em aberto quem decide a compra e preserva a ausência de clientes pagantes e de números de economia. Campo ideia no plano: vazio.",
+        "correcao": "Troque a chamada final por “Conheça o piloto do Volta de Pote” para explicitar na própria chamada o que o produtor é convidado a conhecer."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "B3",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "B3",
+        "blindId": "277a68bb-c59d-404b-85c4-ecff086be24a",
+        "threadId": "01a1ee87-3f58-75c2-b504-783f96922501",
+        "promptSha256": "9e3eb6621a97db6089666c74f03d4f92ff0708e257f4f77c398073a4a61574a4",
+        "answerSha256": "d51243f4c68cfe6f23a60b6759074e2a68b798d34e88dd20f6b1a12ffda4ea37",
+        "idea": "",
+        "offerInPlan": true,
+        "audienceInPlan": true,
+        "goalInPlan": true,
+        "usage": {
+          "input_tokens": 22674,
+          "cached_input_tokens": 13696,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 113,
+          "reasoning_output_tokens": 0
+        }
+      },
+      "entrega": {
+        "blindId": "277a68bb-c59d-404b-85c4-ecff086be24a",
+        "pedido": {
+          "offer": "Roda aberta de gravura na associação do bairro; encontro gratuito para olhar matrizes e conversar.",
+          "audience": "Moradores que nunca participaram de uma roda de gravura.",
+          "action": "Convidar os moradores a comparecer.",
+          "request": "O que esse post deve dizer? Não há venda, inscrição nem data confirmada. Acho que têm vergonha de perguntar, mas ninguém me contou isso."
+        },
+        "contextoNoPlano": {
+          "ideia": "",
+          "oferta": "Roda aberta de gravura na associação do bairro; encontro gratuito para olhar matrizes e conversar.",
+          "público": "Moradores que nunca participaram de uma roda de gravura.",
+          "ação": "Convidar os moradores a comparecer."
+        },
+        "resposta": "**Sugestão de texto para o post**\n\n> Vamos conversar sobre gravura? A associação do bairro vai receber uma roda aberta e gratuita para olhar matrizes de gravura e conversar. Se você nunca participou de uma roda de gravura, fica o convite. A data ainda não está confirmada. A atividade é sem inscrição.\n\nO convite a quem nunca participou vem do público que você definiu. A vergonha de perguntar é uma hipótese sua. Até aqui, ninguém do público relatou isso, então deixei essa ideia fora do post."
+      },
+      "juizo": {
+        "blindId": "277a68bb-c59d-404b-85c4-ecff086be24a",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "O texto convida moradores que nunca participaram a olhar matrizes e conversar em uma roda gratuita, sem inscrição e com data em aberto. Os moradores são os destinatários e não há comprador. A vergonha de perguntar fica identificada como hipótese da pessoa que fez o pedido. Campo ideia no plano: vazio.",
+        "correcao": "Na frase de convite, nomeie diretamente os moradores do bairro que nunca participaram de uma roda de gravura."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "B4",
+      "grupo": "reservado",
+      "registro": {
+        "id": "B4",
+        "blindId": "da86175c-0a18-49a3-8ee6-4c1d6cf05a06",
+        "threadId": "01a1ee87-3f59-7810-9867-b98de57de63f",
+        "promptSha256": "830a0e624d9c55c883b78ed7a79d4ff0cb578aba64187e1cccbc6fec16629c40",
+        "answerSha256": "a528b5956392086a66c8b8b59d9d4bb80a54cca8c6f366ceb6823c5a346ce400",
+        "idea": "",
+        "offerInPlan": true,
+        "audienceInPlan": true,
+        "goalInPlan": true,
+        "usage": {
+          "input_tokens": 22691,
+          "cached_input_tokens": 13696,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 204,
+          "reasoning_output_tokens": 0
+        }
+      },
+      "entrega": {
+        "blindId": "da86175c-0a18-49a3-8ee6-4c1d6cf05a06",
+        "pedido": {
+          "offer": "Percurso Sonoro é um audioguia em português com cinco trechos do acervo.",
+          "audience": "A biblioteca municipal decide se contrata. Os visitantes escutam o audioguia durante a visita.",
+          "action": "Pedir que a biblioteca agende uma demonstração.",
+          "request": "Quero um briefing curto para a campanha. A curadoria suspeita que as famílias gostariam de ouvir juntas, mas não conversou com elas. Não confirmamos recursos de acessibilidade."
+        },
+        "contextoNoPlano": {
+          "ideia": "",
+          "oferta": "Percurso Sonoro é um audioguia em português com cinco trechos do acervo.",
+          "público": "A biblioteca municipal decide se contrata. Os visitantes escutam o audioguia durante a visita.",
+          "ação": "Pedir que a biblioteca agende uma demonstração."
+        },
+        "resposta": "**Briefing da campanha — Percurso Sonoro**\n\n- **Objetivo:** levar a biblioteca municipal a agendar uma demonstração.\n- **Quem decide e quem usa:** segundo o briefing, a biblioteca decide se contrata. Os visitantes escutam o audioguia durante a visita. Ainda não sabemos quais critérios orientam a decisão da biblioteca.\n- **Mensagem principal:** o Percurso Sonoro é um audioguia em português com cinco trechos do acervo.\n- **Hipótese da curadoria:** famílias talvez gostem de ouvir juntas. A curadoria ainda não conversou com elas, e o briefing não traz relatos de compradores ou visitantes.\n- **Acessibilidade:** os recursos ainda não foram confirmados. A chamada abaixo deixa esse ponto e a escuta em família fora da peça.\n\n**Chamada sugerida**\n\nConheça o Percurso Sonoro, um audioguia em português com cinco trechos do acervo. Agende uma demonstração para sua biblioteca."
+      },
+      "juizo": {
+        "blindId": "da86175c-0a18-49a3-8ee6-4c1d6cf05a06",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "A biblioteca decide sobre a contratação e recebe o convite para agendar a demonstração. Os visitantes usam o audioguia em português com cinco trechos do acervo durante a visita. A escuta em família fica identificada como hipótese da curadoria, e a acessibilidade segue sem confirmação. Campo ideia no plano: vazio.",
+        "correcao": "Inclua na chamada que os visitantes podem ouvir os cinco trechos durante a visita e encerre com o convite para a biblioteca agendar a demonstração."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "B5",
+      "grupo": "reservado",
+      "registro": {
+        "id": "B5",
+        "blindId": "639d14d0-9bb9-420f-9169-3642d46e607f",
+        "threadId": "01a1ee87-3f57-7b31-8014-40e2d46fbc46",
+        "promptSha256": "456f5b788878b6f6cfccd6ae9f48eaa45372656f2aa79f978206588cdf34fea3",
+        "answerSha256": "a4d21dcb1de9cf9bff503f20a0abb7fd839505e7ebc05d07e4d53c4d32d50ac2",
+        "idea": "",
+        "offerInPlan": true,
+        "audienceInPlan": true,
+        "goalInPlan": true,
+        "usage": {
+          "input_tokens": 27444,
+          "cached_input_tokens": 13696,
+          "cache_write_input_tokens": 0,
+          "output_tokens": 157,
+          "reasoning_output_tokens": 0
+        }
+      },
+      "entrega": {
+        "blindId": "639d14d0-9bb9-420f-9169-3642d46e607f",
+        "pedido": {
+          "offer": "Vale-oficina de encadernação com materiais incluídos. A pessoa presenteada escolhe a turma.",
+          "audience": "Quem quer presentear compra o vale e outra pessoa participa da oficina.",
+          "action": "Pedir o vale por mensagem.",
+          "request": "Como comunicar essa ideia sem confundir as duas pessoas? Não definimos preço, prazo de uso nem dia das turmas."
+        },
+        "contextoNoPlano": {
+          "ideia": "",
+          "oferta": "Vale-oficina de encadernação com materiais incluídos. A pessoa presenteada escolhe a turma.",
+          "público": "Quem quer presentear compra o vale e outra pessoa participa da oficina.",
+          "ação": "Pedir o vale por mensagem."
+        },
+        "resposta": "Comece por quem compra o presente e diga, em outra frase, o que cabe à pessoa presenteada.\n\n**Texto sugerido**\n\n> Presenteie alguém com um vale para uma oficina de encadernação. Você compra o vale, e a pessoa presenteada escolhe a turma e participa da oficina. Os materiais estão incluídos.\n>\n> Para pedir o vale, mande uma mensagem.\n\n**Para sua revisão**  \nA divisão dos papéis e a inclusão dos materiais vêm do seu relato sobre a oferta. A hipótese é que nomear os dois papéis logo no início ajude a evitar confusão. Ainda não temos relatos de compradores para confirmar isso.\n\nPreço, prazo de uso e datas das turmas seguem em aberto e ficaram fora do texto."
+      },
+      "juizo": {
+        "blindId": "639d14d0-9bb9-420f-9169-3642d46e607f",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "O texto distingue quem compra o vale de quem escolhe a turma e participa. Informa que os materiais estão incluídos e orienta a pedir o vale por mensagem. Preço, prazo de uso e datas seguem em aberto, e a redução da confusão é tratada como hipótese. Campo ideia no plano: vazio.",
+        "correcao": "Na chamada final, explicite que a mensagem deve ser enviada por quem quer comprar o vale para presentear."
+      },
+      "passouPelaRubrica": true
+    }
+  ],
+  "hashInstrucaoPersona": "4a4bc95c8a58ce7932155fb1fe3137495699922f9abbff8ecbdc7ed90a7e0481"
+}

@@ -66,3 +66,30 @@ O ensaio usa cinco projetos sintéticos. Três orientam mudanças (mentoria, pil
 O juiz recebe o texto do pedido, a resposta, o contexto local efetivamente entregue ao planejador e a rubrica fixa de seis dimensões. Identificadores aleatórios e ordem embaralhada ocultam revisão e conjunto. Calculamos casos aprovados / cinco, pontos / 30 e a presença de oferta, público, ação e ideia no plano / cinco. Preço, data, benefício ou condição comercial inventados reprovam o caso. Os critérios individuais de 5/6 e as três dimensões obrigatórias acima valem em todas as rodadas.
 
 O conjunto foi congelado em `dbc5718`. SHA-256 do conteúdo serializado dos casos: `c0e75da08d12bb319e49c673eec8305d973a317d088d89a4cb0c77b3aae21434`. O executor e os cinco pedidos estão em [briefing](../../../scripts/evals/pr61/briefing/).
+
+### Parecer por caso e decisão
+
+| Caso | Base | Ciclo 1 | Ciclo 2 | Ciclo 3 |
+| --- | ---: | ---: | ---: | ---: |
+| B1 · mentoria para escolas | 6 | 6 | 5* | 6 |
+| B2 · registro de potes em piloto | 6 | 6 | 6 | 6 |
+| B3 · encontro aberto de gravura | 5* | 6 | 6 | 4* |
+| B4 · audioguia, reservado | 5* | 6 | 5* | 6 |
+| B5 · vale-oficina, reservado | 6 | 6 | 6 | 6 |
+| **Pontos / 30** | **28** | **30** | **28** | **28** |
+| **Aprovados / 5** | **3** | **5** | **3** | **4** |
+| **Tema presente no plano / 5** | **0** | **0** | **5** | **5** |
+
+O asterisco indica reprovação individual. Oferta, público e ação declarados chegaram ao plano em 5/5 em todas as rodadas. Na base, B3 inventou a possibilidade de apenas observar e um aviso futuro. Entre os reservados, B4 prometeu uma amostra de áudio. Usamos somente o parecer dos três casos de desenvolvimento para propor mudanças. Os casos reservados permaneceram fixos, e os pareceres deles só entraram na análise após a quarta medição. As fixtures são conhecidas pelo autor. Uma avaliação prospectiva pede material de outras pessoas.
+
+| Parecer de desenvolvimento que motivou a decisão | Mudança submetida ao próximo juiz | Resultado observado |
+| --- | --- | --- |
+| Base · B3 assumiu compromissos que a associação não declarou. | Ciclo 1, `d313c73`. A skill pede que compromissos operacionais sejam declarados e que condições pendentes sejam identificadas. | B3 preservou a data em aberto e evitou prometer avisos. Os cinco briefings passaram nessa rodada. |
+| Ciclo 1 · o juiz apontou tema vazio nos três planos de desenvolvimento, apesar de oferta conhecida. | Ciclo 2, `e4ce13b`. A descoberta e o plano usam a oferta declarada quando faltam a ideia inicial e o pedido do post. Uma ideia ou pedido explícito continua tendo precedência. | O tema passou a chegar a 5/5 planos. A ideia original permanece vazia no estado, e o público continua em campo separado. B1 perdeu fidelidade ao tratar o solicitante como criador. |
+| Ciclo 2 · B1 registrou procedência excessivamente específica para o relato. | Ciclo 3, `15ba9ed`. A skill distinguiu o solicitante da pessoa a quem a fala foi atribuída. | B1 voltou a 6/6. B3 descreveu a roda mas deixou de convidar os moradores. |
+
+**Decisão local.** O handoff do ciclo 2 resolve as cinco lacunas observadas quanto à disponibilidade do tema. O ciclo 1 teve a melhor amostra textual, mas a mesma instrução, com tema presente na segunda rodada e respostas novas, voltou a perder fidelidade. A skill do ciclo 3 resolveu uma atribuição e perdeu outro pedido. Preservamos o código já examinado do ciclo 2 na bancada. A promoção da habilidade textual exige nova amostra em que a procedência e a ação resistam em conjunto, a execução com o agente gerenciado e revisão humana. Não há estimativa da taxa de sucesso em produção.
+
+O conjunto contém 20 respostas, 20 identificadores distintos de sessão do gerador e 20 hashes de texto diferentes. O gerador usou o modelo padrão do Codex CLI 0.166.0, sem modelo fixado explicitamente. Cada uma das quatro rodadas recebeu um parecer de uma sessão separada de `gpt-6.2-sol` com esforço médio e zero chamadas de ferramenta. A geração e o julgamento usam modelos hospedados por meio da autenticação ChatGPT. O ensaio não mede cobrança, concordância entre juízes humanos ou satisfação. Os arquivos preservam pedido sintético, contexto, texto exato, hash e ID por execução, notas nas seis dimensões e trecho/ação de cada parecer. [Base](../../../scripts/evals/pr61/briefing/runs/r0.json) · [Ciclo 1](../../../scripts/evals/pr61/briefing/runs/r1.json) · [Ciclo 2](../../../scripts/evals/pr61/briefing/runs/r2.json) · [Ciclo 3](../../../scripts/evals/pr61/briefing/runs/r3.json)
+
+Para reproduzir, entre em `apps/web` e execute `node --import tsx ../../scripts/evals/pr61/briefing/group.mjs /tmp/compor-briefing-novo --count 5`. A pasta de saída deve ser nova. O padrão é cinco; três ou quatro preservam os dois casos reservados e usam os primeiros um ou dois casos de desenvolvimento. Autentique o Codex CLI com ChatGPT. O executor invalida uma geração que tenha chamado ferramenta. Copie somente `blind.json` para um nome aleatório em outra pasta e encaminhe essa cópia a `python3 scripts/evals/pr61/grupos/juiz-texto.py <cópia-do-pacote>`, a partir da raiz. Use o arquivo privado para juntar os pareceres por identificador após a avaliação. No ensaio registrado, cada rodada usou os cinco casos.

@@ -1,0 +1,302 @@
+{
+  "rodada": "r1",
+  "commit": "d313c73",
+  "hashCasos": "cfa0bc29a6686e5ca1361d2035e099006b30428fd80cbd55a0d2787f60ee19fd",
+  "hashPacoteCego": "c1ce4f303b03344dad84cec3857c67d4f477f821791e2bd5b7298307926a080c",
+  "hashParecer": "752148f437159b50fd4bcfc325138933f4908afbbca095c86be1bd6d47b8060a",
+  "juiz": {
+    "model": "gpt-6.2-sol",
+    "thread": "01a1ee87-91ed-79b1-8d7c-f3c6b6eb9b6a",
+    "tools": 0
+  },
+  "casos": [
+    {
+      "caso": "R1",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "R1",
+        "blindId": "3d30d29d-a5ff-48bf-a2b0-0161bf95d47a",
+        "boards": [
+          "behance/typography",
+          "creativemarket/magazine-templates",
+          "dribbble/design-inspiration"
+        ],
+        "status": "ok",
+        "count": 6,
+        "returnedIds": [
+          "111",
+          "113",
+          "114",
+          "112",
+          "115",
+          "116"
+        ],
+        "visibleIds": [
+          "111",
+          "113",
+          "114",
+          "112"
+        ]
+      },
+      "entrega": {
+        "blindId": "3d30d29d-a5ff-48bf-a2b0-0161bf95d47a",
+        "pedido": "Oficina de cerâmica para iniciantes: aulas de modelagem em argila.",
+        "intencao": "Exemplos do gesto artesanal, da aula ou de sua organização para iniciantes.",
+        "cartoes": [
+          {
+            "titulo": "Oficina de cerâmica: passo a passo na roda",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Cartaz editorial sobre modelagem em argila",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Horários das aulas: hierarquia para iniciantes",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Aula de esmaltação em cerâmica: mãos e detalhes",
+            "fonte": "behance/typography"
+          }
+        ],
+        "quantidade": 4
+      },
+      "juizo": {
+        "blindId": "3d30d29d-a5ff-48bf-a2b0-0161bf95d47a",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          0
+        ],
+        "aprovado": true,
+        "evidencia": "O primeiro título indica uma demonstração de cerâmica na roda, o segundo trata de modelagem em argila e o terceiro aborda a organização dos horários para iniciantes. Em conjunto, os títulos tornam reconhecíveis o tema da oficina e o objetivo de orientar iniciantes. O quarto título descreve esmaltação, uma etapa diferente da modelagem. Não há repetição ou recusa indicada.",
+        "correcao": "Substituir o quarto cartão por uma referência distinta cujo título mencione o gesto de modelar argila à mão em uma aula para iniciantes."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "R2",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "R2",
+        "blindId": "4a69d290-b082-4382-b48e-4fb594771c51",
+        "boards": [
+          "behance/typography",
+          "creativemarket/magazine-templates",
+          "dribbble/design-inspiration"
+        ],
+        "status": "ok",
+        "count": 8,
+        "returnedIds": [
+          "215",
+          "216",
+          "217",
+          "218",
+          "211",
+          "212",
+          "213",
+          "214"
+        ],
+        "visibleIds": [
+          "215",
+          "216",
+          "217",
+          "218"
+        ]
+      },
+      "entrega": {
+        "blindId": "4a69d290-b082-4382-b48e-4fb594771c51",
+        "pedido": "Arte para vender com luz de janela: fotos e narrativa de ateliê.",
+        "intencao": "Mostrar a obra ou o processo real de quem vende arte. O material descartado por outras indústrias é irrelevante.",
+        "cartoes": [
+          {
+            "titulo": "Luz de janela nos retratos de artistas",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Ateliê aberto: sequência da obra ao acabamento",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Catálogo de arte: aproximação da textura",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Narrativa em imagens do artista no estúdio",
+            "fonte": "behance/typography"
+          }
+        ],
+        "quantidade": 4
+      },
+      "juizo": {
+        "blindId": "4a69d290-b082-4382-b48e-4fb594771c51",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "Os títulos oferecem referências para fotografar artistas com luz de janela, narrar a sequência da obra até o acabamento, mostrar a textura da peça em catálogo e retratar o artista no estúdio. O artista, a obra e o objetivo de apresentar a arte e seu processo são reconhecíveis. A finalidade de venda é sugerida pelo catálogo. Não há repetição ou recusa indicada.",
+        "correcao": "Para explicitar a ligação com a venda, escolher para o terceiro espaço um título que mencione fotos de detalhes da obra para um catálogo de venda com luz de janela."
+      },
+      "passouPelaRubrica": true
+    },
+    {
+      "caso": "R4",
+      "grupo": "desenvolvimento",
+      "registro": {
+        "id": "R4",
+        "blindId": "9ece0710-f4b6-4d5f-b509-a2916d2540dc",
+        "boards": [
+          "behance/typography",
+          "creativemarket/magazine-templates",
+          "dribbble/design-inspiration"
+        ],
+        "status": "ok",
+        "count": 12,
+        "returnedIds": [
+          "812",
+          "811",
+          "810",
+          "809",
+          "808",
+          "807",
+          "806",
+          "805",
+          "804",
+          "803",
+          "802",
+          "801"
+        ],
+        "visibleIds": []
+      },
+      "entrega": {
+        "blindId": "9ece0710-f4b6-4d5f-b509-a2916d2540dc",
+        "pedido": "Oficina de cerâmica: modelagem em argila para iniciantes.",
+        "intencao": "Encontrar uma referência nova sobre a oficina. Doze referências antigas aprovadas sobre moda praia estão preservadas no histórico.",
+        "cartoes": [],
+        "quantidade": 0
+      },
+      "juizo": {
+        "blindId": "9ece0710-f4b6-4d5f-b509-a2916d2540dc",
+        "dimensoes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "aprovado": false,
+        "evidencia": "Os quatro espaços estão vazios. Nenhum título permite reconhecer a oficina de cerâmica ou o objetivo de ensinar modelagem em argila a iniciantes. As doze referências de moda praia pertencem ao histórico e não ocupam os espaços.",
+        "correcao": "Preencher pelo menos três espaços com referências novas e distintas cujos títulos indiquem atividades de modelagem em argila para iniciantes, como preparar a argila, modelar à mão e fazer uma primeira peça."
+      },
+      "passouPelaRubrica": false
+    },
+    {
+      "caso": "R9",
+      "grupo": "reservado",
+      "registro": {
+        "id": "R9",
+        "blindId": "1e8834c5-0397-41ed-8006-71f727c9cff7",
+        "boards": [
+          "weandthecolor/typography",
+          "creativemarket/magazine-templates",
+          "dribbble/design-inspiration"
+        ],
+        "status": "empty",
+        "count": 0,
+        "returnedIds": [],
+        "visibleIds": []
+      },
+      "entrega": {
+        "blindId": "1e8834c5-0397-41ed-8006-71f727c9cff7",
+        "pedido": "Oficina de bicicleta: mostre o antes e depois do reparo de um freio.",
+        "intencao": "Quero enxergar o problema, o conserto ou o contraste antes/depois de uma bicicleta. Já recusei o cartaz de propaganda neon.",
+        "cartoes": [],
+        "quantidade": 0
+      },
+      "juizo": {
+        "blindId": "1e8834c5-0397-41ed-8006-71f727c9cff7",
+        "dimensoes": [
+          0,
+          0,
+          0,
+          0
+        ],
+        "aprovado": false,
+        "evidencia": "Os quatro espaços estão vazios, por isso nenhum título permite reconhecer a bicicleta, o freio ou o objetivo de mostrar o reparo antes e depois.",
+        "correcao": "Preencher os quatro espaços com títulos distintos sobre o defeito no freio da bicicleta, o diagnóstico, o reparo e a comparação antes e depois. Conferir que o cartaz neon recusado não aparece."
+      },
+      "passouPelaRubrica": false
+    },
+    {
+      "caso": "R10",
+      "grupo": "reservado",
+      "registro": {
+        "id": "R10",
+        "blindId": "e1ab9ad1-31b5-42d7-a5d9-b0b0a853e275",
+        "boards": [
+          "behance/typography",
+          "creativemarket/magazine-templates",
+          "dribbble/design-inspiration"
+        ],
+        "status": "ok",
+        "count": 7,
+        "returnedIds": [
+          "501",
+          "502",
+          "505",
+          "504",
+          "503",
+          "506",
+          "507"
+        ],
+        "visibleIds": [
+          "502",
+          "505",
+          "504",
+          "503"
+        ]
+      },
+      "entrega": {
+        "blindId": "e1ab9ad1-31b5-42d7-a5d9-b0b0a853e275",
+        "pedido": "Biblioteca de sementes: convite para troca de sementes e identificação das plantas em envelopes.",
+        "intencao": "Referências para o convite da troca ou para a identificação botânica dos envelopes. Um envelope antigo já está no histórico.",
+        "cartoes": [
+          {
+            "titulo": "Troca de sementes: convite ilustrado para feira do bairro",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Biblioteca comunitária de sementes: cartaz da troca",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Envelopes com os nomes das sementes e época de plantio",
+            "fonte": "behance/typography"
+          },
+          {
+            "titulo": "Cartela botânica: identificar as plantas pelo desenho",
+            "fonte": "behance/typography"
+          }
+        ],
+        "quantidade": 4
+      },
+      "juizo": {
+        "blindId": "e1ab9ad1-31b5-42d7-a5d9-b0b0a853e275",
+        "dimensoes": [
+          1,
+          1,
+          1,
+          1
+        ],
+        "aprovado": true,
+        "evidencia": "O primeiro título apresenta um convite para a troca de sementes e o segundo, um cartaz para a troca na biblioteca. O terceiro trata da rotulagem dos envelopes e o quarto oferece uma referência para identificar plantas por ilustração. A biblioteca de sementes e os dois objetivos são reconhecíveis. Os títulos são distintos e os dados não indicam recusa nem permitem identificar o envelope antigo entre os cartões.",
+        "correcao": "Para tornar a aplicação do quarto cartão explícita, escolher um título que mencione ilustrações botânicas para identificar plantas em envelopes de sementes e conferir se a referência é diferente do envelope já no histórico."
+      },
+      "passouPelaRubrica": true
+    }
+  ]
+}

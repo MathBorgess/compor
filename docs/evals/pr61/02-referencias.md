@@ -78,3 +78,28 @@ Rodamos cinco buscas de descoberta por rodada. Três casos de desenvolvimento re
 O juiz recebe pedido, finalidade e até quatro títulos e fontes realmente retornados. Cada espaço vale um ponto se o título sustentar diretamente o pedido. Ausência e irrelevância valem zero. Calculamos casos com ao menos três lugares pertinentes / cinco e total de lugares pertinentes / 20. A ausência de duplicatas e recusas entre sugestões é verificada pelo executor em cada caso. Violações impedem promoção. A pertinência avaliada é do metadado. Pixels, decisão de seleção e satisfação das pessoas continuam sem medida.
 
 O conjunto foi congelado em `dbc5718`. SHA-256 do conteúdo serializado dos casos: `cfa0bc29a6686e5ca1361d2035e099006b30428fd80cbd55a0d2787f60ee19fd`. O executor e as duas novas fixtures estão em [referências](../../../scripts/evals/pr61/referencias/).
+
+### Parecer por caso e decisão
+
+| Caso · lugares pertinentes entre quatro | Base | Ciclo 1 | Ciclo 2 | Ciclo 3 |
+| --- | ---: | ---: | ---: | ---: |
+| R1 · oficina de cerâmica | 2 | 3 | 3 | 3 |
+| R2 · fotografar a obra no ateliê | 0 | 4 | 3 | 4 |
+| R4 · oficina com histórico cheio | 0 | 0 | 2 | 2 |
+| R9 · reparo de freio, reservado | 0 | 0 | 0 | 0 |
+| R10 · biblioteca de sementes, reservado | 4 | 4 | 4 | 4 |
+| **Lugares pertinentes / 20** | **6** | **11** | **12** | **13** |
+| **Casos aprovados / 5** | **1** | **3** | **3** | **3** |
+| **Lugares com cartão / 20** | **12** | **12** | **16** | **16** |
+
+| Parecer de desenvolvimento que motivou a decisão | Mudança submetida ao próximo juiz | Resultado observado |
+| --- | --- | --- |
+| Base · R2 apresentou quatro cartões de indústria e descarte para um pedido de fotografia de arte. | Ciclo 1, `d313c73`. O ranking compara palavras de conteúdo inteiras, normaliza acentos e ignora preposições e conectivos frequentes. | Os quatro títulos irrelevantes saíram do top‑4. Voltaram luz de janela, ateliê, textura e narrativa no estúdio. |
+| Ciclo 1 · R4 seguiu sem sugestões porque o retorno de doze itens foi todo ocupado pelo histórico. | Ciclo 2, `e4ce13b`. A tela pede `discoveryOnly`. A busca exclui o histórico e recusas antes de limitar a lista. A opção é facultativa e o consumidor legado mantém a ordem histórica. | R4 passou de zero para quatro cartões. Dois títulos sustentam diretamente a modelagem em argila. Os outros tratam de esmaltação e horários sem indicar o assunto. O teste de rota preserva consentimento, propriedade, recusa e deduplicação. |
+| Ciclo 2 · R4 recebeu dois títulos de pertinência insuficiente. | Ciclo 3, `15ba9ed`. Havendo títulos com sobreposição lexical, a descoberta removeu os restantes. Sem nenhum título correspondente, conservou o conjunto do board. | As cinco listas permaneceram idênticas às do ciclo 2, em IDs e ordem. No controle contrastante, a regra removeu “Da roda à queima da argila” quando a consulta era “Cerâmica”. |
+
+**Decisão local.** Conservamos a correspondência por palavra e a descoberta separada do ciclo 2. Rejeitamos a poda do terceiro ciclo. O aparente ganho de 12 para 13 lugares vem de juízes diferentes discordarem sobre o mesmo título de retratos com luz de janela. O efeito observado da descoberta separada foi recuperar quatro lugares antes ocupados pelo histórico; preencher os quatro não garante quatro referências pertinentes. O caso reservado de bicicleta ficou vazio nas quatro buscas. Os boards escolhidos pelo roteador não ofereciam itens na fixture. Nenhuma revisão foi ajustada a partir dos pareceres reservados. Avaliar cobertura de fontes e paráfrases exige uma nova amostra pré-fixada; o resultado atual não estabelece aprovação global.
+
+Cada rodada executou cinco buscas independentes contra a mesma cópia sintética de RSS e recebeu um parecer em uma sessão exclusiva de `gpt-6.2-sol`, esforço médio e zero chamadas de ferramenta. A busca é determinística. A recusa do caso de bicicleta foi reforçada por um teste separado em que a referência efetivamente chega via RSS. Nenhuma imagem foi baixada. O próximo marco recebe somente referências efetivamente selecionadas. A melhora na ordenação não concede autorização para a geração. Os arquivos preservam entradas sintéticas, boards consultados, IDs e títulos realmente exibidos e o parecer de cada lugar. [Base](../../../scripts/evals/pr61/referencias/runs/r0.json) · [Ciclo 1](../../../scripts/evals/pr61/referencias/runs/r1.json) · [Ciclo 2](../../../scripts/evals/pr61/referencias/runs/r2.json) · [Ciclo 3](../../../scripts/evals/pr61/referencias/runs/r3.json)
+
+Para reproduzir, entre em `apps/web` e execute `node --import tsx ../../scripts/evals/pr61/referencias/group.mjs /tmp/compor-referencias-novo --count 5`. O destino deve ser novo. O padrão usa os cinco casos. Com três ou quatro, o grupo mantém os dois reservados e os primeiros um ou dois casos de desenvolvimento. Entregue somente o conteúdo de `blind.json`, com nome aleatório, ao juiz mantido em `scripts/evals/pr61/grupos/juiz-texto.py`. A partir da raiz, execute `python3 scripts/evals/pr61/grupos/juiz-texto.py <cópia-do-pacote>`; o executor de busca mantém os IDs de casos separados no arquivo privado. Todas as medições acima usaram cinco.
