@@ -29,3 +29,15 @@ Para executar os testes determinísticos da métrica:
 ```sh
 node --test scripts/evals/triagem-divergencia/metrics/metrics.test.mjs
 ```
+
+## Relatório de uma rodada real
+
+A CLI lê o protocolo, o SQLite em modo de leitura, cada `plan.json`, as revisões de divergência e triagem, os recibos das imagens e os PNGs efetivos. Quando disponíveis, os pareceres de `pixels/judgments.json` são vinculados por caso, braço, posição e hash da arte. As notas 0–2 de intenção, característica e aplicação vêm de `triage-judgment.json`. Uma leitura declarada pelo agente é contada separadamente. O relatório calcula as proporções em dólares para a API Images direta em tarifa Standard, usando a tabela congelada em 18/11/2026. Na data da consulta os preços de texto de entrada, imagem de entrada e imagem de saída eram US$ 5, US$ 8 e US$ 30 por milhão, os mesmos do cenário histórico de 04/11/2026. As estimativas excluem a fatura, planos com preço indeterminado e o trabalho dos juízes. [Modelo e preços](https://developers.openai.com/api/docs/models/gpt-image-2.6-flare) · [Tabela Standard](https://developers.openai.com/api/docs/pricing)
+
+```sh
+node scripts/evals/triagem-divergencia/metrics/report.mjs /caminho/do/ensaio 0
+node scripts/evals/triagem-divergencia/metrics/report.mjs /caminho/do/ensaio 5 --include-holdout
+node --test scripts/evals/triagem-divergencia/metrics/*.test.mjs
+```
+
+A saída JSON segue para stdout. Por padrão só traz os casos de desenvolvimento. Para abrir a reserva, o último candidato e o hash do feedback que o originou precisam estar congelados. O consumo da quota é global e inclui solicitações recusadas ou com desfecho incerto. Nos ciclos sem pixels previstos, `scheduledPixels` é falso e `aggregate` é nulo. Em ciclos de imagens, `aggregate` traz os denominadores originais, os subtotais conhecidos e a comparação por caso, N e divisão. `byOptionalOrigin` estratifica o custo e a fidelidade pela origem do único arquivo removido. `bySplitNOriginArm` agrupa as características avaliadas por fonte e quantidade escolhida. `trials` detalha os vereditos de divergência do plano e os pares distinguíveis e utilizáveis nos pixels. Vereditos faltantes e ausências de arte continuam explícitos. A CLI permite medir rodadas em andamento. Gravações simultâneas que ainda divergem do snapshot provocam erro e admitem nova leitura.

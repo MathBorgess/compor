@@ -4,7 +4,8 @@ import {homedir} from 'node:os';
 import {resolve,join} from 'node:path';
 import {randomUUID} from 'node:crypto';
 import {setTimeout as delay} from 'node:timers/promises';
-import {pathToFileURL} from 'node:url';
+import {fileURLToPath,pathToFileURL} from 'node:url';
+import {validateCompletedExplorationPlan} from '../../../../packages/agents-api/src/exploration-plan-contract.mjs';
 import {cases,packet} from '../dataset/packets.mjs';
 import {plannerInstructions,assessDivergence,buildDivergenceReview} from '../planner/candidate.mjs';
 import {openLedger,fingerprint,digest} from './ledger.mjs';
@@ -48,11 +49,18 @@ function roundSpec(root,round){
   }
   return spec;
 }
+function experimentSources(){
+  const root=fileURLToPath(new URL('../../../../',import.meta.url));
+  const files=['packages/agents-api/src/agent-model.mjs','packages/agents-api/src/exploration-plan-provider.mjs',
+    'packages/agents-api/src/exploration-plan-contract.mjs','packages/agents-api/src/visual-input.mjs','packages/agents-api/src/visual-input-contract.mjs',
+    'packages/images-api/src/index.mjs','scripts/evals/triagem-divergencia/planner/candidate.mjs','scripts/evals/triagem-divergencia/dataset/freeze.json'];
+  return Object.fromEntries(files.map(file=>[file,digest(readFileSync(join(root,file)))]));
+}
 function init(root,images){
   if(![60,180].includes(images))throw Error('provide_approved_image_allowance');
   mkdirSync(root,{recursive:true,mode:0o700});
   if(existsSync(join(root,'protocol.json')))throw Error('trial_already_initialized');
-  const protocol={version:1,plans:60,images,caseIds:cases.map(c=>c.id),corpus:getCorpusHash(),pixelRounds:images===60?[0,5]:[0,1,2,3,4,5],paired:'same accepted with-plan prompts and original order, optional bytes removed'};
+  const protocol={version:1,sources:experimentSources(),plans:60,images,caseIds:cases.map(c=>c.id),corpus:getCorpusHash(),pixelRounds:images===60?[0,5]:[0,1,2,3,4,5],paired:'same accepted with-plan prompts and original order, optional bytes removed'};
   keep(join(root,'protocol.json'),protocol);
   mkdirSync(join(root,'round-0'),{mode:0o700});
   keep(join(root,'round-0','revision.json'),{round:0,revision:'',hypothesis:'Control with the unchanged product planner.',parentFeedback:null,corpus:protocol.corpus});
@@ -66,7 +74,7 @@ export function matchedInputs(plan,entry){
 async function run(root,round,mode){
   if(!Number.isInteger(round)||round<0||round>5||!['plans','pixels'].includes(mode))throw Error('unknown_round');
   const protocol=read(join(root,'protocol.json')),spec=roundSpec(root,round);
-  if(protocol.corpus!==getCorpusHash())throw Error('corpus_changed');
+  if(protocol.corpus!==getCorpusHash()||fingerprint(protocol.sources)!==fingerprint(experimentSources()))throw Error('frozen_experiment_changed');
   if(mode==='pixels'&&!protocol.pixelRounds.includes(round))throw Error('not_a_pixel_round');
   const db=openLedger(join(root,'receipts.sqlite'),protocol);
   const key=getKey(),roundDir=join(root,'round-'+round);
@@ -88,6 +96,9 @@ async function run(root,round,mode){
         if(!reason && review.decision!=='admit')reason='held_before_dispatch';
         const entry=packet(c.id,'with');
         if(!reason){
+          const saved=db.get([round,c.id,'with','plan'].join('/'));
+          if(saved?.state!=='complete'||fingerprint(saved.result.plan)!==fingerprint(source.plan)||
+              !validateCompletedExplorationPlan(source.plan,entry.context,entry.visualInput))throw Error('stored_dispatch_plan_changed');
           if(review.subject!==buildDivergenceReview(entry.context,source.plan).subject)throw Error('critic_receipt_mismatch');
           if(!review.critique || assessDivergence(entry.context,source.plan,review.critique).decision!=='admit')throw Error('unverified_critic_receipt');
         }
@@ -100,12 +111,11 @@ async function run(root,round,mode){
           const prior=ids.map(id=>db.get(id));
           if(prior.some(r=>r)&&prior.some(r=>r?.state!=='complete'))throw Error('partial_lot_no_resubmit');
           if(prior.every(r=>!r)){
-            const latest=readLastBatch(root);
-            if(latest)await delay(Math.max(0,latest+15000-Date.now()));
+            let wait;
+            while((wait=db.admitLot([round,c.id,arm].join('/'),ids))>0)await delay(wait);
           }
           const jobs=await Promise.allSettled(source.plan.items.map((item,i)=>imageSlot({ledger:db,id:ids[i],prompt:item.prompt,images:refs[arm],file:join(target,'art-'+item.position+'.png'),key})));
           if(jobs.some(j=>j.status!=='fulfilled'||j.value.state!=='complete'))throw Error('incomplete_image_lot '+ids.join(','));
-          if(prior.every(r=>!r))writeFileSync(join(root,'last-batch-end'),String(Date.now()),{mode:0o600});
           keep(join(target,'images.json'),jobs.map(j=>j.value.result));
           console.log(round,c.id,arm,'images 3/3');
         }
@@ -114,7 +124,6 @@ async function run(root,round,mode){
     }
   }finally{db.close();}
 }
-function readLastBatch(root){const file=join(root,'last-batch-end');return existsSync(file)?Number(readFileSync(file,'utf8')):0;}
 if(import.meta.url===pathToFileURL(process.argv[1]??'').href){
   const [command,dir,arg]=process.argv.slice(2),root=safeRoot(dir);
   if(command==='init')init(root,Number(arg));

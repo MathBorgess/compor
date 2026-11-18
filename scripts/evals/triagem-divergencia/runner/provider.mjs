@@ -1,4 +1,6 @@
 import {readFileSync,writeFileSync,existsSync} from 'node:fs';
+import {spawnSync} from 'node:child_process';
+import {fileURLToPath} from 'node:url';
 import {setTimeout as sleep} from 'node:timers/promises';
 import {createManagedExplorationPlanProvider} from '../../../../packages/agents-api/src/exploration-plan-provider.mjs';
 import {validateExplorationPlan} from '../../../../packages/agents-api/src/exploration-plan-contract.mjs';
@@ -6,6 +8,21 @@ import {createImageHandler} from '../../../../packages/images-api/src/index.mjs'
 import {parseVisualInput} from '../../../../packages/agents-api/src/visual-input.mjs';
 import {parseCandidateOutput} from '../planner/candidate.mjs';
 import {digest,fingerprint} from './ledger.mjs';
+
+const pngDecoder=fileURLToPath(new URL('./validate-png.py',import.meta.url));
+const python=process.env.COMPOR_EVAL_PYTHON||'python3';
+const decoderOptions={timeout:30000,stdio:['pipe','ignore','ignore']};
+let decoderReady=false;
+function ensurePngDecoder(){
+  if(decoderReady)return;
+  const check=spawnSync(python,['-I','-B','-c','from PIL import Image, ImageFile'],decoderOptions);
+  if(check.status!==0)throw Error('png_decoder_unavailable');
+  decoderReady=true;
+}
+function validatePng(bytes){
+  const result=spawnSync(python,['-I','-B',pngDecoder],{...decoderOptions,input:bytes});
+  if(result.status!==0)throw Error('invalid_image_png');
+}
 
 const origin='https://api.openai.com';
 const placeholder='sk-local-evaluation-only-no-provider-credential';
@@ -81,9 +98,16 @@ export async function imageSlot({ledger,id,prompt,images,file,key,fetchApi=fetch
   const prior=ledger.get(id);
   if(prior){
     if(prior.binding!==fingerprint(binding))throw Error('image_binding_changed');
-    if(prior.state==='complete'&&(!existsSync(file)||digest(readFileSync(file))!==prior.result.sha256))throw Error('stored_image_changed');
+    if(prior.state==='complete'){
+      if(!existsSync(file))throw Error('stored_image_changed');
+      const bytes=readFileSync(file);
+      if(digest(bytes)!==prior.result.sha256)throw Error('stored_image_changed');
+      ensurePngDecoder();
+      validatePng(bytes);
+    }
     return prior;
   }
+  ensurePngDecoder();
   const handler=createImageHandler({authenticate:async()=>({userId:'synthetic-evaluation'}),fetch:async(url,init)=>{
     if(url!==origin+'/v1/images/'+(images.length?'edits':'generations')||init.method!=='POST')throw Error('invalid_image_transport');
     const opts=withCredential(init,key);
@@ -109,7 +133,11 @@ export async function imageSlot({ledger,id,prompt,images,file,key,fetchApi=fetch
     return ledger.get(id);
   }
   const output=await response.json(),bytes=Buffer.from(output.imageBase64,'base64');
-  if(bytes.length<28||bytes.readUInt32BE(16)!==1024||bytes.readUInt32BE(20)!==1280)throw Error('invalid_image_dimensions');
+  try{validatePng(bytes);}
+  catch(error){
+    ledger.update(id,'unknown',{reason:'invalid_image_png'});
+    throw error;
+  }
   writeFileSync(file,bytes,{flag:'wx',mode:0o600});
   ledger.update(id,'complete',{sha256:digest(bytes),bytes:bytes.length,usage:output.usage,promptHash:digest(prompt),referenceIds:images.map(x=>x.id),delivered:binding.files,settingsSha256:fingerprint(settings),model:settings.model});
   return ledger.get(id);

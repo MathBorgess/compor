@@ -13,6 +13,8 @@ As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs
 
 O job de contratos executa explicitamente os testes offline do parser de migrations, do gerador de baseline e do workflow. Eles ficam em `scripts/tests/` e não são encontrados pelo `unittest discover` de `scripts`; o job usa um venv Python 3.12 e instala os wheels fixados por hash em `scripts/requirements-migration-tests.txt`. Isso não executa a migração nem valida o alvo de produção.
 
+O mesmo job verifica o dataset congelado da triagem visual, as métricas pareadas, os recibos e os juízes com casos sintéticos. Execute `sh scripts/evals/triagem-divergencia/check.sh` com Node 24 e Python com Pillow. No Ubuntu, o job instala `python3-pil` e chama `/usr/bin/python3`. Esses testes usam um provedor simulado e imagens de fixture.
+
 Os testes de sanitização do protótipo exigem `cwebp` e `dwebp` no `PATH`; o job instala e verifica ambos antes da suíte. O [pacote `webp` do Ubuntu 24.04](https://packages.ubuntu.com/noble/amd64/webp/filelist) fornece esses executáveis. Ausência dos codecs continua sendo falha, sem ignorar testes de pixels, transparência ou remoção de metadados.
 
 Nos preparos de migração, `READ_COMMIT` identifica os bytes em um commit publicado; `SOURCE_COMMIT` e `SOURCES` preservam os IDs históricos registrados na auditoria. Os hashes e as guardas continuam obrigatórios. Uma regressão executa os preparos em um checkout sem os commits locais antigos e exige os mesmos oito arquivos SQL/proof, byte a byte. Os [hashes preservados e a falha que motivou a separação](migration-pins-2026-11-05.md) estão registrados.
