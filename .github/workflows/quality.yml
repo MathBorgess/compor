@@ -28,24 +28,40 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
-      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
-        with:
-          node-version: '24'
-          cache: npm
-          cache-dependency-path: |
-            package-lock.json
-            apps/site/package-lock.json
       - name: Select the areas this change can affect
         id: areas
         env:
           BASE_SHA: ${{ github.event.pull_request.base.sha }}
           HEAD_SHA: ${{ github.event.pull_request.head.sha }}
-        run: node scripts/quality/changed-areas.mjs
+        # The selector uses the runner's Node without project dependencies.
+        run: |
+          node --version
+          node scripts/quality/changed-areas.mjs
+      - name: Report documentation and agent skill changes
+        if: steps.areas.outputs.static_checks == 'false'
+        run: echo 'This pull request changes only Markdown in docs/ or at the repository root, or agent skill files.' >> "$GITHUB_STEP_SUMMARY"
+      - uses: actions/setup-node@a0853c24544627f65ddf259abe73b1d18a591444 # v5
+        if: steps.areas.outputs.static_checks != 'false'
+        with:
+          node-version: '24'
+          cache: npm
+          # Without the site lockfile, Performance can restore this same npm cache.
+          cache-dependency-path: |
+            package-lock.json
+            apps/web/package-lock.json
+            ${{ steps.areas.outputs.site != 'false' && 'apps/site/package-lock.json' || '' }}
       - run: npm ci --ignore-scripts
+        if: steps.areas.outputs.static_checks != 'false'
+        env:
+          NPM_CONFIG_TIMING: 'true'
       - run: npm run quality:maintenance
+        if: steps.areas.outputs.static_checks != 'false'
       - run: npm run quality:lint
+        if: steps.areas.outputs.static_checks != 'false'
       - run: npm ci --ignore-scripts --prefix apps/web
+        if: steps.areas.outputs.static_checks != 'false'
       - run: npm run quality:test
+        if: steps.areas.outputs.static_checks != 'false'
       - name: Check and build the public site
         if: steps.areas.outputs.site != 'false'
         run: |
@@ -53,7 +69,7 @@ jobs:
           npm run check --prefix apps/site
           npm run build --prefix apps/site
       - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        if: always()
+        if: always() && steps.areas.outputs.static_checks != 'false'
         with:
           name: maintainability
           path: quality-results/maintainability
@@ -169,6 +185,8 @@ jobs:
             package-lock.json
             apps/web/package-lock.json
       - run: npm ci --ignore-scripts
+        env:
+          NPM_CONFIG_TIMING: 'true'
       - run: npm ci --ignore-scripts --prefix apps/web
       - name: Read the Playwright version
         id: playwright
@@ -211,7 +229,7 @@ jobs:
     name: Quality gate
     if: always()
     needs: [static, unit, web, performance]
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     timeout-minutes: 2
     permissions:
       contents: read

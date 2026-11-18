@@ -1,16 +1,19 @@
 import { spawnSync } from 'node:child_process';
 import { appendFileSync, realpathSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 
 export const AREAS = ['web', 'unit', 'site'];
+
+function isDocumentationOrSkill(path) {
+  const rootMarkdown = path.length > '.md'.length && !path.includes('/');
+  const markdown = path.endsWith('.md') && (path.startsWith('docs/') || rootMarkdown);
+  return markdown || path.startsWith('.claude/skills/') || path.startsWith('.agents/skills/') || path === 'skills-lock.json';
+}
 
 // First matching rule wins. A path that no rule matches turns on every area.
 const RULES = [
   [/^\.github\//, AREAS],
   [/^(package\.json|package-lock\.json|eslint\.config\.mjs)$/, AREAS],
-  [/^(docs\/.*|[^/]+)\.md$/, []],
-  // Agent skills and their lockfile are instructions for agents; no build or test reads them.
-  [/^\.(claude|agents)\/skills\//, []],
-  [/^skills-lock\.json$/, []],
   // prototypes/compor-mcp/test/phoenix-calibration.test.mjs reads JSON under docs/evals.
   [/^docs\//, ['unit']],
   [/^apps\/web\//, ['web']],
@@ -27,6 +30,7 @@ export const JOB_AREAS = { unit: 'unit', web: 'web', performance: 'web' };
 export function areasForPaths(paths) {
   const on = new Set();
   for (const path of paths) {
+    if (isDocumentationOrSkill(path)) continue;
     const rule = RULES.find(([pattern]) => pattern.test(path));
     for (const area of rule ? rule[1] : AREAS) on.add(area);
   }
@@ -37,6 +41,10 @@ export function areasForPaths(paths) {
 export function selectAreas({ event, paths }) {
   const diffable = !event || event === 'pull_request';
   return diffable && paths ? areasForPaths(paths) : Object.fromEntries(AREAS.map(area => [area, true]));
+}
+
+function needsStaticChecks({ event, paths }) {
+  return event !== 'pull_request' || !paths?.length || !paths.every(isDocumentationOrSkill);
 }
 
 export function gateFailures(needs) {
@@ -55,12 +63,12 @@ export function gateFailures(needs) {
 
 function changedPaths(base, head) {
   if (!base || !head) return null;
-  const diff = spawnSync('git', ['diff', '--name-only', '--no-renames', `${base}...${head}`], { encoding: 'utf8' });
+  const diff = spawnSync('git', ['diff', '--name-only', '-z', '--no-renames', `${base}...${head}`, '--'], { encoding: 'utf8' });
   if (diff.status !== 0) {
-    console.log(`::warning::Could not diff ${base}...${head}, so every area runs. ${diff.stderr.trim()}`);
+    console.log(`::warning::Could not diff ${base}...${head}, so every area runs. ${diff.stderr?.trim() || diff.error?.message || ''}`);
     return null;
   }
-  return diff.stdout.split('\n').filter(Boolean);
+  return diff.stdout.split('\0').filter(Boolean);
 }
 
 function main(args) {
@@ -75,9 +83,10 @@ function main(args) {
   const [base = process.env.BASE_SHA, head = process.env.HEAD_SHA] = args;
   const event = process.env.GITHUB_EVENT_NAME, paths = changedPaths(base, head);
   console.log(`Event: ${event ?? 'local'}. Changed paths: ${paths ? paths.length : 'unknown'}.`);
-  const lines = Object.entries(selectAreas({ event, paths })).map(([area, on]) => `${area}=${on}`);
+  const checks = { ...selectAreas({ event, paths }), static_checks: needsStaticChecks({ event, paths }) };
+  const lines = Object.entries(checks).map(([check, required]) => `${check}=${required}`);
   console.log(lines.join('\n'));
   if (process.env.GITHUB_OUTPUT) appendFileSync(process.env.GITHUB_OUTPUT, `${lines.join('\n')}\n`);
 }
 
-if (process.argv[1] && realpathSync(process.argv[1]) === import.meta.filename) main(process.argv.slice(2));
+if (process.argv[1] && realpathSync(process.argv[1]) === fileURLToPath(import.meta.url)) main(process.argv.slice(2));
