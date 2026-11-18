@@ -35,22 +35,29 @@ def compare(control,candidate,unseal):
         a,b=old[3][case],new[3][case]
         c,d=old[4][case],new[4][case]
         before_bytes,after_bytes=transferred(old_files[case]),transferred(new_files[case])
-        if before_bytes is None or after_bytes is None: reasons.append('recibo_ausente')
+        if new_files[case]['planValid'] is None:
+            reasons.append('sem_plano_validado_ou_arte')
+        elif before_bytes is None or after_bytes is None:
+            reasons.append('entrega_nao_comprovada')
         if any(v['known']!=v['denominator'] for v in (a,b,c,d)): reasons.append('julgamento_incompleto')
         for kind in ('unsupported_fact','extra_copy','missing_fact','unreadable'):
             if kind in b['problems'] or kind in d['problems']: reasons.append(kind)
         for key,old_attr in a['byAttribute'].items():
             new_attr=b['byAttribute'][key]
+            if old_attr['unknown'] or new_attr['unknown']: continue
             if new_attr['fullyMet']<old_attr['fullyMet'] or new_attr['absentOrContradicted']>old_attr['absentOrContradicted']:
                 reasons.append('atributo_'+key+'_piorou')
-        old_pairs,new_pairs=c['scores'].get('2',0),d['scores'].get('2',0)
-        if new_pairs<old_pairs or d['scores'].get('0',0)>c['scores'].get('0',0):reasons.append('divergencia_piorou')
+        old_pairs=c['scores'].get('2',0) if c['known']==c['denominator'] else None
+        new_pairs=d['scores'].get('2',0) if d['known']==d['denominator'] else None
+        comparable=old_pairs is not None and new_pairs is not None
+        if comparable and (new_pairs<old_pairs or d['scores'].get('0',0)>c['scores'].get('0',0)):
+            reasons.append('divergencia_piorou')
         perfect=b['points']==2*b['denominator']
         fidelity_gain=(b['points'] is not None and a['points'] is not None and b['points']>a['points'])
         savings=perfect and before_bytes is not None and after_bytes is not None and after_bytes<before_bytes
         cases.append({'id':case,'triagePoints':[a['points'],b['points']],'fullyDistinctPairs':[old_pairs,new_pairs],
                       'transferredReferenceBytes':[before_bytes,after_bytes],'triageImproved':fidelity_gain or savings,
-                      'variationImproved':new_pairs>old_pairs,'blockingFindings':reasons})
+                      'variationImproved':comparable and new_pairs>old_pairs,'blockingFindings':reasons})
     return {'control':control.name,'candidate':candidate.name,'reservedIncluded':unseal,'cases':cases,
             'triageImprovedCases':sum(v['triageImproved'] for v in cases),
             'variationImprovedCases':sum(v['variationImproved'] for v in cases),

@@ -60,3 +60,24 @@ O ensaio atual usa a mesma entrada e os mesmos três slots dos marcos 3 e 5. A u
 No controle negativo, o juiz independente `gpt-6.2-astra` recebeu os cinco planos fixos. Cada um continha três propostas com apenas um número diferente. Os **15/15 pares receberam nota 0**. O extrato destinado ao redator incluiu somente os três IDs de desenvolvimento. Esse controle verifica sensibilidade à duplicação explícita; a sensibilidade a diferenças visuais sutis requer as artes de cada rodada. A sessão `01a1ee89-48ea-7503-a97b-ca44511c19f8` produziu a resposta SHA-256 `e99dfc07879a74d91c8b8446a2c9a6a89174f03e4da49b02d8ce5fea930b641c`.
 
 Na rodada de controle do adaptador `18dc2a2`, houve cinco planos reais e 15 artes confirmadas. Nos casos de desenvolvimento 1, 2 e 3, os pontos de divergência dos três pares ficaram, respectivamente, em 6 / 6, 5 / 5, 6 / 6 (plano / pixels, máximo 6 em cada perspectiva). A triagem e a variação compartilham os mesmos IDs de plano e PNG. Dois casos reservados permanecem fora do ajuste das instruções. O relatório do marco 4 tem SHA-256 `f5cb7fb576376e4dbb5b2e69c0b006987a6176c59516d80a945b8748fd308df4`. A sessão de planos foi `01a1ee8d-37ca-7062-bcac-c44ac6da5337`. A sessão de pixels foi `01a1ee8d-37ca-7a91-89c4-8b3b10273a22`.
+
+## Resultado das quatro rodadas reais
+
+O marco 4 comparou três pares por lote. Os juízes de plano e de pixels trabalharam em sessões independentes, com a ordem dos casos e dos slots embaralhada em cada pacote. Cada célula contém a soma dos três pares do caso em plano e em pixels, com máximo de 6 pontos em cada modalidade. A parcela sem evidência da rodada 3 aparece como ND. O total observável é 30 em R0–R2 e 24 em R3.
+
+| Caso | R0 plano / pixels | R1 plano / pixels | R2 plano / pixels | R3 plano / pixels |
+|---|---:|---:|---:|---:|
+| 1 · Oficina de impressão | 6 / 6 | 5 / 6 | 5 / 5 | ND / ND |
+| 2 · Mostra de gravuras | 5 / 5 | 5 / 5 | 5 / 5 | 6 / 6 |
+| 3 · Troca de livros | 6 / 6 | 5 / 5 | 6 / 6 | 6 / 6 |
+| 4 · Rota de leitura (reserva) | 5 / 5 | 5 / 6 | 5 / 6 | 5 / 5 |
+| 5 · Inventário de formas (reserva) | 4 / 4 | 5 / 5 | 4 / 3 | 6 / 5 |
+| Desenvolvimento | 17 / 17 | 15 / 16 | 16 / 16 | 12 / 12 |
+| Reserva | 9 / 9 | 10 / 11 | 9 / 9 | 11 / 10 |
+| Total | 26 / 26 | 25 / 27 | 25 / 25 | 23 / 22 |
+
+Dos quinze pares de imagens, receberam a nota máxima **11/15** em R0, **12/15** em R1 e **10/15** em R2. R3 atingiu **10/12** nos pares observáveis e deixou três pares sem pixels. Nos quatro casos pareados com R3, R0 tinha 8/12. A reserva teve, respectivamente, 3/6, 5/6, 3/6 e 4/6 pares plenamente distintos.
+
+R1 ganhou pares plenamente distintos nos dois casos reservados, mas perdeu um par no caso 3 e apresentou regressões de fidelidade. R2 ganhou em apenas um caso e perdeu em outros dois. R3 melhorou em dois dos quatro casos observáveis; o plano recusado no caso 1 e a perda de atributos nos casos concluídos impedem promoção. As instruções do controle permanecem no runtime. As quatro trajetórias são amostras estocásticas de cinco briefings sintéticos com uma execução por caso e braço. Uma nota alta de divergência revela diferenças que o juiz identificou; a preferência entre elas continua dependendo de pessoas.
+
+As revisões avaliadas foram `18dc2a2`, `c988a6f`, `86729b7` e `e6ed07d`. O JSON inclui as duas modalidades dos cinco casos das quatro rodadas, os contadores de reserva, os IDs das 16 sessões independentes, os hashes dos PNGs e recibos e as comparações pareadas. Os escores nas tabelas identificam as mesmas gerações usadas no marco 5. [Matriz e proveniência](../../../scripts/evals/pr61/triagem/rodadas-reais.json) · [Comparação reproduzível](../../../scripts/evals/pr61/variacoes/fechar-rodadas.py)
