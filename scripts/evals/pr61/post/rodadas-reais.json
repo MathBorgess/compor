@@ -1,0 +1,2744 @@
+{
+  "rodadas": [
+    {
+      "round": 0,
+      "revision": "18dc2a20e67ebfe682afe1bc543406c0c0dc6d1a",
+      "judge": {
+        "model": "gpt-6.2-sol",
+        "thread": "01a1ee8d-efc8-7fc2-9fa9-376db5e681d0",
+        "tools": 0
+      },
+      "rubricaSha256": "43d8cf1daf1afceb647d7c61c0389262f99b72eb89a876f8838ece33ca3905f5",
+      "fixtureSha256": "12dcaf0b73b93bf844e6f8458c0f8f0d6fa939cac8beceb9a53b709b142baecc",
+      "casos": {
+        "desenvolvimento": [
+          {
+            "id": "case-1",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O rolo entintado sobre a folha com folhas impressas mostra a prática da oficina abaixo do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em creme é grande no bloco verde à esquerda, e a data em duas linhas é legível no quadro isolado à direita."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título e a demonstração visual convidam para uma oficina prática, com a data destacada à direita dentro do limite de texto."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "“Oficina de impressão” no alto do bloco verde."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "“18 de junho” em duas linhas no quadro verde à direita."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A prensa de parafuso com papel e traços de destaque torna a impressão concreta logo acima do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em verde ocupa um quadro creme largo, e “18 de junho” está em uma faixa laranja própria na base."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A prensa, o nome da oficina e a data em destaque compõem uma chamada clara para participar com o texto previsto no briefing."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "“Oficina de impressão” no quadro creme abaixo da prensa."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "“18 de junho” na faixa laranja inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A prensa na metade inferior mostra uma folha saindo com formas impressas e dá conteúdo concreto ao título da oficina."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título verde sobre branco e a data escura sobre laranja são legíveis no bloco superior à esquerda."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome da oficina e o calendário junto à data formam uma chamada clara para participar com apenas os textos autorizados."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "“Oficina de impressão” no alto à esquerda."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "“18 de junho” na faixa laranja ao lado do calendário."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "3 de 3 artes têm nota 2 nas três dimensões e fidelidade factual. Em A, a data fica longe do título e divide a coluna direita com o emblema. Aproxime a data da altura do título, preserve o emblema isolado e confira a 360 px se nome e data são recuperados na mesma passada de olho."
+          },
+          {
+            "id": "case-2",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A granulação do triângulo violeta e os pontos sobre o fundo creme evocam tinta impressa junto ao título “Mostra de gravuras”."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As duas linhas grandes em violeta logo abaixo do triângulo mantêm o nome legível em uma passada de olho."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome ganha destaque no centro da peça e identifica a mostra a visitar com o único texto permitido."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” entre o triângulo e a faixa colorida inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A textura de papel, os losangos coloridos e o triângulo vazado acima de “Mostra de gravuras” dão à chamada uma linguagem de impressão."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O nome em creme ocupa duas linhas grandes e contrastantes na faixa violeta inferior."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O símbolo em destaque e o nome isolado na faixa inferior apresentam a mostra a visitar dentro do limite de texto."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” na faixa inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O triângulo violeta e os losangos escuros atraem o olhar para o centro, mas o vínculo com gravura vem sobretudo do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O nome em violeta tem contraste forte com o branco e espaço livre ao redor, no centro do painel."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A composição central põe “Mostra de gravuras” em primeiro plano como o único texto do anúncio."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” abaixo do triângulo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 2,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "2 de 3 artes têm nota 2 nas três dimensões e fidelidade factual. Em A, os losangos cruzam o contorno do triângulo. Afaste-os desse contorno e confira a 360 px se o vazado e o nome continuam reconhecíveis de imediato."
+          },
+          {
+            "id": "case-3",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo e o anel estão na mesma linha, com traços verdes dos dois lados que enquadram o par acima de “Troca de livros”."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título verde escuro se destaca sobre o fundo claro, e o local tem faixa própria logo abaixo."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome central e “Pátio Norte” na base informam diretamente o que acontece e onde."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” no centro."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” na faixa verde abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O triângulo no alto à direita e o anel no canto inferior esquerdo dão movimento à composição, mas a distância enfraquece a leitura dos dois como um par."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em duas linhas é grande, e “Pátio Norte”, mesmo menor, fica legível em verde escuro acima do traço inferior."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome fica em destaque à esquerda, e o local está explícito junto à base horizontal."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” no bloco principal à esquerda."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” no canto inferior direito."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta e o anel verde lado a lado formam um par de peso semelhante entre o título da troca e o local."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "Nome e local aparecem em letras claras e grandes, cada um em sua própria faixa de fundo escuro."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Troca de livros” abre a peça e “Pátio Norte” ocupa a base horizontal, com o encontro e o local explícitos."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” na faixa violeta superior."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” na faixa verde inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 2,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "2 de 3 artes têm nota 2 nas três dimensões e fidelidade factual. Em B, os selos ficam em cantos opostos. Coloque-os na mesma altura e confira a 360 px se os dois são percebidos como um par antes da leitura do local."
+          }
+        ],
+        "reserva": [
+          {
+            "id": "case-4",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O título pesado e a faixa preta à esquerda chamam a atenção, enquanto o traço isolado no alto à direita funciona como acento gráfico genérico."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título e “Largo do Sol” estão alinhados à esquerda na área clara, com contraste forte e separação visível."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Largo do Sol” aparece diretamente abaixo de “Rota de leitura” como o único local da chamada e corresponde ao ponto de partida informado."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” em duas linhas sobre o fundo claro."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” na linha abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "A faixa escura e o retângulo vazado independente à direita criam contraste, mas a ideia de percurso depende principalmente do texto."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título e “Largo do Sol” ficam na mesma coluna com contraste claro sobre escuro, separados por um filete."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "Abaixo do título, “Partida:” associa explicitamente “Largo do Sol” ao início do percurso."
+                  }
+                },
+                "fidelidadeFactual": "infiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” na faixa escura à esquerda."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” abaixo de “Partida:” na faixa escura."
+                  }
+                ],
+                "falhasCriticas": [
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "Partida:",
+                    "justificativa": "A lista de texto permitido contém somente “Rota de leitura” e “Largo do Sol”."
+                  }
+                ],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O título serifado à direita e o quadro de partida logo abaixo combinam a ideia de leitura com uma indicação de percurso."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título grande e “Largo do Sol” dentro do quadro são legíveis sobre o fundo creme, fora da faixa pontilhada."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O quadro à direita identifica explicitamente “Largo do Sol” como ponto de partida."
+                  }
+                },
+                "fidelidadeFactual": "infiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” em duas linhas à direita."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” dentro do quadro, abaixo de “Partida:”."
+                  }
+                ],
+                "falhasCriticas": [
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "Partida:",
+                    "justificativa": "A lista de texto permitido contém somente “Rota de leitura” e “Largo do Sol”."
+                  }
+                ],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 2,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  2,
+                  1
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "0 de 3 artes têm nota 2 nas três dimensões e fidelidade factual. Retire “Partida:” de A e preserve o quadro com “Largo do Sol”. A 360 px, teste se o quadro ainda é percebido como a indicação do local de início."
+          },
+          {
+            "id": "case-5",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta grande e isolado dá um exemplo concreto de forma e recorte sob “Inventário de formas”."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "Título e identificação estão centralizados em azul escuro sobre creme, separados por um filete laranja."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título e “Caderno 02” formam um bloco único acima do símbolo e identificam diretamente o caderno de estudos."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” no alto, em duas linhas."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” entre o filete laranja e o triângulo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta com recorte retangular funciona como uma forma em estudo logo abaixo do título e da identificação do caderno."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As duas linhas do título e o subtítulo menor são legíveis no bloco alinhado à esquerda sobre creme."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Caderno 02” aparece imediatamente abaixo de “Inventário de formas”, identificando o volume da série."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” no bloco principal à esquerda."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” logo abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta com recorte central exemplifica o estudo de formas, reforçado pelas diagonais em cantos opostos."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título grande acima do símbolo e “Caderno 02” abaixo têm contraste forte sobre o fundo creme."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A composição de capa identifica a série pelo título e o volume por “Caderno 02”."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” em duas linhas na parte superior."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” abaixo do triângulo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "3 de 3 artes têm nota 2 nas três dimensões e fidelidade factual. Em A, as diagonais ocupam dois cantos. Restrinja o motivo a um canto menor e confira a 360 px se a sequência título, símbolo e identificação fica mais evidente."
+          }
+        ]
+      },
+      "grupos": {
+        "desenvolvimento": {
+          "casos": 3,
+          "disponiveis": 9,
+          "semPixels": 0,
+          "prontasNoProxy": 7,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              2,
+              7
+            ],
+            "leitura": [
+              0,
+              0,
+              9
+            ],
+            "adequacao": [
+              0,
+              0,
+              9
+            ]
+          }
+        },
+        "reserva": {
+          "casos": 2,
+          "disponiveis": 6,
+          "semPixels": 0,
+          "prontasNoProxy": 3,
+          "comFalhaCritica": 2,
+          "dimensoes": {
+            "gancho": [
+              0,
+              2,
+              4
+            ],
+            "leitura": [
+              0,
+              0,
+              6
+            ],
+            "adequacao": [
+              0,
+              0,
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "round": 1,
+      "revision": "c988a6f0f36c219bd5a62e46aa3951554fbeadf8",
+      "judge": {
+        "model": "gpt-6.2-sol",
+        "thread": "01a1ee94-ec76-7793-a045-89b0343cbce8",
+        "tools": 0
+      },
+      "rubricaSha256": "43d8cf1daf1afceb647d7c61c0389262f99b72eb89a876f8838ece33ca3905f5",
+      "fixtureSha256": "12dcaf0b73b93bf844e6f8458c0f8f0d6fa939cac8beceb9a53b709b142baecc",
+      "casos": {
+        "desenvolvimento": [
+          {
+            "id": "case-1",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O anel verde com quatro entalhes, abaixo de «Oficina de impressão», lembra uma marca de registro e faz uma associação visual com a impressão."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título grande ocupa o alto e «18 de junho» tem contraste suficiente no bloco laranja inferior."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "O título e a data tornam a oficina identificável. O convite para se inscrever fica implícito."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» no alto, em duas linhas."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» no bloco laranja inferior direito."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O anel creme à esquerda e a barra verde no alto à direita criam contraste. O título concentra a associação com a impressão."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "Título e data estão juntos no campo creme à direita, com uma linha laranja que separa os dois blocos legíveis."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "O agrupamento do título e da data anuncia a oficina. A ação de se inscrever fica implícita."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» no centro à direita."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» abaixo da linha laranja."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O rolo e a estrutura da prensa na faixa direita tornam concreta a atividade anunciada por «Oficina de impressão»."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título creme se destaca no bloco verde à esquerda e a data é legível na cápsula clara inferior."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "A prensa comunica a atividade prática e a cápsula destaca a data. A inscrição fica implícita."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» no alto do bloco verde."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» na cápsula clara inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  3,
+                  0
+                ]
+              }
+            },
+            "diagnostico": "Em C, a prensa dá uma pista concreta sobre o que se faz na oficina. Exiba a peça a 360 px com apenas o nome e a data atuais e verifique se o leitor menciona espontaneamente a inscrição como ação esperada."
+          },
+          {
+            "id": "case-2",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta de grande escala, sobre pontos repetidos e uma faixa de cores, dá presença à linguagem gráfica anunciada por «Mostra de gravuras»."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título escuro no centro inferior se destaca sobre o pontilhado claro a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "A combinação de símbolo e título apresenta a exposição. A intenção de estimular uma visita depende da interpretação da peça."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» centralizado abaixo do triângulo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta acima do título, os losangos na margem esquerda e a faixa de cores na base compõem uma estampa que dá apelo visual à mostra."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "«Mostra de gravuras» aparece em duas linhas grandes sobre uma área clara, ao lado da margem pontilhada."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "O título identifica a exposição e o símbolo oferece um estímulo visual. O convite à visita fica implícito."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» abaixo do triângulo, à esquerda."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O título violeta conduz ao triângulo vazado da mesma cor, com uma trama de losangos no alto à direita e uma faixa colorida na base."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As duas linhas grandes do título são legíveis no centro superior, com os losangos concentrados no canto."
+                  },
+                  "adequacao": {
+                    "nota": 1,
+                    "evidencia": "O nome em destaque apresenta a mostra. O triângulo e a faixa de cores sustentam um convite visual implícito."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» centralizado acima do triângulo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  3,
+                  0
+                ]
+              }
+            },
+            "diagnostico": "As três peças identificam a mostra. Exiba cada uma a 360 px por alguns segundos e peça ao leitor que diga espontaneamente o que a peça o convida a fazer. Verifique se ele menciona visitar a exposição."
+          },
+          {
+            "id": "case-3",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta e o anel verde aparecem lado a lado, com destaque semelhante, logo abaixo de «Troca de livros»."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O verde escuro sobre fundo claro destaca as duas linhas do título e o local centralizado na base."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A hierarquia entre o título no alto e «Pátio Norte» na faixa inferior comunica o encontro e o local de imediato."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» centralizado no alto."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» centralizado na faixa inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Os dois selos escalonados, violeta e verde, dão identidade à «Troca de livros» acima do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título grande ocupa a metade inferior e «Pátio Norte» aparece em uma faixa clara de alto contraste."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "Nome do encontro e local aparecem em sequência, com o local destacado na base horizontal."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» abaixo dos selos, à esquerda."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» na faixa inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Os dois selos separados no centro repetem o verde e o violeta dos recortes de canto e identificam visualmente o encontro."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título no alto à direita e o local na faixa inferior permanecem legíveis a 360 px, com os recortes nas bordas."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "«Troca de livros» e «Pátio Norte» ocupam blocos distintos e comunicam diretamente o nome e o local."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» no alto à direita."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» na faixa inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em C, os recortes dos cantos repetem as cores dos selos e competem com eles. Reduza esses recortes e confira a 360 px se os dois selos centrais são percebidos como um par com o mesmo destaque."
+          }
+        ],
+        "reserva": [
+          {
+            "id": "case-4",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "A divisão em duas colunas chama atenção, mas a barra isolada no campo pontilhado funciona como um sinal abstrato."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As três linhas claras na faixa escura e o local em branco sobre preto são fáceis de ler a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A faixa escura à esquerda apresenta a rota e o bloco à direita destaca «Largo do Sol» como o único ponto indicado."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» em três linhas na faixa escura."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» no bloco escuro à direita, abaixo da barra."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O título domina a peça. A malha regular de losangos e a barra à direita dão ritmo, mas oferecem pouca pista visual sobre o percurso."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título central à esquerda tem alto contraste e «Largo do Sol», em corpo menor, permanece legível dentro do contorno."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O único local aparece imediatamente abaixo de «Rota de leitura» como o ponto de partida apresentado pela peça."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» no centro à esquerda."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» na caixa contornada abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O título grande no alto atrai o olhar. A textura de losangos e a barra junto ao local dão apelo gráfico genérico."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título preto na parte superior e o local claro na caixa escura conservam alto contraste a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "«Largo do Sol» recebe destaque próprio abaixo do título, junto ao sinal independente, e é o único ponto apresentado."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» no alto, junto à faixa escura."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» na caixa escura na parte inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  3,
+                  0
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em B, a barra fica acima da caixa do local, deslocada para a direita. Aproxime os dois elementos e teste a 360 px se o leitor associa espontaneamente o sinal ao ponto de partida."
+          },
+          {
+            "id": "case-5",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Título e triângulo vazado compartilham o violeta e formam uma sequência central que liga o nome da série à geometria."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título acima do triângulo e «Caderno 02» abaixo têm contraste alto e espaço suficiente entre os elementos."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome da série e «Caderno 02» ocupam posições distintas e identificam a peça de imediato."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» centralizado no alto."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» centralizado abaixo do símbolo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta com recorte à direita dá um exemplo concreto das formas anunciadas no título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título no alto à esquerda e a identificação no canto inferior esquerdo são legíveis a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A tarja inferior com «Caderno 02» identifica o caderno sob o nome da série."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» no alto à esquerda."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» no canto inferior esquerdo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta com vazado retangular ocupa o centro abaixo de «Inventário de formas»."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O texto creme sobre as faixas verde-petróleo destaca o título no alto e a identificação embaixo à direita."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "«Caderno 02» tem uma faixa própria no canto inferior direito e fica claramente associado ao título."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» na faixa superior."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» na faixa inferior direita."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em B, as diagonais atravessam a borda da faixa verde-petróleo e avançam pelo fundo creme. Reduza o motivo no canto inferior esquerdo e confira a 360 px se ele permanece perceptível sem disputar atenção com «Caderno 02»."
+          }
+        ]
+      },
+      "grupos": {
+        "desenvolvimento": {
+          "casos": 3,
+          "disponiveis": 9,
+          "semPixels": 0,
+          "prontasNoProxy": 3,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              1,
+              8
+            ],
+            "leitura": [
+              0,
+              0,
+              9
+            ],
+            "adequacao": [
+              0,
+              6,
+              3
+            ]
+          }
+        },
+        "reserva": {
+          "casos": 2,
+          "disponiveis": 6,
+          "semPixels": 0,
+          "prontasNoProxy": 3,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              3,
+              3
+            ],
+            "leitura": [
+              0,
+              0,
+              6
+            ],
+            "adequacao": [
+              0,
+              0,
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "round": 2,
+      "revision": "86729b79890998983086454edde78c375ae88f1d",
+      "judge": {
+        "model": "gpt-6.2-sol",
+        "thread": "01a1ee9b-afaf-7b81-b058-2e10ace3c4a6",
+        "tools": 0
+      },
+      "rubricaSha256": "43d8cf1daf1afceb647d7c61c0389262f99b72eb89a876f8838ece33ca3905f5",
+      "fixtureSha256": "12dcaf0b73b93bf844e6f8458c0f8f0d6fa939cac8beceb9a53b709b142baecc",
+      "casos": {
+        "desenvolvimento": [
+          {
+            "id": "case-1",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O retângulo verde texturizado abaixo da data sugere tinta, mas a 360 px se lê principalmente como uma amostra de cor."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título e a data em serifas grossas têm alto contraste sobre o branco, com um filete laranja entre eles."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome e a data identificam claramente a oficina e o dia. A peça comunica esses dados com o texto permitido."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» entre o emblema e o filete laranja."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» abaixo do filete."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A prensa no alto à esquerda mostra o emblema impresso no papel junto ao rolo e liga a oficina a um processo concreto."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título verde no branco e a data em verde na tarja laranja são grandes e fáceis de recuperar no feed."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A prensa contextualiza a oficina, e a data fica em destaque no rodapé. O bloco visual à esquerda e o traço isolado à direita enquadram o emblema."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» abaixo da prensa, em duas linhas."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» na tarja laranja."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "As duas flores impressas, uma com marcas irregulares ao redor e outra com fundo limpo, apresentam resultados visuais da impressão."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título verde escuro e a data sobre a área clara se leem facilmente, separados pelo filete laranja."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome, a data e as amostras identificam a atividade e o dia. O bloco verde à esquerda e a barra isolada à direita estão visíveis."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Oficina de impressão",
+                    "estado": "confirmado",
+                    "evidencia": "«Oficina de impressão» abaixo do emblema vazado."
+                  },
+                  {
+                    "fato": "18 de junho",
+                    "estado": "confirmado",
+                    "evidencia": "«18 de junho» abaixo do filete laranja."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 2,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "O retângulo de C comunica a impressão com menos clareza que a prensa de B ou as flores de A. Use uma impressão reconhecível dentro do próprio bloco e teste a 360 px se o motivo é identificado e se a data continua fácil de ler."
+          },
+          {
+            "id": "case-2",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Uma gravura de paisagem com árvore em papel de borda irregular ocupa o centro abaixo do título e mostra o tipo de obra em exposição."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título escuro permanece legível na área branca entre os pontos, e a imagem central é reconhecível no feed."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A obra em destaque e o nome da mostra sustentam o convite visual. A faixa colorida inferior e o losango isolado no alto à direita são distinguíveis."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» entre o triângulo violeta e a obra."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Quatro gravuras com motivos distintos aparecem juntas abaixo do título e mostram a variedade da exposição."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título violeta em duas linhas se destaca sobre o fundo pontilhado, e as quatro gravuras permanecem reconhecíveis a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título e a seleção de obras apresentam a mostra. A faixa horizontal inferior e o losango maior no alto à direita mantêm a relação espacial pedida."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» em violeta acima das quatro obras."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A gravura sobre um pedestal, na metade inferior, dá ao título o contexto de uma exposição."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O nome em creme sobre o retângulo violeta é legível, e a gravura grande é reconhecível no feed."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome e a obra sobre o pedestal apresentam a mostra como algo a visitar. O losango no alto à direita e a faixa inferior ficam visíveis."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "«Mostra de gravuras» no retângulo violeta."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Os pontos de B chegam mais perto do título que em C. Abra uma área livre ao redor das letras em B e teste, a 360 px, se o nome é recuperado de imediato e se as quatro obras continuam reconhecíveis."
+          },
+          {
+            "id": "case-3",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Duas setas curvas entre os livros violeta e verde, abaixo do título, mostram a troca nos dois sentidos."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título violeta em duas linhas e o local em branco na base verde são fáceis de ler no feed."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título identifica o encontro e a base horizontal destaca o local. Os dois selos aparecem separados no topo, com peso visual semelhante."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» no centro."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» na base verde."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Duas mãos oferecem livros de lados opostos, logo abaixo do título e dos selos."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título verde no alto e o local em creme na faixa inferior são legíveis a 360 px."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome abre a peça e o marcador de localização junto a «Pátio Norte» torna inequívoca a função da faixa inferior."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» no alto."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» junto ao marcador na faixa verde inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A seta entre os dois livros abertos associa a ilustração à troca, embora indique um único sentido."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título branco no bloco violeta e o local branco na base verde se distinguem à primeira leitura."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome e o local ocupam blocos distintos. Os dois selos aparecem lado a lado acima da faixa verde."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "«Troca de livros» no bloco violeta."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "«Pátio Norte» na base verde."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "A representa reciprocidade com duas setas, enquanto B mostra só uma direção. Teste B com duas setas opostas e verifique a 360 px se a troca é reconhecida tão rapidamente quanto em A."
+          }
+        ],
+        "reserva": [
+          {
+            "id": "case-4",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "O pequeno livro entre as barras à esquerda remete à leitura. As barras, sem pegadas ou direção, deixam a ideia de percurso a cargo do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em negrito e o local logo abaixo são legíveis no bloco à direita."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O sinal preto à direita da faixa destaca o bloco que apresenta a rota e seu único local, «Largo do Sol»."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» em negrito à direita."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» na linha abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "As pegadas na faixa vertical esquerda, ao lado de «Rota de leitura», associam leitura a um percurso a pé."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "À direita da faixa, o título e o nome do largo aparecem em preto sobre fundo claro, com destaque para o local."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A palavra «Partida:» acima de «Largo do Sol» explicita a função do local."
+                  }
+                },
+                "fidelidadeFactual": "infiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» à direita das pegadas."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» logo abaixo de «Partida:»."
+                  }
+                ],
+                "falhasCriticas": [
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "Partida:",
+                    "justificativa": "O texto permitido contém somente «Rota de leitura» e «Largo do Sol»."
+                  }
+                ],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A mão leva um livro aberto junto à faixa vertical, e o título «Rota de leitura» associa o livro ao percurso."
+                  },
+                  "leitura": {
+                    "nota": 1,
+                    "evidencia": "O título e o local se leem à direita, mas as linhas impressas nas páginas à esquerda exigem ampliação."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "«Largo do Sol» aparece imediatamente abaixo de «Rota de leitura» como o único local da chamada."
+                  }
+                },
+                "fidelidadeFactual": "infiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "«Rota de leitura» em duas linhas à direita."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "«Largo do Sol» abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "42 / 43",
+                    "justificativa": "Os números no alto das páginas, confirmados no original, estão fora do texto permitido."
+                  },
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "A cidade guarda histórias em cada esquina, e é nelas que encontramos um pouco de nós.",
+                    "justificativa": "O original confirma esse texto na página esquerda. O briefing permite apenas o nome e o ponto de partida."
+                  },
+                  {
+                    "tipo": "texto_proibido",
+                    "trecho": "Ler também é viajar, mesmo quando os pés permanecem no lugar.",
+                    "justificativa": "O original confirma esse texto na página direita. O briefing permite apenas o nome e o ponto de partida."
+                  }
+                ],
+                "prontaNoProxy": false
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 2,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  1,
+                  2
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "As pegadas de A tornam o percurso mais claro, mas A e B acrescentam texto proibido. Retire «Partida:» de A e teste a 360 px se as pegadas e a hierarquia bastam para que «Largo do Sol» seja identificado como ponto de partida."
+          },
+          {
+            "id": "case-5",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O lápis inclinado e os traços junto à ponta sugerem o desenho da forma triangular abaixo do título."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título escuro em duas linhas e «Caderno 02» dentro do contorno inferior são fáceis de ler."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título fica acima do triângulo violeta com recorte, e o número do caderno aparece em um campo próprio."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» acima do triângulo."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» dentro do contorno arredondado."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O lápis vertical ao lado do triângulo recortado relaciona o estudo de formas ao desenho."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título no alto e «Caderno 02» logo abaixo dos símbolos têm alto contraste sobre o fundo branco."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título acima do símbolo e a identificação abaixo dele deixam claro qual é o caderno da série."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» no alto à esquerda."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» abaixo do triângulo e do lápis."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O triângulo violeta recortado e o lápis diagonal, entre o título e a identificação, dão à peça um motivo específico de estudo e desenho."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título escuro se destaca no fundo creme, e «Caderno 02» tem contraste alto dentro da tarja escura."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "A série aparece no alto, o símbolo ocupa o centro e a identificação completa do caderno fica isolada abaixo."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "«Inventário de formas» no alto, em duas linhas."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "«Caderno 02» em creme na tarja inferior."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em B, as diagonais ocupam uma área ampla do canto inferior. Reduza essa área e confira a 360 px se as diagonais ainda aparecem como detalhe e se a identificação do caderno continua imediata."
+          }
+        ]
+      },
+      "grupos": {
+        "desenvolvimento": {
+          "casos": 3,
+          "disponiveis": 9,
+          "semPixels": 0,
+          "prontasNoProxy": 8,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              1,
+              8
+            ],
+            "leitura": [
+              0,
+              0,
+              9
+            ],
+            "adequacao": [
+              0,
+              0,
+              9
+            ]
+          }
+        },
+        "reserva": {
+          "casos": 2,
+          "disponiveis": 6,
+          "semPixels": 0,
+          "prontasNoProxy": 3,
+          "comFalhaCritica": 2,
+          "dimensoes": {
+            "gancho": [
+              0,
+              1,
+              5
+            ],
+            "leitura": [
+              0,
+              1,
+              5
+            ],
+            "adequacao": [
+              0,
+              0,
+              6
+            ]
+          }
+        }
+      }
+    },
+    {
+      "round": 3,
+      "revision": "e6ed07d6257d28b17dd89f66b0498cdec0651a38",
+      "judge": {
+        "model": "gpt-6.2-sol",
+        "thread": "01a1eea5-bded-7af2-8b4a-16eb26350fbf",
+        "tools": 0
+      },
+      "rubricaSha256": "43d8cf1daf1afceb647d7c61c0389262f99b72eb89a876f8838ece33ca3905f5",
+      "fixtureSha256": "12dcaf0b73b93bf844e6f8458c0f8f0d6fa939cac8beceb9a53b709b142baecc",
+      "casos": {
+        "desenvolvimento": [
+          {
+            "id": "case-1",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "sem_pixels"
+              },
+              {
+                "slot": 2,
+                "status": "sem_pixels"
+              },
+              {
+                "slot": 3,
+                "status": "sem_pixels"
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 0,
+              "semPixels": 3,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  0
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  0
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  0
+                ]
+              }
+            },
+            "diagnostico": "Os três painéis exibem “Sem pixels”. Com as artes renderizadas a 360 px, testar se “Oficina de impressão” e “18 de junho” são recuperáveis à primeira vista e se aparecem sozinhos como texto.",
+            "interrupcao": {
+              "stage": "planning",
+              "state": "invalid",
+              "slots": "not_submitted"
+            }
+          },
+          {
+            "id": "case-2",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Abaixo do título, uma pessoa olha três gravuras emolduradas. As imagens mostram motivos de paisagem, planta e arquitetura."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título violeta, centralizado sobre fundo rosa claro, tem duas linhas grandes e livres de sobreposição."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome no alto e a pessoa de frente para as gravuras na metade inferior tornam inequívoco o convite visual à mostra."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” no alto, ao centro."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A gravura geométrica emoldurada e a pessoa que a observa de perto dão conteúdo específico a “Mostra de gravuras”."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As duas linhas do título rosa permanecem fáceis de ler sobre a área violeta no topo, mesmo com a transição pixelada nas bordas."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título identifica a mostra e a observadora no canto inferior direito demonstra a visita diante da gravura."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” em rosa, no topo."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A pessoa caminha entre gravuras emolduradas, abaixo de “Mostra de gravuras”. A perspectiva mostra o espaço da visita."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "“Mostra de gravuras” aparece em duas linhas grandes, em violeta sobre rosa, no alto à esquerda."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome está completo no topo e a pessoa diante das obras mostra a visita pedida pelo briefing."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Mostra de gravuras",
+                    "estado": "confirmado",
+                    "evidencia": "“Mostra de gravuras” no alto à esquerda."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em C, as amostras de cor estão na lateral direita e falta a faixa horizontal inferior visível em A e B. Levar as cores para uma faixa na base, com o símbolo pequeno no alto à direita, e conferir a 360 px se a gravura e a visitante continuam fáceis de distinguir."
+          },
+          {
+            "id": "case-3",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "No centro, uma mão entrega o livro violeta a outra. “Troca de livros” nomeia o gesto logo abaixo."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "“Troca de livros” e “Pátio Norte” ocupam duas linhas grandes, em verde escuro sobre fundo claro no terço inferior."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "Nome e local aparecem juntos e completos abaixo da cena de troca."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” na primeira linha abaixo da barra verde."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” na segunda linha abaixo da barra verde."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Sob “Troca de livros”, uma mão estende o livro violeta em direção à palma aberta da outra."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título grande em duas linhas fica no alto. “Pátio Norte” permanece legível e isolado na base, sobre a linha verde."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Troca de livros” domina o topo e “Pátio Norte” aparece como local na base, ao lado dos dois selos separados."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” nas duas linhas do topo."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” sobre a linha verde, à direita dos selos."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Duas pessoas seguram o mesmo livro no centro, abaixo de “Troca de livros”. O gesto mostra a troca."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "“Troca de livros” no alto e “Pátio Norte” abaixo dos selos são grandes e legíveis em verde escuro sobre branco."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título identifica o encontro no alto e “Pátio Norte” identifica o local na base."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Troca de livros",
+                    "estado": "confirmado",
+                    "evidencia": "“Troca de livros” no alto."
+                  },
+                  {
+                    "fato": "Pátio Norte",
+                    "estado": "confirmado",
+                    "evidencia": "“Pátio Norte” abaixo dos dois selos."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em B, a faixa borrada na borda inferior fica abaixo de “Pátio Norte”. Substituí-la por uma linha verde nítida diretamente sob o local, como em C, e verificar a 360 px se a linha ancora o texto sem disputar atenção com os selos."
+          }
+        ],
+        "reserva": [
+          {
+            "id": "case-4",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A pessoa caminha com o livro aberto diante do rosto, acima de “Rota de leitura”, na faixa esquerda."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em duas linhas e “Largo do Sol” têm contraste forte sobre creme e aparecem separados abaixo da foto."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Largo do Sol” ocupa uma linha própria sob o nome do percurso, com a caminhada explícita na foto acima."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” abaixo da pessoa caminhando."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” logo abaixo do título."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 1,
+                    "evidencia": "A ilustração no centro da faixa preta reúne tênis e livro, mas parece mostrar uma pisada sobre as páginas. A leitura durante a caminhada fica pouco clara."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "“Rota de leitura” e “Largo do Sol” aparecem em duas linhas claras, com contraste forte no alto da faixa preta."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Largo do Sol” aparece em destaque logo abaixo de “Rota de leitura”, identificando o ponto de partida."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” no alto da faixa preta."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” na segunda linha da faixa."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": false
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O livro aberto e o passo captado no mesmo recorte, acima de “Rota de leitura”, conectam leitura e caminhada."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título em duas linhas e “Largo do Sol” estão legíveis em preto sobre creme, na base da faixa esquerda."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Largo do Sol” está separado do título na base da mesma coluna, identificando o ponto de partida."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Rota de leitura",
+                    "estado": "confirmado",
+                    "evidencia": "“Rota de leitura” na área creme abaixo da foto."
+                  },
+                  {
+                    "fato": "Largo do Sol",
+                    "estado": "confirmado",
+                    "evidencia": "“Largo do Sol” na linha inferior da faixa esquerda."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 2,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  1,
+                  2
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em A, o tênis sobre as páginas deixa ambígua a relação entre caminhada e leitura. Mantendo a faixa esquerda e o sinal isolado à direita, testar a 360 px uma ilustração de alguém lendo em movimento e verificar se a cena comunica as duas ações à primeira vista."
+          },
+          {
+            "id": "case-5",
+            "artes": [
+              {
+                "slot": 1,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "O emblema triangular violeta e a mão desenhando um triângulo à direita fazem de “Inventário de formas” uma cena de estudo de desenho."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "As duas linhas do título no alto e “Caderno 02” embaixo têm tamanhos generosos e contraste forte sobre creme."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O nome da série está acima do símbolo e “Caderno 02” ocupa uma linha própria logo abaixo da ilustração."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” no alto, em duas linhas centralizadas."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” abaixo do emblema e da mão."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 2,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "Entre o título e “Caderno 02”, o lápis traça um triângulo ao lado do emblema triangular violeta, ligando formas e prática de desenho."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "Título no alto e identificação na base aparecem em creme, com contraste forte sobre o fundo verde-azulado escuro."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "“Inventário de formas” acima dos gráficos e “Caderno 02” em linha própria abaixo identificam a série e o volume."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” nas duas linhas de cima."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” na parte inferior, à esquerda."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              },
+              {
+                "slot": 3,
+                "status": "avaliada",
+                "dimensoes": {
+                  "gancho": {
+                    "nota": 2,
+                    "evidencia": "A ponta do lápis toca o vértice inferior do triângulo desenhado, abaixo do emblema violeta. O close mostra como a forma é construída."
+                  },
+                  "leitura": {
+                    "nota": 2,
+                    "evidencia": "O título escuro no topo e “Caderno 02” dentro da moldura inferior são grandes e legíveis sobre creme."
+                  },
+                  "adequacao": {
+                    "nota": 2,
+                    "evidencia": "O título nomeia a série e a moldura inferior destaca “Caderno 02” como identificação do volume."
+                  }
+                },
+                "fidelidadeFactual": "fiel",
+                "fatos": [
+                  {
+                    "fato": "Inventário de formas",
+                    "estado": "confirmado",
+                    "evidencia": "“Inventário de formas” nas duas linhas do topo."
+                  },
+                  {
+                    "fato": "Caderno 02",
+                    "estado": "confirmado",
+                    "evidencia": "“Caderno 02” dentro da moldura arredondada na base."
+                  }
+                ],
+                "falhasCriticas": [],
+                "prontaNoProxy": true
+              }
+            ],
+            "resumo": {
+              "casos": 1,
+              "disponiveis": 3,
+              "semPixels": 0,
+              "prontasNoProxy": 3,
+              "comFalhaCritica": 0,
+              "dimensoes": {
+                "gancho": [
+                  0,
+                  0,
+                  3
+                ],
+                "leitura": [
+                  0,
+                  0,
+                  3
+                ],
+                "adequacao": [
+                  0,
+                  0,
+                  3
+                ]
+              }
+            },
+            "diagnostico": "Em A, a moldura creme acrescenta um segundo contorno ao triângulo violeta. Testar a 360 px o emblema sem essa moldura, com o recorte diretamente sobre o fundo, e verificar se a silhueta permanece clara junto ao desenho do lápis."
+          }
+        ]
+      },
+      "grupos": {
+        "desenvolvimento": {
+          "casos": 3,
+          "disponiveis": 6,
+          "semPixels": 3,
+          "prontasNoProxy": 6,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              0,
+              6
+            ],
+            "leitura": [
+              0,
+              0,
+              6
+            ],
+            "adequacao": [
+              0,
+              0,
+              6
+            ]
+          }
+        },
+        "reserva": {
+          "casos": 2,
+          "disponiveis": 6,
+          "semPixels": 0,
+          "prontasNoProxy": 5,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": [
+              0,
+              1,
+              5
+            ],
+            "leitura": [
+              0,
+              0,
+              6
+            ],
+            "adequacao": [
+              0,
+              0,
+              6
+            ]
+          }
+        }
+      }
+    }
+  ]
+}
