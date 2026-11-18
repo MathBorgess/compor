@@ -28,6 +28,14 @@ def validate(verdict, ids, dimensions):
             isinstance(row[k], str) and row[k].strip() for k in ("evidencia", "correcao")
         ):
             raise ValueError("Indique o resultado, a evidência e o próximo teste para cada caso.")
+        if dimensions == 4:
+            expected = sum(scores) >= 3
+        elif dimensions == 6:
+            expected = sum(scores) >= 5 and all(scores[i] for i in (1, 2, 5))
+        else:
+            raise ValueError("Rubrica desconhecida.")
+        if row["aprovado"] != expected:
+            raise ValueError("O resultado do caso contradiz a rubrica.")
     group = verdict["sintese"]
     if not group["casosAfetados"] or not set(group["casosAfetados"]) <= ids:
         raise ValueError("A síntese deve apontar casos julgados.")
