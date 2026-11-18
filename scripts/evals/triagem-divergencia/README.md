@@ -18,8 +18,12 @@ O diretório de evidências fica fora do repositório. Cada POST tem recibo rese
 Os controles e testes locais dispensam credencial.
 
 ```sh
-node scripts/evals/triagem-divergencia/dataset/verify.mjs
-node --test scripts/evals/triagem-divergencia/{runner,planner,metrics}/*.test.mjs
+sh scripts/evals/triagem-divergencia/check.sh
 ```
 
 A bancada fica isolada dos handlers do estúdio. Uma mudança do planejador ou do despacho em produção depende da comparação entre baseline e candidatas e da decisão do criador.
+
+Para revisar como a leitura de cada referência e a direção das três propostas poderiam entrar no estúdio, consulte o [desenho de adoção no produto](../../../docs/evals/triagem-divergencia-adocao.md).
+
+
+O [parecer contextual](plan-judge/contextual.md) inclui os arquivos selecionados e retidos no pacote cego. O [controle de prompt fixo](fixed-control/README.md) isola o efeito dos bytes sob a autorização complementar da baseline. Os dois preservam os pareceres e recibos originais. A [conciliação de custo](metrics/provider-usage.md) usa leituras dos mesmos recursos e informa a cobertura e as hipóteses de preço. O consumo em tokens dos juízes via ChatGPT é apurado separadamente pelo comando `node scripts/evals/triagem-divergencia/metrics/judge-usage.mjs DIRETORIO_DAS_EVIDENCIAS`.
