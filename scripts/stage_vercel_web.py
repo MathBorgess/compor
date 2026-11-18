@@ -12,7 +12,7 @@ import sys
 from pathlib import Path
 
 PACKAGES = ('agents-api', 'agile-deliberation', 'images-api', 'private-images', 'remote-mcp')
-PHOENIX_FILES = ('app/api/studio/decision/route.ts', 'lib/phoenix-worker.ts',
+PHOENIX_FILES = ('handlers/api/studio/decision/route.ts', 'lib/phoenix-worker.ts',
                  'lib/studio-decision-route.ts', 'lib/studio-decision-contract.ts',
                  'lib/phoenix/catalog.ts', 'lib/phoenix/deterministic.ts',
                  'lib/phoenix/formulas.ts', 'lib/phoenix/hyperparams.ts',
@@ -70,7 +70,7 @@ def main():
     resolved = output.resolve()
     if resolved == root or root in resolved.parents or resolved in root.parents:
         raise ValueError('output must be outside the repository')
-    specs = ['apps/web/app', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
+    specs = ['apps/web/handlers', 'apps/web/pages', 'apps/web/studio', 'apps/web/build', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
              'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc', 'apps/web/vercel.json',
              'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts']
     for name in PACKAGES:
@@ -100,8 +100,9 @@ def main():
         entries.append((destination, oid))
     names = {name for name, _ in entries}
     required = {'apps/web/package.json', 'apps/web/package-lock.json', 'apps/web/next.config.mjs',
-                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
-    if not required.issubset(names) or not any(name.startswith('apps/web/app/') for name in names):
+                'apps/web/.npmrc', 'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts',
+                'apps/web/build/studio-schema-loader.cjs', 'apps/web/pages/index.tsx', 'apps/web/pages/api/studio/decision.ts'} | {f'apps/web/vendor/{name}/package.json' for name in PACKAGES} | set(UPSTREAM_FILES.values()) | {f'apps/web/{name}' for name in PHOENIX_FILES}
+    if not required.issubset(names) or not all(any(name.startswith('apps/web/' + folder + '/') for name in names) for folder in ('pages', 'studio', 'handlers')):
         raise ValueError('missing required source files')
     output.mkdir(mode=0o700)
     for name, oid in entries:
