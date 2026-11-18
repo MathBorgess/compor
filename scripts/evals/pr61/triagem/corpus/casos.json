@@ -1,0 +1,42 @@
+[
+  {
+    "id":"case-1","split":"desenvolvimento","refs":["oficina-marca","oficina-paleta","oficina-layout","oficina-listras"],
+    "idea":"Cartaz vertical para a Oficina de impressão.","offer":"Oficina de impressão","audience":"Pessoas interessadas em gravura","goal":"Convidar à inscrição.",
+    "direction":"Use o emblema vazado do upload sem deformar. Na primeira referência externa interessa a paleta, sem copiar as faixas verticais. Preserve da arte gerada o grande bloco à esquerda e o detalhe isolado à direita. Evite as listras diagonais da outra externa. Texto visível: apenas o nome da oficina e a data informada, com leitura fácil.",
+    "facts":[["Nome","Oficina de impressão"],["Data","18 de junho"]],
+    "attributes":["Emblema arredondado, vazado, reconhecível","Paleta azul-petróleo, ocre e creme fora do emblema","Massa principal à esquerda com detalhe separado à direita","Sem padrão de listras diagonais"],
+    "viewport":"post vertical de feed","copy":["Oficina de impressão","18 de junho"]
+  },
+  {
+    "id":"case-2","split":"desenvolvimento","refs":["mostra-pontos","mostra-layout","mostra-marca","mostra-paleta"],
+    "idea":"Post vertical convidando a visitar a Mostra de gravuras.","offer":"Mostra de gravuras","audience":"Visitantes de ateliês","goal":"Convidar à visita.",
+    "direction":"Preserve a geometria do símbolo que enviei. O modelo gerado tem uma faixa horizontal inferior e um pequeno elemento no alto à direita, mantenha a relação espacial. Use a paleta da última externa. Da primeira externa interessa só o aspecto pontilhado; os pontos podem mudar de lugar. Na arte escreva apenas o nome da mostra. Não foi informado preço ou gratuidade.",
+    "facts":[["Nome","Mostra de gravuras"]],
+    "attributes":["Símbolo triangular com recorte inferior reconhecível","Faixa inferior e pequeno detalhe no alto à direita","Violeta, verde suave e pêssego na paleta","Textura de pontos discretos localmente visível"],
+    "viewport":"post vertical de feed","copy":["Mostra de gravuras"]
+  },
+  {
+    "id":"case-3","split":"desenvolvimento","refs":["mostra-marca","oficina-marca","mostra-layout","oficina-paleta"],
+    "idea":"Anúncio vertical do encontro Troca de livros.","offer":"Troca de livros","audience":"Leitores do bairro","goal":"Comunicar o nome e o local.",
+    "direction":"Os dois uploads são os selos do encontro. Mostre os dois separados, cada um na sua cor e forma originais, em pé de igualdade. Da arte gerada quero a base horizontal para apoiar o local, não preciso do pequeno elemento de cima. A paleta externa foi selecionada para comparação e deve ser descartada; trabalhe com o verde e o violeta dos selos em fundo claro. Use apenas nome e local como texto.",
+    "facts":[["Nome","Troca de livros"],["Local","Pátio Norte"]],
+    "attributes":["Selo triangular violeta com recorte","Selo verde arredondado vazado","Selos separados, destaque semelhante","Faixa horizontal na base acolhe o local"],
+    "viewport":"post vertical de feed","copy":["Troca de livros","Pátio Norte"]
+  },
+  {
+    "id":"case-4","split":"reserva","uploads":["mostra-pontos"],"refs":["mostra-layout","oficina-layout","mostra-pontos","oficina-listras"],
+    "idea":"Chamada vertical para o percurso Rota de leitura.","offer":"Rota de leitura","audience":"Pessoas que gostam de caminhar e ler","goal":"Apresentar o ponto de partida.",
+    "direction":"A segunda imagem gerada é o guia: grande faixa vertical à esquerda e pequeno sinal independente à direita. A primeira gerada é alternativa descartada: não quero rodapé pesado. O upload da terceira posição só inspira uma textura granulada discreta. A última tem diagonais que devem ficar de fora. Sem marca nem logotipo. Use apenas o nome e o ponto de partida escritos no briefing.",
+    "facts":[["Nome","Rota de leitura"],["Partida","Largo do Sol"]],
+    "attributes":["Grande faixa vertical do lado esquerdo","Sinal pequeno, separado, na direita","Granulado discreto presente","Sem base horizontal pesada nem listras diagonais"],
+    "viewport":"post vertical de feed","copy":["Rota de leitura","Largo do Sol"]
+  },
+  {
+    "id":"case-5","split":"reserva","refs":["oficina-paleta","mostra-marca","oficina-listras","oficina-layout"],
+    "idea":"Peça vertical para a série Inventário de formas.","offer":"Inventário de formas","audience":"Estudantes de desenho","goal":"Identificar o caderno de estudos.",
+    "direction":"Preserve a forma triangular e o recorte do upload, incluindo a cor violeta dele. A paleta da primeira externa colore apenas o fundo e a tipografia. Use as diagonais da segunda externa como motivo pequeno e localizado, longe do texto; não como fundo listrado. A composição da arte gerada está descartada: prefiro o título acima do símbolo e área de respiro. Somente o nome e a identificação do caderno podem aparecer como texto.",
+    "facts":[["Nome","Inventário de formas"],["Identificação","Caderno 02"]],
+    "attributes":["Símbolo triangular violeta com recorte","Fundo e texto usam a paleta petróleo, ocre e creme","Diagonais localizadas fora da área de leitura","Título acima do símbolo com respiro"],
+    "viewport":"post vertical de feed","copy":["Inventário de formas","Caderno 02"]
+  }
+]

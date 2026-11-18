@@ -1,0 +1,9 @@
+# Marco 5 em grupos
+
+O juiz observa cinco tarefas sintéticas na mesma sessão. Cada tarefa traz o objetivo, o que o criador confirmou e as três artes da mesma direção na resolução de leitura de um feed. A ordem dos casos e das propostas é embaralhada. O juiz desconhece a revisão e as notas das demais etapas. Para texto miúdo, pode consultar os mesmos pixels em resolução original.
+
+Pontuar cada arte de 0 a 2 em cada dimensão, com evidência visual ou trecho literal. Gancho recebe 2 quando texto e imagem conectam uma ideia específica ao objetivo, 1 para apelo genérico e 0 se ausente ou contraditório. Leitura recebe 2 quando o motivo de interesse e os dados obrigatórios são fáceis de recuperar a 360 px, 1 se há esforço, 0 se ilegíveis. Adequação ao objetivo recebe 2 quando a ação ou identificação pedida é inequívoca, 1 quando implícita e 0 se contraditória ou ausente. Um pedido de identificação pode ser atendido integralmente sem chamada comercial.
+
+Conferir todos os fatos confirmados, grafia de nomes, valores e condições. Uma afirmação nova sobre preço, gratuidade, duração, data, horário, lugar ou benefício, ou a omissão de fato obrigatório, torna a arte inelegível. Registrar literalmente a afirmação problemática e qual evidência autorizava ou contradizia o texto. Um convite genérico ou interpretação gráfica não é uma condição comercial.
+
+Registrar para cada tarefa quantas das três artes têm 2/2 nas três dimensões e fidelidade factual. Relatar também cada dimensão, falhas críticas e casos sem pixels. O proxy de prontidão não mede desejo humano de publicar. A bancada avalia a peça visual sem legenda quando a exploração entrega apenas imagens. Somente casos de desenvolvimento orientam a candidata seguinte. Os dois casos reservados permanecem fechados ao autor da mudança até o fim das quatro rodadas. A melhoria de produto requer ganho no conjunto reservado, sem aumento de erros críticos, e deve ser interpretada conforme o tamanho da amostra.

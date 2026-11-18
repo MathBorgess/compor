@@ -41,3 +41,25 @@ O defeito corrigido no código do estúdio era verificável no corpo da requisi�
 | Custo e experiência do criador | Nas duas revisões chegaram os mesmos quatro anexos ao GPT Image, 585 bytes e 16 tokens de imagem de entrada. O uso do planejamento anterior ficou desconhecido. A cobrança, a intenção de uso e a resposta do público continuam sem observação. |
 
 A [avaliação da triagem](03-triagem.md) registra as execuções, as condições dos modelos, a cobertura e os julgamentos. As demais etapas conservam suas baselines para a próxima comparação. A [experiência de descoberta](02-referencias.md) ficou isolada da entrega por decisão do criador.
+
+## Ciclo com três a cinco execuções por marco
+
+Escolha de três a cinco casos distintos antes de avaliar. Neste ensaio fixamos cinco por marco, três de desenvolvimento e dois de reserva. A baseline e cada uma das três revisões recebem novas saídas para os mesmos briefings. Na busca determinística, registre novamente os IDs e a ordem. Isso permite identificar quando uma variação vem apenas do juiz.
+
+| Marco | Pacote entregue à sessão independente | Evidência para a próxima revisão |
+| --- | --- | --- |
+| Briefing | Pedido, contexto efetivamente transferido ao plano e resposta textual por caso. | Seis dimensões, trecho preciso, fato inventado ou omitido e uma correção verificável. [Executor](../../../scripts/evals/pr61/briefing/group.mjs) |
+| Coleta de referências | Necessidade declarada, quatro posições da busca e seus títulos. | Pertinência por posição, sinal de recusa e cobertura de descoberta. [Executor](../../../scripts/evals/pr61/referencias/group.mjs) |
+| Triagem | Dois juízes independentes recebem, respectivamente, planos com manifesto e artes com referências. | Por proposta, identificar o atributo preservado, parcial, perdido ou indeterminado. Verificar em separado quais bytes foram anexados. [Protocolo](../../../scripts/evals/pr61/triagem/protocolo-rodadas.md) |
+| Variação | Os mesmos casos com as três propostas em ordem cega. Juízos independentes de prompt e de pixels. | Evidência por par de propostas e próximo teste de composição. [Juiz](../../../scripts/evals/pr61/variacoes/juiz.py) |
+| Post | Briefing e três artes por caso a 360 px, com acesso aos originais. | Gancho, leitura, adequação e fatos por arte. A vontade de usar exige resposta do criador. [Rubrica](../../../scripts/evals/pr61/post/rubrica.md) |
+
+Fixe a rubrica, a divisão entre desenvolvimento e reserva e os critérios de promoção antes das chamadas. Dê ao juiz somente os dados cegos do grupo. Libere ao autor da candidata os trechos dos casos de desenvolvimento. Quando uma sugestão do juiz contrariar texto ou fatos declarados, prevalece o briefing. Documente a mudança escolhida e uma previsão verificável. Congele a revisão antes de gerar as próximas execuções. Abra os resultados de reserva após o último julgamento. Publique a distribuição por caso, as falhas críticas e as limitações do ensaio.
+
+Para um ensaio visual concluído, o comando abaixo confere os quatro planos de execução, os hashes dos três pareceres que precederam cada mudança, os recibos de cada slot, a entrega dos anexos selecionados e os intervalos medidos. A auditoria lê arquivos locais.
+
+```sh
+python3 scripts/evals/pr61/grupos/auditar-ensaio.py "$bancada"
+```
+
+A geração com o provedor tem orçamento próprio. No ensaio de novembro, cada caso consumiu um plano gerenciado e três artes. O mesmo lote sustentou os três marcos visuais. A chave ficou em memória no executor local. Os testes de código e os replays usam fixtures.
