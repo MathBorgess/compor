@@ -4,10 +4,11 @@ export function imageRejectedBeforeDispatch(status:number,error:unknown) {
 }
 
 /** Persist the explicit-decision gate before releasing the submitted marker. */
-export function recordImageNotDispatched(storage:Pick<Storage,'getItem'|'setItem'|'removeItem'>,submittedKey:string,rejectedKey:string,requestId:string) {
-  if(storage.getItem(submittedKey)!==requestId)return false;
+export function recordImageNotDispatched(storage:Pick<Storage,'getItem'|'setItem'|'removeItem'>,submittedKey:string,rejectedKey:string,requestId:string,allowMissing=false) {
+  const submitted=storage.getItem(submittedKey);
+  if(submitted!==requestId&&!(allowMissing&&submitted===null))return false;
   storage.setItem(rejectedKey,requestId);
-  if(storage.getItem(submittedKey)!==requestId)return false;
-  storage.removeItem(submittedKey);
+  if(storage.getItem(submittedKey)!==submitted)return false;
+  if(submitted!==null)storage.removeItem(submittedKey);
   return true;
 }

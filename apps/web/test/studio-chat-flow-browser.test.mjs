@@ -92,7 +92,7 @@ async function attachImage(page,{mime='image/jpeg',name='source.jpg',buffer}={})
  return buffer;
 }
 const action=(name,args,binding)=>({status:'action_required',action:{name,args},actionBinding:binding});
-const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
+const consent=(suffix='one')=>({status:'consent_required',attemptId:id(80),imageActionId:id(81),prompt:`Proposta sintética ${suffix}`,proposal:{prompt:`Proposta sintética ${suffix}`,operation:'create',baseImageId:null,referenceIds:[]},actionBinding:`image-binding-${suffix}`,declineBinding:`decline-binding-${suffix}`});
 
 test('chat cria e salva versões com confirmação; imagem usa snapshot novo automaticamente',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  const {page,origin,calls,versions,flow,errors,external,explorationPosts}=await app(t);let submits=0;

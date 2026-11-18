@@ -16,19 +16,19 @@ test('pedido local pendente sem marcador exige consulta explícita e fonte origi
  const fixture=await mkdtemp(new URL('../pages/studio-busy-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
  await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';
 import {useRef,useState} from 'react';import StudioChat from '../../studio/studio-chat';
-import {createStudioState,createPost,prepareAdjustment,settleAdjustment,editDraft,updateBrief} from '../../lib/studio-state.ts';
+import {createStudioState,createPost,prepareAdjustment,editDraft,updateBrief} from '../../lib/studio-state.ts';
 function initial(){let s=createPost(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{pieceId:'${pieceId}'});s=updateBrief(s,{offer:'Minha oferta preservada'});s=editDraft(s,{field:'headline',value:'Meu rascunho preservado'});s=prepareAdjustment(s,{requestId:'${previousId}',messageId:'${id(5)}',instruction:'Pedido anterior pendente',createdAt:'2026-11-05T00:00:00.000Z',eventId:'${id(6)}'});return s;}
-export default function Fixture(){const[key,setKey]=useState(''),[source,setSource]=useState('byok'),[scope,setScope]=useState('${pieceId}'),[state,setState]=useState(initial),current=useRef(state),counts=useRef({change:0,flush:0,tools:0,image:0});const tools=useRef({execute:async()=>{counts.current.tools++;throw Error('unexpected tool');}});function change(fn){counts.current.change++;const next=fn(current.current);current.current=next;setState(next);return next;}return <main><label>Chave de teste<input type="password" value={key} onChange={e=>setKey(e.target.value)}/></label><label>Conversa<select value={scope} onChange={e=>setScope(e.target.value)}><option value="${pieceId}">Post original</option><option value="${id(13)}">Outro post</option><option value="references">Referências</option></select></label><label>Fonte<select value={source} onChange={e=>setSource(e.target.value)}><option value="byok">Chave própria</option><option value="default">IA do Compor</option></select></label><button type="button" onClick={()=>change(s=>settleAdjustment(s,{requestId:'${previousId}',status:'failed',eventId:'${id(12)}'}))}>Finalizar localmente no teste</button><output data-testid="snapshot">{JSON.stringify(state)}</output><output data-testid="effects">{JSON.stringify(counts.current)}</output><StudioChat credentialSource={source} conversationId={scope} state={state} getState={()=>current.current} change={change} flush={async()=>{counts.current.flush++;}} tools={tools} hasApiKey={source==='default'||Boolean(key)} getApiKey={()=>key} onUseImage={()=>{counts.current.image++;}} loadReference={async()=>null}/></main>;}`);
+export default function Fixture(){const[key,setKey]=useState(''),[source,setSource]=useState('byok'),[scope,setScope]=useState('${pieceId}'),[state,setState]=useState(initial),current=useRef(state),counts=useRef({change:0,flush:0,tools:0,image:0});const tools=useRef({execute:async()=>{counts.current.tools++;throw Error('unexpected tool');}});function change(fn){counts.current.change++;const next=fn(current.current);current.current=next;setState(next);return next;}return <main><label>Chave de teste<input type="password" value={key} onChange={e=>setKey(e.target.value)}/></label><label>Conversa<select value={scope} onChange={e=>setScope(e.target.value)}><option value="${pieceId}">Post original</option><option value="${id(13)}">Outro post</option><option value="references">Referências</option></select></label><label>Fonte<select value={source} onChange={e=>setSource(e.target.value)}><option value="byok">Chave própria</option><option value="default">IA do Compor</option></select></label><output data-testid="snapshot">{JSON.stringify(state)}</output><output data-testid="effects">{JSON.stringify(counts.current)}</output><StudioChat credentialSource={source} conversationId={scope} state={state} getState={()=>current.current} change={change} flush={async()=>{counts.current.flush++;}} tools={tools} hasApiKey={source==='default'||Boolean(key)} getApiKey={()=>key} onUseImage={()=>{counts.current.image++;}} loadReference={async()=>null}/></main>;}`);
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let result={status:'unknown',retryAutomatically:false},hold=null,release;
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let result={status:'unknown',retryAutomatically:false},closedResult={status:'unverified'},hold=null,release;
  await page.addInitScript(()=>{if(!sessionStorage.getItem('test-initialized')){sessionStorage.clear();localStorage.clear();sessionStorage.setItem('test-initialized','1');}});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),body=request.postDataJSON();calls.push({path:new URL(request.url()).pathname,body});
   if(hold)await hold;
-  return route.fulfill({status:200,json:result});
+  return route.fulfill({status:200,json:request.url().endsWith('/api/agent/image/reconcile-closed')?closedResult:result});
  });
  await page.goto(`${origin}/${basename(fixture)}`);await page.getByLabel('Chave de teste').fill(apiKey);
  const before=await page.getByTestId('snapshot').innerText();
@@ -82,7 +82,28 @@ export default function Fixture(){const[key,setKey]=useState(''),[source,setSour
  await page.reload();await page.getByLabel('Chave de teste').fill(apiKey);await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).waitFor();
  assert.equal(calls.length,12,'marcador legado preserva o fluxo existente sem consulta automática');
  await page.evaluate(marker=>sessionStorage.removeItem(marker),marker);await page.reload();await page.getByLabel('Chave de teste').fill(apiKey);await button.waitFor();
- await page.getByLabel('Sua mensagem').fill('Rascunho preservado');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true);await page.getByRole('button',{name:'Finalizar localmente no teste',exact:true}).click();
- assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Rascunho preservado');assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isEnabled(),true);assert.equal(calls.length,12,'não envia nada automaticamente após a transição local');
+ const submittedKey=`compor-image-submission:${userId}`;
+ await page.evaluate(({submittedKey,otherId})=>localStorage.setItem(submittedKey,otherId),{submittedKey,otherId});
+ await page.getByLabel('Sua mensagem').fill('Rascunho preservado');
+ assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true);
+ result={status:'failed',retryAutomatically:false};await button.click();
+ await page.getByText(/A consulta encontrou uma falha/).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isDisabled(),true);
+ closedResult={status:'confirmed',outcome:'failed_without_dispatch'};await button.click();
+ await page.getByText('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.',{exact:true}).waitFor();
+ assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Rascunho preservado');
+ assert.equal(await page.getByRole('button',{name:'Enviar →',exact:true}).isEnabled(),true);
+ assert.equal(await page.evaluate(key=>localStorage.getItem(key),submittedKey),otherId,'preserva a pendência de outra solicitação');
+ assert.deepEqual(calls.slice(12).map(call=>call.path),['/api/studio/chat','/api/agent/image/reconcile-closed','/api/studio/chat','/api/agent/image/reconcile-closed'],'consulta nunca envia imagem');
+ assert.deepEqual(calls.at(-1).body,{projectId,requestId:previousId});
+ const beforeCredentialFree=calls.length;
+ await page.evaluate(key=>localStorage.removeItem(key),submittedKey);
+ await page.reload();await prompt.waitFor();
+ assert.equal(await button.isDisabled(),true);
+ await page.getByRole('button',{name:'Verificar encerramento',exact:true}).click();
+ await page.getByText('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.',{exact:true}).waitFor();
+ assert.equal(await prompt.count(),0);
+ assert.equal(JSON.parse(await page.getByTestId('snapshot').innerText()).adjustments[0].status,'failed');
+ assert.deepEqual(calls.slice(beforeCredentialFree),[{path:'/api/agent/image/reconcile-closed',body:{projectId,requestId:previousId}}]);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
