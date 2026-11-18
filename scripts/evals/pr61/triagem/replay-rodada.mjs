@@ -8,13 +8,14 @@ import {parseSelectedVisualInput} from '../../../../packages/agents-api/src/visu
 
 const file=process.argv[2];
 const entries=JSON.parse(readFileSync(file));
+const complete=state=>state==='complete'||state==='completed';
 assert.deepEqual(entries.map(item=>item.id).sort(),cases.map(item=>item.id).sort());
 const output=[];
 for(const entry of entries){
   const {context,visualInput,referenceImages}=packet(entry.id);
   assert.deepEqual(entry.slots.map(slot=>slot.position).sort(),[1,2,3]);
   if(!entry.plan){
-    assert.ok(entry.slots.every(slot=>slot.state!=='completed'));
+    assert.ok(entry.slots.every(slot=>!complete(slot.state)));
     output.push({id:entry.id,planValid:null,completed:0,delivery:null});
     continue;
   }
@@ -24,11 +25,11 @@ for(const entry of entries){
   const attachments=selected.referenceImages.map(image=>({id:image.id,sha256:createHash('sha256').update(Buffer.from(image.data,'base64')).digest('hex')}));
   const slots=entry.slots.map(slot=>{
     if(slot.delivered)assert.deepEqual(slot.delivered,attachments,'Anexos divergentes de '+entry.id);
-    if(slot.state==='completed'){
+    if(complete(slot.state)){
       assert.equal(createHash('sha256').update(readFileSync(resolve(dirname(file),slot.path))).digest('hex'),slot.sha256);
     }
     return {position:slot.position,state:slot.state,delivered:slot.delivered?true:null};
   });
-  output.push({id:entry.id,planValid:true,completed:slots.filter(s=>s.state==='completed').length,selected:attachments.length,expectedInputBytes:chosen.reduce((n,img)=>n+Buffer.byteLength(img.data,'base64'),0),slots});
+  output.push({id:entry.id,planValid:true,completed:slots.filter(s=>complete(s.state)).length,selected:attachments.length,expectedInputBytes:chosen.reduce((n,img)=>n+Buffer.byteLength(img.data,'base64'),0),slots});
 }
 console.log(JSON.stringify(output,null,2));

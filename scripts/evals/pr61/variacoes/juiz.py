@@ -16,6 +16,7 @@ HERE = Path(__file__).resolve().parent
 TRIAGE = HERE.parent / "triagem"
 MODEL = "gpt-6.2-astra"
 SLOTS = "ABC"
+COMPLETE = {"complete","completed"}
 
 
 def digest(data):
@@ -96,7 +97,7 @@ def prepare(index_path, root, stage, mode):
                 item = next(it for it in plan["items"] if it["position"] == position)
                 # GPT Image receives the final prompt. Other plan fields describe intent.
                 card["outputs"][alias] = {k:item[k] for k in ("prompt","composition","contrast","differenceFromOthers")}
-            elif s["state"] == "completed":
+            elif s["state"] in COMPLETE:
                 source = index_path.parent / s["path"]
                 destination = blind / f"{label}-{alias}.png"
                 content = source.read_bytes()
@@ -173,7 +174,7 @@ def evaluate(root):
             unit=obs["unit"]
             slots=unit[:1] if check["stage"]==3 else unit
             available=(mapping["planObserved"] if check["mode"]=="plan" else
-                       all(mapping["slots"][s]["state"]=="completed" for s in slots))
+                       all(mapping["slots"][s]["state"] in COMPLETE for s in slots))
             if not available and obs["score"] is not None:
                 raise ValueError("Juiz pontuou saída indisponível")
             if not obs["evidence"].strip() or not row["change"].strip():
