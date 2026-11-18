@@ -1,0 +1,497 @@
+[
+  {
+    "id": "dev-feira-three",
+    "caseId": "dev-feira",
+    "split": "dev",
+    "expected": "accept",
+    "reason": "Três escolhas de estrutura reconhecíveis com as restrições autorizadas.",
+    "duplicatePair": null,
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Um único pote monumental visto de frente domina o centro. O nome fica concentrado numa legenda pequena junto à base. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Ícone central e legenda curta na base",
+        "contrast": "Escala monumental do pote contra texto miúdo",
+        "differenceFromOthers": "A imagem se lê de uma vez como um retrato frontal do produto."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Abrir como uma página de catálogo com seis miniaturas diferentes de potes alinhadas em duas fileiras. O olho compara os exemplares. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Prancha de coleção em grade",
+        "contrast": "Repetição de objetos pequenos versus margem larga",
+        "differenceFromOthers": "A escolha é por variedade e leitura comparativa."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Deixar o nome ocupar quase todo o cartaz em um percurso tipográfico diagonal ascendente. Esconder um pequeno pote no começo do percurso. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Percurso de palavras em ascensão",
+        "contrast": "Tipografia dominante e objeto quase escondido",
+        "differenceFromOthers": "Primeiro se lê o texto e depois se descobre o pote."
+      }
+    ]
+  },
+  {
+    "id": "dev-feira-paraphrase",
+    "caseId": "dev-feira",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Os caminhos 1 e 3 repetem hierarquia, foco e percurso com outras palavras.",
+    "duplicatePair": [
+      1,
+      3
+    ],
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Apresentar um recipiente imenso e solitário de frente, exatamente no eixo médio. A pequena inscrição inferior faz de rodapé. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Retrato axial com chamada no chão da página",
+        "contrast": "Protagonista em tamanho gigante e assinatura discreta",
+        "differenceFromOthers": "Enfatiza o recipiente com uma inscrição baixa."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Abrir como uma página de catálogo com seis miniaturas diferentes de potes alinhadas em duas fileiras. O olho compara os exemplares. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Prancha de coleção em grade",
+        "contrast": "Repetição de objetos pequenos versus margem larga",
+        "differenceFromOthers": "A escolha é por variedade e leitura comparativa."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Um único pote monumental visto de frente domina o centro. O nome fica concentrado numa legenda pequena junto à base. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Ícone central e legenda curta na base",
+        "contrast": "Escala monumental do pote contra texto miúdo",
+        "differenceFromOthers": "A imagem se lê de uma vez como um retrato frontal do produto."
+      }
+    ]
+  },
+  {
+    "id": "dev-feira-direction",
+    "caseId": "dev-feira",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Um caminho oferece outra estrutura às custas de uma restrição explícita.",
+    "duplicatePair": null,
+    "driftPosition": 2,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Abrir como uma página de catálogo com seis miniaturas diferentes de potes alinhadas em duas fileiras. O olho compara os exemplares. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Prancha de coleção em grade",
+        "contrast": "Repetição de objetos pequenos versus margem larga",
+        "differenceFromOthers": "A escolha é por variedade e leitura comparativa."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Contornar o cartaz com listras em colunas de amostras coloridas e colocar o pote no canto superior. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Vinheta angular com faixas verticais",
+        "contrast": "Faixas repetidas e fundo vazio",
+        "differenceFromOthers": "A moldura organiza uma leitura periférica."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Deixar o nome ocupar quase todo o cartaz em um percurso tipográfico diagonal ascendente. Esconder um pequeno pote no começo do percurso. Papel vertical e selo da feira preservado inteiro. Texto visível: Feira de compotas / 14 de agosto.",
+        "composition": "Percurso de palavras em ascensão",
+        "contrast": "Tipografia dominante e objeto quase escondido",
+        "differenceFromOthers": "Primeiro se lê o texto e depois se descobre o pote."
+      }
+    ]
+  },
+  {
+    "id": "dev-concerto-three",
+    "caseId": "dev-concerto",
+    "split": "dev",
+    "expected": "accept",
+    "reason": "Três escolhas de estrutura reconhecíveis com as restrições autorizadas.",
+    "duplicatePair": null,
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Usar um percurso circular com três pequenas vistas do instrumento, do arco às cordas. A vista seguinte conduz o olhar em volta do título. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Percurso circular em três vistas",
+        "contrast": "Ritmo de detalhes contra título imóvel",
+        "differenceFromOthers": "O leitor percorre uma sequência."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Tornar o título a maior forma do cartaz. Dentro das letras, revelar fragmentos do violino; a silhueta externa continua tipográfica. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Letras como janelas para o violino",
+        "contrast": "Nome dominante e instrumento fragmentado",
+        "differenceFromOthers": "O próprio nome contém o sinal visual."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Tratar o violino como um retrato lateral recortado na borda esquerda e deixar o título jogar contra a extremidade oposta. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Instrumento cortado à esquerda e título afastado",
+        "contrast": "Silhueta escura e campo de respiro aberto",
+        "differenceFromOthers": "A leitura acontece entre duas extremidades."
+      }
+    ]
+  },
+  {
+    "id": "dev-concerto-paraphrase",
+    "caseId": "dev-concerto",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Os caminhos 2 e 3 repetem hierarquia, foco e percurso com outras palavras.",
+    "duplicatePair": [
+      2,
+      3
+    ],
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Usar um percurso circular com três pequenas vistas do instrumento, do arco às cordas. A vista seguinte conduz o olhar em volta do título. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Percurso circular em três vistas",
+        "contrast": "Ritmo de detalhes contra título imóvel",
+        "differenceFromOthers": "O leitor percorre uma sequência."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Tratar o violino como um retrato lateral recortado na borda esquerda e deixar o título jogar contra a extremidade oposta. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Instrumento cortado à esquerda e título afastado",
+        "contrast": "Silhueta escura e campo de respiro aberto",
+        "differenceFromOthers": "A leitura acontece entre duas extremidades."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Desenhar só a silhueta de perfil de uma viola entrando pelo limite oeste do papel. A inscrição ocupa o extremo leste com espaço liso entre elas. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Perfil parcial na margem oposto à inscrição",
+        "contrast": "Campo vazio largo entre figura escura e letras",
+        "differenceFromOthers": "O olhar cruza o vazio de um lado ao outro."
+      }
+    ]
+  },
+  {
+    "id": "dev-concerto-direction",
+    "caseId": "dev-concerto",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Um caminho oferece outra estrutura às custas de uma restrição explícita.",
+    "duplicatePair": null,
+    "driftPosition": 1,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Construir o programa como uma fotografia de grão grosseiro sobre toda a superfície, com o violino pequeno num medalhão superior. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Medalhão fotográfico no alto",
+        "contrast": "Granulado de pontos contra figura lisa",
+        "differenceFromOthers": "Um pequeno foco fotográfico conduz ao local."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Tornar o título a maior forma do cartaz. Dentro das letras, revelar fragmentos do violino; a silhueta externa continua tipográfica. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Letras como janelas para o violino",
+        "contrast": "Nome dominante e instrumento fragmentado",
+        "differenceFromOthers": "O próprio nome contém o sinal visual."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Usar um percurso circular com três pequenas vistas do instrumento, do arco às cordas. A vista seguinte conduz o olhar em volta do título. Programa vertical em papel, símbolo da série inteiro e faixa inferior para o local. Texto visível: Concerto de bolso / Sala do Lago.",
+        "composition": "Percurso circular em três vistas",
+        "contrast": "Ritmo de detalhes contra título imóvel",
+        "differenceFromOthers": "O leitor percorre uma sequência."
+      }
+    ]
+  },
+  {
+    "id": "dev-troca-three",
+    "caseId": "dev-troca",
+    "split": "dev",
+    "expected": "accept",
+    "reason": "Três escolhas de estrutura reconhecíveis com as restrições autorizadas.",
+    "duplicatePair": null,
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Fazer o nome do encontro dominar o papel mediante letras em escala crescente. O caderno é quase uma vinheta no rodapé. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Hierarquia tipográfica crescente",
+        "contrast": "Nome em escala grande e objeto diminuto",
+        "differenceFromOthers": "Distingue a leitura da palavra do reconhecimento do objeto."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Uma única vista superior de um caderno aberto domina o centro do papel. Título na lombada e selos como assinaturas abaixo. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Caderno central visto de cima",
+        "contrast": "Objeto grande contra a pequena assinatura",
+        "differenceFromOthers": "Vista completa que se lê em um relance."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Distribuir recortes de folhas, elásticos e cantos em uma sequência de três momentos ligada pelo alinhamento diagonal. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Sequência de três recortes em diagonal",
+        "contrast": "Fragmentos intercalados com intervalos de papel vazio",
+        "differenceFromOthers": "A escolha se orienta pelo percurso entre os recortes."
+      }
+    ]
+  },
+  {
+    "id": "dev-troca-paraphrase",
+    "caseId": "dev-troca",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Os caminhos 1 e 2 repetem hierarquia, foco e percurso com outras palavras.",
+    "duplicatePair": [
+      1,
+      2
+    ],
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Uma única vista superior de um caderno aberto domina o centro do papel. Título na lombada e selos como assinaturas abaixo. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Caderno central visto de cima",
+        "contrast": "Objeto grande contra a pequena assinatura",
+        "differenceFromOthers": "Vista completa que se lê em um relance."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Isolar um só bloco de páginas inteiramente aberto e observável do alto bem no meio. Dê grande área ao caderno e ponha os dois carimbos embaixo. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Objeto aberto em planta e assinatura inferior",
+        "contrast": "Área ampla do miolo versus detalhes de rodapé",
+        "differenceFromOthers": "A primeira leitura é uma única vista total."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Distribuir recortes de folhas, elásticos e cantos em uma sequência de três momentos ligada pelo alinhamento diagonal. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Sequência de três recortes em diagonal",
+        "contrast": "Fragmentos intercalados com intervalos de papel vazio",
+        "differenceFromOthers": "A escolha se orienta pelo percurso entre os recortes."
+      }
+    ]
+  },
+  {
+    "id": "dev-troca-direction",
+    "caseId": "dev-troca",
+    "split": "dev",
+    "expected": "reject",
+    "reason": "Um caminho oferece outra estrutura às custas de uma restrição explícita.",
+    "duplicatePair": null,
+    "driftPosition": 3,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Fazer o nome do encontro dominar o papel mediante letras em escala crescente. O caderno é quase uma vinheta no rodapé. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Hierarquia tipográfica crescente",
+        "contrast": "Nome em escala grande e objeto diminuto",
+        "differenceFromOthers": "Distingue a leitura da palavra do reconhecimento do objeto."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Distribuir recortes de folhas, elásticos e cantos em uma sequência de três momentos ligada pelo alinhamento diagonal. Papel vertical liso, selos verde e violeta inteiros, separados e do mesmo tamanho. Texto visível: Troca de cadernos.",
+        "composition": "Sequência de três recortes em diagonal",
+        "contrast": "Fragmentos intercalados com intervalos de papel vazio",
+        "differenceFromOthers": "A escolha se orienta pelo percurso entre os recortes."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Estender listras diagonais repetidas atrás das letras e dar a um dos selos quatro vezes o peso do outro em uma pilha vertical. Texto visível: Troca de cadernos.",
+        "composition": "Eixo de assinaturas empilhadas sobre diagonais",
+        "contrast": "Uma assinatura dominante contra a secundária",
+        "differenceFromOthers": "A leitura começa pela marca ampliada."
+      }
+    ]
+  },
+  {
+    "id": "reserva-cais-three",
+    "caseId": "reserva-cais",
+    "split": "holdout",
+    "expected": "accept",
+    "reason": "Três escolhas de estrutura reconhecíveis com as restrições autorizadas.",
+    "duplicatePair": null,
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Construir a placa como uma grande palavra alinhada verticalmente. O arco surge pequeno ao final da palavra, quase um ponto de chegada. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Percurso tipográfico descendente",
+        "contrast": "Título monumental contra sinal pequeno",
+        "differenceFromOthers": "Convida a ler a palavra de cima para baixo."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Recortar um pequeno mapa esquemático no miolo. Um traço conduz ao arco numa extremidade, e o nome identifica o mapa em escala de legenda. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Mapa com percurso e destino",
+        "contrast": "Traço longo contra ponto de chegada",
+        "differenceFromOthers": "A leitura acompanha um trajeto espacial."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Transformar o símbolo do arco em um grande sinal frontal isolado, centrado, reservando o nome para uma legenda abaixo do sinal. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Sinal único central com legenda",
+        "contrast": "Arco dominante e nome secundário",
+        "differenceFromOthers": "Funciona como sinal visível de longe."
+      }
+    ]
+  },
+  {
+    "id": "reserva-cais-paraphrase",
+    "caseId": "reserva-cais",
+    "split": "holdout",
+    "expected": "reject",
+    "reason": "Os caminhos 1 e 3 repetem hierarquia, foco e percurso com outras palavras.",
+    "duplicatePair": [
+      1,
+      3
+    ],
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Empilhar os caracteres do nome em uma coluna gigante que cai pelo papel e termina no pequeno símbolo de passagem. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Coluna de letras até a marca miúda",
+        "contrast": "Diferença entre o peso do nome e o sinal final",
+        "differenceFromOthers": "Faz o leitor descer pela inscrição."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Recortar um pequeno mapa esquemático no miolo. Um traço conduz ao arco numa extremidade, e o nome identifica o mapa em escala de legenda. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Mapa com percurso e destino",
+        "contrast": "Traço longo contra ponto de chegada",
+        "differenceFromOthers": "A leitura acompanha um trajeto espacial."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Construir a placa como uma grande palavra alinhada verticalmente. O arco surge pequeno ao final da palavra, quase um ponto de chegada. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Percurso tipográfico descendente",
+        "contrast": "Título monumental contra sinal pequeno",
+        "differenceFromOthers": "Convida a ler a palavra de cima para baixo."
+      }
+    ]
+  },
+  {
+    "id": "reserva-cais-direction",
+    "caseId": "reserva-cais",
+    "split": "holdout",
+    "expected": "reject",
+    "reason": "Um caminho oferece outra estrutura às custas de uma restrição explícita.",
+    "duplicatePair": null,
+    "driftPosition": 2,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Recortar um pequeno mapa esquemático no miolo. Um traço conduz ao arco numa extremidade, e o nome identifica o mapa em escala de legenda. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Mapa com percurso e destino",
+        "contrast": "Traço longo contra ponto de chegada",
+        "differenceFromOthers": "A leitura acompanha um trajeto espacial."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Desenhar quatro lados de uma moldura contínua que fecha completamente a peça. No miolo, usar um pequeno desenho de mapa sem percurso. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Moldura fechada com mapa em miniatura",
+        "contrast": "Perímetro pesado versus centro esvaziado",
+        "differenceFromOthers": "O olhar contorna a área fechada."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Transformar o símbolo do arco em um grande sinal frontal isolado, centrado, reservando o nome para uma legenda abaixo do sinal. Placa editorial vertical com o símbolo de passagem inteiro e dois fios acima do local na base. Texto visível: Leitura no cais / Ponte Dois.",
+        "composition": "Sinal único central com legenda",
+        "contrast": "Arco dominante e nome secundário",
+        "differenceFromOthers": "Funciona como sinal visível de longe."
+      }
+    ]
+  },
+  {
+    "id": "reserva-sementes-three",
+    "caseId": "reserva-sementes",
+    "split": "holdout",
+    "expected": "accept",
+    "reason": "Três escolhas de estrutura reconhecíveis com as restrições autorizadas.",
+    "duplicatePair": null,
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Organizar a metade inferior como pequena coleção de silhuetas em dois grupos espelhados. A diferença entre os grupos propõe uma leitura comparativa. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Duas pranchas de coleção espelhadas",
+        "contrast": "Repetição dos exemplares e abertura entre grupos",
+        "differenceFromOthers": "Convida a comparar famílias de sementes."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Reunir discretas pegadas de sementes em um percurso arqueado no corpo inferior. O olhar acompanha uma transformação do broto ao fruto. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Sequência curva de germinação",
+        "contrast": "Ritmo crescente das fases contra o papel livre",
+        "differenceFromOthers": "Conta o processo ao longo de um caminho."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Uma única semente ampliada em corte transversal domina a metade de baixo como ilustração científica. A legenda lateral orienta o olhar para o núcleo. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Corte científico monumental",
+        "contrast": "Semente grande contra identificação discreta",
+        "differenceFromOthers": "A capa apresenta um único exemplar em detalhe."
+      }
+    ]
+  },
+  {
+    "id": "reserva-sementes-paraphrase",
+    "caseId": "reserva-sementes",
+    "split": "holdout",
+    "expected": "reject",
+    "reason": "Os caminhos 2 e 3 repetem hierarquia, foco e percurso com outras palavras.",
+    "duplicatePair": [
+      2,
+      3
+    ],
+    "driftPosition": null,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Organizar a metade inferior como pequena coleção de silhuetas em dois grupos espelhados. A diferença entre os grupos propõe uma leitura comparativa. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Duas pranchas de coleção espelhadas",
+        "contrast": "Repetição dos exemplares e abertura entre grupos",
+        "differenceFromOthers": "Convida a comparar famílias de sementes."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Uma única semente ampliada em corte transversal domina a metade de baixo como ilustração científica. A legenda lateral orienta o olhar para o núcleo. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Corte científico monumental",
+        "contrast": "Semente grande contra identificação discreta",
+        "differenceFromOthers": "A capa apresenta um único exemplar em detalhe."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Oferecer uma vista única, seccionada pelo meio, de um grão descomunal na porção baixa da capa. Uma inscrição lateral pequena acompanha o centro do corte. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Monografia de um grão aberto",
+        "contrast": "Macrodetalhe orgânico e indicação diminuta",
+        "differenceFromOthers": "O leitor examina a seção interna de um exemplar."
+      }
+    ]
+  },
+  {
+    "id": "reserva-sementes-direction",
+    "caseId": "reserva-sementes",
+    "split": "holdout",
+    "expected": "reject",
+    "reason": "Um caminho oferece outra estrutura às custas de uma restrição explícita.",
+    "duplicatePair": null,
+    "driftPosition": 1,
+    "items": [
+      {
+        "position": 1,
+        "creativePrompt": "Aplicar uma malha ortogonal sobre todo o campo claro superior e concentrar três desenhos botânicos num medalhão quadrado ao centro. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Selo central quadrado em fundo quadriculado",
+        "contrast": "Trama repetida e centro figurativo",
+        "differenceFromOthers": "Uma janela central contém as espécies."
+      },
+      {
+        "position": 2,
+        "creativePrompt": "Reunir discretas pegadas de sementes em um percurso arqueado no corpo inferior. O olhar acompanha uma transformação do broto ao fruto. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Sequência curva de germinação",
+        "contrast": "Ritmo crescente das fases contra o papel livre",
+        "differenceFromOthers": "Conta o processo ao longo de um caminho."
+      },
+      {
+        "position": 3,
+        "creativePrompt": "Organizar a metade inferior como pequena coleção de silhuetas em dois grupos espelhados. A diferença entre os grupos propõe uma leitura comparativa. Papel claro vertical, nome no alto com respiro, assinaturas da folha e do par de discos separadas e inteiras, friso de grãos na base. Texto visível: Catálogo de sementes / Volume 04.",
+        "composition": "Duas pranchas de coleção espelhadas",
+        "contrast": "Repetição dos exemplares e abertura entre grupos",
+        "differenceFromOthers": "Convida a comparar famílias de sementes."
+      }
+    ]
+  }
+]

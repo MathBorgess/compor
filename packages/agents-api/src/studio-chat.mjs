@@ -9,6 +9,7 @@ import {extractUserUrls,readUserPages} from './studio-page-reader.mjs';
 import {parseTasteReading,tasteReadingMarkdown,tasteReadingReply,TASTE_REPLY_LIMITS} from './taste-reading.mjs';
 import {parseVisualInput,visualInputDigest} from './visual-input.mjs';
 import {visualInputMatchesProject} from './visual-input-contract.mjs';
+import {visualTriageInstructions} from './visual-triage-instructions.mjs';
 const ROOT='https://api.openai.com/v1/agents/sessions';
 const uuid=x=>typeof x==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(x);
 const identifier=(x,p)=>typeof x==='string'&&new RegExp(`^${p}_[A-Za-z0-9_-]{1,128}$`).test(x)&&!/sk-/i.test(x);
@@ -110,6 +111,20 @@ function validateImages(images){
   if(image.mime==='image/jpeg'&&!(bytes[0]===255&&bytes[1]===216&&bytes[2]===255))throw Error('invalid reference image');
   return {id:image.id,mime:image.mime,data:image.data};
  });
+}
+function turnInstructions(body,{automatic,hasLinks,quick}){
+ const selectedInContext=Array.isArray(body.context.references)?body.context.references:[];
+ const hasReferences=body.visualImages?.length>0||body.referenceImages.some(image=>
+  image.id!==body.context.baseImageId&&selectedInContext.some(reference=>reference?.id===image.id));
+ const parts=[automatic?referenceInstructions:instructions,'Use o contexto atualizado do pedido em cada turno.'];
+ if(body.referenceImages.length){
+  parts.push('As imagens fora de visualInput pertencem a este pedido. A imagem-base serve à edição. Leia como referência somente o arquivo anexado que corresponde a uma referência selecionada em context.references. Mantenha a origem desconhecida quando ela não for informada.');
+ }
+ if(hasReferences)parts.push('Use para essa leitura apenas os arquivos anexados a este turno. Metadados, nomes e comentários isolados não demonstram o conteúdo de uma imagem.',visualTriageInstructions);
+ if(!automatic&&body.visualInput)parts.push('Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.');
+ if(hasLinks)parts.push(linkTurnInstructions);
+ if(quick)parts.push(quickReplyInstructions);
+ return parts.join('\n');
 }
 function inputContent(body,includeHistory,sourcePages=[]){
  const data={...(sourcePages.length?{sourcePages}:{}),...(body.op==='reference_selection'?{origin:'reference_selection',event:'A seleção de referências ficou estável.'}:{origin:'user',message:body.message,...(body.quickReply?{quickReply:{version:1,intent:body.quickReply.intent}}:{})}),projectId:body.projectId,context:body.context,requestId:body.requestId,...(body.visualInput?{visualInput:body.visualInput}:{}),...(includeHistory?{localConversation:body.history??[]}:{})};
@@ -327,6 +342,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    let previous=null,sessionId,expiresAt,priorTurnId=null,initialInput=0,initialOutput=0;
    const hasLinks=!automatic&&extractUserUrls(body.message).length>0;
    const sourcePages=hasLinks?await readPages(body.message):[];
+   const agentInstructions=turnInstructions(body,{automatic,hasLinks,quick});
    if(body.previousAttemptKey&&!hasLinks){d.phase='prior_get';const prior=await store.get({...scope,requestId:body.previousAttemptKey});if(prior?.state==='completed'&&Date.parse(prior.expiresAt)>now()+10000){
     d.phase='prior_binding';const verified=proof(scope,prior);d.phase='prior_lookup';const session=await get(verified.sessionId,key);d.phase='prior_validate';
     if(session.id!==verified.sessionId||session.status!=='idle'||!Array.isArray(session.required_actions)||session.required_actions.length)throw Error('previous session active');
@@ -337,7 +353,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     const expectedTools=new Set(AGENT_STUDIO_TOOLS.map(tool=>tool.name));
     const sessionTools=session.agent?.tools;
     const toolsVerified=Array.isArray(sessionTools)&&sessionTools.length===expectedTools.size&&sessionTools.every(tool=>tool?.type==='function'&&expectedTools.has(tool.name))&&new Set(sessionTools.map(tool=>tool.name)).size===expectedTools.size;
-    if(session.agent.model===AGENT_MODEL&&toolsVerified){
+    // Input events inherit session instructions and previous pixels. Only a signed,
+    // unchanged selection can reuse visual history. Legacy/base bytes have no selection digest.
+    const sameSelection=verified.visualInputDigest===visualClaim?.visualInputDigest;
+    if(session.agent.model===AGENT_MODEL&&toolsVerified&&session.agent.instructions===agentInstructions&&sameSelection&&!body.referenceImages.length){
      if(!identifier(prior.turnId,'turn'))throw Error('previous turn unknown');previous=prior;sessionId=verified.sessionId;priorTurnId=prior.turnId;expiresAt=prior.expiresAt;initialInput=count(session.usage?.input_tokens);initialOutput=count(session.usage?.output_tokens);
     }
    }}
@@ -357,7 +376,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
      if(visualAuthority&&(request.signal.aborted||await checkVisualAuthority({...scope,visualAuthority})!==true||request.signal.aborted))throw Error('visual authority unavailable');
      dispatched=true;
      d.phase='provider_create';
-     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:AGENT_MODEL,instructions:automatic?referenceInstructions:`${instructions}${visualClaim?' Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.':''}${hasLinks?linkTurnInstructions:''}${quick?quickReplyInstructions:''}`,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:automatic||hasLinks||quick?[]:[...AGENT_STUDIO_TOOLS]},environment:{type:'none'},input:inputContent(body,true,sourcePages),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
+     const r=await fetchApi(ROOT,{method:'POST',headers:headers(key,{'Content-Type':'application/json'}),body:JSON.stringify({agent:{model:AGENT_MODEL,instructions:agentInstructions,reasoning:{effort:'low'},multi_agent:{enabled:false},tools:automatic||hasLinks||quick?[]:[...AGENT_STUDIO_TOOLS]},environment:{type:'none'},input:inputContent(body,true,sourcePages),stream:false}),redirect:'error',signal:AbortSignal.timeout(15000)});
      if(!r.ok){if(definiteRejection(r.status)){await finish(scope,record,'failed',null);return {rejected:r.status};}throw providerFailure(r.status);}
      d.phase='provider_create_parse';const session=await limitedJson(r.body,256000);d.phase='provider_create_validate';if(!identifier(session?.id,'sess'))throw Error('session missing');sessionId=session.id;expiresAt=new Date(now()+280000).toISOString();return {created:true};
     };

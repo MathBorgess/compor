@@ -97,7 +97,7 @@ jobs:
             packages/agile-deliberation/package-lock.json
             packages/agents-api/package-lock.json
             prototypes/compor-mcp/package-lock.json
-      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client webp
+      - run: sudo apt-get update && sudo apt-get install --yes postgresql-client webp python3-pil
       - name: Verify migration and image tools
         run: |
           psql --version
@@ -120,6 +120,10 @@ jobs:
       - run: npm ci --ignore-scripts --prefix packages/agents-api
       - run: npm ci --ignore-scripts --prefix prototypes/compor-mcp
       - run: npm run quality:unit
+      - name: Verify paired visual evaluation fixtures offline
+        env:
+          COMPOR_EVAL_PYTHON: /usr/bin/python3
+        run: sh scripts/evals/triagem-divergencia/check.sh
 
   web:
     name: Web types and behavior

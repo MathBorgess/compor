@@ -10,6 +10,8 @@ Desenho e primeira baseline do PR #61, revisão inicial `8817f57`. A unidade de 
 | [4. Variação e convergência](04-variacoes.md) · planejador, GPT Image e criador | Três caminhos dentro da direção. O comentário e a escolha do criador qualificam a rodada seguinte. | Por lote completo, contar alternativas distinguíveis **e** utilizáveis. Por par de lotes com feedback, medir se a preferência construída pelo criador se tornou mais reconhecível. Uma solicitação de nova direção inicia outro grupo de comparação. |
 | [5. Vontade de usar](05-post.md) · criador | Arte e legenda da versão, eventual pedido de variação e sua intenção de uso. A resposta pode orientar a etapa 1 ou 4 de uma nova rodada. | Por versão exposta e avaliada, registrar vontade de usar a peça e confiança declarada no objetivo. Por tarefa, contar se as variantes avaliadas continuaram utilizáveis. Preservar separadamente exploração voluntária, correção, aprovação explícita, aprovação herdada, exportação e resultado posterior observado. |
 
+[Revisar as três propostas de melhoria por marco](propostas-por-marco.md)
+
 ## Como operar o juiz
 
 1. Fixar antes do ensaio o briefing, fatos obrigatórios, funções esperadas das referências, posição das versões na linhagem, rubrica e casos de comparação. Manter conjunto de desenvolvimento separado dos casos reservados. Derivar a amostra do pedido de avaliação e das permissões para essa finalidade.
@@ -79,3 +81,5 @@ A trilha do briefing e da descoberta conservou duas mudanças do ciclo 2. O tema
 Na trilha visual, foram iniciadas 20 sessões de planejamento. O contrato aceitou 19 planos e 57 imagens chegaram com recibos e arquivos conferidos. O plano recusado repetiu o contraste dos slots 1 e 3. O executor consultou a mesma sessão e concluiu os quatro casos inéditos da rodada. Os três slots do caso recusado permaneceram sem envio. Os lotes válidos levaram até 4 ms entre o primeiro e o terceiro início de envio, e o intervalo mínimo observado entre o fim de um lote e o início do próximo plano foi 15,008 s. Essas medidas são do executor local com provedor real. A apresentação progressiva no navegador tem uma validação separada com serviços simulados.
 
 Nos dois casos reservados, a última candidata aumentou as artes prontas de 3/6 para 5/6, e as artes com falha crítica caíram de duas para zero. A fidelidade visual nos mesmos casos caiu de 44/48 para 42/48. As três candidatas visuais ficaram aquém dos critérios congelados. O planejador preservado no código é o da baseline. As matrizes por caso estão nas páginas de cada marco acima.
+
+[Ensaio posterior sobre a triagem da referência opcional e as três propostas](../triagem-divergencia-2026-11-18/README.md)

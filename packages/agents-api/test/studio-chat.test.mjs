@@ -8,6 +8,7 @@ import {AGENT_MODEL} from '../src/agent-model.mjs';
 import {recordStudioEvent} from '../src/studio-telemetry.mjs';
 import {AGENT_STUDIO_TOOLS} from '../src/studio-chat-tools.mjs';
 import {visualInputDigest} from '../src/visual-input.mjs';
+import {visualTriageInstructions} from '../src/visual-triage-instructions.mjs';
 
 const userId='11111111-1111-4111-8111-111111111111',projectId='22222222-2222-4222-8222-222222222222',requestId='33333333-3333-4333-8333-333333333333',attemptId='44444444-4444-4444-8444-444444444444',request2='55555555-5555-4555-8555-555555555555';
 const apiKey='sk-synthetic_abcdefghijklmnopqrstuvwxyz',app='https://compor.test';
@@ -17,6 +18,119 @@ const visualBytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAAD
 const visualFile={sha256:createHash('sha256').update(visualBytes).digest('hex'),mime:'image/png',byteLength:visualBytes.length};
 const visualInput={version:2,policy:'optimized-v1',externalConsent:false,entries:[{id:request2,ordinal:1,role:'reference',inputOrigin:'local-upload',source:null,original:visualFile,transport:{...visualFile,width:1,height:1},transformation:'none'}]};
 const visualImages=[{id:request2,mime:'image/png',data:visualBytes.toString('base64')}];
+
+const signedVisuals={selectedVisualsEnabled:true,authorizeVisualInput:async()=>true};
+const signedTurn={...body,visualInput,visualImages};
+const emptyVisualTurn={...body,visualInput:{...visualInput,entries:[]},visualImages:[]};
+
+test('sessão de análise preserva o formato de gosto e aplica às referências presentes a instrução do servidor',async()=>{
+ const f=fixture(signedVisuals),note='Veja apenas a moldura vermelha escolhida por mim.';
+ const input={apiKey,projectId,requestId,op:'reference_selection',visualInput,visualImages,
+  context:{...body.context,references:[{id:request2,comment:note}]}};
+ assert.equal((await f.chat(request(input))).status,202);
+ const {agent,input:messages}=f.calls.find(call=>call.method==='POST').body;
+ assert.ok(agent.instructions.includes(visualTriageInstructions));
+ assert.match(agent.instructions,/Não gere imagem nem execute ações neste turno/);
+ assert.match(agent.instructions,/leitura.*recomendacao.*pergunta/);
+ assert.deepEqual(agent.tools,[]);
+ assert.ok(!agent.instructions.includes(note)&&!agent.instructions.includes(request2));
+ assert.deepEqual(messages.map(message=>message.role),['user']);
+ const content=messages[0].content;
+ assert.equal(JSON.parse(content[0].text).context.references[0].comment,note);
+ assert.equal(content[1].text,'Referência selecionada '+request2);
+ assert.equal(content[2].image_url,'data:image/png;base64,'+visualImages[0].data);
+ assert.ok(!JSON.stringify(messages).includes(visualTriageInstructions));
+ const legacy=fixture();
+ await legacy.chat(request({...input,visualInput:undefined,visualImages:undefined,referenceImages:visualImages}));
+ const auto=legacy.calls.find(c=>c.method==='POST').body.agent;
+ assert.ok(auto.instructions.includes(visualTriageInstructions));
+ assert.deepEqual(auto.tools,[]);
+});
+
+test('criação e edição vinculam a leitura aos anexos atuais e conservam a base de edição em papel próprio',async()=>{
+ for(const edit of [false,true]){
+  const f=fixture(signedVisuals);
+  const base=edit?[{...visualImages[0],id:projectId}]:[];
+  const context={...body.context,pieceId:attemptId,...(edit?{baseImageId:projectId,baseVersion:1}:{})};
+  const input={...signedTurn,conversationId:attemptId,context,referenceImages:base,message:edit?'Edite esta versão.':'Crie esta peça.'};
+  assert.equal((await f.chat(request(input))).status,202);
+  const req=f.calls.find(c=>c.method==='POST').body;
+  assert.ok(req.agent.instructions.includes(visualTriageInstructions));
+  assert.match(req.agent.instructions,/todos os IDs local-upload/);
+  assert.deepEqual(req.agent.tools,AGENT_STUDIO_TOOLS);
+  const content=req.input[0].content;
+  assert.deepEqual(content.filter(i=>i.type==='input_text').slice(1).map(i=>i.text),[
+   ...(edit?['Imagem-base da versão selecionada '+projectId]:[]),'Referência selecionada '+request2]);
+ }
+});
+
+test('sem manifesto a leitura requer uma referência selecionada com bytes e mantém a origem desconhecida quando ausente',async()=>{
+ const selected={...body.context,references:[{id:request2}]};
+ for(const [context,files,hasTriage] of [[selected,visualImages,true],[selected,[],false],[body.context,visualImages,false],
+  [{...selected,baseImageId:request2},visualImages,false],[body.context,[],false]]){
+  const f=fixture();
+  assert.equal((await f.chat(request({...body,context,referenceImages:files}))).status,202);
+  const req=f.calls.find(c=>c.method==='POST').body;
+  assert.equal(req.agent.instructions.includes(visualTriageInstructions),hasTriage);
+  if(hasTriage)assert.match(req.agent.instructions,/Mantenha a origem desconhecida/);
+  assert.doesNotMatch(req.agent.instructions,/todos os IDs local-upload/);
+  assert.equal(req.input[0].content.filter(i=>i.type==='input_image').length,files.length);
+ }
+ const empty=fixture(signedVisuals);
+ assert.equal((await empty.chat(request(emptyVisualTurn))).status,202);
+ assert.ok(!empty.calls.find(c=>c.method==='POST').body.agent.instructions.includes(visualTriageInstructions));
+});
+
+async function nextTurn(f,first,second){
+ assert.equal((await f.chat(request(first))).status,202);
+ f.set({status:'idle',turnState:'completed'});
+ assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
+ const before=f.calls.length,history=[{role:'assistant',text:'A conversa continua.'}];
+ const result=await(await f.chat(request({...second,requestId:request2,previousAttemptKey:requestId,history}))).json();
+ assert.equal(result.status,'running');
+ const sends=f.calls.slice(before).filter(c=>c.method==='POST');
+ assert.equal(sends.length,1,'um único envio neste turno');
+ const call=sends[0];
+ const messages=result.sessionReused?call.body.events[0].input:call.body.input;
+ assert.deepEqual(messages.map(m=>m.role),['user']);
+ assert.equal(call.url.endsWith('/events'),result.sessionReused);
+ if(!result.sessionReused)assert.deepEqual(JSON.parse(messages[0].content[0].text).localConversation,history);
+ return {reused:result.sessionReused,call,content:messages[0].content};
+}
+
+test('continuação só reutiliza a mesma seleção assinada e as instruções verificadas pelo provedor',async()=>{
+ const other='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
+ const both={...signedTurn,visualInput:{...visualInput,entries:[...visualInput.entries,{...visualInput.entries[0],id:other,ordinal:2}]},
+  visualImages:[...visualImages,{...visualImages[0],id:other}]};
+ const first=await nextTurn(fixture(signedVisuals),signedTurn,signedTurn);
+ assert.equal(first.reused,true);
+ assert.ok(!JSON.stringify(first.content).includes(visualTriageInstructions));
+ const removed=await nextTurn(fixture(signedVisuals),both,signedTurn);
+ assert.equal(removed.reused,false);
+ assert.ok(!JSON.stringify(removed.content).includes(other));
+ assert.deepEqual(removed.content.filter(i=>i.type==='input_image').map(i=>i.image_url),['data:image/png;base64,'+visualImages[0].data]);
+ for(const [a,b,needsRead] of [[signedTurn,emptyVisualTurn,false],[emptyVisualTurn,signedTurn,true]]){
+  const next=await nextTurn(fixture(signedVisuals),a,b);
+  assert.equal(next.reused,false);
+  assert.equal(next.call.body.agent.instructions.includes(visualTriageInstructions),needsRead);
+ }
+ for(const legacyInstructions of [undefined,'Política de uma sessão anterior.']){
+  const f=fixture({...signedVisuals,sessionLookup:()=>Response.json({id:'sess_one',status:'idle',required_actions:[],
+   agent:{model:AGENT_MODEL,tools:AGENT_STUDIO_TOOLS,instructions:legacyInstructions},usage:{input_tokens:5,output_tokens:2}})});
+  assert.equal((await nextTurn(f,signedTurn,signedTurn)).reused,false);
+ }
+});
+
+test('anexos fora do manifesto não são herdados pela mensagem seguinte, mesmo com a mesma seleção',async()=>{
+ const linked={...body,context:{...body.context,references:[{id:request2}]},referenceImages:visualImages};
+ for(const [a,b] of [[linked,linked],[linked,body],[body,linked]]){
+  assert.equal((await nextTurn(fixture(),a,b)).reused,false);
+ }
+ const edit={...signedTurn,context:{...body.context,baseImageId:projectId},referenceImages:[{...visualImages[0],id:projectId}]};
+ assert.equal((await nextTurn(fixture(signedVisuals),edit,signedTurn)).reused,false);
+ assert.equal((await nextTurn(fixture(signedVisuals),emptyVisualTurn,emptyVisualTurn)).reused,true);
+});
+
 
 test('turno visual exige autorização, bytes íntegros e nenhum envio paralelo de referência não comprovada',async()=>{
  const input={...body,visualInput,visualImages};
@@ -125,7 +239,8 @@ function fixture(options={}){
   if(url.includes('/turns?')&&options.turnList)return options.turnList(url,init);
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:turn,session_id:'sess_one',subagent_id:null,status:turnState,error:turnError},...(turn==='turn_two'?[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]:[])]});
   if(options.sessionLookup)return options.sessionLookup(url,init);
-  return Response.json({id:'sess_one',agent:{model,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
+  const created=calls.findLast(c=>c.url?.endsWith('/sessions')&&c.method==='POST');
+  return Response.json({id:'sess_one',agent:{model,instructions:created?.body.agent.instructions,tools:options.sessionTools??AGENT_STUDIO_TOOLS},status,required_actions:actions,usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  };
  const deps={appOrigin:app,resolveActor:async()=>({userId,token:'jwt-synthetic'}),ownsProject:async()=>true,ownsVersion:async()=>true,store,bindings,studioBindings,prepareVisualAuthority:async input=>({pieceId:input.conversationId&&input.conversationId!=='references'?input.conversationId:null,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null}),checkVisualAuthority:async()=>true,attempts:{async bindRecovery(){},async finish(){}},usage:{async start(){return true;},async finish(){}},fetch,...options};
  return{...createStudioChatHandlers(deps),calls,records,store,set:(v)=>{status=v.status??status;actions=v.actions??actions;turn=v.turn??turn;turnState=v.turnState??turnState;if(Object.hasOwn(v,'turnError'))turnError=v.turnError;if(Object.hasOwn(v,'model'))model=v.model;answer=v.answer??answer;}};
@@ -351,14 +466,14 @@ test('HTTP503 no poll mantém a prova da conversa e não inicia outro turno',asy
  assert.equal(calls.filter(call=>call.method==='POST').length,1);assert.doesNotMatch(JSON.stringify(result),/PRIVATE_PROVIDER_BODY|sk-synthetic/);
 });
 test('HTTP503 ao continuar sessão conserva a tentativa unknown e não repete o evento',async()=>{
+ let sessionInstructions;
  const calls=[],f=fixture({fetch:async(url,init={})=>{
   calls.push({url,method:init.method??'GET',headers:init.headers});
-  if(init.method==='POST'&&url.endsWith('/sessions'))return Response.json({id:'sess_one'},{status:201});
+  if(init.method==='POST'&&url.endsWith('/sessions')){sessionInstructions=JSON.parse(init.body).agent.instructions;return Response.json({id:'sess_one'},{status:201});}
   if(init.method==='POST'&&url.endsWith('/events'))return new Response(`PRIVATE_PROVIDER_BODY ${apiKey}`,{status:503});
-  if(url.includes('/turns?')&&options.turnList)return options.turnList(url,init);
   if(url.includes('/turns?'))return Response.json({has_more:false,data:[{id:'turn_one',session_id:'sess_one',subagent_id:null,status:'completed'}]});
   if(url.includes('/items?'))return Response.json({has_more:false,data:[{type:'message',role:'assistant',status:'completed',phase:'final_answer',turn_id:'turn_one',content:[{type:'output_text',text:'Resposta concluída.'}]}]});
-  return Response.json({id:'sess_one',agent:{model:AGENT_MODEL,tools:AGENT_STUDIO_TOOLS},status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
+  return Response.json({id:'sess_one',agent:{model:AGENT_MODEL,instructions:sessionInstructions,tools:AGENT_STUDIO_TOOLS},status:'idle',required_actions:[],usage:{input_tokens:100,output_tokens:20,total_tokens:120}});
  }});
  await f.chat(request(body));assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).status,'completed');
  const next={...body,requestId:request2,previousAttemptKey:requestId,message:'Outra mensagem'};

@@ -1,0 +1,35 @@
+# Adoção da triagem por referência e revisão das três propostas
+
+Proposta para decisão de Matheus. O PR #65 compara planejadores em bancada. A pergunta para o produto é se vale reter um lote antes de cobrar três imagens quando a direção mudou ou duas propostas descrevem a mesma arte. Há dois custos distintos a medir, o de liberar imagens redundantes e o de bloquear três opções válidas.
+
+Em 18/11/2026, Matheus aprovou a ativação da leitura visual no próprio turno para posts e lotes paralelos. O escopo publicado e a recuperação de sessões estão no [ADR 0072](../adr/0072-triagem-visual-no-post-e-lote.md). O restante deste documento preserva as alternativas estudadas.
+
+## Do pedido ao primeiro envio
+
+| Momento | Comportamento proposto |
+| --- | --- |
+| A pessoa pede exploração | Conservar o gatilho explícito na tela de referências. Congelar a intenção e sua época, projeto, conversa, briefing, fatos declarados, aceites, recusas, comentários e o snapshot da seleção. O manifesto completo define o que a pessoa disponibilizou. Cada envio ao GPT Image recebe só o subconjunto que o planejador reteve, na ordem original, com todos os uploads selecionados. |
+| O Agents API termina o plano | No `poll` de `exploration-planner.mjs`, após recuperar a sessão e o turno originais e antes de emitir `planBinding`, validar o plano e uma leitura por entrada do manifesto. Exigir ID, característica observada, intenção declarada/inferida/desconhecida, citação literal quando declarada, decisão, motivo e localização na arte quando incluída. Leitura omitida, repetida ou incompatível com `referenceIds` deixa o plano disponível para revisão e impede a admissão automática. |
+| O estúdio registra a leitura | Versionar o esquema do journal local para preservar as N leituras junto do plano da mesma conta, projeto e conversa. O servidor guarda os digests, versões, vínculos e estados necessários à validação e à recuperação. A análise criativa e os pixels ficam fora da telemetria e das tabelas de recibos. |
+| O servidor admite o lote | Emitir uma prova de admissão em domínio versionado, ligada à prova do plano, à decisão, ao digest da leitura, ao modelo e à versão do critério. Vincular também o digest do briefing e dos três prompts, o manifesto e a subsequência retida. A prova usa o mesmo escopo autenticado e a mesma fonte de credencial. O digest da direção identifica o conteúdo que passou pela avaliação. |
+| O lote entra na fila | No handler do lote, verificar a prova logo após `verifyPlan` e **antes** de `reserveBatch`. Uma única transação deve verificar a admissão exigida para aquela tentativa, a intenção e a revisão de seleção e reservar os três filhos. Preservar o `beforeDispatch` imediatamente antes de cada chamada ao GPT Image para detectar revogação durante o despacho paralelo. |
+
+O planejador e o handler já separam a validação de saída, a emissão da prova, a reserva e os três efeitos externos. O espelho com controle de concorrência cobre a seleção por conta, projeto e post. O briefing fornecido pelo estúdio está vinculado à tentativa. Para garantir que uma direção editada em outra aba cancela um envio antigo, propomos registrar no servidor uma revisão da direção por escopo e compará-la sob o mesmo lock da reserva e revalidá-la antes do POST de cada filho. Uma edição pode ocorrer enquanto o provedor já processa um filho. Nesse caso, preservar o recibo desse envio e identificar os irmãos interrompidos antes do POST. O navegador deve apresentar o conflito para a pessoa revisar e pedir novo envio. Essa garantia requer decisão de persistência, migração e ADR. [Planejador](../../packages/agents-api/src/exploration-planner.mjs) · [Handler do lote](../../apps/web/lib/exploration-batch-route.ts) · [Journal](../../apps/web/lib/parallel-exploration-journal.ts) · [Autoridade da seleção](../adr/0067-autoridade-de-referencias-com-cas.md)
+
+## Quem avalia a direção
+
+| Opção | Custo e limite |
+| --- | --- |
+| Mesmo turno do planejamento | O planejador explicita a decisão visual implementada em cada par. O servidor confirma estrutura, referências, evidências literais e duplicatas exatas. Usa tokens adicionais no mesmo turno. O próprio modelo pode defender uma paráfrase como se fossem artes distintas. |
+| Revisão humana quando houver dúvida | Mostrar lado a lado o foco das três opções e quais referências foram retidas ou omitidas. A pessoa pode revisar a direção ou aceitar explicitamente aquelas três propostas. O aceite se vincula ao mesmo plano e à mesma seleção. Aumenta a fricção nos casos encaminhados. |
+| Crítico independente anterior à reserva | Um novo turno ou sessão gerenciada lê o briefing, o catálogo selecionado, os IDs retidos e os três prompts sem o parecer do planejador. Mede alinhamento por slot e diferença por par. Requer autorização de custo, um recibo próprio e limite de uma avaliação por tentativa. Os pixels só entram se a avaliação passar a exigir inspeção visual dos arquivos. |
+
+No primeiro piloto de produto, sugiro manter o julgamento independente em bancada e medir quantos lotes precisam de revisão humana com a análise no próprio turno. O ensaio deve comparar também falsos bloqueios. O caso em que um juiz desconhece o catálogo pode parecer perda de direção mesmo quando o plano segue a seleção.
+
+## Recibos, versões e aceitação
+
+Se o crítico for contratado, reservar seu recibo **antes** do efeito pago. Consultas de estado recuperam a mesma sessão e turno. Em resposta perdida, manter o estado indeterminado e mostrar “Consultar avaliação”. A reserva de imagens aguarda uma decisão verificável. Medir uso conhecido do planejamento, da avaliação e das imagens em separado, preservando uso desconhecido. Após um resultado parcial, expor os sucessos e permitir reposição apenas por pedido explícito de um slot definitivamente recusado. As três imagens partem juntas e o intervalo de 15 segundos começa depois da conclusão do lote. [Recibos e lotes paralelos](../adr/0061-lotes-paralelos-e-recibos-de-planejamento.md) · [Entradas visuais e triagem](../adr/0066-entradas-visuais-e-triagem-vinculadas-ao-pedido.md)
+
+A versão exigida vem da tentativa registrada pelo servidor. Recibos anteriores continuam consultáveis pelo contrato que os criou. Em uma tentativa nova que exija admissão, apresentar uma prova de versão anterior deve falhar antes da reserva. Um gesto novo pode reaproveitar um plano já pago se o conteúdo e o snapshot ainda forem válidos e a autorização for renovada.
+
+Antes da promoção, exigir testes de contrato para N leituras, prompts equivalentes, direção comum com três opções válidas, troca de manifesto, recuperação de recibos antigos e troca de credencial. No banco e no navegador, exercer duas abas concorrentes, consentimento revogado entre a reserva e o envio, resposta perdida sem segundo POST, progresso por filho e os 15 segundos contados do último sucesso. Comparar em casos de reserva as artes geradas, escolhas de Matheus, tempo até a primeira proposta, custo conhecido por lote útil e falsos aceites/recusas com denominadores. O piloto requer avaliação do dono e uma amostra de uso real para decidir a promoção.

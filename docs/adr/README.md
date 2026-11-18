@@ -84,5 +84,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0069](0069-retomada-de-imagem-com-versao-fixa.md) | implementado localmente | Destino fixo por ação de imagem e reconciliação da reserva original |
 | [0070](0070-encerramento-de-exploracao-serial-incerta.md) | implementado localmente | Encerramento administrativo de exploração serial com resultado incerto |
 | [0071](0071-reducao-de-minutos-de-ci.md) | implementação verificada localmente | Menos esperas em testes web, estático proporcional ao diff, cache npm compartilhado e agregador em `ubuntu-slim` |
+| [0072](0072-triagem-visual-no-post-e-lote.md) | aceito | Triagem das referências no turno do post e no lote paralelo de três imagens |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

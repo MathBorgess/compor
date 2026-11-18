@@ -1,0 +1,470 @@
+{
+  "version": 1,
+  "study": "calibration-2026-11-18",
+  "model": "gpt-6.2-astra",
+  "effort": "medium",
+  "dataset": "../dataset/contrasts.json",
+  "protocolSha256": "9bf418eceb40795dd2900c4c8e7882558a8e42123b5ff5cb21d1060b50063498",
+  "baseline": [
+    {
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 8,
+      "diagnosed": 8,
+      "falseAccepts": 0,
+      "falseHolds": 1,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "14967c2ce27286a796d8fc91efbcd37eb1cf2b2cc703cb195d70336f4ac9c284"
+    },
+    {
+      "split": "holdout",
+      "n": 6,
+      "judged": 6,
+      "correct": 4,
+      "diagnosed": 3,
+      "falseAccepts": 0,
+      "falseHolds": 2,
+      "abstentions": 0,
+      "expectedAccept": 2,
+      "expectedReject": 4,
+      "scoreSha256": "424742332288c0798519aff25bc1dbe7852dd2da8d1cd182fda17fb58c25369d"
+    }
+  ],
+  "rounds": [
+    {
+      "round": 1,
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 8,
+      "diagnosed": 8,
+      "falseAccepts": 0,
+      "falseHolds": 1,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "440b9eff9fbb553d105f62bee07a7b78a1ea792a62f093acbfe6badc7bcaf9b0",
+      "revisionSha256": "ee65867f5876573b3c90050636f1a38192b2e5a8b7702a0eade41b0cd191867f",
+      "feedbackSha256": "14967c2ce27286a796d8fc91efbcd37eb1cf2b2cc703cb195d70336f4ac9c284",
+      "responses": [
+        {
+          "packet": "7596042d8a4a3ed226a835898b6eda91f82422dc475b40e6478538517f1ac139",
+          "response": "e0b363620a3890ca7e42b4c2d202ca303f2585b33533fe389370f884983217f1"
+        },
+        {
+          "packet": "3197e43c34b52dc5993472e04cf9baf311654243d06784a5ca92994908525394",
+          "response": "c80b2cc0fa686e093051c45ae0b9cb0effbfa32ee50237218d22e3249ca49cd0"
+        },
+        {
+          "packet": "550ecc193bc90103eeb8210f8d25a6522c082ba6927e30f0e0797007b8970990",
+          "response": "ee58d7fd463850fd78b5578036e4296aa505a48e3d62ce32f9d9b32c30cff333"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "paraphrase": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "eligible": {
+          "n": 3,
+          "correct": 2,
+          "diagnosed": 2
+        }
+      },
+      "hypothesis": "O erro do controle confunde um eixo compartilhado (escala) com a mesma leitura. A troca do protagonista pode mudar a escolha quando altera a hierarquia e o percurso.",
+      "developmentIds": [
+        "dev-feira-three"
+      ],
+      "addition": "Descreva cada contraste como relação dirigida entre elementos da arte: quem domina, o que serve de apoio, e por onde o olhar entra ou termina. Compartilhar um eixo, por exemplo escala ou densidade, não torna duas soluções equivalentes quando invertem os papéis e isso muda a escolha visual no prompt. Confirme a consequência antes de aceitar. Quando mudarem só as palavras ou a posição nominal sem mudar essa relação, retenha o par.",
+      "prediction": "Recuperar o trio da feira sem passar nenhum dos seis controles recusados de desenvolvimento.",
+      "previousRevisionSha256": null,
+      "errors": [
+        {
+          "id": "dev-troca-three",
+          "reason": "direction",
+          "details": {
+            "position": 1,
+            "direction": "uncertain",
+            "reason": "O cartaz mantém o papel vertical liso e mostra apenas o nome confirmado. O nome pode dominar o caderno sem quebrar a igualdade entre os coautores. O tamanho igual favorece esse equilíbrio, mas o contexto não confirma as cores dos selos. Se a maquete foi selecionada, falta pedir a massa à esquerda e o detalhe à direita no fundo."
+          }
+        }
+      ]
+    },
+    {
+      "round": 2,
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 9,
+      "diagnosed": 9,
+      "falseAccepts": 0,
+      "falseHolds": 0,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "0e3d5dfd3dcf70c654d5b8f1fe59e6d16c59d3b98407014e6652f46f691528b1",
+      "revisionSha256": "a87f38614a24a7d355cb04d333bd9db769e5f8300a0821bf537a24f82f3c8019",
+      "feedbackSha256": "440b9eff9fbb553d105f62bee07a7b78a1ea792a62f093acbfe6badc7bcaf9b0",
+      "responses": [
+        {
+          "packet": "38f1a95a4deb05c1860d2a4e787a19ce25de18a164c510bf91872d49e89d16e9",
+          "response": "88ae4724540ec7e0561b9a0a250adec41f8bc6e851b10cea7cfd189584aeb7c4"
+        },
+        {
+          "packet": "e33335efd662423f17533ecbcc5b088a987d3401c959e2dd9d8103bfec2dfe7a",
+          "response": "b3fcb2f295a658319446db815e1e3420c0c5153f2f2904efa7df04e96e688606"
+        },
+        {
+          "packet": "5162c12dd51ed1c93cca1f8835a4624741fad44a30abcc0e3d6bc2a49c63c6cd",
+          "response": "2a96d88480c57c3452bfbcdb45c28b03e58c4b3db62b0c86243928728e63371d"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "paraphrase": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "eligible": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        }
+      },
+      "hypothesis": "R1 recuperou a inversão de hierarquia da feira. O novo falso bloqueio ocorreu porque o juiz inferiu que uma condição de uso de referência se aplicava sem ver a seleção final.",
+      "developmentIds": [
+        "dev-feira-three",
+        "dev-troca-three"
+      ],
+      "addition": "Separe requisitos incondicionais de cláusulas dependentes de um anexo. A lista de nomes no briefing não demonstra que o arquivo entrou no conjunto final. Quando esta ficha textual não comprova a condição, não marque deriva nem incerteza apenas porque o prompt não descreveu aquele uso opcional. Indique a pendência na justificativa. Continue a marcar drift se o prompt contradiz uma direção obrigatória ou um veto explícito. A triagem e os pixels têm verificação própria.",
+      "prediction": "Recuperar o trio da troca sem perder o da feira, manter a retenção das três quebras expressas de direção e das três paráfrases.",
+      "previousRevisionSha256": "ee65867f5876573b3c90050636f1a38192b2e5a8b7702a0eade41b0cd191867f",
+      "errors": []
+    },
+    {
+      "round": 3,
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 9,
+      "diagnosed": 9,
+      "falseAccepts": 0,
+      "falseHolds": 0,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "691fd77f86e57e837884314488a3775de93458a4fb2ae2a3f43a61b3a0b7fbe3",
+      "revisionSha256": "009e3453c8df3ab2d982058816297e67202c09507810a3c4234488565120b48c",
+      "feedbackSha256": "0e3d5dfd3dcf70c654d5b8f1fe59e6d16c59d3b98407014e6652f46f691528b1",
+      "responses": [
+        {
+          "packet": "60d29ed1c9c73873ac96fb160331d3dc92b3d0394ba8ee5fdf5c3743c6c2af30",
+          "response": "5042fa47193d5d69c6ed358edd356cc9e0982809df1c3ab73adad18970ab663b"
+        },
+        {
+          "packet": "3946f69b77f6a824e696992e179fcbc568a1747fbcd89c588e3148d19c3b7d98",
+          "response": "e6145ee6eb05d57140a829348265b71767cab1c22e2767fa18f2210adc8125ae"
+        },
+        {
+          "packet": "1ce61f2069d28b5bb32441f87f6e3e87f1b33981c5f28927aff57244fa69cb8a",
+          "response": "bc4a6f35e4ed6d4789cb4e2ded65732d43d6c7fd0db697ae75c3ba1a25e2f794"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "paraphrase": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "eligible": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        }
+      },
+      "hypothesis": "R2 identificou as três paráfrases. Em um caso o segundo prompt deixou a posição do título aberta; essa lacuna, em outros julgamentos, poderia ser interpretada como variação deliberada.",
+      "developmentIds": [
+        "dev-troca-paraphrase",
+        "dev-concerto-paraphrase",
+        "dev-feira-three"
+      ],
+      "addition": "Ao comparar o que foi prometido, retire mentalmente os rótulos das rotas e descreva a primeira leitura e a transição até a segunda. Uma peça a mais, outro substantivo para o mesmo papel ou a falta de uma especificação na outra proposta só justificam distinct se houver uma alternativa visível afirmada em ambos os prompts. Na dúvida sobre um detalhe decorativo, descreva a lacuna e avalie os elementos centrais que estão explícitos.",
+      "prediction": "Manter a decisão e o diagnóstico dos nove controles e impedir que detalhes ausentes transformem paráfrases em alternativas.",
+      "previousRevisionSha256": "a87f38614a24a7d355cb04d333bd9db769e5f8300a0821bf537a24f82f3c8019",
+      "errors": []
+    },
+    {
+      "round": 4,
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 9,
+      "diagnosed": 9,
+      "falseAccepts": 0,
+      "falseHolds": 0,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "967ef9b4749ac098b51af33eb6641d098472b02569237a8c0b7314c101078aba",
+      "revisionSha256": "2e04ea810581f21443417b5f05bc34864f50f312feeff029cbf50aa6f1803f4a",
+      "feedbackSha256": "691fd77f86e57e837884314488a3775de93458a4fb2ae2a3f43a61b3a0b7fbe3",
+      "responses": [
+        {
+          "packet": "8b7a29255d6f80c45ddba8824e67a239e2fa27411b2364e632ea4628b58624d6",
+          "response": "1c7114b447d54f2e88414ad3fbd32163d9b6c377350135fe6270b99eee283b28"
+        },
+        {
+          "packet": "f066bffaf0fe78e1df588621f636e46bebb0cd234fd3fdfc8149e6eb8ee2e278",
+          "response": "868cbb3128d8b97ef53ab542a9e316d0eb9e581bb4a4168ded723634f23d4dd8"
+        },
+        {
+          "packet": "ed8a8c2f0bf88598ac33757e889bd9953ffaeca2a2bd733e677fc6e02fbd4c2f",
+          "response": "85a852f19f20fb4ba12c5e0ad3f274ea64fe1432c45de49933c04afde85a7032"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "paraphrase": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "eligible": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        }
+      },
+      "hypothesis": "Nos três controles de deriva de R3, o juiz corretamente reteve o slot; em dois misturou o motivo obrigatório com ressalvas visuais cuja condição não era comprovada. Explicitar o contrafactual deve localizar a violação com mais precisão.",
+      "developmentIds": [
+        "dev-concerto-direction",
+        "dev-feira-direction",
+        "dev-troca-direction"
+      ],
+      "addition": "Para afirmar drift, formate mentalmente um contrafactual local: se corrigirmos o elemento citado, qual compromisso declarado volta a valer? Priorize na justificativa uma transgressão suficiente e apoie-a no trecho literal. Mencione observações condicionais separadamente. Uma diferença visual forte que depende de contrariar uma exigência fixa não oferece uma escolha válida ao criador.",
+      "prediction": "Preservar os nove diagnósticos e dar às três retenções por direção uma causa verificável no próprio pedido, sem tratar condição de anexo como obrigação conhecida.",
+      "previousRevisionSha256": "009e3453c8df3ab2d982058816297e67202c09507810a3c4234488565120b48c",
+      "errors": []
+    },
+    {
+      "round": 5,
+      "split": "dev",
+      "n": 9,
+      "judged": 9,
+      "correct": 9,
+      "diagnosed": 9,
+      "falseAccepts": 0,
+      "falseHolds": 0,
+      "abstentions": 0,
+      "expectedAccept": 3,
+      "expectedReject": 6,
+      "scoreSha256": "d1076855bcd0e10c0b80cb24ca9c52429d96a39ceebc94407b27d2a886338a7f",
+      "revisionSha256": "6a0b1aaa29655f9e943aa2e469488b938b954062007d6619a7bebf6ebd8da3c8",
+      "feedbackSha256": "967ef9b4749ac098b51af33eb6641d098472b02569237a8c0b7314c101078aba",
+      "responses": [
+        {
+          "packet": "b26470abe469f045276c0dfa68abb292b83d502fe861d67493fddd2b6fafa6ac",
+          "response": "957e5ff9ffd26ec4eab150742f5c7a597bc3a3c37753faf4c4a99b447dcea84f"
+        },
+        {
+          "packet": "2ed15a25ee9205f07b575fde35e53d97f0d7502cc1b86a9541f76cbaaa451817",
+          "response": "726fa5e567cc579ebe31d0c1b65b249d77386f023ae33599486a8e7abf1f063e"
+        },
+        {
+          "packet": "e8797b319111006fcb501c81f0e7e22b7d9801d1cbc7e78da28afada7b651aae",
+          "response": "c3a40b73109e97b3d452eee4ca03f9c4efd3248c0632dab2ddc3e858397b4e85"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "paraphrase": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        },
+        "eligible": {
+          "n": 3,
+          "correct": 3,
+          "diagnosed": 3
+        }
+      },
+      "hypothesis": "R4 preservou os nove diagnósticos e descreveu bem, no concerto, o que se vê primeiro em cada opção. Generalizar esse contraste em linguagem de escolha pode tornar o motivo legível ao criador e evitar aprovar distinções que existem apenas no metadado.",
+      "developmentIds": [
+        "dev-concerto-three",
+        "dev-feira-three",
+        "dev-troca-paraphrase"
+      ],
+      "addition": "Feche a comparação com uma escolha que alguém consiga apontar numa miniatura: em uma rota a pessoa veria primeiro X e chegaria a Y; na outra veria primeiro W e chegaria a Z, quando esse percurso for de fato a diferença. Também pode contrastar dois outros resultados espaciais observáveis. Sustente a explicação nos dois trechos. Se só houver nomes técnicos ou adjetivos para separar as opções, explique o que continua visualmente igual. Não atribua uma preferência ao criador.",
+      "prediction": "Manter os nove diagnósticos e explicar as diferenças ou repetições por elementos e leitura perceptíveis; depois conferir esse comportamento nos seis controles reservados.",
+      "previousRevisionSha256": "2e04ea810581f21443417b5f05bc34864f50f312feeff029cbf50aa6f1803f4a",
+      "errors": []
+    }
+  ],
+  "holdout": [
+    {
+      "round": 5,
+      "split": "holdout-repeat",
+      "n": 6,
+      "judged": 6,
+      "correct": 4,
+      "diagnosed": 3,
+      "falseAccepts": 0,
+      "falseHolds": 2,
+      "abstentions": 0,
+      "expectedAccept": 2,
+      "expectedReject": 4,
+      "scoreSha256": "5faff82d563760db156a774927201e186a03b54d5dfa0000c62d75a8acb75aeb",
+      "revisionSha256": "6a0b1aaa29655f9e943aa2e469488b938b954062007d6619a7bebf6ebd8da3c8",
+      "feedbackSha256": "967ef9b4749ac098b51af33eb6641d098472b02569237a8c0b7314c101078aba",
+      "responses": [
+        {
+          "packet": "a4bee88845d9b78c87b2c576612cc822c7f13b93c4188aceb6dc92081a0c9bf9",
+          "response": "8ec597c667a205f35cd469d8c77387d5c3350f104797563bfc66c3c806f3b445"
+        },
+        {
+          "packet": "ca90a04f1bcd79e33308cd5254af466b7f5d98802183793a8041b8eb8c86e7a1",
+          "response": "22331dd7afd6a0ffa14600e92929c062dd31bf56a35ac38bc44546d8d141e7a4"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 2,
+          "correct": 2,
+          "diagnosed": 2
+        },
+        "paraphrase": {
+          "n": 2,
+          "correct": 2,
+          "diagnosed": 1
+        },
+        "eligible": {
+          "n": 2,
+          "correct": 0,
+          "diagnosed": 0
+        }
+      },
+      "errors": [
+        {
+          "id": "reserva-cais-three",
+          "reason": "insufficient_divergence",
+          "details": {
+            "left": 1,
+            "right": 3,
+            "contrast": "equivalent",
+            "structure": "distinct",
+            "choice": "As duas usam a diferença de escala entre nome e arco. Inverter qual deles domina muda a leitura da placa. Na primeira, lê-se até chegar ao arco pequeno. Na terceira, reconhece-se primeiro o arco central e depois lê-se a legenda abaixo."
+          }
+        },
+        {
+          "id": "reserva-sementes-paraphrase",
+          "reason": "direction",
+          "details": {
+            "position": 2,
+            "direction": "drift",
+            "reason": "O corte botânico cabe na área livre da capa. A legenda, porém, pede uma identificação do núcleo além de “Catálogo de sementes” e “Volume 04”, em conflito com a lista de texto visível."
+          }
+        },
+        {
+          "id": "reserva-sementes-three",
+          "reason": "direction",
+          "details": {
+            "position": 3,
+            "direction": "drift",
+            "reason": "O corte transversal cabe na direção botânica. A instrução de desenhar uma legenda para o núcleo introduz uma função textual além do nome e da edição, embora a lista de texto visível contenha apenas esses dois itens. O prompt deixa indefinido o conteúdo dessa legenda."
+          }
+        }
+      ]
+    },
+    {
+      "round": 5,
+      "split": "holdout",
+      "n": 6,
+      "judged": 6,
+      "correct": 5,
+      "diagnosed": 4,
+      "falseAccepts": 0,
+      "falseHolds": 1,
+      "abstentions": 0,
+      "expectedAccept": 2,
+      "expectedReject": 4,
+      "scoreSha256": "f9eb80f9a00115a09276a5aecc89ae21088f8e0dfd1d5f4edc67cc65bb719908",
+      "revisionSha256": "6a0b1aaa29655f9e943aa2e469488b938b954062007d6619a7bebf6ebd8da3c8",
+      "feedbackSha256": "967ef9b4749ac098b51af33eb6641d098472b02569237a8c0b7314c101078aba",
+      "responses": [
+        {
+          "packet": "5fa52f9e662966a4f71f02719b7b5c348692952db5786085a7c9686c6fcc57ae",
+          "response": "32e6a0b9e3db491d13896332a9894ea1f7df73a671d06151936987a09184e774"
+        },
+        {
+          "packet": "5f81893c57302f96fe2fdd4e6488abdf7513be519152ab1585094f4e01f202cf",
+          "response": "9fb341f8176c8c1f927a59af273a6f6bf2a1bbc6d261ffa70a2423a45fa1afa1"
+        }
+      ],
+      "byType": {
+        "direction": {
+          "n": 2,
+          "correct": 2,
+          "diagnosed": 2
+        },
+        "paraphrase": {
+          "n": 2,
+          "correct": 2,
+          "diagnosed": 1
+        },
+        "eligible": {
+          "n": 2,
+          "correct": 1,
+          "diagnosed": 1
+        }
+      },
+      "errors": [
+        {
+          "id": "reserva-sementes-paraphrase",
+          "reason": "direction",
+          "details": {
+            "position": 2,
+            "direction": "drift",
+            "reason": "Além do nome no alto e da edição, a instrução pede uma legenda para identificar o núcleo. A lista final de textos e os fatos acrescentados no despacho não cancelam essa ordem. Retirar a legenda restabelece a restrição a nome e edição e preserva o corte ampliado. O uso do cartão frio depende da seleção do anexo."
+          }
+        },
+        {
+          "id": "reserva-sementes-three",
+          "reason": "direction",
+          "details": {
+            "position": 3,
+            "direction": "drift",
+            "reason": "A instrução pede uma legenda para explicar o corte, embora a lista de texto visível só autorize nome e edição. Suprimir essa legenda restabelece o limite textual e ainda permite desenhar a semente ampliada. A seleção do cartão frio é uma pendência independente."
+          }
+        }
+      ]
+    }
+  ],
+  "newSessions": 19
+}
