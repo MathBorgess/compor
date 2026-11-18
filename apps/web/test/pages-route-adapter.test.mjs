@@ -105,3 +105,58 @@ test('linhas Cookie separadas têm a semântica HTTP do Node no jar do handler',
   });
   assert.deepEqual(values,[{name:'account',value:'alice'},{name:'session',value:'example'}]);
 });
+
+test('POST já desconectado entra no handler com sinal abortado, preserva o motivo e omite o corpo', async t => {
+  for (const failure of [undefined, new Error('socket encerrado')]) {
+    await t.test(failure ? 'com erro de transporte' : 'sem erro de transporte', async t => {
+      const observed = Promise.withResolvers();
+      let submissions = 0;
+      const dispatch = pagesRoute('/api/images', {
+        POST(request) {
+          if (!request.signal.aborted) submissions++;
+          observed.resolve({aborted: request.signal.aborted, reason: request.signal.reason, body: request.body});
+          return new Response(null, {status: 204});
+        },
+      });
+      const server = createServer((request, response) => {
+        response.once('close', () => { void dispatch(request, response).catch(observed.reject); });
+        // Mark this actual ServerResponse errored, or simply close its socket before dispatch.
+        response.destroy(failure);
+      });
+      server.listen(0, '127.0.0.1');
+      await once(server, 'listening');
+      t.after(() => new Promise(resolve => server.close(resolve)));
+      const req = httpRequest({hostname: '127.0.0.1', port: server.address().port, method: 'POST'}, res => res.resume());
+      req.on('error', () => {});
+      req.end('synthetic');
+      const result = await observed.promise;
+      assert.equal(result.aborted, true);
+      assert.equal(result.body, null);
+      assert.equal(submissions, 0);
+      if (failure) assert.equal(result.reason, failure);
+      else assert.equal(result.reason.name, 'ResponseAborted');
+    });
+  }
+});
+
+test('desconexão entre a entrada e o envio fica visível antes de submeter', async t => {
+  const entered = Promise.withResolvers();
+  const checked = Promise.withResolvers();
+  let submissions = 0;
+  const origin = await listen(t, '/api/images', {
+    async POST(request) {
+      entered.resolve(request.signal.aborted);
+      await once(request.signal, 'abort');
+      if (!request.signal.aborted) submissions++;
+      checked.resolve(request.signal.reason.name);
+      return new Response(null, {status: 204});
+    },
+  });
+  const req = httpRequest(origin + '/api/images', {method: 'POST'});
+  req.on('error', () => {});
+  req.end('synthetic');
+  assert.equal(await entered.promise, false);
+  req.destroy();
+  assert.equal(await checked.promise, 'ResponseAborted');
+  assert.equal(submissions, 0);
+});

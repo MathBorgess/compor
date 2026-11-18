@@ -110,10 +110,15 @@ export function pagesRoute(route: string, handlers: Methods) {
       else if (value !== undefined) headers.append(name, value);
     }
     const controller = new AbortController();
-    const abort = () => { if (!res.writableFinished) controller.abort(); };
+    const abort = () => {
+      const reason = res.errored ?? Object.assign(new Error(), { name: 'ResponseAborted' });
+      controller.abort(reason);
+    };
+    const onClose = () => { if (!res.writableFinished) abort(); };
     req.once('aborted', abort);
-    res.once('close', abort);
-    const body = method !== 'GET' && method !== 'HEAD' ? incomingBody(req) : undefined;
+    res.once('close', onClose);
+    if (res.destroyed || res.errored || req.aborted) abort();
+    const body = !controller.signal.aborted && method !== 'GET' && method !== 'HEAD' ? incomingBody(req) : undefined;
     try {
       const request = new NextRequest(url, {
         method, headers, signal: controller.signal, ...(body && { body: body.stream, duplex: 'half' }),
@@ -125,7 +130,7 @@ export function pagesRoute(route: string, handlers: Methods) {
     } finally {
       body?.release();
       req.off('aborted', abort);
-      res.off('close', abort);
+      res.off('close', onClose);
     }
   };
 }
