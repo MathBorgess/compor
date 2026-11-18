@@ -2,7 +2,13 @@
 const nextConfig = {
   agentRules: false,
   // Reduce production chunk overhead; see the measured cache trade-off in docs/quality.
-  experimental: { turbopackCjsTreeShaking: true, turbopackChunking: { minChunkSize: 1000000, maxMergeChunkSize: 3000000 } },
+  experimental: {
+    turbopackCjsTreeShaking: true,
+    turbopackChunking: { minChunkSize: 1000000, maxMergeChunkSize: 3000000 },
+    // The studio has one page. Project and post history use the browser History API.
+    optimisticRouting: false,
+    prefetchInlining: false,
+  },
   // Browser tests run two files at once; test/next-dist-dir.mjs gives each its own dist dir.
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
   // Project and post URLs render the single studio page; lib/studio-route.ts reads the path on the client.
