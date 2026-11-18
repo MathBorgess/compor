@@ -25,3 +25,15 @@ test('reserva vincula hash e finalização comprovada usa segredo apenas na RPC 
  assert.equal(calls[1].path,'/rest/v1/rpc/complete_exploration_image_proven');assert.equal(calls[1].body.p_rejection_secret,secret);
  assert.ok(calls.every(call=>call.auth==='Bearer session-token'));
 });
+
+test('encerramento local conserva o resultado incerto no contrato serial',async()=>{
+ const entry={id:id(3),project_id:id(2),state:'closed_unknown',created_at:'2026-11-17T09:45:07Z',ordinal:15,batch_id:id(4),batch_position:1};
+ const store=createExplorationImageStore(config,async(url,options)=>{
+  assert.equal(options.headers.authorization,'Bearer session-token');
+  if(url.pathname==='/rest/v1/exploration_images')return Response.json([entry]);
+  assert.equal(url.pathname,'/rest/v1/rpc/reserve_exploration_image_batched_proven');
+  return Response.json([{state:'closed_unknown',is_new:false}]);
+ });
+ assert.deepEqual(await store.list(actor,id(2)),[{...entry,state:'unknown'}]);
+ assert.deepEqual(await store.reserve(actor,id(2),id(3),'a'.repeat(64),'b'.repeat(64),{id:id(4),position:1}),{state:'unknown',isNew:false});
+});

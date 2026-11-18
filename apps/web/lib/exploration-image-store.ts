@@ -3,8 +3,12 @@ import type { Actor } from './agent-auth.ts';
 import type { AuthConfig } from './supabase.ts';
 import { explorationImageRecordSchema, type ExplorationStore } from './exploration-image-route.ts';
 
-const reservation=z.array(z.object({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback']),is_new:z.boolean()})).length(1);
-const entries=z.array(explorationImageRecordSchema).max(101);
+// The serial HTTP contract describes the provider outcome. A local closure
+// releases admission but cannot turn that outcome into a confirmed rejection.
+const serialOutcome=explorationImageRecordSchema.shape.state.or(z.literal('closed_unknown'))
+  .transform(state=>state==='closed_unknown'?'unknown':state);
+const reservation=z.array(z.object({state:serialOutcome.or(z.enum(['busy','blocked','awaiting_feedback'])),is_new:z.boolean()})).length(1);
+const entries=z.array(explorationImageRecordSchema.extend({state:serialOutcome})).max(101);
 const uuid=/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 async function readBounded(response:Response):Promise<Buffer> {
   const length=response.headers.get('content-length');

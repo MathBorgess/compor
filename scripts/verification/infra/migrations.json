@@ -162,6 +162,10 @@
     {
       "name": "20261118000040_reconcile_reserved_image_tool_call.sql",
       "sha256": "f720b0442b5b7857685d311dcdba4ca0a1405577f6097b5aa23bdec1d6978934"
+    },
+    {
+      "name": "20261118000041_close_uncertain_serial_exploration.sql",
+      "sha256": "2f1b7a695b9ce419368d180a0c65cdb0e2b9b75a1f617275482db8eb15fb86d5"
     }
   ]
 }
