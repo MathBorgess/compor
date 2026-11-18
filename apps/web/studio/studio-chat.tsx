@@ -815,7 +815,6 @@ export default function StudioChat({
       if(!message.trim())setMessage(QUICK_REPLY_ADJUST_PREFIX);
       const field=composerRef.current;
       if(field&&!field.disabled)field.focus();
-      requestAnimationFrame(()=>{const current=composerRef.current;if(current&&document.activeElement===current)current.setSelectionRange(current.value.length,current.value.length);});
       return;
     }
     if(quickReplyStatus(entry,conversationMessages(getState(),conversationId),quickReplyContext()).kind!=='active')return;
