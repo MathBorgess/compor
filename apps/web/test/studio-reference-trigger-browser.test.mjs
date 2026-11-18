@@ -30,12 +30,13 @@ function choose(fn){change(fn);recordReferenceRound(current.current);}
 return <main><button onClick={()=>setKey(true)}>Conectar</button><button onClick={()=>setVisible(false)}>Fechar referências</button><button onClick={()=>setVisible(true)}>Abrir referências</button><button onClick={()=>choose(s=>addReference(s,reference('${second}')))}>Selecionar outra</button><button onClick={()=>{change(s=>addReference(s,reference('${second}')));setTimeout(()=>recordReferenceRound(current.current),6500);}}>Persistência lenta</button><button onClick={()=>choose(s=>addReference(s,reference('${first}')))}>Selecionar primeira</button><button onClick={()=>choose(s=>removeReference(removeReference(s,'${first}'),'${second}'))}>Limpar seleção</button><button onClick={()=>change(s=>updateBrief(s,{offer:'Uma oferta diferente'}))}>Alterar oferta</button><output id="snapshot">{JSON.stringify(state)}</output>
 <output aria-label="Espera de seleção">{waiting?"estabilizando":"ociosa"}</output><div hidden={!visible}><StudioChat {...(authorityMode?{checkReferenceAuthority:async()=>{window.authorityCheck++;if(params.has('revoked')&&window.authorityCheck===3)await new Promise(resolve=>{window.releaseAuthority=resolve;});return true;},createVisualAuthoritySnapshot:async(scope,manifest)=>{window.authorityEvents.push({op:'snapshot',scope,manifest,saved:Boolean(await window.loadVisual(scope.requestId))});},visualAuthorityHeaders:async(scope)=>{window.authorityEvents.push({op:'headers',scope});return {'x-compor-reference-consent':'A'.repeat(43)};}}:{})} onReferenceWait={reportWait} state={state} conversationId="references" selectedVisualsAvailable={visualMode} selectedVisualsRequired={location.search==='?required'} allowReferenceAnalysis={visible} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey={key} getApiKey={()=>key?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} loadReference={async id=>({file,metadata:reference(id)})} onUseImage={async()=>true}/></div></main>}
 createRoot(document.getElementById('root')).render(<Fixture/>);`;
-async function setup(t,{feedbackDelayMs=0}={}){
+async function setup(t,{feedbackDelayMs=0,virtualTime=false}={}){
  const result=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},alias:{'@compor/agile-deliberation/readiness':fileURLToPath(new URL('../../../packages/agile-deliberation/src/readiness.js',import.meta.url))},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022',jsx:'automatic',define:{'process.env.NODE_ENV':'"test"'}});
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('Content-Type','text/javascript');res.end(result.outputFiles[0].text);}else if(req.url?.endsWith('.svg')){res.setHeader('Content-Type','image/svg+xml');res.end('<svg xmlns="http://www.w3.org/2000/svg"/>');}else{res.setHeader('Content-Type','text/html');res.end('<div id="root"></div><script type="module" src="/fixture.js"></script>');}});
  await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`;
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
  const context=await browser.newContext(),page=await context.newPage();page.setDefaultTimeout(7000);const calls=[],pinSignals=[],dispatches=new EventEmitter();let answer='completed',release,delayedFeedback=false;
+ if(virtualTime)await page.clock.install();
  await context.route('**/api/studio/**/signals',async route=>{if(feedbackDelayMs&&!delayedFeedback){delayedFeedback=true;await new Promise(resolve=>setTimeout(resolve,feedbackDelayMs));}return route.fulfill({json:{signals:route.request().url().includes('/references/')?pinSignals:[]}});});
  await page.context().route('**/api/studio/chat',async route=>{const body=route.request().postDataJSON();if(route.request().headers()['x-compor-reference-consent'])body.testAuthorityHeader=route.request().headers()['x-compor-reference-consent'];if(body.visualInput)body.snapshotBeforeDispatch=await page.evaluate(async id=>Boolean(await window.loadVisual(id)),body.requestId);calls.push(body);dispatches.emit('dispatch');if(answer==='unknown')return route.abort('failed');if(answer==='hold')await new Promise(resolve=>{release=resolve;});return route.fulfill({json:{status:'completed',text:'As referências parecem editoriais.\n\n**Recomendação:** Uma direção sóbria, porque combina com a oferta.\n\nPosso seguir pela direção sóbria?'}});});
  function waitForCalls(count,timeoutMs=7000){
@@ -49,6 +50,17 @@ async function setup(t,{feedbackDelayMs=0}={}){
  }
  const waitForAnswer=count=>page.getByText('Posso seguir pela direção sóbria?',{exact:true}).nth(count-1).waitFor();
  return {page,calls,origin,pinSignals,waitForCalls,waitForAnswer,unknown:()=>{answer='unknown';},hold:()=>{answer='hold';},release:()=>{answer='completed';release?.();}};
+}
+
+async function advanceScheduledReading(page) {
+  await page.getByLabel('Espera de seleção').filter({hasText:'estabilizando'}).waitFor();
+  await page.clock.runFor(5000);
+}
+
+async function finishReadingWindow(page, milliseconds = 5500) {
+  await page.clock.runFor(milliseconds);
+  // Aguarde a leitura que o timer possa ter iniciado, incluindo seu POST assíncrono.
+  await page.evaluate(lock => navigator.locks.request(lock, () => {}), `compor-reference-review:${user}:${project}:references`);
 }
 test('mensagem de texto inclui o PNG selecionado com os bytes originais pequenos',{skip:!existsSync(browserPath),timeout:20000},async t=>{
  const {page,calls,origin,waitForCalls}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();
@@ -83,8 +95,8 @@ test('erro na persistência visual impede envio e conserva texto',{skip:!existsS
  await page.waitForTimeout(800);assert.equal(calls.length,0);assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Crie com esta imagem');
 });
 test('origem legada desconhecida não dispara análise visual automática',{skip:!existsSync(browserPath),timeout:15000},async t=>{
- const {page,calls,origin}=await setup(t);await page.goto(`${origin}/?visual=1&legacy=1`);await page.getByRole('button',{name:'Conectar'}).click();
- await page.waitForTimeout(5800);assert.equal(calls.length,0);
+ const {page,calls,origin}=await setup(t,{virtualTime:true});await page.goto(`${origin}/?visual=1&legacy=1`);await page.getByRole('button',{name:'Conectar'}).click();
+ await finishReadingWindow(page,5800);assert.equal(calls.length,0);
  const snapshot=JSON.parse(await page.locator('#snapshot').textContent());assert.equal(snapshot.references.length,1);assert.equal(snapshot.references[0].source,undefined);
 });
 test('capacidade visual incompleta bloqueia envio e preserva rascunho',{skip:!existsSync(browserPath),timeout:15000},async t=>{
@@ -94,18 +106,18 @@ test('capacidade visual incompleta bloqueia envio e preserva rascunho',{skip:!ex
  await page.getByLabel('Sua mensagem').press('Enter');await page.waitForTimeout(300);assert.equal(calls.length,0);assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'Rascunho preservado');
 });
 test('seleção existente espera digitação, inicia uma vez e não repete em reload',{skip:!existsSync(browserPath),timeout:45000},async t=>{
- const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');
- await page.waitForTimeout(5500);assert.equal(calls.length,0);
- await page.getByLabel('Sua mensagem').fill('');await waitForCalls(1);await waitForAnswer(1);
+ const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t,{virtualTime:true});await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByLabel('Sua mensagem').fill('Estou escrevendo');
+ await finishReadingWindow(page);assert.equal(calls.length,0);
+ await page.getByLabel('Sua mensagem').fill('');await advanceScheduledReading(page);await waitForCalls(1);await waitForAnswer(1);
  assert.equal(calls.length,1);assert.equal(calls[0].op,'reference_selection');assert.equal('message' in calls[0],false);assert.equal(calls[0].referenceImages.length,1);
  const snapshot=JSON.parse(await page.locator('#snapshot').textContent());assert.equal(snapshot.messages.filter(x=>x.role==='user').length,0);assert.equal(snapshot.messages.filter(x=>x.role==='assistant').length,1);
- await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,1);
+ await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await finishReadingWindow(page);assert.equal(calls.length,1);
 });
 test('remover todas as referências cancela a espera e resultado incerto não é reenviado',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- const {page,calls,origin,unknown,waitForCalls}=await setup(t,{feedbackDelayMs:900});await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Limpar seleção'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,0);
- await page.reload();unknown();await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Selecionar outra'}).click();await waitForCalls(1);assert.equal(calls.length,1);assert.equal(calls[0].referenceImages.length,2);
- await page.getByRole('button',{name:'Limpar seleção'}).click();await page.getByRole('button',{name:'Selecionar primeira'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,1,'seleção nova não contorna resultado incerto');
- await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,1);
+ const {page,calls,origin,unknown,waitForCalls}=await setup(t,{feedbackDelayMs:900,virtualTime:true});await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Limpar seleção'}).click();await finishReadingWindow(page);assert.equal(calls.length,0);
+ await page.reload();unknown();await page.getByRole('button',{name:'Conectar'}).click();await page.getByRole('button',{name:'Selecionar outra'}).click();await advanceScheduledReading(page);await waitForCalls(1);assert.equal(calls.length,1);assert.equal(calls[0].referenceImages.length,2);
+ await page.getByRole('button',{name:'Limpar seleção'}).click();await page.getByRole('button',{name:'Selecionar primeira'}).click();await finishReadingWindow(page);assert.equal(calls.length,1,'seleção nova não contorna resultado incerto');
+ await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await finishReadingWindow(page);assert.equal(calls.length,1);
 });
 
 test('abas concorrentes enviam uma única iniciativa para o mesmo conjunto',{skip:!existsSync(browserPath),timeout:30000},async t=>{
@@ -122,14 +134,14 @@ test('resposta de seleção alterada durante o turno não aparece como atual',{s
 });
 
 test('comentário já registrado acompanha nova análise e não provoca repetição após reload',{skip:!existsSync(browserPath),timeout:20000},async t=>{
- const {page,calls,origin,pinSignals,waitForCalls,waitForAnswer}=await setup(t);pinSignals.push({id:id(7),projectId:project,originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography',action:'comment',comment:'Prefiro essa tipografia editorial',supersedes:null,createdAt:'2026-11-06T12:00:00.000Z'});
- await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);assert.equal(calls[0].context.referenceFeedback[0].text,'Prefiro essa tipografia editorial');await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await page.waitForTimeout(5500);assert.equal(calls.length,1);
+ const {page,calls,origin,pinSignals,waitForCalls,waitForAnswer}=await setup(t,{virtualTime:true});pinSignals.push({id:id(7),projectId:project,originUrl:'https://www.pinterest.com/pin/123/',board:'behance/typography',action:'comment',comment:'Prefiro essa tipografia editorial',supersedes:null,createdAt:'2026-11-06T12:00:00.000Z'});
+ await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await advanceScheduledReading(page);await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);assert.equal(calls[0].context.referenceFeedback[0].text,'Prefiro essa tipografia editorial');await page.reload();await page.getByRole('button',{name:'Conectar'}).click();await finishReadingWindow(page);assert.equal(calls.length,1);
 });
 
 test('nova oferta ou limpar e remarcar a mesma imagem iniciam nova rodada',{skip:!existsSync(browserPath),timeout:35000},async t=>{
- const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t);await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);
- await page.getByRole('button',{name:'Alterar oferta'}).click();await waitForCalls(2);await waitForAnswer(2);assert.equal(calls.length,2);assert.equal(calls[1].context.brief.offer,'Uma oferta diferente');
- await page.getByRole('button',{name:'Limpar seleção'}).click();await page.getByRole('button',{name:'Selecionar primeira'}).click();await waitForCalls(3);assert.equal(calls.length,3);assert.equal(calls[2].context.references[0].id,first);
+ const {page,calls,origin,waitForCalls,waitForAnswer}=await setup(t,{virtualTime:true});await page.goto(origin);await page.getByRole('button',{name:'Conectar'}).click();await advanceScheduledReading(page);await waitForCalls(1);await waitForAnswer(1);assert.equal(calls.length,1);
+ await page.getByRole('button',{name:'Alterar oferta'}).click();await advanceScheduledReading(page);await waitForCalls(2);await waitForAnswer(2);assert.equal(calls.length,2);assert.equal(calls[1].context.brief.offer,'Uma oferta diferente');
+ await page.getByRole('button',{name:'Limpar seleção'}).click();await page.getByRole('button',{name:'Selecionar primeira'}).click();await advanceScheduledReading(page);await waitForCalls(3);assert.equal(calls.length,3);assert.equal(calls[2].context.references[0].id,first);
 });
 test('pedido explícito é enviado sem recomendação interna contraditória',{skip:!existsSync(browserPath),timeout:15000},async t=>{
  const {page,calls,origin}=await setup(t);await page.goto(origin);await page.getByLabel('Sua mensagem').fill('Gere uma peça agora');await page.getByRole('button',{name:'Conectar'}).click();

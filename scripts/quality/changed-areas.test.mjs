@@ -68,7 +68,7 @@ test('the gate fails on any failure, cancellation or missing job', () => {
   assert.equal(gateFailures({}).length, 4);
 });
 
-test('the CLI diffs both sides of a rename and writes job outputs', async t => {
+test('the CLI only waives static checks for a known documentation or skill PR', async t => {
   const dir = await mkdtemp(join(tmpdir(), 'compor-changed-areas-'));
   t.after(() => rm(dir, { recursive: true, force: true }));
   const git = (...args) => {
@@ -83,17 +83,36 @@ test('the CLI diffs both sides of a rename and writes job outputs', async t => {
   const base = git('rev-parse', 'HEAD');
   await mkdir(join(dir, 'docs'));
   git('mv', 'apps/site/page.astro', 'docs/page.md'); git('commit', '--quiet', '-m', 'move');
-  const head = git('rev-parse', 'HEAD');
+  const moved = git('rev-parse', 'HEAD');
   const run = (env, ...args) => {
-    const output = join(dir, `output-${Math.random()}`);
+    const output = join(dir, '.git', `output-${Math.random()}`);
     const result = spawnSync(process.execPath, [join(import.meta.dirname, 'changed-areas.mjs'), ...args], { cwd: dir, encoding: 'utf8', env: { PATH: process.env.PATH, GITHUB_OUTPUT: output, ...env } });
     assert.equal(result.status, 0, result.stderr);
     return readFile(output, 'utf8');
   };
-  assert.equal(await run({ GITHUB_EVENT_NAME: 'pull_request', BASE_SHA: base, HEAD_SHA: head }), 'web=false\nunit=false\nsite=true\n');
-  assert.equal(await run({}, base, head), 'web=false\nunit=false\nsite=true\n');
-  assert.equal(await run({ GITHUB_EVENT_NAME: 'push' }), 'web=true\nunit=true\nsite=true\n');
-  assert.equal(await run({ GITHUB_EVENT_NAME: 'pull_request', BASE_SHA: 'f'.repeat(40), HEAD_SHA: head }), 'web=true\nunit=true\nsite=true\n');
+  const pullRequest = (from, to) => run({ GITHUB_EVENT_NAME: 'pull_request', BASE_SHA: from, HEAD_SHA: to });
+  const outputs = (web, unit, site, staticChecks) => `web=${web}\nunit=${unit}\nsite=${site}\nstatic_checks=${staticChecks}\n`;
+  const full = outputs(true, true, true, true);
+  assert.equal(await pullRequest(base, moved), outputs(false, false, true, true), 'a rename must classify the old path too');
+  assert.equal(await run({}, base, moved), outputs(false, false, true, true));
+  assert.equal(await pullRequest('f'.repeat(40), moved), full);
+  assert.equal(await pullRequest(moved, moved), outputs(false, false, false, true));
+
+  await mkdir(join(dir, '.agents/skills/example'), { recursive: true });
+  await writeFile(join(dir, '.agents/skills/example/SKILL.md'), 'skill\n');
+  await writeFile(join(dir, 'README.md'), 'readme\n');
+  const markdown = process.platform === 'win32' ? 'área com espaços.md' : 'área\ncom espaços.md';
+  await writeFile(join(dir, 'docs', markdown), 'note\n');
+  git('add', '.'); git('commit', '--quiet', '-m', 'documentation and skills');
+  const documented = git('rev-parse', 'HEAD');
+  assert.equal(await pullRequest(moved, documented), outputs(false, false, false, false));
+  assert.equal(await run({}, moved, documented), outputs(false, false, false, true));
+  assert.equal(await run({ GITHUB_EVENT_NAME: 'workflow_dispatch' }, moved, documented), full);
+
+  const unknownFormat = process.platform === 'win32' ? 'not-markdown.md.txt' : 'not-markdown.md\n';
+  await writeFile(join(dir, 'docs', unknownFormat), 'unknown format\n');
+  git('add', '.'); git('commit', '--quiet', '-m', 'non-Markdown path');
+  assert.equal(await pullRequest(moved, git('rev-parse', 'HEAD')), outputs(false, true, false, true));
 });
 
 test('the gate CLI exits non-zero unless every required job passed', () => {

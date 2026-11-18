@@ -356,6 +356,7 @@ test('referência escolhida preserva origem e acompanha o próximo turno da conv
 
 test('pergunta do turno de seleção pausa a exploração até a pessoa responder ou pedir mais', {skip: !existsSync(browserPath), timeout: 90000}, async t => {
   const {page, origin, errors,images} = await app(t, {withReferences:true});
+  await page.clock.install();
   const selections=[],generations=[];
   await page.route(url=>url.pathname==='/api/studio/chat',route=>{const body=route.request().postDataJSON();if(body.op!=='reference_selection')return route.fallback();selections.push(body);return route.fulfill({status:202,json:{status:'completed',text:'As referências pedem uma tipografia editorial.\n\n**Recomendação:** Siga pela serifada, porque conversa com quem faz cerâmica.\n\nPosso seguir pela serifada?'}});});
   await page.route(url=>url.pathname==='/api/studio/explorations',route=>{if(route.request().method()!=='POST')return route.fallback();const body=route.request().postDataJSON();generations.push(body);images.unshift({id:body.requestId,project_id:body.projectId,state:'completed',created_at:'2026-11-15T12:00:00.000Z',ordinal:Math.max(0,...images.map(item=>item.ordinal))+1,batch_id:body.batch.id,batch_position:body.batch.position});return route.fulfill({json:{status:'completed',requestId:body.requestId}});});
@@ -376,7 +377,8 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.getByText('Posso seguir pela serifada?',{exact:true}).waitFor();
   assert.equal(selections.length,1);
   const held=generations.length;assert.ok(held>0,'a exploração já gerava antes da pergunta');
-  await page.waitForTimeout(17000);
+  await page.clock.runFor(17000);
+  await recovery.getByText('A exploração aguarda sua resposta no chat.').waitFor();
   assert.equal(generations.length,held,'nenhum lote começa enquanto a pergunta aguarda resposta');
   await recovery.getByRole('button',{name:'Gerar mais propostas'}).click();
   await recovery.waitFor({state:'detached'});await page.getByRole('button',{name:'Voltar às imagens',exact:true}).click();

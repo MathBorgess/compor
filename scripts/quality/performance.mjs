@@ -1,4 +1,4 @@
-import { access, mkdir, readFile, readdir, writeFile } from 'node:fs/promises';
+import { access, mkdir, readFile, readdir, unlink, writeFile } from 'node:fs/promises';
 import { constants } from 'node:fs';
 import { spawn, execFileSync } from 'node:child_process';
 import { once } from 'node:events';
@@ -8,18 +8,17 @@ import { gzipSync } from 'node:zlib';
 import { cpus, loadavg, platform, arch } from 'node:os';
 import lighthouse from 'lighthouse';
 import { launch } from 'chrome-launcher';
-import { summarizeRuns, budgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
+import { summarizeRuns, budgetFailures, bundleBudgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
 
 const root = resolve(import.meta.dirname, '../..');
 const app = resolve(root, 'apps/web');
 const output = resolve(root, 'quality-results/performance');
 const budgets = JSON.parse(await readFile(new URL('./budgets.json', import.meta.url), 'utf8'));
 if (!Number.isInteger(budgets.runs) || budgets.runs < 3 || budgets.runs > 9 || budgets.runs % 2 !== 1) throw Error('Use an odd number of Lighthouse runs between 3 and 9.');
-const browser = process.env.BROWSER_EXECUTABLE_PATH;
-if (!browser) throw Error('Set BROWSER_EXECUTABLE_PATH to an installed Chromium executable.');
-await access(browser, constants.X_OK);
 await access(resolve(app, '.next/BUILD_ID'));
 await mkdir(output, { recursive: true });
+const previousReports = (await readdir(output)).filter(name => /^run-[1-9]\.(json|html)$/.test(name));
+await Promise.all(previousReports.map(name => unlink(resolve(output, name))));
 
 const socket = createServer();
 await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
@@ -72,6 +71,16 @@ try {
     initialFiles,
   };
   await writeFile(resolve(output, 'bundle.json'), `${JSON.stringify(bundle, null, 2)}\n`);
+  report = { ...report, bundle };
+  const bundleFailures = bundleBudgetFailures(bundle, budgets);
+  if (bundleFailures.length) {
+    report = { ...report, runs: 0, failures: bundleFailures, lighthouseSkipped: 'bundle-budget' };
+    throw Error(`Performance budget failed. ${bundleFailures.join('; ')}`);
+  }
+
+  const browser = process.env.BROWSER_EXECUTABLE_PATH;
+  if (!browser) throw Error('Set BROWSER_EXECUTABLE_PATH to an installed Chromium executable.');
+  await access(browser, constants.X_OK);
   chrome = await launch({ chromePath: browser, chromeFlags: ['--headless=new', '--disable-dev-shm-usage'], logLevel: 'error' });
   const results = [];
   for (let index = 0; index < budgets.runs; index++) {

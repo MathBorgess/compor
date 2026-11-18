@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { summarizeRuns, budgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
+import { summarizeRuns, budgetFailures, bundleBudgetFailures, summarizeDiagnostics, entryScripts } from './performance-report.mjs';
 
 const run = (lcp = 1000) => ({ finalDisplayedUrl: 'http://127.0.0.1:3000/', audits: {
   'network-requests': { details: { items: [{ url: 'http://127.0.0.1:3000/', resourceType: 'Document', statusCode: 200, finished: true }] } },
@@ -28,9 +28,22 @@ test('one noisy run is reported while sustained regression fails the budget', ()
   assert.equal(budgetFailures({}, report, { largestContentfulPaintMs: 1300 }).length, 0);
 });
 
-test('missing or oversized bundles cannot pass the budget', () => {
-  assert.equal(budgetFailures({}, {}, { initialJavascriptGzipBytes: 100 }).length, 1);
-  assert.equal(budgetFailures({ initialJavascriptGzipBytes: 101 }, {}, { initialJavascriptGzipBytes: 100 }).length, 1);
+test('the bundle budget can fail before Lighthouse and enforces both inclusive limits', () => {
+  const budgets = { initialJavascriptGzipBytes: 100, totalClientJavascriptGzipBytes: 200, largestContentfulPaintMs: 2500, runs: 5 };
+  const bundle = { initialJavascriptGzipBytes: 100, totalClientJavascriptGzipBytes: 200 };
+  assert.deepEqual(bundleBudgetFailures(bundle, budgets), []);
+  assert.deepEqual(bundleBudgetFailures({ initialJavascriptGzipBytes: 101, totalClientJavascriptGzipBytes: 201 }, budgets), [
+    'initialJavascriptGzipBytes: 101.00 exceeds 100',
+    'totalClientJavascriptGzipBytes: 201.00 exceeds 200',
+  ]);
+  assert.deepEqual(bundleBudgetFailures({}, budgets), [
+    'initialJavascriptGzipBytes: missing measurement or invalid budget',
+    'totalClientJavascriptGzipBytes: missing measurement or invalid budget',
+  ]);
+  assert.deepEqual(bundleBudgetFailures(bundle, { ...budgets, totalClientJavascriptGzipBytes: 0 }), [
+    'totalClientJavascriptGzipBytes: missing measurement or invalid budget',
+  ]);
+  assert.deepEqual(budgetFailures(bundle, {}, budgets), ['largestContentfulPaintMs: missing measurement or invalid budget']);
 });
 
 test('diagnostics keep local chunk timings while excluding private URLs and malformed values', () => {
