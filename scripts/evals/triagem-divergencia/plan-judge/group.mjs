@@ -89,14 +89,15 @@ export function labelRows(rows,key) {
   return order(rows,key).map((row,index)=>({...row,alias:'P'+hash(key+'alias'+index).slice(0,8)}));
 }
 
-export function judgeDivergence(dir, rows, prepare=false) {
+export function judgeDivergence(dir, rows, prepare=false, interpretation='') {
   const packets=rows.map(row=>row.plan?buildDivergenceReview(row.context,row.plan):null);
   const first=packets.find(Boolean);
   if(!first)return new Map(rows.map(row=>[row.id,{decision:'hold',reason:'plan_unavailable'}]));
   const schema=structuredClone(first.schema);
   schema.properties.subject={type:'string',enum:packets.filter(Boolean).map(p=>p.subject)};
   const cards=rows.map((row,i)=>({alias:row.alias,data:packets[i]?.input??null}));
-  const results=runGroup({dir,cards,schema,instructions:first.instructions,prepare});
+  const instructions=interpretation ? first.instructions+'\n\n'+interpretation : first.instructions;
+  const results=runGroup({dir,cards,schema,instructions,prepare});
   if(prepare)return null;
   return new Map(rows.map((row,i)=>{
     const assessment=results.get(row.alias);

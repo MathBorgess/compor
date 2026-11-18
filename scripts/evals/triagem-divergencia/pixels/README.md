@@ -13,4 +13,11 @@ Um campo sem arte/recibo reconciliado fica sem nota. Em `identical_after_triage`
 
 `judgments.json` une o parecer aos IDs do caso, braço, posição, caminho relativo à pasta da rodada e hash do PNG. Cada arte tem decisão de usabilidade e motivo, falhas críticas localizadas e notas 0–2 com evidência por referência. Cada par tem julgamento de proximidade visual. `attribute-scores.json` apresenta a soma e o denominador por atributo, com cobertura e ausências. `feedback-dev.json` inclui apenas os três casos de desenvolvimento. Abra a reserva após o congelamento da última candidata. A rubrica completa está no [dataset](../dataset/README.md). Custos pertencem ao relatório do ledger.
 
-Os quatro testes locais exercitam lacunas e verificam que braços mascarados ainda pontuam os mesmos atributos. Rode `python3 -B -m unittest discover -s scripts/evals/triagem-divergencia/pixels -p 'test*.py'`.
+Os testes locais exercitam lacunas e verificam que braços mascarados ainda pontuam os mesmos atributos. Rode `python3 -B -m unittest discover -s scripts/evals/triagem-divergencia/pixels -p 'test*.py'`.
+
+
+## Comparação local e escolha voluntária
+
+Quando houver PNGs e recibo de ablação concluído, execute `python3 -B scripts/evals/triagem-divergencia/pixels/gallery.py "$RUN" comparacao.html`. Use um nome novo a cada fotografia da bancada. A página compara os braços da baseline e da rodada 5 com o prompt congelado de cada par, links para o PNG original e identificação dos arquivos. Abra o HTML no mesmo computador, mantendo o diretório da bancada em sua localização original.
+
+Em cada braço com um conjunto completo, o leitor pode escolher uma das três rotas, marcar “Nenhuma” e escrever o motivo. Baixar o JSON é uma ação voluntária e registra somente os grupos em que houve resposta. Fechar a página descarta escolhas ainda não baixadas. Casos retidos ou sem ablação têm seu estado indicado. Quando a bancada ainda não tem nenhum PNG de um par reconciliado, o comando encerra sem emitir uma galeria.
