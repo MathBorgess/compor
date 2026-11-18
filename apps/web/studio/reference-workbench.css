@@ -52,7 +52,13 @@
 .reference-step .reference-source { display:inline-block;padding:0;border:0;border-radius:0;background:transparent;font-size:14px;color:var(--studio-muted); }
 .reference-step .reference-results small { display:none; }
 .reference-step .reference-results a { font-size:14px; }
-.reference-step .reference-proposal-controls { display:flex;flex-wrap:wrap;align-items:end;gap:16px;margin-bottom:24px; }
+.reference-step .reference-workbench-actions { display:flex;flex-wrap:wrap;gap:12px; }
+.reference-step .reference-upload-help { margin:8px 0 24px;color:var(--studio-muted);font-size:14px; }
+.reference-step .reference-workbench-block { margin:0 0 24px; }
+.reference-step .reference-workbench-block p { margin:0 0 8px; }
+.reference-step .reference-upload-feedback { margin:0 0 24px; }
+.reference-step .reference-workbench-explore > .studio-exploration-recovery { margin:0 0 24px; }
+.reference-step .reference-workbench-source > div > .reference-source-control { width:max-content;max-width:100%;margin-bottom:24px; }
 .reference-step .studio-exploration-gallery { display:grid;gap:24px;max-width:none;padding:0;border:0;background:transparent; }
 .reference-step .exploration-gallery-heading h2 { font-size:20px; }
 .reference-step .exploration-gallery-heading p { font-size:16px; }
@@ -81,7 +87,6 @@
 .reference-step .reference-selection-title { white-space:normal;overflow:visible;font-size:16px; }
 .reference-step .reference-selection-list button { grid-column:2;margin:0; }
 .reference-step .reference-selection-note,.reference-step .reference-selection-empty { font-size:14px; }
-.reference-step .guided-reference-upload { display:grid;gap:16px;margin-top:24px;padding:24px;border:1px solid var(--studio-line);border-radius:12px; }
 .reference-workbench-conversation { display:grid;gap:24px;max-width:960px;margin-inline:auto; }
 .reference-workbench-conversation .reference-back-to-images { justify-self:start; }
 .reference-step .guided-reference-chat,.reference-step .guided-reference-post-chat { display:block;min-width:0;min-height:0;max-height:none; }

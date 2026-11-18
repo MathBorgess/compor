@@ -32,7 +32,7 @@ async function handle(request:Request,credential?:Pick<PreparedOpenAiRequest,'so
  const approve=createImageToolApproval({bindings,ownsVersion});
  const execute=createImageToolExecution({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key}),appOrigin:config.app,checkVisualAuthority:async input=>visualEnabled&&await authority.check(input.actor,{projectId:input.projectId,conversationId:input.pieceId,requestId:input.visualAuthority.requestId,batchId:null,purpose:'artwork',manifestDigest:input.visualAuthority.manifestDigest,consentSecret:input.visualAuthority.consentSecret}),imageHandler:createImageHandler({authenticate}),imageStorageHandler:createPrivateImageHandler({appOrigin:config.app,supabaseUrl:config.service,publishableKey:config.key,authenticate})});
  const send=createImageToolResultSender({bindings,ownsVersion,reservations,usage:createUsageStore({url:config.service,anonKey:config.key})});
- return createAgentImageRoute({appOrigin:config.app,resolveActor,approve,execute,send,visualEnabled,visualRequired:process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',prepareVisualAuthority:async input=>{
+ return createAgentImageRoute({appOrigin:config.app,resolveActor,approve,execute,send,apiKey:credential?.apiKey,visualEnabled,visualRequired:process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',prepareVisualAuthority:async input=>{
   if(!visualEnabled)return null;const result={requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:referenceConsentSecret(input.consentHeader)};
   return await authority.check(input.actor,{projectId:input.projectId,conversationId:input.pieceId,requestId:input.requestId,batchId:null,purpose:'artwork',manifestDigest:result.manifestDigest,consentSecret:result.consentSecret})?result:null;
  }})(request);
@@ -41,5 +41,5 @@ async function handle(request:Request,credential?:Pick<PreparedOpenAiRequest,'so
 export async function POST(request:Request) {
  const config=authConfig();
  if(!config||!agentSigningKey()||process.env.COMPOR_PRIVATE_IMAGES_ENABLED!=='true')return handle(request);
- return withWebOpenAiCredential(request,config,{bodyLimit:3*1024*1024,versionScope:true},prepared=>handle(prepared.request,prepared));
+ return withWebOpenAiCredential(request,config,{bodyLimit:3*1024*1024,versionScope:true,keyLocation:'separate'},prepared=>handle(prepared.request,prepared));
 }

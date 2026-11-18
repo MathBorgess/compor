@@ -31,6 +31,8 @@ export default function ParallelExplorationRecovery(props:Props){
   },[props.userId,props.projectId]);
   if(!preparation&&!notice)return null;
   const sameProject=preparation?.projectId===props.projectId,sameConversation=preparation?.conversationId===props.conversationId;
+  const planningAttempt=preparation?.stage==='planning'||preparation?.stage==='planned';
+  const canInspectAttempt=sameProject&&(planningAttempt||sameConversation&&preparation?.stage==='executing');
   async function replace(position:number){
     if(!preparation||preparation.stage!=='executing'||!sameProject||!sameConversation||lock.current||!props.allowReplacement||!props.getReplacementContext||props.credentialSource!==preparation.credentialSource||!props.isAuthenticated()||document.visibilityState!=='visible'||!document.hasFocus())return;
     const key=props.getApiKey(),source=props.credentialSource,credentialEpoch=props.credentialEpoch,fingerprint=props.generationFingerprint,serial=++sequence.current;
@@ -41,10 +43,11 @@ export default function ParallelExplorationRecovery(props:Props){
     try{await run.run();}finally{if(replacing.current?.stop===run.stop)replacing.current=null;if(sequence.current===serial){lock.current=false;setBusy(false);}}
   }
   async function inspect(){
-    if(!preparation||!sameProject||!sameConversation||lock.current||!current.current.isAuthenticated())return;
-    if(['planning','planned'].includes(preparation.stage)&&current.current.credentialSource!==preparation.credentialSource){setNotice('Escolha a fonte de IA usada no planejamento para consultar a tentativa original.');return;}
+    if(!preparation||!canInspectAttempt||lock.current||!current.current.isAuthenticated())return;
+    if(planningAttempt&&current.current.credentialSource!==preparation.credentialSource){setNotice('Escolha a fonte de IA usada no planejamento para consultar a tentativa original.');return;}
     const serial=++sequence.current;lock.current=true;setBusy(true);setNotice('');const store=createParallelJournalStore();
-    const inScope=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===preparation.conversationId&&current.current.isAuthenticated()&&(preparation.stage==='executing'||current.current.credentialSource===preparation.credentialSource);
+    const inspectedFrom=current.current.conversationId;
+    const inScope=()=>sequence.current===serial&&current.current.userId===preparation.userId&&current.current.projectId===preparation.projectId&&current.current.conversationId===inspectedFrom&&current.current.isAuthenticated()&&(!planningAttempt||current.current.credentialSource===preparation.credentialSource);
     const client=createParallelExplorationClient({store,canInspect:inScope});
     try{
       if(preparation.stage==='planning'||preparation.stage==='planned'){
@@ -116,11 +119,11 @@ export default function ParallelExplorationRecovery(props:Props){
     finally{store.close();if(sequence.current===serial){lock.current=false;setBusy(false);}}
   }
   return <React.Fragment><section className="studio-exploration-recovery" aria-label="Tentativa paralela anterior">
-    <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
+    <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation&&planningAttempt?'Há um planejamento em outra conversa deste projeto. Você pode consultar o planejamento original aqui.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
     {sameProject&&sameConversation&&progress&&<ParallelExplorationProgress progress={progress}/>}
     {props.replacementAvailable&&props.getReplacementContext&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.filter(item=>item.status==='rejected').map(item=><button key={item.requestId} type="button" disabled={busy||!props.allowReplacement||props.credentialSource!==preparation.credentialSource||progress.children.some(child=>!['completed','rejected'].includes(child.status))} onClick={()=>{void replace(item.position);}}>Repor proposta {item.position}</button>)}
     {props.replacementAvailable&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.some(item=>item.status==='rejected')&&props.credentialSource!==preparation.credentialSource&&<p>Use a fonte e a chave originais para repor uma proposta; o plano não pode ser reutilizado com outra credencial.</p>}
-    {sameProject&&sameConversation&&preparation&&['planning','planned','executing'].includes(preparation.stage)&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
+    {canInspectAttempt&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
     {sameProject&&sameConversation&&preparation?.stage==='planned'&&props.onContinuePlan&&<><p>Para continuar o mesmo plano, use a fonte e a chave originais; o servidor confirma o vínculo antes da execução.</p><button type="button" disabled={busy||props.credentialSource!==preparation.credentialSource} onClick={props.onContinuePlan}>Continuar mesmo plano</button></>}
     {sameProject&&sameConversation&&preparation?.intentId&&['planning','planned','executing','failed'].includes(preparation.stage)&&<><p>O encerramento revoga a intenção. Se houver efeito ainda não confirmado, a tentativa continua bloqueada.</p><button type="button" disabled={busy} onClick={()=>{void archive();}}>Verificar encerramento da tentativa</button></>}
     {notice&&<p role="status">{notice}</p>}

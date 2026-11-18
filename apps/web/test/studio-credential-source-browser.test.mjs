@@ -29,7 +29,7 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  const calls=[],errors=[];let outcome='completed',held;
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/api/**',async route=>{
-  const body=route.request().postDataJSON();calls.push({path:new URL(route.request().url()).pathname,body});
+  const request=route.request(),body=request.postDataJSON();calls.push({path:new URL(request.url()).pathname,body,key:request.headers()['x-compor-openai-key']});
   if(outcome==='held'){held=route;return;}
   if(outcome==='not_submitted')return route.fulfill({status:503,json:{status:'failed',error:'default_credential_unavailable',failurePhase:'before_submission',requestId:body.requestId,retryAutomatically:false}});
   if(outcome==='unavailable')return route.fulfill({status:503,json:{error:'default_credential_unavailable'}});
@@ -47,7 +47,7 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  assert.equal(await page.getByLabel('Sua mensagem').inputValue(),'','um rascunho vazio explícito não recupera a ideia inicial');assert.equal(calls.length,0);
  async function send(text){await page.getByLabel('Sua mensagem').fill(text);await page.getByRole('button',{name:'Enviar →',exact:true}).click();}
  await send('Minha primeira ideia');await page.getByText('Resposta preservada',{exact:true}).waitFor();
- assert.equal(calls.length,1);assert.equal(Object.hasOwn(calls[0].body,'apiKey'),false,'a chave padrão nunca atravessa o navegador');
+ assert.equal(calls.length,1);assert.equal(calls[0].key,undefined,'a chave padrão nunca atravessa o navegador');
  assert.equal(JSON.parse(await page.getByTestId('credential').innerText()).active,true);
  const firstRequest=calls[0].body.requestId;
  const drafts=JSON.parse(await page.getByTestId('snapshot').innerText()).drafts;
@@ -59,10 +59,10 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  outcome='completed';
  await page.getByRole('button',{name:'Usar fonte própria',exact:true}).click();await send('Outra ação com minha chave');
  await page.getByLabel('Sua mensagem').waitFor();await page.waitForFunction(()=>document.querySelectorAll('.studio-message[data-role="assistant"]').length===2);
- assert.equal(calls.length,3);assert.equal(calls[2].body.apiKey,ownKey);assert.equal(Object.hasOwn(calls[2].body,'previousAttemptKey'),false,'trocar fonte inicia sessão nova sem perder a conversa');
+ assert.equal(calls.length,3);assert.equal(calls[2].key,ownKey);assert.equal(Object.hasOwn(calls[2].body,'previousAttemptKey'),false,'trocar fonte inicia sessão nova sem perder a conversa');
  assert.notEqual(calls[2].body.requestId,firstRequest);
  outcome='rejected';await send('Verificar minha chave recusada');await page.getByText('A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.',{exact:true}).waitFor();
- const rejectedCount=calls.length;await page.waitForTimeout(2200);assert.equal(calls.length,rejectedCount,'recusa da BYOK não usa fallback nem consulta automática');assert.equal(calls.at(-1).body.apiKey,ownKey);
+ const rejectedCount=calls.length;await page.waitForTimeout(2200);assert.equal(calls.length,rejectedCount,'recusa da BYOK não usa fallback nem consulta automática');assert.equal(calls.at(-1).key,ownKey);
  const ownPending=calls.at(-1).body.requestId;
  await page.getByRole('button',{name:'Usar fonte padrão',exact:true}).click();
  await page.getByText('Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.',{exact:true}).waitFor();
@@ -72,7 +72,7 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  await page.getByText('Comece a criar com IA para continuar esta solicitação. Nenhuma nova ação foi executada.',{exact:true}).waitFor();assert.equal(calls.length,beforeInactivePoll+1,'consulta com fonte disponível e IA pausada não executa ferramenta nem ACK');
  outcome='completed';await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).waitFor({state:'detached'});
- assert.equal(calls.at(-1).body.requestId,ownPending);assert.equal(calls.at(-1).body.op,'poll');
+ assert.equal(calls.at(-1).body.requestId,ownPending);assert.equal(calls.at(-1).body.op,'poll');assert.equal(calls.at(-1).key,ownKey);
  await page.getByRole('button',{name:'Usar fonte padrão',exact:true}).click();outcome='rejected';await send('Uma tentativa padrão ficou incerta');
  await page.getByText('Não foi possível confirmar o resultado desta solicitação. Consulte seu estado antes de iniciar outra. Você pode continuar editando.',{exact:true}).waitFor();
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).waitFor();const uncertain=calls.at(-1).body.requestId;
@@ -93,5 +93,6 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  await held.fulfill({status:202,json:{status:'completed',text:'RESPOSTA_DA_FONTE_ANTERIOR'}}).catch(()=>{});
  await page.getByText('Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.',{exact:true}).waitFor();
  assert.equal(await page.getByText('RESPOSTA_DA_FONTE_ANTERIOR',{exact:true}).count(),0);
+ assert.equal(calls.some(call=>Object.hasOwn(call.body,'apiKey')||JSON.stringify(call.body).includes(ownKey)),false);
  const storage=await page.evaluate(()=>JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)]));assert.equal(storage.includes(ownKey),false);assert.deepEqual(errors,[]);
 });

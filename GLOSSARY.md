@@ -16,6 +16,14 @@ _Avoid_: Conversa, arquivo exportado
 Frase curta que identifica o projeto, próxima do nome de uma campanha.
 _Avoid_: Título da arte, primeira mensagem
 
+**Contexto do projeto**:
+Tema ou oferta, marca e público geral que orientam os posts do projeto.
+_Avoid_: Pedido de um post específico
+
+**Pedido do post**:
+Objetivo, mensagem e chamada para ação opcional que orientam uma peça. O primeiro pedido pode aproveitar o contexto levantado ao preparar o projeto.
+_Avoid_: Título organizacional do post, contexto compartilhado
+
 **Produto**:
 Oferta divulgada, com fatos, voz e limites próprios, que pode orientar diferentes campanhas.
 _Avoid_: Campanha, peça

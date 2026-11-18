@@ -43,9 +43,9 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill('Mentoria de matemática para o ENEM');
   if(withReferences){
    await button('Continuar').click();await button('Continuar para a IA').click();await button('Escolher depois').click();
-   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
    const png=await page.evaluate(()=>{const canvas=document.createElement('canvas');canvas.width=32;canvas.height=32;return canvas.toDataURL('image/png').split(',')[1];});
-   await page.locator('.reference-step input[type="file"]').setInputFiles({name:'Referencia global.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
+   const [picker]=await Promise.all([page.waitForEvent('filechooser'),button('Enviar imagem').click()]);
+   await picker.setFiles({name:'Referencia global.png',mimeType:'image/png',buffer:Buffer.from(png,'base64')});
    await page.getByText('Revisar seleção e alcance',{exact:true}).click();await page.getByText('Referencia global.png',{exact:true}).waitFor();
   }
   await finishPreparation(page,{preparePost:false});await objective.waitFor();
@@ -61,12 +61,14 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   await button('Expandir menu').focus();await page.keyboard.press('Enter');assert.equal(await button('Recolher menu').getAttribute('aria-expanded'),'true');
   await page.keyboard.press('Escape');assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');
   await button('Configurações do projeto').click();await page.getByRole('dialog',{name:'Configurações do projeto',exact:true}).waitFor();await closeSettings(page);if(await button('Recolher menu').isVisible())await button('Recolher menu').click();
-  await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');
-  await page.getByLabel('Nome do post',{exact:true}).fill('Post de autoridade');await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
+  const name=page.getByLabel('Nome do post',{exact:true});
+  await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'Mentoria de matemática para o ENEM');
+  assert.equal(await name.inputValue(),'Mentoria Veloz — Campanha 1');
+  await name.fill('Post de autoridade');await objective.fill('Construir autoridade');await message.fill('Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
   if(width===390){await page.evaluate(()=>window.scrollTo(0,document.body.scrollHeight));const menu=await button('Expandir menu').boundingBox(),header=await page.locator('.studio-topbar').boundingBox();assert.ok(menu.y>=header.y+header.height-1,'menu permanece abaixo do cabeçalho durante a rolagem');await button('Expandir menu').click();await page.keyboard.press('Escape');}
   await page.waitForFunction(()=>new Promise(resolve=>{const q=indexedDB.open('compor-studio-v1');q.onsuccess=()=>{const r=q.result.transaction('states').objectStore('states').getAll();r.onsuccess=()=>{q.result.close();resolve(r.result[0]?.state.workflow.pendingPost?.message==='Ensinar uma estratégia de porcentagem');};};}));
   assert.equal(Object.keys((await stored()).posts).length,0);
-  await page.goto(new URL('/',page.url()).href);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await action.inputValue(),'');
+  await page.goto(new URL('/',page.url()).href);await button('Mentoria Veloz — Campanha 1 Abrir projeto').click();await objective.waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await name.inputValue(),'Post de autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');assert.equal(await action.inputValue(),'');
   await button('Continuar para criação').click();const chat=await openConversation(page);assert.equal(await chat.inputValue(),'');
   assert.equal(await page.locator('.guided-workspace').getAttribute('data-view'),'intro','as configurações continuam acessíveis antes do primeiro pedido');
   await nav.getByRole('button',{name:'Configurações do Post',exact:true}).click();await page.getByRole('dialog',{name:'Configurações do Post',exact:true}).waitFor();assert.equal(await objective.inputValue(),'Construir autoridade');assert.equal(await message.inputValue(),'Ensinar uma estratégia de porcentagem');await page.keyboard.press('Escape');
@@ -74,7 +76,7 @@ for(const [width,withReferences] of [[1440,false],[390,false],[1440,true]])test(
   await button('Expandir menu').click();
   if(width===390){const main=page.locator('#studio-main'),bounds=await main.boundingBox();await main.click({position:{x:bounds.width-12,y:12}});assert.equal(await button('Expandir menu').getAttribute('aria-expanded'),'false');}
   else await button('Recolher menu').click();
-  await button('Posts do projeto').click();await button('Criar novo post').click();await objective.waitFor();assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');assert.equal(await action.inputValue(),'');
+  await button('Posts do projeto').click();await button('Criar novo post').click();await objective.waitFor();assert.equal(await name.inputValue(),'');assert.equal(await objective.inputValue(),'');assert.equal(await message.inputValue(),'');assert.equal(await action.inputValue(),'');
   await page.getByLabel('Nome do post',{exact:true}).fill('Convite para live');await objective.fill('Inscrições para live gratuita');await action.fill('Inscreva-se pelo link da bio');await button('Continuar para criação').click();await openConversation(page);
   await button('Começar sem IA, no editor').click();
   assert.ok(await page.getByRole('button',{name:'Salvar versão',exact:true}).isEnabled());

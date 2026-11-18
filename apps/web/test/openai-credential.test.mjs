@@ -26,6 +26,25 @@ test('explicit own credentials, including invalid values, never inspect Vault',a
   assert.equal(result.source,'byok');assert.equal(result.request.headers.get('x-compor-openai-key'),'');assert.deepEqual(calls,[]);
 });
 
+test('a chave do navegador e a entrada legada preservam a mesma credencial interna',async()=>{
+ for(const keyLocation of ['header-or-legacy-body','separate']){
+  for(const [body,headers] of [[{projectId,apiKey:ownKey},{}],[{projectId},{'x-compor-openai-key':ownKey}]]){
+   const {calls,deps}=fixture();
+   const result=await prepareOpenAiRequest(request(body,headers),deps,{...options,keyLocation});
+   assert.equal(result.source,'byok');assert.equal(result.apiKey,ownKey);assert.deepEqual(calls,[]);
+   assert.equal(result.request.headers.has('x-compor-openai-key'),false);
+   const expected=keyLocation==='separate'?{projectId}:{projectId,apiKey:ownKey};
+   assert.deepEqual(await result.request.json(),expected);
+  }
+  const {calls,deps}=fixture();
+  const invalid=await prepareOpenAiRequest(request({projectId},{'x-compor-openai-key':''}),deps,{...options,keyLocation});
+  assert.equal(invalid.source,'byok');assert.equal(invalid.apiKey,undefined);
+  const ambiguous=await prepareOpenAiRequest(request({projectId,apiKey:ownKey},{'x-compor-openai-key':ownKey}),deps,{...options,keyLocation});
+  assert.equal(ambiguous.status,400);assert.deepEqual(await ambiguous.json(),{error:'invalid_request'});
+  assert.deepEqual(calls,[]);
+ }
+});
+
 test('missing credential is resolved after verified project and exact version ownership',async()=>{
   const {calls,deps}=fixture();
   const result=await prepareOpenAiRequest(request({projectId,pieceId,version:2}),deps,{...options,versionScope:true});
@@ -36,6 +55,10 @@ test('missing credential is resolved after verified project and exact version ow
   const header=await prepareOpenAiRequest(request({projectId}),deps,{...options,keyLocation:'header'});
   assert.equal(header.request.headers.get('x-compor-openai-key'),defaultKey);
   assert.deepEqual(await header.request.json(),{projectId});
+  const separate=await prepareOpenAiRequest(request({projectId}),deps,{...options,keyLocation:'separate'});
+  assert.equal(separate.source,'default');assert.equal(separate.apiKey,defaultKey);
+  assert.equal(separate.request.headers.has('x-compor-openai-key'),false);
+  assert.deepEqual(await separate.request.json(),{projectId});
 });
 
 test('unauthenticated, cross-project, cross-version and invalid-origin requests never read Vault',async()=>{
@@ -114,7 +137,8 @@ test('polling a managed turn with another credential or source never contacts Op
     const oldBindings=createCredentialSessionBindings({secret,source:originalSource,apiKey:originalKey});
     const binding=oldBindings.issueRecovery({userId,projectId,attemptId,sessionId:'sess_private'});
     const {deps}=fixture();
-    const prepared=await prepareOpenAiRequest(request({projectId,requestId:attemptId,op:'poll',...(requestedSource==='byok'?{apiKey:requestedKey}:{})}),deps,options);
+    const headers=requestedSource==='byok'?{'x-compor-openai-key':requestedKey}:{};
+    const prepared=await prepareOpenAiRequest(request({projectId,requestId:attemptId,op:'poll'},headers),deps,{...options,keyLocation:'header-or-legacy-body'});
     let providerCalls=0;
     const noop=async()=>{};
     const store={reserve:noop,get:async()=>({state:'running',attemptId,requestId:attemptId,binding}),bind:noop,state:noop,claimAction:noop,finishAction:noop,getAction:noop};

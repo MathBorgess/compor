@@ -1,7 +1,7 @@
 import {changeStudioState,createPost,selectDraft,parseStudioState,StudioStateError,type StudioState,type StudioWorkflow} from './studio-state';
 import {emptyPostSettings} from './studio-post-context';
 import {postNameSchema} from './post-catalog';
-import type {PostContext} from './studio-domain';
+import {postContextSchema,type PostContext} from './studio-domain';
 
 export function updateWorkflow(state:StudioState,patch:Partial<StudioWorkflow>) {
   return parseStudioState({...state,revision:state.revision+1,workflow:{...state.workflow,...patch}});
@@ -14,10 +14,13 @@ export function postIds(state:StudioState) {
   return [...new Set(state.drafts.map(draft=>draft.pieceId))].filter(id=>id!==state.workflow.referencePieceId&&!state.posts[id]?.deleted);
 }
 
-export function startPostPreparation(state:StudioState,pieceId:string) {
+export function startPostPreparation(state:StudioState,pieceId:string,initialProjectTitle?:string) {
   if(state.drafts.some(draft=>draft.pieceId===pieceId))throw new StudioStateError('studio_draft_unavailable');
+  const initial=initialProjectTitle!==undefined;
+  const name=initial?postNameSchema.safeParse(initialProjectTitle).data??'':'';
+  const message=initial?postContextSchema.shape.message.safeParse(state.brief.offer).data??'':'';
   return changeStudioState(state,next=>{
-    next.workflow.pendingPost={pieceId,name:'',objective:'',message:'',action:''};
+    next.workflow.pendingPost={pieceId,name,objective:'',message,action:'',...(initial?{initial:true as const}:{})};
     next.workflow.view='prepare-post';
   });
 }

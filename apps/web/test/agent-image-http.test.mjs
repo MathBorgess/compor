@@ -10,6 +10,13 @@ function setup({allow=true,sendStatus='accepted'}={}) {
  const calls=[];const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async input=>{calls.push('approve');return allow && input.actor===actor?'approved':null;},execute:async()=>{calls.push('execute');return {status:'completed',executionId,toolResult:{output:JSON.stringify({assetId})}};},send:async()=>{calls.push('send');return {status:sendStatus};}});return {handler,calls};
 }
 test('aprovação explícita executa e retorna somente aceitação e asset',async()=>{const f=setup();const result=await f.handler(request());assert.equal(result.status,202);const data=await result.json();assert.deepEqual(data,{status:'accepted',assetId});assert.deepEqual(f.calls,['approve','execute','send']);assert.doesNotMatch(JSON.stringify(data),/sk-|private-token/);});
+test('a rota de imagem consome a credencial resolvida sem a chave no corpo',async()=>{
+ const payload={...body};delete payload.apiKey;
+ let calls=0;
+ const handler=createAgentImageRoute({appOrigin:'https://compor.test',apiKey,resolveActor:async()=>actor,approve:async()=>'proof',execute:async input=>{calls++;assert.equal(input.apiKey,apiKey);return {status:'busy'};},send:async()=>{throw Error('unexpected');}});
+ const result=await handler(request(payload));assert.deepEqual(await result.json(),{status:'busy'});assert.equal(calls,1);
+ assert.equal((await handler(request())).status,400);assert.equal(calls,1);
+});
 test('origem e confirmação inválidas não acionam geração',async()=>{for(const req of [request({...body,explicitApproval:false}),request(body,'https://evil.test')]){const f=setup();assert.notEqual((await f.handler(req)).status,202);assert.deepEqual(f.calls,[]);}});
 test('autorização negada e resultado desconhecido não geram repetição',async()=>{let f=setup({allow:false});assert.equal((await f.handler(request())).status,403);assert.deepEqual(f.calls,['approve']);f=setup({sendStatus:'unknown'});const r=await f.handler(request());assert.equal(r.status,502);assert.deepEqual(await r.json(),{error:'result_unknown',retryAutomatically:false,assetId});assert.deepEqual(f.calls,['approve','execute','send']);});
 

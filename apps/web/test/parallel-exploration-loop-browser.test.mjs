@@ -26,7 +26,7 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
   const initial=createStudioState({userId:id(1),projectId:id(2)}),state=visualMode?addReference(initial,reference):initial,key='sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
   const batches=new Map();window.calls=[];window.applied=[];window.completeBatches=0;window.holdGate=location.search==='?gate';
   window.fetch=async(path,options)=>{
-   const body=JSON.parse(options.body);window.calls.push({path,body});
+   const body=JSON.parse(options.body);window.calls.push({path,body,ownCredential:options.headers['x-compor-openai-key']===key});
    if(path.endsWith('/intent/epoch'))return Response.json({epoch:0});
    if(path.endsWith('/intent'))return Response.json({status:'created',epoch:body.expectedEpoch+1});
    if(path==='/api/studio/explorations/status'){if(window.holdGate){window.gateEntered=true;return new Promise(resolve=>{window.releaseGate=()=>resolve(Response.json({status:'awaiting_feedback'}));});}return Response.json({status:location.search.startsWith('?resume')||window.completeBatches>=2?'awaiting_feedback':'active'});}
@@ -92,6 +92,7 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
   if(mode==='resume')await page.getByText('1 de 3 imagens confirmadas.',{exact:true}).waitFor();else await page.getByText('Não foi possível confirmar esta tentativa. Ela permanece preservada.',{exact:true}).waitFor();
   const calls=await page.evaluate(()=>window.calls),intent=calls.findIndex(call=>call.path.endsWith('/intent')),resume=calls.findIndex(call=>call.path==='/api/studio/exploration-batches/resume'),plan=calls.findIndex(call=>call.path.endsWith('/plan'));
   assert(intent>=0&&resume>intent,'intenção confirmada antes de retomar');assert.equal(calls.filter(call=>call.path==='/api/studio/exploration-batches/resume').length,1);
+  assert.equal(calls[resume].ownCredential,true);assert.equal(Object.hasOwn(calls[resume].body,'apiKey'),false);
   if(mode==='resume')assert(plan>resume,'planejamento depois da retomada protegida');else assert.equal(plan,-1,'resposta incerta não inicia planejamento');await context.close();
  }
  const resumeContext=await browser.newContext(),resumePage=await resumeContext.newPage();await resumePage.goto(`http://127.0.0.1:${server.address().port}/?resume-hold`);await resumePage.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);await resumePage.getByRole('button',{name:'Pedir propostas'}).click();await resumePage.waitForFunction(()=>window.resumeEntered);await resumePage.getByRole('button',{name:'Pausar'}).click();await resumePage.evaluate(()=>window.releaseResume());await resumePage.waitForTimeout(200);assert.equal((await resumePage.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/plan')||call.path.endsWith('/execute')).length,0,'pausa durante retomada não planeja nem executa');await resumeContext.close();

@@ -15,7 +15,7 @@ create table public.projects(id uuid primary key,owner_id uuid not null referenc
 alter table public.projects enable row level security; grant select on public.projects to authenticated;
 create policy project_select on public.projects for select to authenticated using(owner_id=auth.uid());
 create table public.agent_attempts(id uuid primary key default gen_random_uuid(),owner_id uuid,project_id uuid,state text default 'started',idempotency_key uuid,unique(owner_id,idempotency_key));
-create table public.image_tool_reservations(id uuid primary key,owner_id uuid,project_id uuid,piece_id uuid,agent_attempt_id uuid,state text);
+create table public.image_tool_reservations(id uuid primary key,owner_id uuid,project_id uuid,piece_id uuid,agent_attempt_id uuid,state text,piece_version integer,session_id text,turn_id text,call_id text);
 create table public.image_consent_declarations(reservation_id uuid,owner_id uuid);
 create table public.image_tool_executions(id uuid primary key default gen_random_uuid(),owner_id uuid,reservation_id uuid,asset_id uuid default gen_random_uuid(),state text default 'running');
 create table storage.buckets(id text primary key,name text,public boolean,file_size_limit integer,allowed_mime_types text[]);

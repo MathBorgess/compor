@@ -6,7 +6,7 @@ import {deriveExplorationIntent} from './exploration-intent.ts';
 import {parseVisualInputManifest,visualInputMatchesProject,MAX_VISUAL_REQUEST_BYTES,type VisualInputManifest,type VisualReferenceImage} from '@compor/agents-api/visual-input-contract';
 import {parseVisualInput,visualInputDigest} from '@compor/agents-api/visual-input';
 const id=z.string().uuid();
-const schema=z.strictObject({op:z.enum(['submit','poll']),projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,requestId:id,context:z.unknown(),visualInput:z.unknown().optional(),referenceImages:z.unknown().optional(),intentId:id.optional(),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/)});
+const schema=z.strictObject({op:z.enum(['submit','poll']),projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,requestId:id,context:z.unknown(),visualInput:z.unknown().optional(),referenceImages:z.unknown().optional(),intentId:id.optional(),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/).optional()});
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const containsCredential=(value:unknown,key:string):boolean=>typeof value==='string'?value.includes(key):Array.isArray(value)?value.some(item=>containsCredential(item,key)):value!==null&&typeof value==='object'?Object.values(value).some(item=>containsCredential(item,key)):false;
 type Planner={submit:(input:ExplorationPlannerInput)=>Promise<PlannerResult>;poll:(input:ExplorationPlannerInput)=>Promise<PlannerResult>};
@@ -19,7 +19,7 @@ export function createExplorationPlannerRoute(deps:Dependencies){
   if(request.headers.get('origin')!==deps.appOrigin)return reply({error:'invalid_origin'},403);
   if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return reply({error:'invalid_request'},400);
   let raw:unknown;try{if(!request.body)throw Error('missing');const reader=request.body.getReader(),chunks:Uint8Array[]=[];let size=0;try{for(;;){const {done,value}=await reader.read();if(done)break;size+=value.byteLength;if(size>MAX_VISUAL_REQUEST_BYTES)throw Error('large');chunks.push(value);}raw=JSON.parse(new TextDecoder('utf-8',{fatal:true}).decode(Buffer.concat(chunks))) as unknown;}finally{await reader.cancel().catch(()=>{});}}catch{return reply({error:'invalid_request'},400);}
-  const parsed=schema.safeParse(raw);if(!parsed.success||parsed.data.apiKey!==deps.apiKey||!validateExplorationContext(parsed.data.context)||containsCredential(parsed.data.context,deps.apiKey)||(parsed.data.op==='submit'?parsed.data.intentId===undefined:parsed.data.intentId!==undefined))return reply({error:'invalid_request'},400);
+  const parsed=schema.safeParse(raw);if(!parsed.success||!/^sk-[^\s]{20,300}$/.test(deps.apiKey)||(parsed.data.apiKey!==undefined&&parsed.data.apiKey!==deps.apiKey)||!validateExplorationContext(parsed.data.context)||containsCredential(parsed.data.context,deps.apiKey)||(parsed.data.op==='submit'?parsed.data.intentId===undefined:parsed.data.intentId!==undefined))return reply({error:'invalid_request'},400);
   let visualInput:VisualInputManifest|undefined,referenceImages:readonly VisualReferenceImage[]|undefined;
   try{
    if(parsed.data.visualInput!==undefined){visualInput=parseVisualInputManifest(parsed.data.visualInput);if(parsed.data.op==='submit')({visualInput,referenceImages}=parseVisualInput(visualInput,parsed.data.referenceImages));}
