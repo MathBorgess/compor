@@ -52,3 +52,7 @@ node --import tsx ../../scripts/evals/pr61/variacoes/baseline.mjs --blind
 ```
 
 O primeiro comando confere os hashes dos pixels julgados, reapura os votos, relata cobertura e reaplica os controles ao código da revisão em execução. O segundo prepara cópias cegas em diretório temporário e executa os controles. A nota semântica vem de uma inspeção anterior e deve ser refeita para novas imagens. Ambos funcionam offline.
+
+## Rodadas de cinco lotes
+
+O ensaio atual usa a mesma entrada e os mesmos três slots dos marcos 3 e 5. A unidade de divergência é um par dentro do lote: A–B, A–C e B–C. Cinco lotes completos oferecem quinze pares por rodada. Um juiz examina em conjunto os cinco casos com os prompts; outro processo recebe as artes correspondentes em ordem cega e verifica a divergência que se materializou. A graduação exige diferença concreta em hierarquia, foco, enquadramento ou percurso, preservando os pedidos explícitos. A preferência do criador e a aproximação após feedback humano continuam sem observação enquanto não houver avaliações humanas associadas. [Protocolo das rodadas](../../../scripts/evals/pr61/triagem/protocolo-rodadas.md) · [Instrumento independente](../../../scripts/evals/pr61/variacoes/juiz.py)
