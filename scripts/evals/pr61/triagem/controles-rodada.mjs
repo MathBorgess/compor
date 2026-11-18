@@ -51,5 +51,13 @@ for(const [name,mutate] of Object.entries({
   const modified=structuredClone(rows);mutate(modified[0]);const invalid=join(directory,name+'.json');
   writeFileSync(invalid,JSON.stringify(modified));assert.notEqual(spawnSync(process.execPath,[replay,invalid]).status,0,name);
 }
+for(const n of [3,4]){
+  const subset=join(directory,'subset-'+n+'.json');writeFileSync(subset,JSON.stringify(rows.slice(0,n)));
+  assert.equal(JSON.parse(execFileSync(process.execPath,[replay,subset])).length,n);
+}
+for(const group of [rows.slice(0,2),[...rows,rows[0]],[rows[0],rows[0],rows[2]],[rows[0],rows[1],{...rows[2],id:'fora'}]]){
+  const path=join(directory,'grupo-invalido.json');
+  writeFileSync(path,JSON.stringify(group));assert.notEqual(spawnSync(process.execPath,[replay,path]).status,0);
+}
 assert.equal(JSON.parse(readFileSync(index)).length,5);
-console.log(JSON.stringify({fixture:'fixed-transport-controls',positiveCases:5,plannerInputAttachments:20,negativeControlsRejected:4,modelPlans:0,newImages:0,index}));
+console.log(JSON.stringify({fixture:'fixed-transport-controls',positiveCases:5,plannerInputAttachments:20,negativeControlsRejected:4,validGroupSizes:[3,4,5],invalidGroupsRejected:4,modelPlans:0,newImages:0,index}));

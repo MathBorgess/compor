@@ -9,7 +9,11 @@ import {parseSelectedVisualInput} from '../../../../packages/agents-api/src/visu
 const file=process.argv[2];
 const entries=JSON.parse(readFileSync(file));
 const complete=state=>state==='complete'||state==='completed';
-assert.deepEqual(entries.map(item=>item.id).sort(),cases.map(item=>item.id).sort());
+const ids=entries.map(item=>item.id);
+assert.ok(ids.length>=3&&ids.length<=5,'O lote de avaliação exige de três a cinco casos');
+assert.equal(new Set(ids).size,ids.length,'Caso duplicado');
+const corpusIds=new Set(cases.map(item=>item.id));
+assert.ok(ids.every(id=>corpusIds.has(id)),'Caso fora do corpus');
 const output=[];
 for(const entry of entries){
   const {context,visualInput,referenceImages}=packet(entry.id);
