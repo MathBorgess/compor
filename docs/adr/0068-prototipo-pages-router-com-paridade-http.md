@@ -2,7 +2,7 @@
 
 **Estado:** proposto em bancada local, em 18/11/2026. A promoção da mudança e qualquer publicação dependem de decisão de Matheus.
 
-A revisão de partida `bb2bf1b` emite 322.930 bytes gzip de JavaScript para o navegador no Mac do teste. O orçamento é 300.000 bytes. A interface usa uma página do Next e controla projeto e post pela History API. O primeiro build de Pages Router com a interface completa e as 46 entradas HTTP mediu 272.781 bytes. Rodar os dois roteadores no mesmo build somou 440.732 bytes. A medição inclui todo o JavaScript estático e assíncrono.
+A revisão de partida `bb2bf1b` emite 322.930 bytes gzip de JavaScript para o navegador no Mac do teste. O orçamento é 300.000 bytes. A interface usa uma página do Next e controla projeto e post pela History API. O primeiro build de Pages Router com a interface completa e as 46 entradas HTTP mediu 272.781 bytes. Rodar os dois roteadores no mesmo build somou 440.732 bytes. A medição inclui todo o JavaScript estático e assíncrono. O build oficial do App emite um arquivo de compatibilidade `nomodule` de 39.473 bytes gzip. O build oficial Pages com Turbopack não emite esse arquivo. Ele explica 39.473 dos 50.149 bytes de diferença; os demais arquivos explicam 10.676 bytes líquidos. Os alvos de navegador, as dependências e o cálculo do gate foram preservados. Compatibilidade efetiva depende de verificações nos navegadores.
 
 ```text
 Navegador ou cliente MCP
