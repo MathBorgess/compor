@@ -26,7 +26,7 @@ def summarize(path, unseal):
         known=[n for n in scores if n is not None]
         kinds=collections.Counter(r['kind'] for r in output['problems'])
         rows={'case':entry['id'],'known':len(known),'denominator':len(scores),
-              'points':sum(known) if known else None,'maxKnown':2*len(known),'scores':dict(collections.Counter(known)),
+              'points':sum(known) if known else None,'maxKnown':2*len(known),'scores':{str(k):v for k,v in collections.Counter(known).items()},
               'problems':dict(kinds),'advice':output['change']}
         if index['stage']==3:
             rows['byAttribute']={}
