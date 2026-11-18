@@ -20,7 +20,7 @@ for(const entry of entries){
   assert.deepEqual(entry.slots.map(slot=>slot.position).sort(),[1,2,3]);
   if(!entry.plan){
     assert.ok(entry.slots.every(slot=>!complete(slot.state)));
-    output.push({id:entry.id,planValid:null,completed:0,delivery:null});
+    output.push({id:entry.id,planValid:null,completed:0,delivery:null,slots:entry.slots.map(s=>({position:s.position,state:s.state,delivered:null}))});
     continue;
   }
   assert.ok(validateCompletedExplorationPlan(entry.plan,context,visualInput),'Plano inválido em '+entry.id);

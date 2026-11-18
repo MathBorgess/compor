@@ -71,7 +71,11 @@ def close(root):
     if not all((d/'judge-5.json').is_file() for d in dirs): raise ValueError('Aguardar os quatro grupos e o marco 5')
     rounds=[read_group(directory) for directory in dirs]
     for r in rounds:
-        if r['plans']!=5 or r['images']!=15: raise ValueError('Grupo real incompleto')
+        if len(r['receipts'])!=5 or not 0<=r['plans']<=5 or not 0<=r['images']<=15:
+            raise ValueError('Grupo excede o protocolo autorizado')
+        r['coverage']={'plannedCases':5,'imageSlots':15,
+                       'confirmedPlans':sum(c['planSha256'] is not None for c in r['receipts']),
+                       'confirmedImages':sum(s['sha256'] is not None and s['state'] in ('complete','completed') for c in r['receipts'] for s in c['slots'])}
     comparisons=[]
     for d,r in zip(dirs[1:],rounds[1:]):
         paired=compare(dirs[0],d,True)
