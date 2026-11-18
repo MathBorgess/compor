@@ -24,7 +24,7 @@ test('etapa da pessoa compradora permite lacunas e preserva informações com fo
   await writeFile(resolve(fixture, 'package.json'), JSON.stringify({ name: 'compor-persona-test', private: true, type: 'module' }));
   await writeFile(resolve(fixture, 'next.config.mjs'), 'export default { turbopack: { root: import.meta.dirname } };');
   await writeFile(resolve(fixture, 'app/layout.jsx'), 'export default function Layout({children}) { return <html lang="pt-BR"><body>{children}</body></html>; }');
-  await writeFile(resolve(fixture, 'app/persona-step.tsx'), await readFile(new URL('../app/persona-step.tsx', import.meta.url)));
+  await writeFile(resolve(fixture, 'app/persona-step.tsx'), await readFile(new URL('../studio/persona-step.tsx', import.meta.url)));
   await writeFile(resolve(fixture, 'lib/studio-domain.ts'), await readFile(new URL('../lib/studio-domain.ts', import.meta.url)));
   await writeFile(resolve(fixture, 'lib/schema.ts'), await readFile(new URL('../lib/schema.ts', import.meta.url)));
   await writeFile(resolve(fixture, 'lib/post-catalog.ts'), await readFile(new URL('../lib/post-catalog.ts', import.meta.url)));

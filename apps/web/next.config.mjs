@@ -13,7 +13,17 @@ const nextConfig = {
   distDir: process.env.COMPOR_TEST_NEXT_DIST_DIR || '.next',
   // Project and post URLs render the single studio page; lib/studio-route.ts reads the path on the client.
   async rewrites() {
-    return [{ source: '/projetos/:path*', destination: '/' }];
+    return [
+      { source: '/projetos/:path*', destination: '/' },
+      { source: '/.well-known/oauth-protected-resource/api/mcp', destination: '/api/__compor_bridge/discovery/oauth-protected-resource/api/mcp' },
+      { source: '/auth/callback', destination: '/api/__compor_bridge/auth/callback' },
+      { source: '/auth/session', destination: '/api/__compor_bridge/auth/session' },
+      { source: '/auth/sign-in', destination: '/api/__compor_bridge/auth/sign-in' },
+      { source: '/auth/sign-out', destination: '/api/__compor_bridge/auth/sign-out' },
+      { source: '/favicon.ico', destination: '/api/__compor_bridge/favicon' },
+      { source: '/oauth/consent', destination: '/api/__compor_bridge/oauth/consent' },
+      { source: '/oauth/decision', destination: '/api/__compor_bridge/oauth/decision' },
+    ];
   },
   turbopack: {
     rules: {

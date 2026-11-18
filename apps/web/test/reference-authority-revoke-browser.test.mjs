@@ -9,7 +9,7 @@ import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('retirar permissão bloqueia a capacidade antes da resposta e consulta o mesmo consentimento perdido',{skip:!existsSync(browserPath),timeout:20000},async t=>{
  const source=`import {useState} from 'react';import {createRoot} from 'react-dom/client';
- import ReferenceExploration from './app/reference-exploration.tsx';
+ import ReferenceExploration from './studio/reference-exploration.tsx';
  import {readReferenceAuthorityConsent} from './lib/reference-authority-consent.ts';
  const user='00000000-0000-4000-8000-000000000001';window.calls=[];window.serverState='active';window.finishRevoke=null;window.readConsent=()=>readReferenceAuthorityConsent(user);
  window.fetch=async(path,options)=>{const body=JSON.parse(options.body);if(path.endsWith('/history'))return Response.json({references:[]});if(!path.endsWith('/consent'))throw Error('unexpected');window.calls.push(body);if(body.op==='grant')return Response.json({status:'granted',consentId:body.consentId,capability:'A'.repeat(43)});if(body.op==='state')return Response.json({state:window.serverState,consentId:body.consentId});if(body.op==='revoke')return new Promise(resolve=>{window.finishRevoke=()=>resolve(Response.json({status:'unknown'},{status:503}));});throw Error('unexpected');};

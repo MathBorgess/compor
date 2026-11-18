@@ -6,7 +6,7 @@
     "node": ">=22.13.1"
   },
   "scripts": {
-    "quality:lint": "eslint apps/web/app apps/web/lib apps/web/proxy.ts \"packages/*/src/**/*.{js,mjs,ts}\" scripts/quality scripts/verification --max-warnings=0",
+    "quality:lint": "eslint apps/web/studio apps/web/handlers apps/web/pages apps/web/lib apps/web/proxy.ts \"packages/*/src/**/*.{js,mjs,ts}\" scripts/quality scripts/verification --max-warnings=0",
     "quality:maintenance": "node scripts/quality/maintainability.mjs",
     "quality:unit": "node scripts/quality/test-packages.mjs",
     "quality:browser": "node scripts/quality/test-browser.mjs",

@@ -17,7 +17,7 @@ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42
 async function fixture(t,{initialVersion=1}={}){
  const contents=`import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioAssets from './app/studio-assets.tsx';
+import StudioAssets from './studio/studio-assets.tsx';
 import {composeStudioPng} from './lib/studio-compose.ts';
 const digest=async blob=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',await blob.arrayBuffer())),n=>n.toString(16).padStart(2,'0')).join('');
 function Fixture(){

@@ -12,9 +12,9 @@ const pixels=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQV
 const source=`
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import ReferenceExploration from './app/reference-exploration.tsx';
+import ReferenceExploration from './studio/reference-exploration.tsx';
 import {syncReferenceConsentAccount} from './lib/reference-session-consent.ts';
-import {useExplorationLoop} from './app/use-exploration-loop.ts';
+import {useExplorationLoop} from './studio/use-exploration-loop.ts';
 import {createStudioState} from './lib/studio-state.ts';
 function FirstBatch(){const [connected,setConnected]=useState(false),[enabled,setEnabled]=useState(true),[state]=useState(()=>createStudioState({userId:'${user}',projectId:'${project}'}));const loop=useExplorationLoop({userId:'${user}',projectId:'${project}',state,getState:()=>state,hasApiKey:connected,getApiKey:()=>connected?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':'',isAuthenticated:()=>true,enabled,idea:'Uma oficina nova, ainda sem briefing'});return <><button onClick={()=>setConnected(true)}>Conectar chave de teste</button><button onClick={()=>setEnabled(false)}>Sair das referências</button><output id="exploration-status">{loop.status}</output></>;}
 function Demo(){const [userId,setUser]=useState('${user}'),[projectId,setProject]=useState('${project}'),[epoch,setEpoch]=useState(0),[selected,setSelected]=useState([]),[used,setUsed]=useState([]);return <><button onClick={()=>setProject('00000000-0000-4000-8000-000000000004')}>Outro projeto</button><button onClick={()=>setUser('00000000-0000-4000-8000-000000000002')}>Outra conta</button><button onClick={()=>setUser('${user}')}>Conta inicial</button><button onClick={()=>{syncReferenceConsentAccount(sessionStorage,null);setEpoch(x=>x+1);}}>Sair e entrar</button><FirstBatch/><output id="used">{JSON.stringify(used)}</output><ReferenceExploration key={userId+projectId+epoch} userId={userId} projectId={projectId} idea="Quero divulgar uma aula de cerâmica" selectedOrigins={selected} onContinue={()=>setEpoch(x=>x+1)} onUseReference={async(reference,file)=>{setSelected(items=>[...items,reference.originUrl]);setUsed(items=>[...items,{userId,projectId,id:reference.id,size:file.size}]);}}/></>};createRoot(document.getElementById('root')).render(<Demo/>);`;

@@ -32,7 +32,9 @@ O estúdio usa function tools definidas em `studio-chat-tools.mjs` e executa aç
 ```text
 apps/
   web/
-    app/                 páginas, TSX e handlers HTTP do Next
+    pages/               página do estúdio, documento e 46 entradas HTTP do protótipo
+    handlers/            implementações HTTP delegadas por Pages API
+    studio/              componentes TSX e CSS do estúdio
     lib/                 domínio TS, schemas e adaptadores locais/servidor
     proxy.ts             entrada sem sessão em HTML sem JavaScript
     public/studio/       fontes e ativos oficiais da interface
@@ -55,7 +57,7 @@ scripts/quality/         testes e avaliadores dos gates
 docs/adr/               decisões e supersessões
 ```
 
-`apps/web` depende dos exports de `packages`; os pacotes não dependem de componentes de UI. A infraestrutura específica do Next é composta em `app/api` e nos adaptadores de `lib`. O diretório `lib` contém módulos de navegador e de servidor: sua presença nessa pasta não torna um módulo seguro para importar num componente `use client`. Hoje essa separação depende de revisão, além das restrições do build Next.
+`apps/web` depende dos exports de `packages`; os pacotes não dependem de componentes de UI. Neste protótipo, a infraestrutura do Next é composta em `pages/api` e nos adaptadores de `lib`, com as implementações HTTP em `handlers`. O [ADR 0068](adr/0068-prototipo-pages-router-com-paridade-http.md) registra a fronteira e as condições para promoção. O diretório `lib` contém módulos de navegador e de servidor: sua presença nessa pasta não torna um módulo seguro para importar num componente `use client`. Hoje essa separação depende de revisão, além das restrições do build Next.
 
 Os pacotes compartilhados continuam em JavaScript e publicam declarações `.d.ts` onde são consumidos pelo Next. A verificação estrita cobre o app TS/TSX; não converte essas implementações JavaScript em código estaticamente verificado. Os testes exercitam os contratos reais.
 

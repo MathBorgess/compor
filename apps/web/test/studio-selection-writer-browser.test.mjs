@@ -9,7 +9,7 @@ import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 test('seleção coordenada preserva edição durante confirmação remota e writer segue em CAS',{skip:!existsSync(browserPath),timeout:20000},async t=>{
  const source=`
- import {useEffect,useRef} from 'react';import {createRoot} from 'react-dom/client';import {useStudioState} from './app/use-studio-state.ts';
+ import {useEffect,useRef} from 'react';import {createRoot} from 'react-dom/client';import {useStudioState} from './studio/use-studio-state.ts';
  import {updateBrief} from './lib/studio-state.ts';import {referenceSelectionPublic} from './lib/reference-selection-projection.ts';import {createReferenceSelectionCoordinator} from './lib/reference-selection-coordinator.ts';
  const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0'),scope={userId:id(1),projectId:id(2)};
  let remote={status:'ready',revision:0,state:{version:1,references:[],projectReferenceIds:[],posts:[]}},receipt=null;

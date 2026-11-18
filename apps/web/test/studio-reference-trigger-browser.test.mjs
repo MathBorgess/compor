@@ -12,7 +12,7 @@ const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5);
 const source=`
 import {useCallback,useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioChat from './app/studio-chat.tsx';
+import StudioChat from './studio/studio-chat.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';

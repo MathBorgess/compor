@@ -10,11 +10,11 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const source=`
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import ReferencePanel from './app/studio-reference-panel.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import './app/style.css';
-import './app/studio-shell.css';
-import './app/studio-guided.css';
+import ReferencePanel from './studio/studio-reference-panel.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import './studio/style.css';
+import './studio/studio-shell.css';
+import './studio/studio-guided.css';
 function Screen(){const [selected,setSelected]=useState([]),[requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false);
  return <div className="compor-studio" data-guided="true"><div className="studio-body"><main className="studio-canvas-column">
  <ReferencePanel entry="preparation" projectTitle="Café Aurora" selectionCount={3} projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)} onRequestProposals={()=>setRequests(value=>value+1)} proposalsDisabled={requests>0}

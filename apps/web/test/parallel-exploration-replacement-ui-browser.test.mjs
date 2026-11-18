@@ -9,8 +9,8 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 test('reposição explícita persiste antes do envio e pausa impede despacho tardio',{skip:!existsSync(browserPath),timeout:30000},async t=>{
  const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'replacement-fixture.tsx',loader:'tsx',contents:`
  import React from 'react';import {createRoot} from 'react-dom/client';
- import Recovery from './app/parallel-exploration-recovery.tsx';import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';import {validateExplorationPlan} from '@compor/agents-api/exploration-plan-contract';
- import {useParallelExploration} from './app/use-parallel-exploration.ts';import {createStudioState} from './lib/studio-state.ts';
+ import Recovery from './studio/parallel-exploration-recovery.tsx';import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';import {validateExplorationPlan} from '@compor/agents-api/exploration-plan-contract';
+ import {useParallelExploration} from './studio/use-parallel-exploration.ts';import {createStudioState} from './lib/studio-state.ts';
  const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0'),key='sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
  const context={idea:'Oficina',offer:'',audience:'',goal:'',direction:'',offerFacts:[],accepted:[],rejected:[],feedback:[]};
  const plan=validateExplorationPlan({version:1,items:[1,2,3].map(position=>({position,creativePrompt:'caminho '+position,composition:'composição '+position,contrast:'contraste '+position,differenceFromOthers:'diferença '+position}))},context);

@@ -15,11 +15,11 @@ const pins=[pin(101,'Terracota e textura'),pin(102,'Cor e contraste'),pin(103,'F
 const source=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioShell from './app/studio-shell.tsx';
-import StudioChat from './app/studio-chat.tsx';
-import ReferenceExploration from './app/reference-exploration.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import ReferenceSelectionTray from './app/reference-selection-tray.tsx';
+import StudioShell from './studio/studio-shell.tsx';
+import StudioChat from './studio/studio-chat.tsx';
+import ReferenceExploration from './studio/reference-exploration.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import ReferenceSelectionTray from './studio/reference-selection-tray.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const colors=['#ba654a','#123eab','#68784e','#e8b44a'];

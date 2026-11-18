@@ -35,7 +35,7 @@ export default [
     },
   },
   {
-    files: ['apps/web/{app,lib}/**/*.{js,mjs,jsx}'],
+    files: ['apps/web/{studio,handlers,pages,lib}/**/*.{js,mjs,jsx}'],
     rules: { 'no-restricted-syntax': ['error', { selector: 'Program', message: 'Código de produção do Next deve usar .ts ou .tsx para participar da checagem de tipos.' }] },
   },
 ];

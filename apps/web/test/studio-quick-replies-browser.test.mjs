@@ -14,7 +14,7 @@ const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5),foreignPiece
 const source=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioChat from './app/studio-chat.tsx';
+import StudioChat from './studio/studio-chat.tsx';
 import {createStudioState,createPost,addMessage,addReference,parseStudioState} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);

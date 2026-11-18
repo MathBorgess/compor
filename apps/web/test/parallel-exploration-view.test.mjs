@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import React from 'react';
 import {renderToStaticMarkup} from 'react-dom/server';
-import {ParallelExplorationProgress} from '../app/parallel-exploration-progress.tsx';
+import {ParallelExplorationProgress} from '../studio/parallel-exploration-progress.tsx';
 
 test('três posições preservam sua ordem e mostram estados sem alegar atividade do fornecedor',()=>{
  const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;

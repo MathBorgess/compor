@@ -18,7 +18,7 @@ async function fixtureSource(){
  const contents=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioChat from './app/studio-chat.tsx';
+import StudioChat from './studio/studio-chat.tsx';
 import {prepareSelectedVisualCandidates} from './lib/selected-visual-input.ts';
 import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';
 import {createStudioState,selectVersion,selectDraft,prepareAdjustment,parseStudioState,recordSavedVersion,getCurrentDraft} from './lib/studio-state.ts';

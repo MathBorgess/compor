@@ -111,14 +111,14 @@ async function uiSources(dir) {
 test("a interface não apresenta Phoenix, nota ou validação", async () => {
   const forbidden = /\b(Phoenix|validado|comprovado|NDCG|ndcg|probabilidade|probabilidades|calibrado)\b|\bscores?\b/i;
   const hits = [];
-  for (const path of await uiSources(fileURLToPath(new URL("../app/", import.meta.url)))) {
+  for (const path of await uiSources(fileURLToPath(new URL("../studio/", import.meta.url)))) {
     const lines = (await readFile(path, "utf8")).split("\n");
     lines.forEach((line, index) => {
       if (forbidden.test(line)) hits.push(`${path}:${index + 1}:${line.trim()}`);
     });
   }
   assert.deepEqual(hits, []);
-  const interview = await readFile(new URL("../app/brief-interview.tsx", import.meta.url), "utf8");
+  const interview = await readFile(new URL("../studio/brief-interview.tsx", import.meta.url), "utf8");
   assert.match(interview, /role="status">calibrando…/);
   assert.match(interview, /calibrating \? "calibrando…"/);
   assert.match(interview, /BRIEF · \{step\} DE \{briefDecisions\.length\}/);

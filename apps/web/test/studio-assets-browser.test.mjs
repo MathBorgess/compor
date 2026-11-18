@@ -14,9 +14,9 @@ const markerKey=user=>`compor-studio-image-upload:${user}:${project}:${piece}:1`
 
 test('PNG final exige autorização, preserva envio incerto e recupera a versão apenas com uso explícito',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  // The fixture is a temporary route, never part of a production build.
- const fixture=await mkdtemp(new URL('../app/studio-assets-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
-import {useState} from 'react';import StudioAssets from '../studio-assets';
+ const fixture=await mkdtemp(new URL('../pages/studio-assets-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
+ await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';
+import {useState} from 'react';import StudioAssets from '../../studio/studio-assets';
 export default function Fixture(){const[preview,setPreview]=useState(null),[version,setVersion]=useState(1),[userId,setUser]=useState('alice'),[used,setUsed]=useState('');return <main><label>PNG de teste<input type="file" onChange={e=>setPreview(e.target.files?.[0]??null)}/></label><button onClick={()=>setVersion(v=>v===1?2:1)}>Trocar versão</button><button onClick={()=>setUser(u=>u==='alice'?'bob':'alice')}>Trocar conta</button><output data-testid="used">{used}</output><StudioAssets userId={userId} projectId="${project}" pieceId="${piece}" version={version} canSave={true} preview={preview} onUseImage={({blob,pieceId,version})=>setUsed(JSON.stringify({size:blob.size,pieceId,version}))}/></main>;}`);
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:'ignore',env:{...process.env,APP_ORIGIN:origin}});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});

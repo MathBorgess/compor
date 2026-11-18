@@ -15,7 +15,7 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 test('consentimento não atravessa conta nem pedido antigo após troca de projeto',{skip:!existsSync(browserPath),timeout:20000},async t=>{
  const source=`
  import {useState} from 'react';import {createRoot} from 'react-dom/client';
- import ReferenceExploration from './app/reference-exploration.tsx';
+ import ReferenceExploration from './studio/reference-exploration.tsx';
  import {clearReferenceAuthorityConsent,readReferenceAuthorityConsent} from './lib/reference-authority-consent.ts';
  const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
  window.pending=[];window.readConsent=()=>readReferenceAuthorityConsent(id(1));window.readOther=()=>readReferenceAuthorityConsent(id(2));
@@ -45,9 +45,9 @@ test('consentimento não atravessa conta nem pedido antigo após troca de projet
 });
 
 test('Workspace invalida consentimento ao trocar conta e ao sair',{skip:!existsSync(browserPath),timeout:60000},async t=>{
- const fixture=await mkdtemp(new URL('../app/authority-consent-test-',import.meta.url));let child,browser;
+ const fixture=await mkdtemp(new URL('../pages/authority-consent-test-',import.meta.url));let child,browser;
  t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(fixture,{recursive:true,force:true});}}});
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';import Workspace from '../workspace';import {grantReferenceAuthorityConsent,readReferenceAuthorityConsent} from '../../lib/reference-authority-consent';if(typeof window!=='undefined'){window.testGrant=user=>grantReferenceAuthorityConsent(user);window.testRead=user=>readReferenceAuthorityConsent(user);}export default function Page(){return <Workspace loginAvailable/>;}`);
+ await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';import Workspace from '../../studio/workspace';import {grantReferenceAuthorityConsent,readReferenceAuthorityConsent} from '../../lib/reference-authority-consent';if(typeof window!=='undefined'){window.testGrant=user=>grantReferenceAuthorityConsent(user);window.testRead=user=>readReferenceAuthorityConsent(user);}export default function Page(){return <Workspace loginAvailable/>;}`);
  const socket=createSocket();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let startup='';child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});
  await waitForApp({url:`${origin}/${basename(fixture)}`,child,signal:t.signal,diagnostics:()=>startup});browser=await chromium.launch({executablePath:browserPath,headless:true});const page=await browser.newPage();page.setDefaultTimeout(10000);

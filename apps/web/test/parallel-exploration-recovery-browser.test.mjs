@@ -9,8 +9,8 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 test('recuperação visível consulta lote somente por gesto e mostra resultados por posição',{skip:!existsSync(browserPath)},async t=>{
  const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'parallel-recovery-fixture.tsx',loader:'tsx',contents:`
   import React from 'react';import {createRoot} from 'react-dom/client';
-  import Recovery from './app/parallel-exploration-recovery.tsx';
-  import {useExplorationLoop} from './app/use-exploration-loop.ts';
+  import Recovery from './studio/parallel-exploration-recovery.tsx';
+  import {useExplorationLoop} from './studio/use-exploration-loop.ts';
   import {createStudioState} from './lib/studio-state.ts';
   import {createParallelJournalStore} from './lib/parallel-exploration-journal.ts';
   import {validateExplorationPlan} from '@compor/agents-api/exploration-plan-contract';

@@ -16,9 +16,9 @@ const pixels=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQV
 const source=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import ReferenceExploration from './app/reference-exploration.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import ReferenceSelectionTray from './app/reference-selection-tray.tsx';
+import ReferenceExploration from './studio/reference-exploration.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import ReferenceSelectionTray from './studio/reference-selection-tray.tsx';
 function Screen(){
  const [references,setReferences]=useState([]),current=useRef(references);
  const [usingShared,setUsingShared]=useState(false);

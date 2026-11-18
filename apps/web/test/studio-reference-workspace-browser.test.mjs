@@ -11,10 +11,10 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const source=`
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioShell from './app/studio-shell.tsx';
-import ContextStrip from './app/context-strip.tsx';
+import StudioShell from './studio/studio-shell.tsx';
+import ContextStrip from './studio/context-strip.tsx';
 import {createStudioState,updateBrief,updateOfferFacts} from './lib/studio-state.ts';
-import './app/reference-exploration.css';
+import './studio/reference-exploration.css';
 function Conversation(){
  const [draft,setDraft]=useState('');
  return <section className="studio-chat-panel" aria-label="Conversa do projeto">

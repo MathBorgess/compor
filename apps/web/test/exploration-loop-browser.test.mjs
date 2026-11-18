@@ -8,11 +8,11 @@ import { chromium } from 'playwright-core';
 import { stopApp, waitForApp } from './wait-for-app.mjs';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const fixture=new URL('../app/exploration-loop-test/',import.meta.url);
+const fixture=new URL('../pages/exploration-loop-test/',import.meta.url);
 const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000003',pieceId='00000000-0000-4000-8000-000000000004';
 const source=`'use client';
 import {useState,StrictMode} from 'react';
-import {useExplorationLoop} from '../use-exploration-loop';
+import {useExplorationLoop} from '../../studio/use-exploration-loop';
 import {createStudioState,updateBrief,createPost,prepareAdjustment,settleAdjustment,addMessage,REFERENCE_SELECTION_EVENT} from '../../lib/studio-state';
 const at=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
 function ask(value){const requestId=uid(),asked=prepareAdjustment(createPost(value,{pieceId:'${pieceId}'}),{requestId,messageId:uid(),instruction:REFERENCE_SELECTION_EVENT,origin:'system',createdAt:at(),eventId:uid()});return settleAdjustment(asked,{requestId,status:'completed',result:{messageId:uid(),text:'Posso seguir pela tipografia serifada?'},createdAt:at(),eventId:uid()});}
@@ -21,7 +21,7 @@ async function referenceSignals(context){await context.route('**/api/studio/refe
 async function until(fn, predicate, timeout=6000){const end=Date.now()+timeout;for(;;){const result=await fn();if(predicate(result))return result;if(Date.now()>end)throw Error('estado não observado');await new Promise(resolve=>setTimeout(resolve,25));}}
 
 test('exploração sequencial protege abas, recarga, desconexão e resultado incerto', {skip:!existsSync(browserPath),timeout:150000}, async t=>{
-  assert.equal(existsSync(fixture),false);await mkdir(fixture);await writeFile(new URL('page.tsx',fixture),source);
+  assert.equal(existsSync(fixture),false);await mkdir(fixture);await writeFile(new URL('index.tsx',fixture),source);
   const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
   let logs='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'',SUPABASE_PUBLISHABLE_KEY:''}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{logs=(logs+chunk).slice(-5000);});
   let browser;t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(fixture,{recursive:true,force:true});}}});
@@ -266,10 +266,10 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   assert.equal(answered.length,7,'pedido explícito retoma a exploração');await o.close();
 });
 
-const questionFixture=new URL('../app/selection-question-test/',import.meta.url);
+const questionFixture=new URL('../pages/selection-question-test/',import.meta.url);
 const questionSource=`'use client';
 import {useState,useEffect} from 'react';
-import {useExplorationLoop} from '../use-exploration-loop';
+import {useExplorationLoop} from '../../studio/use-exploration-loop';
 import {createStudioState,updateBrief,createPost,prepareAdjustment,settleAdjustment,addMessage,addReference,removeReference,parseStudioState,REFERENCE_SELECTION_EVENT,type StudioState} from '../../lib/studio-state';
 const at=()=>new Date().toISOString(),uid=()=>crypto.randomUUID();
 const initial=()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Aula de cerâmica'});
@@ -290,7 +290,7 @@ export default function Page(){
 }`;
 
 test('pergunta da seleção resiste a turno automático e recarga, e a retomada vale só para a mesma pergunta',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- assert.equal(existsSync(questionFixture),false);await mkdir(questionFixture);await writeFile(new URL('page.tsx',questionFixture),questionSource);
+ assert.equal(existsSync(questionFixture),false);await mkdir(questionFixture);await writeFile(new URL('index.tsx',questionFixture),questionSource);
  const socket=createServer();await new Promise(resolve=>socket.listen(0,'127.0.0.1',resolve));const port=socket.address().port;await new Promise(resolve=>socket.close(resolve));const origin=`http://127.0.0.1:${port}`;
  let logs='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,SUPABASE_URL:'',SUPABASE_PUBLISHABLE_KEY:''}});for(const stream of [child.stdout,child.stderr])stream.on('data',chunk=>{logs=(logs+chunk).slice(-5000);});
  let browser;t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(questionFixture,{recursive:true,force:true});}}});

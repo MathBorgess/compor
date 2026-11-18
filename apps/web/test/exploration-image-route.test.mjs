@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createExplorationImageRoute, ExplorationCredentialsRejected } from '../lib/exploration-image-route.ts';
 import { decodeExplorationImage } from '../lib/exploration-image-runtime.ts';
-import { POST as explorationPost } from '../app/api/studio/explorations/route.ts';
+import { POST as explorationPost } from '../handlers/api/studio/explorations/route.ts';
 import { createHash } from 'node:crypto';
 import { createExplorationPrompt } from '@compor/agile-deliberation/exploration';
 

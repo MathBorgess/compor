@@ -19,7 +19,7 @@ async function waitForPage(page,predicate,message){
 test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',{skip:!existsSync(browserPath),timeout:30000},async t=>{
  const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'parallel-loop-fixture.tsx',loader:'tsx',contents:`
   import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
-  import {useParallelExploration} from './app/use-parallel-exploration.ts';import {ParallelExplorationProgress} from './app/parallel-exploration-progress.tsx';
+  import {useParallelExploration} from './studio/use-parallel-exploration.ts';import {ParallelExplorationProgress} from './studio/parallel-exploration-progress.tsx';
   import {createStudioState,createPost,addReference,prepareAdjustment,settleAdjustment,REFERENCE_SELECTION_EVENT} from './lib/studio-state.ts';import {validateExplorationPlan} from '@compor/agents-api/exploration-plan-contract';
   const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');const visualMode=location.search.startsWith('?visual'),canvas=document.createElement('canvas');canvas.width=2;canvas.height=2;canvas.getContext('2d').fillRect(0,0,2,2);const file=await new Promise(resolve=>canvas.toBlob(resolve,'image/png'));window.visualOriginal=Array.from(new Uint8Array(await file.arrayBuffer()));
   const reference={id:id(90),name:'Upload',mime:'image/png',size:file.size,width:2,height:2,source:location.search==='?visual-extra'?{kind:'generated',projectId:id(2),imageId:id(91)}:{kind:'local-upload'}};
