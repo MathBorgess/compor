@@ -4,6 +4,12 @@ import { exploredReferenceSchema, type ExploredReference, type ReferenceSignal, 
 import type { BoardAffinityEntry, UserTasteProfile } from './phoenix/models.ts';
 
 const MAX_FEED_BYTES = 1024 * 1024;
+// Ranking stays on the server. Generic connective words are not evidence of a matching subject.
+const queryStopwords = new Set(['aos','com','das','dos','ela','ele','essa','esse','esta','este','nas','nos','para','pela','pelo','por','que','sem','uma','uns']);
+function contentTerms(value:string):Set<string> {
+  const words=value.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase().match(/[a-z0-9]+/g) ?? [];
+  return new Set(words.filter(word=>word.length>=3 && !queryStopwords.has(word)));
+}
 function decode(value:string) {
   return value.replace(/<!\[CDATA\[([\s\S]*?)\]\]>/g,'$1').replace(/&(?:amp|lt|gt|quot|apos|#39);/g, entity => ({'&amp;':'&','&lt;':'<','&gt;':'>','&quot;':'"','&apos;':"'",'&#39;':"'"})[entity] ?? entity);
 }
@@ -45,7 +51,7 @@ async function readBounded(response:Response):Promise<string> {
   finally { await reader.cancel().catch(()=>{}); }
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
-export async function searchReferences({projectId,query,signals,history=[],fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];fetchApi?:typeof fetch}) {
+export async function searchReferences({projectId,query,signals,history=[],discoveryOnly=false,fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];discoveryOnly?:boolean;fetchApi?:typeof fetch}) {
   const projectSignals=signals.filter(signal=>signal.projectId===projectId);
   const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
   const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(projectSignals)});
@@ -57,10 +63,9 @@ export async function searchReferences({projectId,query,signals,history=[],fetch
       return {ok:true,items:parseReferenceFeed(await readBounded(response),board)};
     } catch { return {ok:false,items:[]}; }
   }));
-  const normalized=query.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();
-  const terms=normalized.split(/[^a-z0-9]+/).filter(term=>term.length>=3);
-  const seen=new Set<string>();
-  const ranked=[...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
+  const terms=[...contentTerms(query)];
+  const seen=new Set(discoveryOnly ? history.map(item=>item.originUrl) : []);
+  const ranked=discoveryOnly ? [] : [...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
   const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
   const choices=new Map<string,ReferenceSignal['action']>();
   for(const signal of currentSignals(projectSignals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
@@ -69,7 +74,7 @@ export async function searchReferences({projectId,query,signals,history=[],fetch
   const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
     const historyRank=(historyOrder.get(a.originUrl)??Infinity)-(historyOrder.get(b.originUrl)??Infinity);
     if(historyRank)return historyRank;
-    const score=(title:string)=>{const text=title.normalize('NFD').replace(/\p{M}/gu,'').toLowerCase();return terms.reduce((sum,term)=>sum+Number(text.includes(term)),0);};
+    const score=(title:string)=>{const words=contentTerms(title);return terms.reduce((count,word)=>count+Number(words.has(word)),0);};
     return score(b.title)-score(a.title);
   }).slice(0,12);
   return {status:references.length?'ok':responses.some(response=>response.ok)?'empty':'unavailable',references};

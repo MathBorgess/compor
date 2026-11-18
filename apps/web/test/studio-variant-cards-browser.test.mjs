@@ -12,9 +12,9 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 const project='11111111-1111-4111-8111-111111111111',piece='22222222-2222-4222-8222-222222222222',assetId='33333333-3333-4333-8333-333333333333';
 const png='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+nmTkAAAAASUVORK5CYII=';
 test('cards carregam a imagem mais recente por variante e recuperação privada exige escolha explícita',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- const fixture=await mkdtemp(new URL('../app/variant-test-',import.meta.url));
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
-import {useState,useRef} from 'react';import VariantCards from '../studio-variant-cards';
+ const fixture=await mkdtemp(new URL('../pages/variant-test-',import.meta.url));
+ await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';
+import {useState,useRef} from 'react';import VariantCards from '../../studio/studio-variant-cards';
 const piece='${piece}',project='${project}',content={headline:'Post',price:'',date:'',caption:'',captionOrigin:'user'};
 const versions=[{project_id:project,piece_id:piece,version:1,content},{project_id:project,piece_id:piece,version:2,content,metadata:{revision:0,approval:{status:'unapproved'},baseVersion:1,changedDimension:'style',operation:'create'}},{project_id:project,piece_id:piece,version:3,content,metadata:{revision:0,approval:{status:'unapproved'},baseVersion:2,changedDimension:null,operation:'edit'}}];
 export default function Fixture(){const[selected,setSelected]=useState(1),[used,setUsed]=useState('');const cache=useRef(new Map([[1,new Blob([Uint8Array.from(atob('${png}'),c=>c.charCodeAt(0))],{type:'image/png'})]]));return <main><output data-testid="selected">{selected}</output><output data-testid="used">{used}</output><VariantCards userId="alice" projectId={project} pieceId={piece} versions={versions} selectedVersion={selected} loadLocal={async version=>cache.current.has(version.version)?{file:cache.current.get(version.version)}:null} onOpenVersion={version=>setSelected(version.version)} onUseImage={async image=>{cache.current.set(image.version,image.blob);setUsed(String(image.version));return true;}}/></main>;}`);
@@ -27,6 +27,7 @@ export default function Fixture(){const[selected,setSelected]=useState(1),[used,
  await page.route('**/api/image-assets?**',route=>{const query=new URL(route.request().url()).searchParams;assert.equal(query.get('version'),'3');return route.fulfill({json:{assets:[{assetId,origin:'unknown'}],nextCursor:null}});});
  await page.route('**/api/images?**',route=>{const query=Object.fromEntries(new URL(route.request().url()).searchParams);reads.push(query);return route.fulfill({contentType:'image/png',body:Buffer.from(png,'base64')});});
  await page.goto(`${origin}/${basename(fixture)}`);
+ await page.getByRole('article').first().waitFor();
  assert.equal(await page.getByRole('article').count(),2);
  await page.getByRole('img',{name:'Arte da versão 1',exact:true}).waitFor();
  assert.equal(await page.getByRole('img',{name:'Arte da versão 2',exact:true}).count(),0,'o segundo card representa o retoque mais recente da variante');

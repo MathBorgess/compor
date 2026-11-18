@@ -9,12 +9,17 @@ import {build} from 'esbuild';
 import {chromium} from 'playwright-core';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
-const source=`import {useState} from 'react';import {createRoot} from 'react-dom/client';import ContextStrip from './context-strip';import StudioShell from './studio-shell';import {createStudioState,parseStudioState,updateBrief,updateOfferFacts} from '../lib/studio-state';
+const source=`
+import './context-strip.css';
+import './studio-shell.css';
+import './studio-reference-workspace.css';
+import './studio-reference-chat.css';
+import {useState} from 'react';import {createRoot} from 'react-dom/client';import ContextStrip from './context-strip';import StudioShell from './studio-shell';import {createStudioState,parseStudioState,updateBrief,updateOfferFacts} from '../lib/studio-state';
 const initial=structuredClone(createStudioState({userId:'${id(1)}',projectId:'${id(2)}'}));initial.brief.offer='Oficina de cerâmica';initial.brief.audience='Público do briefing';initial.persona.audience='Público da persona';initial.offerFacts=[{id:'${id(3)}',label:'Preço',value:'R$ 180',status:'confirmed'},{id:'${id(4)}',label:'Data',value:'18 de novembro',status:'pending'},{id:'${id(5)}',label:'Local',value:'Endereço reservado',status:'omitted'}];
 function Fixture(){const[state,setState]=useState(()=>parseStudioState(initial)),[editing,setEditing]=useState(false);return <><StudioShell stage="studio" projectTitle="Tempo de criar" context={<ContextStrip state={state} onBrief={patch=>setState(value=>updateBrief(value,patch))} onFacts={facts=>setState(value=>updateOfferFacts(value,facts))}/>} canvas={<section><h2>{editing?'Seu post preservado':'Escolha suas referências'}</h2><button type="button" onClick={()=>setEditing(value=>!value)}>{editing?'Escolher mais referências':'Voltar ao post'}</button><p>Uma ideia já em desenvolvimento.</p></section>}/><output data-testid="state" hidden>{JSON.stringify(state)}</output></>;}createRoot(document.getElementById('root')).render(<Fixture/>);`;
 
 test('faixa do contexto edita por teclado, pede a escolha de público e distingue fatos sem esconder o post',async t=>{
-  const compiled=await build({stdin:{contents:source,sourcefile:'context-strip-fixture.tsx',resolveDir:fileURLToPath(new URL('../app/',import.meta.url)),loader:'tsx'},bundle:true,external:['/studio/*'],write:false,format:'iife',platform:'browser',jsx:'automatic',outfile:'/tmp/context-strip-fixture.js'});
+  const compiled=await build({stdin:{contents:source,sourcefile:'context-strip-fixture.tsx',resolveDir:fileURLToPath(new URL('../studio/',import.meta.url)),loader:'tsx'},bundle:true,external:['/studio/*'],write:false,format:'iife',platform:'browser',jsx:'automatic',outfile:'/tmp/context-strip-fixture.js'});
   const script=compiled.outputFiles.find(file=>file.path.endsWith('.js')).contents,css=compiled.outputFiles.find(file=>file.path.endsWith('.css')).contents;
   const server=createServer(async(request,response)=>{
     if(request.url==='/fixture.js'){response.setHeader('Content-Type','text/javascript');return response.end(script);}

@@ -8,12 +8,24 @@ import {agentSigningKey} from './agent-config.ts';
 import {createCredentialSessionBindings,createCredentialStudioBindings} from './openai-credential-bindings.ts';
 import type {PreparedOpenAiRequest} from './openai-credential.ts';
 import {resolveSupabaseActor,ownsSupabaseProject,ownsSupabaseVersion} from './agent-auth.ts';
+import {selectedVisualsAvailable} from './selected-visual-availability.ts';
+import {createReferenceAuthorityStore} from './reference-authority-store.ts';
+import {referenceConsentSecret} from './reference-authority-route.ts';
+import {visualInputDigest} from '@compor/agents-api/visual-input';
 
 export function configuredStudioChat(env=process.env,credential?:Pick<PreparedOpenAiRequest,'source'|'actor'|'apiKey'>){
  const config=authConfig(),secret=agentSigningKey(env);
  if(env.COMPOR_STUDIO_CHAT_ENABLED!=='true'||!config||!secret)return null;
  const credentials={url:config.service,anonKey:config.key};
  return createStudioChatHandlers({appOrigin:config.app,onEvent:recordStudioEvent,
+  selectedVisualsEnabled:selectedVisualsAvailable(Boolean(config),env),selectedVisualsRequired:env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',authorizeVisualInput:async()=>true,
+  prepareVisualAuthority:async input=>{
+   if(env.COMPOR_REFERENCE_AUTHORITY_ENABLED!=='true')return null;
+   const pieceId=input.conversationId&&input.conversationId!=='references'?input.conversationId:null;
+   const authority={pieceId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:referenceConsentSecret(input.consentHeader)};
+   return await createReferenceAuthorityStore(config).check(input.actor,{projectId:input.projectId,conversationId:input.conversationId??'references',requestId:input.requestId,batchId:null,purpose:'artwork',manifestDigest:authority.manifestDigest,consentSecret:authority.consentSecret})?authority:null;
+  },
+  checkVisualAuthority:async input=>env.COMPOR_REFERENCE_AUTHORITY_ENABLED==='true'&&await createReferenceAuthorityStore(config).check(input.actor,{projectId:input.projectId,conversationId:input.conversationId??'references',requestId:input.requestId,batchId:null,purpose:'artwork',manifestDigest:input.visualAuthority.manifestDigest,consentSecret:input.visualAuthority.consentSecret}),
   resolveActor:async()=>credential?.actor??resolveSupabaseActor(await authClient(config)),
   ownsProject:args=>ownsSupabaseProject({...args,config}),ownsVersion:args=>ownsSupabaseVersion({...args,config}),
   verifyDurableResult:async({actor,projectId,name,args,result})=>{

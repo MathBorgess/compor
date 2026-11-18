@@ -1,0 +1,44 @@
+{
+  "mentoria-P01-variacao": {
+    "divergence": 2,
+    "preserves": true,
+    "observation": "A estabelece a pergunta no topo e põe o tecido pequeno à direita. B amplia o mesmo tecido como protagonista à esquerda e desloca o argumento para a lateral.",
+    "digest": "2e9e179cb131a806ff2267cbff27ec34f37f59a6eb7db5cce8cd80216dfe3cfc"
+  },
+  "mentoria-P02-variacao": {
+    "divergence": 1,
+    "preserves": true,
+    "observation": "Ambas abrem com pergunta no topo e mostram o mesmo diagrama central horizontal. B intercala o apoio antes da faixa e reduz o diagrama.",
+    "digest": "d5064c9c52ff55063e0cc88e06ed2f7bb7e6aa4a89036868801100f4662d9b5e"
+  },
+  "startup-P01-variacao": {
+    "divergence": 1,
+    "preserves": true,
+    "observation": "Ambas abrem com título e apresentam a transferência do pote em faixa horizontal. O texto de apoio muda de lado da faixa e A acrescenta uma tarja superior.",
+    "digest": "185d4b03dd6f90f6b306ee4d23b681bf3a392d0c4cfa95677462ca36b7121ad7"
+  },
+  "startup-P02-variacao": {
+    "divergence": 2,
+    "preserves": true,
+    "observation": "A começa pela sequência grande de recipientes e abaixo propõe a leitura. B começa pela pergunta e situa os recipientes como ilustração intermediária.",
+    "digest": "186d68a3c54b8eb642edf078d1554b45a3cdb7c97c39a580c5e833b96d1d1dca"
+  },
+  "mentoria-P01-convergencia": {
+    "closer": "A",
+    "preserves": true,
+    "observation": "A conserva as palavras em duas linhas menores. B ocupa três linhas mais pesadas. Paleta, tecido e rodapé permanecem reconhecíveis.",
+    "digest": "b3170a628c00a6d9e50034251c33226523becd02e6a725e2d260d4a2c758dc55"
+  },
+  "mentoria-P02-convergencia": {
+    "closer": "B",
+    "preserves": true,
+    "observation": "B reduz peso visual e largura do título, distribuindo-o em três linhas curtas. A conserva duas linhas largas e letras maiores. O diagrama e o restante da peça se mantêm.",
+    "digest": "7018b1110193a91ca6349e6c20385c37ed4e07ecea88cb5e4c45df3ff4f8a8dc"
+  },
+  "startup-P02-convergencia": {
+    "closer": "B",
+    "preserves": true,
+    "observation": "B amplia o título e quebra a primeira linha após “com”. As palavras, os recipientes e a chamada no rodapé se mantêm.",
+    "digest": "fb9331de3a340d9711c7116aed245b87b88196c0463df14fa0efb165d5b3c1c0"
+  }
+}

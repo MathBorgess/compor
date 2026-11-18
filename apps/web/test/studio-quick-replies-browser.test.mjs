@@ -14,7 +14,7 @@ const user=id(1),project=id(2),piece=id(3),first=id(4),second=id(5),foreignPiece
 const source=`
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioChat from './app/studio-chat.tsx';
+import StudioChat from './studio/studio-chat.tsx';
 import {createStudioState,createPost,addMessage,addReference,parseStudioState} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const canvas=document.createElement('canvas');canvas.width=4;canvas.height=4;canvas.getContext('2d').fillRect(0,0,4,4);
@@ -121,12 +121,21 @@ test('mensagem de outro post não bloqueia a resposta rápida da conversa de ref
 
 test('alternativa pelo teclado envia a descrição; “Quero ajustar” só abre o compositor',options,async t=>{
  const {page,calls,reading,waitForCalls}=await setup(t);await reading();
- await group(page).getByRole('button',{name:'Quero ajustar',exact:true}).click();
+ const adjust=group(page).getByRole('button',{name:'Quero ajustar',exact:true});
+ await adjust.click();
  const composer=page.getByLabel('Sua mensagem');
  assert.equal(await composer.inputValue(),'Quero ajustar a recomendação: ');
  assert.equal(await page.evaluate(()=>document.activeElement?.id),'studio-chat-message-references');
- await composer.fill('texto meu');
- await group(page).getByRole('button',{name:'Quero ajustar',exact:true}).click();
+ assert.equal(await composer.evaluate(field=>field.selectionStart===field.value.length&&field.selectionEnd===field.value.length),true);
+ // Select immediately on refocus and type in the next frame, as when replacing the suggested prefix.
+ await adjust.evaluate(async button=>{
+  button.focus();
+  button.click();
+  document.activeElement.select();
+  await new Promise(resolve=>requestAnimationFrame(resolve));
+ });
+ await page.keyboard.insertText('texto meu');
+ await adjust.click();
  assert.equal(await composer.inputValue(),'texto meu','um rascunho existente é preservado');
  await page.waitForTimeout(300);assert.equal(calls.length,1,'ajustar não envia nada');
  await group(page).getByRole('button',{name:'Mais sóbrio',exact:true}).focus();await page.keyboard.press('Space');

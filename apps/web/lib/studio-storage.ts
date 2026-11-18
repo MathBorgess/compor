@@ -11,6 +11,8 @@ function parseRecord(input:unknown):StoredRecord {const value=recordSchema.safeP
 function parseRecords(input:unknown):StoredRecord[]{if(!Array.isArray(input))throw new StudioStorageError('studio_storage_corrupt');return input.map(parseRecord);}
 import {studioImageDimensions,studioImageDimensionsMatch} from './studio-image.ts';
 import { parseStudioState, STUDIO_LIMITS } from './studio-state.ts';
+import {effectiveReferences,selectScopedReference,unselectScopedReference} from './studio-post-context.ts';
+import {referenceSelectionProjection,referenceSelectionWriteSchema} from './reference-selection-projection.ts';
 
 export class StudioStorageError extends Error {
   code:string; currentRevision?:number;
@@ -32,7 +34,7 @@ function checkGlobalBudget(references:StoredRecord[],assets:StoredRecord[],repla
 }
 
 /**
- * Browser-only content. IDB v4 retains state/reference/draft asset stores and archives schemas 1 and 2 before their first converted save.
+ * Browser-only content. IDB v6 retains state/reference/draft asset stores and archives schemas 1–3 before their first converted save.
  * References and draft assets share an atomic 256 MiB / 500 blob budget for this database;
  * existing per-project reference limits still apply. Quota errors never evict content.
  * State is limited to 512 KiB per project, without a global project/state count limit.
@@ -48,8 +50,8 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     opening=new Promise<IDBDatabase>((resolve,reject)=>{
       let request:IDBOpenDBRequest,settled=false;
       const rejectOnce=(error:unknown)=>{if(!settled){settled=true;reject(storageError(error));}};
-      try{request=indexedDB.open(name,4);}catch(error){rejectOnce(error);return;}
-      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'scope'});if(!db.objectStoreNames.contains('legacyStates'))db.createObjectStore('legacyStates',{keyPath:'scope'});if(!db.objectStoreNames.contains('stateArchives'))db.createObjectStore('stateArchives',{keyPath:'key'});if(!db.objectStoreNames.contains('references'))db.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('draftAssets'))db.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');};
+      try{request=indexedDB.open(name,6);}catch(error){rejectOnce(error);return;}
+      request.onupgradeneeded=()=>{const db=request.result;if(!db.objectStoreNames.contains('states'))db.createObjectStore('states',{keyPath:'scope'});if(!db.objectStoreNames.contains('legacyStates'))db.createObjectStore('legacyStates',{keyPath:'scope'});if(!db.objectStoreNames.contains('stateArchives'))db.createObjectStore('stateArchives',{keyPath:'key'});if(!db.objectStoreNames.contains('references'))db.createObjectStore('references',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('draftAssets'))db.createObjectStore('draftAssets',{keyPath:'key'}).createIndex('scope','scope');if(!db.objectStoreNames.contains('referenceCommands'))db.createObjectStore('referenceCommands',{keyPath:'scope'});if(!db.objectStoreNames.contains('referenceSync'))db.createObjectStore('referenceSync',{keyPath:'scope'});};
       request.onerror=()=>rejectOnce(request.error);
       request.onblocked=()=>rejectOnce(new StudioStorageError('studio_storage_blocked'));
       request.onsuccess=()=>{const db=request.result;if(settled){db.close();return;}settled=true;connection=db;db.onversionchange=()=>{db.close();if(connection===db)connection=null;};resolve(db);};
@@ -89,10 +91,104 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
           if((existing?.revision??null)!==expectedRevision)throw new StudioStorageError('studio_storage_conflict',{currentRevision:existing?.revision});
           if(existing && state.revision<=existing.revision){if(JSON.stringify(existing)===JSON.stringify(state)){done(state);return;}throw new StudioStorageError('studio_storage_invalid');}
           const previous=z.optional(z.object({state:z.catchall(z.object({schemaVersion:z.number()}),z.unknown())})).parse(request.result);
-          if(previous&&[1,2].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
+          if(previous&&[1,2,3].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([scope,previous.state.schemaVersion]),scope,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope,state:previous.state});}
           store.put({scope,state});done(state);
         }catch(error){fail(error);}
       };
+    });
+  }
+  /** Selection changes and their pending command commit in one local transaction. */
+  const authorityRecord=z.strictObject({scope:z.string(),commandId:z.uuid(),expectedRemoteRevision:z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER-1)),localRevision:z.number().check(z.int()).check(z.nonnegative()),selection:referenceSelectionWriteSchema});
+  const authoritySync=z.strictObject({scope:z.string(),revision:z.number().check(z.int()).check(z.nonnegative()).check(z.maximum(Number.MAX_SAFE_INTEGER)),selection:referenceSelectionWriteSchema});
+  type AuthorityCommand=z.infer<typeof authorityRecord>;
+  async function readReferenceAuthority(scope:StudioScope){
+    const address=scopeOf(scope);
+    return transaction<{state:StudioState;pending:AuthorityCommand|null;confirmed:z.infer<typeof authoritySync>|null}>(['states','referenceCommands','referenceSync'],'readonly',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address),tx.objectStore('referenceSync').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{const state=readState(requests[0].result,address);if(!state)throw new StudioStorageError('studio_storage_invalid');const pending=requests[1].result===undefined?null:authorityRecord.parse(requests[1].result),confirmed=requests[2].result===undefined?null:authoritySync.parse(requests[2].result);if(pending&&pending.scope!==address||confirmed&&confirmed.scope!==address)throw Error();done({state,pending,confirmed});}catch(error){fail(error instanceof StudioStorageError?error:new StudioStorageError('studio_storage_corrupt'));}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
+  /** Establish only an observed matching baseline; never adopt a later revision silently. */
+  async function establishReferenceAuthority(scope:StudioScope,localRevision:number,remoteRevision:number,selection:z.infer<typeof referenceSelectionWriteSchema>){
+    const address=scopeOf(scope),expected=referenceSelectionWriteSchema.parse(selection);
+    if(!Number.isSafeInteger(localRevision)||localRevision<0||!Number.isSafeInteger(remoteRevision)||remoteRevision<0)throw new StudioStorageError('studio_storage_invalid');
+    return transaction<void>(['states','referenceCommands','referenceSync'],'readwrite',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address),tx.objectStore('referenceSync').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{const state=readState(requests[0].result,address),old=requests[2].result===undefined?null:authoritySync.parse(requests[2].result);if(!state||state.revision!==localRevision||requests[1].result!==undefined||JSON.stringify(referenceSelectionProjection(state))!==JSON.stringify(expected)||old&&(old.scope!==address||old.revision!==remoteRevision||JSON.stringify(old.selection)!==JSON.stringify(expected)))throw new StudioStorageError('studio_storage_conflict');tx.objectStore('referenceSync').put({scope:address,revision:remoteRevision,selection:expected});done();}catch(error){fail(error);}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
+  type ReferenceChange={kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string};
+  /** Queue the reviewed local selection against the exact remote revision shown to the person. */
+  async function beginReferenceAuthorityAdoption(scope:StudioScope,{commandId,expectedLocalRevision,expectedRemoteRevision,selection}:{commandId:string;expectedLocalRevision:number;expectedRemoteRevision:number;selection:z.infer<typeof referenceSelectionWriteSchema>}){
+    const address=scopeOf(scope),expected=referenceSelectionWriteSchema.parse(selection);
+    if(!uuid(commandId)||!Number.isSafeInteger(expectedLocalRevision)||expectedLocalRevision<0)throw new StudioStorageError('studio_storage_invalid');
+    return transaction<AuthorityCommand>(['states','referenceCommands'],'readwrite',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{
+        const state=readState(requests[0].result,address);
+        if(!state||state.revision!==expectedLocalRevision||requests[1].result!==undefined||JSON.stringify(referenceSelectionProjection(state))!==JSON.stringify(expected))throw new StudioStorageError('studio_storage_conflict');
+        const command=authorityRecord.parse({scope:address,commandId,expectedRemoteRevision,localRevision:state.revision,selection:expected});
+        tx.objectStore('referenceCommands').add(command);done(command);
+      }catch(error){fail(error);}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
+  async function beginReferenceAuthorityChange(scope:StudioScope,{commandId,expectedLocalRevision,expectedRemoteRevision,change}:{commandId:string;expectedLocalRevision:number;expectedRemoteRevision:number;change:ReferenceChange}){
+    const address=scopeOf(scope);
+    if(!uuid(commandId)||!Number.isSafeInteger(expectedLocalRevision)||expectedLocalRevision<0||!Number.isSafeInteger(expectedRemoteRevision)||expectedRemoteRevision<0||expectedRemoteRevision>=Number.MAX_SAFE_INTEGER||!change||!['select','unselect'].includes(change.kind)||(change.target!=='references'&&!uuid(change.target)))throw new StudioStorageError('studio_storage_invalid');
+    return transaction<{state:StudioState;command:AuthorityCommand|null}>(['states','references','referenceCommands','referenceSync','stateArchives','legacyStates'],'readwrite',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address),tx.objectStore('referenceSync').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{
+        const state=readState(requests[0].result,address),synced=requests[2].result===undefined?null:authoritySync.parse(requests[2].result);
+        if(!state||state.revision!==expectedLocalRevision||requests[1].result!==undefined||!synced||synced.scope!==address||synced.revision!==expectedRemoteRevision||JSON.stringify(referenceSelectionProjection(state))!==JSON.stringify(synced.selection))throw new StudioStorageError('studio_storage_conflict');
+        const apply=(reference?:StudioReference)=>{try{
+          if(change.kind==='unselect'&&!effectiveReferences(state,change.target).some(item=>item.id===change.id))throw new StudioStorageError('studio_storage_invalid');
+          const next=change.kind==='select'?selectScopedReference(state,reference!,change.target):unselectScopedReference(state,change.id,change.target);
+          const selection=referenceSelectionProjection(next);
+          const previous=z.optional(z.object({state:z.catchall(z.object({schemaVersion:z.number()}),z.unknown())})).parse(requests[0].result);
+          if(previous&&[1,2,3].includes(previous.state.schemaVersion)){tx.objectStore('stateArchives').put({key:JSON.stringify([address,previous.state.schemaVersion]),scope:address,state:previous.state});if(previous.state.schemaVersion===1)tx.objectStore('legacyStates').put({scope:address,state:previous.state});}
+          tx.objectStore('states').put({scope:address,state:next});
+          if(JSON.stringify(selection)===JSON.stringify(synced.selection)){done({state:next,command:null});return;}
+          const command=authorityRecord.parse({scope:address,commandId,expectedRemoteRevision,localRevision:next.revision,selection});
+          tx.objectStore('referenceCommands').add(command);done({state:next,command});
+        }catch(error){fail(error);}};
+        if(change.kind==='select'){
+          const metadata=referenceSchema.parse(change.reference);if(!uuid(metadata.id))throw new StudioStorageError('studio_storage_invalid');
+          const request=tx.objectStore('references').get(referenceKey(address,metadata.id));request.onsuccess=()=>{try{const stored=parseRecord(request.result);if(stored.scope!==address||!('id' in stored.metadata)||!recordValid(stored)||JSON.stringify(stored.metadata)!==JSON.stringify(metadata))throw new StudioStorageError('studio_storage_corrupt');apply(metadata);}catch(error){fail(error);}};
+        }else apply();
+      }catch(error){fail(error);}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
+  /** Clear only the exact confirmed command and retain its synchronized revision. */
+  async function confirmReferenceAuthorityChange(scope:StudioScope,commandId:string,remoteRevision:number){
+    const address=scopeOf(scope);if(!uuid(commandId)||!Number.isSafeInteger(remoteRevision)||remoteRevision<1)throw new StudioStorageError('studio_storage_invalid');
+    return transaction<void>(['states','referenceCommands','referenceSync'],'readwrite',(tx,done,fail)=>{
+      const requests=[tx.objectStore('states').get(address),tx.objectStore('referenceCommands').get(address)];let remaining=requests.length;
+      const finish=()=>{if(--remaining)return;try{
+        const state=readState(requests[0].result,address);
+        const parsed=authorityRecord.safeParse(requests[1].result);
+        if(!state||!parsed.success||parsed.data.scope!==address||parsed.data.commandId!==commandId||remoteRevision!==parsed.data.expectedRemoteRevision+1||JSON.stringify(referenceSelectionProjection(state))!==JSON.stringify(parsed.data.selection))throw new StudioStorageError('studio_storage_conflict');
+        tx.objectStore('referenceSync').put({scope:address,revision:remoteRevision,selection:parsed.data.selection});
+        tx.objectStore('referenceCommands').delete(address);done();
+      }catch(error){fail(error);}};
+      requests.forEach(request=>{request.onsuccess=finish;});
+    });
+  }
+  /** The server has either applied or permanently fenced the exact command. */
+  async function clearResolvedReferenceCommand(scope:StudioScope,commandId:string){
+    const address=scopeOf(scope);
+    return transaction<void>(['referenceCommands','referenceSync'],'readwrite',(tx,done,fail)=>{
+      const commands=tx.objectStore('referenceCommands'),request=commands.get(address);
+      request.onsuccess=()=>{try{
+        const parsed=authorityRecord.safeParse(request.result);
+        if(!parsed.success||parsed.data.scope!==address||parsed.data.commandId!==commandId)throw new StudioStorageError('studio_storage_conflict');
+        commands.delete(address);
+        tx.objectStore('referenceSync').delete(address);
+        done();
+      }catch(error){fail(error);}};
     });
   }
   async function prepareFile({id,file,source}:{id:string;file:File;source?:StudioReference['source']}):Promise<StudioReference> {
@@ -204,5 +300,5 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const address=draftAddress(scopeOf(scope),input);
     return transaction(['draftAssets'],'readwrite',(tx,done)=>{tx.objectStore('draftAssets').delete(address.key);done(true);});
   }
-  return Object.freeze({load,save,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
+  return Object.freeze({load,save,readReferenceAuthority,establishReferenceAuthority,beginReferenceAuthorityAdoption,beginReferenceAuthorityChange,confirmReferenceAuthorityChange,clearResolvedReferenceCommand,putReference,getReference,removeReference,putDraftAsset,getDraftAsset,copyDraftAsset,removeDraftAsset,close(){connection?.close();connection=null;}});
 }

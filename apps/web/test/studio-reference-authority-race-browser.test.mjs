@@ -1,0 +1,21 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {existsSync} from 'node:fs';
+import {createServer} from 'node:http';
+import {build} from 'esbuild';
+import {chromium} from 'playwright-core';
+const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+
+test('troca de fonte durante verificação bloqueia ferramenta e dois envios aguardam um só lock',{skip:!existsSync(browserPath),timeout:30000},async t=>{
+ const source=`import React,{useRef,useState} from 'react';import{createRoot}from'react-dom/client';import StudioChat from './studio/studio-chat.tsx';import{createStudioState,createPost}from'./lib/studio-state.ts';
+ const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000002',pieceId='00000000-0000-4000-8000-000000000003';window.count=0;window.executed=[];window.release=null;const locked=location.search==='?lock';
+ function App(){const[source,setSource]=useState('byok'),[epoch,setEpoch]=useState(0),[state,setState]=useState(()=>createPost(createStudioState({userId,projectId}),{pieceId}));const current=useRef(state),tools=useRef({execute:async(name,args)=>{window.executed.push({name,args});return{status:'completed',revision:1};}});function change(fn){const next=fn(current.current);current.current=next;setState(next);return next;}async function check(){window.count++;if(window.count===(locked?1:3))await new Promise(resolve=>{window.release=resolve;});return true;}return <main><button onClick={()=>{setSource('default');setEpoch(n=>n+1)}}>Trocar fonte</button><StudioChat state={state} getState={()=>current.current} change={change} flush={async()=>{}} tools={tools} hasApiKey canUseAI credentialSource={source} credentialEpoch={epoch} getApiKey={()=>source==='byok'?'sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx':''} onUseImage={async()=>false} loadReference={async()=>null} conversationId={pieceId} checkReferenceAuthority={check}/></main>;}createRoot(document.getElementById('root')).render(<App/>);`;
+ const built=await build({stdin:{contents:source,loader:'tsx',resolveDir:process.cwd()},bundle:true,write:false,platform:'browser',format:'esm',jsx:'automatic',define:{'process.env.NODE_ENV':'"development"'},loader:{'.css':'empty'}});
+ const server=createServer((request,response)=>{response.setHeader('content-type',request.url==='/bundle.js'?'text/javascript':'text/html');response.end(request.url==='/bundle.js'?built.outputFiles[0].text:'<!doctype html><div id="root"></div><script type="module" src="/bundle.js"></script>');});await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));const origin=`http://127.0.0.1:${server.address().port}`,browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{await browser.close();server.closeAllConnections();await new Promise(resolve=>server.close(resolve));});
+ for(const mode of ['action','lock']){const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[];page.on('pageerror',error=>errors.push(error.message));await page.route('**/*',route=>{const url=new URL(route.request().url());if(url.origin!==origin)return route.abort();if(url.pathname.startsWith('/api/')){calls.push(url.pathname);return route.fulfill({status:202,json:mode==='action'?{status:'action_required',action:{name:'compor_novo_post',args:{}},actionBinding:'signed-synthetic'}:{status:'completed',text:'Concluído.'}});}return route.continue();});
+  await page.goto(`${origin}/${mode==='lock'?'?lock':''}`);await page.getByLabel('Sua mensagem').fill('Criar post sintético');await page.getByRole('button',{name:'Enviar →',exact:true}).click();await page.waitForFunction(()=>window.release!==null);
+  if(mode==='action')await page.getByRole('button',{name:'Trocar fonte',exact:true}).click();else await page.locator('form.studio-chat-composer').evaluate(form=>form.requestSubmit());
+  await page.evaluate(()=>window.release());if(mode==='lock')await page.getByText('Concluído.',{exact:true}).waitFor();else await page.waitForTimeout(150);
+  assert.deepEqual(await page.evaluate(()=>window.executed),[]);assert.deepEqual(calls,['/api/studio/chat']);assert.deepEqual(errors,[]);await page.close();
+ }
+});

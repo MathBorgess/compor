@@ -17,7 +17,7 @@ class StageTest(unittest.TestCase):
         self.base = Path(self.directory.name)
         self.root = self.base / 'source'
         self.root.mkdir()
-        specs = ['apps/web/app', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
+        specs = ['apps/web/handlers', 'apps/web/pages', 'apps/web/studio', 'apps/web/build', 'apps/web/lib', 'apps/web/public', 'apps/web/package.json',
                  'apps/web/package-lock.json', 'apps/web/next.config.mjs', 'apps/web/.npmrc',
                  'apps/web/vercel.json', 'apps/web/tsconfig.json', 'apps/web/next-env.d.ts', 'apps/web/proxy.ts']
         specs += [path for name in PACKAGES for path in (f'packages/{name}/package.json', f'packages/{name}/src')]
@@ -51,7 +51,7 @@ class StageTest(unittest.TestCase):
                               cwd=self.root, capture_output=True, text=True, check=check)
 
     def test_stage_is_reproducible_and_uses_only_internal_package_paths(self):
-        (self.root / 'apps/web/app/untracked.tsx').write_text('not part of the selected commit')
+        (self.root / 'apps/web/studio/untracked.tsx').write_text('not part of the selected commit')
         outputs = []
         for name in ['first', 'second']:
             path = self.base / name
@@ -92,7 +92,7 @@ class StageTest(unittest.TestCase):
             self.assertFalse((path / 'packages').exists())
             self.assertFalse((app / '.next').exists())
             self.assertFalse((app / 'node_modules').exists())
-            self.assertFalse((app / 'app/untracked.tsx').exists())
+            self.assertFalse((app / 'studio/untracked.tsx').exists())
             outputs.append(result['manifest_sha256'])
         self.assertEqual(outputs[0], outputs[1])
 
@@ -104,7 +104,9 @@ class StageTest(unittest.TestCase):
                          'phoenix/catalog.ts', 'phoenix/deterministic.ts', 'phoenix/formulas.ts',
                          'phoenix/hyperparams.ts', 'phoenix/models.ts', 'phoenix/source-manifest.json', 'phoenix/PROVENANCE.md']:
             self.assertEqual((app / 'lib' / filename).read_bytes(), (self.root / 'apps/web/lib' / filename).read_bytes())
-        self.assertTrue((app / 'app/api/studio/decision/route.ts').is_file())
+        self.assertTrue((app / 'handlers/api/studio/decision/route.ts').is_file())
+        self.assertTrue((app / 'pages/api/studio/decision.ts').is_file())
+        self.assertTrue((app / 'build/studio-schema-loader.cjs').is_file())
         self.assertFalse((output / 'prototypes').exists())
         self.assertEqual(json.loads((app / 'package.json').read_text())['scripts']['build'], 'next build')
 

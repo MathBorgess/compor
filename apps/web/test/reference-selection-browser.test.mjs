@@ -14,11 +14,13 @@ const pin=(id,title)=>({id,title,board:'behance/typography',originUrl:`https://w
 const pixels=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');
 // The same wiring as the studio reference screen: tray, external suggestions and generated images share one selection.
 const source=`
+import './studio/reference-exploration.css';
+
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import ReferenceExploration from './app/reference-exploration.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import ReferenceSelectionTray from './app/reference-selection-tray.tsx';
+import ReferenceExploration from './studio/reference-exploration.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import ReferenceSelectionTray from './studio/reference-selection-tray.tsx';
 function Screen(){
  const [references,setReferences]=useState([]),current=useRef(references);
  const [usingShared,setUsingShared]=useState(false);

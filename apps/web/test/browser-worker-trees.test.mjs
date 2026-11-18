@@ -18,7 +18,7 @@ async function fixture(t) {
   t.after(()=>rm(temporary,{recursive:true,force:true}));
   const source=join(temporary,'source'),run=join(temporary,'run');
   const files=['package.json','package-lock.json','apps/web/package.json','apps/web/package-lock.json',
-    'apps/web/app/page.tsx','apps/web/lib/state.ts','apps/web/test/case.test.mjs',
+    'apps/web/studio/page.tsx','apps/web/lib/state.ts','apps/web/test/case.test.mjs',
     'apps/web/test/fixtures/example.json','apps/web/public/studio/brand.svg',
     'apps/web/proxy.ts','apps/web/next.config.mjs','apps/web/tsconfig.json','apps/web/next-env.d.ts',
     'packages/tool/package.json','packages/tool/src/index.mjs'];

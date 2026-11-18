@@ -1,0 +1,1540 @@
+"use client";
+import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
+import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
+import PersonaStep from "./persona-step";
+import StudioDirection from "./studio-direction";
+import StudioEditor from "./studio-editor";
+import StudioReview from "./studio-review";
+import VariantCards from "./studio-variant-cards";
+import type { ImageProposal } from '@compor/agents-api/image-proposal';
+import { useStudioState } from "./use-studio-state";
+import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
+import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
+import {createStudioJourneyController} from '../lib/studio-journey-controller';
+import StudioNavigation from './studio-navigation';
+import {postMutationSchema,postNameSchema,type PostRecord} from '../lib/post-catalog';
+import PostSettings from './studio-post-settings';
+import ReferencePanel from './studio-reference-panel';
+import {addPostCriterion,decidePostCriterion,freezeCreationContext,conversationContext,effectiveReferences,postContext,updatePostContext,selectScopedReference} from '../lib/studio-post-context';
+import ContextStrip from "./context-strip";
+import ReferenceExploration from "./reference-exploration";
+import type { ExploredReference } from "../lib/reference-exploration-contract";
+import { recordReferenceSelection } from "../lib/reference-selection";
+import {createReferenceSelectionCoordinator,type ReferenceAdoptionReview} from '../lib/reference-selection-coordinator.ts';
+import {assertReferenceVisualCapability,createReferenceVisualAuthority,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
+import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
+import type { ApprovedReference } from "../lib/web-contracts";
+import ExplorationGallery from "./exploration-gallery";
+import ReferenceSelectionTray from "./reference-selection-tray";
+import { useExplorationLoop } from "./use-exploration-loop";
+import {useParallelExploration} from './use-parallel-exploration';
+import {releaseObjectUrl} from './release-object-url.ts';
+import {parallelExplorationContext} from '../lib/parallel-exploration-context';
+import {ParallelExplorationProgress} from './parallel-exploration-progress';
+import type { CredentialSource } from "./use-ai-credentials";
+import { selectedExplorationKey } from "../lib/exploration-batch";
+import {confirmedExploration,recordCompletedExploration,prepareExplorationDraft} from "../lib/exploration-draft";
+import { recordVisualFeedback,recordGeneratedComment } from "../lib/studio-visual-feedback";
+import { recordReferenceRound } from "../lib/studio-reference-round";
+import { referenceDiscoverySubject, studioProjectIdea } from "../lib/studio-project-idea";
+import {
+  updateBrief,
+  updatePersona,
+  updateOfferFacts,
+  addCreativeCriterion,
+  recordCreativeDecision,
+  createPost,
+  changeStudioState,
+  selectDraft,
+  getCurrentDraft,
+  setCreativeField,
+  removeCreativeField,
+  addMark,
+  removeMark,
+  approveDraft,
+  recordActionReceipt,
+  resolveProjectTitle,
+  STUDIO_LIMITS,
+} from "../lib/studio-state.ts";
+import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
+import StudioChat from "./studio-chat";
+import StudioDialog from "./studio-dialog";
+import { rootRoute, useStudioRoute, type StudioRoute } from "../lib/studio-route";
+import StudioProfile from "./studio-profile";
+import StudioAssets from "./studio-assets";
+
+import * as z from '../lib/schema.ts';
+import { projectsSchema, projectResponseSchema, versionsSchema, versionSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
+import type { StudioState, StudioReference, ActionResult, DraftContext } from '../lib/studio-domain';
+import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
+const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
+declare global { interface Document { readonly modelContext?: StudioModelContext } }
+type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
+type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
+type Confirmation={name:StudioActionName;args:StudioAction};
+const renamedProjectSchema=z.extend(projectResponseSchema,{status:z.literal('renamed')});
+const approvedVersionSchema=z.object({status:z.literal('approved'),version:versionSchema});
+const homeSteps=[['Projeto','Um nome'],['Contexto','Oferta e público'],['IA','Escolha a IA'],['Referências','Opcional'],['Post','Seu pedido']] as const;
+const lastProjectKey=(userId:string)=>`compor:last-project:${userId}`;
+const createdDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'});
+function formatCreated(value?:string){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':createdDate.format(date);}
+function newestProject(projects:Project[]){return projects.reduce<Project|undefined>((best,project)=>!best||(project.created_at??'')>=(best.created_at??'')?project:best,undefined);}
+const settingsSections=[['context','Contexto'],['ai','IA'],['references','Referências'],['direction','Marca e direção'],['materials','Materiais e versões'],['history','Histórico anterior']] as const;
+
+export default function StudioApp({
+  userId,
+  hasApiKey,
+  canUseAI = hasApiKey,
+  credentialSource = "byok",
+  credentialEpoch = 0,
+  defaultAvailable = false,
+  parallelAvailable = false,
+  selectedVisualsAvailable = false,
+  selectedVisualsRequired = false,
+  referenceAuthorityEnabled = false,
+  onUseAI,
+  onPauseAI,
+  getApiKey,
+  keyInput,
+  onRemoveKey,
+  initialObjective,
+  recoveryBanner,
+  isAuthenticated,
+  developerMode = false,
+  accountLabel = "",
+  localAccount = false,
+  onSignOut,
+}: StudioAppProps) {
+  const [projects, setProjects] = useState<Project[]>([]),
+    [selected, setSelected] = useState<Project|null>(null),
+    [projectName, setProjectName] = useState(""),
+    [createdProjectId, setCreatedProjectId] = useState<string|null>(null),
+    [state, setState] = useState("loading"),
+    [notice, setNotice] = useState(""),
+    [uncertain, setUncertain] = useState(false);
+  const [deleteTarget,setDeleteTarget]=useState<Project|null>(null),[deleteError,setDeleteError]=useState('');
+  const [profileOpen,setProfileOpen]=useState(false);
+  const deleteLock=useRef(false);
+  const seq = useRef(0);
+  const focusCreate = useRef(false);
+  const [route, navigate] = useStudioRoute();
+  const selectedRoute = useRef<StudioRoute>(rootRoute);
+  const leaveGuard = useRef<{projectId:string;guard:()=>Promise<boolean>}|null>(null);
+  const registerLeaveGuard = useCallback<RegisterProjectLeaveGuard>((projectId,guard) => {
+    leaveGuard.current = {projectId,guard};
+    return () => { if (leaveGuard.current?.guard === guard) leaveGuard.current = null; };
+  }, []);
+  if (selected && route?.projectId === selected.id) selectedRoute.current = route;
+  const [openedFromUrl, setOpenedFromUrl] = useState(false);
+  // Only the id of the last opened project stays in this browser, to offer it first on the home screen.
+  const [lastOpened, setLastOpened] = useState<string|null>(null);
+  useEffect(() => { try { setLastOpened(localStorage.getItem(lastProjectKey(userId))); } catch { setLastOpened(null); } }, [userId]);
+  function rememberProject(id:string) {
+    setLastOpened(id);
+    try { localStorage.setItem(lastProjectKey(userId), id); } catch { /* the home screen falls back to the newest project */ }
+  }
+  const hasProjects = projects.length > 0;
+  const openedProject = projects.find(project => project.id === lastOpened);
+  const resumeProject = projects.length > 1 ? openedProject ?? newestProject(projects) : undefined;
+  const resume = resumeProject ? { project: resumeProject, opened: resumeProject === openedProject, created: formatCreated(resumeProject.created_at) } : null;
+  function openProject(project:Project, created=false) {
+    rememberProject(project.id);
+    setCreatedProjectId(created ? project.id : null);
+    setOpenedFromUrl(false);
+    setSelected(project);
+    selectedRoute.current = { projectId: project.id, pieceId: null };
+    navigate(selectedRoute.current);
+  }
+  // The URL (initial load or back/forward) chooses the open project once the list is known.
+  useEffect(() => {
+    if (!route) return;
+    if (selected?.id === route.projectId || (route.projectId && state !== "ready")) return;
+    function applyRoute() {
+      if (!route?.projectId) { if (selected) { setSelected(null); void refresh(); } return; }
+      const target = projects.find(project => project.id === route.projectId);
+      if (target) { selectedRoute.current=route; rememberProject(target.id); setCreatedProjectId(null); setOpenedFromUrl(true); setSelected(target); }
+      else { navigate(rootRoute, { replace: true }); setNotice("Este projeto não está disponível na sua conta."); }
+    }
+    if (!selected) { applyRoute(); return; }
+    let cancelled = false;
+    const registered = leaveGuard.current;
+    void (async () => {
+      const preserved = registered?.projectId === selected.id && await registered.guard();
+      if (cancelled) return;
+      // Keep the destination in history so a later Back can retry after storage recovers.
+      if (!preserved) { navigate(selectedRoute.current); return; }
+      applyRoute();
+    })();
+    return () => { cancelled = true; };
+  }, [route, state, projects, selected?.id]);
+  async function refresh() {
+    const n = ++seq.current;
+    setState("loading");
+    try {
+      const response = await fetch("/api/projects", { cache: "no-store" });
+      if (!response.ok) throw Error();
+      const data = projectsSchema.parse(await response.json());
+      if (n !== seq.current) return;
+      setProjects(data.projects);
+      if (!uncertain) setNotice("");
+      setState("ready");
+    } catch {
+      if (n === seq.current) {
+        setState("error");
+        setNotice("Não foi possível carregar seus projetos.");
+      }
+    }
+  }
+  useEffect(() => {
+    setDeleteTarget(null);setDeleteError('');setProfileOpen(false);deleteLock.current=false;
+    refresh();
+    return () => {
+      seq.current++;
+    };
+  }, [userId]);
+  useEffect(() => {
+    if (selected || !focusCreate.current || state !== "ready") return;
+    focusCreate.current = false;
+    document.getElementById("studio-project-name")?.focus();
+  }, [selected, state]);
+  function requestCreate() {
+    focusCreate.current = true;
+    setCreatedProjectId(null);
+    setSelected(null);
+    navigate(rootRoute);
+    refresh();
+  }
+  function projectRenamed(project:Project) {
+    setProjects(items => items.map(item => item.id === project.id ? {...item,...project} : item));
+    setSelected(current => current?.id === project.id ? {...current,...project} : current);
+  }
+  async function openProfile(){
+    if(selected){
+      const registered=leaveGuard.current;
+      if(registered?.projectId!==selected.id||!await registered.guard())return;
+    }
+    if(isAuthenticated())setProfileOpen(true);
+  }
+  async function requestDeletion(project:Project){
+    if(selected?.id===project.id){
+      const registered=leaveGuard.current;
+      if(registered?.projectId!==project.id||!await registered.guard())return;
+    }
+    if(isAuthenticated()){setDeleteError('');setDeleteTarget(project);}
+  }
+  async function deleteProject(){
+    const target=deleteTarget;
+    if(!target||!target.revision||deleteLock.current||deleteError||!isAuthenticated())return;
+    deleteLock.current=true;const n=++seq.current;setState('deleting');
+    try{
+      const response=await fetch('/api/projects',{method:'DELETE',signal:AbortSignal.timeout(15000),headers:{'content-type':'application/json'},body:JSON.stringify({projectId:target.id,expectedRevision:target.revision})});
+      if(n!==seq.current||!isAuthenticated())return;
+      const result=z.strictObject({status:z.literal('deleted'),projectId:z.string()}).safeParse(await response.json());
+      if(!response.ok||!result.success||result.data.projectId!==target.id)throw Error('unconfirmed');
+      setProjects(items=>items.filter(item=>item.id!==target.id));setDeleteTarget(null);setNotice('Projeto excluído da lista. Seus aprendizados continuam em Seu perfil.');
+      if(selected?.id===target.id){setSelected(null);navigate(rootRoute,{replace:true});}
+    }catch{
+      if(n===seq.current)setDeleteError('Não foi possível confirmar a exclusão. Atualize a lista antes de tentar novamente.');
+    }finally{if(n===seq.current){deleteLock.current=false;setState('ready');}}
+  }
+  async function create(event:FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (state !== "ready" || uncertain || !projectName.trim()) return;
+    setState("creating");
+    try {
+      const response = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ title: projectName.trim() }),
+      });
+      if (!response.ok) throw Error();
+      const data = projectResponseSchema.parse(await response.json());
+      setProjects((items) => [...items, data.project]);
+      openProject(data.project, true);
+      setProjectName("");
+      setState("ready");
+    } catch {
+      setUncertain(true);
+      setState("ready");
+      setNotice(
+        "A criação pode ter acontecido. Atualize a lista antes de criar outro projeto.",
+      );
+    }
+  }
+  const accountOverlays=<>{profileOpen&&<StudioProfile userId={userId} isAuthenticated={isAuthenticated} onClose={()=>setProfileOpen(false)}/>}
+    {deleteTarget&&<StudioDialog title="Excluir projeto?" onClose={()=>{if(!deleteLock.current)setDeleteTarget(null);}}><p>Excluir “{deleteTarget.title}” da sua lista de projetos?</p><p>Seus aprendizados continuam em Seu perfil, com as escolhas, comentários e critérios deste projeto. Posts, imagens e históricos são preservados. Esta ação remove o projeto da lista; não apaga seus arquivos definitivamente.</p>{deleteError&&<p role="alert">{deleteError}</p>}<button type="button" className="studio-button-secondary" disabled={state==='deleting'} onClick={()=>setDeleteTarget(null)}>Cancelar</button>{deleteError?<button type="button" className="studio-button" onClick={()=>{setDeleteTarget(null);setDeleteError('');setSelected(null);navigate(rootRoute,{replace:true});void refresh();}}>Atualizar projetos</button>:<button type="button" className="studio-button" disabled={state==='deleting'} onClick={()=>void deleteProject()}>{state==='deleting'?'Excluindo…':'Excluir projeto'}</button>}</StudioDialog>}
+  </>;
+  if (selected)
+    return (
+      <ProjectStudio
+        key={`${userId}:${selected.id}`}
+        userId={userId}
+        isAuthenticated={isAuthenticated}
+        developerMode={developerMode}
+        accountLabel={accountLabel}
+        localAccount={localAccount}
+        onSignOut={onSignOut}
+        project={selected}
+        projects={projects}
+        onOpenProject={project => openProject(project)}
+        onProjectRenamed={projectRenamed}
+        onCreateNew={requestCreate}
+        onBack={() => {setSelected(null);navigate(rootRoute);refresh();}}
+        routePieceId={route?.projectId===selected.id?route.pieceId:selectedRoute.current.pieceId}
+        onRoutePiece={(pieceId,replace)=>{
+          selectedRoute.current={projectId:selected.id,pieceId};
+          if(route?.projectId===selected.id)navigate(selectedRoute.current,{replace});
+        }}
+        onOpenProfile={()=>{void openProfile();}}
+        onRequestDelete={()=>{void requestDeletion(selected);}}
+        accountOverlays={accountOverlays}
+        onRegisterLeaveGuard={registerLeaveGuard}
+        openedFromUrl={openedFromUrl}
+        hasApiKey={hasApiKey}
+        canUseAI={canUseAI}
+        credentialSource={credentialSource}
+        credentialEpoch={credentialEpoch}
+        defaultAvailable={defaultAvailable}
+        parallelAvailable={parallelAvailable}
+        selectedVisualsAvailable={selectedVisualsAvailable}
+        selectedVisualsRequired={selectedVisualsRequired}
+        referenceAuthorityEnabled={referenceAuthorityEnabled}
+        onUseAI={onUseAI}
+        onPauseAI={onPauseAI}
+        getApiKey={getApiKey}
+        keyInput={keyInput}
+        onRemoveKey={onRemoveKey}
+        initialObjective=""
+        initialPrepare={createdProjectId===selected.id}
+      />
+    );
+  return (
+    <StudioShell
+      stage="projects"
+      onOpenProfile={()=>{void openProfile();}}
+      overlays={accountOverlays}
+      accountLabel={accountLabel}
+      localAccount={localAccount}
+      onSignOut={onSignOut}
+      onNewProject={() =>
+        document.getElementById("studio-project-name")?.focus()
+      }
+    >
+      {recoveryBanner}
+
+      <div className="studio-home" data-empty={hasProjects?undefined:'true'}>
+      {resume&&<section className="studio-home-resume" aria-labelledby="resume-title">
+        <div className="studio-home-resume-art" aria-hidden="true"><span/><span/><span/></div>
+        <div className="studio-home-resume-body">
+          <p className="studio-home-eyebrow">{resume.opened?'Aberto por último':'Mais recente'}</p>
+          <h2 id="resume-title" title={resume.project.title}>{resume.project.title}</h2>
+          {resume.created&&<p className="studio-home-meta">Criado em {resume.created}</p>}
+          <button type="button" className="studio-button" disabled={state==='deleting'} onClick={() => openProject(resume.project)}>Continuar projeto</button>
+        </div>
+      </section>}
+      <section className="studio-recent-projects" aria-label="Conversas e projetos anteriores">
+        <h2>{hasProjects?'Todos os projetos':'Seus projetos'}</h2>
+        {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
+        <div className="studio-project-grid">
+          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => openProject(project)}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{void requestDeletion(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+        </div>
+      </section>
+      <section className="studio-starter" aria-labelledby="starter-title">
+        <h2 id="starter-title">{hasProjects?'Novo projeto':'Comece um projeto'}</h2>
+        <p>Você prepara o projeto uma vez e cada post nasce dele. Nenhuma imagem é gerada até você pedir.</p>
+        <ol className="studio-home-steps" aria-label="Etapas de um projeto">
+          {homeSteps.map(([label,detail],index)=><li key={label} aria-current={index===0?'step':undefined}><span aria-hidden="true">{index+1}</span><strong>{label}</strong><small>{detail}</small></li>)}
+        </ol>
+        <form onSubmit={create}>
+          <label htmlFor="studio-project-name">Nome do projeto</label><p className="studio-hint" id="project-idea-help">Escolha um nome para organizar seus posts. Na próxima etapa, você descreve o contexto do projeto.</p>
+          <input type="text" id="studio-project-name" aria-describedby="project-idea-help" maxLength={200} value={projectName} onChange={event => setProjectName(event.target.value)} placeholder="Ex.: Mentoria Veloz — Campanha 1" />
+          <button className="studio-button" disabled={state !== "ready" || uncertain || !projectName.trim()}>{state === "creating" ? "Criando projeto…" : "Criar projeto e continuar"}</button>
+        </form>
+        {initialObjective&&<details><summary>Rascunho anterior</summary><p>{initialObjective}</p></details>}
+        {notice && <p role="alert">{notice}</p>}
+        {(state === "error" || uncertain) && <button type="button" onClick={refresh}>Atualizar projetos</button>}
+        {uncertain && <button type="button" onClick={() => setUncertain(false)}>Entendi, iniciar outra criação</button>}
+      </section>
+      </div>
+    </StudioShell>
+  );
+}
+
+function ProjectStudio({
+  userId,
+  project,
+  projects,
+  onOpenProject,
+  onProjectRenamed,
+  onCreateNew,
+  onBack,
+  hasApiKey: credentialActive,
+  canUseAI = credentialActive,
+  credentialSource = "byok",
+  credentialEpoch = 0,
+  defaultAvailable = false,
+  parallelAvailable = false,
+  selectedVisualsAvailable = false,
+  selectedVisualsRequired = false,
+  referenceAuthorityEnabled = false,
+  onUseAI,
+  onPauseAI,
+  getApiKey,
+  keyInput,
+  onRemoveKey,
+  initialObjective,
+  initialPrepare,
+  isAuthenticated,
+  developerMode = false,
+  accountLabel = "",
+  localAccount = false,
+  onSignOut,
+  routePieceId,
+  onRoutePiece,
+  openedFromUrl,
+  onRegisterLeaveGuard,
+  onOpenProfile,
+  onRequestDelete,
+  accountOverlays,
+}: ProjectStudioProps) {
+  const session = useStudioState({ userId, projectId: project.id, prepare:initialPrepare,projectIdea:initialObjective }), s=session.state;
+  const local = {...session,get:():StudioState=>{const value=session.get();if(!value)throw Error("O estúdio ainda está carregando.");return value;}};
+  const [projectIntent, setProjectIntent] = useState(false);
+  const [settingsTab,setSettingsTab]=useState<'context'|'ai'|'references'|'direction'|'materials'|'history'|null>(null);
+  const [referenceScope,setReferenceScope]=useState('references');
+  const [serialInspection,setSerialInspection]=useState('');
+  const currentReferenceScope=useRef(referenceScope);currentReferenceScope.current=referenceScope;
+  const [referencesModalKind,setReferencesModalKind]=useState<'project'|'post'|null>(null);
+  const [chatMinimized,setChatMinimized]=useState(false);
+  const [referenceWaits,setReferenceWaits]=useState<Record<string,boolean>>({});
+  const reportReferenceWait=useCallback((conversationId:string,waiting:boolean)=>setReferenceWaits(current=>current[conversationId]===waiting?current:{...current,[conversationId]:waiting}),[]);
+  const [referenceChatTarget,setReferenceChatTarget]=useState<HTMLDivElement|null>(null);
+  const [postSettingsOpen,setPostSettingsOpen]=useState(false);
+  const [postRecords,setPostRecords]=useState<PostRecord[]>([]);
+  const postRecordsRef=useRef<PostRecord[]>([]);postRecordsRef.current=postRecords;
+  const [creatingPost,setCreatingPost]=useState(false),[deletingPost,setDeletingPost]=useState(false);
+  const [postDeleteTarget,setPostDeleteTarget]=useState<{pieceId:string;name:string}|null>(null),[postDeleteError,setPostDeleteError]=useState('');
+  const [explorationRequested,setExplorationRequested]=useState(false);
+  const parallelGesture=useRef<{source:CredentialSource;epoch:number;scope:string}|null>(null);
+  const previousParallelAvailable=useRef(parallelAvailable);
+  const [referenceTransition,setReferenceTransition]=useState(false);
+  const referenceTransitionLock=useRef(false);
+  const [visitedPosts,setVisitedPosts]=useState<string[]>([]);
+  const projectAIChosen=Boolean(s&&s.workflow.aiPreference!=='none'&&s.workflow.aiPreference===credentialSource);
+  const canUseProjectAI=canUseAI&&projectAIChosen;
+  const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
+  const hasApiKey = credentialActive && projectAIChosen && (credentialSource !== "default" || projectIntent);
+  const credentialSeen = useRef(credentialEpoch);
+  const [stageRestored, setStageRestored] = useState(false);
+  const [stage, setStage] = useState<StudioStage>("studio"),
+    [versionsLoaded, setVersionsLoaded] = useState(false),
+    [versions, setVersions] = useState<PieceVersion[]>([]),
+    [notice, setNotice] = useState(""),
+    [saving, setSaving] = useState(false),
+    [base, setBase] = useState<Blob|null>(null),
+    [referenceImages, setReferenceImages] = useState<{manifest:string;generation:number;items:(StudioReference & {url:string})[]}|null>(null),
+    [proposal, setProposal] = useState<{prompt:string}|null>(null),
+    [dialog, setDialog] = useState<Confirmation|null>(null),
+    [projectDetails, setProjectDetails] = useState(project),
+    [drawer, setDrawer] = useState<StudioDrawer>(null),
+    [viewingArt, setViewingArt] = useState(false),
+    [panelRequest, setPanelRequest] = useState<{id:string;nonce:number}|null>(null);
+  const referenceManifest = s ? JSON.stringify({userId, projectId:project.id, references:s.references}) : null;
+  const references = referenceImages?.manifest === referenceManifest ? referenceImages.items : [];
+  const referenceUrls=useRef(new Map<string,number>()),referenceUrlGeneration=useRef(0),referenceUrlCleanup=useRef<ReturnType<typeof setTimeout>|null>(null);
+  useEffect(()=>{
+    if(referenceUrlCleanup.current!==null){clearTimeout(referenceUrlCleanup.current);referenceUrlCleanup.current=null;}
+    return()=>{referenceUrlCleanup.current=setTimeout(()=>{for(const url of referenceUrls.current.keys())releaseObjectUrl(url);referenceUrls.current.clear();},0);};
+  },[]);
+  useEffect(()=>{if(!referenceImages)return;for(const [url,generation] of referenceUrls.current){if(generation<referenceImages.generation){releaseObjectUrl(url);referenceUrls.current.delete(url);}}},[referenceImages]);
+  const stateRef = useRef<StudioState|null>(null),
+    versionRef = useRef<PieceVersion[]>([]),
+    toolsRef = useRef<ReturnType<typeof createStudioTools>|null>(null),
+    confirmResolver = useRef<((value:boolean)=>void)|null>(null),
+    active = useRef(true),
+    saveLock = useRef(false),
+    creationLock = useRef(false),
+    baseLoadGeneration=useRef(0),
+    versionsReadSequence=useRef(0),
+    proposalRequest=useRef({scope:'',sequence:0,pending:false});
+  const [authorityStatus,setAuthorityStatus]=useState<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking');
+  const [authorityReview,setAuthorityReview]=useState<ReferenceAdoptionReview|null>(null);
+  const authorityCurrent=useRef<'checking'|'ready'|'pending'|'conflict'|'unavailable'>('checking'),authorityLock=useRef(false);
+  function reportAuthority(status:typeof authorityCurrent.current){authorityCurrent.current=status;if(active.current)setAuthorityStatus(status);}
+  useEffect(()=>{
+    if(!referenceAuthorityEnabled){reportAuthority('ready');return;}
+    if(session.loading)return;
+    let live=true;reportAuthority('checking');
+    void (async()=>{try{await session.ensureStored();const store=session.storage.current;if(!store)throw Error('storage');const coordinator=createReferenceSelectionCoordinator({store});let result=await coordinator.readiness({userId,projectId:project.id});if(result.status==='ready'||result.status==='unavailable')result=await coordinator.observe({userId,projectId:project.id});if(live)reportAuthority(result.status);}catch{if(live)reportAuthority('unavailable');}})();
+    return()=>{live=false;};
+  },[referenceAuthorityEnabled,session.loading,userId,project.id]);
+  async function checkReferenceAuthority(){
+    if(!referenceAuthorityEnabled)return true;
+    if(authorityLock.current||authorityCurrent.current!=='ready'||!active.current||!isAuthenticated())return false;
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error('storage');const result=await createReferenceSelectionCoordinator({store}).readiness({userId,projectId:project.id});if(!active.current||authorityLock.current||!isAuthenticated())return false;reportAuthority(result.status);return result.status==='ready';}catch{reportAuthority('unavailable');return false;}
+  }
+  function visualAuthority(scope:VisualAuthorityScope){
+    return createReferenceVisualAuthority({isCurrent:()=>active.current&&isAuthenticated()&&scope.userId===userId&&scope.projectId===project.id&&session.get()?.userId===userId&&session.get()?.projectId===project.id});
+  }
+  async function createVisualAuthoritySnapshot(scope:VisualAuthorityScope,manifest:VisualInputManifest){
+    if(!await checkReferenceAuthority())throw Error('Consulte a seleção de referências antes de continuar.');
+    const store=session.storage.current;if(!store)throw Error('reference_authority_unavailable');
+    const status=await createReferenceSelectionCoordinator({store}).readiness({userId,projectId:project.id});
+    if(status.status!=='ready'||authorityLock.current)throw Error('reference_authority_unavailable');
+    try{await visualAuthority(scope).create(scope,manifest,status.revision);}catch(error){if(error instanceof Error&&error.message==='reference_authority_conflict')reportAuthority('conflict');throw error;}
+  }
+  async function visualAuthorityHeaders(scope:VisualAuthorityScope,manifest:VisualInputManifest){if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');const headers=await visualAuthority(scope).headers(scope,manifest);if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');assertReferenceVisualCapability(userId,manifest,headers);return headers;}
+  async function coordinateSelection(selection:{kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string}){
+    if(!referenceAuthorityEnabled){const result=selection.kind==='select'?journey.selectReference(selection.reference,selection.target):journey.unselectReference(selection.id,selection.target);if(!result)throw Error('studio_unavailable');await session.flush();return;}
+    if(authorityLock.current||authorityCurrent.current!=='ready'||!isAuthenticated())throw Error('reference_authority_unavailable');
+    authorityLock.current=true;reportAuthority('pending');
+    let completed=false;
+    try{const result=await session.coordinateReference(selection,()=>active.current&&isAuthenticated());completed=true;reportAuthority(result.status);if(result.status!=='ready')throw Error('reference_authority_unconfirmed');}
+    catch(error){if(!completed)reportAuthority('unavailable');throw error;}
+    finally{authorityLock.current=false;}
+  }
+  async function inspectAuthority(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{const store=session.storage.current;if(!store)throw Error();const coordinator=createReferenceSelectionCoordinator({store});let result=await coordinator.reconcile({userId,projectId:project.id});if(result.status==='ready'||result.status==='unavailable')result=await coordinator.observe({userId,projectId:project.id});reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function fenceAuthorityPending(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).fencePending({userId,projectId:project.id});reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function previewAuthorityAdoption(){
+    if(authorityLock.current)return;authorityLock.current=true;
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).previewAdoption({userId,projectId:project.id});if(result.status==='review')setAuthorityReview(result.review);else reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  async function confirmAuthorityAdoption(){
+    if(authorityLock.current||!authorityReview)return;authorityLock.current=true;reportAuthority('pending');
+    try{await session.flush();const store=session.storage.current;if(!store)throw Error();const result=await createReferenceSelectionCoordinator({store}).adoptCurrent({userId,projectId:project.id},authorityReview);setAuthorityReview(null);reportAuthority(result.status);}catch{reportAuthority('unavailable');}finally{authorityLock.current=false;}
+  }
+  stateRef.current = s;
+  versionRef.current = versions;
+  useEffect(() => onRegisterLeaveGuard(project.id, async () => {
+    try {
+      if (!session.loading) await session.flush();
+      return active.current;
+    } catch {
+      setNotice("Não foi possível preservar o projeto antes de sair.");
+      return false;
+    }
+  }), [project.id, session.loading, session.flush, onRegisterLeaveGuard]);
+  const draft = s ? getCurrentDraft(s) : null;
+  useEffect(()=>{
+    const pieceId=s?.selection?.pieceId;
+    if(!s||!pieceId||!postRecords.some(post=>post.pieceId===pieceId&&post.deleted)||s.adjustments.some(turn=>turn.context.pieceId===pieceId&&!['completed','failed'].includes(turn.status)))return;
+    local.change(value=>removePostFromList(value,pieceId));setStage('studio');
+  },[postRecords,s?.selection?.pieceId,s?.adjustments]);
+  const currentSettings=settingsTab??(drawer==='marca'?'direction':drawer==='bases'?'materials':null);
+  const referencesOpen=s?.workflow.phase==='references'||currentSettings==='references';
+  // ADR 0059: a aba Referências das configurações e "Escolher mais referências" abrem a bancada em janela modal.
+  const referencesModal=referencesModalKind!==null&&currentSettings==='references'&&s?.workflow.phase!=='references';
+  useEffect(()=>{if(draft)setVisitedPosts(ids=>ids.includes(draft.pieceId)?ids:[...ids,draft.pieceId]);},[draft?.pieceId]);
+  useEffect(()=>{if(!referencesOpen){setExplorationRequested(false);}},[referencesOpen]);
+  const idea = studioProjectIdea(s,initialObjective);
+  async function onExplorationCompleted(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext']){
+    if(!active.current||!isAuthenticated())throw Error("studio_unavailable");
+    const state=local.get();
+    if(state.workflow.latestExplorations?.[conversationId]?.imageId!==imageId){
+      const candidate=await confirmedExploration(project.id,imageId);
+      if(!active.current||!isAuthenticated())throw Error("studio_unavailable");
+      local.change(value=>recordCompletedExploration(value,conversationId,{...candidate,...(creationContext?{creationContext}:{})}));
+    }
+    await local.flush();
+  }
+  const parallel=useParallelExploration({userId,projectId:project.id,conversationId:referenceScope,state:s?conversationContext(s,referenceScope):null,getState:()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;},source:credentialSource,credentialEpoch,hasApiKey,getApiKey,isAuthenticated,available:parallelAvailable&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready'),selectedVisualsAvailable,selectedVisualsRequired,...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{}),loadReference:id=>local.storage.current?.getReference({userId,projectId:project.id},id)??Promise.resolve(null),visible:stageRestored&&(stage==='studio'||currentSettings==='references')&&referencesOpen,idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea,onCompleted:onExplorationCompleted});
+  const usingParallel=parallelAvailable&&!parallel.legacyPending;
+  const proposalScope=JSON.stringify([userId,project.id,credentialSource,credentialEpoch,referenceScope,referencesOpen,usingParallel,selectedVisualsAvailable,selectedVisualsRequired]);
+  if(proposalRequest.current.scope!==proposalScope)proposalRequest.current={scope:proposalScope,sequence:proposalRequest.current.sequence+1,pending:false};
+  const legacyExploration = useExplorationLoop({ userId, projectId: project.id, state: s?conversationContext(s,referenceScope):null, getState: ()=>{const value=session.get();return value?conversationContext(value,referenceScope):null;}, conversationId:referenceScope, hasApiKey, canUseAI:canUseProjectAI, getApiKey, credentialSource, credentialEpoch, isAuthenticated, idea:referenceScope==='references'?idea:s?postContext(s,referenceScope).message||idea:idea, enabled: !referenceAuthorityEnabled && !selectedVisualsRequired && !usingParallel && !(previousParallelAvailable.current&&!parallelAvailable) && stageRestored && (stage === "studio" || currentSettings === "references") && referencesOpen && explorationRequested, onCompleted:onExplorationCompleted });
+  useEffect(()=>{if(previousParallelAvailable.current&&!parallelAvailable){parallelGesture.current=null;setExplorationRequested(false);parallel.pause();}previousParallelAvailable.current=parallelAvailable;},[parallelAvailable]);
+  useEffect(()=>{if(!parallelAvailable||!parallel.legacyPending||!legacyExploration.blocked)return;try{if(localStorage.getItem(`compor-exploration-pending:${userId}`)===null){parallel.clearLegacyPending();setExplorationRequested(false);}}catch{/* Preserve the legacy guard when storage is unavailable. */}},[parallelAvailable,parallel.legacyPending,legacyExploration.blocked,userId]);
+  const exploration=usingParallel?{...parallel,blocked:parallel.phase==='blocked',parallelBlocked:false,awaitingAnswer:explorationRequested?false:legacyExploration.awaitingAnswer,resuming:false,resumeError:null,progress:null,resume:parallel.start}:legacyExploration;
+  const parallelStart=useRef(parallel.start);parallelStart.current=parallel.start;
+  useEffect(()=>{
+    const gesture=parallelGesture.current;
+    if(!gesture)return;
+    if(!usingParallel||!referencesOpen||gesture.source!==credentialSource||gesture.epoch!==credentialEpoch||gesture.scope!==referenceScope){parallelGesture.current=null;return;}
+    if(hasApiKey&&explorationRequested&&parallel.epochReady){parallelGesture.current=null;void parallelStart.current();}
+  },[usingParallel,referencesOpen,credentialSource,credentialEpoch,referenceScope,hasApiKey,explorationRequested,parallel.epochReady]);
+  function requestProposals(){
+    if(visualUnavailable){setNotice('O envio das imagens selecionadas está indisponível. Você pode continuar editando e consultar tentativas anteriores.');return;}
+    if(selectedVisualsRequired&&!usingParallel){setNotice('A exploração com imagens selecionadas está indisponível. Consulte tentativas anteriores ou continue editando.');return;}
+    if(proposalRequest.current.pending||!referencesOpen||!active.current||!isAuthenticated()||document.visibilityState!=='visible'||!document.hasFocus())return;
+    const sequence=proposalRequest.current.sequence;proposalRequest.current.pending=true;
+    const valid=()=>proposalRequest.current.sequence===sequence&&active.current&&isAuthenticated()&&document.visibilityState==='visible'&&document.hasFocus();
+    void (async()=>{try{const allowed=await checkReferenceAuthority();if(!valid())return;if(!allowed){setNotice('Consulte a seleção de referências antes de pedir novas propostas.');return;}if(usingParallel)parallelGesture.current={source:credentialSource,epoch:credentialEpoch,scope:referenceScope};activateAI();setExplorationRequested(true);if(!usingParallel)void exploration.resume();}finally{if(proposalRequest.current.sequence===sequence)proposalRequest.current.pending=false;}})();
+  }
+  async function inspectLegacyExploration(){
+    const scope=referenceScope;setSerialInspection('Consultando tentativa anterior…');
+    try{
+      const {inspectSerialPending}=await import('../lib/exploration-pending.ts');
+      const result=await inspectSerialPending({storage:localStorage,userId,projectId:project.id,conversationId:scope});
+      if(active.current&&currentReferenceScope.current===scope)setSerialInspection(result);
+    }catch{if(active.current&&currentReferenceScope.current===scope)setSerialInspection('Não foi possível consultar a tentativa anterior. O recibo permanece preservado.');}
+  }
+  async function getReplacementReferences(){
+    const scope=referenceScope,value=session.get();if(!value)throw Error('context_unavailable');
+    const selected=conversationContext(value,scope).references.filter(reference=>reference.source!==undefined);
+    const storage=local.storage.current;if(!storage)throw Error('visual_storage_unavailable');
+    const references=await Promise.all(selected.map(async reference=>{
+      const stored=await storage.getReference({userId,projectId:project.id},reference.id);
+      if(!stored||JSON.stringify(stored.metadata)!==JSON.stringify(reference))throw Error('visual_reference_changed');
+      return stored;
+    }));
+    if(!active.current||currentReferenceScope.current!==scope||!isAuthenticated())throw Error('visual_context_changed');
+    return references;
+  }
+  useEffect(() => {
+    if (credentialSeen.current === credentialEpoch) return;
+    credentialSeen.current = credentialEpoch;
+    if (!credentialActive) { setProjectIntent(false); exploration.pause(); }
+  }, [credentialEpoch, credentialActive]);
+  function activateAI() {
+    setProjectIntent(true); onUseAI?.();
+
+  }
+  function continueWithoutAI() {
+    setProjectIntent(false); onPauseAI?.(); exploration.pause(); local.change(value=>updateWorkflow(value,{aiPreference:'none'})); nextStage("studio");
+  }
+  const sourceLabel = credentialSource === "default" ? "IA do Compor" : "Minha chave OpenAI";
+  async function signOutSafely() {
+    exploration.pause();
+    try { if (!session.loading) await session.flush(); }
+    catch (error) { setNotice("Não foi possível preservar o projeto antes de sair."); throw error; }
+    await onSignOut?.();
+  }
+  async function refreshVersions() {
+    const readSequence=++versionsReadSequence.current;
+    const response = await fetch(
+      `/api/pieces?projectId=${encodeURIComponent(project.id)}`,
+      { cache: "no-store" },
+    );
+    if (!response.ok) throw Error("Não foi possível carregar as versões.");
+    const data = versionsSchema.parse(await response.json());
+    if(data.posts.some(post=>post.projectId!==project.id))throw Error('invalid posts');
+    if (active.current&&readSequence===versionsReadSequence.current){setVersionsLoaded(true);setVersions(data.versions.filter(version=>!isRemoved(version.piece_id)));setPostRecords(previous=>[...data.posts.filter(post=>!previous.some(old=>old.pieceId===post.pieceId&&old.deleted)),...previous.filter(post=>post.deleted)]);}
+    return data.versions;
+  }
+  useEffect(() => {
+    active.current = true;
+    refreshVersions().catch(() => {
+      setVersionsLoaded(true);
+      setNotice("As versões não estão disponíveis.");
+    });
+    return () => {
+      active.current = false;
+      confirmResolver.current?.(false);
+    };
+  }, [project.id]);
+  useEffect(() => {
+    if (s && referencesOpen && !s.selection) local.change(value => prepareReferenceWorkspace(value,crypto.randomUUID()));
+  }, [Boolean(s),referencesOpen]);
+  useEffect(() => {
+    if (!s) return;
+    try {
+      const saved = sessionStorage.getItem(
+        `compor-studio-stage:${userId}:${project.id}`,
+      );
+      if (s.workflow.phase==="ready"&&(saved === "studio" || saved === "review" || saved === "export")) setStage(saved);
+    } catch {}
+    setStageRestored(true);
+  }, [Boolean(s)]);
+  useEffect(() => {
+    if (!s) return;
+    try {
+      sessionStorage.setItem(
+        `compor-studio-stage:${userId}:${project.id}`,
+        stage,
+      );
+    } catch {}
+  }, [stage, userId, project.id, Boolean(s)]);
+  // The address bar names the open post (/projetos/<id>/posts/<pieceId>); the reference workspace is not a post.
+  const openPieceId = s && s.workflow.phase === "ready" && (s.workflow.view === "compose" || s.workflow.view === "studio") &&
+    s.selection && s.selection.pieceId !== s.workflow.referencePieceId ? s.selection.pieceId : null;
+  // Opened from the project list, the project resumes its saved screen and the URL follows it.
+  const routeSync = useRef<{target:string|null|undefined;tried:boolean;done:boolean;resume:boolean}>({target:undefined,tried:false,done:false,resume:!openedFromUrl});
+  useEffect(() => { // URL -> screen (initial load, back/forward)
+    const sync = routeSync.current;
+    if (sync.target !== routePieceId) {
+      const resume = sync.target === undefined && sync.resume && routePieceId === null;
+      Object.assign(sync, {target:routePieceId,tried:false,done:resume});
+    }
+    if (s && sync.resume && openPieceId === routePieceId) sync.resume = false; // resumed screen already matches the URL
+    if (sync.done || !s) return;
+    if (openPieceId === routePieceId) { sync.done = true; return; }
+    if (sync.tried || s.workflow.phase !== "ready") { sync.done = true; onRoutePiece(openPieceId, true); return; }
+    if (routePieceId === null) {
+      sync.tried = true;
+      closeSettings(); setPostSettingsOpen(false); nextStage("studio");
+      local.change(value => updateWorkflow(value, {view:"posts"}));
+      return;
+    }
+    const known = s.drafts.some(item => item.pieceId === routePieceId) || versions.some(item => item.piece_id === routePieceId) ||
+      postRecords.some(post => post.pieceId === routePieceId && !post.deleted);
+    if (!known && !versionsLoaded) return;
+    if (!known || isRemoved(routePieceId)) {
+      // Keep screen -> URL paused until the list renders, even when the catalog loaded before local state.
+      sync.tried = true;
+      closeSettings(); setPostSettingsOpen(false); nextStage("studio");
+      local.change(value => updateWorkflow(value, {view:"posts"}));
+      onRoutePiece(null, true);
+      return;
+    }
+    sync.tried = true;
+    openPost(routePieceId);
+  }, [Boolean(s), routePieceId, openPieceId, versionsLoaded]);
+  useEffect(() => { // screen -> URL
+    const sync = routeSync.current;
+    if (!s || !sync.done || openPieceId === routePieceId) return;
+    onRoutePiece(openPieceId, sync.resume);
+    sync.resume = false;
+  }, [openPieceId]);
+  useEffect(() => {
+    if (!s || !referenceManifest || !local.storage.current) return;
+    let live = true,published=false;
+    const urls:string[] = [];
+    const generation=++referenceUrlGeneration.current;
+    const storage=local.storage.current;
+    Promise.all(
+      s.references.map(async (ref) => {
+        const value = await storage.getReference(
+          { userId, projectId: project.id },
+          ref.id,
+        );
+        if (!value || !live) return null;
+        const url = URL.createObjectURL(value.file);
+        urls.push(url);referenceUrls.current.set(url,generation);
+        return { ...ref, url };
+      }),
+    )
+      .then((items) => {
+        if (live){published=true;setReferenceImages({manifest:referenceManifest,generation,items:items.filter((item): item is StudioReference & {url:string} => item !== null)});}
+      })
+      .catch(() => {
+        if (live){live=false;urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
+          setNotice(
+            "Não foi possível recuperar as referências deste navegador.",
+          );}
+      });
+    return () => {
+      live = false;
+      if(!published)urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
+    };
+  }, [referenceManifest, project.id, userId]);
+  useEffect(() => {
+    setBase(null);
+    const loadGeneration=++baseLoadGeneration.current;
+    if (!draft || !local.storage.current) return;
+    let live = true;
+    local.storage.current
+      .getDraftAsset(
+        { userId, projectId: project.id },
+        {
+          pieceId: draft.pieceId,
+          baseVersion: draft.baseVersion,
+          kind: "base",
+        },
+      )
+      .then((value) => {
+        if (live && loadGeneration===baseLoadGeneration.current && value) setBase(value.file);
+      })
+      .catch(() => {
+        if (live)
+          setNotice("Não foi possível recuperar a imagem local desta versão.");
+      });
+    return () => {
+      live = false;
+    };
+  }, [draft?.pieceId, draft?.baseVersion]);
+  async function useBase({ blob, pieceId, version,creationContext }:ImageSelection) {
+    baseLoadGeneration.current++;
+    try {
+      if(!local.storage.current)throw Error("Armazenamento indisponível.");
+      await local.storage.current.putDraftAsset({
+        userId,
+        projectId: project.id,
+        pieceId,
+        baseVersion: version,
+        kind: "base",
+        file: blob,
+      });
+      if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));await local.flush();}
+      const current = getCurrentDraft(local.get());
+      if (
+        active.current &&
+        current?.pieceId === pieceId &&
+        current.baseVersion === version
+      )
+        setBase(blob);
+      else if (active.current)
+        setNotice("A imagem está preservada no rascunho da versão de origem.");
+      return true;
+    } catch {
+      if (active.current)
+        setNotice(
+          "Não foi possível preservar a imagem no navegador. O arquivo anterior foi mantido.",
+        );
+      return false;
+    }
+  }
+
+  function nextStage(value:StudioStage) {
+    setStage(value);
+    setNotice("");
+    if(value !== "studio") setViewingArt(false);
+  }
+  function setSettings(value:typeof settingsTab,modal:'project'|'post'|null=null){if(value==='references')setStage('studio');setReferencesModalKind(value==='references'?modal:null);setSettingsTab(value);}
+  function closeSettings(){setSettings(null);setDrawer(null);}
+  function isRemoved(pieceId:string){return Boolean(session.get()?.posts[pieceId]?.deleted||postRecordsRef.current.some(post=>post.pieceId===pieceId&&post.deleted));}
+  const journey=createStudioJourneyController({
+    getState:local.get,change:local.change,flush:local.flush,fetchImpl:fetch,
+    isActive:()=>active.current&&isAuthenticated(),isRemoved,
+    locks:{creation:creationLock,save:saveLock},
+  });
+  function newPost(pieceId:string = crypto.randomUUID(),fromAgent=false) {
+    if(isRemoved(pieceId))throw Error("Post excluído.");
+    closeSettings();
+    if(fromAgent)exploration.pause();
+    journey.preparePost(pieceId,{fromAgent,...(referencesOpen?{referenceScope}:{})});
+    setBase(null);setViewingArt(false);setStage('studio');
+  }
+  async function confirmPostCreation(){
+    if(creatingPost||creationLock.current)return;
+    setCreatingPost(true);setNotice('');
+    const result=await journey.confirmPost({
+      onPostCreated:post=>{++versionsReadSequence.current;setPostRecords(previous=>[...previous.filter(item=>item.pieceId!==post.pieceId),post]);},
+      retainReferenceProposal,
+    });
+    if(!active.current)return;
+    if(result.status==='superseded')setNotice(`O post “${result.post.name}” foi criado. Sua preparação mais recente foi preservada.`);
+    else if(result.status==='unknown')setNotice('Não foi possível confirmar a criação do post. Sua preparação foi mantida. Tente novamente para verificar o mesmo pedido.');
+    else if(result.status==='created'&&result.retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
+    setCreatingPost(false);
+  }
+  async function confirmPostDeletion(){
+    if(!postDeleteTarget||deletingPost)return;
+    const {pieceId}=postDeleteTarget;
+    if(local.get().adjustments.some(turn=>turn.context.pieceId===pieceId&&!['completed','failed'].includes(turn.status))){setPostDeleteError('Conclua ou verifique o pedido pendente antes de excluir este post.');return;}
+    setDeletingPost(true);setPostDeleteError('');
+    try{
+      await local.flush();
+      const response=await fetch('/api/posts',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:project.id,pieceId})});
+      if(!response.ok)throw Error('unconfirmed');const result=postMutationSchema.parse(await response.json());
+      if(result.status!=='deleted'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||!result.post.deleted)throw Error('unconfirmed');
+      if(!active.current||!isAuthenticated())return;
+      ++versionsReadSequence.current;
+      setPostRecords(previous=>[...previous.filter(post=>post.pieceId!==pieceId),result.post]);
+      setVersions(previous=>previous.filter(version=>version.piece_id!==pieceId));
+      local.change(value=>removePostFromList(value,pieceId));await local.flush();
+      setPostDeleteTarget(null);setNotice('Post excluído da lista deste projeto.');
+    }catch{if(active.current)setPostDeleteError('Não foi possível confirmar a exclusão. Verifique novamente antes de sair; não houve repetição automática.');}
+    finally{if(active.current)setDeletingPost(false);}
+  }
+  function openPost(pieceId:string) {
+    if(isRemoved(pieceId))return;
+    const value=local.get(),remembered=value.workflow.selections[pieceId];
+    const chosen=value.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===remembered)??value.drafts.filter(item=>item.pieceId===pieceId).at(-1);
+    closeSettings();setStage('studio');
+    if(chosen)local.change(state=>updateWorkflow(selectDraft(state,chosen),{view:state.posts[pieceId]?.prepared===false?'prepare-post':'studio'}));
+    else {const version=versionRef.current.filter(item=>item.piece_id===pieceId).toSorted((a,b)=>b.version-a.version)[0];if(version)openVersion(version);else if(postRecordsRef.current.some(post=>post.pieceId===pieceId&&!post.deleted))local.change(value=>updateWorkflow(createPost(value,{pieceId}),{view:'compose'}));}
+  }
+  function openVersion(version:PieceVersion) {
+    if(!journey.openVersion(version,versionRef.current))return;
+    setSettings(null);setDrawer(null);setViewingArt(false);setStage("studio");
+  }
+  function confirmAction(action:Confirmation) {
+    return new Promise<boolean>((resolve) => {
+      confirmResolver.current = resolve;
+      setDialog(action);
+    });
+  }
+  function resolveConfirmation(yes:boolean) {
+    confirmResolver.current?.(yes);
+    confirmResolver.current = null;
+    setDialog(null);
+  }
+  async function saveCurrent(args?:DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>):Promise<ActionResult> {
+    if(!getCurrentDraft(local.get())||saveLock.current)throw Error("save_unavailable");
+    setSaving(true);setNotice("");
+    try {
+      const outcome=await journey.saveCurrent({
+        readVersions:refreshVersions,
+        copyDraftAsset:async(scope,source,target)=>{
+          const storage=local.storage.current;
+          if(!storage)throw Error('storage_unavailable');
+          return storage.copyDraftAsset(scope,source,target);
+        },
+        newEventId:()=>crypto.randomUUID(),
+        onVersionsChanging:()=>{versionsReadSequence.current++;},
+        onVersionSaved:version=>setVersions(items=>[...items.filter(item=>item.piece_id!==version.piece_id||item.version!==version.version),version]),
+      },args);
+      const notices={
+        saved:'Nova versão salva.',
+        recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
+        conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
+        unknown:'O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',
+        inactive:'',
+      };
+      if(outcome.notice!=='inactive')setNotice(notices[outcome.notice]);
+      return outcome.result;
+    } finally {if(active.current)setSaving(false);}
+  }
+  const handlers:StudioHandlers = {
+    compor_contexto: async () => {
+      const state = local.get(),
+        d = getCurrentDraft(state);
+      return {
+        status: "completed",
+        projectId: project.id,
+        revision: state.revision,
+        pieceId: d?.pieceId ?? null,
+        baseVersion: d?.baseVersion ?? null,
+        expectedLatestVersion: d?.expectedLatestVersion ?? 0,
+        unsaved: Boolean(d?.dirty),
+      };
+    },
+    compor_editar_briefing: async (args,context) => {
+      const target=context?.conversationId??local.get().selection?.pieceId;
+      local.change(value=>target&&target!=='references'&&['offer','action'].includes(args.field)?updatePostContext(value,target,{[args.field==='offer'?'message':'action']:args.value}):updateBrief(value,{[args.field]:args.value}));
+      return { status: "completed", local: true };
+    },
+    compor_editar_persona: async (args) => {
+      local.change((value) =>
+        updatePersona(value, { [args.field]: args.value }),
+      );
+      return { status: "completed", local: true };
+    },
+    compor_registrar_afirmacao_persona: async (args) => {
+      if (
+        !local.get().persona.claims.some((claim) => claim.id === args.requestId)
+      )
+        local.change((value) =>
+          updatePersona(value, {
+            claims: [
+              ...value.persona.claims,
+              {
+                id: args.requestId,
+                text: args.text,
+                provenance: args.provenance,
+                source: args.source || "",
+              },
+            ],
+          }),
+        );
+      return { status: "completed", local: true };
+    },
+    compor_registrar_feedback_visual: async (args, context) => recordVisualFeedback(local.get(), args, fetch, context?.signal),
+    compor_comentar_imagem_gerada: async (args, context) => recordGeneratedComment(local.get(), args, fetch, context?.signal),
+    compor_propor_criterio: async (args,context) => {
+      const target=context?.conversationId;
+      for (const id of [args.exampleReferenceId, args.counterexampleReferenceId].filter(Boolean)) {
+        if (!effectiveReferences(local.get(),target).some(reference => reference.id === id)) throw Error("reference_unavailable");
+      }
+      local.change(value => (target&&target!=='references'?(state:StudioState,criterion:Parameters<typeof addCreativeCriterion>[1])=>addPostCriterion(state,target,criterion):addCreativeCriterion)(value, {
+        id: args.requestId, viewpoint: args.viewpoint, dimension: args.dimension, statement: args.statement,
+        example: { description: args.example, referenceId: args.exampleReferenceId || null },
+        counterexample: { description: args.counterexample, referenceId: args.counterexampleReferenceId || null },
+        provenance: args.provenance, source: args.source || "", tension: args.tension || "",
+      }));
+      if(target&&target!=='references')setPostSettingsOpen(true);else setDrawer('marca');
+      return { status: 'completed', local: true };
+    },
+    compor_novo_post: async (args) => {
+      newPost(args.requestId,true);
+      return {
+        status: "declined",
+        local: true,
+      };
+    },
+    compor_editar_peca: async (args) => {
+      const d = getCurrentDraft(local.get());
+      if (
+        !d ||
+        d.pieceId !== args.pieceId ||
+        d.baseVersion !== args.baseVersion
+      )
+        throw Error("context_changed");
+      journey.editDraft({field:args.field,value:args.value});
+      return { status: "completed", local: true };
+    },
+    compor_adicionar_campo: async args => {
+      const d=getCurrentDraft(local.get());
+      if(!d || d.pieceId!==args.pieceId || d.baseVersion!==args.baseVersion) throw Error("context_changed");
+      local.change(value => setCreativeField(value,{id:args.requestId,label:args.label,value:"",origin:"agent"}));
+      return {status:"completed",local:true};
+    },
+    compor_abrir_versao: async (args) => {
+      const version = versionRef.current.find(
+        (v) => v.piece_id === args.pieceId && v.version === args.version,
+      );
+      if (!version) throw Error("version_unavailable");
+      openVersion(version);
+      return { status: "completed" };
+    },
+    compor_salvar_versao: saveCurrent,
+    compor_renomear_projeto: async (args) => {
+      const response = await fetch("/api/projects", {
+        method: "PATCH",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({
+          projectId: project.id,
+          title: args.title,
+          expectedRevision: projectDetails.revision ?? 0,
+        }),
+      });
+      const parsed = renamedProjectSchema.safeParse(await response.json());
+      if (!response.ok || !parsed.success) {
+        setNotice(
+          "Não foi possível confirmar a alteração do nome. Atualize os projetos antes de repetir.",
+        );
+        return { status: "unknown" };
+      }
+      if (parsed.data.project.id !== project.id) return { status: "unknown" };
+      if (active.current) {
+        local.change(resolveProjectTitle);
+        await local.flush();
+      }
+      if (active.current) {
+        setProjectDetails(parsed.data.project);
+        onProjectRenamed(parsed.data.project);
+      }
+      return { status: "completed", title: parsed.data.project.title };
+    },
+    compor_propor_imagem: async (args) => {
+      setProposal({ prompt: args.prompt });
+      return { status: "pending_confirmation" };
+    },
+  };
+  const handlersRef=useRef(handlers);
+  handlersRef.current=handlers;
+  useEffect(() => {
+    if (!s) return;
+    const tools = createStudioTools({
+      getScope: () => {
+        const value = local.get();
+        return {
+          userId: isAuthenticated?.() === false ? null : userId,
+          projectId: project.id,
+          revision: value?.revision,
+        };
+      },
+      handlers: {
+        compor_contexto: args => handlersRef.current.compor_contexto(args),
+        compor_editar_briefing: (args,context) => handlersRef.current.compor_editar_briefing(args,context),
+        compor_editar_persona: args => handlersRef.current.compor_editar_persona(args),
+        compor_registrar_afirmacao_persona: args => handlersRef.current.compor_registrar_afirmacao_persona(args),
+        compor_registrar_feedback_visual: (args, context) => handlersRef.current.compor_registrar_feedback_visual(args, context),
+        compor_comentar_imagem_gerada: (args, context) => handlersRef.current.compor_comentar_imagem_gerada(args, context),
+        compor_propor_criterio: (args,context) => handlersRef.current.compor_propor_criterio(args,context),
+        compor_novo_post: args => handlersRef.current.compor_novo_post(args),
+        compor_editar_peca: args => handlersRef.current.compor_editar_peca(args),
+        compor_adicionar_campo: args => handlersRef.current.compor_adicionar_campo(args),
+        compor_abrir_versao: args => handlersRef.current.compor_abrir_versao(args),
+        compor_salvar_versao: args => handlersRef.current.compor_salvar_versao(args),
+        compor_renomear_projeto: args => handlersRef.current.compor_renomear_projeto(args),
+        compor_propor_imagem: args => handlersRef.current.compor_propor_imagem(args),
+      },
+      confirm: confirmAction,
+      getReceipt: (id) =>
+        local.get()?.actionReceipts.find((receipt) => receipt.requestId === id),
+      canRecord: () => local.get()?.actionReceipts.length < 200,
+      saveReceipt: async (receipt) => {
+        const result = {
+          ...receipt.result,
+          revision: local.get().revision + 1,
+        };
+        local.change((value) =>
+          recordActionReceipt(value, { ...receipt, result }),
+        );
+        await local.flush();
+        return result;
+      },
+    });
+    toolsRef.current = tools;
+    let registration:{dispose:()=>void}|undefined;
+    tools
+      .register(document.modelContext)
+      .then((value) => (registration = value));
+    return () => {
+      tools.dispose();
+      registration?.dispose();
+      toolsRef.current = null;
+    };
+  }, [Boolean(s), project.id, userId]);
+  async function addFiles(files:File[]) {
+    const target=referenceScope;
+    if (!local.storage.current) return;
+    try {
+      for (const file of files) await storeSelectedReference({kind:'local-upload'},file,target);
+      setNotice("Referências adicionadas neste navegador.");
+    } catch {
+      setNotice(
+        "Imagem não adicionada. Use PNG/JPEG até 8 MB. O limite é de 20 por projeto.",
+      );
+    }
+  }
+  async function storeSelectedReference(source:StudioReference['source'],file:File,target=referenceScope) {
+    const storage=local.storage.current;
+    if (!storage || !active.current || !isAuthenticated()) throw Error("studio_storage_unavailable");
+    const scope={userId,projectId:project.id};
+    if(local.get().references.length>=STUDIO_LIMITS.references)throw Error('studio_state_limit');
+    const metadata=await storage.putReference({...scope,id:crypto.randomUUID(),file,source});
+    try {
+      const current=local.get();
+      if(!active.current || !isAuthenticated() || !current || current.projectId!==project.id || current.userId!==userId) throw Error("studio_unavailable");
+      await coordinateSelection({kind:'select',reference:metadata,target});
+    } catch(error) {
+      if(!referenceAuthorityEnabled)await storage.removeReference(scope,metadata.id).catch(()=>{});
+      throw error;
+    }
+    await local.flush();
+    try { recordReferenceRound(conversationContext(local.get(),referenceScope)); } catch {}
+  }
+  async function useExploredReference(reference:ExploredReference,file:File) {
+    if(!isAuthenticated()||!await checkReferenceAuthority())throw Error('studio_unavailable');
+    const existing=local.get().references.find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===reference.originUrl);
+    if(existing){await selectExistingReference(existing,referenceScope,reference);return;}
+    const target=referenceScope;
+    await recordReferenceSelection({userId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),reference,commit:()=>storeSelectedReference({originUrl:reference.originUrl,board:reference.board,title:reference.title},file,target)});
+  }
+  async function useGeneratedReference(imageId:string,file:File,ordinal?:number) {
+    if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');
+    const existing=local.get().references.find(item=>item.source&&'kind' in item.source&&item.source.kind==='generated'&&item.source.imageId===imageId);
+    if(existing){await selectExistingReference(existing,referenceScope);return;}
+    const target=referenceScope;
+    const signalKey=`compor-exploration-selection-signal:${userId}:${project.id}${target!=='references'?`:${target}`:''}:${imageId}`;
+    let signalId=localStorage.getItem(signalKey);
+    if(!signalId) { signalId=crypto.randomUUID();localStorage.setItem(signalKey,signalId); }
+    const response=await fetch('/api/studio/explorations/signals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:signalId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),imageId,action:'selected',comment:'',supersedes:null})});
+    if(!response.ok)throw Error('selection_unconfirmed');
+    await storeSelectedReference({kind:'generated',projectId:project.id,imageId,...(ordinal === undefined ? {} : {ordinal})},file,target);
+    localStorage.setItem(selectedExplorationKey(userId,project.id,imageId),'1');
+  }
+  async function selectExistingReference(reference:StudioReference,target:string,pin?:ExploredReference) {
+    if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');
+    const source=reference.source;
+    const commit=async()=>{await coordinateSelection({kind:'select',reference,target});recordReferenceRound(conversationContext(local.get(),target));};
+    if(source&&'originUrl' in source&&pin){await recordReferenceSelection({userId,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),reference:pin,commit});return;}
+    if(source&&('originUrl' in source||source.kind==='generated')){
+      const key=`compor-reference-share:${userId}:${project.id}:${target}:${reference.id}`;
+      let id=localStorage.getItem(key);if(!id){id=crypto.randomUUID();localStorage.setItem(key,id);}
+      const body={id,projectId:project.id,...(target!=='references'?{pieceId:target}:{}),action:'selected',comment:'',supersedes:null,...('kind' in source?{imageId:source.imageId}:{originUrl:source.originUrl,board:source.board})};
+      const response=await fetch('kind' in source?'/api/studio/explorations/signals':'/api/studio/references/signals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+      if(!response.ok)throw Error('selection_unconfirmed');
+    }
+    await commit();
+  }
+  async function useSharedReference(id:string) {
+    const scope=referenceScope;
+    if(scope==='references')return;
+    try {
+      const current=local.get();
+      const reference=current.references.find(item=>item.id===id);
+      if(!reference||!current.projectReferenceIds.includes(id))throw Error('reference_unavailable');
+      await coordinateSelection({kind:'select',reference,target:scope});
+      try { recordReferenceRound(conversationContext(local.get(),scope)); } catch {}
+    } catch { if(active.current)setNotice('Não foi possível salvar a seleção.'); }
+  }
+  async function removeFile(id:string):Promise<boolean> {
+    const scope=referenceScope,before=local.get(),reference=before.references.find(item=>item.id===id);
+    if(!reference)return false;
+    if(referenceAuthorityEnabled){
+      try{await coordinateSelection({kind:'unselect',id,target:scope});recordReferenceRound(conversationContext(local.get(),scope));if(!local.get().references.some(item=>item.id===id))await local.storage.current?.removeReference({userId,projectId:project.id},id);if(active.current)setNotice('Referência retirada da seleção.');return true;}
+      catch{if(active.current)setNotice('Não foi possível confirmar a alteração. Consulte o estado da seleção antes de continuar.');return false;}
+    }
+    journey.unselectReference(id,scope);
+    try {await local.flush();}
+    catch {
+      // Restore only this selection; preserve unrelated edits made during the write.
+      local.change(value=>changeStudioState(selectScopedReference(value,reference,scope),next=>{
+        for(const [pieceId,post] of Object.entries(before.posts)){
+          const current=next.posts[pieceId];
+          if(current&&post.excludedReferenceIds.includes(id)&&!current.excludedReferenceIds.includes(id))current.excludedReferenceIds.push(id);
+        }
+      }));
+      if(active.current)setNotice('Não foi possível confirmar a retirada. A referência continua selecionada.');
+      return false;
+    }
+    try {recordReferenceRound(conversationContext(local.get(),scope));} catch {}
+    try {
+      if(!local.get().references.some(item=>item.id===id))await local.storage.current?.removeReference({userId,projectId:project.id},id);
+      if(active.current)setNotice('Referência retirada da seleção.');
+    } catch {
+      if(active.current)setNotice('Referência retirada da seleção. O arquivo continua preservado no histórico local.');
+    }
+    return true;
+  }
+  if (local.loading || !s)
+    return (
+      <StudioShell stage="projects" accountLabel={accountLabel} localAccount={localAccount} onSignOut={onSignOut ? signOutSafely : undefined}>
+        <p role="status">Abrindo seu espaço de criação…</p>
+      </StudioShell>
+    );
+  const scopedReferences=effectiveReferences(s,referenceScope);
+  const selectedGeneratedIds = scopedReferences.flatMap(reference => reference.source && 'kind' in reference.source && reference.source.kind === 'generated' ? [reference.source.imageId] : []);
+  const selectedOrigins = scopedReferences.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);
+  const editor = (
+    <StudioEditor guided
+      panelRequest={panelRequest}
+      panels={[
+        {id:"base",label:"Imagem-base",title:"Usar uma imagem-base própria",className:"guided-base-upload",content:<label>
+            Imagem-base PNG ou JPEG
+            <input type="file" accept="image/png,image/jpeg" onChange={event => {
+              const file = event.target.files?.[0];
+              if (file && draft) void useBase({blob:file,pieceId:draft.pieceId,version:draft.baseVersion});
+              event.target.value = "";
+            }} />
+          </label>},
+        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />},
+      ]}
+      draft={draft}
+      brief={s.brief}
+      base={base}
+      onViewArt={() => {setDrawer(null);setViewingArt(true);}}
+      marks={s.marks.filter(
+        (m) =>
+          m.pieceId === draft?.pieceId && m.baseVersion === draft?.baseVersion,
+      )}
+      onEdit={(field, value) =>
+        journey.editDraft({field,value})
+      }
+      onSetField={field => local.change(state => setCreativeField(state, field))}
+      onRemoveField={id => local.change(state => removeCreativeField(state, id))}
+      onMark={(mark) =>
+        local.change((value) =>
+          addMark(value, { ...mark, id: crypto.randomUUID() }),
+        )
+      }
+      onRemoveMark={(id) => local.change((value) => removeMark(value, id))}
+      onApprove={async () => {
+        const selected = getCurrentDraft(local.get());
+        const version = versionRef.current.find(
+          (v) =>
+            v.piece_id === selected?.pieceId &&
+            v.version === selected?.baseVersion,
+        );
+        if (!selected || selected.dirty || !version) {
+          setNotice("Salve a versão antes de aprovar.");
+          return;
+        }
+        try {
+          const response = await fetch("/api/pieces", {
+            method: "PATCH",
+            headers: { "content-type": "application/json" },
+            body: JSON.stringify({
+              operation: "approve",
+              projectId: project.id,
+              pieceId: selected.pieceId,
+              version: selected.baseVersion,
+              expectedRevision: version.metadata?.revision ?? 0,
+              references:(selected.creationContext?.references??[]).flatMap((reference):ApprovedReference[]=>{
+                const source=reference.source;
+                if(!source)return [];
+                return 'kind' in source ? source.kind==='generated'?[{kind:'generated',projectId:source.projectId,imageId:source.imageId}]:[] : [{kind:'pinterest',originUrl:source.originUrl,board:source.board}];
+              }),
+            }),
+          });
+          const data = approvedVersionSchema.parse(await response.json());
+          if (!response.ok) throw Error();
+          versionsReadSequence.current++;
+          await refreshVersions();
+          const current = getCurrentDraft(local.get());
+          if (
+            current?.pieceId === selected.pieceId &&
+            current.baseVersion === selected.baseVersion &&
+            !current.dirty
+          )
+            local.change((value) =>
+              approveDraft(value, {
+                at:
+                  (data.version.metadata?.approval.status === "approved" ? data.version.metadata.approval.at : undefined) ??
+                  new Date().toISOString(),
+                eventId: crypto.randomUUID(),
+              }),
+            );
+          setNotice("Aprovação salva nesta versão.");
+        } catch {
+          setNotice(
+            "Não foi possível confirmar a aprovação. Consulte as versões antes de repetir.",
+          );
+        }
+      }}
+    />
+  );
+  const explorationRecovery=<>{referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<Suspense fallback={null}><ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={onExplorationCompleted} onContinuePlan={usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/></Suspense>}{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
+  const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
+    <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
+      state={s}
+      projectRevision={projectDetails.revision}
+      developerMode={developerMode}
+      getState={local.get}
+      change={local.change}
+      flush={local.flush}
+      tools={toolsRef}
+      hasApiKey={hasApiKey}
+      canUseAI={canUseProjectAI}
+      credentialSource={credentialSource}
+      credentialEpoch={credentialEpoch}
+      onUseAI={activateAI}
+      getApiKey={getApiKey}
+      onUseImage={useBase}
+      prepareImageVersion={saveCurrent}
+      initialMessage=""
+      connection={<p className="studio-hint">{canUseProjectAI?sourceLabel:'Escolha uma IA nas configurações para conversar, ou continue no editor sem IA.'}</p>}
+
+      loadBase={async () => {
+        const d = getCurrentDraft(local.get());
+        return d
+          ? local.storage.current?.getDraftAsset(
+              { userId, projectId: project.id },
+              { pieceId: d.pieceId, baseVersion: d.baseVersion, kind: "base" },
+            )
+          : null;
+      }}
+      loadReference={async (id) =>
+        local.storage.current?.getReference(
+          { userId, projectId: project.id },
+          id,
+        )
+      }
+    />
+  );
+  const basesPanel=(<>
+          <div className="studio-history">
+            <h2>Materiais e versões</h2>
+            <p>Abra um post para ver seus rascunhos e versões. As referências ficam na aba Referências.</p>
+            <div className="guided-actions">
+              <button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));}}>Abrir posts do projeto</button>
+              {draft&&s.workflow.view!=='posts'&&<button type="button" className="studio-button-secondary" onClick={()=>{closeSettings();nextStage('studio');local.change(value=>updateWorkflow(value,{view:'studio'}));setPanelRequest({id:'versions',nonce:Date.now()});}}>Ver versões deste post</button>}
+              <button type="button" className="studio-button-secondary" onClick={()=>{void refreshVersions().catch(()=>setNotice('Não foi possível atualizar as versões.'));}}>Atualizar versões</button>
+            </div>
+            {draft&&s.workflow.view!=='posts'&&<StudioAssets
+              userId={userId}
+              projectId={project.id}
+              pieceId={draft.pieceId}
+              version={draft.baseVersion}
+              canSave={draft.baseVersion > 0 && !draft.dirty}
+              preview={base}
+              onUseImage={useBase}
+            />}
+          </div>
+      </>);
+  const directionPanel=(<>
+          <div>
+            <PersonaStep
+              showAudience={false}
+              value={s.persona}
+              onChange={(value) =>
+                local.change((state) => updatePersona(state, value))
+              }
+              onContinue={closeSettings}
+            />
+          </div>
+        <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
+      </>);
+  const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
+  const postVersionLabel=draft?.approval.status==="approved"?"Aprovado":draft?.dirty?"Rascunho":draft?.baseVersion?`Versão ${draft.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Rascunho":"Rascunho";
+  // ADR 0056: nome do post, versão e ações ficam no topo do próprio post; a barra superior é fixa.
+  const artwork=(<div className="studio-post-workspace">
+          <div className="studio-post-workspace-header">
+            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span></div>
+            <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
+            <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
+            <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
+            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} title="Salvar versão" disabled={saving||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
+
+          <div className="guided-artwork-editor">
+          {editor}
+        </div>
+        </div>);
+  const preparing=s.workflow.phase!=='ready';
+  async function renameProject(title:string){
+    try {
+      const result=await handlersRef.current.compor_renomear_projeto({projectId:project.id,requestId:crypto.randomUUID(),revision:local.get().revision,title});
+      return result.status === "completed";
+    } catch {setNotice("Não foi possível confirmar a alteração do nome.");return false;}
+  }
+  const returnToWorkspaceLabel=s.workflow.view==='posts'?'Voltar aos posts':'Voltar ao post';
+  async function retainReferenceProposal(conversationId:string) {
+    const storage=local.storage.current;
+    if(!storage&&local.get().workflow.latestExplorations?.[conversationId])throw Error('studio_storage_unavailable');
+    const result=storage?await prepareExplorationDraft({conversationId,getState:local.get,change:local.change,flush:local.flush,storage}):'none';
+    if(!active.current||!isAuthenticated())throw Error('studio_unavailable');
+    const selected=getCurrentDraft(local.get());
+    let image=selected?.pieceId===draft?.pieceId?base:null;
+    if(selected&&storage&&result!=='none'){image=(await storage.getDraftAsset({userId,projectId:project.id},{pieceId:selected.pieceId,baseVersion:selected.baseVersion,kind:'base'}))?.file??null;baseLoadGeneration.current++;setBase(image);}
+    return {result,hasImage:Boolean(image)};
+  }
+  async function finishReferences(close=true) {
+    if(referenceTransitionLock.current)return false;
+    referenceTransitionLock.current=true;setReferenceTransition(true);exploration.pause();
+    try {
+      const value=local.get(),selected=getCurrentDraft(value);
+      const defer=preparing||!selected||selected.pieceId===value.workflow.referencePieceId||value.workflow.view==='posts'||value.workflow.view==='prepare-post';
+      if(defer){
+        if(value.workflow.latestExplorations?.[referenceScope])local.change(state=>updateWorkflow(state,{referenceHandoff:referenceScope}));
+        if(preparing){
+          setSettings('references');
+          journey.updateWorkflow({phase:'ready'});
+          if(value.workflow.pendingPost)journey.updateWorkflow({view:'prepare-post'});
+          else journey.preparePost(crypto.randomUUID());
+        }
+        await local.flush();
+      } else {
+        const retained=await retainReferenceProposal(referenceScope);
+        if(retained.result==='retained')setNotice('A última proposta do Compor está preservada como v0 deste post.');
+      }
+      if(!active.current||!isAuthenticated())return false;
+      if(close){
+        closeSettings();
+        requestAnimationFrame(()=>{const name=document.querySelector<HTMLInputElement>('.guided-post-preparation-fields input');if(name)name.focus();else document.querySelector<HTMLButtonElement>('.studio-post-actions button')?.focus();});
+      }
+      return true;
+    } catch {setNotice('Não foi possível preservar a proposta para o post. Suas referências continuam aqui; tente continuar novamente.');return false;}
+    finally {referenceTransitionLock.current=false;if(active.current)setReferenceTransition(false);}
+  }
+  const nextReferences=()=>local.change(value=>updateWorkflow(value,{phase:'references'}));
+  const authorityPanel=referenceAuthorityEnabled&&<div className="studio-exploration-recovery" aria-label="Estado da seleção de referências">
+    {authorityStatus==='ready'?<p>Seleção de referências confirmada.</p>:<><p role="status">{authorityStatus==='checking'?'Verificando a seleção de referências…':authorityStatus==='pending'?'A seleção ainda precisa ser confirmada. Novas gerações estão pausadas.':authorityStatus==='conflict'?'A seleção deste navegador diverge da seleção confirmada. Novas gerações estão pausadas.':'Não foi possível verificar a seleção. Novas gerações estão pausadas.'}</p><button type="button" onClick={()=>void inspectAuthority()}>Consultar confirmação</button>{authorityStatus==='pending'&&<button type="button" onClick={()=>void fenceAuthorityPending()}>Encerrar tentativa de alteração pendente</button>}{authorityStatus==='conflict'&&<button type="button" onClick={()=>void previewAuthorityAdoption()}>Revisar seleção deste navegador</button>}</>}
+    {authorityReview&&<section aria-label="Revisão da seleção local"><p>Confirme se deseja publicar a seleção deste navegador no lugar da seleção remota revisada. Qualquer alteração concorrente impede a publicação.</p><h3>Seleção remota · revisão {authorityReview.remote.revision}</h3><ul>{authorityReview.remote.state.references.map(reference=>{const posts=authorityReview.remote.state.posts.filter(post=>post.referenceIds.includes(reference.id)).map(post=>post.pieceId),excluded=authorityReview.remote.state.posts.filter(post=>post.excludedReferenceIds.includes(reference.id)).map(post=>post.pieceId);return <li key={reference.id}>{reference.id} · {reference.inputOrigin==='local-upload'?'upload':reference.inputOrigin==='external'?'externa':'gerada'} · {authorityReview.remote.state.projectReferenceIds.includes(reference.id)?'selecionada no projeto':'não selecionada no projeto'}{posts.length?` · posts: ${posts.join(', ')}`:''}{excluded.length?` · excluída dos posts: ${excluded.join(', ')}`:''}</li>;})}</ul><p>Somente na seleção remota: {authorityReview.remote.state.references.filter(item=>!authorityReview.selection.references.some(reference=>reference.id===item.id)).map(item=>item.id).join(', ')||'nenhuma'}.</p><p>Somente neste navegador: {authorityReview.selection.references.filter(item=>!authorityReview.remote.state.references.some(reference=>reference.id===item.id)).map(item=>item.id).join(', ')||'nenhuma'}.</p><h3>Seleção deste navegador</h3><p>Itens de origem desconhecida não serão incluídos.</p><ul>{authorityReview.selection.references.map(reference=>{const posts=authorityReview.selection.posts.filter(post=>post.referenceIds.includes(reference.id)).map(post=>s.posts[post.pieceId]?.name||post.pieceId),excluded=authorityReview.selection.posts.filter(post=>post.excludedReferenceIds.includes(reference.id)).map(post=>s.posts[post.pieceId]?.name||post.pieceId);return <li key={reference.id}>{s.references.find(item=>item.id.toLowerCase()===reference.id)?.name??reference.id} ({reference.id}) · {reference.inputOrigin==='local-upload'?'upload':reference.inputOrigin==='external'?'externa':'gerada'} · {authorityReview.selection.projectReferenceIds.includes(reference.id)?'selecionada no projeto':'não selecionada no projeto'}{posts.length?` · posts: ${posts.join(', ')}`:''}{excluded.length?` · excluída dos posts: ${excluded.join(', ')}`:''}</li>;})}</ul>{authorityReview.unknownSelected.length>0&&<p>Não incluídas por origem desconhecida: {authorityReview.unknownSelected.map(item=>item.name).join(', ')}.</p>}<button type="button" onClick={()=>void confirmAuthorityAdoption()}>Confirmar seleção revisada</button><button type="button" onClick={()=>setAuthorityReview(null)}>Cancelar</button></section>}
+  </div>;
+  const aiPanel=<ProjectAI continueLabel={preparing?'Continuar para referências':returnToWorkspaceLabel} preference={s.workflow.aiPreference} source={credentialSource} available={defaultAvailable} canUseAI={canUseAI} keyInput={keyInput} onDefault={()=>{if(credentialSource==='byok')onRemoveKey();local.change(value=>updateWorkflow(value,{aiPreference:'default'}));activateAI();}} onOwn={()=>local.change(value=>updateWorkflow(value,{aiPreference:'byok'}))} onRemove={()=>{onRemoveKey();setProjectIntent(false);exploration.pause();}} onContinue={preparing?nextReferences:closeSettings} onSkip={()=>{continueWithoutAI();if(preparing)nextReferences();else closeSettings();}} onBack={()=>preparing?local.change(value=>updateWorkflow(value,{phase:'context'})):closeSettings()}/>;
+  const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition} onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||!canUseProjectAI||referenceAuthorityEnabled&&authorityStatus!=='ready'||selectedVisualsRequired&&!usingParallel||usingParallel&&(!parallel.epochReady||!parallel.ready)||explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} proposalsRunning={explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback} onPauseProposals={()=>{proposalRequest.current.sequence++;proposalRequest.current.pending=false;parallelGesture.current=null;exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':referenceAuthorityEnabled&&authorityStatus!=='ready'?'A seleção precisa de revisão. Abra “Revisar seleção e alcance” para consultar ou resolver a pendência.':usingParallel&&!parallel.ready?'Informe uma ideia ou oferta e resolva o público antes de pedir propostas.':explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
+    selection={<>{authorityPanel}<ReferenceSelectionTray items={scopedReferences.map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url,scopeLabel:s.projectReferenceIds.includes(reference.id)?'Do projeto':'Deste post',removeLabel:referenceScope==='references'?'Remover do projeto':s.projectReferenceIds.includes(reference.id)?'Deixar de usar neste post':'Remover deste post',...(referenceScope!=='references'&&!s.projectReferenceIds.includes(reference.id)?{onShare:()=>{void selectExistingReference(reference,'references').catch(()=>setNotice('Não foi possível confirmar o compartilhamento.'));}}:{})}))} availableShared={referenceScope==='references'?[]:s.references.filter(reference=>s.projectReferenceIds.includes(reference.id)&&!scopedReferences.some(item=>item.id===reference.id)).map(reference=>({...reference,url:references.find(item=>item.id===reference.id)?.url}))} onUseShared={referenceScope==='references'?undefined:useSharedReference} limit={STUDIO_LIMITS.references} onRemove={async id=>{await removeFile(id);}}/></>}
+    search={sourceControl=><ReferenceExploration authorityConsentRequired={referenceAuthorityEnabled} sourceControl={sourceControl} key={referenceScope} userId={userId} projectId={project.id} idea={referenceDiscoverySubject(s,referenceScope==='references'?idea:postContext(s,referenceScope).message||idea)} selectedOrigins={selectedOrigins} onUseReference={useExploredReference} onRemoveReference={async originUrl=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'originUrl' in item.source&&item.source.originUrl===originUrl);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/>}
+    upload={<label className="guided-reference-upload">Enviar suas imagens<p>PNG ou JPEG, até 8 MB cada. Limite de 20 imagens por projeto.</p><input type="file" accept="image/png,image/jpeg" multiple onChange={event=>{void addFiles(Array.from(event.target.files??[]));event.target.value='';}}/></label>}
+    proposals={<section className="reference-workbench-proposals">{referencesOpen&&selectedVisualsRequired&&!usingParallel&&<div className="studio-exploration-recovery"><p>A exploração com imagens selecionadas está indisponível. Você ainda pode consultar uma tentativa anterior.</p><button type="button" onClick={()=>void inspectLegacyExploration()}>Consultar tentativa sequencial</button>{serialInspection&&<p role="status">{serialInspection}</p>}</div>}{!canUseProjectAI&&<p>Escolha sua IA para pedir propostas. Você pode continuar sem gerar imagens.</p>}{usingParallel&&selectedVisualsAvailable&&scopedReferences.some(reference=>reference.source)&&<p>As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. {referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero.</p>}{usingParallel&&parallel.progress&&<ParallelExplorationProgress progress={parallel.progress}/>}<ExplorationGallery projectId={project.id} completed={exploration.completed} phase={exploration.phase} countdown={exploration.countdown} onUseReference={useGeneratedReference} selectedIds={selectedGeneratedIds} onRemoveReference={async imageId=>{const reference=effectiveReferences(local.get(),referenceScope).find(item=>item.source&&'kind' in item.source&&item.source.kind==='generated'&&item.source.imageId===imageId);if(!reference||!await removeFile(reference.id))throw Error('reference_removal_not_confirmed');}}/></section>}
+    conversation={<>{explorationRecovery}<div className="guided-reference-chat"><div className="guided-reference-post-chat" ref={setReferenceChatTarget}/></div></>}
+    onBack={preparing?()=>local.change(value=>updateWorkflow(value,{phase:'ai'})):undefined} onContinue={()=>{void finishReferences();}} continueLabel={preparing?(scopedReferences.length?'Preparar primeiro post':'Continuar sem referências'):s.workflow.view==='prepare-post'?'Voltar ao pedido':returnToWorkspaceLabel}/>;
+  const intro=s.workflow.view==='compose'&&!draft?.baseVersion&&!base&&!conversationMessages(s,draft?.pieceId).some(message=>message.role==='user');
+  const chatIds=[...new Set([...visitedPosts,...(draft?[draft.pieceId]:[])])].filter(id=>id!==s.workflow.referencePieceId);
+  const chats=chatIds.map(id=><div className="guided-conversation" key={id} hidden={id!==draft?.pieceId}>{renderChat(id,id===draft?.pieceId&&intro)}</div>);
+  const pendingTurn=s.adjustments.find(item=>!['completed','failed'].includes(item.status));
+  const showPosts=()=>{closeSettings();setPostSettingsOpen(false);nextStage('studio');local.change(value=>updateWorkflow(value,{view:'posts'}));};
+  const pendingPost=s.workflow.pendingPost;
+  const preparingPost=s.workflow.view==='prepare-post';
+  const viewingPendingConversation=Boolean(pendingTurn&&draft&&pendingTurn.context.conversationId===draft.pieceId&&s.workflow.view!=='posts'&&!preparingPost&&(!chatMinimized||intro));
+  const preparedValue=pendingPost??(draft?postContext(s,draft.pieceId):{objective:'',message:'',action:''});
+  const preparedName=pendingPost?.name??(draft?s.posts[draft.pieceId]?.name??'':'');
+  const changePreparation=journey.changePreparation;
+  const postPreparation=preparingPost&&<section className="studio-panel guided-question" aria-labelledby="post-preparation-title"><p className="studio-eyebrow">PREPARAR POST</p><h2 id="post-preparation-title">Vamos preparar este post</h2><p>Escolha um nome para organizar esta peça e defina o que ela deve comunicar.</p><form onSubmit={event=>{event.preventDefault();void confirmPostCreation();}}><fieldset className="guided-post-preparation-fields" disabled={creatingPost}><label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" disabled={creatingPost} onChange={event=>changePreparation({name:event.target.value})}/></label><PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/><p className="studio-hint">A chamada para ação é opcional. O post será criado somente ao continuar.</p><div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={creatingPost} onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button><button type="submit" className="studio-button" disabled={creatingPost||!postNameSchema.safeParse(preparedName).success}>{creatingPost?'Criando post…':'Continuar para criação'}</button></div></fieldset></form></section>;
+
+  const canvas=<>
+    {referencesOpen&&!referencesModal&&referencePanel}
+    <div className="studio-workspace-host" hidden={referencesOpen&&!referencesModal}>
+      {pendingTurn&&!preparing&&!viewingPendingConversation&&<p className="studio-hint" role="status">Há um pedido ainda não confirmado. <button type="button" onClick={()=>{if(!pendingTurn.context.conversationId){setSettings('history');}else if(pendingTurn.context.conversationId==='references'){setReferenceScope('references');setSettings('references');}else{setChatMinimized(false);openPost(pendingTurn.context.pieceId);}}}>Abrir a conversa desse pedido</button></p>}
+      {preparing&&s.workflow.phase!=='references'&&<><PreparationSteps phase={s.workflow.phase}/>{s.workflow.phase==='context'?<ProjectQuestions state={s} onChange={patch=>local.change(value=>updateWorkflow(updateBrief(value,patch),{contextStarted:true}))} onStep={contextStep=>local.change(value=>updateWorkflow(value,{contextStep}))} onContinue={()=>local.change(value=>updateWorkflow(value,{phase:'ai'}))}/>:aiPanel}</>}
+      {!preparing&&s.workflow.view==='posts'&&<ProjectPosts state={s} versions={versions} posts={postRecords} onOpen={openPost} onNew={()=>newPost()} onDelete={(pieceId,name)=>{setPostDeleteError('');setPostDeleteTarget({pieceId,name});}}/>}
+      <div className="guided-post-host" hidden={preparing||s.workflow.view==='posts'} style={{height:'100%',minHeight:0,overflowY:preparingPost?'auto':undefined}}>{postPreparation}<div className="studio-workspace-view" data-active={!preparing&&!referencesOpen&&s.workflow.view!=='posts'&&!preparingPost} hidden={preparingPost} style={{height:'100%',minHeight:0}}><GuidedWorkspace chat={chats} artwork={artwork} intro={intro} chatMinimized={chatMinimized} onChatMinimizedChange={setChatMinimized} onManual={()=>local.change(value=>updateWorkflow(value,{view:'studio'}))}/></div></div>
+    </div>
+  </>;
+
+  return (
+    <StudioShell
+      stage={stage}
+      projectTitle={projectDetails.title}
+      accountLabel={accountLabel}
+      localAccount={localAccount}
+      onSignOut={onSignOut ? signOutSafely : undefined}
+      onOpenProfile={()=>{exploration.pause();setExplorationRequested(false);onOpenProfile();}}
+      canOpenStudio
+      onTabChange={() => {setDrawer(null);nextStage("studio");}}
+      onNewProject={async () => {try {await local.flush();if(active.current) onCreateNew();} catch {setNotice("Não foi possível preservar o projeto antes de sair.");}}}
+      onNavigate={async value => {
+        if(value !== "projects") return nextStage(value);
+        try {await local.flush();if(active.current) onBack();}
+        catch {setNotice("Não foi possível preservar o projeto antes de sair.");}
+      }}
+      onReview={() => nextStage("review")}
+      guided
+      sidebar={!preparing?<StudioNavigation projectTitle={projectDetails.title} onRenameProject={renameProject} actions={[
+        {id:'posts',label:'Posts do projeto',disabled:creatingPost||deletingPost,onClick:showPosts,current:!currentSettings&&s.workflow.view==='posts'&&stage==='studio'},
+        {id:'project',label:'Configurações do projeto',disabled:creatingPost||deletingPost,onClick:()=>setSettings('context')},
+        ...(intro&&draft?[{id:'post' as const,label:'Configurações do Post',onClick:()=>setPostSettingsOpen(true)}]:[]),
+        {id:'delete',label:'Excluir projeto',disabled:creatingPost||deletingPost||saving||Boolean(pendingTurn)||exploration.phase==='generating'||referenceTransition||!project.revision,onClick:()=>{exploration.pause();setExplorationRequested(false);onRequestDelete();}},
+      ]}/>:undefined}
+      projectId={project.id}
+      projects={projects}
+      onOpenProject={async target => {
+        try { await local.flush(); if(active.current) onOpenProject(target); }
+        catch { setNotice("Não foi possível preservar este projeto antes de trocar."); }
+      }}
+      canvas={canvas}
+      overlays={
+        <>
+          {accountOverlays}
+          <div hidden>{renderChat('references',false,false,true)}</div>
+          {postDeleteTarget&&<StudioDialog title="Excluir post?" onClose={()=>{if(!deletingPost)setPostDeleteTarget(null);}}><p>Excluir “{postDeleteTarget.name}” da lista de posts deste projeto?</p><p>As imagens e o histórico já registrados são preservados.</p>{postDeleteError&&<p role="alert">{postDeleteError}</p>}<div className="guided-actions"><button type="button" className="studio-button-secondary" disabled={deletingPost} onClick={()=>setPostDeleteTarget(null)}>Cancelar</button><button type="button" className="studio-button" disabled={deletingPost} onClick={()=>{void confirmPostDeletion();}}>{deletingPost?'Excluindo…':'Excluir post'}</button></div></StudioDialog>}
+          {referencesModal&&referencesModalKind==='post'&&<StudioDialog title="Referências deste post" className="studio-modal-framed reference-post-modal" closeLabel="Fechar referências do post" onClose={()=>{void finishReferences();}}>{referencePanel}</StudioDialog>}
+          {currentSettings&&(currentSettings!=='references'||referencesModal&&referencesModalKind==='project')&&<StudioDialog title="Configurações do projeto" className="studio-modal-framed" closeLabel="Fechar configurações" onClose={()=>{if(currentSettings==='references')void finishReferences();else closeSettings();}}><nav className="guided-settings-tabs" aria-label="Configurações">{settingsSections.map(([tab,label])=><button type="button" className="studio-button-secondary" key={tab} aria-pressed={currentSettings===tab} onClick={()=>{void(async()=>{if(currentSettings==='references'&&tab!=='references'&&!await finishReferences(false))return;setDrawer(null);if(tab==='references')setReferenceScope('references');setSettings(tab,'project');})();}}>{label}</button>)}</nav>{currentSettings==='context'?<><p>Ideia inicial: {idea||'Ainda não informada'}</p><ContextStrip state={s} onBrief={patch=>local.change(value=>updateBrief(value,patch))} onFacts={facts=>local.change(value=>updateOfferFacts(value,facts))}/></>:currentSettings==='ai'?aiPanel:currentSettings==='direction'?directionPanel:currentSettings==='materials'?basesPanel:currentSettings==='references'?referencePanel:<><p>Histórico preservado da versão anterior. Novos pedidos são feitos na conversa de cada post.</p><div className="guided-reference-chat">{renderChat(undefined,false,true)}</div></>}</StudioDialog>}
+          {postSettingsOpen&&draft&&<StudioDialog title="Configurações do Post" closeLabel="Fechar configurações do post" onClose={()=>setPostSettingsOpen(false)}><PostSettings value={postContext(s,draft.pieceId)} legacyAction={s.brief.action} onChange={patch=>journey.updatePostContext(draft.pieceId,patch)}/>{s.posts[draft.pieceId]?.direction.criteria.length>0&&<StudioDirection direction={s.posts[draft.pieceId].direction} references={references.filter(reference=>effectiveReferences(s,draft.pieceId).some(item=>item.id===reference.id))} onPropose={criterion=>local.change(value=>addPostCriterion(value,draft.pieceId,criterion))} onDecide={decision=>local.change(value=>decidePostCriterion(value,draft.pieceId,decision))}/>}</StudioDialog>}
+          {viewingArt&&base&&<StudioDialog title="Arte do post" onClose={()=>setViewingArt(false)}><GuidedArtPreview image={base}/></StudioDialog>}
+          {dialog && (
+            <StudioDialog
+              title="Confirmar alteração no projeto?"
+              onClose={() => resolveConfirmation(false)}
+            >
+              <p>
+                {"title" in dialog.args
+                  ? `O projeto passa a se chamar “${dialog.args.title}”.`
+                  : "Uma nova versão será salva."}
+              </p>
+              <button onClick={() => resolveConfirmation(true)}>
+                Confirmar
+              </button>
+              <button onClick={() => resolveConfirmation(false)}>
+                Cancelar
+              </button>
+            </StudioDialog>
+          )}
+          {proposal && (
+            <StudioDialog
+              title="Imagem proposta"
+              onClose={() => setProposal(null)}
+            >
+              <p>{proposal.prompt}</p>
+              <p>
+                Esta proposta ainda não gerou uma imagem. A execução depende da
+                confirmação da chamada vinculada ao agente.
+              </p>
+              <button onClick={() => setProposal(null)}>
+                Voltar ao estúdio
+              </button>
+            </StudioDialog>
+          )}
+        </>
+      }
+      footer={
+        <>
+          {local.error && <p role="alert">{local.error}</p>}
+          {notice && <p role="status">{notice}</p>}
+        </>
+      }
+    >
+      {(stage === "review" || stage === "export") && (
+        <StudioPanel
+          eyebrow="ARTE E LEGENDA"
+          title={
+            stage === "review"
+              ? "Revise seu post"
+              : "Pronto para levar sua ideia adiante"
+          }
+          description="Confira arte, fatos e legenda antes de usar."
+        >
+          <p className="studio-hint">{postTitle}</p><StudioReview title={projectDetails.title} draft={draft} base={base} />
+          <button onClick={() => nextStage("studio")}>
+            Pedir ajuste no estúdio
+          </button>
+        </StudioPanel>
+      )}
+    </StudioShell>
+  );
+}
+
+function PostActionIcon({path}:{path:string}) {
+  return <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d={path}/></svg>;
+}

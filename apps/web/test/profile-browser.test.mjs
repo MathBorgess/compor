@@ -13,11 +13,11 @@ const pageData={userId:alice,projects:[{id:project,title:'Café Aurora',deletedA
 const source=`
 import {StrictMode,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioProfile from './app/studio-profile.tsx';
+import StudioProfile from './studio/studio-profile.tsx';
 import {createStudioStorage} from './lib/studio-storage.ts';
 import {createStudioState,addCreativeCriterion,recordCreativeDecision} from './lib/studio-state.ts';
-import './app/studio-shell.css';
-import './app/studio-guided.css';
+import './studio/studio-shell.css';
+import './studio/studio-guided.css';
 const storage=createStudioStorage();
 for(const [userId,statement] of [['${alice}','Contraste suave'],['${bob}','Critério privado da outra conta']]){
  let state=createStudioState({userId,projectId:'${project}'});

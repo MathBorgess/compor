@@ -5,7 +5,7 @@ import { relative, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '../..');
 const packages = await readdir(resolve(root, 'packages'));
-const paths = ['apps/web/app', 'apps/web/lib', ...packages.map(name => `packages/${name}/src`)];
+const paths = ['apps/web/studio', 'apps/web/handlers', 'apps/web/pages', 'apps/web/lib', ...packages.map(name => `packages/${name}/src`)];
 const results = await new ESLint({ cwd: root, overrideConfig: [{ rules: { complexity: ['warn', 20] } }] }).lintFiles(paths);
 if (results.some(result => result.fatalErrorCount > 0)) throw Error('Maintainability analysis could not parse all source files.');
 const findings = results.flatMap(result => result.messages.filter(message => message.ruleId === 'complexity').map(message => ({

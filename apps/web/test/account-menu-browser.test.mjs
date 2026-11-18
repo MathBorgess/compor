@@ -13,7 +13,7 @@ test('menu de conta mostra identidade e uma única opção de saída', {skip:!ex
     import AccountMenu from './account-menu.tsx';
     function Fixture(){const [signedOut,setSignedOut]=useState(false);return signedOut?<p>Saída concluída</p>:<><AccountMenu label="Alice Silva" onSignOut={()=>setSignedOut(true)}/><AccountMenu label="Conta local" local onSignOut={()=>{}}/></>};
     createRoot(document.getElementById('app')).render(<Fixture/>);`;
-  const bundle=await build({stdin:{contents:source,resolveDir:resolve('app'),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',loader:{'.css':'empty'}});
+  const bundle=await build({stdin:{contents:source,resolveDir:resolve('studio'),loader:'tsx'},bundle:true,write:false,format:'iife',platform:'browser',loader:{'.css':'empty'}});
   const server=createServer((request,response)=>{
     if(request.url==='/app.js'){response.writeHead(200,{'content-type':'application/javascript'});response.end(bundle.outputFiles[0].contents);return;}
     response.writeHead(200,{'content-type':'text/html'});response.end('<div id="app"></div><script src="/app.js"></script>');

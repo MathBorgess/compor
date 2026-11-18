@@ -9,7 +9,7 @@ test('migra schema 2 sem atribuir a ação antiga aos posts, mantendo todas as r
  const current=updateBrief(initial(),{action:'Compre o curso'}),{posts,projectReferenceIds,...legacy}=structuredClone(current);
  legacy.schemaVersion=2;legacy.references=[reference(10)];
  const next=parseStudioState(legacy);
- assert.equal(next.schemaVersion,3);assert.equal(next.brief.action,'Compre o curso');assert.deepEqual(postContext(next,id(3)),{objective:'',message:'',action:''});
+ assert.equal(next.schemaVersion,4);assert.equal(next.brief.action,'Compre o curso');assert.deepEqual(postContext(next,id(3)),{objective:'',message:'',action:''});
  assert.deepEqual(effectiveReferences(next,id(4)),legacy.references);assert.deepEqual(parseStudioState(next),next);assert.equal(legacy.schemaVersion,2);
  assert.equal(conversationContext(next,id(3)).brief.action,'');
 });

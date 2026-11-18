@@ -1,5 +1,7 @@
 import { createHash } from 'node:crypto';
 import { parseImageProposal, serializeImageProposal } from './image-proposal.mjs';
+import {parseSelectedVisualInput,visualInputDigest} from './visual-input.mjs';
+import {validateVisualReferenceSelection} from './visual-input-contract.mjs';
 
 export const MAX_ARTWORK_REQUEST_BYTES = 3 * 1024 * 1024;
 export const MAX_ARTWORK_IMAGE_BYTES = 2 * 1024 * 1024;
@@ -9,7 +11,7 @@ const hash = value => createHash('sha256').update(value).digest('hex');
 export const imageProposalDigest = value => hash(serializeImageProposal(value));
 
 export function parseArtworkInput(value = {literalText: {headline: '', price: '', date: ''}, source: null, images: []}) {
-  if (!exact(value, ['literalText', 'source', 'images']) || !(exact(value.literalText, ['headline', 'price', 'date']) || exact(value.literalText, ['headline', 'price', 'date', 'fields'])) ||
+  if (!(exact(value, ['literalText', 'source', 'images']) || exact(value, ['literalText', 'source', 'images', 'visualInput'])) || !(exact(value.literalText, ['headline', 'price', 'date']) || exact(value.literalText, ['headline', 'price', 'date', 'fields'])) ||
       !Array.isArray(value.images) || value.images.length > 21) throw Error('invalid_artwork_input');
   for (const [key, max] of [['headline', 500], ['price', 100], ['date', 100]]) {
     const text = value.literalText[key];
@@ -33,16 +35,19 @@ export function parseArtworkInput(value = {literalText: {headline: '', price: ''
   });
   if (new Set(images.map(image => image.id)).size !== images.length || images.filter(image => image.role === 'base').length > 1 ||
       Boolean(source) !== images.some(image => image.role === 'base')) throw Error('invalid_artwork_input');
-  return {literalText: {headline: value.literalText.headline, price: value.literalText.price, date: value.literalText.date, ...(fields !== undefined ? {fields:fields.map(({id,label,value,origin}) => ({id,label,value,origin}))} : {})}, source: source ? {pieceId: source.pieceId, version: source.version} : null, images};
+  const references=images.filter(image=>image.role==='reference').map(({id,mime,data})=>({id,mime,data}));
+  const visualInput=Object.hasOwn(value,'visualInput')?parseSelectedVisualInput(value.visualInput,references,references.map(image=>image.id)).visualInput:undefined;
+  return {literalText: {headline: value.literalText.headline, price: value.literalText.price, date: value.literalText.date, ...(fields !== undefined ? {fields:fields.map(({id,label,value,origin}) => ({id,label,value,origin}))} : {})}, source: source ? {pieceId: source.pieceId, version: source.version} : null, images,...(visualInput?{visualInput}:{})};
 }
 
 export function artworkInputDigest(value) {
   const input = parseArtworkInput(value);
-  return hash(JSON.stringify({literalText: input.literalText, source: input.source, images: input.images.map(({id, role, mime, data}) => ({id, role, mime, sha256: hash(Buffer.from(data, 'base64'))})), size: '1024x1280'}));
+  return hash(JSON.stringify({literalText: input.literalText, source: input.source, images: input.images.map(({id, role, mime, data}) => ({id, role, mime, sha256: hash(Buffer.from(data, 'base64'))})), size: '1024x1280',...(input.visualInput?{visualInputDigest:visualInputDigest(input.visualInput)}:{})}));
 }
 
 export function validateArtworkForProposal(proposalValue, inputValue) {
   const proposal = parseImageProposal(proposalValue), input = parseArtworkInput(inputValue);
+  if(input.visualInput&&!validateVisualReferenceSelection(input.visualInput,proposal.referenceIds))throw Error('artwork_inputs_changed');
   const expected = [...(proposal.operation === 'edit' ? [{id: proposal.baseImageId, role: 'base'}] : []), ...proposal.referenceIds.map(id => ({id, role: 'reference'}))];
   if (input.images.length !== expected.length || expected.some((item, index) => item.id !== input.images[index].id || item.role !== input.images[index].role) ||
       (proposal.operation === 'edit' ? input.source?.pieceId !== proposal.baseImageId : input.source !== null)) throw Error('artwork_inputs_changed');

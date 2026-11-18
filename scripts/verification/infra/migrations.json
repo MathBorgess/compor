@@ -130,6 +130,34 @@
     {
       "name": "20261115000031_project_posts.sql",
       "sha256": "cb7a80ee14619edcd37275e16e55a67544eb3b30cc3e509da38f2bb6851a2a2b"
+    },
+    {
+      "name": "20261117000033_exploration_parallel_batches.sql",
+      "sha256": "107213c617c6679ecfe0ec027d27c442913bf787bef9ff4da1a812947b9d9b9e"
+    },
+    {
+      "name": "20261117000034_exploration_revocable_intents.sql",
+      "sha256": "ef113e850d4d07fe4c3ca4e1ac80b7a145b7e181055aa2cc4290c6c5e7689bf7"
+    },
+    {
+      "name": "20261117000035_exploration_revocation_epoch.sql",
+      "sha256": "2ce9f22e2d5f1a86b2946f5b7d0161f0dbc4c6f351c552693b83eb9e385fb777"
+    },
+    {
+      "name": "20261117000036_exploration_parallel_review.sql",
+      "sha256": "9cb0fced4eacb562babbd896c6b265f213e9554ebd0fb813713510eb7897bddb"
+    },
+    {
+      "name": "20261117000037_reference_authority.sql",
+      "sha256": "c1dd38cb83d7365c995b79f58399f5d30b55f44fc2ddbad5c64e75054f91d424"
+    },
+    {
+      "name": "20261117000038_reference_selection_fence.sql",
+      "sha256": "7aaae62855faf0b4379a8e5bb6c797dc1f82e9a68241fa4e96f7004d3c407d3b"
+    },
+    {
+      "name": "20261117000039_authorize_visual_parallel_review.sql",
+      "sha256": "c44351c68410d8c742d5791e8022fc08aed6c2185250a93eaefa2fbcf1fd8704"
     }
   ]
 }

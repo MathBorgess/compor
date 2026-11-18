@@ -235,6 +235,7 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  assert.equal(explorations.length,3);assert.ok(explorations.every(call=>call.projectId===projects[1].id&&call.prompt.includes(secondIdea)&&!call.prompt.includes(firstIdea)&&!call.prompt.includes('Uma ideia antiga da entrada')));
  await closeSettings(page);await message.fill('Post sobre gravura');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  await page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:firstIdea,exact:true}).click();
+ await projectHeading(page,firstIdea).waitFor();
  message=await connectKey(page);assert.equal(await message.inputValue(),'');
  await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor();
@@ -257,13 +258,28 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  await field.fill('Segundo post, sobre materiais');await field.press('Enter');await page.locator('.guided-conversation:not([hidden])').getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.notEqual(chats[1].conversationId,first);assert.equal(chats[1].context.brief.offer,chats[0].context.brief.offer);
  assert.ok(chats[1].history.every(message=>!message.text.includes('Primeiro post')));
+ const second=chats[1].conversationId;
+ const draftKey=`compor-message-draft:v1:${userId}:${projects[0].id}:${second}`;
+ const storedDraft=()=>page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)),draftKey);
  await field.fill('Rascunho privado do post dois');
+ assert.equal(await storedDraft(),'Rascunho privado do post dois');
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 1 /}).click();
- field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post um');
+ field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');
  await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();await finishPreparation(page);
- field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post um');
+ field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');
+ // Observe the first visible value in this conversation, before a subsequent effect could replace it.
+ await page.evaluate(id=>{
+  window.firstVisibleConversationDraft=new Promise(resolve=>{
+   const observer=new MutationObserver(()=>{
+    const field=document.getElementById(id);
+    if(field?.getClientRects().length){observer.disconnect();resolve(field.value);}
+   });
+   observer.observe(document.body,{subtree:true,childList:true,attributes:true});
+  });
+ },`studio-chat-message-${second}`);
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 2 /}).click();
- field=await openConversation(page);assert.equal(await field.inputValue(),'Rascunho privado do post dois');
+ assert.equal(await storedDraft(),'Rascunho privado do post dois');
+ field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${second}`);assert.equal(await page.evaluate(()=>window.firstVisibleConversationDraft),'Rascunho privado do post dois');assert.equal(await field.inputValue(),'Rascunho privado do post dois');
  assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Primeiro post, sobre a oficina',{exact:true}).count(),0);assert.deepEqual(errors,[]);
 });
 

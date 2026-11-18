@@ -6,7 +6,7 @@ export interface ImageReservationStore {
  fenceUnsubmitted(input:CallScope):Promise<{status:'fenced'|'unverified'}>;
  confirmClosedAttempt(input:{actor:Actor;projectId:string;requestId:string}):Promise<{status:'confirmed'|'unverified'}>;
  declareConsent(input:{actor:Actor;reservationId:string;confirmed:true}):Promise<{id:string;isNew:boolean}>;
- claimExecution(input:{actor:Actor;reservationId:string}):Promise<{state:'busy'|'blocked'} | {id:string;assetId:string;state:'running'|'unknown'|'completed';isNew:boolean}>;
+ claimExecution(input:{actor:Actor;reservationId:string;visualAuthority?:{requestId:string;manifestDigest:string;consentSecret:string|null}}):Promise<{state:'busy'|'blocked'} | {id:string;assetId:string;state:'running'|'unknown'|'completed';isNew:boolean}>;
  markExecutionUnknown(input:{actor:Actor;executionId:string}):Promise<void>;
  completeExecution(input:{actor:Actor;executionId:string}):Promise<void>;
  claimResultSubmission(input:CallScope & {executionId:string}):Promise<{id:string;assetId:string;state:'sending'|'unknown'|'sent';isNew:boolean}>;

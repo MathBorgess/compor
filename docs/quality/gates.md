@@ -78,7 +78,7 @@ Cada arquivo executa por um wrapper nativo do `node:test`: reserva atomicamente 
 
 O snapshot requer fontes estáveis e sem fixtures transitórias no checkout. Ele não copia `.next`, caches, `.git` ou `tsbuildinfo`. Os dois workers preservam seus próprios caches entre arquivos da mesma execução. O preparo autenticado abaixo e os limites dos testes continuam iguais. O [registro do isolamento](browser-worker-isolation-2026-11-10.md) separa a falha de CI que motivou essa mudança, os controles adversariais e a medição da suíte.
 
-O preparo das fixtures autenticadas verifica a rota real com o mesmo cookie sintético do navegador, consome o HTML e os scripts e estilos locais em `/_next/static`. O HTTP 200 da entrada leve do ADR 0034 não comprova que o App Router está pronto. O prazo de startup continua em 30 s, com até 2 s por requisição, e também cobre o corpo e os chunks. Uma falha de asset espera a conclusão da mesma onda de requisições antes de tentar novamente. Os limites de 6 s das ações dessas fixtures e o padrão de 90 s por teste não mudam. O preparo não executa o JavaScript nem consulta serviços externos.
+O preparo das fixtures autenticadas verifica a rota real com o mesmo cookie sintético do navegador, consome o HTML e os scripts e estilos locais em `/_next/static`. O HTTP 200 da entrada leve do ADR 0034 não comprova que a página autenticada está pronta. O prazo de startup continua em 30 s, com até 2 s por requisição, e também cobre o corpo e os chunks. Uma falha de asset espera a conclusão da mesma onda de requisições antes de tentar novamente. Os limites de 6 s das ações dessas fixtures e o padrão de 90 s por teste não mudam. O preparo não executa o JavaScript nem consulta serviços externos.
 
 Medição local de 09/11, num Apple M1 Max com outra tarefa usando a máquina ao mesmo tempo:
 
@@ -136,7 +136,7 @@ Os relatórios incluem acessibilidade e boas práticas para diagnóstico, sem im
 
 ## Limites da cobertura
 
-O benchmark não autentica no Google, não consulta um projeto Supabase e não chama o GPT Image. Ele não mede latência de rede real, geração de imagem, interação autenticada, INP de campo ou acessibilidade completa. O App Router que uma pessoa conectada carrega fica fora do Lighthouse e do limite de JavaScript inicial; só o limite total cobre esse código. Os contratos usam fornecedores simulados para verificar chamadas, autorização e recuperação sem custos externos.
+O benchmark não autentica no Google, não consulta um projeto Supabase e não chama o GPT Image. Ele não mede latência de rede real, geração de imagem, interação autenticada, INP de campo ou acessibilidade completa. O JavaScript do estúdio que uma pessoa conectada carrega fica fora do Lighthouse e do limite de JavaScript inicial; só o limite total cobre esse código. Os contratos usam fornecedores simulados para verificar chamadas, autorização e recuperação sem custos externos.
 
 A escolha entre SSR e conteúdo estático depende dos dados da rota. Sem cookie de sessão, `proxy.ts` responde `/` com HTML sem JavaScript. Com sessão, o Next renderiza `/` sob demanda. O Astro gera o site público estaticamente. O gate valida o build e o resultado observado, sem exigir que dados de sessão sejam convertidos em conteúdo estático.
 

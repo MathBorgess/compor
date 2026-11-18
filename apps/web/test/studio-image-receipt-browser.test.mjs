@@ -17,9 +17,9 @@ const failure='A imagem foi gerada, mas não foi possível confirmar sua aplica�
 const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 
 test('receipt confirma aplicação aguardada sem alterar o agente; escopo e falha não regeneram imagem',{skip:!existsSync(browserPath),timeout:90000},async t=>{
- const fixture=await mkdtemp(new URL('../app/studio-image-receipt-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
-import {useEffect,useRef,useState} from 'react';import StudioChat from '../studio-chat';
+ const fixture=await mkdtemp(new URL('../pages/studio-image-receipt-test-',import.meta.url));t.after(()=>rm(fixture,{recursive:true,force:true}));
+ await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';
+import {useEffect,useRef,useState} from 'react';import StudioChat from '../../studio/studio-chat';
 import {createStudioState,selectVersion,selectDraft,prepareAdjustment,parseStudioState} from '../../lib/studio-state.ts';
 const content={headline:'Post de origem',price:'',date:'',caption:'',captionOrigin:'user'};
 function initial(userId='${userId}',projectId='${projectId}',restore=false){if(restore&&typeof window!=='undefined'){try{const old=JSON.parse(sessionStorage.getItem('receipt-test-state'));if(old?.userId===userId&&old?.projectId===projectId)return parseStudioState(old);}catch{}}let s=selectVersion(createStudioState({userId,projectId}),{pieceId:'${otherPiece}',version:2,latestVersion:2,content:{...content,headline:'Outro post'}});s=selectVersion(s,{pieceId:'${pieceId}',version:2,latestVersion:2,content});return prepareAdjustment(s,{requestId:'${requestId}',messageId:'${id(7)}',instruction:'Gere uma imagem',createdAt:'2026-11-05T00:00:00.000Z',eventId:'${id(8)}'});}

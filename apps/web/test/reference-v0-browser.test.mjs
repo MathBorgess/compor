@@ -10,7 +10,8 @@ import {waitForApp,stopApp} from './wait-for-app.mjs';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`,userId=id(1),projectId=id(2);
 async function stored(page){return page.evaluate(async({userId,projectId})=>{
- const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1',4);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
+ // Observe the app's current schema after it migrates the v4 fixture below.
+ const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
  try{
   const read=(store,key)=>new Promise((resolve,reject)=>{const request=db.transaction(store).objectStore(store).get(key);request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});
   const scope=JSON.stringify([userId,projectId]),state=(await read('states',scope))?.state;

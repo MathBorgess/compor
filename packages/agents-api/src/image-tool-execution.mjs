@@ -26,10 +26,10 @@ export function createImageToolApproval({ bindings, ownsVersion } = {}) {
     } catch { return null; }
   };
 }
-export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, fetch: fetchApi = globalThis.fetch } = {}) {
+export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, checkVisualAuthority, fetch: fetchApi = globalThis.fetch } = {}) {
   if (typeof bindings?.verifyApprovedAction !== 'function' || typeof ownsVersion !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
   if (usage && (typeof usage.start !== 'function' || typeof usage.finish !== 'function')) throw new TypeError('invalid usage store');
-  return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval, artworkInput } = {}) => {
+  return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval, artworkInput, visualAuthority, signal } = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
     try { action = bindings.verifyApprovedAction({token: actionBinding, userId: actor.userId, projectId, attemptId, pieceId, version}); } catch { return {status:'rejected'}; }
@@ -39,6 +39,8 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     try {
       input = parseArtworkInput(artworkInput);
       if (artworkInputDigest(input) !== action.artworkDigest) return {status:'rejected'};
+      if (input.visualInput && (!visualAuthority || typeof checkVisualAuthority!=='function' || !uuid(visualAuthority.requestId) || visualAuthority.manifestDigest!==action.visualInputDigest || (visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret)))) return {status:'rejected'};
+      if (!input.visualInput && visualAuthority) return {status:'rejected'};
       if (input.source && (input.source.pieceId !== pieceId || input.source.version >= version || await ownsVersion({actor,projectId,pieceId,version:input.source.version}) !== true)) return {status:'rejected'};
     } catch { return {status:'rejected'}; }
     try {
@@ -64,7 +66,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       const reservation = await reservations.reserve({actor,projectId,pieceId,version,attemptId,sessionId:action.sessionId,turnId:action.turnId,callId:action.callId});
       if (!uuid(reservation?.id) || reservation.state !== 'reserved') return unknown();
       await reservations.declareConsent({actor,reservationId:reservation.id,confirmed:true});
-      execution = await reservations.claimExecution({actor,reservationId:reservation.id});
+      execution = await reservations.claimExecution({actor,reservationId:reservation.id,...(visualAuthority?{visualAuthority}:{})});
       if (execution?.state === 'busy' || execution?.state === 'blocked') return {status:execution.state};
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
@@ -73,6 +75,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     let storedAssetId;
     try {
       if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
+      if (visualAuthority && (signal?.aborted || await checkVisualAuthority({actor,projectId,pieceId,visualAuthority}) !== true || signal?.aborted)) throw Error('visual authority unavailable');
       const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true})}));
       if (!image.ok) throw new Error('generation uncertain');
       const result = await image.json();

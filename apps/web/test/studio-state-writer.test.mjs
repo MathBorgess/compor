@@ -116,3 +116,28 @@ test('unmount after an observed failure does not retry its pending snapshot', as
   assert.equal(repository.writes.length, 1);
   assert.equal(repository.closed, true);
 });
+
+test('local CAS fence rebases concurrent edits and releases before remote confirmation',async()=>{
+ const repository=controlledRepository(),writer=createStudioStateWriter({repository,storedRevision:3});
+ const lease=await writer.acquireExternal({revision:3});
+ writer.enqueue({revision:4,text:'edicao concorrente'});let finished=false;
+ const flushing=writer.flush().then(()=>{finished=true;});await ticks();assert.equal(repository.writes.length,0);assert.equal(finished,false);
+ lease.commit({revision:4},{revision:5,text:'edicao concorrente',selected:true});await ticks();
+ assert.equal(repository.writes.length,1);assert.equal(repository.writes[0].options.expectedRevision,4);assert.deepEqual(repository.writes[0].snapshot,{revision:5,text:'edicao concorrente',selected:true});
+ repository.writes[0].resolve();await flushing;assert.equal(finished,true);
+});
+
+test('local CAS fence without a commit preserves queued work and original revision',async()=>{
+ const repository=controlledRepository(),writer=createStudioStateWriter({repository,storedRevision:3});
+ const lease=await writer.acquireExternal({revision:3});writer.enqueue({revision:4,text:'rascunho'});
+ const flushing=writer.flush();lease.release();await ticks();assert.equal(repository.writes[0].options.expectedRevision,3);repository.writes[0].resolve();await flushing;
+});
+
+test('a flush already running cannot write over an external local transaction',async()=>{
+ const repository=controlledRepository(),writer=createStudioStateWriter({repository,storedRevision:3});
+ writer.enqueue({revision:4});const flushing=writer.flush(),acquiring=writer.acquireExternal({revision:4});
+ repository.writes[0].resolve();const lease=await acquiring;assert.equal(lease.baseRevision,4);
+ writer.enqueue({revision:5,text:'rascunho'});await ticks();assert.equal(repository.writes.length,1);
+ lease.commit({revision:5},{revision:6,text:'rascunho',selected:true});await ticks();
+ const final=writer.flush();assert.equal(repository.writes.length,2);assert.equal(repository.writes[1].options.expectedRevision,5);repository.writes[1].resolve();await Promise.all([flushing,final]);
+});

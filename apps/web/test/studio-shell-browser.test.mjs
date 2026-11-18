@@ -9,18 +9,18 @@ import { stopApp, waitForApp } from './wait-for-app.mjs';
 import { isolateFixtureHmr } from './fixture-hmr.mjs';
 
 const browserPath = process.env.BROWSER_EXECUTABLE_PATH || '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const fixture = new URL('../app/studio-visual-test/', import.meta.url);
+const fixture = new URL('../pages/studio-visual-test/', import.meta.url);
 const pageSource = `'use client';
 import {useState} from 'react';
-import StudioShell,{CreativeBoard,StudioEmptyBoard,StudioChatPanel} from '../studio-shell';
+import StudioShell,{CreativeBoard,StudioEmptyBoard,StudioChatPanel} from '../../studio/studio-shell';
 export default function Preview(){
  const [stage,setStage]=useState('studio'),[message,setMessage]=useState(''),[art,setArt]=useState(false);
  return <StudioShell stage={stage} projectId="project-planilhas" projectTitle="Planilhas para a rotina" onNewProject={()=>setStage('projects')} onNavigate={setStage} onTabChange={()=>setStage('studio')} canOpenStudio userLabel="Mavi Almeida" basesCount={3} bases={<div><h2>Referências</h2><p>Três bases locais.</p></div>} marca={<div><h2>Marca do projeto</h2><p>Direção criativa local.</p></div>} viewingArt={art} onCloseArt={()=>setArt(false)} footer="Alterações ainda locais no navegador" canvas={<CreativeBoard title="Vamos encontrar a sua direção."><StudioEmptyBoard onStartIdea={()=>setMessage('Quero divulgar meu curso.')} onAddReference={()=>setMessage('referência')}/><button type="button" onClick={()=>setArt(true)}>Ver arte</button></CreativeBoard>} chat={<StudioChatPanel composer={<form onSubmit={event=>{event.preventDefault();setMessage('Enviada');}}><label className="studio-hint" htmlFor="test-message">Sua mensagem</label><textarea id="test-message" value={message} onChange={event=>setMessage(event.target.value)} placeholder="Peça um ajuste ou conte uma ideia…"/><div className="studio-composer-actions"><span className="studio-hint">Referências locais</span><button className="studio-button">Enviar</button></div></form>}><div className="studio-message" data-role="assistant"><span className="studio-message-label">Compor</span><p>O que você quer criar hoje? Pode me contar do seu jeito.</p></div></StudioChatPanel>}><p>Conteúdo da etapa {stage}</p></StudioShell>;
 }`;
 const navigationSource = `'use client';
 import {useState} from 'react';
-import StudioShell from '../../studio-shell';
-import StudioNavigation from '../../studio-navigation';
+import StudioShell from '../../../studio/studio-shell';
+import StudioNavigation from '../../../studio/studio-navigation';
 export default function Preview(){
  const [projects,setProjects]=useState([{id:'project-planilhas',title:'Planilhas para a rotina'},{id:'project-outro',title:'Outro projeto'}]);
  const [projectId,setProjectId]=useState('project-planilhas');
@@ -31,9 +31,9 @@ export default function Preview(){
 test('shell usa ativos originais, mantém navegação por teclado e permite explorar o quadro', { skip: !existsSync(browserPath), timeout: 90000 }, async t => {
   assert.equal(existsSync(fixture), false);
   await mkdir(fixture);
-  await writeFile(new URL('page.jsx', fixture), pageSource);
+  await writeFile(new URL('index.jsx', fixture), pageSource);
   await mkdir(new URL('navigation/', fixture));
-  await writeFile(new URL('navigation/page.jsx', fixture), navigationSource);
+  await writeFile(new URL('navigation/index.jsx', fixture), navigationSource);
   const socket = createServer();
   await new Promise(resolve => socket.listen(0, '127.0.0.1', resolve));
   const port = socket.address().port;

@@ -9,15 +9,18 @@ import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000003';
 const source=`
+import './studio/reference-workbench.css';
+import './studio/reference-exploration.css';
+
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import ReferencePanel from './app/studio-reference-panel.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import {useExplorationLoop} from './app/use-exploration-loop.ts';
+import ReferencePanel from './studio/studio-reference-panel.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import {useExplorationLoop} from './studio/use-exploration-loop.ts';
 import {createStudioState,updateBrief} from './lib/studio-state.ts';
-import './app/style.css';
-import './app/studio-shell.css';
-import './app/studio-guided.css';
+import './studio/style.css';
+import './studio/studio-shell.css';
+import './studio/studio-guided.css';
 function Screen(){
  const [project,setProject]=useState(window.startProject||'${projectId}'),[enabled,setEnabled]=useState(!window.startDisabled);
  const [state]=useState(()=>updateBrief(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{offer:'Oficina de cerâmica'}));

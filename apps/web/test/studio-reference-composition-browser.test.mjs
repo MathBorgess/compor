@@ -13,13 +13,20 @@ const pin=(n,title)=>({id:String(n),title,board:'behance/typography',originUrl:`
 const pins=[pin(101,'Terracota e textura'),pin(102,'Cor e contraste'),pin(103,'Forma e calma'),pin(104,'Serifa editorial')];
 // Real shell, chat, tray, suggestions and gallery, as composed on the reference screen.
 const source=`
+import './studio/reference-workbench.css';
+import './studio/reference-exploration.css';
+import './studio/brand-symbol.css';
+import './studio/studio-shell.css';
+import './studio/studio-reference-workspace.css';
+import './studio/studio-reference-chat.css';
+
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
-import StudioShell from './app/studio-shell.tsx';
-import StudioChat from './app/studio-chat.tsx';
-import ReferenceExploration from './app/reference-exploration.tsx';
-import ExplorationGallery from './app/exploration-gallery.tsx';
-import ReferenceSelectionTray from './app/reference-selection-tray.tsx';
+import StudioShell from './studio/studio-shell.tsx';
+import StudioChat from './studio/studio-chat.tsx';
+import ReferenceExploration from './studio/reference-exploration.tsx';
+import ExplorationGallery from './studio/exploration-gallery.tsx';
+import ReferenceSelectionTray from './studio/reference-selection-tray.tsx';
 import {createStudioState,createPost,addReference,removeReference,updateBrief} from './lib/studio-state.ts';
 import {recordReferenceRound} from './lib/studio-reference-round.ts';
 const colors=['#ba654a','#123eab','#68784e','#e8b44a'];

@@ -8,7 +8,7 @@ const browserPath=process.env.BROWSER_EXECUTABLE_PATH||'/Applications/Google Chr
 
 test('URL segue válida em StrictMode, troca de imagem e é liberada ao desmontar',{skip:!existsSync(browserPath)},async t=>{
  const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'object-url-fixture.tsx',loader:'tsx',contents:`
-  import React,{StrictMode,Activity,useState} from 'react';import {createRoot} from 'react-dom/client';import {useObjectUrl} from './app/use-object-url.ts';
+  import React,{StrictMode,Activity,useState} from 'react';import {createRoot} from 'react-dom/client';import {useObjectUrl} from './studio/use-object-url.ts';
   const create=URL.createObjectURL.bind(URL),revoke=URL.revokeObjectURL.bind(URL);window.live=new Set();window.activeRevokes=[];window.created=[];
   URL.createObjectURL=value=>{const url=create(value);window.live.add(url);window.created.push(url);return url;};
   URL.revokeObjectURL=url=>{if([...document.images].some(image=>image.src===url))window.activeRevokes.push(url);window.live.delete(url);revoke(url);};

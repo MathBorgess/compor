@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import {Client} from '@modelcontextprotocol/sdk/client/index.js';
 import {StreamableHTTPClientTransport} from '@modelcontextprotocol/sdk/client/streamableHttp.js';
-import {POST} from '../app/api/mcp/route.ts';
+import {POST} from '../handlers/api/mcp/route.ts';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const actor=id(1),project=id(2),requestId=id(3),key=`sk-${'x'.repeat(30)}`;

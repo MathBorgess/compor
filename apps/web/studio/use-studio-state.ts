@@ -1,0 +1,119 @@
+"use client";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { createStudioState, type StudioState, type StudioScope } from "../lib/studio-state.ts";
+import { createStudioStorage } from "../lib/studio-storage.ts";
+import { createStudioStateWriter } from "../lib/studio-state-writer.ts";
+import {createReferenceSelectionCoordinator} from '../lib/reference-selection-coordinator.ts';
+import {selectScopedReference,unselectScopedReference} from '../lib/studio-post-context.ts';
+import type {StudioReference} from '../lib/studio-domain.ts';
+
+export function useStudioState({ userId, projectId, projectTitleProvisional = false,projectIdea='',prepare=false }: StudioScope & {projectTitleProvisional?:boolean;projectIdea?:string;prepare?:boolean}) {
+  const [state, setState] = useState<StudioState|null>(null),
+    [error, setError] = useState(""),
+    [loading, setLoading] = useState(true);
+  type Repository=ReturnType<typeof createStudioStorage>;
+  type RecordState={state:StudioState|null;writer:ReturnType<typeof createStudioStateWriter>|null;repo:Repository|null};
+  const active = useRef<RecordState|null>(null),
+    repo = useRef<Repository|null>(null);
+  useEffect(() => {
+    const record:RecordState = {
+      state: null,
+      writer: null,
+      repo: null,
+    };
+    active.current = record;
+    setLoading(true);
+    setState(null);
+    setError("");
+    try {
+      record.repo = createStudioStorage({ indexedDB: window.indexedDB });
+    } catch {}
+    repo.current = record.repo;
+    const load = record.repo
+      ? record.repo.load({ userId, projectId })
+      : Promise.resolve(null);
+    function initialize(value:StudioState, storedRevision:number|null) {
+      record.state = value;
+      record.writer = createStudioStateWriter({
+        repository: record.repo,
+        storedRevision,
+        onError: () => {
+          if (active.current === record)
+            setError(
+              "Não foi possível preservar as alterações. Outra aba pode ter atualizado o projeto; seu trabalho continua nesta aba.",
+            );
+        },
+      });
+      setState(value);
+      setLoading(false);
+    }
+    const ready = load
+      .then((saved) => {
+        if (active.current !== record) return;
+        const value = saved ?? createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare });
+        initialize(value, saved?.revision ?? null);
+        if(!saved&&prepare&&record.writer){record.writer.enqueue(value);void record.writer.flush().catch(()=>{});}
+        if (!record.repo)
+          setError(
+            "Armazenamento local indisponível. O trabalho ficará somente em memória.",
+          );
+      })
+      .catch(() => {
+        if (active.current !== record) return;
+        const value = createStudioState({ userId, projectId, projectTitleProvisional,projectIdea,prepare });
+        initialize(value, null);
+        setError(
+          "Não foi possível abrir o trabalho local. Evite fechar esta aba.",
+        );
+      });
+    return () => {
+      if (active.current === record) active.current = null;
+      // Finish this record's load/write queue before closing its connection;
+      // the next account/project owns a different record and repository.
+      ready
+        .then(() => record.writer ? record.writer.close() : record.repo?.close())
+        .catch(() => {});
+    };
+  }, [userId, projectId]);
+  const flush = useCallback(async () => {
+    const record = active.current;
+    if (!record?.writer) throw Error("local_storage_unavailable");
+    await record.writer.flush();
+  }, []);
+  const change = useCallback(
+    (reducer:(state:StudioState)=>StudioState) => {
+      const record = active.current;
+      if (!record?.state || !record.writer) return null;
+      const next = reducer(record.state);
+      record.state = next;
+      record.writer.enqueue(next);
+      setState(next);
+      flush().catch(() => {});
+      return next;
+    },
+    [flush],
+  );
+  const get = useCallback(() => active.current?.state ?? null, []);
+  const ensureStored = useCallback(async () => {
+    const record=active.current;if(!record?.state||!record.writer)throw Error('local_storage_unavailable');
+    const lease=await record.writer.acquireExternal(record.state);lease.release();
+    if(active.current!==record)throw Error('studio_scope_changed');
+  },[]);
+  const coordinateReference = useCallback(async (selection:{kind:'select';reference:StudioReference;target:string}|{kind:'unselect';id:string;target:string},allowed:()=>boolean) => {
+    const record=active.current;
+    if(!record?.state||!record.writer||!record.repo||!allowed())throw Error('local_storage_unavailable');
+    const lease=await record.writer.acquireExternal(record.state);
+    try{
+      if(active.current!==record||!allowed())throw Error('studio_scope_changed');
+      const coordinator=createReferenceSelectionCoordinator({store:record.repo});
+      return await coordinator.change({userId,projectId},selection,committed=>{
+        const current=record.state;if(!current)throw Error('local_storage_unavailable');
+        const merged=current.revision===lease.baseRevision?committed:selection.kind==='select'?selectScopedReference(current,selection.reference,selection.target):unselectScopedReference(current,selection.id,selection.target);
+        lease.commit(committed,merged===committed?null:merged);
+        record.state=merged;if(active.current===record)setState(merged);
+        if(active.current!==record||!allowed())throw Error('studio_scope_changed');
+      });
+    }finally{lease.release();}
+  },[userId,projectId]);
+  return { state, error, loading, change, get, flush, ensureStored, coordinateReference, storage: repo };
+}

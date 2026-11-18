@@ -16,10 +16,10 @@ const authenticationNotice='A OpenAI recusou a autenticação desta chave. Confi
 
 test('consulta de solicitação anterior é explícita e não executa nem repete efeitos',{skip:!existsSync(browserPath),timeout:90000},async t=>{
  let phase='fixture';t.after(()=>t.diagnostic(`Última etapa da inspeção: ${phase}`));
- const fixture=await mkdtemp(new URL('../app/studio-inspection-test-',import.meta.url));let child,browser;
+ const fixture=await mkdtemp(new URL('../pages/studio-inspection-test-',import.meta.url));let child,browser;
  t.after(async()=>{try{await browser?.close();}finally{try{await stopApp(child);}finally{await rm(fixture,{recursive:true,force:true});}}});
- await writeFile(new URL('page.jsx',`file://${fixture}/`),`'use client';
-import {useEffect,useRef,useState} from 'react';import StudioChat from '../studio-chat';
+ await writeFile(new URL('index.jsx',`file://${fixture}/`),`'use client';
+import {useEffect,useRef,useState} from 'react';import StudioChat from '../../studio/studio-chat';
 import {createStudioState,createPost,prepareAdjustment,settleAdjustment} from '../../lib/studio-state.ts';
 function initial(){let s=createPost(createStudioState({userId:'${userId}',projectId:'${projectId}'}),{pieceId:'${pieceId}'});s=prepareAdjustment(s,{requestId:'${requestId}',messageId:'${id(5)}',instruction:'Pedido já concluído',createdAt:'2026-11-05T00:00:00.000Z',eventId:'${id(6)}'});return settleAdjustment(s,{requestId:'${requestId}',status:'completed',result:{messageId:'${id(7)}',text:'Resposta já guardada'},createdAt:'2026-11-05T00:01:00.000Z',eventId:'${id(8)}'});}
 export default function Fixture(){const[developer,setDeveloper]=useState(true),[key,setKey]=useState(''),[state]=useState(initial),counts=useRef({change:0,flush:0,tools:0,image:0});const tools=useRef({execute:async()=>{counts.current.tools++;throw Error('unexpected tool');}});useEffect(()=>{window.__inspectionCounts=counts.current;},[]);return <main><button onClick={()=>setDeveloper(value=>!value)}>Alternar modo desenvolvedor</button><label>Chave de teste<input type="password" value={key} onChange={e=>setKey(e.target.value)}/></label><output data-testid="snapshot">{JSON.stringify(state)}</output><StudioChat developerMode={developer} state={state} getState={()=>state} change={()=>{counts.current.change++;throw Error('unexpected settle');}} flush={async()=>{counts.current.flush++;}} tools={tools} hasApiKey={Boolean(key)} getApiKey={()=>key} onUseImage={()=>{counts.current.image++;}}/></main>;}`);

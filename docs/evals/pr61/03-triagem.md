@@ -1,0 +1,152 @@
+# Etapa 3 · Triagem de imagens para geração
+
+A triagem responde a duas perguntas diferentes. Quais arquivos o GPT Image precisa receber para preservar o que a pessoa escolheu? Quais atributos visuais precisam sobreviver no pedido e na imagem final? Reduzir anexos só é uma melhoria se ambas as respostas forem satisfatórias.
+
+## Entrada e saída
+
+A etapa 2 entrega os IDs em ordem do conjunto selecionado pela pessoa, a origem declarada e o briefing vigente. No estúdio, o snapshot autorizado delimita a seleção. A escolha de uma imagem pode ter ocorrido pela paleta, pelo produto ou pela composição. O motivo declarado pela pessoa é evidência, enquanto um motivo inferido pelo agente continua hipótese.
+
+No lote visual v2, o planejador recebe todos os pixels selecionados. Ele devolve três prompts e um conjunto de IDs comum aos três. Os uploads selecionados são obrigatórios. O planejador pode omitir externas consentidas ou imagens geradas selecionadas. O servidor vincula a subsequência, a ordem e os bytes ao pedido. Na criação individual, a arte de origem de uma edição tem um papel próprio.
+
+A etapa 4 recebe o plano e os arquivos permitidos. Na avaliação podemos observar anexo mantido, anexo omitido e evidência textual de um atributo. O contrato atual não exige relacionar um trecho do prompt ao ID da imagem que o inspirou. Para uma referência omitida, só registrar **representada em texto** quando houver evidência atribuível no caso avaliado. Na falta dessa evidência, registrar **atribuição desconhecida**. Uma paleta pode estar descrita e anexada ao mesmo tempo. [Contrato visual](../../adr/0066-entradas-visuais-e-triagem-vinculadas-ao-pedido.md) · [Planejador efetivo](../../../packages/agents-api/src/exploration-plan-provider.mjs) · [Validação na arte individual](../../../packages/agents-api/src/artwork-input.mjs)
+
+## Métricas e decisão proposta
+
+| Métrica | Unidade e denominador | Sucesso candidato |
+|---|---|---|
+| Integridade de seleção | Por pedido, uploads enviados sobre uploads selecionados. Registrar separadamente cada arquivo não autorizado enviado e alteração de ordem ou conteúdo. Sem uploads, a fração é inaplicável. | Todos os uploads obrigatórios preservados e zero anexos fora da seleção. Qualquer violação impede promoção. |
+| Preservação semântica | Por atributo de referência explicitamente pedido, julgar no prompt e depois nos pixels se o atributo foi preservado (0 ausente ou contraditório, 1 parcial, 2 claro). Informar pontos sobre o máximo dos casos julgáveis e fração julgável. | Na comparação pareada, nenhum atributo indispensável piora. Um avanço requer mais casos com atributos preservados, ou redução de consumo com fidelidade pelo menos equivalente. Registrar discordância humana. |
+| Atribuição de representação | Para cada referência, comparar papel esperado com arquivo realmente entregue e evidência de descrição. Reportar contagens para anexo, descrição, ambos e omissão intencional, mais os casos de atribuição desconhecida. | Atribuição defensável no caso. Não creditar uma descrição genérica a duas fontes visualmente parecidas. |
+| Custo condicionado à fidelidade | Por lote concluído, somar uso conhecido do planejamento e das três imagens. Comparar os mesmos casos e configurações. Mostrar pedidos com uso disponível sobre pedidos elegíveis e exposição em bytes por etapa. | Com a mesma cobertura de uso, redução de custo estimado sem regressão de fidelidade ou de integridade. Uso ausente impede concluir economia monetária. |
+
+## Baseline da revisão 8817f57
+
+Em 17/11/2026, o comando abaixo produziu a mensagem serializada pelo adaptador real para um `fetch` local injetado. Quatro PNGs sintéticos de 32×32 representam marca, paleta, distribuição de massas e listras que o briefing pede para evitar. O adaptador recebeu um contexto e um manifesto válidos. O plano usado para testar transporte é resposta fixa de fixture. Esta execução tem um lote e nenhum retorno de modelo gerenciado.
+
+```sh
+node scripts/evals/pr61/triagem/baseline.mjs
+```
+
+| Fonte | Papel na fixture | Texto ao lado dos pixels no pedido real | Plano fixo recebido pelo validador |
+|---|---|---|---|
+| Upload | Símbolo circular vazado | “Referência local selecionada 1” | Anexado, 211 bytes |
+| Externa | Paleta em faixas | “Referência local selecionada 2” | Anexada, 113 bytes |
+| Gerada | Bloco amplo à esquerda e detalhe à direita | “Referência local selecionada 3” | Anexada, 123 bytes |
+| Externa | Listras a evitar | “Referência local selecionada 4” | Omitida como arquivo, 186 bytes |
+
+- O JSON global declarou 4/4 origens corretamente. O adaptador colocou 4/4 imagens no contexto do planejador. **1/4 rótulos adjacentes** identificou a origem de ingestão sem ambiguidade. As três origens opcionais apareceram como “local”, embora o manifesto as diferenciasse. O teste demonstra a ambiguidade da instrução. A frequência com que o modelo escolheria o arquivo errado por esse motivo está em aberto.
+- No plano fornecido, 1/1 upload foi preservado e 3/4 itens foram encaminhados à validação de bytes. O validador recusou 4/4 controles negativos (omitir upload, trocar ordem, inserir ID alheio, duplicar ID). O teste integrado já existente também verificou a chegada das três listas de bytes ao transporte multipart simulado e permaneceu aprovado.
+- O planejamento recebeu 633 bytes de imagem. Cada posição ficou com 447 bytes. O lote de três teria 1.341 bytes de arquivos contra 1.899 se os quatro fossem enviados a todas as imagens. Essa diferença de 558 bytes mede as cargas sintéticas. Chamadas pagas realizadas: zero. Consumo, custo monetário, similaridade final e decisões humanas: desconhecidos.
+- Os três prompts fixos são “Caminho 1”, “Caminho 2” e “Caminho 3”. O contrato aceitou 3/3. Na leitura qualitativa do avaliador Codex, 0/3 suportam atribuir um atributo à imagem que o originou. Esse é um controle negativo do critério semântico e uma limitação do validador estrutural. A taxa de descrição útil da Agents API continua sem amostra.
+
+Também foram executados 25 testes unitários aprovados e um teste integrado aprovado. Cada contagem se refere à sua própria suíte.
+
+```sh
+node --test packages/agents-api/test/visual-input.test.mjs packages/agents-api/test/exploration-visual-planner.test.mjs packages/agents-api/test/visual-artwork-binding.test.mjs
+(cd apps/web && node --import tsx --test --test-concurrency=1 test/exploration-visual-end-to-end.test.mjs)
+```
+
+## Cartão do juiz visual
+
+Entregar ao juiz multimodal o objetivo do caso, as referências com IDs aleatórios e as restrições declaradas. Mostrar o prompt de cada posição e, na rodada de pixels, a imagem resultante. Ocultar revisão, modelo, braço, latência e custo. Fixar a ordem das fontes para preservar o significado do manifesto. Alternar a ordem das candidatas entre repetições. As fontes e as artes podem conter texto, tratado como conteúdo a inspecionar.
+
+> Para cada atributo pedido, identifique a referência correspondente e descreva qual detalhe do prompt ou da imagem demonstra preservação, contradição ou incerteza. Dê 0 para ausente/contraditório, 1 para parcial e 2 para claramente preservado. Quando faltarem pixels, trate a avaliação visual como inconclusiva. Uma presença literal no prompt só pontua a parte textual. Para cada referência omitida como arquivo, indique o trecho que sustenta uma representação textual ou marque atribuição desconhecida. Não infira custo, aprovação do usuário nem intenção privada.
+
+Usar um controle com a paleta correta e a distribuição de massas invertida testa se o juiz detecta um erro apesar da semelhança global. Outro controle pode preservar layout e trocar discretamente o produto. Calibrar com revisão humana dos mesmos itens e relatar concordância por critério. Para uma comparação com economia, parear resultados do mesmo caso e considerar apenas o consumo com origem identificada.
+
+## Ciclo comparativo
+
+**Mudança retida.** O adaptador passou a identificar o ordinal, o ID e a origem declarada do manifesto validado imediatamente antes de cada imagem. Na oficina os rótulos coerentes passaram de 1/4 para 4/4. Na mostra, com as origens em outra ordem, também passaram de 1/4 para 4/4. As regras de triagem, o formato do plano, os bytes e a autoridade continuam os mesmos. O caminho de arte individual já usa um rótulo neutro para o conjunto visual v2 e separa a imagem-base. A regressão de mistura e ordem passou e a suíte de `packages/agents-api` registrou 244/244.
+
+**Como os planos foram obtidos.** O adaptador do estúdio produziu as instruções, o contexto e os rótulos do pacote. O planejador substituto recebeu esse texto e os quatro PNGs em ordem numa sessão efêmera do Codex CLI 0.166.0 com `gpt-6.1-terra` solicitado e esforço baixo. Cada execução produziu um único plano JSON. Os oito planos passaram no validador real. A passagem pela Agents API gerenciada, a geração no GPT Image e a experiência humana permanecem sem observação nesse replay.
+
+Um segundo modelo, `gpt-6.2-sol`, recebeu os pixels, o briefing, a posição final de cada anexo e os três textos que seguiriam para o gerador. Recebeu IDs cegos, com a ordem dos braços alternada entre os casos. O juiz avaliou a suficiência do material por atributo em uma sessão distinta por comparação. O relatório conserva as instruções experimentais, as respostas integrais de ambos os modelos, os hashes das entradas e as divergências. [Planos, rubricas e julgamentos](triagem-replay.json)
+
+| Caso e critério por posição | Baseline → rótulos corrigidos | Anexos por posição | Bytes de imagens nas três posições |
+|---|---:|---:|---:|
+| Oficina. Símbolo, paleta, distribuição espacial, exclusão das listras. | 6/8 → 6/8 | 3 → 3 | 1.341 → 1.341 |
+| Mostra de gravuras. Textura livre, composição, símbolo, paleta específica. Quatro PNGs novos e ordem diferente. | 8/8 → 8/8 | 4 → 4 | 1.755 → 1.755 |
+
+A pontuação usa o pior dos três prompts em cada um dos quatro atributos. A correção comprovada é identificar as origens no contexto do planejador. Os dois casos empataram na nota e no volume de anexos. Esse replay mediu apenas os planos. A seção de ensaio com o provedor abaixo registra a comparação posterior nos pixels.
+
+**Experimento de redução de anexos.** Foram examinadas três revisões de instruções. A primeira, que permitia expressar opcionais em texto, descartou o layout da oficina e descreveu uma massa central. A segunda manteve o layout, mas descreveu a paleta com verde-escuro no lugar do verde-azulado. No primeiro julgamento cego essas revisões obtiveram 5/8 e 7/8, com baseline de 8/8. Antes do terceiro ajuste, foram congelados o briefing e quatro novos PNGs da mostra, com uma textura opcional representável por palavras e três características que exigiam precisão. O hash do pacote de transferência da baseline é `2fb68da95e1bbe9659fe31285f3d590e3714d635332f1a2a5509317969de86f9`.
+
+A terceira revisão preservou a distribuição espacial e a paleta como anexos e dispensou a textura na mostra. Os três prompts descreveram os pontos escuros sobre fundo claro e remeteram aos três anexos por posição. O volume caiu de 1.755 para 1.359 bytes, com 8/8 nos dois braços. Na oficina, apesar de reter o anexo de layout, ela acrescentou aos três prompts uma posição central que contradiz o detalhe escuro à direita. O juiz dessa comparação deu 7/8 à candidata e 6/8 à baseline, apontando também ambiguidade na associação por origem dos prompts anteriores. A contradição visual introduzida em um atributo obrigatório motivou descartar a revisão mesmo com o ganho na soma. No código entregue ficou a correção dos rótulos.
+
+**Limites do julgamento.** A baseline da oficina recebeu 8 e 6 em aplicações distintas da rubrica, sobretudo pela interpretação da ambiguidade de “referência externa” quando o gerador recebe anexos sem esses rótulos. No caso da mostra, um parecer descreveu como losango o elemento circular pequeno definido pela fixture. As imagens e os planos conservados permitem revisão humana. A amostra de dois casos e um plano por braço/caso não determina distribuição de qualidade ou preferência de usuários.
+
+Para inspecionar um pacote sintético ou revalidar um plano gravado, na raiz do repositório:
+
+```sh
+node scripts/evals/pr61/triagem/baseline.mjs --packet /tmp/compor-triagem-pacote-novo --mostra
+jq '.plans[] | select(.case == "mostra" and .arm == "origens-corrigidas") | .plan' docs/evals/pr61/triagem-replay.json > /tmp/compor-triagem-plano.json
+node scripts/evals/pr61/triagem/baseline.mjs --replay /tmp/compor-triagem-plano.json --mostra
+```
+
+Os comandos acima são locais e preservam o fixture de controle negativo. Acionar outra sessão de modelo é uma execução distinta, com possível variação na resposta.
+
+## Ensaio com a Agents API e o GPT Image
+
+Em 17/11/2026, duas sessões gerenciadas de `gpt-6.1-terra` receberam o mesmo briefing e os mesmos quatro PNGs da mostra de gravuras. O primeiro prompt validado de cada plano seguiu para uma chamada de edição ao `gpt-image-2.6-flare`. Os adaptadores comparados vieram das revisões `8817f57` e `e1d509f`. Cada chamada produziu um PNG de 1024 × 1280. O teste exerceu os adaptadores reais em execução local com provedores reais. A navegação, a autorização no servidor web e as três imagens simultâneas têm cobertura própria nos testes do PR.
+
+| Medida por braço | Anterior | Com a origem corrigida |
+|---|---:|---:|
+| Planejamento, da reserva até o plano validado | 26,3 s | 18,0 s |
+| Uso total conhecido do planejamento | Desconhecido | 9.499 tokens |
+| Imagens escolhidas que chegaram ao GPT Image | 4 de 4 | 4 de 4 |
+| Bytes dos quatro PNGs anexados | 585 | 585 |
+| GPT Image, da reserva até os bytes validados | 9,6 s | 12,2 s |
+| Tokens de imagem de entrada | 16 | 16 |
+| Tokens de texto de entrada | 131 | 136 |
+| Tokens de imagem de saída | 727 | 1.551 |
+
+Os quatro anexos chegaram na ordem do manifesto, com o conteúdo verificado por hash. As consultas ao mesmo planejamento usaram o ID da sessão. Foram consumidas as duas sessões e as duas imagens autorizadas. O intervalo de 15 segundos entre lotes fica fora dessas durações.
+
+### Fidelidade nos pixels
+
+Antes da geração foram fixados quatro atributos e uma escala de 0 a 2 por atributo. Um juiz visual recebeu as quatro referências originais e as duas artes em ordem aleatória, identificadas como A e B. O mapeamento foi aberto após o parecer.
+
+| Atributo | Anterior | Com a origem corrigida | Evidência no par |
+|---|---:|---:|---|
+| Identidade do símbolo | 2 | 2 | O triângulo violeta conserva o recorte retangular na base em ambas. |
+| Composição | 1 | 1 | A referência traz uma faixa horizontal na base e um detalhe no alto à direita. O rolo da anterior concentra peso embaixo. A corrigida recupera um detalhe superior. Ambas perdem a faixa contínua. |
+| Paleta | 2 | 2 | Violeta, verde e pêssego aparecem nas duas. |
+| Textura | 1 | 2 | A anterior amplia os pontos em losangos. O pontilhado fino da corrigida se aproxima da primeira referência. |
+| **Total** | **6/8** | **7/8** | Um par, um juiz. |
+
+**Fatos da oferta.** A arte corrigida acrescentou “ENTRADA GRATUITA”. O briefing e o prompt da primeira posição não autorizavam a afirmação. O prompt incluía a instrução para preservar os fatos e não inventá-los. A gratuidade surgiu nos pixels. A anterior trazia o título e deixava o convite à visita implícito. Pelo critério de fidelidade factual, a candidata exige correção do criador antes de usar a peça.
+
+O resultado técnico confirma a entrega das quatro fontes selecionadas. O pontilhado recebeu um ponto a mais neste par. O modelo gerou uma peça por revisão, com variação tanto do planejamento quanto da imagem, e a taxa de acerto em outros pedidos segue desconhecida. O uso parcial e a ausência de fatura impedem estimar economia total. A vontade de publicar exige observação do criador. Para o próximo ciclo, o caso de gratuidade oferece um controle concreto para a leitura de texto final contra os fatos declarados.
+
+## Rodadas de cinco lotes
+
+Cinco briefings sintéticos combinam quatro referências selecionadas cada, incluindo uma ou duas imagens enviadas. Os mesmos cinco planos e quinze slots de cada rodada alimentam os marcos 3, 4 e 5. A triagem é julgada sobre os quatro atributos de cada briefing em três dimensões observáveis distintas: o que o prompt pede, quais anexos o executor confirma e o que aparece nos pixels. Os casos reservados ficam fora do feedback usado para redigir a próxima instrução. [Casos e critérios](../../../scripts/evals/pr61/triagem/corpus/casos.json) · [Rubrica, cegamento e gate de promoção](../../../scripts/evals/pr61/triagem/protocolo-rodadas.md)
+
+O replay permite grupos de três a cinco IDs distintos e conhecidos. O ensaio real fixou cinco. Os controles aceitaram os três tamanhos e recusaram grupos de dois ou seis, um caso repetido e um ID desconhecido. O controle de transporte validou os cinco planos fixos e rejeitou quatro alterações independentes: upload retirado, posição repetida, prompt final adulterado e recibo de anexo divergente. Ele não produz novas sessões nem imagens. Para reproduzir, execute `node scripts/evals/pr61/triagem/controles-rodada.mjs` na raiz. [Controle executável](../../../scripts/evals/pr61/triagem/controles-rodada.mjs)
+
+Na rodada de controle do adaptador `18dc2a2`, houve cinco planos reais e 15 artes confirmadas. Nos casos de desenvolvimento 1, 2 e 3, os pontos de atributos de referência ficaram, respectivamente, em 21 / 19, 21 / 22, 23 / 22 (plano / pixels, máximo 24 em cada perspectiva). A triagem e a variação compartilham os mesmos IDs de plano e PNG. Dois casos reservados permanecem fora do ajuste das instruções. O relatório do marco 3 tem SHA-256 `c48f5aeaa4829e0f21389d400a7ff7563f5d456a4dc7590fd740e21567c3676c`. A sessão de planos foi `01a1ee8d-37ca-7210-8017-95ae351ac3fa`. A sessão de pixels foi `01a1ee8d-37ca-74b0-b442-f99b0e73498d`.
+
+## Resultado das quatro rodadas reais
+
+O executor abriu 20 sessões gerenciadas. O contrato aceitou 19 planos e os recibos confirmaram 57 das 60 imagens previstas. A rodada 3 do caso 1 retornou três prompts e três composições distintos, mas repetiu o mesmo contraste nos slots 1 e 3. Uma consulta ao mesmo turno confirmou a rejeição. Nenhuma das três imagens foi submetida. A decisão do código foi preservar o planejador de controle, commit `18dc2a2`.
+
+Cada célula mostra pontos do plano e dos pixels, nessa ordem. São quatro atributos em três slots, com até 24 pontos por modalidade e caso. ND indica ausência de plano aceito e de pixels. Nos totais de R3 o máximo observável foi 96; nas demais rodadas foi 120. Os dois casos reservados admitiram até 48 pontos por rodada.
+
+| Caso | R0 plano / pixels | R1 plano / pixels | R2 plano / pixels | R3 plano / pixels |
+|---|---:|---:|---:|---:|
+| 1 · Oficina de impressão | 21 / 19 | 21 / 18 | 24 / 18 | ND / ND |
+| 2 · Mostra de gravuras | 21 / 22 | 21 / 22 | 24 / 23 | 21 / 20 |
+| 3 · Troca de livros | 23 / 22 | 24 / 24 | 24 / 21 | 24 / 16 |
+| 4 · Rota de leitura (reserva) | 24 / 21 | 24 / 21 | 24 / 22 | 24 / 21 |
+| 5 · Inventário de formas (reserva) | 24 / 23 | 24 / 22 | 24 / 22 | 24 / 21 |
+| Desenvolvimento | 65 / 63 | 66 / 64 | 72 / 62 | 45 / 36 |
+| Reserva | 48 / 44 | 48 / 43 | 48 / 44 | 48 / 42 |
+| Total | 113 / 107 | 114 / 107 | 120 / 106 | 93 / 78 |
+
+R1 ganhou fidelidade em um caso. R2 ganhou em dois, atingiu 120/120 no plano e obteve 106/120 nos pixels. Na peça da Rota de leitura, o juiz transcreveu texto adicional nas páginas ilustradas de um livro. Em dois casos de desenvolvimento apontou dificuldade de leitura. Na reserva, a soma dos pixels empatou com a baseline em 44/48; o empate encobre mudanças por atributo. R3 obteve 78/96 nos quatro casos observáveis. A baseline nesses mesmos casos obteve 88/96. A rejeição do quinto plano impede concluir a trajetória completa.
+
+Em cada caso concluído repetiu-se exatamente a seleção do controle. Chegaram ao GPT Image, por pedido, 3 arquivos/447 B no caso 1, 4/585 B no caso 2, 3/551 B no caso 3, 2/255 B no caso 4 e 3/499 B no caso 5. Em R3 houve três submissões a menos; isso não representa economia de uma triagem mais eficiente. Nenhuma candidata apresentou ganho suficiente com os atributos obrigatórios preservados.
+
+Os juízes dos marcos 3 e 4 não classificaram afirmações factuais inéditas da oferta. Registraram cópia adicional nos pixels da baseline e de R2. A evidência de erro inclui texto legível fora da lista autorizada, como “Partida:” no caso 4. Zero marcações de afirmação inventada é resultado desses juízes sobre esta amostra. A aprovação humana e o uso da arte seguem sem observação.
+
+As revisões avaliadas foram `18dc2a2`, `c988a6f`, `86729b7` e `e6ed07d`. O JSON inclui as duas modalidades dos cinco casos das quatro rodadas, os contadores de reserva, os IDs das 16 sessões independentes, os hashes dos PNGs e recibos e as comparações pareadas. Os escores nas tabelas identificam as mesmas gerações usadas no marco 5. [Matriz e proveniência](../../../scripts/evals/pr61/triagem/rodadas-reais.json) · [Comparação reproduzível](../../../scripts/evals/pr61/variacoes/fechar-rodadas.py)
