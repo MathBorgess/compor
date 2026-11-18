@@ -59,5 +59,12 @@ for(const group of [rows.slice(0,2),[...rows,rows[0]],[rows[0],rows[0],rows[2]],
   const path=join(directory,'grupo-invalido.json');
   writeFileSync(path,JSON.stringify(group));assert.notEqual(spawnSync(process.execPath,[replay,path]).status,0);
 }
+const partial=structuredClone(rows);
+partial[0]={id:partial[0].id,plan:null,slots:[1,2,3].map(position=>({position,state:'not_submitted'}))};
+const partialIndex=join(directory,'partial.json');
+writeFileSync(partialIndex,JSON.stringify(partial));
+const partialResults=JSON.parse(execFileSync(process.execPath,[replay,partialIndex]));
+assert.equal(partialResults.filter(item=>item.planValid===true).length,4);
+assert.ok(partialResults[0].slots.every(slot=>slot.delivered===null&&slot.state==='not_submitted'));
 assert.equal(JSON.parse(readFileSync(index)).length,5);
 console.log(JSON.stringify({fixture:'fixed-transport-controls',positiveCases:5,plannerInputAttachments:20,negativeControlsRejected:4,validGroupSizes:[3,4,5],invalidGroupsRejected:4,modelPlans:0,newImages:0,index}));
