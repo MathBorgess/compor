@@ -69,7 +69,7 @@ after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopA
 test('excluir exige confirmação, mantém o projeto ao cancelar e confirma persistência após reload',{timeout:90000},async()=>{
  const page=await browser.newPage({viewport:{width:390,height:844}});const errors=[];page.on('pageerror',error=>errors.push(error.message));
  await page.context().addCookies([sessionCookie(origin)]);
- let projects=[{id:project,title:'Projeto de matemática',revision:1}],deletes=0,fail=false;
+ let projects=[{id:project,title:'Projeto de matemática',revision:1}],deletes=0,fail=false,pending=false;
  await page.route('**/auth/session',route=>route.fulfill({json:{state:'connected',userId:alice}}));
  await page.route('**/api/**',async route=>{
   const request=route.request(),path=new URL(request.url()).pathname;
@@ -78,6 +78,7 @@ test('excluir exige confirmação, mantém o projeto ao cancelar e confirma pers
    if(request.method()==='DELETE'){
     deletes++;assert.deepEqual(request.postDataJSON(),{projectId:project,expectedRevision:1});
     if(fail)return route.fulfill({status:502,json:{error:'result_unknown'}});
+    if(pending)return route.fulfill({status:409,json:{status:'pending'}});
     projects=[];return route.fulfill({json:{status:'deleted',projectId:project}});
    }
    return route.fulfill({json:{projects}});
@@ -94,7 +95,12 @@ test('excluir exige confirmação, mantém o projeto ao cancelar e confirma pers
   const dialog=page.getByRole('dialog',{name:'Excluir projeto?',exact:true});await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();assert.equal(deletes,0);assert.equal(await remove.isVisible(),true);
   fail=true;await remove.click();await dialog.getByRole('button',{name:'Excluir projeto',exact:true}).click();await dialog.getByRole('alert').waitFor();assert.equal(deletes,1);await page.waitForTimeout(200);assert.equal(deletes,1);
   await dialog.getByRole('button',{name:'Atualizar projetos',exact:true}).click();await remove.waitFor();assert.equal(await remove.isVisible(),true);
-  fail=false;await remove.click();await dialog.getByRole('button',{name:'Excluir projeto',exact:true}).click();await remove.waitFor({state:'hidden'});assert.equal(deletes,2);
+  fail=false;pending=true;
+  await remove.click();await dialog.getByRole('button',{name:'Excluir projeto',exact:true}).click();
+  await dialog.getByText('Conclua ou verifique o pedido pendente antes de excluir este projeto.',{exact:true}).waitFor();
+  await dialog.getByRole('button',{name:'Cancelar',exact:true}).click();
+  assert.equal(await remove.isVisible(),true);assert.equal(deletes,2);
+  pending=false;await remove.click();await dialog.getByRole('button',{name:'Excluir projeto',exact:true}).click();await remove.waitFor({state:'hidden'});assert.equal(deletes,3);
   await page.reload();await page.getByText('Seus projetos aparecerão aqui. Comece com uma ideia acima.',{exact:true}).waitFor();assert.equal(await remove.count(),0);assert.deepEqual(errors,[]);
  }finally{await page.close();}
 });

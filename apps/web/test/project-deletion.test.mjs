@@ -18,6 +18,14 @@ test('conflito, projeto alheio e resultado incerto não são confirmados nem rep
   const response=await routes.DELETE(request());assert.equal(response.status,status);assert.equal(calls,1);assert.doesNotMatch(await response.text(),/private/);
  }
 });
+test('exclusão bloqueada por geração pendente retorna 409',async()=>{
+ const expected={status:'pending'};
+ const projectStore=createWebProjectStore({url:'https://example.test',anonKey:'public',fetchImpl:async()=>Response.json(expected)});
+ const routes=createProjectRoutes({appOrigin,resolveActor:async()=>({userId,token:'token'}),projectStore});
+ const response=await routes.DELETE(request());
+ assert.equal(response.status,409);
+ assert.deepEqual(await response.json(),expected);
+});
 test('adaptador usa token pessoal, filtra projetos excluídos e rejeita confirmação de outro projeto',async()=>{
  let invalid=false;const calls=[];
  const store=createWebProjectStore({url:'https://example.test',anonKey:'public',fetchImpl:async(url,options)=>{calls.push({url,options});return options.method==='GET'?Response.json([]):Response.json({status:'deleted',projectId:invalid?userId:projectId});}});

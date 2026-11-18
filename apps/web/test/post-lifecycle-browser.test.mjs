@@ -74,7 +74,15 @@ test('falhas não criam ou removem posts e a repetição usa a mesma identidade'
  await button('Continuar para criação').click();await page.getByText(/^Não foi possível confirmar a criação/).waitFor();assert.equal((await stored()).drafts.length,0);assert.equal(catalog.calls.length,1);
  catalog.failCreate=false;await button('Continuar para criação').click();await page.getByRole('textbox',{name:'Sua mensagem',exact:true}).waitFor();assert.equal(catalog.calls[0].body.pieceId,catalog.calls[1].body.pieceId);
  await button('Posts do projeto').click();catalog.failDelete=true;await button('Excluir post').click();const dialog=page.getByRole('dialog',{name:'Excluir post?',exact:true});await dialog.getByRole('button',{name:'Excluir post',exact:true}).click();await dialog.getByRole('alert').waitFor();assert.equal(await page.locator('.studio-project-entry').count(),1);assert.equal(catalog.calls.length,3);
- catalog.failDelete=false;await dialog.getByRole('button',{name:'Excluir post',exact:true}).click();await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('.studio-project-entry').count(),0);assert.equal(catalog.calls[2].body.pieceId,catalog.calls[3].body.pieceId);assert.deepEqual(errors,[]);
+ catalog.failDelete=false;
+ const rejectPending=route=>route.fulfill({status:409,json:{status:'pending'}});
+ await page.route('**/api/posts',rejectPending);
+ await dialog.getByRole('button',{name:'Excluir post',exact:true}).click();
+ await dialog.getByText('Conclua ou verifique o pedido pendente antes de excluir este post.',{exact:true}).waitFor();
+ assert.equal(await page.locator('.studio-project-entry').count(),1);
+ assert.equal((await stored()).posts[catalog.calls[2].body.pieceId].deleted,false);
+ await page.unroute('**/api/posts',rejectPending);
+ await dialog.getByRole('button',{name:'Excluir post',exact:true}).click();await dialog.waitFor({state:'hidden'});assert.equal(await page.locator('.studio-project-entry').count(),0);assert.equal(catalog.calls[2].body.pieceId,catalog.calls[3].body.pieceId);assert.deepEqual(errors,[]);
 });
 test('post legado com versões salvas também pode ser excluído sem apagar a versão',{timeout:90000},async t=>{
  const versions=[{project_id:project,piece_id:id(8),version:1,content:{headline:'Arte anterior',price:'',date:'',caption:'Legenda',captionOrigin:'user'}}];

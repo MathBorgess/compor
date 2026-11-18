@@ -16,7 +16,8 @@ export function createPostRoutes({appOrigin,resolveActor,ownsProject,postStore}:
       }catch{return reply({error:'invalid_request'},400);}
       if(!await ownsProject(actor,data.projectId))return reply({error:'not_found'},404);
       const result=await postStore.mutate({actor:{userId:actor.userId},token:actor.token},method,data);
-      return reply(result,result.status==='conflict'?409:result.status==='not_found'?404:200);
+      if(result.status==='pending'||result.status==='conflict')return reply(result,409);
+      return reply(result,result.status==='not_found'?404:200);
     }catch{return reply({error:'result_unknown',retryAutomatically:false},502);}
   }
   return {POST:(request:Request)=>handle('POST',request),DELETE:(request:Request)=>handle('DELETE',request)};
