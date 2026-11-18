@@ -2,6 +2,8 @@
 
 Proposta para decisão de Matheus. O PR #65 compara planejadores em bancada. A pergunta para o produto é se vale reter um lote antes de cobrar três imagens quando a direção mudou ou duas propostas descrevem a mesma arte. Há dois custos distintos a medir, o de liberar imagens redundantes e o de bloquear três opções válidas.
 
+Em 18/11/2026, Matheus aprovou a ativação da leitura visual no próprio turno para posts e lotes paralelos. O escopo publicado e a recuperação de sessões estão no [ADR 0072](../adr/0072-triagem-visual-no-post-e-lote.md). O restante deste documento preserva as alternativas estudadas.
+
 ## Do pedido ao primeiro envio
 
 | Momento | Comportamento proposto |

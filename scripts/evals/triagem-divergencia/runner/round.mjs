@@ -55,7 +55,7 @@ function roundSpec(root,round){
 function experimentSources(){
   const root=fileURLToPath(new URL('../../../../',import.meta.url));
   const files=['packages/agents-api/src/agent-model.mjs','packages/agents-api/src/exploration-plan-provider.mjs',
-    'packages/agents-api/src/exploration-plan-contract.mjs','packages/agents-api/src/visual-input.mjs','packages/agents-api/src/visual-input-contract.mjs',
+    'packages/agents-api/src/visual-triage-instructions.mjs','packages/agents-api/src/exploration-plan-contract.mjs','packages/agents-api/src/visual-input.mjs','packages/agents-api/src/visual-input-contract.mjs',
     'packages/images-api/src/index.mjs',...['dataset/freeze.json','planner/candidate.mjs','plan-judge/round.mjs','plan-judge/group.mjs',
       'plan-judge/triage.mjs','plan-judge/strip.py','pixels/judge.py','metrics/index.mjs','metrics/report.mjs','runner/refine.py',
       'runner/validate-png.py','runner/provider.mjs'].map(file=>'scripts/evals/triagem-divergencia/'+file)];

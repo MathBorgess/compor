@@ -3,6 +3,7 @@ import assert from 'node:assert/strict';
 import {createHash} from 'node:crypto';
 import {createExplorationPlanner,createExplorationPlannerBindings,verifyExplorationPlan,validateExplorationPlan,validateCompletedExplorationPlan} from '../src/exploration-planner.mjs';
 import {createManagedExplorationPlanProvider} from '../src/exploration-plan-provider.mjs';
+import {visualTriageInstructions} from '../src/visual-triage-instructions.mjs';
 
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const key='sk-synthetic-visual-credential-only',secret=Buffer.alloc(32,18);
@@ -93,6 +94,67 @@ test('provider instrui triagem v2 no mesmo turno sem criar outra sessão de aná
  const calls=[],v=candidates(),provider=createManagedExplorationPlanProvider({apiKey:key,fetch:async(url,options)=>{calls.push(JSON.parse(options.body));return Response.json({id:'sess_triage'});}});
  await provider.create({scope,context,...v});assert.equal(calls.length,1);assert.match(calls[0].agent.instructions,/OBRIGATORIAMENTE/);assert.match(calls[0].agent.instructions,/"version":2/);assert.deepEqual(calls[0].agent.tools,[]);assert.equal(calls[0].input[0].content.filter(c=>c.type==='input_image').length,2);
 });
+test('o pedido ao provedor distingue texto, uploads v1 e triagem v2 preservando os formatos anteriores',async()=>{
+ const bodies=[];
+ const provider=createManagedExplorationPlanProvider({apiKey:key,fetch:async(_url,options)=>{
+  assert.equal(options.method,'POST');
+  bodies.push(JSON.parse(options.body));
+  return Response.json({id:'sess_visual'});
+ }});
+ for(const data of [{},visual(),candidates()])await provider.create({context,...data});
+ const [textOnly,uploads,triaged]=bodies.map(body=>body.agent.instructions);
+ assert.ok(!textOnly.includes(visualTriageInstructions));
+ assert.ok(uploads.includes(visualTriageInstructions));
+ assert.ok(triaged.includes(visualTriageInstructions));
+ assert.match(textOnly,/"version":1/);assert.match(uploads,/"version":1/);
+ assert.ok(!uploads.includes('referenceIds'));
+ assert.match(triaged,/"version":2/);
+ assert.match(triaged,/local-upload.*external\/generated/);
+ assert.match(triaged,/ordem do manifesto/);
+ for(const body of bodies){
+  for(const limit of ['creativePrompt comporta até 4000','composition até 300','contrast até 300','differenceFromOthers até 500']){
+   assert.ok(body.agent.instructions.includes(limit));
+  }
+  assert.ok(body.agent.instructions.includes('Compare os três pares'));
+  assert.deepEqual(body.agent.tools,[]);
+  assert.equal(body.agent.multi_agent.enabled,false);
+  assert.ok(!body.agent.instructions.includes('referenceReadings'));
+ }
+});
+
+test('o planejador assina a seleção v2 no limite de contraste e recusa o excedente sem outro POST',async()=>{
+ const v=candidates();
+ const selected=[v.visualInput.entries[0].id];
+ const input={...scope,...v,context:{...context,offerFacts:[{id:'entry',label:'Ingresso',value:'R$ 15',status:'confirmed'}]}};
+ for(const length of [300,301]){
+  let creates=0;
+  const raw={...structuredClone(plan),version:2,referenceIds:selected};
+  raw.items[2].contrast='A'.repeat(length);
+  const response=path=>{
+   if(path.endsWith('/items'))return {has_more:false,data:[{type:'message',role:'assistant',phase:'final_answer',status:'completed',
+    turn_id:'turn_visual',content:[{type:'output_text',text:JSON.stringify(raw)}]}]};
+   if(path.endsWith('/turns'))return {has_more:false,data:[{id:'turn_visual',session_id:'sess_visual',subagent_id:null,status:'completed'}]};
+   return {id:'sess_visual',status:'idle',agent:{tools:[]},required_actions:[]};
+  };
+  const provider=createManagedExplorationPlanProvider({apiKey:key,fetch:async(url,options)=>{
+   if(options.method==='GET')return Response.json(response(new URL(url).pathname));
+   assert.equal(options.method,'POST');creates++;
+   return Response.json({id:'sess_visual'});
+  }});
+  const f=fixture(),planner=f.build({provider});
+  assert.equal((await planner.submit(input)).status,'running');
+  const pollInput={...scope,context:input.context,visualInput:v.visualInput};
+  const completed=await planner.poll(pollInput);
+  assert.equal(completed.status,length===300?'completed':'failed');
+  if(length===300){
+   assert.ok(verifyExplorationPlan({bindings:f.bindings,input:pollInput,plan:completed.plan,token:completed.planBinding}));
+   assert.deepEqual(completed.plan.referenceIds,selected);
+   assert.ok(completed.plan.items.every(item=>item.prompt.includes('Ingresso: R$ 15')));
+  }else{assert.equal(completed.planBinding,undefined);}
+  assert.equal(creates,1);
+ }
+});
+
 test('cada imagem recebe a origem do seu item do manifesto em uma seleção mista',async()=>{
  const v=candidates();
  const generatedBytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');

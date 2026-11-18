@@ -21,7 +21,7 @@ Os controles e testes locais dispensam credencial.
 sh scripts/evals/triagem-divergencia/check.sh
 ```
 
-A bancada fica isolada dos handlers do estúdio. Uma mudança do planejador ou do despacho em produção depende da comparação entre baseline e candidatas e da decisão do criador.
+Para reproduzir o estudo de 18/11 e consultar seus recibos congelados, use o commit `74a4b978534efd44f3711874ae6960ecc59dc62e`. Ensaios novos congelam o planejador e a instrução compartilhada da revisão em uso. O estúdio usa a orientação por referência descrita no [ADR 0072](../../../docs/adr/0072-triagem-visual-no-post-e-lote.md).
 
 Para revisar como a leitura de cada referência e a direção das três propostas poderiam entrar no estúdio, consulte o [desenho de adoção no produto](../../../docs/evals/triagem-divergencia-adocao.md).
 
