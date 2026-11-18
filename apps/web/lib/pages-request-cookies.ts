@@ -38,10 +38,9 @@ export async function cookies() {
 
 /** Mirror the Route Handler rule that explicit response cookies take precedence over jar changes. */
 export function outgoingCookies(explicit: Headers, changed: Headers): string[] {
-  if (!changed.has('set-cookie')) return explicit.getSetCookie();
-  const response = new NextResponse(null, {headers: explicit});
-  const original = response.cookies.getAll();
-  for (const value of new NextResponse(null, {headers: changed}).cookies.getAll()) response.cookies.set(value);
-  for (const value of original) response.cookies.set(value);
-  return response.headers.getSetCookie();
+  const original = explicit.getSetCookie();
+  const nameOf = (line: string) => line.slice(0, line.indexOf('=')).trim();
+  const explicitNames = new Set(original.map(nameOf));
+  // Keep each serialized line intact. Parsing it again can discard a zero Max-Age.
+  return [...original, ...changed.getSetCookie().filter(line => !explicitNames.has(nameOf(line)))];
 }

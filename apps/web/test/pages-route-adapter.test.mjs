@@ -160,3 +160,23 @@ test('desconexão entre a entrada e o envio fica visível antes de submeter', as
   assert.equal(await checked.promise, 'ResponseAborted');
   assert.equal(submissions, 0);
 });
+
+test('a remoção do verificador PKCE conserva Max-Age=0 ao combinar cookies da resposta e do jar', async t => {
+  const origin = await listen(t, '/auth/callback', {
+    async GET() {
+      const jar = await cookies();
+      jar.set('verifier', '', {path: '/', maxAge: 0, httpOnly: true, sameSite: 'lax'});
+      jar.set('session', 'from-jar', {path: '/'});
+      const headers = new Headers();
+      headers.append('Set-Cookie', 'session=explicit; Path=/; HttpOnly');
+      headers.append('Set-Cookie', 'pending=; Max-Age=0; Path=/oauth');
+      return new Response(null, {status: 303, headers});
+    },
+  });
+  const reply = await fetch(origin + '/auth/callback', {redirect: 'manual', headers: {Cookie: 'verifier=old'}});
+  assert.deepEqual(reply.headers.getSetCookie(), [
+    'session=explicit; Path=/; HttpOnly',
+    'pending=; Max-Age=0; Path=/oauth',
+    'verifier=; Path=/; Max-Age=0; HttpOnly; SameSite=lax',
+  ]);
+});
