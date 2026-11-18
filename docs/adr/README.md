@@ -81,5 +81,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 
 | [0067](0067-autoridade-de-referencias-com-cas.md) | banco/provas locais; integração e ativação separadas | Espelho explícito com CAS, consentimento de sessão em memória e admissão visual transacional |
 | [0068](0068-prototipo-pages-router-com-paridade-http.md) | aceito | Pages Router com paridade das 46 URLs de operação |
+| [0069](0069-retomada-de-imagem-com-versao-fixa.md) | implementado localmente | Destino fixo por ação de imagem e reconciliação da reserva original |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

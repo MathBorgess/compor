@@ -158,6 +158,10 @@
     {
       "name": "20261117000039_authorize_visual_parallel_review.sql",
       "sha256": "c44351c68410d8c742d5791e8022fc08aed6c2185250a93eaefa2fbcf1fd8704"
+    },
+    {
+      "name": "20261118000040_reconcile_reserved_image_tool_call.sql",
+      "sha256": "f720b0442b5b7857685d311dcdba4ca0a1405577f6097b5aa23bdec1d6978934"
     }
   ]
 }

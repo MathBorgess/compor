@@ -252,6 +252,10 @@ test('exec pendente percorre poll, binding e ACK exato, sem aceitar outra conta 
 test('exec de imagem em poll produz handoff assinado preservando o ID e recusa ID inválido',async()=>{
  const f=fixture();await f.chat(request(body));const callId='exec_'+ 'c'.repeat(56),action={type:'function_call',name:'generate_image',turn_id:'turn_one',call_id:callId,arguments:{prompt:'Synthetic image'}};f.set({status:'requires_action',turnState:'waiting',actions:[action]});
  const pending=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(pending.status,'consent_required');const bindings=createSessionBindings({secret:Buffer.alloc(32,7)});assert.equal(bindings.verifyAction({token:pending.actionBinding,userId,projectId,attemptId}).callId,callId);
+ assert.match(pending.imageActionId,/^[a-f0-9]{8}-[a-f0-9]{4}-4[a-f0-9]{3}-[89ab][a-f0-9]{3}-[a-f0-9]{12}$/);
+ const same=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(same.imageActionId,pending.imageActionId);
+ f.set({actions:[{...action,call_id:'exec_next'}]});
+ const next=await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json();assert.equal(next.status,'consent_required');assert.notEqual(next.imageActionId,pending.imageActionId);
  f.set({actions:[{...action,call_id:'exec_'+ 'x'.repeat(129)}]});assert.equal((await(await f.chat(request({op:'poll',apiKey,projectId,requestId}))).json()).phase,'action_validate');assert.equal(f.calls.filter(call=>call.url?.endsWith('/events')).length,0);
 });
 test('imagem exige contrato de consentimento e pode ser recusada sem chamar Images API',async()=>{

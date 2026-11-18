@@ -1298,15 +1298,9 @@ function ProjectStudio({
       initialMessage=""
       connection={<p className="studio-hint">{canUseProjectAI?sourceLabel:'Escolha uma IA nas configurações para conversar, ou continue no editor sem IA.'}</p>}
 
-      loadBase={async () => {
-        const d = getCurrentDraft(local.get());
-        return d
-          ? local.storage.current?.getDraftAsset(
-              { userId, projectId: project.id },
-              { pieceId: d.pieceId, baseVersion: d.baseVersion, kind: "base" },
-            )
-          : null;
-      }}
+      loadBase={async ({pieceId,baseVersion}) => local.storage.current?.getDraftAsset(
+        {userId,projectId:project.id},{pieceId,baseVersion,kind:'base'},
+      )}
       loadReference={async (id) =>
         local.storage.current?.getReference(
           { userId, projectId: project.id },

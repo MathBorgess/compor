@@ -246,7 +246,10 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    await state(scope,record,'action_required',turn.id);
    d.phase='action_sign';
    const binding=studioBindings.issue({userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId,attemptId:record.attemptId,sessionId,turnId:turn.id,callId:action.call_id,name:action.name,args});
-   if(action.name==='generate_image')return reply({status:'consent_required',requestId:scope.requestId,attemptId:record.attemptId,prompt:args.prompt,proposal:parseImageProposal(args),declineBinding:binding,...(verified.visualInputDigest?{visualInputRequired:true}:{}),actionBinding:bindings.issueAction({userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,turnId:turn.id,callId:action.call_id,proposal:args,...(verified.visualInputDigest?{visualInputDigest:verified.visualInputDigest}:{})})},202);
+   if(action.name==='generate_image'){
+    const imageActionId=studioBindings.actionRequestId({userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId,attemptId:record.attemptId,sessionId,turnId:turn.id,callId:action.call_id});
+    return reply({status:'consent_required',requestId:scope.requestId,attemptId:record.attemptId,imageActionId,prompt:args.prompt,proposal:parseImageProposal(args),declineBinding:binding,...(verified.visualInputDigest?{visualInputRequired:true}:{}),actionBinding:bindings.issueAction({userId:scope.actor.userId,projectId:scope.projectId,attemptId:record.attemptId,sessionId,turnId:turn.id,callId:action.call_id,proposal:args,...(verified.visualInputDigest?{visualInputDigest:verified.visualInputDigest}:{})})},202);
+   }
    const uiArgs={...args,requestId:studioBindings.actionRequestId({userId:scope.actor.userId,projectId:scope.projectId,requestId:scope.requestId,turnId:turn.id,callId:action.call_id})};
    return reply({status:'action_required',requestId:scope.requestId,attemptId:record.attemptId,action:{name:action.name,args:uiArgs,callId:action.call_id,turnId:turn.id},actionBinding:binding},202);
   }

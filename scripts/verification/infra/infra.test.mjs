@@ -9,7 +9,7 @@ import { FIXTURE_USERS, FIXTURE_OPENAI_KEY } from './stack.mjs';
 
 test('manifest refuses a changed migration instead of reporting the pinned schema', async t => {
   const expected = await verifyMigrations();
-  assert.equal(expected.migrations.length, 39);
+  assert.equal(expected.migrations.length, 40);
   const root = await mkdtemp(join(tmpdir(), 'compor-infra-migration-negative-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'supabase/migrations'), { recursive: true });
@@ -23,7 +23,7 @@ test('network precondition rejects an interface able to leave loopback', () => {
   assert.equal(onlyLoopback({ lo: [{ internal: true }], eth0: [{ internal: false }] }), false);
 });
 
-test('all unchanged migrations run on the declared fixture and preserve roles, RLS and the fixed Vault RPC', { timeout: 30_000 }, async t => {
+async function createSyntheticDatabase(t) {
   const directory = await mkdtemp(join(tmpdir(), 'compor-infra-sql-'));
   let db = new PGlite(directory);
   t.after(async () => { await db.close(); await rm(directory, { recursive: true, force: true }); });
@@ -36,6 +36,11 @@ test('all unchanged migrations run on the declared fixture and preserve roles, R
   const sources = [];
   for (const migration of inventory.migrations) sources.push(await readFile(join(defaultRepoRoot, 'supabase/migrations', migration.name), 'utf8'));
   await db.exec("begin; set local compor.verification_baseline='synthetic-offline-v1';\n" + baseline + '\n' + sources.join('\n') + '\ncommit;');
+  return db;
+}
+
+test('all unchanged migrations run on the declared fixture and preserve roles, RLS and the fixed Vault RPC', { timeout: 30_000 }, async t => {
+  const db = await createSyntheticDatabase(t);
   await db.query('insert into auth.users(id) values ($1),($2)', [FIXTURE_USERS.alice, FIXTURE_USERS.bob]);
   await db.query('insert into vault.synthetic_secrets(name,decrypted_secret) values ($1,$2)', ['COMPOR_CIN_OPENAI', FIXTURE_OPENAI_KEY]);
   await db.exec('set role authenticated');
@@ -64,4 +69,91 @@ test('all unchanged migrations run on the declared fixture and preserve roles, R
   assert.equal((await db.query('select public.compor_default_openai_key() as key')).rows[0].key, FIXTURE_OPENAI_KEY);
   await assert.rejects(db.query('select * from vault.decrypted_secrets'), error => error.code === '42501');
   await assert.rejects(db.query('select * from public.projects'), error => error.code === '42501');
+});
+
+test('image reconciliation keeps the original reservation and fences only unclaimed actions', { timeout: 30_000 }, async t => {
+  const db = await createSyntheticDatabase(t);
+  const owner = FIXTURE_USERS.alice;
+  await db.query('insert into auth.users(id) values ($1),($2)', [owner, FIXTURE_USERS.bob]);
+  await db.exec('set role authenticated');
+  const authenticate = user => db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify({ role: 'authenticated', sub: user })]);
+  await authenticate(owner);
+  const { id: project } = (await db.query("insert into public.projects(title) values ('Synthetic recovery') returning id")).rows[0];
+  const piece = '33333333-3333-4333-8333-333333333333';
+  const content = JSON.stringify({ headline: '', price: '', date: '', caption: 'Synthetic', captionOrigin: 'user' });
+  await db.query('select public.create_project_post($1,$2,$3)', [project, piece, 'Synthetic post']);
+  for (const baseVersion of [0, 1]) {
+    const { value } = (await db.query('select public.save_piece_version($1,$2,$3,$4::jsonb) as value', [project, piece, baseVersion, content])).rows[0];
+    assert.equal(value.status, 'saved');
+  }
+  const start = async request => {
+    const { value } = (await db.query('select public.reserve_studio_turn($1,$2,$3) as value', [project, request, 'a'.repeat(64)])).rows[0];
+    assert.equal(value.status, 'reserved');
+    await db.query("select public.set_studio_turn_state($1,$2,'action_required','turn_test')", [project, request]);
+    return value.turn.attempt_id;
+  };
+  const finish = async (request, attempt, state) => {
+    await db.query("select public.set_studio_turn_state($1,$2,$3,'turn_test')", [project, request, state]);
+    await db.query('select public.finish_agent_attempt($1,$2,$3)', [project, attempt, state === 'failed' ? 'unknown' : 'completed']);
+  };
+  const reserve = args => db.query('select * from public.reserve_image_tool_call($1,$2,$3,$4,$5,$6,$7)', args).then(result => result.rows[0]);
+  const fence = args => db.query('select public.fence_unsubmitted_image_tool_call($1,$2,$3,$4,$5,$6,$7) as value', args).then(result => result.rows[0].value);
+  const confirm = request => db.query('select public.confirm_closed_image_attempt($1,$2) as value', [project, request]).then(result => result.rows[0].value);
+  const declare = reservation => db.query('select * from public.declare_image_generation_consent($1,true)', [reservation]);
+  const claim = reservation => db.query('select * from public.claim_image_tool_execution($1)', [reservation]).then(result => result.rows[0]);
+  const unavailable = error => error.code === '42501';
+
+  const request = '44444444-4444-4444-8444-444444444444';
+  const attempt = await start(request);
+  const original = [project, piece, 1, attempt, 'sess_test', 'turn_test', 'exec_original'];
+  const staleVersion = [project, piece, 2, ...original.slice(3)];
+  const { reservation_id: reservation } = await reserve(original);
+  await declare(reservation);
+  await db.exec('reset role');
+  await db.query("insert into public.foreground_image_waits values($1,$2,now()+interval '15 seconds')", [owner, reservation]);
+  await db.exec('set role authenticated');
+  await authenticate(FIXTURE_USERS.bob);
+  await assert.rejects(fence(staleVersion), unavailable, 'another account cannot fence the reservation');
+  assert.equal(await confirm(request), 'unverified');
+  await authenticate(owner);
+  await assert.rejects(fence([project, piece, 3, ...original.slice(3)]), unavailable, 'the submitted version must belong to this post');
+  assert.equal(await fence(staleVersion), 'fenced');
+  assert.equal(await fence(original), 'fenced', 'a retry records no additional fence');
+  assert.deepEqual((await db.query('select piece_version,state from public.image_tool_reservations where id=$1', [reservation])).rows, [{ piece_version: 1, state: 'unknown' }]);
+  await assert.rejects(reserve(staleVersion), unavailable, 'reconciliation does not let the generation path rebind the image');
+  await assert.rejects(claim(reservation), unavailable, 'a late claimant cannot turn the fence into an execution');
+  await db.exec('reset role');
+  assert.deepEqual((await db.query('select reservation_id from public.image_non_dispatch_fences')).rows, [{ reservation_id: reservation }]);
+  assert.deepEqual((await db.query('select reservation_id from public.foreground_image_waits')).rows, []);
+  await db.exec('set role authenticated');
+  assert.equal(await confirm(request), 'unverified', 'a fenced action alone cannot close the provider turn');
+  await finish(request, attempt, 'failed');
+  assert.equal(await confirm(request), 'failed_without_dispatch', 'a terminal failed turn may release a fully fenced marker');
+  await assert.rejects(reserve([...original.slice(0, 6), 'exec_late']), unavailable, 'the closed parent cannot reserve another image');
+
+  const completed = '55555555-5555-4555-8555-555555555555';
+  await finish(completed, await start(completed), 'completed');
+  assert.equal(await confirm(completed), 'confirmed', 'legacy completed attempts may have no reservations');
+  const failed = '66666666-6666-4666-8666-666666666666';
+  await finish(failed, await start(failed), 'failed');
+  assert.equal(await confirm(failed), 'unverified', 'the legacy failed path still requires durable evidence');
+
+  const active = '77777777-7777-4777-8777-777777777777';
+  const activeAttempt = await start(active);
+  const activeCall = [project, piece, 1, activeAttempt, 'sess_test', 'turn_test', 'exec_claimed'];
+  const freshCall = [...activeCall.slice(0, 6), 'exec_fence_first'];
+  assert.equal(await fence(freshCall), 'fenced', 'a first fence still reserves the exact requested version');
+  const unfenced = [...activeCall.slice(0, 6), 'exec_unknown_without_fence'];
+  await reserve(unfenced);
+  await db.query('select public.mark_image_tool_call_unknown($1,$2,$3,$4)', [project, ...unfenced.slice(4)]);
+  assert.equal(await fence(unfenced), 'unverified', 'legacy uncertainty without a fence supplies no evidence');
+  const { reservation_id: claimedReservation } = await reserve(activeCall);
+  await declare(claimedReservation);
+  const execution = await claim(claimedReservation);
+  assert.equal(execution.state, 'running');
+  assert.equal(await fence([project, piece, 2, ...activeCall.slice(3)]), 'unverified', 'an execution takes precedence over the fence');
+  await db.query('select public.mark_image_tool_execution_unknown($1)', [execution.execution_id]);
+  assert.equal(await fence(activeCall), 'unverified', 'an unknown execution cannot become non-dispatch evidence');
+  await finish(active, activeAttempt, 'completed');
+  assert.equal(await confirm(active), 'unverified', 'a mixed attempt cannot release its marker');
 });

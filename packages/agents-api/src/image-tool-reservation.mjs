@@ -43,6 +43,7 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
     async confirmClosedAttempt({actor,projectId,requestId}) {
       if (!uuid.test(projectId ?? '') || !uuid.test(requestId ?? '')) throw new Error('invalid attempt');
       const result=await rpc('confirm_closed_image_attempt',actor,{p_project_id:projectId,p_request_id:requestId});
+      if (result==='failed_without_dispatch') return {status:'confirmed',outcome:result};
       if (!['confirmed','unverified'].includes(result)) throw new Error('reservation status unknown');
       return {status:result};
     },

@@ -137,6 +137,8 @@ A versão de peça salva usa o formato opcional `fields` para textos próprios, 
 
 As instruções do Agile Deliberation são compartilhadas com o MCP. O agente esclarece ambiguidades; a pessoa decide os critérios. Fontes, hipóteses e decisões permanecem distinguíveis. Ver [ADRs 0012](adr/0012-arte-integral-e-deliberacao-adaptativa.md), [0013](adr/0013-agile-deliberation-no-mcp.md) e [0016](adr/0016-agente-api-e-ferramentas.md).
 
+O estúdio mantém o destino de uma imagem associado à chamada original do agente. Ao consultar uma proposta preparada, ele confirma a mesma versão e a mesma entrada antes de seguir. A reconciliação procura a reserva original sob a trava de execução e pode confirmar o encerramento local quando a tentativa terminou e todas as reservas estão impedidas de executar sem registro de imagem. Ver [ADR 0069](adr/0069-retomada-de-imagem-com-versao-fixa.md).
+
 ## MCP
 
 `packages/remote-mcp` fornece o transporte HTTP autenticado. `/api/mcp` atende clientes autorizados; `/api/agent-mcp` usa uma credencial distinta e delegação limitada ao projeto. Autenticação e verificação de acesso por chamada continuam necessárias após a negociação MCP. OAuth/discovery depende da configuração do ambiente.
