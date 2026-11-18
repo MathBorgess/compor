@@ -67,7 +67,7 @@ Um segundo modelo, `gpt-6.2-sol`, recebeu os pixels, o briefing, a posição fin
 | Oficina. Símbolo, paleta, distribuição espacial, exclusão das listras. | 6/8 → 6/8 | 3 → 3 | 1.341 → 1.341 |
 | Mostra de gravuras. Textura livre, composição, símbolo, paleta específica. Quatro PNGs novos e ordem diferente. | 8/8 → 8/8 | 4 → 4 | 1.755 → 1.755 |
 
-A pontuação usa o pior dos três prompts em cada um dos quatro atributos. A correção comprovada é identificar as origens no contexto do planejador. Os dois casos empataram na nota e no volume de anexos. Nenhuma cobrança de GPT Image ou qualidade de uma arte resultante foi medida.
+A pontuação usa o pior dos três prompts em cada um dos quatro atributos. A correção comprovada é identificar as origens no contexto do planejador. Os dois casos empataram na nota e no volume de anexos. Esse replay mediu apenas os planos. A seção de ensaio com o provedor abaixo registra a comparação posterior nos pixels.
 
 **Experimento de redução de anexos.** Foram examinadas três revisões de instruções. A primeira, que permitia expressar opcionais em texto, descartou o layout da oficina e descreveu uma massa central. A segunda manteve o layout, mas descreveu a paleta com verde-escuro no lugar do verde-azulado. No primeiro julgamento cego essas revisões obtiveram 5/8 e 7/8, com baseline de 8/8. Antes do terceiro ajuste, foram congelados o briefing e quatro novos PNGs da mostra, com uma textura opcional representável por palavras e três características que exigiam precisão. O hash do pacote de transferência da baseline é `2fb68da95e1bbe9659fe31285f3d590e3714d635332f1a2a5509317969de86f9`.
 
@@ -84,3 +84,36 @@ node scripts/evals/pr61/triagem/baseline.mjs --replay /tmp/compor-triagem-plano.
 ```
 
 Os comandos acima são locais e preservam o fixture de controle negativo. Acionar outra sessão de modelo é uma execução distinta, com possível variação na resposta.
+
+## Ensaio com a Agents API e o GPT Image
+
+Em 17/11/2026, duas sessões gerenciadas de `gpt-6.1-terra` receberam o mesmo briefing e os mesmos quatro PNGs da mostra de gravuras. O primeiro prompt validado de cada plano seguiu para uma chamada de edição ao `gpt-image-2.6-flare`. Os adaptadores comparados vieram das revisões `8817f57` e `e1d509f`. Cada chamada produziu um PNG de 1024 × 1280. O teste exerceu os adaptadores reais em execução local com provedores reais. A navegação, a autorização no servidor web e as três imagens simultâneas têm cobertura própria nos testes do PR.
+
+| Medida por braço | Anterior | Com a origem corrigida |
+|---|---:|---:|
+| Planejamento, da reserva até o plano validado | 26,3 s | 18,0 s |
+| Uso total conhecido do planejamento | Desconhecido | 9.499 tokens |
+| Imagens escolhidas que chegaram ao GPT Image | 4 de 4 | 4 de 4 |
+| Bytes dos quatro PNGs anexados | 585 | 585 |
+| GPT Image, da reserva até os bytes validados | 9,6 s | 12,2 s |
+| Tokens de imagem de entrada | 16 | 16 |
+| Tokens de texto de entrada | 131 | 136 |
+| Tokens de imagem de saída | 727 | 1.551 |
+
+Os quatro anexos chegaram na ordem do manifesto, com o conteúdo verificado por hash. As consultas ao mesmo planejamento usaram o ID da sessão. Foram consumidas as duas sessões e as duas imagens autorizadas. O intervalo de 15 segundos entre lotes fica fora dessas durações.
+
+### Fidelidade nos pixels
+
+Antes da geração foram fixados quatro atributos e uma escala de 0 a 2 por atributo. Um juiz visual recebeu as quatro referências originais e as duas artes em ordem aleatória, identificadas como A e B. O mapeamento foi aberto após o parecer.
+
+| Atributo | Anterior | Com a origem corrigida | Evidência no par |
+|---|---:|---:|---|
+| Identidade do símbolo | 2 | 2 | O triângulo violeta conserva o recorte retangular na base em ambas. |
+| Composição | 1 | 1 | A referência traz uma faixa horizontal na base e um detalhe no alto à direita. O rolo da anterior concentra peso embaixo. A corrigida recupera um detalhe superior. Ambas perdem a faixa contínua. |
+| Paleta | 2 | 2 | Violeta, verde e pêssego aparecem nas duas. |
+| Textura | 1 | 2 | A anterior amplia os pontos em losangos. O pontilhado fino da corrigida se aproxima da primeira referência. |
+| **Total** | **6/8** | **7/8** | Um par, um juiz. |
+
+**Fatos da oferta.** A arte corrigida acrescentou “ENTRADA GRATUITA”. O briefing e o prompt da primeira posição não autorizavam a afirmação. O prompt incluía a instrução para preservar os fatos e não inventá-los. A gratuidade surgiu nos pixels. A anterior trazia o título e deixava o convite à visita implícito. Pelo critério de fidelidade factual, a candidata exige correção do criador antes de usar a peça.
+
+O resultado técnico confirma a entrega das quatro fontes selecionadas. O pontilhado recebeu um ponto a mais neste par. O modelo gerou uma peça por revisão, com variação tanto do planejamento quanto da imagem, e a taxa de acerto em outros pedidos segue desconhecida. O uso parcial e a ausência de fatura impedem estimar economia total. A vontade de publicar exige observação do criador. Para o próximo ciclo, o caso de gratuidade oferece um controle concreto para a leitura de texto final contra os fatos declarados.

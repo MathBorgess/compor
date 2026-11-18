@@ -37,6 +37,7 @@ O defeito corrigido no código do estúdio era verificável no corpo da requisi�
 | Origem junto aos pixels na oficina | 1/4 correta na baseline → 4/4 na candidata. Na mostra de gravuras, as quatro origens também conferiram. |
 | Julgamento cego dos planos com a correção de rótulos | Oficina 6/8 → 6/8. Mostra de gravuras 8/8 → 8/8. Foram replays sintéticos via Codex e o juiz avaliou planos. |
 | Experimento de substituir anexos por descrições | Uma descrição podia levar a composição para o centro apesar de a referência exigir o bloco à esquerda. A alteração das instruções foi rejeitada. |
-| Resultado com pessoas e GPT Image | Sem amostra de imagens geradas por esse PR no ensaio. Similaridade final, economia em dinheiro, empolgação e uso permanecem desconhecidos. |
+| Pixels do GPT Image, uma arte por revisão | Mostra de gravuras 6/8 → 7/8 no julgamento cego. O ponto veio do pontilhado. As duas composições ficaram parciais. A candidata escreveu “entrada gratuita” sem essa informação no briefing. |
+| Custo e experiência do criador | Nas duas revisões chegaram os mesmos quatro anexos ao GPT Image, 585 bytes e 16 tokens de imagem de entrada. O uso do planejamento anterior ficou desconhecido. A cobrança, a intenção de uso e a resposta do público continuam sem observação. |
 
 A [avaliação da triagem](03-triagem.md) registra as execuções, as condições dos modelos, a cobertura e os julgamentos. As demais etapas conservam suas baselines para a próxima comparação. A [experiência de descoberta](02-referencias.md) ficou isolada da entrega por decisão do criador.

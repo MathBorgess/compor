@@ -91,3 +91,19 @@ Os snapshots Turbopack `bundle-pr-before-9fb0367` e `bundle-pr-after-1e9774d` co
 | Cliente de autoridade visual | 782 → 635 B; 279 B compartilhados no novo helper | IDs, seleção, digest e capacidade efêmera continuam no cliente por contrato. Assinatura e verificação de autoridade permanecem no servidor |
 
 A inspeção não encontrou implementação de Server Action própria, SDK administrativo ou provedor de IA no cliente. Os módulos Next de roteamento e o shim removido são infraestrutura do framework. O polyfill `nomodule` continua presente (39.473 bytes gzip no arquivo). Ajustes experimentais de Turbopack renderam no máximo 403 bytes e foram descartados. Compartilhar schemas primitivos aumentou o bundle em 138 bytes e encadear verificações do Zod economizou apenas 8 bytes. Ambos os experimentos foram revertidos.
+
+
+## Checkpoint da triagem e do gate no PR 61
+
+A correção de origem `41e1f8c` e o desenho das cinco etapas chegaram à branch do PR. No ensaio com a Agents API e o GPT Image, a origem corrigida subiu de 6/8 para 7/8 no julgamento visual de um par. As quatro referências totalizaram 585 bytes em cada pedido. A imagem corrigida anunciou gratuidade sem fonte e exige revisão antes de usar. [Caso, tempos e consumo conhecido](../evals/pr61/03-triagem.md#ensaio-com-a-agents-api-e-o-gpt-image)
+
+A execução Linux da revisão `e1d509f` aprovou os checks estáticos, contratos, isolamento e comportamento web. O build de performance mediu **335.581 bytes gzip**, excedendo o limite de 300.000 em **35.581**. Os cinco carregamentos da entrada sem sessão tiveram LCP mediano de 657 ms, TBT zero e CLS de 0,008. O PR ficou em rascunho. [Execução de Quality](https://github.com/MathBorgess/compor/actions/runs/44201362982) · [Gate de performance](https://github.com/MathBorgess/compor/actions/runs/44201362982/job/134457428752)
+
+Para a próxima rodada, estes dois controles locais delimitam a redução ainda necessária, com os handlers de API e suas URLs preservados.
+
+| Experimento de cliente | Total gzip | O que demonstrou |
+|---|---:|---|
+| Studio independente usando Preact/compat e o framework residual do Next | 337.689 B com um JS do estúdio, 342.093 B com módulos sob demanda | O framework e seu 404 ainda ocupam 172.916 B. A tela do estúdio abriu no Chromium com sessão simulada. |
+| Retirada contrafactual das árvores HTML de apresentação, preservando expressões e callbacks | 318.782 B | O código emitido caiu 16.167 B a partir de 334.949 B. Essa variante de medição elimina apresentação essencial. |
+
+Nenhuma das duas variantes foi incorporada ao PR. As medições mantiveram a soma de todos os arquivos JS. O próximo desenho de cliente precisa demonstrar a economia em um build funcional e preservar seleção entre abas, consulta de pedidos antigos, anexos locais e pausa após resultados incertos.
