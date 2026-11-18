@@ -80,7 +80,7 @@ def prepare(index_path, root, stage, mode):
                 "authorizedVisibleCopy":case["rubric"]["allowedCopy"], "format":case["rubric"]["format"],
                 "referenceStrip":sheet.name,"origins":[v["inputOrigin"] for v in case["visualInput"]["entries"]],
                 "outputs":{}}
-        mapping = {"id":row["id"],"split":case["rubric"]["split"],"slots":{}}
+        mapping = {"id":row["id"],"split":case["rubric"]["split"],"planObserved":row.get("plan") is not None,"slots":{}}
         manifest = case["visualInput"]["entries"]
         plan = row.get("plan")
         if mode == "plan":
@@ -168,8 +168,18 @@ def evaluate(root):
     public=[]
     for row in answer["cases"]:
         if sorted(v["unit"] for v in row["observations"])!=sorted(check["units"]): raise ValueError("Unidades ausentes ou repetidas")
-        if check["cases"][row["case"]]["split"]=="desenvolvimento":
-            public.append({"id":check["cases"][row["case"]]["id"],**row})
+        mapping=check["cases"][row["case"]]
+        for obs in row["observations"]:
+            unit=obs["unit"]
+            slots=unit[:1] if check["stage"]==3 else unit
+            available=(mapping["planObserved"] if check["mode"]=="plan" else
+                       all(mapping["slots"][s]["state"]=="completed" for s in slots))
+            if not available and obs["score"] is not None:
+                raise ValueError("Juiz pontuou saída indisponível")
+            if not obs["evidence"].strip() or not row["change"].strip():
+                raise ValueError("Evidência ou feedback vazio")
+        if mapping["split"]=="desenvolvimento":
+            public.append({"id":mapping["id"],**row})
     write_json(root/"feedback-desenvolvimento.json",public)
     write_json(root/"judge-receipt.json",{"model":MODEL,"effort":"medium","threadIds":[e["thread_id"] for e in events if e.get("type")=="thread.started"],"promptSha256":digest(prompt),"answerSha256":digest((root/"judge-answer.json").read_bytes()),"mode":check["mode"],"stage":check["stage"]})
 
