@@ -51,8 +51,11 @@ class VisualJudgeTest(unittest.TestCase):
         scored = verify_art(art, record, ['Nome: Roda'])
         self.assertFalse(scored['prontaNoProxy'])
         self.assertEqual(notes([{'artes': [scored, {'status': 'sem_pixels'}]}])['semPixels'], 1)
+        missing = {'available': False, 'slot': 2}
         with self.assertRaises(ValueError):
-            verify_art(art, {'available': False, 'slot': 2}, ['Nome: Roda'])
+            verify_art(art, missing, ['Nome: Roda'])
+        abstained = verify_art({'status': 'sem_pixels'}, missing, ['Nome: Roda'])
+        self.assertEqual(abstained, {'slot': 2, 'status': 'sem_pixels'})
         art['fidelidadeFactual'] = 'infiel'
         with self.assertRaises(ValueError):
             verify_art(art, record, ['Nome: Roda'])

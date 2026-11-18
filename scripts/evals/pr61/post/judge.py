@@ -206,10 +206,21 @@ def main():
         raise ValueError('o manifesto corresponde a outra rodada')
     fixtures = root / 'cases.json'
     seed = digest(fixtures.read_bytes() + str(args.round).encode())
+    interruptions = {}
+    for record in complete.get('incompleteCases', []):
+        if record['id'] in interruptions:
+            raise ValueError('caso interrompido registrado mais de uma vez')
+        interruptions[record['id']] = {key: text(record[key]) for key in ('stage', 'state', 'slots')}
     private = root / 'juiz-visual-retido'
     private.mkdir(exist_ok=True, mode=0o700)
     blind = Path(tempfile.mkdtemp(prefix='compor-juiz-visual-', dir=private))
     packets, attachments, decoding = build_packet(fixtures, round_dir, blind, seed, complete['revision'])
+    cases_by_id = {entry['id']: entry for entry in decoding.values()}
+    if set(interruptions) - cases_by_id.keys():
+        raise ValueError('o manifesto declara interrupção de um caso ausente do grupo')
+    for case_id, interruption in interruptions.items():
+        if interruption['slots'] == 'not_submitted' and any(slot['available'] for slot in cases_by_id[case_id]['slots'].values()):
+            raise ValueError('há pixels em um caso declarado sem envio')
     (private / f'round-{args.round}-mapa.json').write_text(json.dumps({'seed':seed, 'pacote':blind.name, 'decodificacao':decoding}, ensure_ascii=False, indent=2), encoding='utf-8')
     verdict, thread = run_codex(packets, attachments, blind)
     cases = {'desenvolvimento': [], 'reserva': []}
@@ -219,7 +230,11 @@ def main():
         mapping = decoding[blind_id]
         by_slot = indexed(result['artes'], 'slot', SLOTS)
         arts = sorted((verify_art(by_slot[slot], mapping['slots'][slot], packet['fatosConfirmados']) for slot in SLOTS), key=lambda row: row['slot'])
-        cases[mapping['split']].append({'id': mapping['id'], 'artes': arts, 'resumo': notes([{'artes': arts}]), 'diagnostico': text(result['diagnostico'])})
+        case_id = mapping['id']
+        entry = {'id': case_id, 'artes': arts, 'resumo': notes([{'artes': arts}]), 'diagnostico': text(result['diagnostico'])}
+        if case_id in interruptions:
+            entry['interrupcao'] = interruptions[case_id]
+        cases[mapping['split']].append(entry)
     meta = {'round': args.round, 'revision': complete['revision'], 'judge': {'model': MODEL, 'thread': thread, 'tools': 0}, 'rubricaSha256': digest(RUBRIC.read_bytes()), 'fixtureSha256': digest(fixtures.read_bytes())}
     for rows in cases.values():
         rows.sort(key=lambda row: row['id'])

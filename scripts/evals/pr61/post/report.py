@@ -40,12 +40,17 @@ def render(rounds):
     else:
         summary = 'O grupo reservado deixou de demonstrar o ganho exigido entre a primeira e a última rodada.'
     lines.extend(['', summary + ' A comparação envolve apenas dois casos reservados.', ''])
+    if any(group['semPixels'] for run in rounds for group in run['grupos'].values()):
+        lines.extend(['A ausência de pixels é uma falha de cobertura da geração. A sessão independente se absteve de pontuar os slots faltantes.', ''])
     for run in rounds:
         lines.extend([f"## Rodada {run['round']}", '', f"Revisão `{run['revision']}` · juiz `{run['judge']['model']}` · sessão `{run['judge']['thread']}`", ''])
         for split, cases in run['casos'].items():
             lines.extend([f'### Grupo de {split}', ''])
             for case in cases:
-                lines.extend([f"#### {case['id']}", '', f"{case['resumo']['prontasNoProxy']} de três artes prontas. {case['diagnostico']}", '', '| Arte | Gancho | Leitura | Adequação | Fidelidade factual |', '| --- | --- | --- | --- | --- |'])
+                result = 'Sem avaliação visual.'
+                if any(art['status'] == 'avaliada' for art in case['artes']):
+                    result = f"{case['resumo']['prontasNoProxy']} de três artes prontas."
+                lines.extend([f"#### {case['id']}", '', f"{result} {case['diagnostico']}", '', '| Arte | Gancho | Leitura | Adequação | Fidelidade factual |', '| --- | --- | --- | --- | --- |'])
                 for art in case['artes']:
                     if art['status'] == 'sem_pixels':
                         lines.append(f"| {art['slot']} | — | — | — | Sem pixels |")
@@ -53,6 +58,8 @@ def render(rounds):
                     scores = [f"{art['dimensoes'][dim]['nota']} · {cell(art['dimensoes'][dim]['evidencia'])}" for dim in DIMENSIONS]
                     lines.append(f"| {art['slot']} | " + ' | '.join(scores) + f" | {art['fidelidadeFactual']} |")
                 lines.append('')
+                if interruption := case.get('interrupcao'):
+                    lines.extend([f"A execução registrou `{interruption['state']}` em `{interruption['stage']}`. Situação dos slots `{interruption['slots']}`.", ''])
                 for art in case['artes']:
                     for fact in art.get('fatos', []):
                         lines.append(f"- Arte {art['slot']} · {fact['fato']} · {fact['estado']}. {fact['evidencia']}")

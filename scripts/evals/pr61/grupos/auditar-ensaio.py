@@ -44,20 +44,34 @@ def audit(root):
         index = read(folder / "index.json")
         check([entry["id"] for entry in index] == ids, "Casos mudaram durante o ciclo.")
         intervals = []
-        image_count = attachment_count = 0
+        image_count = attachment_count = valid_plans = 0
+        invalid_cases = []
         launches = []
         for entry in index:
             case_id = entry["id"]
             records = read(folder / case_id / "receipts.json")
-            plan = read(folder / case_id / "plan.json")
             check(len(records) == 4 and len(entry["slots"]) == 3, "Lote incompleto.")
-            check(records[0]["plan"] == plan == entry["plan"], "Plano divergente do recibo.")
+
             check([slot["position"] for slot in entry["slots"]] == [1, 2, 3], "Slots repetidos ou ausentes.")
-            for rec in records:
-                check(rec["state"] == "complete" and rec["revision"] == release["revision"] and
+            invalid = records[0]["state"] == "invalid"
+            observed = records[:1] if invalid else records
+            for rec in observed:
+                check(rec["state"] in ("complete", "invalid") and rec["revision"] == release["revision"] and
                       rec["fixture"] == digest(fixtures), "Recibo incompleto ou de outro ensaio.")
                 check(rec["receipt"] not in receipts_seen, "Recibo reutilizado.")
                 receipts_seen.add(rec["receipt"])
+            if invalid:
+                check(entry["plan"] is None and all(rec["state"] == "not_submitted" for rec in records[1:]),
+                      "Um plano inválido precisa conservar os três slots sem envio.")
+                for position, slot in enumerate(entry["slots"], 1):
+                    check(slot["state"] == "not_submitted" and not (folder / case_id / f"art-{position}.png").exists(),
+                          "Um slot sem envio tem uma arte ou envio registrado.")
+                invalid_cases.append(case_id)
+                continue
+            check(all(rec["state"] == "complete" for rec in records), "Resultado de lote pendente.")
+            plan = read(folder / case_id / "plan.json")
+            check(records[0]["plan"] == plan == entry["plan"], "Plano divergente do recibo.")
+            valid_plans += 1
             starts = [moment(rec["started"]) for rec in records[1:]]
             if latest_end is not None:
                 gap = (moment(records[0]["started"]) - latest_end).total_seconds()
@@ -74,10 +88,12 @@ def audit(root):
                 attachment_count += len(delivered)
                 image_count += 1
         previous_judges = {str(stage): digest(folder / f"judge-{stage}.json") for stage in (3, 4, 5)}
-        check((summary["plans"], summary["images"]) == (len(cases), image_count), "Denominador do ensaio incorreto.")
-        rounds.append({"rodada": r, "revisao": release["revision"], "planos": len(cases), "imagens": image_count,
-                       "anexosSomados": attachment_count, "menorIntervaloAposLoteSegundos": min(intervals),
-                       "maiorDiferencaEntreInicioDosTresEnviosSegundos": max(launches), "hashesPareceres": previous_judges})
+        check((summary["plans"], summary["images"]) == (valid_plans, image_count), "Denominador do ensaio incorreto.")
+        check(invalid_cases == [row["id"] for row in summary.get("incompleteCases", [])], "Cobertura das falhas divergente.")
+        rounds.append({"rodada": r, "revisao": release["revision"], "tentativasDePlano": len(cases),
+                       "planosValidos": valid_plans, "casosComPlanoInvalido": invalid_cases, "imagens": image_count,
+                       "anexosSomados": attachment_count, "menorIntervaloAposLoteSegundos": min(intervals, default=None),
+                       "maiorDiferencaEntreInicioDosTresEnviosSegundos": max(launches, default=None), "hashesPareceres": previous_judges})
     return {"rodadas": rounds, "recibosUnicos": len(receipts_seen)}
 
 
