@@ -56,7 +56,15 @@ def read_group(directory):
     receipts=[]
     for row,observed in zip(rows,replay):
         if row['id']!=observed['id']: raise ValueError('Índices fora de ordem')
-        receipts.append({'id':row['id'],'references':observed.get('selected'),'bytesPerImage':observed.get('expectedInputBytes'),
+        failure=None
+        diagnostic=directory/row['id']/'invalid.json'
+        if diagnostic.is_file():
+            content=diagnostic.read_bytes()
+            details=json.loads(content)
+            failure={'kind':details.get('observed'),'sameTurn':details.get('sameTurn'),'accepted':details.get('passesOriginalValidator'),
+                     'distinctFieldCounts':details.get('unique'),'diagnosticSha256':sha(content),
+                     'rejectedOutputSha256':sha((directory/row['id']/'rejected-plan.json').read_bytes())}
+        receipts.append({'id':row['id'],'references':observed.get('selected'),'bytesPerImage':observed.get('expectedInputBytes'),'rejection':failure,
                          'planSha256':sha((directory/row['id']/'plan.json').read_bytes()) if row.get('plan') else None,
                          'receiptsSha256':sha((directory/row['id']/'receipts.json').read_bytes()),
                          'slots':[{'position':s['position'],'state':s['state'],'sha256':s.get('sha256'),
