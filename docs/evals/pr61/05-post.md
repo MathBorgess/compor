@@ -55,3 +55,17 @@ Reproduzir a identidade dos insumos no commit `8817f57d44b9d9f9339d59791c6b7cf03
 Na raiz, `node --test scripts/quality/variant-metadata.test.mjs` passou (1/1). O teste PGlite aplica as migrations pertinentes e verifica versão-base, variante nova sem aprovação, retoque com aprovação herdada e restrições de escrita. Em `apps/web`, `node --import tsx --test test/version-metadata-http.test.mjs test/studio-variants.test.mjs` passou (8/8). Exercita o adaptador HTTP com respostas simuladas e o agrupamento real por linhagem. O caminho de revisão cria o PNG e inicia um download no navegador. [Teste de versões no banco](../../../scripts/quality/variant-metadata.test.mjs) · [Adaptador de versões](../../../apps/web/lib/piece-store.ts) · [Revisão e download](../../../apps/web/app/studio-review.tsx)
 
 **Próxima comparação.** Fixar a régua e os casos separados antes de gerar a candidata. Comparar as duas revisões no mesmo briefing e direção, com as variantes em ordem aleatória e os avaliadores cegos para tratamento e autoria. Julgar fatos, leitura e CTA antes de revelar a identidade da revisão. Pedir às pessoas que avaliem separadamente empolgação, confiança e uso, inclusive quando quiserem explorar. Medir concordância humano–juiz em versões autorizadas e reportar discordâncias; promover somente com evidência compatível com a afirmação feita.
+
+
+## Quatro rodadas em cinco casos por grupo
+
+O juiz observou três propostas de cada briefing a 360 px e registrou fatos e falhas por arte. Nas três primeiras rodadas havia 15 artes por grupo. Na última, o planejador repetiu o contraste nas posições 1 e 3 do primeiro caso. A validação impediu o envio desse lote ao GPT Image. As três posições continuam no denominador da tarefa e têm abstenção no julgamento visual.
+
+| Rodada | Prontas no desenvolvimento | Prontas nos dois casos de reserva | Falhas factuais críticas na reserva | Sem pixels |
+| --- | ---: | ---: | ---: | ---: |
+| Baseline | 7 de 9 | 3 de 6 | 2 | 0 |
+| Ciclo 1 | 3 de 9 | 3 de 6 | 0 | 0 |
+| Ciclo 2 | 8 de 9 | 3 de 6 | 2 | 0 |
+| Ciclo 3 | 6 de 6 observadas | 5 de 6 | 0 | 3 |
+
+A última instrução produziu mais artes prontas na reserva de dois briefings. A decisão sobre o planejador também exige lotes utilizáveis e fidelidade às referências. Essa candidata perdeu um lote e teve pior resultado de fidelidade nos pixels reservados. O estúdio conserva a instrução de controle. O ensaio avaliou os pixels compartilhados pela exploração, sem produzir legenda nem colher intenção de publicação. [Respostas por arte e por caso, divisões e hashes](../../../scripts/evals/pr61/post/rodadas-reais.json)

@@ -63,3 +63,19 @@ python3 scripts/evals/pr61/grupos/auditar-ensaio.py "$bancada"
 ```
 
 A geração com o provedor tem orçamento próprio. No ensaio de novembro, cada caso consumiu um plano gerenciado e três artes. O mesmo lote sustentou os três marcos visuais. A chave ficou em memória no executor local. Os testes de código e os replays usam fixtures.
+
+### Resultados do ensaio de 18 de novembro
+
+| Medida | Baseline | Ciclo 1 | Ciclo 2 | Ciclo 3 |
+| --- | ---: | ---: | ---: | ---: |
+| Briefings utilizáveis | 3/5 | 5/5 | 3/5 | 4/5 |
+| Sugestões pertinentes nas primeiras quatro posições | 6/20 | 11/20 | 12/20 | 13/20 |
+| Fidelidade das artes às referências, pontos do juiz | 107/120 | 107/120 | 106/120 | 78/96 observáveis |
+| Pares de propostas com distinção máxima nos pixels | 11/15 | 12/15 | 10/15 | 10/12 observáveis |
+| Artes prontas para o objetivo visual | 10/15 | 6/15 | 11/15 | 11/12 observáveis |
+
+A trilha do briefing e da descoberta conservou duas mudanças do ciclo 2. O tema chegou a cinco de cinco planos a partir da oferta declarada e a descoberta voltou a ter espaço quando o histórico preenchia a lista. Os cartões dos ciclos 2 e 3 eram idênticos. A diferença de um ponto veio do julgamento da mesma lista.
+
+Na trilha visual, foram iniciadas 20 sessões de planejamento. O contrato aceitou 19 planos e 57 imagens chegaram com recibos e arquivos conferidos. O plano recusado repetiu o contraste dos slots 1 e 3. O executor consultou a mesma sessão e concluiu os quatro casos inéditos da rodada. Os três slots do caso recusado permaneceram sem envio. Os lotes válidos levaram até 4 ms entre o primeiro e o terceiro início de envio, e o intervalo mínimo observado entre o fim de um lote e o início do próximo plano foi 15,008 s. Essas medidas são do executor local com provedor real. A apresentação progressiva no navegador tem uma validação separada com serviços simulados.
+
+Nos dois casos reservados, a última candidata aumentou as artes prontas de 3/6 para 5/6, e as artes com falha crítica caíram de duas para zero. A fidelidade visual nos mesmos casos caiu de 44/48 para 42/48. As três candidatas visuais ficaram aquém dos critérios congelados. O planejador preservado no código é o da baseline. As matrizes por caso estão nas páginas de cada marco acima.
