@@ -25,3 +25,11 @@ test('descoberta preserva histórico legado, não repete a recusa e depende de c
   assert.deepEqual(legacy.references.map(row=>row.id),previous.map(row=>row.id));
   assert.deepEqual(discovery.references.map(row=>row.id),['201']);
 });
+
+test('a candidata de precisão conserva a exploração sem correspondência e pode excluir um sinônimo útil',async()=>{
+  const titles=['Cerâmica: como organizar a oficina','Da roda à queima da argila','Campanha de moda praia'];
+  const rss='<rss>'+titles.map((title,i)=>'<item><title>'+title+'</title><link>https://www.pinterest.com/pin/'+(310+i)+'/</link><description>https://i.pinimg.com/test.jpg</description></item>').join('')+'</rss>';
+  const search=query=>searchReferences({projectId:crypto.randomUUID(),query,signals:[],discoveryOnly:true,fetchApi:async()=>new Response(rss)});
+  const lexical=await search('Cerâmica');assert.deepEqual(lexical.references.map(item=>item.title),[titles[0]]);
+  const board=await search('Aquarela');assert.equal(board.references.length,3);
+});

@@ -71,11 +71,20 @@ export async function searchReferences({projectId,query,signals,history=[],disco
   for(const signal of currentSignals(projectSignals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){
     if(signal.action!=='comment'&&!choices.has(signal.originUrl))choices.set(signal.originUrl,signal.action);
   }
-  const references=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)].filter(item=>{if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return false;seen.add(item.originUrl);return true;}).sort((a,b)=>{
-    const historyRank=(historyOrder.get(a.originUrl)??Infinity)-(historyOrder.get(b.originUrl)??Infinity);
-    if(historyRank)return historyRank;
-    const score=(title:string)=>{const words=contentTerms(title);return terms.reduce((count,word)=>count+Number(words.has(word)),0);};
-    return score(b.title)-score(a.title);
-  }).slice(0,12);
+  const candidates=[...ranked.map(item=>exploredReferenceSchema.parse({id:item.id,title:item.title,board:item.board,originUrl:item.originUrl,previewUrl:item.previewUrl})),...responses.flatMap(item=>item.items)];
+  const scored=candidates.flatMap(item=>{
+    if(choices.get(item.originUrl)==='rejected'||seen.has(item.originUrl))return [];
+    seen.add(item.originUrl);
+    const words=contentTerms(item.title);
+    const score=terms.reduce((count,word)=>count+Number(words.has(word)),0);
+    return [{item,score}];
+  });
+  // When a feed gives us some direct evidence, do not fill discovery with unrelated titles.
+  // If none of its titles match, keep board-level exploration available.
+  const directOnly=discoveryOnly && scored.some(entry=>entry.score>0);
+  const references=scored.filter(entry=>!directOnly || entry.score>0).sort((left,right)=>{
+    const historyRank=(historyOrder.get(left.item.originUrl)??Infinity)-(historyOrder.get(right.item.originUrl)??Infinity);
+    return historyRank || right.score-left.score;
+  }).slice(0,12).map(entry=>entry.item);
   return {status:references.length?'ok':responses.some(response=>response.ok)?'empty':'unavailable',references};
 }
