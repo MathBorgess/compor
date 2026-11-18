@@ -125,3 +125,28 @@ Cinco briefings sintéticos combinam quatro referências selecionadas cada, incl
 O replay permite grupos de três a cinco IDs distintos e conhecidos. O ensaio real fixou cinco. Os controles aceitaram os três tamanhos e recusaram grupos de dois ou seis, um caso repetido e um ID desconhecido. O controle de transporte validou os cinco planos fixos e rejeitou quatro alterações independentes: upload retirado, posição repetida, prompt final adulterado e recibo de anexo divergente. Ele não produz novas sessões nem imagens. Para reproduzir, execute `node scripts/evals/pr61/triagem/controles-rodada.mjs` na raiz. [Controle executável](../../../scripts/evals/pr61/triagem/controles-rodada.mjs)
 
 Na rodada de controle do adaptador `18dc2a2`, houve cinco planos reais e 15 artes confirmadas. Nos casos de desenvolvimento 1, 2 e 3, os pontos de atributos de referência ficaram, respectivamente, em 21 / 19, 21 / 22, 23 / 22 (plano / pixels, máximo 24 em cada perspectiva). A triagem e a variação compartilham os mesmos IDs de plano e PNG. Dois casos reservados permanecem fora do ajuste das instruções. O relatório do marco 3 tem SHA-256 `c48f5aeaa4829e0f21389d400a7ff7563f5d456a4dc7590fd740e21567c3676c`. A sessão de planos foi `01a1ee8d-37ca-7210-8017-95ae351ac3fa`. A sessão de pixels foi `01a1ee8d-37ca-74b0-b442-f99b0e73498d`.
+
+## Resultado das quatro rodadas reais
+
+O executor abriu 20 sessões gerenciadas. O contrato aceitou 19 planos e os recibos confirmaram 57 das 60 imagens previstas. A rodada 3 do caso 1 retornou três prompts e três composições distintos, mas repetiu o mesmo contraste nos slots 1 e 3. Uma consulta ao mesmo turno confirmou a rejeição. Nenhuma das três imagens foi submetida. A decisão do código foi preservar o planejador de controle, commit `18dc2a2`.
+
+Cada célula mostra pontos do plano e dos pixels, nessa ordem. São quatro atributos em três slots, com até 24 pontos por modalidade e caso. ND indica ausência de plano aceito e de pixels. Nos totais de R3 o máximo observável foi 96; nas demais rodadas foi 120. Os dois casos reservados admitiram até 48 pontos por rodada.
+
+| Caso | R0 plano / pixels | R1 plano / pixels | R2 plano / pixels | R3 plano / pixels |
+|---|---:|---:|---:|---:|
+| 1 · Oficina de impressão | 21 / 19 | 21 / 18 | 24 / 18 | ND / ND |
+| 2 · Mostra de gravuras | 21 / 22 | 21 / 22 | 24 / 23 | 21 / 20 |
+| 3 · Troca de livros | 23 / 22 | 24 / 24 | 24 / 21 | 24 / 16 |
+| 4 · Rota de leitura (reserva) | 24 / 21 | 24 / 21 | 24 / 22 | 24 / 21 |
+| 5 · Inventário de formas (reserva) | 24 / 23 | 24 / 22 | 24 / 22 | 24 / 21 |
+| Desenvolvimento | 65 / 63 | 66 / 64 | 72 / 62 | 45 / 36 |
+| Reserva | 48 / 44 | 48 / 43 | 48 / 44 | 48 / 42 |
+| Total | 113 / 107 | 114 / 107 | 120 / 106 | 93 / 78 |
+
+R1 ganhou fidelidade em um caso. R2 ganhou em dois, atingiu 120/120 no plano e obteve 106/120 nos pixels. Na peça da Rota de leitura, o juiz transcreveu texto adicional nas páginas ilustradas de um livro. Em dois casos de desenvolvimento apontou dificuldade de leitura. Na reserva, a soma dos pixels empatou com a baseline em 44/48; o empate encobre mudanças por atributo. R3 obteve 78/96 nos quatro casos observáveis. A baseline nesses mesmos casos obteve 88/96. A rejeição do quinto plano impede concluir a trajetória completa.
+
+Em cada caso concluído repetiu-se exatamente a seleção do controle. Chegaram ao GPT Image, por pedido, 3 arquivos/447 B no caso 1, 4/585 B no caso 2, 3/551 B no caso 3, 2/255 B no caso 4 e 3/499 B no caso 5. Em R3 houve três submissões a menos; isso não representa economia de uma triagem mais eficiente. Nenhuma candidata apresentou ganho suficiente com os atributos obrigatórios preservados.
+
+Os juízes dos marcos 3 e 4 não classificaram afirmações factuais inéditas da oferta. Registraram cópia adicional nos pixels da baseline e de R2. A evidência de erro inclui texto legível fora da lista autorizada, como “Partida:” no caso 4. Zero marcações de afirmação inventada é resultado desses juízes sobre esta amostra. A aprovação humana e o uso da arte seguem sem observação.
+
+As revisões avaliadas foram `18dc2a2`, `c988a6f`, `86729b7` e `e6ed07d`. O JSON inclui as duas modalidades dos cinco casos das quatro rodadas, os contadores de reserva, os IDs das 16 sessões independentes, os hashes dos PNGs e recibos e as comparações pareadas. Os escores nas tabelas identificam as mesmas gerações usadas no marco 5. [Matriz e proveniência](../../../scripts/evals/pr61/triagem/rodadas-reais.json) · [Comparação reproduzível](../../../scripts/evals/pr61/variacoes/fechar-rodadas.py)

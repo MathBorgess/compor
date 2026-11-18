@@ -1,0 +1,3737 @@
+{
+  "baselineRevision": "18dc2a20e67ebfe682afe1bc543406c0c0dc6d1a",
+  "corpusSha256": "12dcaf0b73b93bf844e6f8458c0f8f0d6fa939cac8beceb9a53b709b142baecc",
+  "rubricSha256": "4e8de0f1b414566304b5e30d7005b2caee083824c1d758b51f2cf7991ead4271",
+  "scale": "0 ausente/contradito, 1 parcial, 2 fiel ou distintivo; null não observável",
+  "units": {
+    "3": "posição.atributo; quatro atributos por posição",
+    "4": "posição-posição; pares por lote"
+  },
+  "rounds": [
+    {
+      "round": 0,
+      "revision": "18dc2a20e67ebfe682afe1bc543406c0c0dc6d1a",
+      "indexSha256": "82aefbad37ca7d670924417f1f60f63a639b0b24ea359c8c9cd3b7783e875a82",
+      "plans": 5,
+      "images": 15,
+      "receipts": [
+        {
+          "id": "case-1",
+          "references": 3,
+          "bytesPerImage": 447,
+          "rejection": null,
+          "planSha256": "9eb989fcd532cc18df9f862f87d2e125081dddfe90471ea1df707eea30694689",
+          "receiptsSha256": "66525e0324ba059d5e64660fbcc8b1ed158819f58a79c832f15cc68fa5bfccf1",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "b440b12120e4a6111ba25c4f92f4f99e6f2d360298e7d88398f2ae3694750718",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "134e982b5189ea00bd26c9dd23feff61630c113e9ceb6888d612a6aa6d1e1f8b",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "0ed429fc4a976d0d74393da978309155d291e3ae022d166385bb01a5f030d3cb",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-2",
+          "references": 4,
+          "bytesPerImage": 585,
+          "rejection": null,
+          "planSha256": "0545e2588c55c9e4ea84eab47f2465ce75c1ea6dd7a136c2c1d69ae7bc61127c",
+          "receiptsSha256": "8ff668b683b5f5e8745df13a10e8569805bcb9eeab3b717caa202c166c46b153",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "eec7595b5188d42e5a872b27af3e35ce5a540e79715984a664866dcd7325a9bb",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "bd9d20eaf77e193b2755183f415587f14dceb24ab57f7a2aa0c04cfff080417c",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "492619219d618cdbfe2f1b83a54533a0105a062f80d9ce6a1dd987012c83bd37",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-3",
+          "references": 3,
+          "bytesPerImage": 551,
+          "rejection": null,
+          "planSha256": "a454e14cf28b71e7b49b3f7612acbb9dfe6aafb8f325555259a0500c51a319cf",
+          "receiptsSha256": "6f49006602d1ed71e1a65023d5d2636a5b476b06c5ee4c3774fb557e82e656b7",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "7cc203991de54d5220971934ee8947617005d77c47d84f02ff2bcee1b8b934c7",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "0f14953bf8de849b07df567b52bf3cc448c0d585ffc1da464e2c417bbbcf5511",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "cb769f51e1d9bf26e28207d155b9db78bd69651a4edc280ec7e52aa622d38106",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-4",
+          "references": 2,
+          "bytesPerImage": 255,
+          "rejection": null,
+          "planSha256": "881985b41b57dd8044da7c16ff807a684e13b83d23966b5a55558194daae4014",
+          "receiptsSha256": "75f878e9e93d8e2557ba5e487f7153f27c081da46655a6e12d94df621aed0ae5",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "bb7748a130b9d827c360170370cdc772b3612c1258351690be9efedda72107bf",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "c984dd723be55ea224d8904559f4d75ae3acc677c59f3f7468d06ca6b94db3a3",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "2dcbb4ed27d5c03b1e6a3af6a0a5da0e84e9ad45136a5c7d78eb7d851e5a5a93",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-5",
+          "references": 3,
+          "bytesPerImage": 499,
+          "rejection": null,
+          "planSha256": "9e581365267f81c1eb2f7c77c9f3402bbfa1d692f5598e643e0dc6086c64f5af",
+          "receiptsSha256": "8e387db5c8326981fa28e0b700cfd0b2613a11953ef7449649c33fc1950046a7",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "94aaad8fa17f0bd997fc8e7e7ec81e375cec15fe3e6b8d61162414a1d3a065a4",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "ff0b5610f3957812107fdb8dcd18667a1a9fda76163832e80e19a42c406daf3d",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "448cba6beaeb59d5a104fe5b49271cf1d120a2ccca4d285f06b8c86b9ee5b0f4",
+              "deliveryConfirmed": true
+            }
+          ]
+        }
+      ],
+      "stages": {
+        "3": {
+          "plan": {
+            "runIds": [
+              "01a1ee8d-37ca-7210-8017-95ae351ac3fa"
+            ],
+            "answerSha256": "a58fe69b2aec2e25914f038c7066c0af01aa8862cc463066f173cdbf21cac2ec",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«Use a paleta da referência externa» deixa indefinido o limite de aplicação em relação ao emblema."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "«Aplique a paleta da referência externa» permite recolorir também o emblema."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "«Use a paleta da referência externa» deixa aberta a cor do emblema integrado ao bloco."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 1,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 1,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 1
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "«com distribuição livre» deixa indeterminadas no prompt a discrição dos pontos e sua aplicação nas margens."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«interprete livremente o aspecto pontilhado» omite a região lateral, e «área pontilhada densa» enfraquece a direção de textura discreta."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "«pontos em uma distribuição livre» deixa fora do prompt o campo central de textura fina."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 1,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«Pátio Norte» junto à base horizontal da referência gerada. A posição permite que o local fique ao lado da faixa que deveria acolhê-lo."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 113,
+              "maxKnown": 120,
+              "fullyMet": 53,
+              "partial": 7,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 7
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 65,
+              "maxKnown": 72,
+              "fullyMet": 29,
+              "partial": 7,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 7
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 48,
+              "maxKnown": 48,
+              "fullyMet": 24,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee8d-37ca-74b0-b442-f99b0e73498d"
+            ],
+            "answerSha256": "67ce2e7c179bd770aa4370b4e5b263abe8e5328ccfa5ea0e4549c6bd4b069f25",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 2,
+                  "3.3": 1,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "No bloco esquerdo, na ilustração e na caixa da data predominam verde e creme. Falta o ocre da paleta selecionada."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas no alto à esquerda, acima da data. As letras escuras se confundem com o fundo verde-escuro."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O anel superior direito quase desaparece no fundo escuro, comprometendo o detalhe isolado."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A prensa concentra o peso visual no centro e à direita. Fora do emblema, o verde da prensa também ocupa o papel previsto para o azul-petróleo."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 1,
+                  "3.1": 1,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A malha de losangos multicoloridos tem destaque próprio e invade o símbolo no centro."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas sob o triângulo. O preenchimento violeta escuro quase se perde no halo da mesma cor."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "No centro, o halo reduz o contraste do contorno triangular e da abertura na base."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 1,
+                  "2.4": 1,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O triângulo fica acima do título à direita e o anel abaixo à esquerda. No rodapé, “Pátio Norte” fica fora da faixa, sobre um sublinhado fino."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 0,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A coluna de losangos à esquerda dá grande destaque ao padrão, e falta o sinal isolado à direita."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” dentro da caixa de “Largo do Sol”."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” abaixo do filete claro."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "As diagonais superiores esquerdas usam o ocre reservado ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O filete ocre entre “Inventário de formas” e “Caderno 02” estende a cor a um ornamento."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 107,
+              "maxKnown": 120,
+              "fullyMet": 48,
+              "partial": 11,
+              "absentOrContradicted": 1,
+              "issues": {
+                "direction": 9,
+                "unreadable": 2,
+                "extra_copy": 2
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 63,
+              "maxKnown": 72,
+              "fullyMet": 27,
+              "partial": 9,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6,
+                "unreadable": 2
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 44,
+              "maxKnown": 48,
+              "fullyMet": 21,
+              "partial": 2,
+              "absentOrContradicted": 1,
+              "issues": {
+                "direction": 3,
+                "extra_copy": 2
+              }
+            }
+          }
+        },
+        "4": {
+          "plan": {
+            "runIds": [
+              "01a1ee8d-37ca-7062-bcac-c44ac6da5337"
+            ],
+            "answerSha256": "c0e93432178a23ffedd0b9e2b5a18f0abcb6fff6bcf3132735f6d3d4e6d51609",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 1
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 26,
+              "maxKnown": 30,
+              "fullyMet": 11,
+              "partial": 4,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 17,
+              "maxKnown": 18,
+              "fullyMet": 8,
+              "partial": 1,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 9,
+              "maxKnown": 12,
+              "fullyMet": 3,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee8d-37ca-7a91-89c4-8b3b10273a22"
+            ],
+            "answerSha256": "8b0679117df95e5e287ca89a23ca779bf835426c59700ee55965456b146b3507",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas no alto à esquerda, entre o filete ocre e a data. As letras verde-escuras quase desaparecem sobre o fundo verde-escuro."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O anel no alto à direita e o grande bloco à esquerda perdem definição no fundo escuro com halos difusos."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Fora do emblema, o painel esquerdo e a caixa da data repetem o verde do anel. A composição fica em verde e creme, sem o ocre da paleta selecionada."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A faixa esquerda, a prensa e as letras usam verde-escuro no lugar do azul-petróleo pedido fora do emblema."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Os losangos multicoloridos formam uma grade de alto contraste que atravessa até o triângulo, excedendo o pontilhado discreto solicitado."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas logo abaixo do triângulo. As letras escuras quase se fundem com o halo violeta."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O campo quase preto e o halo dominam a peça. O verde suave e o pêssego concentram-se na faixa inferior, e o recorte do símbolo perde definição."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Na base, “Pátio Norte” fica acima de um filete violeta. Falta a faixa horizontal que acolhe o local."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O triângulo no alto à direita tem a ponta achatada. O selo de R1 termina em ponta."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” dentro da caixa de “Largo do Sol”."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A coluna esquerda está coberta de losangos pretos muito visíveis, além do granulado discreto pedido."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "No campo direito, a moldura envolve o local. Falta o pequeno sinal gráfico independente de R2."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” abaixo do filete claro na faixa esquerda."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "As diagonais ocupam dois cantos extensos. As do alto à esquerda usam o ocre da paleta reservada ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O filete ocre entre “Inventário de formas” e “Caderno 02” aplica a cor da primeira externa a um ornamento."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 26,
+              "maxKnown": 30,
+              "fullyMet": 11,
+              "partial": 4,
+              "absentOrContradicted": 0,
+              "issues": {
+                "unreadable": 2,
+                "direction": 11,
+                "extra_copy": 2
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 17,
+              "maxKnown": 18,
+              "fullyMet": 8,
+              "partial": 1,
+              "absentOrContradicted": 0,
+              "issues": {
+                "unreadable": 2,
+                "direction": 7
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 9,
+              "maxKnown": 12,
+              "fullyMet": 3,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "extra_copy": 2,
+                "direction": 4
+              }
+            }
+          }
+        }
+      },
+      "coverage": {
+        "plannedCases": 5,
+        "planningSessionsObserved": 5,
+        "imageSlots": 15,
+        "confirmedPlans": 5,
+        "confirmedImages": 15
+      }
+    },
+    {
+      "round": 1,
+      "revision": "c988a6f0f36c219bd5a62e46aa3951554fbeadf8",
+      "indexSha256": "c022f53f84b193e98801c898ba1db3bde93b0477d41125c6b2da57463b3f6708",
+      "plans": 5,
+      "images": 15,
+      "receipts": [
+        {
+          "id": "case-1",
+          "references": 3,
+          "bytesPerImage": 447,
+          "rejection": null,
+          "planSha256": "ffce909f7c8a75a12d9fe61097cdc480b7a71d359c759a49c620cab6878933cf",
+          "receiptsSha256": "9ec0d3b6d85a9b550f308f8b5ce5ac67acafe4abbddc60a0461a00d865c971f8",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "79265e189839f2be4256763e5d0d0688cb568e8c970ceaf63cada4739c75ed8e",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "471bc923de8852ab96043f7e4b797eaddf53b0bc6369c6ae7e105f16882aadb8",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "9f1f9af57afd37133ca90ec9d4958070393e3a55f5fbe2c54a8a68326e1802dd",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-2",
+          "references": 4,
+          "bytesPerImage": 585,
+          "rejection": null,
+          "planSha256": "515a728e527a01113d4edb9fb1040678e49f37f77c51cbf2c2f8882bfaddec65",
+          "receiptsSha256": "ab51b153ea9730511752117b3479ab4b9611d3204e318ce9baf7e331729014af",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "618cca568577a15d65f57c927a97a8426cefd356ddb8ae32e5b7bc325b200192",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "cb65415a938651863a6235d2ec607a395a5b1f452adb240ec60510a94e9edaf4",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "81f1370d20d2e0273c7ccb672db23acb7adbdaa5610a9eb77434781ce19e30f3",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-3",
+          "references": 3,
+          "bytesPerImage": 551,
+          "rejection": null,
+          "planSha256": "3efd81d9be26d7b5f38b759c59336d50ffb5e4e67f44f7a9a4791bf06a9c3cc3",
+          "receiptsSha256": "65f24ab1bae73563f8b986eff5e9bb1468ad74c4df17d08b7a04bfcb9cf87908",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "ab6e4c5ea1d3bbbb62ca2de240f0f5773747b22710ccf3d26e0cae6ac906916a",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "6a64eb5a8c66bbd851d9a19b57f7fe83f7460382ff06c4fa9e7c32e365f4a614",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "c896e9917038d407a1792730a2e7643108eb31eb8ff74df1fc65d0a2875fced9",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-4",
+          "references": 2,
+          "bytesPerImage": 255,
+          "rejection": null,
+          "planSha256": "36a64e8339bfc8b8804ff5cde6a505db0c91ea06743c677659631bb23f462778",
+          "receiptsSha256": "8148d4f82456a5b039d99f2ac100b3e739cd9d0fcfb08131eafe571f34c23e69",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "8291809bf586cffa38110d7e2edace2495dcbe5d2110347c84abaf34fc435599",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "7d661528c78b84e364a20b183b646f1dd08a0a1e73a697c937e4dee233d45cd0",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "71859eb1730433bb86151d3d7d15e5f2abfda8dc6332785bff2fee4fa758e31b",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-5",
+          "references": 3,
+          "bytesPerImage": 499,
+          "rejection": null,
+          "planSha256": "941c827de97d0185093ab7cdfa6b9a1187fd7e57748d9d24c153e2bc9665cd03",
+          "receiptsSha256": "69dc925874fb3023af781f5b3b52ea9efcbff41683449c35141f93f914d6fba5",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "ebc904f208b63ec3a17c73337bbd65d4203f115dc0a012c5bf22b16d8ddc5740",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "e7a3b7109d43dd7fbaee706a6278003564cd74eaf056e61b1043f065d45116f9",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "58f486212812ad2e3f89f9520e197cd966d77c4a359b3ac1c7e988ef0953abf1",
+              "deliveryConfirmed": true
+            }
+          ]
+        }
+      ],
+      "stages": {
+        "3": {
+          "plan": {
+            "runIds": [
+              "01a1ee94-f154-7743-a5ae-ec862e9100fe"
+            ],
+            "answerSha256": "00d1e0e6a644cdc2485defdf9fb7a11080504bb50c2846ca568a0a9d10883f86",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "«paleta verde, ocre e clara do segundo anexo» descreve de modo impreciso a amostra de azul-petróleo, ocre e creme."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«paleta verde, ocre e clara do segundo anexo» deixa ambígua a distinção entre o verde do emblema e o petróleo das massas."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "«paleta verde, ocre e clara do segundo anexo» deixa imprecisos dois tons do fundo e das massas."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 1,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 1,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«paleta de verde, laranja e roxo» descreve de modo impreciso o verde suave e o pêssego de R4."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "«paleta de verde, laranja e roxo [...] em toda a arte» admite um laranja mais saturado que a amostra pêssego de R4."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "«paleta de verde, laranja e roxo» perde a especificidade dos tons suaves de R4."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 114,
+              "maxKnown": 120,
+              "fullyMet": 54,
+              "partial": 6,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 66,
+              "maxKnown": 72,
+              "fullyMet": 30,
+              "partial": 6,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 48,
+              "maxKnown": 48,
+              "fullyMet": 24,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee94-f18d-7d81-bdc2-e9dcce28eb9b"
+            ],
+            "answerSha256": "5e0bfb007d676973032377583c106b9886a69e26d5982c98a3a0746cf40c809d",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 1,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 1,
+                  "3.3": 1,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Quatro entalhes no anel central alteram o emblema enviado."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Bloco esquerdo, barra e tipografia em verde-escuro substituem o azul-petróleo."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Painel esquerdo e tipografia em verde-escuro deixam a paleta externa incompleta."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O selo abaixo do título ganhou um segundo contorno e um ponto central."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A prensa grande preenche a lateral direita reservada ao detalhe isolado."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O campo escuro fora do selo é verde, sem o tom azul-petróleo de R2."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Os blocos quentes da faixa inferior são laranja saturado em lugar do pêssego de R4."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O agrupamento pontilhado no alto à direita absorve o sinal individual de R2."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 1,
+                  "2.2": 2,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A faixa preta na borda esquerda é estreita para a massa vertical de R2."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Os losangos escuros e regulares dominam a área acima do título, excedendo o granulado discreto pedido."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A faixa esquerda ocupa cerca de 15% da largura, reduzindo a presença do grande bloco de R2."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 1,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "“Inventário de formas” e “Caderno 02” aparecem em violeta, fora da paleta de R1 destinada à tipografia."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Uma ponta adicional no centro do recorte inferior do símbolo modifica sua geometria."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 107,
+              "maxKnown": 120,
+              "fullyMet": 47,
+              "partial": 13,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 13
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 64,
+              "maxKnown": 72,
+              "fullyMet": 28,
+              "partial": 8,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 8
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 43,
+              "maxKnown": 48,
+              "fullyMet": 19,
+              "partial": 5,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 5
+              }
+            }
+          }
+        },
+        "4": {
+          "plan": {
+            "runIds": [
+              "01a1ee94-f196-7022-aa91-87ab4d310e1c"
+            ],
+            "answerSha256": "1359cce01229e3254038341834ba6843a00c1dc94db2e710b2c51bc20d5de524",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "“paleta verde, ocre e clara do segundo anexo” chama de verde o azul-petróleo de R2 e deixa o creme impreciso. O verde pertence ao emblema de R1."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "“paleta verde, ocre e clara do segundo anexo” orienta o fundo e as massas para verde, embora R2 forneça azul-petróleo, ocre e creme."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "“paleta verde, ocre e clara do segundo anexo” confunde o verde do emblema com o azul-petróleo de R2 e não identifica o creme."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "“paleta de verde, laranja e roxo” descreve o pêssego de R4 como laranja e perde a indicação de verde suave."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "“paleta de verde, laranja e roxo” dá uma orientação de cor imprecisa para R4, sobretudo ao pedir laranja para o campo pêssego."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "“paleta de verde, laranja e roxo” deixa a suavidade do verde em aberto e troca a indicação de pêssego por laranja."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 25,
+              "maxKnown": 30,
+              "fullyMet": 10,
+              "partial": 5,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 15,
+              "maxKnown": 18,
+              "fullyMet": 6,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 10,
+              "maxKnown": 12,
+              "fullyMet": 4,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee94-f18e-7a73-b333-ca8e6f05e4c2"
+            ],
+            "answerSha256": "9c702cb9bd832f4fa4013c8894ea739c1706977a110c1747eed242c153f20a36",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O anel no centro-direita tem quatro entalhes retangulares na borda externa. O contorno do emblema em R1 é contínuo."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O grande bloco à esquerda é verde-escuro, próximo da cor do emblema. A paleta solicitava azul-petróleo fora dele."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O emblema abaixo do título tem aro creme e um quadrado creme no centro escuro. O ponto central acrescenta uma forma ao vazado original."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A prensa ocupa quase toda a coluna direita e chega à borda do cartaz. Ela substitui o pequeno detalhe isolado de R3."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O painel dominante à esquerda e a prensa à direita usam verde-escuro onde a paleta externa previa azul-petróleo."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O anel à esquerda tem bordas circulares lisas e abertura proporcionalmente maior que a do emblema escalonado de R1."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A coluna esquerda, o título e a barra superior direita usam verde-escuro onde a paleta externa previa azul-petróleo."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Na faixa inferior, os blocos entre verde e violeta são laranja vivo, distantes do pêssego suave de R4."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O símbolo acima do título tem laterais lisas e recorte inferior estreito em relação ao triângulo escalonado de R3."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O grande triângulo no alto conserva o recorte retangular, mas alisa os degraus das laterais de R3."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "No alto à direita, vários losangos escuros de tamanho semelhante formam a textura. Falta um pequeno sinal isolado que faça par com a faixa inferior."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O triângulo abaixo do título tem laterais lisas que alteram o perfil escalonado do símbolo enviado."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Nos dois selos centrais, as laterais do triângulo e os contornos do anel são lisos. R1 e R2 têm bordas em degraus, visíveis também na abertura do anel."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O triângulo e o anel no meio da peça mantêm as cores e os vazados, mas seus contornos lisos alteram a geometria escalonada dos uploads."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "A faixa esquerda ocupa cerca de um doze avos da largura. A grade regular de losangos escuros cobre quase todo o campo claro e ganha mais presença que o granulado discreto pedido."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "A metade direita tem uma malha de losangos escuros claramente individualizados, que funciona como padrão gráfico além da textura granulada pedida."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "“Inventário de formas” e “Caderno 02” aparecem em violeta. A paleta indicada para a tipografia era petróleo, ocre e creme."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O símbolo central preserva o recorte retangular, mas apresenta laterais lisas no lugar das bordas escalonadas de R2."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O triângulo central tem laterais retas e lisas que eliminam o perfil escalonado do upload."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "No símbolo à direita, as laterais são lisas e o topo do recorte inferior tem uma ponta triangular adicional. Em R2, o recorte termina em linha horizontal."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 27,
+              "maxKnown": 30,
+              "fullyMet": 12,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 20
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 16,
+              "maxKnown": 18,
+              "fullyMet": 7,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 14
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 11,
+              "maxKnown": 12,
+              "fullyMet": 5,
+              "partial": 1,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            }
+          }
+        }
+      },
+      "coverage": {
+        "plannedCases": 5,
+        "planningSessionsObserved": 5,
+        "imageSlots": 15,
+        "confirmedPlans": 5,
+        "confirmedImages": 15
+      }
+    },
+    {
+      "round": 2,
+      "revision": "86729b79890998983086454edde78c375ae88f1d",
+      "indexSha256": "d52f0cc8f397fd334224eac979a15b3c6e245e8f5b14a9fb1dbe0c6dd56609f3",
+      "plans": 5,
+      "images": 15,
+      "receipts": [
+        {
+          "id": "case-1",
+          "references": 3,
+          "bytesPerImage": 447,
+          "rejection": null,
+          "planSha256": "6c2d93b2676ad31b19fb3e75f3b1370333457f798de1804d2c6e6ad1f75fde01",
+          "receiptsSha256": "031885533bec7a385a174da4b808633935110d738138701a1ae083c6884e4861",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "7d648cd03e87430969d4c9966d57a584fe649143694eaca75592546cd5997eac",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "993d1b52c24755adb750f74cd8e10ccaf1eecc4af2d45c6e16909ce15055f6b1",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "c5bf786814cbc49f37eeb2b98dad99c946d8049bead3a2e3b46ac43bf3dfd117",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-2",
+          "references": 4,
+          "bytesPerImage": 585,
+          "rejection": null,
+          "planSha256": "d453f05d935f2aca0330b89348ae6087f6766b662db83541a3bb3575a63ad692",
+          "receiptsSha256": "af1f777e6a0c89aee4746808cd7f4700fbf130f906c85751e758b1f4de743e07",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "ebdc3907b0e88194fe4e0bb58b4d97ba04a42a09844e8e065dae7c7766bf3ee1",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "72b210454a68eecaf61b491075293cbc4471b773dbd64b6da1470f05a90d531c",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "6319883a77d19e35c67f32072f55aa758e91559c390f511c2e143aa28195e8c9",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-3",
+          "references": 3,
+          "bytesPerImage": 551,
+          "rejection": null,
+          "planSha256": "f5c72163d1014085cca95cd2cabe401cacfdb863d9eda19606efceb49fd7d58d",
+          "receiptsSha256": "d8d92da2d95429f948fc0dc365c97f8ce5367b1907d39cfd9c2aa3680dde12e6",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "67f3e38558dda933c5ca7a716e0cd5356a733ef76ac24144b6084e808d86d7fd",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "49630ed2563e2b35aa6aa018f618a2de0d61dd0164ae06e16dddb3b3893c7f7d",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "5452c30f58e176180bcd52f8d5de0737509604e05cac73a744337378912432d9",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-4",
+          "references": 2,
+          "bytesPerImage": 255,
+          "rejection": null,
+          "planSha256": "2c8fd6f2c1070e8a6e7bf43df1a739e29af343a3860c6aeb82375167f582571f",
+          "receiptsSha256": "6b8b3de160d157775aa6134152c644f81a812b92211aaf44b5442c2cd3a4ba3b",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "7d64c778770530786f6094bca3bc4d50cd812b8dcab8cc81c9545b578df75aca",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "5a91cf60adc731d8cc0952c6508bce45c880f5e9936709798cc5e534ac6bf689",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "ae2b5fa4df9ee54d8f73a53f9d8c2c48716f1e47c645178df84447c2c16cf523",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-5",
+          "references": 3,
+          "bytesPerImage": 499,
+          "rejection": null,
+          "planSha256": "ff6a84d22a724c37b599d0341af023bc80b2ef546c65769edefd38ccc53731cf",
+          "receiptsSha256": "240cc918f6cc8609020a02069ac6e63cb15da16bad4b6fda07f83f6d4ad26a74",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "c30098a39371165c3955e04489ef1b083bd0aed77090dbc94ba67bee95232703",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "203715f2860c668bbd143fe43f9d89bbbb6cbb81694fe86e08b226b0ca3fc562",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "be61fe2ca0a4553cb4d04e7ad8435907520575b2e8f0e0907f00f90e8ac8b539",
+              "deliveryConfirmed": true
+            }
+          ]
+        }
+      ],
+      "stages": {
+        "3": {
+          "plan": {
+            "runIds": [
+              "01a1ee9b-b4fa-7c93-926c-ef2f4bcaec46"
+            ],
+            "answerSha256": "4575c6d9a60e3d2ef88efc4aa6571cb61a9ddd424dc0e813d8c43fce3ab74d29",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 120,
+              "maxKnown": 120,
+              "fullyMet": 60,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 72,
+              "maxKnown": 72,
+              "fullyMet": 36,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 48,
+              "maxKnown": 48,
+              "fullyMet": 24,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee9b-b514-75e0-9793-70e8774e8192"
+            ],
+            "answerSha256": "1efe2164cf7eb0bd85f30b97fe7e912b0cb05b2762864f6aacb4afd83987e01d",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 1,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 1,
+                  "2.2": 1,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "unreadable",
+                    "evidence": "O título no centro e a data sob o filete ocre têm contraste muito baixo com o fundo verde."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "O título entre a prensa e a faixa da data quase se confunde com o fundo verde escuro."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "No papel curvo da prensa, o emblema aparece alongado na vertical, contrariando a orientação de preservar sua forma."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 1,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "unreadable",
+                    "evidence": "“Mostra de gravuras”, acima da folha, aparece em azul muito escuro sobre fundo escuro. A primeira linha é especialmente difícil de ler."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 1,
+                  "3.2": 1,
+                  "3.3": 1,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O fundo escuro com halos verdes e violetas contraria a indicação de fundo claro e reduz o contraste dos selos no topo."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 1,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "extra_copy",
+                    "evidence": "Página esquerda do livro, “42” e “A cidade guarda histórias em cada esquina, e é nelas que encontramos um pouco de nós.”"
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "extra_copy",
+                    "evidence": "Página direita do livro, “43” e “Ler também é viajar, mesmo quando os pés permanecem no lugar.”"
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Duas barras estreitas à esquerda dividem a faixa, e o sinal independente fica na metade esquerda do cartaz."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” acima de “Largo do Sol”."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O lápis e os dois traços à direita do triângulo também usam petróleo, cor reservada ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O lápis central usa ocre, creme e petróleo fora do fundo e da tipografia."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "O título no alto e a identificação abaixo do triângulo têm letras escuras que se perdem no fundo petróleo."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O corpo do lápis à direita do triângulo usa petróleo, cor reservada ao fundo e à tipografia."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 60,
+              "denominator": 60,
+              "points": 106,
+              "maxKnown": 120,
+              "fullyMet": 46,
+              "partial": 14,
+              "absentOrContradicted": 0,
+              "issues": {
+                "unreadable": 4,
+                "direction": 6,
+                "extra_copy": 3
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 36,
+              "denominator": 36,
+              "points": 62,
+              "maxKnown": 72,
+              "fullyMet": 26,
+              "partial": 10,
+              "absentOrContradicted": 0,
+              "issues": {
+                "unreadable": 3,
+                "direction": 2
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 44,
+              "maxKnown": 48,
+              "fullyMet": 20,
+              "partial": 4,
+              "absentOrContradicted": 0,
+              "issues": {
+                "extra_copy": 3,
+                "direction": 4,
+                "unreadable": 1
+              }
+            }
+          }
+        },
+        "4": {
+          "plan": {
+            "runIds": [
+              "01a1ee9b-b4fa-7292-8262-485f05675552"
+            ],
+            "answerSha256": "85645ce83f5dba4a60f60ef5b04b7c0e8fecdb21fefe9d8e0851d495cd5aa74c",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 1
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 25,
+              "maxKnown": 30,
+              "fullyMet": 10,
+              "partial": 5,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 16,
+              "maxKnown": 18,
+              "fullyMet": 7,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {}
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 9,
+              "maxKnown": 12,
+              "fullyMet": 3,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1ee9b-b514-71b0-ad5d-d1e225c2bce8"
+            ],
+            "answerSha256": "9ee0eed73c9e7d962ae9eda64aea14b8b04f0f2acde9f57bbc1a8257dbfc9cab",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O verde do emblema também domina o bloco esquerdo, as letras e as estampas, afastando essas áreas da paleta externa de petróleo, ocre e creme."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "O título em duas linhas entre a prensa e a data quase se funde ao fundo verde-escuro."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O anel mais nítido, na folha da prensa, aparece ovalado pela perspectiva. O anel circular ao fundo tem o vazado quase imperceptível."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O verde se estende muito além do emblema e domina o fundo e as letras."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "unreadable",
+                    "evidence": "O título acima do filete ocre e a data logo abaixo aparecem em verde-escuro sobre verde-escuro, com contraste insuficiente para leitura fácil."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "No alto, o centro do anel quase se confunde com sua borda. O mesmo verde domina também o campo de texto e a amostra inferior."
+                  }
+                ]
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas no terço superior. As letras azul-escuras, sobretudo na primeira linha, quase desaparecem sobre o fundo da mesma cor."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "Na gravura inferior, a perspectiva achata o triângulo violeta e inclina o recorte da base, alterando a geometria do símbolo enviado."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O fundo escuro contraria o pedido de fundo claro. No topo, o anel verde quase se confunde com o fundo e tem menos destaque que o triângulo violeta."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Duas barras estreitas emolduram o livro à esquerda. O sinal independente fica antes do meio da peça, enfraquecendo a relação pedida entre uma faixa larga à esquerda e um sinal pequeno à direita."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "extra_copy",
+                    "evidence": "“Partida:” acima de “Largo do Sol”."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "extra_copy",
+                    "evidence": "O livro exibe os números “42” e “43” e duas passagens legíveis: “A cidade guarda histórias em cada esquina, e é nelas que encontramos um pouco de nós.” e “Ler também é viajar, mesmo quando os pés permanecem no lugar.”"
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 1,
+                  "2-3": 1
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O lápis à direita do triângulo usa azul-petróleo da paleta reservada ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O lápis vertical ao lado do triângulo usa ocre, creme e petróleo da paleta reservada ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "O título no alto e a identificação abaixo do lápis têm letras escuras sobre manchas de tom muito próximo, tornando ambas as leituras difíceis."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O lápis e os dois traços junto à ponta usam azul-petróleo fora do fundo e da tipografia."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 15,
+              "denominator": 15,
+              "points": 25,
+              "maxKnown": 30,
+              "fullyMet": 10,
+              "partial": 5,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 10,
+                "unreadable": 4,
+                "extra_copy": 2
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 9,
+              "denominator": 9,
+              "points": 16,
+              "maxKnown": 18,
+              "fullyMet": 7,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6,
+                "unreadable": 3
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 9,
+              "maxKnown": 12,
+              "fullyMet": 3,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 4,
+                "extra_copy": 2,
+                "unreadable": 1
+              }
+            }
+          }
+        }
+      },
+      "coverage": {
+        "plannedCases": 5,
+        "planningSessionsObserved": 5,
+        "imageSlots": 15,
+        "confirmedPlans": 5,
+        "confirmedImages": 15
+      }
+    },
+    {
+      "round": 3,
+      "revision": "e6ed07d6257d28b17dd89f66b0498cdec0651a38",
+      "indexSha256": "709b82d8e362e2c00c5f95ca4ec4cc9a85da6fd44e614ffe933b7beec2d11f37",
+      "plans": 4,
+      "images": 12,
+      "receipts": [
+        {
+          "id": "case-1",
+          "references": null,
+          "bytesPerImage": null,
+          "rejection": {
+            "kind": "contract_rejected",
+            "sameTurn": true,
+            "accepted": false,
+            "distinctFieldCounts": {
+              "creativePrompt": 3,
+              "composition": 3,
+              "contrast": 2
+            },
+            "diagnosticSha256": "51912d8d13de8fd91ffb8598755f30f831ff60c50284dab3e92437bac24b6977",
+            "rejectedOutputSha256": "3602247fa65594e0123259b84487cbcbb20e230c1dd36e5e8fa661df1e6cf087"
+          },
+          "planSha256": null,
+          "receiptsSha256": "2a08148280b853013cee61a7039c444c7b0458f1b0bc644a0fd9f8f9b57f3693",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "not_submitted",
+              "sha256": null,
+              "deliveryConfirmed": null
+            },
+            {
+              "position": 2,
+              "state": "not_submitted",
+              "sha256": null,
+              "deliveryConfirmed": null
+            },
+            {
+              "position": 3,
+              "state": "not_submitted",
+              "sha256": null,
+              "deliveryConfirmed": null
+            }
+          ]
+        },
+        {
+          "id": "case-2",
+          "references": 4,
+          "bytesPerImage": 585,
+          "rejection": null,
+          "planSha256": "fb16a4e49e1e56d4e5e49f55f793d36427b039a1798b0305224d4283ad9b590a",
+          "receiptsSha256": "e0dec9030797b2656a245f9879e6e890eab93923e89173a8441926af0790b633",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "50b408e8c47399d037f7eaeec00a1f053925e6cb20c1c0c7c92c61ccbe0d9c7a",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "10befa54040284b859d09d997edaf196515bf9005a2f985dba49789fff677488",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "9910c657c6faa685dcae3eab543cf3324b0fb12b5c50ef2e0084ad6e587bfd36",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-3",
+          "references": 3,
+          "bytesPerImage": 551,
+          "rejection": null,
+          "planSha256": "8b295ef57a1b8f3b872ef10066b617271fb6009de6a53792c3e421733dfde11c",
+          "receiptsSha256": "4265441cfc01a9a897d81fbe2e9881b973aa281f2b8aeb9539e8cb5290bbcd3a",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "e978db272104793f61da6efc4085af3c032569c0d1da6e97f1357ee15fac3f93",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "b89b44b0ff38f5a4eb6192b2985c6b8b55f712b4719eac4f2d4a9a257be29cf4",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "18b98a67c04ee6f993434d0dab4fa31f65f036300862e5d36542987898159c24",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-4",
+          "references": 2,
+          "bytesPerImage": 255,
+          "rejection": null,
+          "planSha256": "27edc8037bcd99d1e0a5bcc67ebc0a76980fcf6430b2867a985bc68afd3fdd6d",
+          "receiptsSha256": "0518a60aa52fc6cc7823aeefcd852cb9f787e1df372f0d2bb0f7c831871dc301",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "039abd9f0d050c193d52663a1174be6ff8d8808f2a53225b883d7625778f02bb",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "eeccac2e6a1a96ecffbf60d8a14ad0c0d9e2e308089f497ae1b3760efea26104",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "999dee5df09a00f0e267202c91732ebcd2b7b0c250987a20ccb378223515243d",
+              "deliveryConfirmed": true
+            }
+          ]
+        },
+        {
+          "id": "case-5",
+          "references": 3,
+          "bytesPerImage": 499,
+          "rejection": null,
+          "planSha256": "a0366a6927cde5cbb33a14867a0e15d7450d7d94aab7382db9ab5623aed55b3a",
+          "receiptsSha256": "c1e45c04f51e2fca5cf5ed3bdc328ec31b107841e56cfde64dd2e62889f9c4ac",
+          "planningSessionsObserved": 1,
+          "slots": [
+            {
+              "position": 1,
+              "state": "complete",
+              "sha256": "e0cdd7e66c1298805c11e03cc215aaafda4e7559babdbb7229338438c1efc166",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 2,
+              "state": "complete",
+              "sha256": "f99e20e8830261d8443a6b2e952c3d130c9490e4af072792084c781ac1269e47",
+              "deliveryConfirmed": true
+            },
+            {
+              "position": 3,
+              "state": "complete",
+              "sha256": "2f71e694f31a47d51cc3bf4a3c3aebb08adcb89f91a953da92731814281b2404",
+              "deliveryConfirmed": true
+            }
+          ]
+        }
+      ],
+      "stages": {
+        "3": {
+          "plan": {
+            "runIds": [
+              "01a1eea5-b27d-7e01-9d5a-dcd5cab714a1"
+            ],
+            "answerSha256": "04d5bdce0496238cf292a52bcf37436c9beb45e2f1fac9be4eddf0ad22af2f00",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": null,
+                  "1.2": null,
+                  "1.3": null,
+                  "1.4": null,
+                  "2.1": null,
+                  "2.2": null,
+                  "2.3": null,
+                  "2.4": null,
+                  "3.1": null,
+                  "3.2": null,
+                  "3.3": null,
+                  "3.4": null
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 1,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 1,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 1,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "“com letras rosa-claras” introduz uma cor diferente do pêssego de R4."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "“campo liso rosa-claro da paleta” descreve incorretamente a amostra pêssego de R4."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "“campo liso rosa-claro da paleta” conflita com a amostra pêssego de R4."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 48,
+              "denominator": 60,
+              "points": 93,
+              "maxKnown": 96,
+              "fullyMet": 45,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 3
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 24,
+              "denominator": 36,
+              "points": 45,
+              "maxKnown": 48,
+              "fullyMet": 21,
+              "partial": 3,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 3
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 48,
+              "maxKnown": 48,
+              "fullyMet": 24,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1eea5-b27d-7811-8425-4fb191505698"
+            ],
+            "answerSha256": "c31f07fb055d33dabd76fadabaf33a269685efea329f1f8d890d33f9cd41b645",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": null,
+                  "1.2": null,
+                  "1.3": null,
+                  "1.4": null,
+                  "2.1": null,
+                  "2.2": null,
+                  "2.3": null,
+                  "2.4": null,
+                  "3.1": null,
+                  "3.2": null,
+                  "3.3": null,
+                  "3.4": null
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 1,
+                  "2.1": 2,
+                  "2.2": 0,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 1
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Os losangos escuros do alto e da margem esquerda se destacam individualmente e dão pouco efeito de granulação discreta."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Amostras de cor e losango agrupados à direita do quadro, perto da meia-altura. Falta a faixa horizontal na base."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O pontilhado fica pouco distinguível entre as hachuras das gravuras."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 2,
+                  "1.3": 2,
+                  "1.4": 1,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 1,
+                  "2.4": 1,
+                  "3.1": 1,
+                  "3.2": 1,
+                  "3.3": 1,
+                  "3.4": 1
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Faixa horizontal acima de “Troca de livros”, distante de “Pátio Norte”."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "Texto no topo e linha do local abaixo dos selos, ambos em verde sobre verde escuro."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O fundo escuro reduz o destaque dos selos, sobretudo do anel. A faixa inferior fica abaixo da linha do local."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "Título em duas linhas no alto e local junto à barra inferior, com contraste insuficiente para leitura fácil."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O fundo escuro compromete a separação visual entre o anel verde e o rodapé."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 0,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 2,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 2,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Na metade direita, o sinal quase desaparece sobre o fundo preto e o degradê ocupa o espaço da textura granulada."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1.1": 2,
+                  "1.2": 1,
+                  "1.3": 2,
+                  "1.4": 2,
+                  "2.1": 2,
+                  "2.2": 1,
+                  "2.3": 2,
+                  "2.4": 2,
+                  "3.1": 2,
+                  "3.2": 1,
+                  "3.3": 2,
+                  "3.4": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Fundo e tipografia usam petróleo e creme, sem ocre visível. O creme também colore a moldura do símbolo e o lápis."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Falta ocre no fundo e nas letras. O petróleo também colore o lápis e os contornos da mão e do desenho."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "Falta ocre no fundo e nas letras. O petróleo também aparece no corpo do lápis e na moldura de “Caderno 02”."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 48,
+              "denominator": 60,
+              "points": 78,
+              "maxKnown": 96,
+              "fullyMet": 32,
+              "partial": 14,
+              "absentOrContradicted": 2,
+              "issues": {
+                "direction": 10,
+                "unreadable": 2
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 24,
+              "denominator": 36,
+              "points": 36,
+              "maxKnown": 48,
+              "fullyMet": 13,
+              "partial": 10,
+              "absentOrContradicted": 1,
+              "issues": {
+                "direction": 6,
+                "unreadable": 2
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 24,
+              "denominator": 24,
+              "points": 42,
+              "maxKnown": 48,
+              "fullyMet": 19,
+              "partial": 4,
+              "absentOrContradicted": 1,
+              "issues": {
+                "direction": 4
+              }
+            }
+          }
+        },
+        "4": {
+          "plan": {
+            "runIds": [
+              "01a1eea5-b27d-7381-88a1-1406f8c5a1de"
+            ],
+            "answerSha256": "c60baac8e354e16e9cc79ed11cd1a100b4292a5cae64e7aef365205d4d605310",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": null,
+                  "1-3": null,
+                  "2-3": null
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "«campo liso rosa-claro da paleta» identifica como rosa a amostra pêssego de R4."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "«letras rosa-claras» orienta uma cor diferente do pêssego mostrado em R4."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "«campo liso rosa-claro da paleta» conflita com a amostra pêssego de R4."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": []
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 12,
+              "denominator": 15,
+              "points": 23,
+              "maxKnown": 24,
+              "fullyMet": 11,
+              "partial": 1,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 3
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 6,
+              "denominator": 9,
+              "points": 12,
+              "maxKnown": 12,
+              "fullyMet": 6,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 3
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 11,
+              "maxKnown": 12,
+              "fullyMet": 5,
+              "partial": 1,
+              "absentOrContradicted": 0,
+              "issues": {}
+            }
+          },
+          "pixels": {
+            "runIds": [
+              "01a1eea5-b27d-7c71-be5d-3377e08cbfee"
+            ],
+            "answerSha256": "05f33b205aac54b6581ee3e2070ad423aa0a6c4a41bbae7975aa90e720d05d0b",
+            "cases": [
+              {
+                "id": "case-1",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": null,
+                  "1-3": null,
+                  "2-3": null
+                },
+                "problems": []
+              },
+              {
+                "id": "case-2",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A parede rosa ao redor do título e do símbolo fica lisa. Não se distingue ali uma textura de pontos como a selecionada."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "As barras coloridas e o pequeno losango estão agrupados a meia altura, à direita. Falta a relação entre uma faixa horizontal inferior e um detalhe isolado no alto à direita."
+                  }
+                ]
+              },
+              {
+                "id": "case-3",
+                "split": "desenvolvimento",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 3,
+                    "kind": "unreadable",
+                    "evidence": "O título no topo e a linha do local no rodapé quase se confundem com o verde do fundo."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O fundo é predominantemente escuro. No rodapé, o vazado do selo verde mal se distingue, e o triângulo recebe mais destaque."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "A faixa horizontal fica abaixo da linha do local, separada dela."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "unreadable",
+                    "evidence": "O título em duas linhas e o local à direita dos selos têm contraste muito baixo com o fundo."
+                  },
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "O fundo escuro contraria o pedido de fundo claro e reduz a distinção do selo verde."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "A barra verde separa o livro do título. O próprio título fica entre a barra e “Pátio Norte”, afastando o apoio horizontal do local."
+                  }
+                ]
+              },
+              {
+                "id": "case-4",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 2,
+                  "1-3": 1,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O pequeno retângulo à direita é quase indistinguível sobre o campo preto, comprometendo sua leitura como sinal independente."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "Na área direita aparece um degradê liso, sem granulado discreto perceptível."
+                  }
+                ]
+              },
+              {
+                "id": "case-5",
+                "split": "reserva",
+                "observations": {
+                  "1-2": 1,
+                  "1-3": 2,
+                  "2-3": 2
+                },
+                "problems": [
+                  {
+                    "slot": 2,
+                    "kind": "direction",
+                    "evidence": "Uma moldura triangular creme envolve o símbolo violeta e fecha visualmente a abertura inferior. O creme da paleta também colore o lápis e o desenho à direita."
+                  },
+                  {
+                    "slot": 3,
+                    "kind": "direction",
+                    "evidence": "O azul-petróleo da paleta aparece no corpo do lápis e no contorno da caixa de “Caderno 02”, além do fundo e da tipografia autorizados."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "O azul-petróleo colore a caneta e os contornos da mão e do triângulo desenhado, embora a paleta externa estivesse reservada ao fundo e à tipografia."
+                  },
+                  {
+                    "slot": 1,
+                    "kind": "direction",
+                    "evidence": "As diagonais ocupam dois cantos opostos em blocos largos, ampliando o motivo pedido como pequeno e localizado."
+                  }
+                ]
+              }
+            ],
+            "all": {
+              "cases": 5,
+              "known": 12,
+              "denominator": 15,
+              "points": 22,
+              "maxKnown": 24,
+              "fullyMet": 10,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 12,
+                "unreadable": 2
+              }
+            },
+            "development": {
+              "cases": 3,
+              "known": 6,
+              "denominator": 9,
+              "points": 12,
+              "maxKnown": 12,
+              "fullyMet": 6,
+              "partial": 0,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6,
+                "unreadable": 2
+              }
+            },
+            "holdout": {
+              "cases": 2,
+              "known": 6,
+              "denominator": 6,
+              "points": 10,
+              "maxKnown": 12,
+              "fullyMet": 4,
+              "partial": 2,
+              "absentOrContradicted": 0,
+              "issues": {
+                "direction": 6
+              }
+            }
+          }
+        }
+      },
+      "coverage": {
+        "plannedCases": 5,
+        "planningSessionsObserved": 5,
+        "imageSlots": 15,
+        "confirmedPlans": 4,
+        "confirmedImages": 12
+      }
+    }
+  ],
+  "comparisonsWithBaseline": [
+    {
+      "control": "round-0",
+      "candidate": "round-1",
+      "reservedIncluded": true,
+      "cases": [
+        {
+          "id": "case-1",
+          "triagePoints": [
+            19,
+            18
+          ],
+          "fullyDistinctPairs": [
+            3,
+            3
+          ],
+          "transferredReferenceBytes": [
+            1341,
+            1341
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "atributo_1_piorou",
+            "atributo_2_piorou"
+          ]
+        },
+        {
+          "id": "case-2",
+          "triagePoints": [
+            22,
+            22
+          ],
+          "fullyDistinctPairs": [
+            2,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1755,
+            1755
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "atributo_2_piorou",
+            "atributo_3_piorou"
+          ]
+        },
+        {
+          "id": "case-3",
+          "triagePoints": [
+            22,
+            24
+          ],
+          "fullyDistinctPairs": [
+            3,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1653,
+            1653
+          ],
+          "triageImproved": true,
+          "variationImproved": false,
+          "blockingFindings": [
+            "divergencia_piorou"
+          ]
+        },
+        {
+          "id": "case-4",
+          "triagePoints": [
+            21,
+            21
+          ],
+          "fullyDistinctPairs": [
+            2,
+            3
+          ],
+          "transferredReferenceBytes": [
+            765,
+            765
+          ],
+          "triageImproved": false,
+          "variationImproved": true,
+          "blockingFindings": [
+            "atributo_1_piorou",
+            "atributo_3_piorou"
+          ]
+        },
+        {
+          "id": "case-5",
+          "triagePoints": [
+            23,
+            22
+          ],
+          "fullyDistinctPairs": [
+            1,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1497,
+            1497
+          ],
+          "triageImproved": false,
+          "variationImproved": true,
+          "blockingFindings": [
+            "atributo_1_piorou"
+          ]
+        }
+      ],
+      "triageImprovedCases": 1,
+      "variationImprovedCases": 2,
+      "casesWithBlockingFindings": 5,
+      "stages": {
+        "3": {
+          "casesMeetingImprovement": 1,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        },
+        "4": {
+          "casesMeetingImprovement": 2,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        }
+      }
+    },
+    {
+      "control": "round-0",
+      "candidate": "round-2",
+      "reservedIncluded": true,
+      "cases": [
+        {
+          "id": "case-1",
+          "triagePoints": [
+            19,
+            18
+          ],
+          "fullyDistinctPairs": [
+            3,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1341,
+            1341
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "unreadable",
+            "atributo_1_piorou",
+            "atributo_2_piorou",
+            "divergencia_piorou"
+          ]
+        },
+        {
+          "id": "case-2",
+          "triagePoints": [
+            22,
+            23
+          ],
+          "fullyDistinctPairs": [
+            2,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1755,
+            1755
+          ],
+          "triageImproved": true,
+          "variationImproved": false,
+          "blockingFindings": [
+            "unreadable"
+          ]
+        },
+        {
+          "id": "case-3",
+          "triagePoints": [
+            22,
+            21
+          ],
+          "fullyDistinctPairs": [
+            3,
+            3
+          ],
+          "transferredReferenceBytes": [
+            1653,
+            1653
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "atributo_1_piorou",
+            "atributo_2_piorou"
+          ]
+        },
+        {
+          "id": "case-4",
+          "triagePoints": [
+            21,
+            22
+          ],
+          "fullyDistinctPairs": [
+            2,
+            3
+          ],
+          "transferredReferenceBytes": [
+            765,
+            765
+          ],
+          "triageImproved": true,
+          "variationImproved": true,
+          "blockingFindings": [
+            "extra_copy"
+          ]
+        },
+        {
+          "id": "case-5",
+          "triagePoints": [
+            23,
+            22
+          ],
+          "fullyDistinctPairs": [
+            1,
+            0
+          ],
+          "transferredReferenceBytes": [
+            1497,
+            1497
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "unreadable",
+            "atributo_3_piorou",
+            "divergencia_piorou"
+          ]
+        }
+      ],
+      "triageImprovedCases": 2,
+      "variationImprovedCases": 1,
+      "casesWithBlockingFindings": 5,
+      "stages": {
+        "3": {
+          "casesMeetingImprovement": 2,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        },
+        "4": {
+          "casesMeetingImprovement": 1,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        }
+      }
+    },
+    {
+      "control": "round-0",
+      "candidate": "round-3",
+      "reservedIncluded": true,
+      "cases": [
+        {
+          "id": "case-1",
+          "triagePoints": [
+            19,
+            null
+          ],
+          "fullyDistinctPairs": [
+            3,
+            null
+          ],
+          "transferredReferenceBytes": [
+            1341,
+            null
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "sem_plano_validado_ou_arte",
+            "julgamento_incompleto"
+          ]
+        },
+        {
+          "id": "case-2",
+          "triagePoints": [
+            22,
+            20
+          ],
+          "fullyDistinctPairs": [
+            2,
+            3
+          ],
+          "transferredReferenceBytes": [
+            1755,
+            1755
+          ],
+          "triageImproved": false,
+          "variationImproved": true,
+          "blockingFindings": [
+            "atributo_2_piorou",
+            "atributo_4_piorou"
+          ]
+        },
+        {
+          "id": "case-3",
+          "triagePoints": [
+            22,
+            16
+          ],
+          "fullyDistinctPairs": [
+            3,
+            3
+          ],
+          "transferredReferenceBytes": [
+            1653,
+            1653
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "unreadable",
+            "atributo_1_piorou",
+            "atributo_2_piorou",
+            "atributo_3_piorou",
+            "atributo_4_piorou"
+          ]
+        },
+        {
+          "id": "case-4",
+          "triagePoints": [
+            21,
+            21
+          ],
+          "fullyDistinctPairs": [
+            2,
+            2
+          ],
+          "transferredReferenceBytes": [
+            765,
+            765
+          ],
+          "triageImproved": false,
+          "variationImproved": false,
+          "blockingFindings": [
+            "atributo_3_piorou"
+          ]
+        },
+        {
+          "id": "case-5",
+          "triagePoints": [
+            23,
+            21
+          ],
+          "fullyDistinctPairs": [
+            1,
+            2
+          ],
+          "transferredReferenceBytes": [
+            1497,
+            1497
+          ],
+          "triageImproved": false,
+          "variationImproved": true,
+          "blockingFindings": [
+            "atributo_2_piorou"
+          ]
+        }
+      ],
+      "triageImprovedCases": 0,
+      "variationImprovedCases": 2,
+      "casesWithBlockingFindings": 5,
+      "stages": {
+        "3": {
+          "casesMeetingImprovement": 0,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        },
+        "4": {
+          "casesMeetingImprovement": 2,
+          "required": 2,
+          "unsupportedFactObservations": 0,
+          "meetsLocalCriteria": false
+        }
+      }
+    }
+  ]
+}
