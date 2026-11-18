@@ -51,7 +51,7 @@ async function readBounded(response:Response):Promise<string> {
   finally { await reader.cancel().catch(()=>{}); }
   return new TextDecoder().decode(Buffer.concat(chunks));
 }
-export async function searchReferences({projectId,query,signals,history=[],fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];fetchApi?:typeof fetch}) {
+export async function searchReferences({projectId,query,signals,history=[],discoveryOnly=false,fetchApi=fetch}:{projectId:string;query:string;signals:ReferenceSignal[];history?:ReferenceHistoryEntry[];discoveryOnly?:boolean;fetchApi?:typeof fetch}) {
   const projectSignals=signals.filter(signal=>signal.projectId===projectId);
   const taste:UserTasteProfile={user_id:'current',preferred_boards_by_goal:{},visual_dna_rules:[],negative_constraints:[],updated_at:new Date().toISOString()};
   const routed=deterministicRouteBoards(createPhoenixHyperparams(),{briefing:query,target_format:'single_feed',user_taste:taste,board_affinities:boardAffinities(projectSignals)});
@@ -64,8 +64,8 @@ export async function searchReferences({projectId,query,signals,history=[],fetch
     } catch { return {ok:false,items:[]}; }
   }));
   const terms=[...contentTerms(query)];
-  const seen=new Set<string>();
-  const ranked=[...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
+  const seen=new Set(discoveryOnly ? history.map(item=>item.originUrl) : []);
+  const ranked=discoveryOnly ? [] : [...history].sort((a,b)=>b.approvedVersions-a.approvedVersions||b.selectedAt.localeCompare(a.selectedAt)||a.originUrl.localeCompare(b.originUrl));
   const historyOrder=new Map(ranked.map((item,index)=>[item.originUrl,index]));
   const choices=new Map<string,ReferenceSignal['action']>();
   for(const signal of currentSignals(projectSignals).toSorted((a,b)=>b.createdAt.localeCompare(a.createdAt)||b.id.localeCompare(a.id))){

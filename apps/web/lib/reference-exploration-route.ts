@@ -3,7 +3,7 @@ import type { Actor } from './agent-auth.ts';
 import { referenceHistoryResponseSchema, referenceSignalInputSchema, referenceSignalSchema, type ReferenceSignal, type ReferenceHistoryEntry } from './reference-exploration-contract.ts';
 import { searchReferences } from './reference-exploration.ts';
 
-const searchInput=z.strictObject({projectId:z.uuid(),query:z.string().trim().min(1).max(1000),consentExternalSearch:z.literal(true)});
+const searchInput=z.strictObject({projectId:z.uuid(),query:z.string().trim().min(1).max(1000),consentExternalSearch:z.literal(true),discoveryOnly:z.boolean().optional()});
 const signalInput=referenceSignalInputSchema;
 type Store={list:(projectId?:string,pieceId?:string)=>Promise<ReferenceSignal[]>;insert:(signal:z.infer<typeof signalInput>)=>Promise<ReferenceSignal>;history?:(projectId:string)=>Promise<ReferenceHistoryEntry[]>};
 type Dependencies={appOrigin:string;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:(actor:Actor)=>Store;search?:typeof searchReferences};
@@ -32,7 +32,7 @@ export function createReferenceSearchRoute(deps:Dependencies) {
         catch{return [];}
       };
       const [signals,history]=await Promise.all([store.list(input.projectId),readHistory()]);
-      const result=await (deps.search??searchReferences)({projectId:input.projectId,query:input.query,signals,history});
+      const result=await (deps.search??searchReferences)({projectId:input.projectId,query:input.query,signals,history,discoveryOnly:input.discoveryOnly});
       return reply(result);
     } catch {return reply({status:'unavailable',references:[]},503);}
   };

@@ -50,7 +50,7 @@ export default function ReferenceExploration({userId,projectId,idea,selectedOrig
     const requestedScope=currentScope;
     setNotice('');setSearch({status:'loading',references:[]});
     try {
-      const response=await fetch('/api/studio/references/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,query:value.trim(),consentExternalSearch:true}),signal:cancel.signal});
+      const response=await fetch('/api/studio/references/search',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId,query:value.trim(),consentExternalSearch:true,discoveryOnly:true}),signal:cancel.signal});
       if(!response.ok)throw Error('unavailable');
       const data=referenceSearchResponseSchema.parse(await response.json());
       if(!cancel.signal.aborted&&scope.current===requestedScope)setSearch(data);

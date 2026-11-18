@@ -19,7 +19,7 @@ for(const {id,brief,need,history:previous=[],feeds,rejected} of scenarios){
   const history=previous.map(({id,title,approvedVersions,day})=>({id,title,approvedVersions,board:standardBoard,originUrl:origin(id),previewUrl:preview(id),selectedAt:'2026-10-'+String(day).padStart(2,'0')+'T12:00:00Z'}));
   const signals=rejected?[{id:'00000000-0000-4000-8000-000000000012',action:'rejected',board:standardBoard,projectId,originUrl:origin(rejected),supersedes:null,createdAt:'2026-11-01T12:00:00Z',comment:''}]:[];
   const boards=[];
-  const result=await searchReferences({projectId,query:brief,history,signals,mode:'discovery',fetchApi:async url=>{
+  const result=await searchReferences({projectId,query:brief,history,signals,discoveryOnly:true,fetchApi:async url=>{
     const {pathname,hostname}=new URL(url);assert.equal(hostname,'www.pinterest.com');assert(pathname.endsWith('.rss'));const board=pathname.slice(1,-4);boards.push(board);return new Response(feed(feeds[board]??[]));
   }});
   const known=new Set(history.map(item=>item.originUrl));

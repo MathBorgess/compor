@@ -36,9 +36,9 @@ async function run(scenario){
   const records=events.trim().split('\n').map(line=>JSON.parse(line));
   assert(!records.some(event=>event.item && ['command_execution','mcp_tool_call','web_search','file_change'].includes(event.item.type)));
   const answer=(await readFile(answerPath,'utf8')).trim();assert(answer.length>0);
-  const record={id,blindId,threadId:records.find(event=>event.type==='thread.started')?.thread_id,promptSha256:hash(prompt),answerSha256:hash(answer),idea,offerInPlan:handoff.offer===offer,audienceInPlan:handoff.audience===audience,goalInPlan:handoff.goal===action,usage:records.find(event=>event.type==='turn.completed')?.usage};
+  const record={id,blindId,threadId:records.find(event=>event.type==='thread.started')?.thread_id,promptSha256:hash(prompt),answerSha256:hash(answer),idea:handoff.idea,initialIdea:idea,offerInPlan:handoff.offer===offer,audienceInPlan:handoff.audience===audience,goalInPlan:handoff.goal===action,usage:records.find(event=>event.type==='turn.completed')?.usage};
   assert(record.threadId);
-  const evidence={blindId,pedido:{offer,audience,action,request},contextoNoPlano:{ideia:idea,oferta:handoff.offer,público:handoff.audience,ação:handoff.goal},resposta:answer};
+  const evidence={blindId,pedido:{offer,audience,action,request},contextoNoPlano:{ideia:handoff.idea,oferta:handoff.offer,público:handoff.audience,ação:handoff.goal},resposta:answer};
   await writeFile(join(dest,id+'.json'),JSON.stringify({record,evidence},null,2)+'\n');
   return {record,evidence};
 }
