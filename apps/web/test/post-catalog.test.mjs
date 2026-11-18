@@ -30,6 +30,14 @@ test('nome é validado, criação é idempotente e exclusão não permite ressur
  assert.equal((await f.routes.POST(request('POST',body))).status,404);
  assert.equal(f.calls[0].options.headers.authorization,'Bearer alice-token');assert.equal(f.calls[0].options.redirect,'error');
 });
+test('exclusão bloqueada por geração pendente retorna 409',async()=>{
+ const expected={status:'pending'};
+ const postStore=createPostStore({url:'https://example.supabase.co',anonKey:'public',fetchImpl:async()=>Response.json(expected)});
+ const routes=createPostRoutes({appOrigin:origin,resolveActor:async()=>({userId:id(1),token:'alice-token'}),ownsProject:async()=>true,postStore});
+ const response=await routes.DELETE(request('DELETE',{projectId,pieceId}));
+ assert.equal(response.status,409);
+ assert.deepEqual(await response.json(),expected);
+});
 test('origem, identidade e propriedade são verificadas antes da escrita',async()=>{
  const f=fixture(),body={projectId,pieceId,name:'Um post'};
  assert.equal((await f.routes.POST(request('POST',body,{origin:'https://attacker.test'}))).status,403);

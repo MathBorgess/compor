@@ -231,8 +231,16 @@ export default function StudioApp({
     try{
       const response=await fetch('/api/projects',{method:'DELETE',signal:AbortSignal.timeout(15000),headers:{'content-type':'application/json'},body:JSON.stringify({projectId:target.id,expectedRevision:target.revision})});
       if(n!==seq.current||!isAuthenticated())return;
-      const result=z.strictObject({status:z.literal('deleted'),projectId:z.string()}).safeParse(await response.json());
-      if(!response.ok||!result.success||result.data.projectId!==target.id)throw Error('unconfirmed');
+      const result=z.discriminatedUnion('status',[
+        z.strictObject({status:z.literal('deleted'),projectId:z.string()}),
+        z.strictObject({status:z.literal('pending')}),
+      ]).safeParse(await response.json());
+      if(n!==seq.current||!isAuthenticated())return;
+      if(response.status===409&&result.success&&result.data.status==='pending'){
+        setDeleteError('Conclua ou verifique o pedido pendente antes de excluir este projeto.');
+        return;
+      }
+      if(!response.ok||!result.success||result.data.status!=='deleted'||result.data.projectId!==target.id)throw Error('unconfirmed');
       setProjects(items=>items.filter(item=>item.id!==target.id));setDeleteTarget(null);setNotice('Projeto excluído da lista. Seus aprendizados continuam em Seu perfil.');
       if(selected?.id===target.id){setSelected(null);navigate(rootRoute,{replace:true});}
     }catch{
@@ -823,9 +831,13 @@ function ProjectStudio({
     try{
       await local.flush();
       const response=await fetch('/api/posts',{method:'DELETE',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:project.id,pieceId})});
-      if(!response.ok)throw Error('unconfirmed');const result=postMutationSchema.parse(await response.json());
-      if(result.status!=='deleted'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||!result.post.deleted)throw Error('unconfirmed');
+      const result=postMutationSchema.parse(await response.json());
       if(!active.current||!isAuthenticated())return;
+      if(response.status===409&&result.status==='pending'){
+        setPostDeleteError('Conclua ou verifique o pedido pendente antes de excluir este post.');
+        return;
+      }
+      if(!response.ok||result.status!=='deleted'||result.post.projectId!==project.id||result.post.pieceId!==pieceId||!result.post.deleted)throw Error('unconfirmed');
       ++versionsReadSequence.current;
       setPostRecords(previous=>[...previous.filter(post=>post.pieceId!==pieceId),result.post]);
       setVersions(previous=>previous.filter(version=>version.piece_id!==pieceId));

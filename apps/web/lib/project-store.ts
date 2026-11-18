@@ -23,7 +23,12 @@ export function createWebProjectStore({ url, anonKey, fetchImpl = fetch }:StoreO
     async remove(context:StoreContext,{projectId,expectedRevision}:{projectId:string;expectedRevision:number}) {
       const response=await fetchImpl(new URL('/rest/v1/rpc/delete_project_from_list',url),{method:'POST',headers:{apikey:anonKey,authorization:`Bearer ${context.token}`,'content-type':'application/json'},body:JSON.stringify({p_project_id:projectId,p_expected_revision:expectedRevision}),redirect:'error',signal:AbortSignal.timeout(5000)});
       if(!response.ok)throw Error('unavailable');
-      const result=z.discriminatedUnion('status',[z.strictObject({status:z.literal('deleted'),projectId:z.string().uuid()}),z.strictObject({status:z.literal('not_found')}),z.strictObject({status:z.literal('conflict'),currentRevision:z.number().int().positive()})]).parse(await response.json());
+      const result=z.discriminatedUnion('status',[
+        z.strictObject({status:z.literal('deleted'),projectId:z.string().uuid()}),
+        z.strictObject({status:z.literal('not_found')}),
+        z.strictObject({status:z.literal('conflict'),currentRevision:z.number().int().positive()}),
+        z.strictObject({status:z.literal('pending')}),
+      ]).parse(await response.json());
       if(result.status==='deleted'&&result.projectId!==projectId)throw Error('invalid response');
       return result;
     },

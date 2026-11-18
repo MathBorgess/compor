@@ -16,6 +16,7 @@ export function createPostStore({url,anonKey,fetchImpl=fetch}:StoreOptions){
     async mutate(context:StoreContext,method:'POST'|'DELETE',input:unknown){
       const data=method==='POST'?postCreationSchema.parse(input):postDeletionSchema.parse(input);
       const result=postMutationSchema.parse(await rpc(context,method==='POST'?'create_project_post':'delete_project_post',{p_project_id:data.projectId,p_piece_id:data.pieceId,...('name' in data?{p_name:data.name}:{})}));
+      if(result.status==='pending'&&method!=='DELETE')throw Error('invalid response');
       if('post' in result&&(result.post.projectId!==data.projectId||result.post.pieceId!==data.pieceId||result.status!==(method==='POST'?'created':'deleted')||result.post.deleted!==(method==='DELETE')||'name' in data&&result.post.name!==data.name))throw Error('invalid response');
       return result;
     },

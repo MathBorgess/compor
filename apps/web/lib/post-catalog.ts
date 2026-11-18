@@ -9,6 +9,7 @@ export const postMutationSchema=z.discriminatedUnion('status',[
   z.strictObject({status:z.literal('created'),post:postRecordSchema}),
   z.strictObject({status:z.literal('deleted'),post:postRecordSchema}),
   z.strictObject({status:z.literal('conflict')}),
+  z.strictObject({status:z.literal('pending')}),
   z.strictObject({status:z.literal('not_found')}),
 ]);
 export type PostRecord=z.infer<typeof postRecordSchema>;
