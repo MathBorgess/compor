@@ -1,3 +1,4 @@
+import {byokJsonHeaders} from './openai-byok-transport.ts';
 import * as z from './schema.ts';
 import type {ParallelPreparation} from './parallel-exploration-journal.ts';
 import {assertReferenceVisualCapability} from './reference-visual-authority.ts';
@@ -10,7 +11,7 @@ export async function resumeParallelReview(value:ParallelPreparation,key:string,
   if(!value.intentId||value.intentEpoch===undefined||value.revocationRequested)throw Error('intent_unconfirmed');
   if(value.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(key))throw Error('credential_unavailable');
   if(authority&&value.visualInput!==undefined)assertReferenceVisualCapability(value.userId,value.visualInput,authority.headers);
-  const result=await fetchApi('/api/studio/exploration-batches/resume',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...(value.credentialSource==='byok'?{'x-compor-openai-key':key}:{})},signal,body:JSON.stringify({projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,intentId:value.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),expectedEpoch:value.intentEpoch,context:value.context,...(value.visualInput===undefined?{}:{visualInput:value.visualInput})})});
+  const result=await fetchApi('/api/studio/exploration-batches/resume',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...(value.credentialSource==='byok'?byokJsonHeaders(key):{})},signal,body:JSON.stringify({projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,intentId:value.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),expectedEpoch:value.intentEpoch,context:value.context,...(value.visualInput===undefined?{}:{visualInput:value.visualInput})})});
   if(!result.ok)throw Error('resume_unconfirmed');
   const receipt=success.parse(await result.json());
   if(receipt.intentEpoch!==value.intentEpoch)throw Error('resume_unconfirmed');

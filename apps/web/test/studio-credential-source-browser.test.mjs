@@ -29,7 +29,8 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  const calls=[],errors=[];let outcome='completed',held;
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/api/**',async route=>{
-  const request=route.request(),body=request.postDataJSON();calls.push({path:new URL(request.url()).pathname,body,key:request.headers()['x-compor-openai-key']});
+  const request=route.request(),body=request.postDataJSON(),headers=request.headers();
+  calls.push({path:new URL(request.url()).pathname,body,key:headers['x-compor-openai-key'],mediaType:headers['content-type']});
   if(outcome==='held'){held=route;return;}
   if(outcome==='not_submitted')return route.fulfill({status:503,json:{status:'failed',error:'default_credential_unavailable',failurePhase:'before_submission',requestId:body.requestId,retryAutomatically:false}});
   if(outcome==='unavailable')return route.fulfill({status:503,json:{error:'default_credential_unavailable'}});
@@ -94,5 +95,6 @@ export default function Fixture(){const[ready,setReady]=useState(false);useEffec
  await page.getByText('Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.',{exact:true}).waitFor();
  assert.equal(await page.getByText('RESPOSTA_DA_FONTE_ANTERIOR',{exact:true}).count(),0);
  assert.equal(calls.some(call=>Object.hasOwn(call.body,'apiKey')||JSON.stringify(call.body).includes(ownKey)),false);
+ assert.ok(calls.every(call=>call.mediaType===(call.key?'application/vnd.compor.byok+json':'application/json')),'BYOK sinaliza o transporte versionado e a fonte padrão mantém JSON comum');
  const storage=await page.evaluate(()=>JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)]));assert.equal(storage.includes(ownKey),false);assert.deepEqual(errors,[]);
 });

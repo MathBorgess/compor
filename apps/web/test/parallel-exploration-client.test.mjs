@@ -19,7 +19,8 @@ test('registro de planejamento é único e recuperação só consulta a mesma te
   const input={version:1,userId:id(1),projectId:id(2),batchId:id(3),conversationId:id(4),planRequestId:id(5),credentialSource:source,imageIds:[id(6),id(7),id(8)],context,plan:null,stage:'planning',revision:0};
   const store=createParallelJournalStore(),calls=[];let persistedBeforePlan=false;
   const fetchApi=async(path,options)=>{
-   const body=JSON.parse(options.body);calls.push({path,op:body.op});
+   const body=JSON.parse(options.body);calls.push({path,op:body.op,
+     byokTransport:options.headers['x-compor-openai-key']===apiKey&&options.headers['content-type']==='application/vnd.compor.byok+json'&&!Object.hasOwn(body,'apiKey')});
    if(path.endsWith('/plan')){
     persistedBeforePlan=Boolean(await store.loadPreparation(input.userId));
     return Response.json({status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof-in-memory'});
@@ -33,7 +34,7 @@ test('registro de planejamento é único e recuperação só consulta a mesma te
   await client.inspectPlan(existing,apiKey);
   const after=await store.loadPreparation(input.userId);
   const raw=JSON.stringify(after);
-  return {persistedBeforePlan,duplicate,planSubmits:calls.filter(call=>call.op==='submit').length,polls:calls.filter(call=>call.op==='poll').length,executions:calls.filter(call=>call.path.endsWith('/execute')).length,planned:after.stage==='planned',noProof:!raw.includes('proof-in-memory')&&!raw.includes(apiKey)};
+  return {persistedBeforePlan,duplicate,planSubmits:calls.filter(call=>call.op==='submit').length,polls:calls.filter(call=>call.op==='poll').length,executions:calls.filter(call=>call.path.endsWith('/execute')).length,planned:after.stage==='planned',noProof:!raw.includes('proof-in-memory')&&!raw.includes(apiKey),byokTransport:calls.every(call=>call.byokTransport)};
  });
- assert.deepEqual(results,{persistedBeforePlan:true,duplicate:true,planSubmits:0,polls:1,executions:0,planned:true,noProof:true});
+ assert.deepEqual(results,{persistedBeforePlan:true,duplicate:true,planSubmits:0,polls:1,executions:0,planned:true,noProof:true,byokTransport:true});
 });

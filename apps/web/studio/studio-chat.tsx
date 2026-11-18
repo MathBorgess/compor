@@ -2,6 +2,7 @@
 import {conversationContext,postContext} from '../lib/studio-post-context';
 import {scheduleSelectionReading} from '../lib/selection-reading-timer';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
+import {byokJsonHeaders} from '../lib/openai-byok-transport.ts';
 import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
@@ -394,7 +395,7 @@ export default function StudioChat({
     if(typeof mode==='function')mode();
     const response = await fetch(path, {
       method: "POST",
-      headers: { "content-type": "application/json",...authorityHeaders,...(credentialSource==='byok'?{'x-compor-openai-key':key}:{}) },
+      headers: { "content-type": "application/json",...authorityHeaders,...(credentialSource==='byok'?byokJsonHeaders(key):{}) },
       body: JSON.stringify({ ...body, ...(conversationId&&path.startsWith("/api/studio/")?{conversationId}:{}) }),
       signal: controller.signal,
     });

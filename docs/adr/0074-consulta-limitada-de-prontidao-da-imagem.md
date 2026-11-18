@@ -8,4 +8,6 @@ O planejamento original pode ser consultado em Referências no projeto de origem
 
 O navegador envia BYOK no cabeçalho `x-compor-openai-key` quando a operação exige a chave. O servidor ainda aceita o campo legado em requisições antigas e rejeita o envio pelos dois meios. Uma BYOK fornecida e inválida continua sem fallback para o Vault. A credencial permanece visível para quem controla a aba. A consulta de prontidão usa somente os dados da reserva.
 
+As rotas que antes aguardavam a chave no JSON usam o tipo `application/vnd.compor.byok+json` para requisições BYOK do navegador. Um servidor antigo recusa esse tipo antes de consultar o Vault, inclusive após rollback com uma aba nova aberta. Na versão que reconhece o tipo, a chave no cabeçalho é obrigatória e o corpo interno volta ao formato JSON. As rotas que já aceitavam BYOK em cabeçalho seguem seu contrato de transporte.
+
 Esta decisão complementa os ADRs 0038, 0061, 0062 e 0069. Substitui o reenvio contínuo no cliente. A migration `20261118000042_image_tool_wait_status.sql` é aditiva e integra a verificação de produção prevista no ADR 0043.

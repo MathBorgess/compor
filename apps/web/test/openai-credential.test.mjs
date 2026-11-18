@@ -1,6 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {prepareOpenAiRequest,credentialSigningKey,createCredentialStatusHandler} from '../lib/openai-credential.ts';
+import {byokJsonHeaders,byokJsonMediaType} from '../lib/openai-byok-transport.ts';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 import {createStudioBindings} from '@compor/agents-api/studio-chat-bindings';
 import {createStudioChatHandlers} from '@compor/agents-api/studio-chat';
@@ -41,6 +42,30 @@ test('a chave do navegador e a entrada legada preservam a mesma credencial inter
   assert.equal(invalid.source,'byok');assert.equal(invalid.apiKey,undefined);
   const ambiguous=await prepareOpenAiRequest(request({projectId,apiKey:ownKey},{'x-compor-openai-key':ownKey}),deps,{...options,keyLocation});
   assert.equal(ambiguous.status,400);assert.deepEqual(await ambiguous.json(),{error:'invalid_request'});
+  assert.deepEqual(calls,[]);
+ }
+});
+
+test('o tipo BYOK impede que uma aba nova caia no Vault de uma versão antiga',async()=>{
+ const headers=byokJsonHeaders(ownKey);
+ // The prior body-only server used this check before reading credentials or Vault.
+ assert.equal(/^application\/json(?:\s*;|$)/i.test(headers['content-type']),false);
+ for(const keyLocation of ['body','header']){
+  const {calls,deps}=fixture();
+  assert.equal((await prepareOpenAiRequest(request({projectId},headers),deps,{...options,keyLocation})).status,400);
+  assert.deepEqual(calls,[]);
+ }
+ for(const keyLocation of ['header-or-legacy-body','separate']){
+  const {calls,deps}=fixture();
+  const opts={...options,keyLocation};
+  const result=await prepareOpenAiRequest(request({projectId},headers),deps,opts);
+  assert.equal(result.source,'byok');
+  assert.equal(result.apiKey,ownKey);
+  assert.equal(result.request.headers.get('content-type'),'application/json');
+  const missing=await prepareOpenAiRequest(request({projectId},{'content-type':byokJsonMediaType}),deps,opts);
+  assert.equal(missing.status,400);
+  const ambiguous=await prepareOpenAiRequest(request({projectId,apiKey:ownKey},headers),deps,opts);
+  assert.equal(ambiguous.status,400);
   assert.deepEqual(calls,[]);
  }
 });

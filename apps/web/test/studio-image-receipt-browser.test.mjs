@@ -46,11 +46,13 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
   if(url.pathname==='/api/agent/image'){
    assert.equal(Object.hasOwn(body,'apiKey'),false);
    assert.equal(request.headers()['x-compor-openai-key'],apiKey);
+   assert.equal(request.headers()['content-type'],'application/vnd.compor.byok+json');
    const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});
   }
   if(url.pathname==='/api/agent/image/status'){
    assert.deepEqual(Object.keys(body).sort(),['actionBinding','attemptId','pieceId','projectId','version']);
    assert.equal(request.headers()['x-compor-openai-key'],undefined,'consulta de prontidão não carrega credencial');
+   assert.equal(request.headers()['content-type'],'application/json');
    return route.fulfill({json:{status:imageReadiness}});
   }
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:png});

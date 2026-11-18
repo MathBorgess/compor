@@ -1,3 +1,4 @@
+import {byokJsonHeaders} from './openai-byok-transport.ts';
 import * as z from './schema.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
 import {createParallelJournalStore,parseParallelPreparation,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
@@ -40,7 +41,7 @@ export function createParallelDispatcher(options:Options){
     const images=snapshot?await visualInputImages(snapshot):undefined;ensure();
     const visualAuthority=op==='submit'?await authority(value):undefined;ensure();
     if(visualAuthority&&visual)assertReferenceVisualCapability(value.userId,visual,visualAuthority.headers);
-    const result=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers:{...headers,...visualAuthority?.headers,...credentialHeader(value,key)},signal:commandAbort.signal,body:JSON.stringify({op,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.planRequestId,context:value.context,...(visual?{visualInput:visual}:{}),...(images?{referenceImages:images}:{}),...(op==='submit'?{intentId:value.intentId}:{})})});
+    const result=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers:{...headers,...visualAuthority?.headers,...(value.credentialSource==='byok'?byokJsonHeaders(key):{})},signal:commandAbort.signal,body:JSON.stringify({op,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.planRequestId,context:value.context,...(visual?{visualInput:visual}:{}),...(images?{referenceImages:images}:{}),...(op==='submit'?{intentId:value.intentId}:{})})});
     const payload=response.parse(await result.json());
     if(payload.requestId!==undefined&&payload.requestId!==value.planRequestId)throw Error('plan_mismatch');
     if(payload.status==='completed'&&(!result.ok||payload.batchId!==value.batchId||payload.requestId!==value.planRequestId||!payload.planBinding||!validateExplorationContext(value.context)||!validateCompletedExplorationPlan(payload.plan,value.context,visual)))throw Error('plan_mismatch');

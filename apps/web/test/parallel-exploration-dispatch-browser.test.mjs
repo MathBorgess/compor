@@ -20,7 +20,10 @@ test('um despacho mostra recibos progressivos e uma pausa revoga antes de novos 
   const executeGate=new Promise(resolve=>{releaseExecute=resolve;}),sleepGate=new Promise(resolve=>{releaseSleep=resolve;}),first=new Promise(resolve=>{firstSeen=resolve;});
   const images=status=>[1,2,3].map(position=>({requestId:id(position+5),position,status:status(position),ordinal:position,revision:status(position)==='completed'?2:1,replacesImageId:null}));
   const fetchApi=async(path,options)=>{
-    const body=JSON.parse(options.body),expectedKey=path.endsWith('/status')?undefined:key;calls.push({path,op:body.op,keyTransport:options.headers['x-compor-openai-key']===expectedKey&&!Object.hasOwn(body,'apiKey')});const saved=await store.loadPreparation(input.userId);
+    const body=JSON.parse(options.body),expectedKey=path.endsWith('/status')?undefined:key;
+    const mediaType=path.endsWith('/intent')||path.endsWith('/plan')?'application/vnd.compor.byok+json':'application/json';
+    calls.push({path,op:body.op,keyTransport:options.headers['x-compor-openai-key']===expectedKey&&options.headers['content-type']===mediaType&&!Object.hasOwn(body,'apiKey')});
+    const saved=await store.loadPreparation(input.userId);
     if(path.endsWith('/intent')){checks.push(saved?.intentId===input.intentId);return Response.json({status:'created',epoch:1});}
     if(path.endsWith('/plan')){checks.push(Boolean(saved?.planSubmitted));return Response.json(body.op==='submit'?{status:'running',retryAutomatically:false,requestId:input.planRequestId}:{status:'completed',retryAutomatically:false,requestId:input.planRequestId,batchId:input.batchId,plan,planBinding:'proof'});}
     if(path.endsWith('/execute')){checks.push(saved?.stage==='executing'&&Boolean(await store.load({userId:input.userId,projectId:input.projectId,batchId:input.batchId})));await executeGate;commandDone=true;return Response.json({status:'completed'});}

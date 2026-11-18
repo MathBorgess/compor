@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import {byokJsonMediaType} from './openai-byok-transport.ts';
 import type { Actor } from './agent-auth.ts';
 
 export type OpenAiCredentialSource = 'byok' | 'default';
@@ -55,14 +56,20 @@ export async function prepareOpenAiRequest(request:Request,deps:CredentialDepend
   const fail=options.failure??reply;
   if(request.method!=='POST')return fail('method_not_allowed',405);
   if(request.headers.get('origin')!==deps.appOrigin)return fail('invalid_origin',403);
-  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return fail('invalid_request',400);
+  const location=options.keyLocation??'body';
+  const contentType=request.headers.get('content-type')??'';
+  const inHeader=request.headers.has(keyHeader);
+  const markedByok=contentType.trim().toLowerCase()===byokJsonMediaType;
+  if(markedByok){
+    if(!inHeader||(location!=='header-or-legacy-body'&&location!=='separate'))return fail('invalid_request',400);
+  }else if(!/^application\/json(?:\s*;|$)/i.test(contentType))return fail('invalid_request',400);
   let parsed:Awaited<ReturnType<typeof readBody>>;
   try{parsed=await readBody(request,options.bodyLimit);}catch(error){return fail('invalid_request',error instanceof BodyTooLarge?(options.bodyTooLargeStatus??400):400);}
-  const location=options.keyLocation??'body';
-  const inHeader=request.headers.has(keyHeader),inBody=Object.hasOwn(parsed.value,'apiKey');
+  const inBody=Object.hasOwn(parsed.value,'apiKey');
   if((inHeader&&inBody)||(inHeader&&location==='body')||(inBody&&location==='header'))return fail('invalid_request',400);
   function prepare(source:OpenAiCredentialSource,apiKey:unknown,actor?:Actor):PreparedOpenAiRequest {
     const headers=new Headers(request.headers);
+    if(markedByok)headers.set('content-type','application/json');
     let bytes=parsed.bytes;
     if(location==='separate'){
       headers.delete(keyHeader);

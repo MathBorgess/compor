@@ -1,4 +1,5 @@
 import * as z from './schema.ts';
+import {byokJsonHeaders} from './openai-byok-transport.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
 import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
@@ -20,7 +21,7 @@ export function createParallelExplorationClient({store,fetchApi=fetch,canInspect
   function credentialHeader(preparation:ParallelPreparation,apiKey:string):Record<string,string>{
     if(preparation.credentialSource==='byok'){
       if(!/^sk-[^\s]{20,300}$/.test(apiKey))throw Error('credential_unavailable');
-      return {'x-compor-openai-key':apiKey};
+      return byokJsonHeaders(apiKey);
     }
     return {};
   }
