@@ -32,7 +32,7 @@ O estúdio usa function tools definidas em `studio-chat-tools.mjs` e executa aç
 ```text
 apps/
   web/
-    pages/               página do estúdio, documento e 46 entradas HTTP do protótipo
+    pages/               página do estúdio, documento e 46 entradas HTTP do estúdio
     handlers/            implementações HTTP delegadas por Pages API
     studio/              componentes TSX e CSS do estúdio
     lib/                 domínio TS, schemas e adaptadores locais/servidor
@@ -57,7 +57,7 @@ scripts/quality/         testes e avaliadores dos gates
 docs/adr/               decisões e supersessões
 ```
 
-`apps/web` depende dos exports de `packages`; os pacotes não dependem de componentes de UI. Neste protótipo, a infraestrutura do Next é composta em `pages/api` e nos adaptadores de `lib`, com as implementações HTTP em `handlers`. O [ADR 0068](adr/0068-prototipo-pages-router-com-paridade-http.md) registra a fronteira e as condições para promoção. O diretório `lib` contém módulos de navegador e de servidor: sua presença nessa pasta não torna um módulo seguro para importar num componente `use client`. Hoje essa separação depende de revisão, além das restrições do build Next.
+`apps/web` depende dos exports de `packages`; os pacotes não dependem de componentes de UI. No estúdio, a infraestrutura do Next é composta em `pages/api` e nos adaptadores de `lib`, com as implementações HTTP em `handlers`. O [ADR 0068](adr/0068-prototipo-pages-router-com-paridade-http.md) registra a fronteira e as verificações de paridade. O diretório `lib` contém módulos de navegador e de servidor: sua presença nessa pasta não torna um módulo seguro para importar num componente `use client`. Hoje essa separação depende de revisão, além das restrições do build Next.
 
 Os pacotes compartilhados continuam em JavaScript e publicam declarações `.d.ts` onde são consumidos pelo Next. A verificação estrita cobre o app TS/TSX; não converte essas implementações JavaScript em código estaticamente verificado. Os testes exercitam os contratos reais.
 
@@ -77,7 +77,7 @@ As ações de navegação, configurações, revisão e salvamento ficam num menu
 
 `page.tsx` abre sempre o estúdio atual. O caminho legado e seu seletor foram retirados por autorização de Matheus ([ADR 0036](adr/0036-remocao-da-interface-legada.md)). A entrada oferece Google. `workspace.tsx` verifica sessão e carrega o estúdio por importação dinâmica após autenticação. O símbolo usa os ativos da marca e respeita movimento reduzido.
 
-Na primeira visita sem cookie de sessão do Supabase, com login configurado, `proxy.ts` responde `GET /` sem passar pelo App Router. `lib/light-entry.ts` gera HTML sem script externo, com a cópia de `lib/entry-content.ts` e os mesmos arquivos CSS, importados como texto por uma regra do Turbopack. Um script inline grava o rascunho com as chaves que `workspace.tsx` reivindica depois do login. Com cookie, sem login configurado ou com login local, `/` segue para `page.tsx`. Ver [ADR 0034](adr/0034-entrada-leve-sem-runtime.md) e, sobre o bundle, o [ADR 0033](adr/0033-turbopack-e-analise-do-bundle.md).
+Na primeira visita sem cookie de sessão do Supabase, com login configurado, `proxy.ts` responde `GET /` antes de renderizar a página do estúdio. `lib/light-entry.ts` gera HTML sem script externo, com a cópia de `lib/entry-content.ts` e os mesmos arquivos CSS, importados como texto por uma regra do Turbopack. Um script inline grava o rascunho com as chaves que `workspace.tsx` reivindica depois do login. Com cookie, sem login configurado ou com login local, `/` segue para `page.tsx`. Ver [ADR 0034](adr/0034-entrada-leve-sem-runtime.md) e, sobre o bundle, o [ADR 0033](adr/0033-turbopack-e-analise-do-bundle.md).
 
 `studio-app.tsx` mantém a preparação explícita de projeto e post. O nome do projeto é escolhido pela pessoa, independente do contexto; respostas e rascunhos herdados são preservados conforme o [ADR 0048](adr/0048-nome-explicito-e-contexto-independente.md). O nome organizacional do post, sua confirmação e a exclusão lógica continuam conforme o [ADR 0051](adr/0051-nome-confirmacao-e-exclusao-de-posts.md). A navegação global mantém o menu lateral com ícones. Configurações do projeto usam um modal de viewport com abas, conteúdo rolável e saída visível. Referências abrem a página dedicada do ADR 0058, exceto pela aba Referências das configurações e por “Escolher mais referências” no post, que mostram a bancada em janela modal ([ADR 0059](adr/0059-aba-referencias-dentro-do-modal.md)). Essa decisão substitui a apresentação em página do [ADR 0050](adr/0050-configuracoes-do-projeto-em-pagina.md); `workspacePage` e o componente dessa página foram removidos.
 
