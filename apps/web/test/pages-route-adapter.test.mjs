@@ -73,3 +73,35 @@ test('MCP pode emitir o primeiro evento enquanto o fluxo continua e observa desc
   const [chunk]=await once(res,'data');assert.equal(chunk.toString(),'data: pronto\n\n');res.destroy();
   await Promise.all([signal,cancelled]);
 });
+
+test('HEAD pode encerrar mesmo quando a fonte demora para concluir o cancelamento',async t=>{
+  let settle,seen;const pending=new Promise(resolve=>settle=resolve),called=new Promise(resolve=>seen=resolve);
+  t.after(()=>settle());
+  const origin=await listen(t,'/api/mcp',{GET:()=>new Response(new ReadableStream({cancel(){seen();return pending;}}))});
+  const response=await fetch(origin+'/api/mcp',{method:'HEAD'});
+  assert.equal(response.status,200);assert.equal(await response.text(),'');await called;
+});
+
+test('corpo recusado antes de abrir o leitor é drenado e a conexão pode atender o próximo pedido',async t=>{
+  const {Agent}=await import('node:http');
+  const agent=new Agent({keepAlive:true,maxSockets:1});t.after(()=>agent.destroy());
+  const origin=await listen(t,'/api/agent',{POST:()=>new Response(null,{status:403}),GET:()=>Response.json({ok:true})});
+  const send=(method,payload)=>new Promise((resolve,reject)=>{
+    const req=httpRequest(origin+'/api/agent',{method,agent},res=>{
+      const socket=res.socket;res.resume();res.once('end',()=>resolve({status:res.statusCode,socket}));});
+    req.once('error',reject);req.end(payload);
+  });
+  const refused=await send('POST',Buffer.alloc(128*1024));assert.equal(refused.status,403);
+  const next=await send('GET');assert.equal(next.status,200);assert.equal(next.socket,refused.socket);
+});
+
+test('linhas Cookie separadas têm a semântica HTTP do Node no jar do handler',async t=>{
+  const origin=await listen(t,'/auth/session',{GET:async()=>Response.json((await cookies()).getAll())});
+  const values=await new Promise((resolve,reject)=>{
+    const req=httpRequest(origin+'/auth/session',{headers:['Host','localhost','Cookie','account=alice','Cookie','session=example']},res=>{
+      let body='';res.setEncoding('utf8');res.on('data',chunk=>body+=chunk);res.once('end',()=>resolve(JSON.parse(body)));
+    });
+    req.once('error',reject);req.end();
+  });
+  assert.deepEqual(values,[{name:'account',value:'alice'},{name:'session',value:'example'}]);
+});

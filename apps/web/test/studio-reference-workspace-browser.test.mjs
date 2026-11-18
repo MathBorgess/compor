@@ -9,6 +9,11 @@ import {chromium} from 'playwright-core';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const source=`
+import './studio/context-strip.css';
+import './studio/studio-shell.css';
+import './studio/studio-reference-workspace.css';
+import './studio/studio-reference-chat.css';
+
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import StudioShell from './studio/studio-shell.tsx';

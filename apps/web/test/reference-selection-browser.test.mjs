@@ -14,6 +14,8 @@ const pin=(id,title)=>({id,title,board:'behance/typography',originUrl:`https://w
 const pixels=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64');
 // The same wiring as the studio reference screen: tray, external suggestions and generated images share one selection.
 const source=`
+import './studio/reference-exploration.css';
+
 import {useRef,useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import ReferenceExploration from './studio/reference-exploration.tsx';

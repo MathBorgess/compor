@@ -8,6 +8,9 @@ import {chromium} from 'playwright-core';
 
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const source=`
+import './studio/reference-workbench.css';
+import './studio/reference-exploration.css';
+
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import ReferencePanel from './studio/studio-reference-panel.tsx';

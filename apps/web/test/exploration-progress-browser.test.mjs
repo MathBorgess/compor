@@ -9,6 +9,9 @@ import {chromium} from 'playwright-core';
 const browserPath=process.env.BROWSER_EXECUTABLE_PATH;
 const userId='00000000-0000-4000-8000-000000000001',projectId='00000000-0000-4000-8000-000000000003';
 const source=`
+import './studio/reference-workbench.css';
+import './studio/reference-exploration.css';
+
 import {useState} from 'react';
 import {createRoot} from 'react-dom/client';
 import ReferencePanel from './studio/studio-reference-panel.tsx';
