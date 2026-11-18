@@ -3,19 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import * as z from '../lib/schema.ts';
 import { createExplorationPrompt } from "@compor/agile-deliberation/exploration";
-import { criterionChoice } from "../lib/studio-direction";
 import { pendingSelectionQuestion } from "../lib/studio-state";
 import type { StudioState } from "../lib/studio-domain";
 import {audienceResolution} from '../lib/studio-context.ts';
-import { generatedSignalsSchema,currentGeneratedFeedback } from "../lib/generated-feedback-contract";
 import { markBeforeDispatch } from "../lib/exploration-pending";
 import { BATCH_SIZE,pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
-import { referenceSignalsResponseSchema,currentReferenceFeedback } from "../lib/reference-exploration-contract";
+import {readExplorationGate,readExplorationSignals,planningCriteria,planningFeedback} from '../lib/exploration-feedback.ts';
 import {postContext} from '../lib/studio-post-context.ts';
 
 const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()) });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
-const gateSchema=z.object({status:z.enum(['active','awaiting_feedback'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(["running", "unknown", "completed", "rejected"]) })).check(z.maxLength(100)) });
 
 type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string;onCompleted?:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void> };
@@ -176,27 +173,14 @@ export function useExplorationLoop(props: LoopProps) {
             const state = getState();
             const apiKey = getApiKey();
             if (!isAuthenticated() || !current.current.hasApiKey || !sameCredential() || (source === "byok" && !/^sk-[^\s]{20,300}$/.test(apiKey)) || !state || state.adjustments.some(item => !["completed", "failed"].includes(item.status))) return;
-            const gateResponse=await fetch('/api/studio/explorations/status',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:props.projectId}),signal:cancel.signal});
-            if(!gateResponse.ok)throw Error('gate_unavailable');
-            const gate=gateSchema.parse(await gateResponse.json());
+            const gate=await readExplorationGate(props.projectId,cancel.signal);
             if(!active || cancel.signal.aborted)return;
-            if(gate.status==='awaiting_feedback') {
+            if(gate==='awaiting_feedback') {
               progress={...progress,awaitingFeedback:true};
               localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
               setAwaitingFeedback(true);setPhase('idle');setCountdown(null);return;
             }
-            const readSignals=async(path:string,local=false)=>{
-              const body={projectId:props.projectId,scope:local?'project':'account',...(local&&props.conversationId&&props.conversationId!=='references'?{pieceId:props.conversationId}:{})};
-              const response=await fetch(path,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body),signal:cancel.signal});
-              if(!response.ok)throw Error('feedback unavailable');return response.json();
-            };
-            const local=props.conversationId&&props.conversationId!=='references';
-            const [generated,external]=await Promise.all([
-              Promise.all([readSignals('/api/studio/explorations/signals'),...(local?[readSignals('/api/studio/explorations/signals',true)]:[])]),
-              Promise.all([readSignals('/api/studio/references/signals'),...(local?[readSignals('/api/studio/references/signals',true)]:[])])
-            ]);
-            const generatedSignals=generated.flatMap(value=>generatedSignalsSchema.parse(value).signals);
-            const referenceSignals=external.flatMap(value=>referenceSignalsResponseSchema.parse(value).signals);
+            const {generatedSignals,referenceSignals}=await readExplorationSignals(props.projectId,props.conversationId||'references',fetch,cancel.signal);
             const latestState=current.current.getState();
             if(!active || cancel.signal.aborted || !latestState)return;
             const engaged=new Set(generatedSignals.filter(item=>item.projectId===props.projectId&&(item.action==='selected'||Boolean(item.comment.trim()))).map(item=>item.imageId));
@@ -217,9 +201,8 @@ export function useExplorationLoop(props: LoopProps) {
               continue;
             }
             const sequence=progress.sequence;
-            const accepted = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "accept").slice(0,4).map(item => item.statement.slice(0,160));
-            const rejected = state.direction.criteria.filter(item => criterionChoice(state.direction, item.id) === "reject").slice(0,4).map(item => item.statement.slice(0,160));
-            const feedback=[...currentGeneratedFeedback(generatedSignals),...currentReferenceFeedback(referenceSignals)];
+            const {accepted,rejected}=planningCriteria(state.direction);
+            const feedback=planningFeedback(generatedSignals,referenceSignals);
             const audience=audienceResolution(latestState);
             if(audience.status==='conflict')return;
             const { prompt,composition,contrast } = createExplorationPrompt({ idea:current.current.idea??'', offer: latestState.brief.offer, audience: audience.value, facts:latestState.offerFacts?.map(({label,value,status})=>({label,value,status})), goal: latestState.brief.action, direction: latestState.brief.direction, accepted, rejected, feedback, sequence });

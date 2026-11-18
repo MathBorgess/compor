@@ -1,7 +1,7 @@
 "use client";
 
 import {useEffect,useRef,useState} from 'react';
-import * as z from '../lib/schema.ts';
+import {readExplorationGate} from '../lib/exploration-feedback.ts';
 import {audienceResolution} from '../lib/studio-context.ts';
 import {pendingSelectionQuestion} from '../lib/studio-state.ts';
 import {postContext} from '../lib/studio-post-context.ts';
@@ -21,7 +21,6 @@ import type {VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 
 type Props={userId:string;projectId:string;conversationId:string;state:StudioState|null;getState:()=>StudioState|null;source:'byok'|'default';credentialEpoch:number;hasApiKey:boolean;getApiKey:()=>string;isAuthenticated:()=>boolean;available:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;loadReference?:(id:string)=>Promise<StoredReference|null|undefined>;visible:boolean;idea:string;onCompleted:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void>};
-const gate=z.object({status:z.enum(['active','awaiting_feedback'])});
 const wait=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
 const fingerprint=(state:StudioState,idea:string)=>JSON.stringify({idea,brief:state.brief,persona:state.persona,direction:state.direction,offerFacts:state.offerFacts,references:state.references});
 
@@ -64,9 +63,8 @@ export function useParallelExploration(props:Props){
     };
     const stop=()=>{if(!active)return;active=false;const stoppedAt=Date.now();if(dispatcher)runtime.stopping=dispatcher.stop();if(last){const scope={userId:last.preparation.userId,projectId:last.preparation.projectId,batchId:last.preparation.batchId};runtime.freezing=(async()=>{const journal=await store.load(scope);if(journal)await store.update(scope,journal.revision,{kind:'pause',now:stoppedAt});})();}};run.current={stop,valid};
     async function requireGate(allowResume:boolean){
-      const reply=await fetch('/api/studio/explorations/status',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:identity.projectId})});
-      if(!reply.ok)throw Error('gate_unavailable');const value=gate.parse(await reply.json());if(!valid())throw Error('paused');
-      if(value.status==='active')return 'active' as const;
+      const status=await readExplorationGate(identity.projectId);if(!valid())throw Error('paused');
+      if(status==='active')return 'active' as const;
       if(!allowResume){setAwaitingFeedback(true);setStatus('Aguardando sua decisão sobre as propostas.');return 'blocked' as const;}
       return 'resume' as const;
     }
