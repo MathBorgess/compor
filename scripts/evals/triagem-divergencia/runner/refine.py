@@ -5,6 +5,7 @@ import json
 import os
 from pathlib import Path
 import subprocess
+from tempfile import TemporaryDirectory
 
 def sha(data):
     return hashlib.sha256(data).hexdigest()
@@ -31,6 +32,8 @@ def refine(root, number):
         raise ValueError("Development feedback scope")
     if number-1 in protocol["pixelRounds"]:
         feedback["pixels"]=read(prev/"pixels"/"feedback-dev.json")
+        if any(case.get("split")!="dev" for case in feedback["pixels"]["cases"]):
+            raise ValueError("Pixel feedback outside development set")
     feedback_file=prev/"feedback-development.json"
     save(feedback_file,feedback)
     parent_hash=sha(feedback_file.read_bytes())
@@ -66,10 +69,14 @@ def refine(root, number):
         state=subprocess.run(["codex","login","status"],capture_output=True,text=True,env=env,check=True)
         if "ChatGPT" not in state.stdout+state.stderr:
             raise ValueError("ChatGPT login required for the editor")
-        args=["codex","exec","--ephemeral","--ignore-rules","--ignore-user-config","--skip-git-repo-check",
-              "-s","read-only","-m",model,"-c",'model_reasoning_effort="medium"',"--json","--output-schema",
-              str(schema_file),"-o",str(answer),"-"]
-        run=subprocess.run(args,input=prompt,text=True,capture_output=True,cwd=folder,env=env,timeout=480,check=True)
+        with TemporaryDirectory(prefix="compor-revision-") as tmp:
+            isolated=Path(tmp)
+            save(isolated/"schema.json",schema)
+            args=["codex","exec","--ephemeral","--ignore-rules","--ignore-user-config","--skip-git-repo-check",
+                  "--disable","apps","-s","read-only","-m",model,"-c",'model_reasoning_effort="medium"',
+                  "--json","--output-schema",str(isolated/"schema.json"),"-o",str(isolated/"answer.json"),"-"]
+            run=subprocess.run(args,input=prompt,text=True,capture_output=True,cwd=isolated,env=env,timeout=480,check=True)
+            save(answer,read(isolated/"answer.json"))
         events=[json.loads(line) for line in run.stdout.splitlines() if line.startswith("{")]
         if any(e.get("item",{}).get("type") in {"command_execution","mcp_tool_call","web_search","file_change"} for e in events):
             raise ValueError("Editor used tools")

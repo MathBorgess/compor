@@ -114,3 +114,20 @@ test('prepara os dados cegos pela composição real, sem expor declarações da 
   assert.equal(buildDivergenceReview(reordered,plan).subject,a.subject);
   assert.throws(()=>buildDivergenceReview(context,{items:[items[0],items[1],items[1]]}),/invalid_divergence_subject/);
 });
+
+test('exige uma leitura vinculada por ID em cada tamanho de seleção aceito pelo estúdio',()=>{
+  // Structural coverage complements the visual study, whose evaluated selections contain 1–6 files.
+  for(let count=0;count<=21;count++){
+    const entries=Array.from({length:count},(_,i)=>({...visual.entries[0],id:uuid(i+1),ordinal:i+1}));
+    const input={...visual,entries};
+    const raw=candidateOutput();
+    raw.plan.referenceIds=entries.map(ref=>ref.id);
+    raw.referenceReadings=entries.map(ref=>({...raw.referenceReadings[0],referenceId:ref.id}));
+    const accepted=parseCandidateOutput(raw,context,input);
+    if(count>20){assert.equal(accepted,null);continue;}
+    assert.equal(accepted?.referenceReadings.length,count);
+    if(count){
+      assert.equal(parseCandidateOutput({...raw,referenceReadings:raw.referenceReadings.slice(1)},context,input),null);
+    }
+  }
+});

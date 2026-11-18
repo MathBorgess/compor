@@ -37,7 +37,7 @@ def run(root, start):
         if r in protocol['pixelRounds']:
             node('runner/round.mjs','pixels',root,r,paid=True)
             out=root/f'round-{r}'/'pixels'
-            if not (out/'blind-index.json').exists() and not out.exists():
+            if not out.exists():
                 python('pixels/judge.py','prepare',root,r,out)
             python('pixels/judge.py','judge',out)
         print(f'Condition {r} complete',flush=True)
