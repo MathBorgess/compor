@@ -10,6 +10,8 @@ Desenho e primeira baseline do PR #61, revisão inicial `8817f57`. A unidade de 
 | [4. Variação e convergência](04-variacoes.md) · planejador, GPT Image e criador | Três caminhos dentro da direção. O comentário e a escolha do criador qualificam a rodada seguinte. | Por lote completo, contar alternativas distinguíveis **e** utilizáveis. Por par de lotes com feedback, medir se a preferência construída pelo criador se tornou mais reconhecível. Uma solicitação de nova direção inicia outro grupo de comparação. |
 | [5. Vontade de usar](05-post.md) · criador | Arte e legenda da versão, eventual pedido de variação e sua intenção de uso. A resposta pode orientar a etapa 1 ou 4 de uma nova rodada. | Por versão exposta e avaliada, registrar vontade de usar a peça e confiança declarada no objetivo. Por tarefa, contar se as variantes avaliadas continuaram utilizáveis. Preservar separadamente exploração voluntária, correção, aprovação explícita, aprovação herdada, exportação e resultado posterior observado. |
 
+[Revisar as três propostas de melhoria por marco](propostas-por-marco.md)
+
 ## Como operar o juiz
 
 1. Fixar antes do ensaio o briefing, fatos obrigatórios, funções esperadas das referências, posição das versões na linhagem, rubrica e casos de comparação. Manter conjunto de desenvolvimento separado dos casos reservados. Derivar a amostra do pedido de avaliação e das permissões para essa finalidade.
