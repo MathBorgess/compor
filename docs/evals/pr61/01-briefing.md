@@ -57,3 +57,12 @@ node --import tsx ../../scripts/evals/pr61/briefing/baseline.mjs --judge
 ```
 
 Na próxima comparação, manter a saída atual do estúdio e a saída candidata para os mesmos casos em um conjunto reservado, sob a mesma configuração. Incluir descrições escassas, venda B2B com comprador diferente do destinatário e posts sem CTA comercial. O próximo juiz recebe só os dados autorizados do caso e a resposta a avaliar. A promoção depende de evidência de compreensão e fidelidade, e o sinal humano permanece separado.
+
+
+## Avaliação agrupada de 18/11/2026
+
+O ensaio usa cinco projetos sintéticos. Três orientam mudanças (mentoria, piloto de software e encontro comunitário). Dois ficam reservados até a análise final (audioguia e vale-oficina). A unidade é um primeiro turno de um projeto. A cada rodada reconstruímos o estado pelo redutor do estúdio e obtemos o plano pelo código do repositório. Cada caso envia a instrução de persona vigente, o plano e a mensagem a uma nova sessão efêmera do Codex CLI autenticada com ChatGPT. O executor verifica o identificador da sessão, a ausência de ferramentas no turno e o texto devolvido. É uma aproximação da habilidade textual. O ensaio não executa o agente gerenciado, suas ferramentas de escrita ou a confirmação da pessoa.
+
+O juiz recebe o texto do pedido, a resposta, o contexto local efetivamente entregue ao planejador e a rubrica fixa de seis dimensões. Identificadores aleatórios e ordem embaralhada ocultam revisão e conjunto. Calculamos casos aprovados / cinco, pontos / 30 e a presença de oferta, público, ação e ideia no plano / cinco. Preço, data, benefício ou condição comercial inventados reprovam o caso. Os critérios individuais de 5/6 e as três dimensões obrigatórias acima valem em todas as rodadas.
+
+O conjunto foi congelado em `dbc5718`. SHA-256 do conteúdo serializado dos casos: `c0e75da08d12bb319e49c673eec8305d973a317d088d89a4cb0c77b3aae21434`. O executor e os cinco pedidos estão em [briefing](../../../scripts/evals/pr61/briefing/).

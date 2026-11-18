@@ -69,3 +69,12 @@ Matheus escolheu a etapa 3 para o ciclo deste PR. A candidata da etapa 2 ficou p
 A comparação foi feita no mesmo host, contra a mesma cópia sintética dos feeds. O comando `node scripts/evals/pr61/referencias/baseline.mjs` no PR reproduz as oito linhas da revisão inicial (SHA-256 `b241cf82355fa66160df52855f7ce13885f52d7571a97cfd898c2218dd996029`). Na revisão isolada, o argumento `discovery` exercita a candidata e `combined` conserva o controle. Os testes executados nessa revisão isolada cobriram 11 pins históricos aprovados, uma escolha anterior e quatro novas sugestões no Chromium, além do teto de 12 novas na rota, com recusa e duplicatas excluídas. Os resultados da coluna da candidata pertencem ao experimento local.
 
 A melhora medida é cobertura de sugestões pertinentes, pelos títulos de fixtures sintéticas. O cenário de falsa semelhança lexical continua com 0/4. O efeito sobre escolha, intenção e pedidos adicionais por pessoa permanece em aberto.
+
+
+## Avaliação agrupada de 18/11/2026
+
+Rodamos cinco buscas de descoberta por rodada. Três casos de desenvolvimento retomam a oficina de cerâmica, a colisão lexical entre “arte” e “descarte” e a oficina com histórico cheio. Dois casos novos ficam reservados até a análise final. Um pede conserto de bicicleta com uma recusa registrada. O outro pede troca de sementes com duplicata no histórico. Todos usam metadados sintéticos de RSS, origem permitida, leitura limitada e parser/ranking do estúdio. Os adaptadores devolvem exclusivamente fixtures. Os quatro primeiros lugares seguem a seleção exibida pela região de sugestões da interface. A disponibilidade de cada board faz parte do resultado. Uma busca separada em cada rodada pode devolver a mesma ordem por ser determinística.
+
+O juiz recebe pedido, finalidade e até quatro títulos e fontes realmente retornados. Cada espaço vale um ponto se o título sustentar diretamente o pedido. Ausência e irrelevância valem zero. Calculamos casos com ao menos três lugares pertinentes / cinco e total de lugares pertinentes / 20. A ausência de duplicatas e recusas entre sugestões é verificada pelo executor em cada caso. Violações impedem promoção. A pertinência avaliada é do metadado. Pixels, decisão de seleção e satisfação das pessoas continuam sem medida.
+
+O conjunto foi congelado em `dbc5718`. SHA-256 do conteúdo serializado dos casos: `cfa0bc29a6686e5ca1361d2035e099006b30428fd80cbd55a0d2787f60ee19fd`. O executor e as duas novas fixtures estão em [referências](../../../scripts/evals/pr61/referencias/).
