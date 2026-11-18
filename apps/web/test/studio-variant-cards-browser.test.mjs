@@ -27,6 +27,7 @@ export default function Fixture(){const[selected,setSelected]=useState(1),[used,
  await page.route('**/api/image-assets?**',route=>{const query=new URL(route.request().url()).searchParams;assert.equal(query.get('version'),'3');return route.fulfill({json:{assets:[{assetId,origin:'unknown'}],nextCursor:null}});});
  await page.route('**/api/images?**',route=>{const query=Object.fromEntries(new URL(route.request().url()).searchParams);reads.push(query);return route.fulfill({contentType:'image/png',body:Buffer.from(png,'base64')});});
  await page.goto(`${origin}/${basename(fixture)}`);
+ await page.getByRole('article').first().waitFor();
  assert.equal(await page.getByRole('article').count(),2);
  await page.getByRole('img',{name:'Arte da versão 1',exact:true}).waitFor();
  assert.equal(await page.getByRole('img',{name:'Arte da versão 2',exact:true}).count(),0,'o segundo card representa o retoque mais recente da variante');
