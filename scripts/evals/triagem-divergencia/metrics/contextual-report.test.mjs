@@ -77,6 +77,9 @@ test('one SHA, one receipt and truthful J1/J2 attribution per slot; the subtract
   writeFileSync(join(source,'art-1.png'),png);
   assert.throws(()=>receiptSlot(row),/wrong image attribution/);
   row.record.origin='j1';
+  assert.throws(()=>receiptSlot(row),/J1 judgment cannot corroborate/);
+  row.j1Pixel={position:1,sha256};
+  save(join(source,'images.json'),[art]);
   assert.equal(receiptSlot(row).attribution.origin,'j1');
   row.pixel.attributes.pop();
   assert.throws(()=>receiptSlot(row),/missing attribute/);

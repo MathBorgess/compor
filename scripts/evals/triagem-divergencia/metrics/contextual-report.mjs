@@ -78,7 +78,7 @@ function checkedPixels(pixel, ids, sha256) {
   return {usable:pixel.usable,fidelity};
 }
 
-export function receiptSlot({dir, source, id, position, record, exported, receipt, pixel, attributeIds}) {
+export function receiptSlot({dir, source, id, position, record, exported, receipt, pixel, attributeIds, j1Pixel}) {
   assert.equal(record.id, id);
   assert.equal(receipt?.kind, 'image');
   assert.equal(receipt.state, 'complete');
@@ -90,7 +90,11 @@ export function receiptSlot({dir, source, id, position, record, exported, receip
   assert.equal(record.sha256, art.sha256);
   const orig = join(source,name);
   assert.equal(record.origin, existsSync(orig) ? 'j1' : 'j2', 'wrong image attribution');
-  if (record.origin === 'j1') assert.equal(sha(orig), art.sha256, 'wrong reused PNG');
+  if (record.origin === 'j1') {
+    assert.equal(sha(orig), art.sha256, 'wrong reused PNG');
+    assert.equal(j1Pixel?.sha256, art.sha256, 'J1 judgment cannot corroborate reuse');
+    assert.deepEqual(json(join(source,'images.json'))[position-1],art,'original image receipt differs from reuse');
+  } else assert.ok(j1Pixel?.sha256==null,'J1 judged a slot attributed as new');
   assert.deepEqual(art.referenceIds, art.delivered.map(f=>f.id));
   assert.equal(art.model, rateCard.model);
   const cost = estimateImageCost(art.usage,rateCard,art.model);
@@ -183,6 +187,9 @@ function confirmIntervention(proof, source, p, selection) {
 export function buildContextualReport(root, round, {includeHoldout=false}={}) {
   const {protocol,original,view,provenance} = scopeMetadata(root,round,includeHoldout);
   const {receipts,quota} = journal(root,protocol);
+  const j1Judgments = json(join(original,'pixels','judgments.json'));
+  assert.equal(j1Judgments.version,1);
+  assert.deepEqual(j1Judgments.cases.map(c=>c.caseId).sort(),[...protocol.caseIds].sort());
   const judgments = readIfPresent(join(view,'pixels','judgments.json'));
   if (judgments) {
     assert.equal(judgments.version,1);
@@ -200,6 +207,7 @@ export function buildContextualReport(root, round, {includeHoldout=false}={}) {
     const sealed = Boolean(meta && proof), plans={}, inputs={};
     const trial = {id:item.id,split:item.split,referenceCount:selection.length,optionalOrigin:selection.find(e=>e.id===optional).inputOrigin,
       state:sealed?proof.state:'pending',reason:sealed?(proof.reason??null):'case_view_incomplete',gates:{},images:[],pixelPairs:{}};
+    const j1Case = j1Judgments.cases.find(c=>c.caseId===item.id);
     const judged = judgments?.cases.find(c=>c.caseId===item.id);
     if (judged) {assert.equal(judged.split,item.split); assert.equal(judged.optionalId,optional);}
     if (sealed) {
@@ -220,7 +228,7 @@ export function buildContextualReport(root, round, {includeHoldout=false}={}) {
         const i=position-1, pixel=pixels?.slots[i], id=[round,item.id,arm,position].join('/');
         if (complete) {
           const observed=receiptSlot({dir:out,source:join(source,arm),id,position,record:record.slots[i],
-            exported:saved[i],receipt:receipts.get(id),pixel,attributeIds:spec.attributeIds});
+            exported:saved[i],receipt:receipts.get(id),pixel,attributeIds:spec.attributeIds,j1Pixel:j1Case.arms[arm].slots[i]});
           assert.equal(observed.input.promptSha256,proof.prompts[i]);
           assert.deepEqual(observed.input.delivered,proof.inputs[arm]);
           slots.push(observed.slot); inputs[arm].push(observed.input); trial.images.push(observed.attribution);
@@ -249,7 +257,7 @@ export function buildContextualReport(root, round, {includeHoldout=false}={}) {
     byOptionalOrigin[origin]=summarizeAblation(specs.filter(s=>ids.has(s.id)),rows.filter(r=>ids.has(r.caseId))).all;
   }
   return {version,round,scope:includeHoldout?'all':'development',corpus:protocol.corpus,provenance,
-    gate:'contextual J2 on the original with-plan',judgeScope:judgments?'paired pixels':'pixels not judged',
+    gate:'contextual J2 on the original with-plan',judgeScope:judgments?'paired assessment recorded':'pixel assessment pending',
     accountingBasis:'J1 slots reused at zero incremental cost; J2 slots first acquired in this view. Aggregate image costs value all included slots at the frozen rates. Managed plan prices and invoice totals unknown.',
     rateCard,quota,accounting,trials,bySplitNOriginArm,byOptionalOrigin,aggregate:summarizeAblation(specs,rows)};
 }
