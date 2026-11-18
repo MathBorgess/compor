@@ -1,0 +1,73 @@
+[
+  {
+    "id": "dev-feira", "split": "dev",
+    "idea": "Post vertical de apresentação da Feira de compotas.",
+    "offer": "Feira de compotas", "audience": "Visitantes da feira do bairro", "goal": "Anunciar o dia da feira.",
+    "direction": "Quero um cartaz de feira em papel. O selo que enviei deve aparecer íntegro. Se anexei o cartão de cores, use apenas as cores dele no fundo e na tipografia. Nunca reproduza as barras do cartão. Pode variar a composição do pote, do selo e do título. Apresente somente o texto confirmado.",
+    "facts": [["Nome", "Feira de compotas"], ["Data", "14 de agosto"]],
+    "invariants": ["Cartaz vertical impresso em papel com título legível.", "O selo permanece inteiro.", "Proibidas faixas de amostras de cores."],
+    "optional": "oficina-paleta",
+    "references": [
+      {"asset":"oficina-marca","label":"selo da feira","origin":"local-upload","intent":"Assinar a feira com o selo sem reinterpretá-lo.","attribute":"Emblema verde arredondado com vazio claro interno.","placement":"Selo inteiro em área de assinatura visível.","forbidden":"Preencher o vazio ou substituir por círculo liso.","decision":"keep"},
+      {"asset":"oficina-paleta","label":"cartão de cores","origin":"external","intent":"Aplicar o acorde cromático, independentemente da geometria da amostra.","attribute":"Azul-petróleo, ocre e creme combinados.","placement":"Fundo e tipografia, fora do selo.","forbidden":"Copiar a divisão da referência em faixas verticais.","decision":"keep"}
+    ]
+  },
+  {
+    "id":"dev-concerto","split":"dev",
+    "idea":"Peça vertical para o Concerto de bolso.","offer":"Concerto de bolso","audience":"Pessoas que frequentam a biblioteca","goal":"Anunciar local e nome da apresentação.",
+    "direction":"Trate como um programa musical em papel. A forma do símbolo que enviei identifica a série. Da maquete gerada, conserve a faixa horizontal da base só para o local. A amostra pontilhada, se estiver anexada, é um exemplo do que deve ficar de fora. Quero superfícies lisas. Explore como revelar o instrumento sem mudar o texto confirmado.",
+    "facts":[["Nome","Concerto de bolso"],["Local","Sala do Lago"]],
+    "invariants":["Programa musical vertical com um instrumento identificável.","Faixa inferior serve ao local.","Superfícies lisas."],
+    "optional":"mostra-pontos",
+    "references":[
+      {"asset":"mostra-layout","label":"maquete do local","origin":"generated","intent":"Usar a base horizontal como suporte do local.","attribute":"Faixa retangular horizontal junto à base.","placement":"Base da peça sob o nome do local.","forbidden":"Interpretar a faixa como moldura nos quatro lados.","decision":"keep"},
+      {"asset":"mostra-pontos","label":"amostra pontilhada","origin":"external","intent":"Identificar uma textura recusada.","attribute":"Pontos pequenos repetidos devem ficar ausentes.","placement":"Superfícies lisas inclusive no fundo.","forbidden":"Transferir a trama pontilhada do contraexemplo.","decision":"omit"},
+      {"asset":"mostra-marca","label":"símbolo da série","origin":"local-upload","intent":"Preservar a geometria original da assinatura da série.","attribute":"Símbolo violeta triangular com entalhe inferior.","placement":"Assinatura visível inteira.","forbidden":"Apagar o entalhe.","decision":"keep"}
+    ]
+  },
+  {
+    "id":"dev-troca","split":"dev",
+    "idea":"Cartaz vertical para a Troca de cadernos.","offer":"Troca de cadernos","audience":"Alunos do ateliê","goal":"Identificar o encontro sem acrescentar oferta comercial.",
+    "direction":"Os dois selos enviados são coautores. Use-os inteiros e com o mesmo peso. A amostra externa de listras é um contraexemplo, quero papel liso. Se anexei a maquete gerada, aproveite o contraste entre uma massa grande à esquerda e o detalhe separado à direita no fundo. As assinaturas têm peso igual em qualquer composição. Mostre apenas o nome.",
+    "facts":[["Nome","Troca de cadernos"]],
+    "invariants":["Dois selos separados de igual destaque.","Papel liso.","Formato vertical e nome legível."],
+    "optional":"oficina-layout",
+    "references":[
+      {"asset":"mostra-marca","label":"selo do primeiro coautor","origin":"local-upload","intent":"Assinar com o primeiro coautor em igualdade de peso.","attribute":"Selo triangular violeta com entalhe inferior.","placement":"Separado do selo verde e de tamanho semelhante.","forbidden":"Fundir os dois selos.","decision":"keep"},
+      {"asset":"oficina-layout","label":"maquete do fundo","origin":"generated","intent":"Aproveitar a distribuição assimétrica do fundo.","attribute":"Massa grande à esquerda e um detalhe separado à direita.","placement":"No fundo, mantendo as assinaturas em destaque equivalente.","forbidden":"Transformar a hierarquia do fundo em hierarquia entre os selos.","decision":"keep"},
+      {"asset":"oficina-listras","label":"amostra listrada","origin":"external","intent":"Reconhecer a textura recusada.","attribute":"Superfície sem as listras oblíquas da referência.","placement":"Toda a área de papel.","forbidden":"Repetir diagonais no fundo.","decision":"omit"},
+      {"asset":"oficina-marca","label":"selo do segundo coautor","origin":"local-upload","intent":"Assinar com o segundo coautor em igualdade de peso.","attribute":"Emblema verde arredondado com vazio claro interno.","placement":"Separado do violeta e de tamanho semelhante.","forbidden":"Encobrir o vazio com o selo violeta.","decision":"keep"}
+    ]
+  },
+  {
+    "id":"reserva-cais","split":"holdout",
+    "idea":"Peça vertical de sinalização da Leitura no cais.","offer":"Leitura no cais","audience":"Leitores que chegam a pé","goal":"Identificar o ponto de encontro.",
+    "direction":"Quero uma placa editorial, sem fotografia. Preserve o símbolo enviado da passagem em arco. Da amostra com quadrantes, interessa só o acorde de cores para fundo e texto. A maquete de moldura fechada é um contraexemplo. Use a referência dos dois fios para separar o local na base. Da amostra de ondas, se anexada, aproveite o ritmo apenas no canto inferior direito. Somente nome e local.",
+    "facts":[["Nome","Leitura no cais"],["Local","Ponte Dois"]],
+    "invariants":["Placa editorial vertical, sem fotografia.","Área do local na base com divisor duplo.","A margem externa permanece aberta."],
+    "optional":"cais-ondas",
+    "references":[
+      {"asset":"cais-acorde","label":"cartão de cores","origin":"external","intent":"Aplicar o acorde de cores da amostra.","attribute":"Vinho escuro, salmão e marfim.","placement":"Fundo e texto da placa.","forbidden":"Copiar os quadrantes do cartão.","decision":"keep"},
+      {"asset":"cais-arco","label":"símbolo de passagem","origin":"local-upload","intent":"Manter o símbolo de passagem da leitura.","attribute":"Arco azul de topo curvo com abertura inferior e dois pés separados.","placement":"Sinal inteiro em área visível.","forbidden":"Fechar o arco na base.","decision":"keep"},
+      {"asset":"cais-moldura","label":"maquete de moldura","origin":"generated","intent":"Reconhecer a composição recusada.","attribute":"O perímetro deve ficar aberto.","placement":"Quatro bordas da placa.","forbidden":"Transferir a moldura contínua.","decision":"omit"},
+      {"asset":"cais-ondas","label":"amostra de ondas","origin":"external","intent":"Aproveitar o ritmo ondulado como pequeno acento.","attribute":"Traços ondulados paralelos.","placement":"Somente no canto inferior direito.","forbidden":"Espalhar ondas atrás do título.","decision":"keep"},
+      {"asset":"cais-fios","label":"referência dos dois fios","origin":"generated","intent":"Separar o campo do local com dois fios.","attribute":"Par de linhas finas paralelas com intervalo claro.","placement":"Horizontalmente, acima do local na base.","forbidden":"Trocar o par por uma faixa única preenchida.","decision":"keep"}
+    ]
+  },
+  {
+    "id":"reserva-sementes","split":"holdout",
+    "idea":"Capa vertical do Catálogo de sementes.","offer":"Catálogo de sementes","audience":"Cultivadores da horta comunitária","goal":"Identificar a edição e as duas entidades responsáveis.",
+    "direction":"Capa botânica de papel claro. Os dois símbolos enviados identificam os responsáveis e devem ficar separados e íntegros. Da maquete com grande vazio no alto, preserve espaço para o nome. A referência quadriculada é um exemplo recusado. A amostra de grãos inspira só um friso estreito no rodapé. Se anexei o cartão de cores frias, quero usar o acorde somente no friso. O restante do papel fica claro. Apenas nome e edição.",
+    "facts":[["Nome","Catálogo de sementes"],["Edição","Volume 04"]],
+    "invariants":["Capa botânica vertical em papel claro.","Área livre no alto recebe o nome.","As duas assinaturas conservam a forma e ficam separadas."],
+    "optional":"horta-acorde",
+    "references":[
+      {"asset":"horta-folha","label":"primeiro símbolo","origin":"local-upload","intent":"Identificar a primeira entidade pela folha.","attribute":"Folha verde diagonal com nervura clara única.","placement":"Assinatura inteira, separada da segunda marca.","forbidden":"Remover a nervura.","decision":"keep"},
+      {"asset":"horta-vazio","label":"maquete de capa","origin":"generated","intent":"Deixar respiro para o nome da capa.","attribute":"Área superior clara e ampla com massa visual concentrada embaixo.","placement":"Terço superior reservado para o nome.","forbidden":"Preencher o alto com ornamentos.","decision":"keep"},
+      {"asset":"horta-acorde","label":"cartão de cores frias","origin":"generated","intent":"Colorir exclusivamente o friso da capa.","attribute":"Azul ardósia e verde-água claro lado a lado.","placement":"Dentro do friso inferior.","forbidden":"Tingir todo o papel com a paleta fria.","decision":"keep"},
+      {"asset":"horta-grade","label":"referência quadriculada","origin":"external","intent":"Reconhecer a padronagem recusada.","attribute":"Superfície livre da grade ortogonal.","placement":"Papel claro fora do friso.","forbidden":"Transferir o quadriculado.","decision":"omit"},
+      {"asset":"horta-graos","label":"amostra de grãos","origin":"external","intent":"Usar o motivo de sementes como friso.","attribute":"Pequenas formas ovais alternadamente inclinadas.","placement":"Em um friso estreito junto à base.","forbidden":"Espalhar os grãos no campo superior.","decision":"keep"},
+      {"asset":"horta-dois","label":"segundo símbolo","origin":"local-upload","intent":"Identificar a segunda entidade pelo par de discos.","attribute":"Dois discos ocres separados por uma lacuna horizontal clara.","placement":"Segunda assinatura inteira, separada da folha.","forbidden":"Fundir os discos ou arranjá-los verticalmente.","decision":"keep"}
+    ]
+  }
+]

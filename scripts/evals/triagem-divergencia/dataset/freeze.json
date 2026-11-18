@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "files": {
+    "../../pr61/triagem/corpus/mostra-layout.png": "3302c95d716da2d0ca15f4fea9a23b6c4f2dc60a6b7a22cff91919dd08b1adb5",
+    "../../pr61/triagem/corpus/mostra-marca.png": "18030e5e9b9e913cace2177bc9d9ba6670bed330f4c46ccbc2e00f5ad85bfc3e",
+    "../../pr61/triagem/corpus/mostra-pontos.png": "4e9520071773c2b923d65236f79114c9153d8ce56fa9d958ce3dc88c6bf57999",
+    "../../pr61/triagem/corpus/oficina-layout.png": "874815617645134c23c2c9e00e821a9c9c801fbf957ad0d48d9d386d7bc1ad5a",
+    "../../pr61/triagem/corpus/oficina-listras.png": "03b035e3c655d277cbc629b7f061392517d43e8fcb2460c0d63dcceefe9d935f",
+    "../../pr61/triagem/corpus/oficina-marca.png": "ff31b8802dccf09865e3ce0f09ac81a7d9ea5bd5ed6d3ac8ac60753a4443d0a8",
+    "../../pr61/triagem/corpus/oficina-paleta.png": "8bf4923dd87a5a2beab77ce2dba528c245bdc573dc6e65125c44ac47a074bd3a",
+    "README.md": "a7a827a27d6b35812179efdda7f454fa9d6d68ecea44a6d3d753f998f4b270cd",
+    "assets/cais-acorde.png": "155ff03bad963bf9e7981c12baac2d8e3115038e356cea1cc01c1be526829d35",
+    "assets/cais-arco.png": "3574d5eb7ddf6105a6621bf72664b5e78dfba155f059ef58c85bec90c6b6e32d",
+    "assets/cais-fios.png": "c020ce8726208dac313b6b874924d597a91db18dae1b69b94860f31051fbdc13",
+    "assets/cais-moldura.png": "75d6f018efa0cb1b9a8fb82f3cededff2f5a8b221c67da72636dcf5068836789",
+    "assets/cais-ondas.png": "4aaa4a54bd71903cc3cc36887c84cc2f24800e8d3ab05706d2d168e9a056da47",
+    "assets/draw.py": "3f7470a8b2bf4c3409ba62ca0aa8f8ea10ab48be05c5b2aeeac5407fc229dd8f",
+    "assets/horta-acorde.png": "5de4179b5093ea710cc9ca467d3834a8f3cb51c61b684e0a222bdd8ec57fa2c5",
+    "assets/horta-dois.png": "7bcd04552a1597c83c4755880b7b7450f63664db7c3880abe110270d6d45f264",
+    "assets/horta-folha.png": "11fc49e0d04225c5297cf4fd128613498223969310f1c06e047cdd0ff31266ac",
+    "assets/horta-grade.png": "80aad4ba28cbbf6b444d336cb92baad731f29ca3ba895b8bac1181b22d41ea31",
+    "assets/horta-graos.png": "29941cf5cf9ddf858a815501d92150f80c13d3c26740ec83b07169346bac6bc0",
+    "assets/horta-vazio.png": "a71fbfbe5c3ba478a74b8a11a63401fb562502d43da0b2afd50d49310618fe26",
+    "cases.json": "80a7d50d45d90b16fa55e2d1c59f2a07a9622d489f52139cc45e47ad8a4641b1",
+    "contrasts.json": "0e0bfe424cdfad1971ef58d4862d2524a23d0cb0d7c18de35da5233b0fc7c09b",
+    "packets.mjs": "0afca23b030082dafed7cc77562247dd5b6d45867fecb76b30a37c08e48fa973"
+  }
+}
