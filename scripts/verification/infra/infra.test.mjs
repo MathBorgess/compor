@@ -9,7 +9,7 @@ import { FIXTURE_USERS, FIXTURE_OPENAI_KEY } from './stack.mjs';
 
 test('manifest refuses a changed migration instead of reporting the pinned schema', async t => {
   const expected = await verifyMigrations();
-  assert.equal(expected.migrations.length, 40);
+  assert.equal(expected.migrations.length, 41);
   const root = await mkdtemp(join(tmpdir(), 'compor-infra-migration-negative-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'supabase/migrations'), { recursive: true });
@@ -156,4 +156,79 @@ test('image reconciliation keeps the original reservation and fences only unclai
   assert.equal(await fence(activeCall), 'unverified', 'an unknown execution cannot become non-dispatch evidence');
   await finish(active, activeAttempt, 'completed');
   assert.equal(await confirm(active), 'unverified', 'a mixed attempt cannot release its marker');
+});
+
+test('a closed serial exploration preserves the uncertain receipt and releases other projects', { timeout: 30_000 }, async t => {
+  const db = await createSyntheticDatabase(t);
+  const owner = FIXTURE_USERS.alice;
+  const oldImage = '44444444-4444-4444-8444-444444444444';
+  const oldBatch = '55555555-5555-4555-8555-555555555555';
+  const newImage = '66666666-6666-4666-8666-666666666666';
+  const request = '77777777-7777-4777-8777-777777777777';
+  const piece = '88888888-8888-4888-8888-888888888888';
+  const promptDigest = 'a'.repeat(64);
+  const proofDigest = 'b'.repeat(64);
+  const row = async (query, values = []) => (await db.query(query, values)).rows[0];
+  const denied = error => error.code === '42501';
+  const invalidClosure = error => error.code === '23514';
+  await db.query('insert into auth.users(id) values ($1),($2)', [owner, FIXTURE_USERS.bob]);
+  await db.exec('set role authenticated');
+  const authenticate = user => db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify({ role: 'authenticated', sub: user })]);
+  await authenticate(owner);
+  const { id: deletedProject } = await row("insert into public.projects(title) values ('Old project') returning id");
+  const { id: activeProject } = await row("insert into public.projects(title) values ('Active project') returning id");
+  const reserveOld = () => row('select * from public.reserve_exploration_image_batched_proven($1,$2,$3,$4,1,$5)', [deletedProject, oldImage, promptDigest, oldBatch, proofDigest]);
+  const reserveNew = () => row('select * from public.reserve_exploration_image_proven($1,$2,$3,$4)', [activeProject, newImage, promptDigest, proofDigest]);
+  assert.deepEqual(await reserveOld(), { state: 'running', is_new: true });
+  await db.query("insert into public.exploration_plans(image_id,project_id,composition,contrast) values ($1,$2,'Synthetic composition','Synthetic contrast')", [oldImage, deletedProject]);
+  await db.query("select public.finish_exploration_image($1,$2,'unknown')", [deletedProject, oldImage]);
+
+  await db.query("select public.create_project_post($1,$2,'Synthetic post')", [activeProject, piece]);
+  const content = JSON.stringify({ headline: '', price: '', date: '', caption: 'Synthetic', captionOrigin: 'user' });
+  assert.equal((await row('select public.save_piece_version($1,$2,0,$3::jsonb) as value', [activeProject, piece, content])).value.status, 'saved');
+  const { value: turn } = await row('select public.reserve_studio_turn($1,$2,$3) as value', [activeProject, request, promptDigest]);
+  assert.equal(turn.status, 'reserved');
+  const { reservation_id: reservation } = await row("select * from public.reserve_image_tool_call($1,$2,1,$3,'sess_test','turn_test','exec_test')", [activeProject, piece, turn.turn.attempt_id]);
+  await db.query('select * from public.declare_image_generation_consent($1,true)', [reservation]);
+  const claim = () => row('select * from public.claim_image_tool_execution($1)', [reservation]);
+  const close = expression => db.query(`update public.exploration_images set state='closed_unknown',closed_at=${expression} where id=$1`, [oldImage]);
+  await assert.rejects(close('clock_timestamp()'), denied, 'ordinary owners cannot perform an administrative closure');
+
+  await db.exec('reset role');
+  // Simulate the historical soft delete from before the current pending guard.
+  await db.query('update public.projects set deleted_at=now() where id=$1', [deletedProject]);
+  const history = () => row(`select e.*, p.digest, x.composition, x.contrast from public.exploration_images e
+    join public.exploration_rejection_proofs p on p.image_id=e.id
+    join public.exploration_plans x on x.image_id=e.id where e.id=$1`, [oldImage]);
+  const original = await history();
+  assert.equal(original.state, 'unknown');
+  assert.equal(original.closed_at, null);
+  await db.exec('set role authenticated');
+  assert.deepEqual(await reserveNew(), { state: 'blocked', is_new: false });
+  assert.equal((await claim()).state, 'blocked');
+  await db.exec('reset role');
+  await assert.rejects(close('null'), invalidClosure);
+  await assert.rejects(close("updated_at-interval '1 second'"), invalidClosure);
+  await assert.rejects(db.query('update public.exploration_images set closed_at=clock_timestamp() where id=$1', [oldImage]), invalidClosure);
+
+  await db.exec('begin');
+  await db.query('select pg_advisory_xact_lock(hashtextextended($1,0))', [owner]);
+  await close('clock_timestamp()');
+  await db.exec('commit');
+  const closed = await history();
+  assert.ok(closed.closed_at instanceof Date && closed.closed_at >= original.updated_at);
+  assert.equal(Number(closed.revision), Number(original.revision) + 1);
+  assert.deepEqual(closed, { ...original, state: 'closed_unknown', revision: closed.revision, closed_at: closed.closed_at });
+  assert.equal((await row('select count(*)::int as count from public.image_tool_executions')).count, 0);
+
+  await db.exec('set role authenticated');
+  await authenticate(FIXTURE_USERS.bob);
+  assert.deepEqual((await db.query('select id from public.exploration_images where id=$1', [oldImage])).rows, []);
+  await authenticate(owner);
+  assert.deepEqual(await reserveOld(), { state: 'closed_unknown', is_new: false }, 'the exact old ID always replays its receipt');
+  await assert.rejects(db.query("select public.finish_exploration_image($1,$2,'unknown')", [deletedProject, oldImage]), denied);
+  await db.exec('begin');
+  assert.equal((await claim()).state, 'running', 'foreground admission no longer counts the closed receipt');
+  await db.exec('rollback');
+  assert.deepEqual(await reserveNew(), { state: 'running', is_new: true }, 'a fresh ID in the other project is admitted');
 });

@@ -139,6 +139,8 @@ As instruções do Agile Deliberation são compartilhadas com o MCP. O agente es
 
 O estúdio mantém o destino de uma imagem associado à chamada original do agente. Ao consultar uma proposta preparada, ele confirma a mesma versão e a mesma entrada antes de seguir. A reconciliação procura a reserva original sob a trava de execução e pode confirmar o encerramento local quando a tentativa terminou e todas as reservas estão impedidas de executar sem registro de imagem. Ver [ADR 0069](adr/0069-retomada-de-imagem-com-versao-fixa.md).
 
+Uma decisão explícita da pessoa pode encerrar administrativamente uma exploração serial incerta de um projeto já excluído. O estado `closed_unknown` libera a espera da conta e conserva o recibo e o resultado incerto. O contrato HTTP serial mantém `unknown` e o mesmo ID fica impedido de iniciar outra geração. Ver [ADR 0070](adr/0070-encerramento-de-exploracao-serial-incerta.md).
+
 ## MCP
 
 `packages/remote-mcp` fornece o transporte HTTP autenticado. `/api/mcp` atende clientes autorizados; `/api/agent-mcp` usa uma credencial distinta e delegação limitada ao projeto. Autenticação e verificação de acesso por chamada continuam necessárias após a negociação MCP. OAuth/discovery depende da configuração do ambiente.
