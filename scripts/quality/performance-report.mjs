@@ -44,6 +44,13 @@ export function budgetFailures(bundle, lighthouse, budgets) {
   });
 }
 
+export function bundleBudgetFailures(bundle, budgets) {
+  return budgetFailures(bundle, {}, {
+    initialJavascriptGzipBytes: budgets.initialJavascriptGzipBytes,
+    totalClientJavascriptGzipBytes: budgets.totalClientJavascriptGzipBytes,
+  });
+}
+
 // Diagnostic only: never change a gate based on missing breakdowns. Restrict
 // paths to local Next chunks so logs cannot include query strings or URLs from
 // a third-party report. Lighthouse's raw reports remain available as artifacts.

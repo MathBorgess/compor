@@ -1,15 +1,15 @@
 # Gates de qualidade
 
-O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull request e por execução manual. Por decisão de Matheus em 10/11/2026, o push para `main` não repete os checks executados no PR. Num pull request, executa só as áreas que a mudança pode afetar; a execução manual executa tudo. O check agregado **Quality gate** passa quando o job estático termina com sucesso e cada outro job termina com sucesso ou foi pulado porque a área dele está desligada. Falha, cancelamento, job ausente ou job pulado com a área ligada bloqueiam o agregado. O [ADR 0032](../adr/0032-gates-por-area-e-falha-rapida.md) registra essa regra e sua atualização. O workflow não altera a proteção da branch. Essa proteção precisa exigir **Quality gate** para impedir merges sem os checks.
+O workflow [Quality](../../.github/workflows/quality.yml) executa em cada pull request e por execução manual. Por decisão de Matheus em 10/11/2026, o push para `main` não repete os checks executados no PR. Num pull request, executa só as áreas que a mudança pode afetar; a execução manual executa tudo. O check agregado **Quality gate** passa quando o job estático termina com sucesso e cada outro job termina com sucesso ou foi pulado porque a área dele está desligada. Falha, cancelamento, job ausente ou job pulado com a área ligada bloqueiam o agregado. O [ADR 0032](../adr/0032-gates-por-area-e-falha-rapida.md) registra o desenho original e o [ADR 0071](../adr/0071-reducao-de-minutos-de-ci.md) registra os ajustes de 18/11. Exigir **Quality gate** para merge depende da proteção da branch no GitHub.
 
 | Job | Área | Condição de aprovação | Escopo |
 | --- | --- | --- | --- |
-| Static checks | Sempre | ESLint sem erros ou avisos e testes de `scripts/quality` e dos contratos/avaliadores rápidos de `scripts/verification` aprovados. Com a área `site` ligada, também `astro check` e build do site | TypeScript/TSX do app web, JavaScript dos pacotes, scripts de qualidade/verificação e site público com seus headers |
+| Static checks | Sempre | Classificar o diff. Se envolver código ou entradas de testes, exigir ESLint e suítes de qualidade/verificação. Com `site` ligada, exigir também `astro check` e build | App web, pacotes, scripts de qualidade/verificação e site público |
 | Contracts and data isolation | `unit` | Todas as suítes dos pacotes e dos scripts Python aprovadas | Autorização, isolamento, idempotência, persistência, recuperação e contratos com fornecedores simulados |
 | Web types and behavior | `web` | TypeScript estrito, Chromium instalado e toda a suíte web aprovada | Navegação, interação e estados do app com fixtures locais |
 | Production performance | `web` | Build Next de produção e todos os limites abaixo aprovados | Entrada `/` sem sessão, servida sem JavaScript pelo proxy, com configuração pública sintética |
 
-As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Os jobs não recebem secrets e não fazem deploy. O token tem `contents: read`. Só o Quality gate recebe também `actions: read`, para ler a duração dos jobs. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
+As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Quando `site` está desligada, Static e Performance usam a mesma chave de cache npm, com os lockfiles da raiz e da web. Os passos de instalação da raiz registram timings do npm. Os jobs não recebem secrets e não fazem deploy. O token tem `contents: read`. O Quality gate usa `ubuntu-slim` e recebe também `actions: read`, para ler a duração dos jobs. As Actions usam SHAs fixos. Chromium vem da versão de Playwright fixada no lockfile web. `BROWSER_EXECUTABLE_PATH` aponta para esse executável, e o preflight falha se ele estiver ausente. Os testes de migração recebem o histórico Git completo e um cliente `psql`, sem banco externo.
 
 O job de contratos executa explicitamente os testes offline do parser de migrations, do gerador de baseline e do workflow. Eles ficam em `scripts/tests/` e não são encontrados pelo `unittest discover` de `scripts`; o job usa um venv Python 3.12 e instala os wheels fixados por hash em `scripts/requirements-migration-tests.txt`. Isso não executa a migração nem valida o alvo de produção.
 
@@ -34,11 +34,13 @@ Nenhum dos dois faz smoke do deployment publicado nem comprova login, geração 
 
 ## Execução por área
 
-O primeiro passo do job estático, depois do checkout e do Node, executa `scripts/quality/changed-areas.mjs`. Num pull request, o script lista os arquivos com `git diff --name-only --no-renames` entre a base e o head do PR. Um arquivo movido conta no caminho antigo e no novo. As regras ficam na tabela `RULES` desse script, e a primeira que casar vale. Por exemplo, `apps/web/**` liga `web`, `packages/**` liga `web` e `unit`, e `apps/site/**` liga `site`. Markdown em `docs/` e na raiz não liga nada. Os outros arquivos de `docs/` ligam `unit`, porque um teste do protótipo lê JSON em `docs/evals`. `.github/**`, os `package*.json` da raiz, `eslint.config.mjs` e qualquer caminho sem regra ligam tudo.
+Após o checkout, o job estático executa `scripts/quality/changed-areas.mjs` antes de instalar dependências. Num pull request, o script compara o head com a base comum do PR e usa caminhos delimitados por NUL. Um arquivo movido conta no caminho antigo e no novo. `apps/web/**` liga `web`, `packages/**` liga `web` e `unit`, e `apps/site/**` liga `site`. `.github/**`, os `package*.json` da raiz, `eslint.config.mjs` e qualquer caminho desconhecido ligam tudo.
 
-Execução manual, diff desconhecido ou falha do git também ligam tudo. Um job dependente só é pulado quando a saída da área é exatamente `false`. Como os outros jobs dependem do estático, uma falha de lint também evita os jobs caros. Para conferir as áreas de um intervalo, execute `node scripts/quality/changed-areas.mjs BASE HEAD` na raiz.
+Um diff conhecido e não vazio formado só por Markdown na raiz ou em `docs/`, skills registradas ou `skills-lock.json` segue pelo job estático até o resultado da classificação. Os demais arquivos de `docs/` ligam `unit` porque há testes que leem dados em `docs/evals`. Qualquer caminho fora desse conjunto exige os checks estáticos. Execução manual, diff desconhecido ou falha do Git ligam todas as áreas. Um job dependente só é pulado quando a saída da área é exatamente `false`. Como os outros jobs dependem do estático, uma falha de lint evita os jobs dependentes. Para conferir as áreas de um intervalo, execute `node scripts/quality/changed-areas.mjs BASE HEAD` na raiz.
 
 As regras supõem que cada arquivo só afeta as áreas mapeadas. Quando um teste passar a ler arquivos de outra área, atualize `RULES` e seus testes no mesmo PR. Uma dependência fora do mapa pode passar no PR sem ser exercitada; a execução manual completa permite verificá-la. Um push direto na `main` não aciona Quality. O workflow separado de migrations mantém seus gatilhos.
+
+Se a base do PR for trocada, confirme a revisão integrada à nova base e obtenha um Quality para essa combinação. Um push autorizado que atualize a branch do PR dispara a classificação novamente. A edição da base por si só não dispara o workflow.
 
 ## Falha rápida
 
@@ -51,6 +53,8 @@ O `timeout-minutes` de cada job fica perto da maior duração bem-sucedida obser
 ## Minutos do GitHub Actions
 
 O repositório é privado. O GitHub cobra cada job que executa, arredondado para cima até o minuto inteiro, e não cobra job pulado. A meta é de até 1.500 minutos cobrados por mês.
+
+Use o tempo até o **Quality gate** para avaliar a espera e os minutos arredondados por job para avaliar consumo. Para comparar mudanças, registre o mesmo SHA, runner, áreas e estado do cache, e confira os resultados dos checks. Confira o crédito efetivamente consumido no [painel de cobrança](https://github.com/settings/billing/usage). A tarifa do `ubuntu-slim` é menor que a do Ubuntu x64 padrão. [Preços do GitHub](https://docs.github.com/en/billing/reference/actions-runner-pricing)
 
 O último passo do Quality gate lê os jobs da própria execução pela API e escreve no resumo da execução a duração de cada job e uma estimativa dos minutos cobrados. Esse passo nunca reprova o gate. Para acompanhar a meta, some as estimativas das execuções do mês.
 
@@ -132,7 +136,7 @@ O script inicia um servidor de produção em uma porta local disponível e um pe
 
 Os limites de LCP e CLS usam os valores de referência publicados pelo Google. O limite de TBT usa a faixa mobile do Lighthouse. A mediana de laboratório não substitui o percentil 75 observado em usuários reais. [LCP](https://web.dev/articles/lcp), [CLS](https://web.dev/articles/cls), [TBT](https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time).
 
-Os relatórios incluem acessibilidade e boas práticas para diagnóstico, sem impor uma nota agregada. Os artefatos `production-performance` e `maintainability` ficam disponíveis por cinco dias. Localmente, ficam em `quality-results/`, fora do Git. O job web também guarda `studio-screenshots` por cinco dias: são capturas desktop/mobile com dados sintéticos, para revisão visual, sem comparação automática com o Figma.
+O avaliador verifica os limites de gzip antes de iniciar o Chromium. Se algum limite falhar, ele preserva a contagem de bytes, `summary.json` e o log do servidor. Builds dentro do orçamento seguem para as cinco navegações, com relatórios de acessibilidade e boas práticas para diagnóstico. Os artefatos `production-performance` e `maintainability` ficam disponíveis por cinco dias. Localmente, ficam em `quality-results/`, fora do Git. O job web também guarda `studio-screenshots` por cinco dias para revisão visual desktop e mobile com dados sintéticos.
 
 ## Limites da cobertura
 

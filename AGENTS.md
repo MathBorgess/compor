@@ -52,6 +52,8 @@ A pessoa usuária aprovou preparação guiada (projeto → contexto → IA → r
 
 O workflow [Quality](.github/workflows/quality.yml) agrega os jobs no check **Quality gate**. Num PR, ele executa só as [áreas que a mudança pode afetar](docs/quality/gates.md#execução-por-área) e aceita um job pulado só quando a área dele não mudou. Por decisão de Matheus em 10/11/2026, o push na `main` não repete o Quality; a execução manual continua disponível e executa tudo. Execute os checks correspondentes antes de concluir a alteração; a sequência de instalação está no [guia atual](docs/architecture.md#instalação-e-verificação).
 
+**Minutos de CI · decisão de 18/11/2026.** Durante a iteração, faça commits locais e agrupe o push autorizado após os checks locais da área. Antes de concluir a revisão, confirme o **Quality gate** e os checks aplicáveis ao commit final e à base atual do PR. Em falha transitória no mesmo commit, reexecute apenas os jobs que falharam e deixe o GitHub reexecutar seus dependentes. Ao otimizar CI, use o [guia dos gates](docs/quality/gates.md#minutos-do-github-actions) para medir minutos por job e tempo até o resultado.
+
 | Regra cobrada automaticamente | Comando |
 | --- | --- |
 | Correção ESLint, imports sem uso, ausência de `any`/supressões e ausência de JS de produção no Next | `npm run quality:lint` |
