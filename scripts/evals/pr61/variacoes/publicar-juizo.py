@@ -11,7 +11,8 @@ from resumo import summarize
 def publish(directory, stage):
     destination = directory / f"judge-{stage}.json"
     views = {}
-    expected_ids={row["id"] for row in json.loads((directory/"index.json").read_text())}
+    rows=json.loads((directory/"index.json").read_text())
+    expected_ids={row["id"] for row in rows}
     if not 3<=len(expected_ids)<=5: raise ValueError("Grupo deve conter 3–5 casos únicos")
     splits={}
     for mode in ("plan","pixels"):
@@ -32,6 +33,11 @@ def publish(directory, stage):
     if len(sessions)!=2 or len(set(sessions))!=2: raise ValueError("Sessões independentes ausentes")
     result={"stage":stage,"round":directory.name,"casesJudged":len(splits),"developmentCases":len(development),"reservedCases":len(splits)-len(development),
             "indexSha256":hashlib.sha256((directory/"index.json").read_bytes()).hexdigest(),"views":views}
+    valid=sum(row.get("plan") is not None for row in rows)
+    images=sum(slot["state"] in ("complete","completed") and bool(slot.get("sha256")) for row in rows for slot in row["slots"])
+    if valid<len(rows) or images<3*len(rows):
+        result["coverage"]={"caseFiles":len(rows),"validPlans":valid,"imageSlots":3*len(rows),"observedImages":images,
+                            "unobservedCaseIds":[row["id"] for row in rows if row.get("plan") is None]}
     if destination.exists():
         if json.loads(destination.read_text())!=result: raise FileExistsError("Juízo diferente já publicado")
         return
