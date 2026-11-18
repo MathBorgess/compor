@@ -27,3 +27,5 @@ Para revisar como a leitura de cada referência e a direção das três proposta
 
 
 O [parecer contextual](plan-judge/contextual.md) inclui os arquivos selecionados e retidos no pacote cego. O [controle de prompt fixo](fixed-control/README.md) isola o efeito dos bytes sob a autorização complementar da baseline. Os dois preservam os pareceres e recibos originais. A [conciliação de custo](metrics/provider-usage.md) usa leituras dos mesmos recursos e informa a cobertura e as hipóteses de preço. O consumo em tokens dos juízes via ChatGPT é apurado separadamente pelo comando `node scripts/evals/triagem-divergencia/metrics/judge-usage.mjs DIRETORIO_DAS_EVIDENCIAS`.
+
+[Resultados das cinco revisões e comparação visual](../../../docs/evals/triagem-divergencia-2026-11-18/README.md)
