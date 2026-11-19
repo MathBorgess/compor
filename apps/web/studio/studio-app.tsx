@@ -60,6 +60,7 @@ import {
 import { createStudioTools, type StudioModelContext } from "../lib/studio-tools.ts";
 import StudioChat, { type InitialPostRequest } from "./studio-chat";
 import StudioDialog from "./studio-dialog";
+import StudioLoading from "./studio-loading";
 import { rootRoute, useStudioRoute, type StudioRoute } from "../lib/studio-route";
 import StudioProfile from "./studio-profile";
 import StudioAssets from "./studio-assets";
@@ -71,7 +72,7 @@ import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/
 const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
 type StudioHandlers = {[Name in StudioActionName]:(input:ActionInputByName[Name], context?:{signal?:AbortSignal;conversationId?:string})=>Promise<ActionResult>};
-type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
+type StudioAppProps={userId:string;hasApiKey:boolean;canUseAI?:boolean;credentialSource?:CredentialSource;credentialEpoch?:number;defaultAvailable?:boolean;parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean;onUseAI?:()=>void;onPauseAI?:()=>void;getApiKey:()=>string;keyInput:ReactNode;onRemoveKey:()=>void;initialObjective:string;recoveryBanner?:ReactNode;isAuthenticated:()=>boolean;awaitConfirmedIdentity?:()=>Promise<boolean>;developerMode?:boolean;accountLabel?:string;localAccount?:boolean;onSignOut?:()=>void|Promise<void>};
 type RegisterProjectLeaveGuard=(projectId:string,guard:()=>Promise<boolean>)=>()=>void;
 type ProjectStudioProps=Omit<StudioAppProps,'recoveryBanner'>&{project:Project;projects:Project[];onOpenProject:(project:Project)=>void;onProjectRenamed:(project:Project)=>void;onCreateNew:()=>void;onBack:()=>void;initialPrepare:boolean;routePieceId:string|null;onRoutePiece:(pieceId:string|null,replace:boolean)=>void;openedFromUrl:boolean;onRegisterLeaveGuard:RegisterProjectLeaveGuard;onOpenProfile:()=>void;onRequestDelete:()=>void;accountOverlays:ReactNode};
 type Confirmation={name:StudioActionName;args:StudioAction};
@@ -103,6 +104,7 @@ export default function StudioApp({
   initialObjective,
   recoveryBanner,
   isAuthenticated,
+  awaitConfirmedIdentity,
   developerMode = false,
   accountLabel = "",
   localAccount = false,
@@ -174,7 +176,7 @@ export default function StudioApp({
     const n = ++seq.current;
     setState("loading");
     try {
-      const response = await fetch("/api/projects", { cache: "no-store" });
+      const response = await fetch("/api/projects", { cache: "no-store", signal: AbortSignal.timeout(15000) });
       if (!response.ok) throw Error();
       const data = projectsSchema.parse(await response.json());
       if (n !== seq.current) return;
@@ -281,6 +283,7 @@ export default function StudioApp({
         key={`${userId}:${selected.id}`}
         userId={userId}
         isAuthenticated={isAuthenticated}
+        awaitConfirmedIdentity={awaitConfirmedIdentity}
         developerMode={developerMode}
         accountLabel={accountLabel}
         localAccount={localAccount}
@@ -319,6 +322,8 @@ export default function StudioApp({
         initialPrepare={createdProjectId===selected.id}
       />
     );
+  if (!route || (route.projectId && state !== "error"))
+    return <StudioLoading>Abrindo seu espaço de criação…</StudioLoading>;
   return (
     <StudioShell
       stage="projects"
@@ -396,6 +401,7 @@ function ProjectStudio({
   initialObjective,
   initialPrepare,
   isAuthenticated,
+  awaitConfirmedIdentity,
   developerMode = false,
   accountLabel = "",
   localAccount = false,
@@ -1139,6 +1145,7 @@ function ProjectStudio({
       else if(error instanceof Error&&error.message==='studio_state_limit')message='Este projeto já tem 20 imagens. Retire uma da seleção antes de enviar outra.';
       else if(error instanceof Error&&error.message==='reference_authority_unconfirmed')message='O envio ainda precisa de confirmação. Consulte a seleção antes de enviar a imagem novamente.';
       else if(error instanceof Error&&error.message==='reference_authority_unavailable')message='O envio foi interrompido enquanto a seleção precisa de confirmação.';
+      else if(error instanceof Error&&error.message==='studio_scope_changed')message='O envio foi interrompido. Confirme a conta e abra novamente a seleção de referências.';
       else message='Não foi possível salvar a imagem no armazenamento deste navegador.';
       if(added)message=`${added} de ${files.length} imagens adicionadas. ${message}`;
     } finally {
@@ -1147,16 +1154,23 @@ function ProjectStudio({
     }
   }
   async function storeSelectedReference(source:StudioReference['source'],file:File,target=referenceScope) {
+    // A native file picker can deliver change while focus is revalidating the account.
+    async function confirmTarget(){
+      const confirmed=isAuthenticated()||await awaitConfirmedIdentity?.();
+      if(!confirmed||!active.current||!isAuthenticated()||currentReferenceScope.current!==target)throw Error('studio_scope_changed');
+    }
+    await confirmTarget();
     const storage=local.storage.current;
-    if (!storage || !active.current || !isAuthenticated()) throw Error("studio_storage_unavailable");
+    if(!storage)throw Error('studio_storage_unavailable');
     const scope={userId,projectId:project.id};
     if(!await checkReferenceAuthority())throw Error('reference_authority_unavailable');
-    if(!active.current||!isAuthenticated()||currentReferenceScope.current!==target)throw Error('studio_unavailable');
+    await confirmTarget();
     if(local.get().references.length>=STUDIO_LIMITS.references)throw Error('studio_state_limit');
     const metadata=await storage.putReference({...scope,id:crypto.randomUUID(),file,source});
     try {
+      await confirmTarget();
       const current=local.get();
-      if(!active.current || !isAuthenticated() || currentReferenceScope.current!==target || current.projectId!==project.id || current.userId!==userId) throw Error("studio_unavailable");
+      if(current.projectId!==project.id || current.userId!==userId)throw Error('studio_scope_changed');
       await coordinateSelection({kind:'select',reference:metadata,target});
     } catch(error) {
       // A committed local selection may still have an unresolved receipt. Keep its bytes.
@@ -1243,12 +1257,8 @@ function ProjectStudio({
     }
     return true;
   }
-  if (local.loading || !s)
-    return (
-      <StudioShell stage="projects" accountLabel={accountLabel} localAccount={localAccount} onSignOut={onSignOut ? signOutSafely : undefined}>
-        <p role="status">Abrindo seu espaço de criação…</p>
-      </StudioShell>
-    );
+  if (local.loading || !s || !stageRestored)
+    return <StudioLoading>Abrindo seu espaço de criação…</StudioLoading>;
   const scopedReferences=effectiveReferences(s,referenceScope);
   const selectedGeneratedIds = scopedReferences.flatMap(reference => reference.source && 'kind' in reference.source && reference.source.kind === 'generated' ? [reference.source.imageId] : []);
   const selectedOrigins = scopedReferences.flatMap(reference => reference.source && 'originUrl' in reference.source ? [reference.source.originUrl] : []);

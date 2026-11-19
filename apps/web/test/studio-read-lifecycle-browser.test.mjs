@@ -49,6 +49,48 @@ async function setup(t){
 function deferredRead(route){let release;const done=new Promise(resolve=>{release=resolve;}).then(async json=>{try{await route.fulfill({json});}catch{}});return{release,done};}
 async function flushBrowser(page){await page.evaluate(()=>new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve))));}
 
+test('link direto de projeto aguarda a sessão e o catálogo sem exibir login ou formulário de novo projeto',async t=>{
+ const {page}=await setup(t);
+ let sessionRead,projectsRead;
+ await page.route('**/auth/session',route=>{sessionRead=deferredRead(route);return sessionRead.done;});
+ await page.route('**/api/projects',route=>{projectsRead=deferredRead(route);return projectsRead.done;});
+ t.after(()=>{sessionRead?.release({state:'signed-out'});projectsRead?.release({projects:[]});});
+ await page.goto(origin+'/projetos/'+project);
+ await page.getByText('Verificando sua conta…',{exact:true}).waitFor();
+ assert.equal(await page.getByRole('button',{name:'Entrar com Google'}).count(),0,'login não pisca antes de confirmar a sessão');
+ await until(()=>sessionRead,Boolean);sessionRead.release({state:'connected',userId:alice});
+ await until(()=>projectsRead,Boolean);await flushBrowser(page);
+ assert.equal(await page.getByLabel('Nome do projeto',{exact:true}).count(),0,'formulário da página inicial não aparece durante a navegação');
+ projectsRead.release({error:'unavailable'});
+ await page.getByText('Não foi possível carregar seus projetos.',{exact:true}).waitFor();
+ await page.route('**/api/projects',route=>route.fulfill({json:{projects:[{id:project,title:'Projeto por URL',revision:1}]}}));
+ await page.getByRole('button',{name:'Atualizar projetos',exact:true}).click();
+ await page.getByRole('button',{name:'Criar novo post',exact:true}).waitFor();
+});
+
+test('revalidação lenta mantém o espaço do estúdio e libera nova verificação após timeout',async t=>{
+ const {page}=await setup(t);
+ await page.goto(origin);await page.getByLabel('Nome do projeto',{exact:true}).waitFor();
+ await page.setViewportSize({width:390,height:420});
+ const studio=page.getByTestId('studio-auth-boundary');
+ const height=await studio.evaluate(element=>element.getBoundingClientRect().height);
+ await page.clock.install();
+ let read;
+ await page.route('**/auth/session',route=>{read=deferredRead(route);return read.done;});
+ t.after(()=>read?.release({state:'signed-out'}));
+ await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+ await until(()=>read,Boolean);
+ const checking=page.getByText('Verificando sua conta…',{exact:true});
+ await checking.waitFor();
+ assert.equal(await studio.isVisible(),false);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollHeight)>=Math.floor(height),'a página mantém a altura enquanto a conta é reconfirmada');
+ await page.clock.fastForward(15001);
+ await page.getByText('Login temporariamente indisponível.').waitFor();
+ await page.route('**/auth/session',route=>route.fulfill({json:{state:'connected',userId:alice}}));
+ await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+ await page.getByLabel('Nome do projeto',{exact:true}).waitFor();
+});
+
 test('sessão descarta resposta antiga após troca de conta e mantém falha real visível, sem abortar leituras',{timeout:90000},async t=>{
  const {page,errors}=await setup(t);await page.goto(origin);const idea=page.getByLabel('Nome do projeto',{exact:true});await idea.waitFor();assert.equal(await idea.inputValue(),'');
  const pending=[];await page.route('**/auth/session',route=>{const read=deferredRead(route);pending.push(read);return read.done;});

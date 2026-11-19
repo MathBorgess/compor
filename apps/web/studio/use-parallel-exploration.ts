@@ -32,14 +32,16 @@ export function useParallelExploration(props:Props){
   const current=useRef(props),epoch=useRef<number|null>(null),run=useRef<{stop:()=>void;valid:()=>boolean}|null>(null),pendingStart=useRef(false);current.current=props;
   const audienceConflict=props.state?audienceResolution(props.state).status==='conflict':false;
   const ready=!audienceConflict&&Boolean(props.idea.trim()||props.state?.brief.offer.trim()||props.state?.brief.direction.trim());
+  // A focus event can open this screen before session revalidation has finished.
+  const canReadEpoch=props.available&&props.visible&&pageVisible&&props.isAuthenticated();
   useEffect(()=>{
     let live=true;epoch.current=null;setEpochStatus('checking');
-    if(!props.available||!props.visible||!pageVisible||!props.isAuthenticated())return;
+    if(!canReadEpoch)return;
     void createParallelIntentClient().readEpoch(props.projectId).then(value=>{
       if(live){epoch.current=value;setEpochStatus('ready');}
     }).catch(()=>{if(live)setEpochStatus('unavailable');});
     return()=>{live=false;};
-  },[props.available,props.visible,pageVisible,props.userId,props.projectId,epochCheck]);
+  },[canReadEpoch,props.userId,props.projectId,epochCheck]);
   useEffect(()=>{if(run.current&&!run.current.valid()){run.current.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}});
   useEffect(()=>{const onHide=()=>run.current?.stop();window.addEventListener('pagehide',onHide);return()=>{window.removeEventListener('pagehide',onHide);run.current?.stop();};},[]);
   useEffect(()=>{const update=()=>{const visible=document.visibilityState==='visible'&&document.hasFocus();setPageVisible(visible);if(!visible&&run.current){run.current.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}};document.addEventListener('visibilitychange',update);window.addEventListener('blur',update);window.addEventListener('focus',update);update();return()=>{document.removeEventListener('visibilitychange',update);window.removeEventListener('blur',update);window.removeEventListener('focus',update);};},[]);

@@ -6,6 +6,7 @@ import { useAICredentials } from "./use-ai-credentials";
 import { clearReferenceAuthorityConsent } from '../lib/reference-authority-consent.ts';
 import { syncReferenceConsentAccount } from "../lib/reference-session-consent";
 import BrandSymbol from "./brand-symbol";
+import StudioLoading from "./studio-loading";
 import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content";
 
 const StudioApp = lazy(() => import("./studio-app"));
@@ -16,6 +17,13 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
   const [account, setAccount] = useState<{label:string;local:boolean}|null>(null);
   const [signOutError, setSignOutError] = useState(false);
   const sessionEpoch = useRef(0);
+  const studioBoundary = useRef<HTMLDivElement>(null);
+  const [recheckHeight, setRecheckHeight] = useState(0);
+  const sessionWaiters = useRef<Set<(identity: string | null) => void> | null>(null);
+  function resolveSessionCheck(identity: string | null) {
+    sessionWaiters.current?.forEach(resolve => resolve(identity));
+    sessionWaiters.current = null;
+  }
   const lastConnectedUser = useRef<string | null>(null);
   const signingOut = useRef(false);
   const credentials = useAICredentials(authenticatedUser, authState === "connected");
@@ -50,6 +58,9 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     let generation = 0;
     const checkSession = () => {
       if (signingOut.current) return;
+      if (studioBoundary.current && !studioBoundary.current.hidden)
+        setRecheckHeight(studioBoundary.current.getBoundingClientRect().height);
+      sessionWaiters.current ??= new Set();
       const currentGeneration = ++generation;
       const currentEpoch = ++sessionEpoch.current;
       draftKey.current = null;
@@ -58,7 +69,9 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
       setHasPendingDraft(false);
       setObjective("");
       setAuthState("checking");
-      fetch("/auth/session", { cache: "no-store" })
+      const controller = new AbortController();
+      const timeout = window.setTimeout(() => controller.abort(), 15000);
+      fetch("/auth/session", { cache: "no-store", signal: controller.signal })
         .then((response) =>
           response.ok ? response.json() : { state: "unavailable" },
         )
@@ -164,13 +177,18 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             setAuthState("unavailable");
           }
         })
-        .catch((error) => {
-          if (currentGeneration === generation && currentEpoch === sessionEpoch.current && !(error instanceof DOMException && error.name === "AbortError")) {
+        .catch(() => {
+          if (currentGeneration === generation && currentEpoch === sessionEpoch.current) {
+            activeIdentity.current = null;
             clearOpenAIKey();
             setAuthenticatedUser(null);
             setAccount(null);
             setAuthState("unavailable");
           }
+        }).finally(() => {
+          window.clearTimeout(timeout);
+          if (currentGeneration === generation && currentEpoch === sessionEpoch.current)
+            resolveSessionCheck(activeIdentity.current);
         });
     };
     const checkVisible = () => {
@@ -182,6 +200,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     return () => {
       generation++;
       sessionEpoch.current++;
+      resolveSessionCheck(null);
       window.removeEventListener("focus", checkSession);
       document.removeEventListener("visibilitychange", checkVisible);
     };
@@ -210,6 +229,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
   const signOut = async () => {
     if(signingOut.current)return;
     signingOut.current=true;
+    resolveSessionCheck(null);
     sessionEpoch.current++;
     activeIdentity.current=null;
     clearReferenceAuthorityConsent();
@@ -233,18 +253,31 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
       setAuthState("unavailable");
     } finally { signingOut.current=false; }
   };
+  // A native file picker can return its files while focus revalidation is still in flight.
+  // Only the latest completed check may release the selection to its original account.
+  async function awaitConfirmedIdentity() {
+    const pending = sessionWaiters.current;
+    const expected = `user:${authenticatedUser}`;
+    if (pending) {
+      const confirmed = await new Promise<string | null>(resolve => pending.add(resolve));
+      if (confirmed !== expected) return false;
+    }
+    return Boolean(authenticatedUser) && !signingOut.current && activeIdentity.current === expected;
+  }
+  if (authState === "checking" && !authenticatedUser) return <StudioLoading>Verificando sua conta…</StudioLoading>;
   if (authenticatedUser && ["connected", "checking"].includes(authState))
     return (
       <>
         {authState === "checking" && (
-          <p role="status">Verificando sua conta…</p>
+          <div style={{height: recheckHeight}}><StudioLoading overlay>Verificando sua conta…</StudioLoading></div>
         )}
         <div
+          ref={studioBoundary}
           hidden={authState !== "connected"}
           inert={authState !== "connected"}
           data-testid="studio-auth-boundary"
         >
-          <Suspense fallback={<p role="status">Abrindo sua conversa…</p>}>
+          <Suspense fallback={<StudioLoading>Abrindo seu espaço de criação…</StudioLoading>}>
             <StudioApp
               developerMode={developerMode}
               parallelAvailable={parallelAvailable}
@@ -257,6 +290,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
               localAccount={account?.local ?? localAuth}
               onSignOut={signOut}
               initialObjective={objective}
+              awaitConfirmedIdentity={awaitConfirmedIdentity}
               isAuthenticated={() =>
                 activeIdentity.current === `user:${authenticatedUser}`
               }
@@ -289,7 +323,7 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
     <main className="compor-entry" aria-labelledby="entry-title">
       <div className="entry-content">
         <div className="entry-brand" aria-label="Compor">
-          <BrandSymbol motion={authState === "checking" ? "working" : "arriving"} />
+          <BrandSymbol motion="arriving" />
           <img src={brandImages.wordmark.src} alt={brandImages.wordmark.alt} width={brandImages.wordmark.width} height={brandImages.wordmark.height} />
         </div>
         <section className="entry-panel" aria-labelledby="entry-title">
@@ -329,9 +363,6 @@ export default function Workspace({ loginAvailable, localAuth = false, developer
             </button>
           </form>
           <p className="entry-note">{localAuth ? "Sessão anônima de desenvolvimento no banco local." : entryCopy.googleNote}</p>
-          {authState === "checking" && (
-            <p className="entry-status" role="status">Verificando sua conta…</p>
-          )}
           {(authState === "unavailable" || authState === "offline") && (
             <p className="entry-alert" role="status">{signOutError ? "Não foi possível confirmar a saída. Tente novamente." : "Login temporariamente indisponível."}</p>
           )}
