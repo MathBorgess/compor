@@ -12,7 +12,9 @@ test('reposição cria intenção vinculada e despacha uma vez com IDs e plano o
  const signal=new AbortController().signal;
  assert.equal(await client.create(preparation,claim,key,signal),8);await client.dispatch(preparation,claim,'proof-in-memory',key,signal);
  assert.deepEqual(calls.map(call=>call.path),['/api/studio/exploration-batches/intent','/api/studio/exploration-batches/replace']);
- assert.equal(calls[0].body.purpose,'replacement');assert.equal(calls[0].body.previousId,claim.previousId);assert.equal(calls[1].body.requestId,claim.requestId);assert.equal(calls[1].headers['x-compor-openai-key'],key);assert.equal(calls[1].body.planBinding,'proof-in-memory');
+ assert.equal(calls[0].body.purpose,'replacement');assert.equal(calls[0].body.previousId,claim.previousId);assert.equal(calls[1].body.requestId,claim.requestId);assert.equal(calls[1].body.planBinding,'proof-in-memory');
+ for(const call of calls){assert.equal(call.headers['x-compor-openai-key'],key);assert.equal(Object.hasOwn(call.body,'apiKey'),false);}
+ assert.deepEqual(calls.map(call=>call.headers['content-type']),['application/vnd.compor.byok+json','application/json']);
 });
 
 test('resposta incerta ou divergente não provoca repetição',async()=>{

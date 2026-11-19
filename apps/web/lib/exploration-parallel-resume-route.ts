@@ -9,7 +9,7 @@ import {parseVisualInputManifest,visualInputMatchesProject,type VisualInputManif
 import {visualInputDigest} from '@compor/agents-api/visual-input';
 import type {VisualAuthority,VisualAuthorityScope} from './visual-authority.ts';
 const id=z.string().uuid(),epoch=z.number().int().nonnegative().safe();
-const input=z.strictObject({projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,expectedEpoch:epoch.positive(),context:z.unknown(),visualInput:z.unknown().optional(),authorityRequestId:id.optional(),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/)});
+const input=z.strictObject({projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,expectedEpoch:epoch.positive(),context:z.unknown(),visualInput:z.unknown().optional(),authorityRequestId:id.optional(),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/).optional()});
 const statusInput=z.strictObject({projectId:id,intentId:id});
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 type Deps={appOrigin:string;apiKey?:string;bindings?:PlannerBindings;allowResume:()=>boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;store:ReturnType<typeof createExplorationParallelResumeStore>;prepareVisualAuthority?:(input:VisualAuthorityScope)=>Promise<VisualAuthority|null>};
@@ -20,7 +20,7 @@ export function createExplorationParallelResumeRoute(deps:Deps){
  async function resume(request:Request){
   if(request.headers.get('origin')!==deps.appOrigin)return reply({error:'invalid_origin'},403);
   let value:z.infer<typeof input>;try{value=input.parse(await read(request));}catch{return reply({error:'invalid_request'},400);}
-  if(!deps.apiKey||value.apiKey!==deps.apiKey||!deps.bindings||!validateExplorationContext(value.context)||JSON.stringify(value.context).includes(deps.apiKey))return reply({error:'invalid_request'},400);
+  if(!deps.apiKey||!/^sk-[^\s]{20,300}$/.test(deps.apiKey)||(value.apiKey!==undefined&&value.apiKey!==deps.apiKey)||!deps.bindings||!validateExplorationContext(value.context)||JSON.stringify(value.context).includes(deps.apiKey))return reply({error:'invalid_request'},400);
   let visualInput:VisualInputManifest|undefined;try{if(value.visualInput!==undefined)visualInput=parseVisualInputManifest(value.visualInput);}catch{return reply({error:'invalid_request'},400);}
   if((visualInput===undefined)!==(value.authorityRequestId===undefined))return reply({error:'invalid_request'},400);
   if(!visualInput&&deps.visualRequired)return reply({status:'unavailable',retryAutomatically:false},503);

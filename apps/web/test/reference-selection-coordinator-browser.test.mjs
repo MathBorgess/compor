@@ -25,7 +25,13 @@ test('seleção e comando são atômicos e conciliados sem reviver gesto antigo'
   }};
   const a=createStudioStorage({name:'compor-studio-coordinator-a'});await a.save(createStudioState(scope),{expectedRevision:null});
   const refA=await a.putReference({...scope,id:id(10),file,source:{kind:'local-upload'}}),legacy=await a.putReference({...scope,id:id(11),file});
-  let coordinator=createReferenceSelectionCoordinator({store:a,client});const initialized=(await coordinator.observe(scope)).status==='ready';
+  let coordinator=createReferenceSelectionCoordinator({store:a,client:{...client,read:async projectId=>{
+   const value=await a.load(scope);
+   await a.save({...value,revision:value.revision+1,projectIdea:'editado enquanto o navegador consultava a seleção'},{expectedRevision:value.revision});
+   return client.read(projectId);
+  }}});
+  const initialized=(await coordinator.observe(scope)).status==='ready';
+  coordinator=createReferenceSelectionCoordinator({store:a,client});
   const legacyResult=await coordinator.change(scope,{kind:'select',reference:legacy,target:'references'}),legacySafe=legacyResult.status==='ready'&&writes===0&&(await a.load(scope)).references.some(x=>x.id===legacy.id&&!x.source);
   mode='lost';const lost=await coordinator.change(scope,{kind:'select',reference:refA,target:'references'});const pendingBefore=await a.readReferenceAuthority(scope),oneWrite=writes===1&&lost.status==='pending'&&!!pendingBefore.pending;a.close();
   const resumed=createStudioStorage({name:'compor-studio-coordinator-a'});coordinator=createReferenceSelectionCoordinator({store:resumed,client});const restored=await coordinator.reconcile(scope),reconciled=restored.status==='ready'&&restored.revision===1&&writes===1&&(await resumed.readReferenceAuthority(scope)).pending===null;

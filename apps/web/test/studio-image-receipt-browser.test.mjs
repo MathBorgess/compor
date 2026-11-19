@@ -31,7 +31,7 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
  const completedPollStarted=Promise.withResolvers(),releaseCompletedPoll=Promise.withResolvers(),completedPollDelivered=Promise.withResolvers();
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{releaseCompletedPoll.resolve();await browser.close();});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],holdCompletedPoll=false,stableProposal=false;
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{releaseCompletedPoll.resolve();await browser.close();});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],imageReadiness='ready',holdCompletedPoll=false,stableProposal=false;
  await isolateFixtureHmr(page,`/${basename(fixture)}`);
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
@@ -43,7 +43,18 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
    await route.fulfill({status:202,json:first?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:stableProposal?`renewed-binding-${calls.length}`:'synthetic-binding',declineBinding:'synthetic-decline',...(stableProposal?{imageActionId:id(13),proposal:{prompt:'Proposta sintética',operation:'edit',baseImageId:pieceId,referenceIds:[]}}:{})}:{status:'completed',text:staleText}});
    if(held)completedPollDelivered.resolve();return;
   }
-  if(url.pathname==='/api/agent/image'){const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});}
+  if(url.pathname==='/api/agent/image'){
+   assert.equal(Object.hasOwn(body,'apiKey'),false);
+   assert.equal(request.headers()['x-compor-openai-key'],apiKey);
+   assert.equal(request.headers()['content-type'],'application/vnd.compor.byok+json');
+   const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});
+  }
+  if(url.pathname==='/api/agent/image/status'){
+   assert.deepEqual(Object.keys(body).sort(),['actionBinding','attemptId','pieceId','projectId','version']);
+   assert.equal(request.headers()['x-compor-openai-key'],undefined,'consulta de prontidão não carrega credencial');
+   assert.equal(request.headers()['content-type'],'application/json');
+   return route.fulfill({json:{status:imageReadiness}});
+  }
   if(url.pathname==='/api/images')return route.fulfill({contentType:'image/png',body:png});
   throw Error('unexpected API');
  });
@@ -67,13 +78,30 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
   assert.equal(calls.slice(start).filter(c=>c.path==='/api/agent/image').length,1,'recarregar e consultar a proposta não repetem uma geração incerta');
  }
  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['busy'];holdCompletedPoll=true;await page.reload();await page.evaluate(()=>{window.__receiptMode='ok';delete window.__releaseImage;});const beforeBusy=calls.length;
- await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Aguardando a exploração atual terminar/).waitFor();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText('Há outra operação de imagem em andamento na sua conta.',{exact:true}).waitFor();
  await page.waitForFunction(()=>typeof window.__releaseImage==='function');await page.evaluate(()=>window.__releaseImage());await page.getByText(receipt,{exact:true}).waitFor();
- assert.equal(calls.slice(beforeBusy).filter(c=>c.path==='/api/agent/image').length,2,'ocupação confirmada aguarda e repete a reserva sem gerar duas imagens');
+ assert.deepEqual(calls.slice(beforeBusy).map(c=>c.path).slice(0,4),['/api/studio/chat','/api/agent/image','/api/agent/image/status','/api/agent/image'],'só envia a imagem novamente após verificar a prontidão');
  await completedPollStarted.promise;assert.equal(polls,2);assert.equal(JSON.parse(await page.evaluate(marker=>sessionStorage.getItem(marker),marker)).requestId,requestId,'o receipt aparece antes da conclusão do poll');
  releaseCompletedPoll.resolve();await completedPollDelivered.promise;
  await page.waitForFunction(marker=>JSON.parse(sessionStorage.getItem(marker)??'null')?.requestId===null,marker);
  await page.getByText(staleText,{exact:true}).waitFor();assert.equal(polls,2,'o cenário só termina depois do poll final e da persistência terminal');
+ await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['busy'];imageReadiness='waiting_planning';await page.reload();const beforePersistent=calls.length;
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.getByText(/A espera foi pausada/).waitFor({timeout:35000});
+ assert.deepEqual(calls.slice(beforePersistent).map(c=>c.path),[
+  '/api/studio/chat','/api/agent/image',...Array(4).fill('/api/agent/image/status'),
+ ],'planejamento persistente consulta apenas a prontidão e encerra a espera');
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).waitFor();
+ assert.match(await page.getByText(/A espera foi pausada/).innerText(),/planejamento de referências/);
+ imageReadiness='ready';
+ polls=0;const beforeReady=calls.length;
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.waitForFunction(()=>typeof window.__releaseImage==='function');
+ assert.deepEqual(calls.slice(beforeReady).map(c=>c.path),[
+  '/api/studio/chat','/api/agent/image/status','/api/agent/image','/api/images',
+ ],'a mesma tentativa consulta a reserva antes de reenviar anexos');
+ await page.evaluate(()=>window.__releaseImage());
+ await page.getByText(staleText,{exact:true}).waitFor();
  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['blocked'];await page.reload();const beforeBlocked=calls.length;
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Uma geração anterior tem resultado incerto/).waitFor();
  assert.equal(await page.evaluate(user=>localStorage.getItem(`compor-image-submission:${user}`),userId),null,'bloqueio anterior não marca esta requisição como enviada');
@@ -106,7 +134,7 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  polls=0;imageReplies=['busy'];await page.reload();
  assert.equal(first().length,1,'recarregar não retoma a geração');
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
- await page.getByText(/Aguardando a exploração atual terminar/).waitFor();
+ await page.getByText('Há outra operação de imagem em andamento na sua conta.',{exact:true}).waitFor();
  await page.waitForFunction(()=>typeof window.__releaseImage==='function');
  await page.evaluate(()=>window.__releaseImage());
  await page.getByText('Imagem gerada e adicionada a este post · versão 3.',{exact:true}).waitFor();

@@ -1,4 +1,5 @@
 import { createHmac } from 'node:crypto';
+import {byokJsonMediaType} from './openai-byok-transport.ts';
 import type { Actor } from './agent-auth.ts';
 
 export type OpenAiCredentialSource = 'byok' | 'default';
@@ -14,7 +15,8 @@ type CredentialDependencies = {
 export type CredentialRequestOptions = {
   bodyLimit:number;
   bodyTooLargeStatus?:400|413;
-  keyLocation?:'body'|'header';
+  /** The last two modes accept either carrier for old clients, then normalize server-side. */
+  keyLocation?:'body'|'header'|'header-or-legacy-body'|'separate';
   projectLocation?:'body'|'header';
   versionScope?:boolean;
   freshSubmission?:boolean;
@@ -23,6 +25,7 @@ export type CredentialRequestOptions = {
 const uuid=(value:unknown):value is string=>typeof value==='string'&&/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 const keyValid=(value:unknown):value is string=>typeof value==='string'&&/^sk-[^\s]{20,300}$/.test(value);
 const reply=(error:string,status:number)=>Response.json({error},{status,headers:{'Cache-Control':'no-store'}});
+const keyHeader='x-compor-openai-key';
 
 /** BYOK keeps its historical proofs. Default credentials use a separate MAC
  * domain, never a key fingerprint or a provider secret in public claims. */
@@ -42,7 +45,7 @@ async function readBody(request:Request,limit:number) {
     return {bytes,value:value as Record<string,unknown>};
   } finally {try{Promise.resolve(reader.cancel()).catch(()=>{});}catch{}try{reader.releaseLock();}catch{}}
 }
-function rebuiltRequest(request:Request,bytes:Uint8Array,headers=new Headers(request.headers)) {
+function rebuiltRequest(request:Request,bytes:Uint8Array,headers:Headers) {
   headers.delete('content-length');
   return new Request(request.url,{method:request.method,headers,body:Buffer.from(bytes),signal:request.signal});
 }
@@ -53,15 +56,34 @@ export async function prepareOpenAiRequest(request:Request,deps:CredentialDepend
   const fail=options.failure??reply;
   if(request.method!=='POST')return fail('method_not_allowed',405);
   if(request.headers.get('origin')!==deps.appOrigin)return fail('invalid_origin',403);
-  if(!/^application\/json(?:\s*;|$)/i.test(request.headers.get('content-type')??''))return fail('invalid_request',400);
+  const location=options.keyLocation??'body';
+  const contentType=request.headers.get('content-type')??'';
+  const inHeader=request.headers.has(keyHeader);
+  const markedByok=contentType.trim().toLowerCase()===byokJsonMediaType;
+  if(markedByok){
+    if(!inHeader||(location!=='header-or-legacy-body'&&location!=='separate'))return fail('invalid_request',400);
+  }else if(!/^application\/json(?:\s*;|$)/i.test(contentType))return fail('invalid_request',400);
   let parsed:Awaited<ReturnType<typeof readBody>>;
   try{parsed=await readBody(request,options.bodyLimit);}catch(error){return fail('invalid_request',error instanceof BodyTooLarge?(options.bodyTooLargeStatus??400):400);}
-  const supplied=options.keyLocation==='header'?request.headers.has('x-compor-openai-key'):Object.hasOwn(parsed.value,'apiKey');
-  // Preserve legacy validation and behavior when the preparation is disabled.
-  if(supplied||!deps.defaultEnabled){
-    const apiKey=options.keyLocation==='header'?request.headers.get('x-compor-openai-key'):parsed.value.apiKey;
-    return {request:rebuiltRequest(request,parsed.bytes),source:'byok',...(keyValid(apiKey)?{apiKey}:{})};
+  const inBody=Object.hasOwn(parsed.value,'apiKey');
+  if((inHeader&&inBody)||(inHeader&&location==='body')||(inBody&&location==='header'))return fail('invalid_request',400);
+  function prepare(source:OpenAiCredentialSource,apiKey:unknown,actor?:Actor):PreparedOpenAiRequest {
+    const headers=new Headers(request.headers);
+    if(markedByok)headers.set('content-type','application/json');
+    let bytes=parsed.bytes;
+    if(location==='separate'){
+      headers.delete(keyHeader);
+      if(inBody){const body={...parsed.value};delete body.apiKey;bytes=Buffer.from(JSON.stringify(body));}
+    }else if(location==='header'){
+      if(source==='default'&&keyValid(apiKey))headers.set(keyHeader,apiKey);
+    }else if(inHeader||source==='default'){
+      // The managed chat handlers still consume this field in their internal contract.
+      headers.delete(keyHeader);
+      bytes=Buffer.from(JSON.stringify({...parsed.value,apiKey}));
+    }
+    return {request:rebuiltRequest(request,bytes,headers),source,...(actor?{actor}:{}),...(keyValid(apiKey)?{apiKey}:{})};
   }
+  if(inHeader||inBody||!deps.defaultEnabled)return prepare('byok',inHeader?request.headers.get(keyHeader):parsed.value.apiKey);
   const projectId=options.projectLocation==='header'?request.headers.get('x-compor-project-id'):parsed.value.projectId;
   if(!uuid(projectId))return fail('invalid_request',400);
   let actor:Actor|null;
@@ -84,9 +106,7 @@ export async function prepareOpenAiRequest(request:Request,deps:CredentialDepend
   let apiKey:string|null;
   try{apiKey=await deps.resolveDefault();}catch{return unavailable();}
   if(!keyValid(apiKey)||request.signal.aborted)return unavailable();
-  const headers=new Headers(request.headers);
-  const bytes=options.keyLocation==='header'?(headers.set('x-compor-openai-key',apiKey),parsed.bytes):Buffer.from(JSON.stringify({...parsed.value,apiKey}));
-  return {request:rebuiltRequest(request,bytes,headers),source:'default',actor,apiKey};
+  return prepare('default',apiKey,actor);
 }
 
 /** Availability is not authorization to generate and never exposes the key. */

@@ -29,7 +29,8 @@ export function visualManifestDigest(input:VisualInputManifest){
 /** Each call makes exactly one request. Conflicts and lost replies require explicit reconciliation. */
 export function createReferenceAuthorityClient(fetchApi:typeof fetch=fetch){
  async function post(path:'selection'|'consent'|'snapshot',body:Record<string,unknown>,capability?:string){
-  const response=await fetchApi(`/api/studio/reference-authority/${path}`,{method:'POST',headers:{'content-type':'application/json',...(capability?{'x-compor-reference-consent':capability}:{})},body:JSON.stringify(body)});
+  const signal=body.op==='read'||body.op==='receipt'||body.op==='state'?AbortSignal.timeout(15000):undefined;
+  const response=await fetchApi(`/api/studio/reference-authority/${path}`,{method:'POST',headers:{'content-type':'application/json',...(capability?{'x-compor-reference-consent':capability}:{})},body:JSON.stringify(body),signal});
   if(!response.ok)throw Error(response.status===409?'reference_authority_conflict':'reference_authority_unavailable');
   return await response.json() as unknown;
  }

@@ -32,14 +32,15 @@ test('wrapper BYOK/Vault preserva fonte, vínculo e recuperação somente por GE
  const provider={create:async()=>{creates++;return{sessionId:'sess_test'};},get:async()=>{lookups++;return{status:'completed',turnId:'turn_test',plan:{version:1,items:[1,2,3].map(i=>({position:i,creativePrompt:`Direção ${i}`,composition:`Composição ${i}`,contrast:`Contraste ${i}`,differenceFromOthers:`Diferença ${i}`}))}};}};
  const store={reserve:async input=>{if(record)return{status:'existing',record};record={userId:input.actor.userId,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,requestId:input.requestId,attemptId:id(6),inputDigest:input.inputDigest,state:'starting',binding:null};return{status:'reserved',record};},get:async()=>record,bind:async input=>{record={...record,binding:input.binding,state:'running'};},finish:async input=>{record={...record,state:input.state};}};
  const deps={appOrigin:'https://compor.test',defaultEnabled:true,resolveActor:async()=>actor,ownsProject:async()=>true,resolveDefault:async()=>{vault++;return defaultKey;}};
- async function handle(body,allowSubmit=true){const prepared=await prepareOpenAiRequest(request(body),deps,{bodyLimit:65536});if(prepared instanceof Response)return prepared;if(!prepared.apiKey)return new Response(null,{status:400});const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),planner=createExplorationPlanner({store,bindings,provider,authorize:async()=>true});return createExplorationPlannerRoute({appOrigin:deps.appOrigin,apiKey:prepared.apiKey,allowSubmit,resolveActor:async()=>actor,ownsProject:async()=>true,bindings,plannerFor:()=>planner})(prepared.request);}
- assert.equal((await handle({...data,apiKey:'invalid'})).status,400);assert.equal(vault,0,'BYOK inválida nunca usa fallback');
- assert.equal((await handle(data)).status,202);assert.equal(creates,1);assert.equal(vault,0);
- const {intentId,...poll}=data;const changed=await handle({...poll,op:'poll',apiKey:`sk-other-${'z'.repeat(30)}`});assert.equal((await changed.json()).status,'unknown');assert.equal(lookups,0);
- const defaultPoll={...poll,op:'poll'};delete defaultPoll.apiKey;assert.equal((await(await handle(defaultPoll)).json()).status,'unknown');assert.equal(vault,1);assert.equal(lookups,0);
- const completed=await handle({...poll,op:'poll'});assert.equal((await completed.json()).status,'completed');assert.equal(lookups,1);
- const recovered=await handle({...poll,op:'poll'},false);assert.equal((await recovered.json()).status,'completed');assert.equal(creates,1);assert.equal(lookups,2);
- const denied=await handle(data,false);assert.equal(denied.status,503);assert.equal(creates,1);assert.equal(lookups,2);
+ async function handle(raw,allowSubmit=true){const prepared=await prepareOpenAiRequest(raw,deps,{bodyLimit:65536,keyLocation:'separate'});if(prepared instanceof Response)return prepared;if(!prepared.apiKey)return new Response(null,{status:400});const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey}),planner=createExplorationPlanner({store,bindings,provider,authorize:async()=>true});return createExplorationPlannerRoute({appOrigin:deps.appOrigin,apiKey:prepared.apiKey,allowSubmit,resolveActor:async()=>actor,ownsProject:async()=>true,bindings,plannerFor:()=>planner})(prepared.request);}
+ const header=body=>{const {apiKey:key,...payload}=body;return request(payload,{'x-compor-openai-key':key});};
+ assert.equal((await handle(header({...data,apiKey:'invalid'}))).status,400);assert.equal(vault,0,'BYOK inválida nunca usa fallback');
+ assert.equal((await handle(header(data))).status,202);assert.equal(creates,1);assert.equal(vault,0);
+ const {intentId,...poll}=data;const changed=await handle(header({...poll,op:'poll',apiKey:`sk-other-${'z'.repeat(30)}`}));assert.equal((await changed.json()).status,'unknown');assert.equal(lookups,0);
+ const defaultPoll={...poll,op:'poll'};delete defaultPoll.apiKey;assert.equal((await(await handle(request(defaultPoll))).json()).status,'unknown');assert.equal(vault,1);assert.equal(lookups,0);
+ const completed=await handle(header({...poll,op:'poll'}));assert.equal((await completed.json()).status,'completed');assert.equal(lookups,1);
+ const recovered=await handle(request({...poll,op:'poll'}),false);assert.equal((await recovered.json()).status,'completed');assert.equal(creates,1);assert.equal(lookups,2);
+ const denied=await handle(header(data),false);assert.equal(denied.status,503);assert.equal(creates,1);assert.equal(lookups,2);
 });
 
 test('flag desligada permite apenas consultar planejamento existente sem novo submit',async()=>{

@@ -79,6 +79,84 @@ async function connectKey(page){
  await finishPreparation(page);await connectOwnOpenAiKey(page,apiKey);await closeSettings(page);return openChat(page);
 }
 
+async function prepareFirstPost(page,idea){
+ const button=name=>page.getByRole('button',{name,exact:true});
+ await idea.fill('Oficina de cerâmica');await button('Criar projeto e continuar').click();
+ await page.getByRole('textbox',{name:'O que vamos divulgar?',exact:true}).fill('Oficina de cerâmica aos sábados');
+ await button('Continuar').click();
+ await page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true}).fill('Adultos iniciantes');
+ await button('Continuar para a IA').click();
+ await connectOwnOpenAiKey(page,apiKey);await button('Continuar para referências').click();
+ await finishPreparation(page,{preparePost:false});
+ return button;
+}
+
+test('Gerar primeiro post usa o contexto revisado sem uma segunda mensagem',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,errors,external}=await studio(t);
+ const button=await prepareFirstPost(page,idea);
+ const generate=button('Gerar primeiro post');
+ await generate.waitFor();assert.equal(await generate.isDisabled(),true);
+ assert.equal(await page.getByLabel('Nome do post',{exact:true}).inputValue(),'Oficina de cerâmica');
+ const message=page.getByLabel('O que este post deve comunicar?',{exact:true});
+ assert.equal(await message.inputValue(),'Oficina de cerâmica aos sábados');
+ await message.fill('A oficina de cerâmica aceita pessoas iniciantes');
+ await page.getByLabel('Objetivo deste post',{exact:true}).fill('Apresentar a oficina');
+ await page.getByLabel('Chamada para ação (opcional)',{exact:true}).fill('Conheça a oficina');
+ assert.equal(chats.length,0);
+ await generate.click();
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.equal(chats.length,1);
+ assert.equal(chats[0].context.brief.audience,'Adultos iniciantes');
+ assert.equal(chats[0].context.brief.offer,'Oficina de cerâmica aos sábados');
+ assert.deepEqual(chats[0].context.postContext,{objective:'Apresentar a oficina',message:'A oficina de cerâmica aceita pessoas iniciantes',action:'Conheça a oficina'});
+ assert.equal(await page.getByRole('textbox',{name:'Sua mensagem',exact:true}).inputValue(),'');
+ await page.reload();
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.equal(chats.length,1);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('Gerar primeiro post interrompe o envio ao sair durante a gravação do pedido',{skip,timeout:90000},async t=>{
+ const {page,idea,chats,errors}=await studio(t);
+ const button=await prepareFirstPost(page,idea);
+ await page.getByLabel('Objetivo deste post',{exact:true}).fill('Apresentar a oficina');
+ await page.evaluate(()=>{
+  const put=IDBObjectStore.prototype.put;
+  IDBObjectStore.prototype.put=function(...args){
+   const result=put.apply(this,args);
+   if(this.name==='states'&&args[0]?.state?.adjustments.some(turn=>turn.status==='pending')){
+    IDBObjectStore.prototype.put=put;
+    const deadline=Date.now()+12000;
+    const holdTransaction=()=>{
+     if(window.releaseFirstPostWrite||Date.now()>deadline)return;
+     this.count().onsuccess=holdTransaction;
+    };
+    window.firstPostWriting=true;
+    holdTransaction();
+   }
+   return result;
+  };
+ });
+ await button('Gerar primeiro post').click();
+ await page.waitForFunction(()=>window.firstPostWriting===true);
+ await button('Posts do projeto').click();
+ await page.evaluate(()=>{window.releaseFirstPostWrite=true;});
+ await page.waitForFunction(async()=>{
+  const db=await new Promise(resolve=>{const open=indexedDB.open('compor-studio-v1');open.onsuccess=()=>resolve(open.result);});
+  const rows=await new Promise(resolve=>{const read=db.transaction('states').objectStore('states').getAll();read.onsuccess=()=>resolve(read.result);});
+  db.close();
+  return rows.some(row=>row.state.adjustments.some(turn=>turn.status==='failed'));
+ });
+ assert.equal(chats.length,0);
+ await page.getByRole('button',{name:/^Oficina de cerâmica .*Abrir post e conversa$/}).click();
+ const composer=await openConversation(page);
+ await composer.fill('Gere a arte e a legenda.');
+ await composer.press('Enter');
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ assert.equal(chats.length,1,'o pedido sem envio não bloqueia o próximo gesto explícito');
+ assert.deepEqual(errors,[]);
+});
+
 test('Enter envia a ideia e a mensagem uma única vez',{skip,timeout:90000},async t=>{
  const {page,idea,posts,chats,errors,external}=await studio(t,{createDelay:1000});
  await idea.fill('Quero divulgar minha oficina de cerâmica para iniciantes aos sábados');await idea.press('Enter');
@@ -254,6 +332,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  const first=chats[0].conversationId;assert.equal(first,chats[0].context.pieceId);
  await field.fill('Rascunho privado do post um');
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:'Criar novo post',exact:true}).click();
+ await page.getByLabel('Nome do post',{exact:true}).fill('Materiais da oficina');
  field=await openConversation(page);assert.equal(await field.inputValue(),'');assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Primeiro post, sobre a oficina',{exact:true}).count(),0);
  await field.fill('Segundo post, sobre materiais');await field.press('Enter');await page.locator('.guided-conversation:not([hidden])').getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.notEqual(chats[1].conversationId,first);assert.equal(chats[1].context.brief.offer,chats[0].context.brief.offer);
@@ -263,7 +342,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
  const storedDraft=()=>page.evaluate(key=>JSON.parse(sessionStorage.getItem(key)),draftKey);
  await field.fill('Rascunho privado do post dois');
  assert.equal(await storedDraft(),'Rascunho privado do post dois');
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 1 /}).click();
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Um projeto de cerâmica .*Abrir post e conversa$/}).click();
  field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');
  await page.goto(new URL('/',page.url()).href);await page.getByRole('button',{name:projects[0].title+' Abrir projeto',exact:true}).click();await finishPreparation(page);
  field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${first}`);assert.equal(await field.inputValue(),'Rascunho privado do post um');
@@ -277,7 +356,7 @@ test('posts isolam conversa e compositor, preservam contexto compartilhado e ret
    observer.observe(document.body,{subtree:true,childList:true,attributes:true});
   });
  },`studio-chat-message-${second}`);
- await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post 2 /}).click();
+ await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Materiais da oficina .*Abrir post e conversa$/}).click();
  assert.equal(await storedDraft(),'Rascunho privado do post dois');
  field=await openConversation(page);assert.equal(await field.getAttribute('id'),`studio-chat-message-${second}`);assert.equal(await page.evaluate(()=>window.firstVisibleConversationDraft),'Rascunho privado do post dois');assert.equal(await field.inputValue(),'Rascunho privado do post dois');
  assert.equal(await page.locator('.guided-conversation:not([hidden])').getByText('Primeiro post, sobre a oficina',{exact:true}).count(),0);assert.deepEqual(errors,[]);

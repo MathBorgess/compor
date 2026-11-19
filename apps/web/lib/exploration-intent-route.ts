@@ -8,7 +8,7 @@ import {parseVisualInputManifest,visualInputMatchesProject,type VisualInputManif
 import {visualInputDigest} from '@compor/agents-api/visual-input';
 import type {VisualAuthority,VisualAuthorityScope} from './visual-authority.ts';
 const id=z.string().uuid(),reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
-const createSchema=z.strictObject({projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,purpose:z.enum(['batch','replacement']),position:z.number().int().min(1).max(3).optional(),previousId:id.optional(),context:z.unknown(),visualInput:z.unknown().optional(),authorityRequestId:id.optional(),expectedEpoch:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER-1),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/)});
+const createSchema=z.strictObject({projectId:id,conversationId:z.union([z.literal('references'),id]),batchId:id,intentId:id,purpose:z.enum(['batch','replacement']),position:z.number().int().min(1).max(3).optional(),previousId:id.optional(),context:z.unknown(),visualInput:z.unknown().optional(),authorityRequestId:id.optional(),expectedEpoch:z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER-1),apiKey:z.string().regex(/^sk-[^\s]{20,300}$/).optional()});
 const projectSchema=z.strictObject({projectId:id}),stateSchema=projectSchema.extend({intentId:id}),revokeSchema=stateSchema.extend({expectedEpoch:z.number().int().nonnegative().safe()});
 const contains=(value:unknown,key:string):boolean=>typeof value==='string'?value.includes(key):Array.isArray(value)?value.some(v=>contains(v,key)):value!==null&&typeof value==='object'?Object.values(value).some(v=>contains(v,key)):false;
 export type IntentStore={
@@ -33,7 +33,7 @@ export function createExplorationIntentRoute(deps:Deps){
  return {
   async create(request:Request){
    let raw:unknown;try{raw=await parse(request,65536);}catch{return reply({error:'invalid_request'},400);}
-   const parsed=createSchema.safeParse(raw);if(!parsed.success||!deps.apiKey||parsed.data.apiKey!==deps.apiKey||!deps.bindings||!validateExplorationContext(parsed.data.context)||contains(parsed.data.context,deps.apiKey))return reply({error:'invalid_request'},400);
+   const parsed=createSchema.safeParse(raw);if(!parsed.success||!deps.apiKey||!/^sk-[^\s]{20,300}$/.test(deps.apiKey)||(parsed.data.apiKey!==undefined&&parsed.data.apiKey!==deps.apiKey)||!deps.bindings||!validateExplorationContext(parsed.data.context)||contains(parsed.data.context,deps.apiKey))return reply({error:'invalid_request'},400);
    const validatedContext=parsed.data.context;const data=parsed.data;if(data.purpose==='batch'?(data.position!==undefined||data.previousId!==undefined):(data.position===undefined||data.previousId===undefined))return reply({error:'invalid_request'},400);
    let visualInput:VisualInputManifest|undefined;try{if(data.visualInput!==undefined)visualInput=parseVisualInputManifest(data.visualInput);}catch{return reply({error:'invalid_request'},400);}
    if((visualInput===undefined)!==(data.authorityRequestId===undefined))return reply({error:'invalid_request'},400);

@@ -49,10 +49,10 @@ export function createStudioJourneyController(port:StatePort) {
     return result;
   }
 
-  function preparePost(pieceId:string,{fromAgent=false,referenceScope}:{fromAgent?:boolean;referenceScope?:string}={}) {
+  function preparePost(pieceId:string,{fromAgent=false,referenceScope,initialProjectTitle}:{fromAgent?:boolean;referenceScope?:string;initialProjectTitle?:string}={}) {
     if(port.isRemoved(pieceId))throw Error('Post excluído.');
     return change(value=>{
-      const next=startPostPreparation(value,pieceId);
+      const next=startPostPreparation(value,pieceId,initialProjectTitle);
       return fromAgent?changeStudioState(next,state=>{
         state.selection=null;
         if(state.workflow.phase==='references')state.workflow.phase='ready';

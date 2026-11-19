@@ -2,6 +2,7 @@
 import {conversationContext,postContext} from '../lib/studio-post-context';
 import {scheduleSelectionReading} from '../lib/selection-reading-timer';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
+import {byokJsonHeaders} from '../lib/openai-byok-transport.ts';
 import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
@@ -25,6 +26,7 @@ import { submitOnEnter } from "../lib/submit-on-enter.ts";
 import {offerContext} from '../lib/studio-context.ts';
 import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
+import type { ImageWaitStatus } from '@compor/agents-api/image-tool-reservation';
 import {readReferenceAuthorityConsent} from '../lib/reference-authority-consent.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {assertReferenceVisualCapability,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
@@ -65,7 +67,23 @@ async function prepareRequestVisuals(state:StudioState,conversationId:string|und
  return {visualInput:snapshot.manifest,visualImages};
 }
 const openAIAuthenticationNotice='A OpenAI recusou a autenticação desta chave. Confira sua chave para consultar a solicitação anterior.';
+const imageWaitDelays=[2500,5000,7500,10000] as const;
+const imageWaitMessages={
+  waiting_planning:'Um planejamento de referências ainda está em andamento. Abra Referências para consultar a tentativa original.',
+  waiting_exploration:'Uma imagem de exploração ainda está em andamento na sua conta.',
+  waiting_image:'Outra imagem de post ainda está em andamento na sua conta.',
+  waiting_priority:'Outro pedido de imagem tem prioridade nesta conta.',
+} satisfies Record<Extract<ImageWaitStatus,`waiting_${string}`>,string>;
+const imageBlockedNotice='Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.';
+const chatPollDelay=(count:number)=>count<4?2000:count<9?4000:8000;
 type CredentialSource='default'|'byok';
+export type InitialPostRequest={
+  pieceId:string;
+  credentialSource:CredentialSource;
+  credentialEpoch:number;
+  claim:()=>boolean;
+  isCurrent:()=>boolean;
+};
 const sourceNotice=(source:CredentialSource)=>source==='default'?'Esta tentativa começou com a IA do Compor. Volte a essa opção para consultá-la; ela não será reenviada.':'Esta tentativa começou com sua chave OpenAI. Reconecte a chave original para consultá-la; ela não será reenviada.';
 /** Assistant text is Markdown without raw HTML; links open safely and images become their alt text. */
 function MessageMarkdown({text}:{text:string}) {
@@ -112,6 +130,7 @@ export default function StudioChat({
   loadReference,
   loadBase,
   initialMessage = "",
+  initialPostRequest,
   messageDraft,
   onMessageDraftChange,
   connection,
@@ -130,7 +149,7 @@ export default function StudioChat({
   createVisualAuthoritySnapshot,
   visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext)=>Promise<StoredImage|null|undefined>;initialMessage?:string;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext)=>Promise<StoredImage|null|undefined>;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -187,6 +206,7 @@ export default function StudioChat({
     request = useRef<AbortController|null>(null),
     actionCount = useRef(new Map<string,number>()),
     imageContext=useRef<ImageContext|null>(null),
+    waitingImageRequest=useRef<string|null>(null),
     receiptRef=useRef<ImageReceipt|null>(null),
     activeMarker=useRef<string|null>(null),
     preparationSequence=useRef(0),
@@ -350,8 +370,8 @@ export default function StudioChat({
     return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
   },[marker]);
   async function api(path:string, body:Record<string,unknown>,mode:'inspection'):Promise<PendingInspection>;
-  async function api(path:string, body:Record<string,unknown>):Promise<ChatResponse>;
-  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'):Promise<ChatResponse|PendingInspection> {
+  async function api(path:string, body:Record<string,unknown>,beforeDispatch?:()=>void):Promise<ChatResponse>;
+  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'|(()=>void)):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
     const effect=path==='/api/agent/image'||path==='/api/studio/action'||path==='/api/studio/chat'&&body.op!=='poll'&&body.op!=='inspect_pending';
@@ -372,10 +392,11 @@ export default function StudioChat({
       if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     }
     if(visual!==undefined&&visualAuthorityHeaders)assertReferenceVisualCapability(state.userId,visual,authorityHeaders);
+    if(typeof mode==='function')mode();
     const response = await fetch(path, {
       method: "POST",
-      headers: { "content-type": "application/json",...authorityHeaders },
-      body: JSON.stringify({ ...body, ...(conversationId&&path.startsWith("/api/studio/")?{conversationId}:{}), ...(credentialSource==='byok'?{apiKey:key}:{}) }),
+      headers: { "content-type": "application/json",...authorityHeaders,...(credentialSource==='byok'?byokJsonHeaders(key):{}) },
+      body: JSON.stringify({ ...body, ...(conversationId&&path.startsWith("/api/studio/")?{conversationId}:{}) }),
       signal: controller.signal,
     });
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
@@ -603,9 +624,9 @@ export default function StudioChat({
       });
       return handle(next, requestId, count + 1);
     }
-    if (data.status === "running" && count < 60) {
+    if (data.status === "running" && count < 20) {
       setNotice("");
-      timer.current = setTimeout(() => poll(requestId, count + 1), 2000);
+      timer.current = setTimeout(() => poll(requestId, count + 1), chatPollDelay(count));
       return;
     }
     if (data.status === "failed") {
@@ -651,7 +672,7 @@ export default function StudioChat({
   async function poll(requestId:string, count = 0, afterImageConfirmation = false) {
     if (!credentialIsCurrent()||!canUseAI) return;
     const nested=afterImageConfirmation&&pollLock.current===requestId;
-    if(inspectionLock.current||(pollLock.current&&!nested)){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),2000);return;}
+    if(inspectionLock.current||(pollLock.current&&!nested)){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),chatPollDelay(count));return;}
     if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
     pollLock.current=requestId;setBusy(true);
     try {
@@ -743,18 +764,30 @@ export default function StudioChat({
     event.preventDefault();
     await submitText(message,{fromComposer:true});
   }
-  type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void};
+  useEffect(()=>{
+    if(!initialPostRequest?.claim())return;
+    const instruction='Gere a arte e a legenda do primeiro post com o objetivo, a mensagem e o contexto do projeto já informados. Use a chamada para ação se estiver preenchida.';
+    const approvedScope=initialPostRequest.credentialSource===credentialSource&&initialPostRequest.credentialEpoch===credentialEpoch;
+    void (async()=>{
+      const submitted=approvedScope&&await submitText(instruction,{fromComposer:false,isCurrent:initialPostRequest.isCurrent});
+      if(!submitted&&mounted.current&&initialPostRequest.isCurrent()&&!availability.current.message.trim()){
+        setMessage(instruction);
+        setNotice(current=>current||'O pedido ficou pronto na conversa. Envie quando a IA estiver disponível.');
+      }
+    })();
+  },[initialPostRequest]);
+  type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void;isCurrent?:()=>boolean};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
-  async function submitText(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
-    if (referenceAuthorityBlocked || visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()) return false;
+  async function submitText(text:string,options:SubmitOptions) {
+    if (referenceAuthorityBlocked || visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()||options.isCurrent?.()===false) return false;
     submitLock.current=true;
     try {
       if(checkReferenceAuthority){const allowed=await checkReferenceAuthority();if(!credentialIsCurrent())return false;if(!allowed){setNotice('Consulte a seleção de referências antes de enviar.');return false;}}
-      if(!credentialIsCurrent()||availability.current.busy||availability.current.pending||availability.current.localBlocked||availability.current.readOnly||availability.current.visualUnavailable||inspectionLock.current)return false;
-      return await submitLocked(text,{fromComposer,quickReply,onPrepared});
+      if(!credentialIsCurrent()||availability.current.busy||availability.current.pending||availability.current.localBlocked||availability.current.readOnly||availability.current.visualUnavailable||inspectionLock.current||options.isCurrent?.()===false)return false;
+      return await submitLocked(text,options);
     } finally { submitLock.current=false; }
   }
-  async function submitLocked(text:string,{fromComposer,quickReply,onPrepared}:SubmitOptions) {
+  async function submitLocked(text:string,{fromComposer,quickReply,onPrepared,isCurrent}:SubmitOptions) {
     onUseAI?.();
     setNotice("");
     setBusy(true);
@@ -764,17 +797,28 @@ export default function StudioChat({
     const visualIsCurrent=()=>!availability.current.visualUnavailable&&availability.current.selectedVisualsAvailable===visualMode;
     let prepared = false,
       submitted = false;
+    const assertInitialPostIsCurrent=()=>{
+      if(isCurrent&&(!isCurrent()||!credentialIsCurrent()||!visualIsCurrent()))
+        throw Error('O contexto mudou antes do envio. Abra o primeiro post para gerar novamente.');
+    };
+    const beforeDispatch=isCurrent?()=>{
+      assertInitialPostIsCurrent();
+      submitted=true;
+    }:undefined;
     try {
       const before = getState();
       const selected=getCurrentDraft(before), storedBase=selected?await loadBase?.(selected):null;
+      assertInitialPostIsCurrent();
       if(!credentialIsCurrent()||!visualIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
       const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference,Boolean(createVisualAuthoritySnapshot)):null;
+      assertInitialPostIsCurrent();
       if(visuals&&createVisualAuthoritySnapshot){if(!conversationId)throw Error('Abra a conversa para confirmar a seleção.');await createVisualAuthoritySnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId,batchId:null,purpose:'artwork'},visuals.visualInput);}
       const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
       const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
+      assertInitialPostIsCurrent();
       if(!credentialIsCurrent()||!visualIsCurrent())return;
       if (getState().revision !== before.revision)
         throw Error(
@@ -796,6 +840,7 @@ export default function StudioChat({
       onPrepared?.(userMessageId);
       imageContext.current={pieceId:selected.pieceId,baseVersion:selected.baseVersion};
       await flush();
+      assertInitialPostIsCurrent();
       if(!credentialIsCurrent()||!visualIsCurrent()){settle(requestId,'failed');return;}
       remember(requestId);
       setPending(requestId);
@@ -828,7 +873,7 @@ export default function StudioChat({
           references: next.references,
           projectTitleProvisional: next.projectTitleProvisional && projectRevision===1,
         } satisfies StudioContext;
-      submitted = true;
+      if(!beforeDispatch)submitted=true;
       const data = await api("/api/studio/chat", {
         projectId: state.projectId,
         requestId,
@@ -842,12 +887,21 @@ export default function StudioChat({
         ...(visuals??{}),
         // A quick reply starts a text-only turn; it never resumes a tool-enabled session.
         ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
-      });
+      },beforeDispatch);
       await handle(data, requestId);
       return true;
     } catch (e) {
+      if(isCurrent&&prepared&&!submitted){
+        try { settle(requestId,'failed'); } catch { /* The previous account or project may already be closed. */ }
+        try {
+          const stored=chatMarkerSchema.safeParse(JSON.parse(sessionStorage.getItem(marker)??'null'));
+          if(stored.success&&stored.data.requestId===requestId)
+            sessionStorage.setItem(marker,JSON.stringify({...stored.data,requestId:null,imageContext:undefined}));
+        } catch { /* Recover the unsent request through its original conversation if storage is unavailable. */ }
+        if(mounted.current)setPending(current=>current===requestId?null:current);
+      }
       if (credentialIsCurrent()) {
-        if (prepared && !submitted) {
+        if (!isCurrent && prepared && !submitted) {
           settle(requestId, "failed");
           remember(null);
           setPending(null);
@@ -1003,6 +1057,26 @@ export default function StudioChat({
     }
     await sendImage(action);
   }
+  async function readImageWaitStatus(reservation:{projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string}):Promise<ImageWaitStatus> {
+    const controller=new AbortController();
+    request.current=controller;
+    const timeout=setTimeout(()=>controller.abort(),5000);
+    try {
+      const response=await fetch('/api/agent/image/status',{
+        method:'POST',
+        headers:{'content-type':'application/json'},
+        body:JSON.stringify(reservation),
+        signal:controller.signal,
+      });
+      if(!response.ok)return 'unverified';
+      const body:unknown=await response.json();
+      if(!body||typeof body!=='object'||!('status' in body))return 'unverified';
+      const status=body.status;
+      if(status==='ready'||status==='blocked'||status==='waiting_planning'||status==='waiting_exploration'||status==='waiting_image'||status==='waiting_priority')return status;
+      return 'unverified';
+    }catch{return 'unverified';}
+    finally{clearTimeout(timeout);}
+  }
   async function sendImage(action:ImageAction) {
     const snapshot=getState(),selectedDraft=getCurrentDraft(snapshot);
     let preparedTarget:PreparedImageTarget|null;
@@ -1079,37 +1153,64 @@ export default function StudioChat({
       remember(action.requestId);
       if (!credentialIsCurrent() || !availability.current.hasApiKey || !canUseAI || (credentialSource==='byok'&&!getApiKey())) throw Error("Ative a IA escolhida para continuar.");
       const savedRevision = getState().revision;
-      let data:ChatResponse;
-      for (;;) {
+      const reservation={projectId:state.projectId,pieceId:target.pieceId,version:target.version,attemptId:action.attemptId,actionBinding:action.actionBinding};
+      const artworkInput=action.artworkInput;
+      async function dispatchImage(){
         try {
           if (localStorage.getItem(imageSubmissionMarker)) throw Error();
           localStorage.setItem(imageSubmissionMarker, action.requestId);
           if (localStorage.getItem(imageSubmissionMarker) !== action.requestId) throw Error();
         } catch { throw Error("Não foi possível preservar o estado da geração. Nenhuma imagem foi enviada."); }
-        data = await api("/api/agent/image", {
-          projectId: state.projectId,
-          pieceId: target.pieceId,
-          version: target.version,
-          attemptId: action.attemptId,
-          ...(action.artworkInput.visualInput&&createVisualAuthoritySnapshot?{requestId:action.requestId}:{}),
-          actionBinding: action.actionBinding,
+        return api("/api/agent/image", {
+          ...reservation,
+          ...(artworkInput?.visualInput&&createVisualAuthoritySnapshot?{requestId:action.requestId}:{}),
           explicitApproval: true,
-          artworkInput: action.artworkInput,
+          artworkInput,
         });
-        if (data.status === 'failed' && data.error === 'image_invalid_request') {
-          setImageAction({...action,...(preparedTarget?{preparedTarget}:{context:{...action.context,baseVersion:target.version}}),artworkInput:null,conversions:[],sourceFingerprint:null,canPrepareTransport:false});
-          setImageNeedsReconciliation(true);setImageNeedsDecision(false);setBusy(false);
-          setNotice('Esta requisição não enviou a imagem e o post salvo foi preservado. Verifique a tentativa antes de continuar.');
-          return;
-        }
-        if (data.status !== "failed" || !["image_busy", "image_blocked"].includes(data.error ?? "")) break;
-        // The server confirms that no image request was sent for this reservation.
+      }
+      const clearUndispatched=()=>{
         if (localStorage.getItem(imageSubmissionMarker) === action.requestId) localStorage.removeItem(imageSubmissionMarker);
-        if (data.error === "image_blocked") throw Error("Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.");
-        setNotice("Aguardando a exploração atual terminar para gerar esta peça…");
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        if (!isCurrentScope()) return;
+      };
+      const waitingIsCurrent=()=>{
+        if(!isCurrentScope())return false;
         if (!credentialIsCurrent() || !availability.current.hasApiKey || (credentialSource==='byok'&&!getApiKey()) || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
+        return true;
+      };
+      let data:ChatResponse=waitingImageRequest.current===action.requestId
+        ?{status:'failed',error:'image_busy'}
+        :await dispatchImage();
+      let waitMessage='Há outra operação de imagem em andamento na sua conta.';
+      if(data.status==='failed'&&data.error==='image_busy'){
+        clearUndispatched();
+        waitingImageRequest.current=action.requestId;
+        setNotice(waitMessage);
+        for(const delay of imageWaitDelays){
+          await new Promise(resolve=>setTimeout(resolve,delay));
+          if(!waitingIsCurrent())return;
+          const readiness=await readImageWaitStatus(reservation);
+          if(!waitingIsCurrent())return;
+          if(readiness==='unverified')throw Error('Não foi possível verificar a prontidão. Consulte a mesma tentativa antes de continuar.');
+          if(readiness==='blocked')throw Error(imageBlockedNotice);
+          if(readiness==='ready'){
+            waitingImageRequest.current=null;
+            data=await dispatchImage();
+            break;
+          }
+          waitMessage=imageWaitMessages[readiness];
+          setNotice(waitMessage);
+        }
+      }
+      if (data.status === 'failed' && data.error === 'image_invalid_request') {
+        setImageAction({...action,...(preparedTarget?{preparedTarget}:{context:{...action.context,baseVersion:target.version}}),artworkInput:null,conversions:[],sourceFingerprint:null,canPrepareTransport:false});
+        setImageNeedsReconciliation(true);setImageNeedsDecision(false);setBusy(false);
+        setNotice('Esta requisição não enviou a imagem e o post salvo foi preservado. Verifique a tentativa antes de continuar.');
+        return;
+      }
+      if(data.status==='failed'&&(data.error==='image_busy'||data.error==='image_blocked')){
+        clearUndispatched();
+        if(data.error==='image_blocked')throw Error(imageBlockedNotice);
+        waitingImageRequest.current=action.requestId;
+        throw Error(`${waitMessage} A espera foi pausada. Consulte esta tentativa para continuar.`);
       }
       if (data.assetId) {
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");

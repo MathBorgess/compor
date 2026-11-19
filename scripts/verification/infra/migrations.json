@@ -166,6 +166,10 @@
     {
       "name": "20261118000041_close_uncertain_serial_exploration.sql",
       "sha256": "2f1b7a695b9ce419368d180a0c65cdb0e2b9b75a1f617275482db8eb15fb86d5"
+    },
+    {
+      "name": "20261118000042_image_tool_wait_status.sql",
+      "sha256": "5de9c2cf6840f4bbdd7883c2584bbe898ee8f276d18ca1a26cf0245984a5511f"
     }
   ]
 }

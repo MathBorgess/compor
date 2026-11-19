@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {createAgentImageReconcile} from '../lib/agent-image-reconcile.ts';
+import {createAgentImageReconcile,createAgentImageWaitStatus} from '../lib/agent-image-reconcile.ts';
 import {createSessionBindings} from '@compor/agents-api/session-binding';
 
 const actor={userId:'11111111-1111-4111-8111-111111111111',token:'synthetic-token'};
@@ -25,4 +25,22 @@ test('falha ou reserva anterior permanecem não verificadas',async()=>{
   const handler=createAgentImageReconcile({appOrigin:'https://compor.test',resolveActor:async()=>actor,ownsVersion:async()=>true,bindings,fence});
   const response=await handler(request());assert.deepEqual(await response.json(),{status:'unverified'});
  }
+});
+
+test('a prontidão usa a prova e a versão autorizada sem chave ou anexos',async()=>{
+ const scopes=[];
+ const handler=createAgentImageWaitStatus({
+  appOrigin:'https://compor.test',resolveActor:async()=>actor,ownsVersion:async value=>value.version===3,bindings,
+  getWaitStatus:async scope=>{scopes.push(scope);return {status:'waiting_planning'};},
+ });
+ const response=await handler(request());
+ assert.equal(response.status,200);
+ assert.equal(response.headers.get('cache-control'),'no-store');
+ assert.deepEqual(await response.json(),{status:'waiting_planning'});
+ assert.deepEqual(scopes,[{actor,projectId,pieceId,version:3,attemptId,sessionId:'sess_test',turnId:'turn_test',callId:'call_test'}]);
+ assert.equal((await handler(request({...body,apiKey:'synthetic'}))).status,400);
+ assert.equal((await handler(request({...body,artworkInput:{}}))).status,400);
+ assert.equal((await handler(request({...body,attemptId:pieceId}))).status,403);
+ assert.equal((await handler(request({...body,version:4}))).status,404);
+ assert.equal(scopes.length,1);
 });

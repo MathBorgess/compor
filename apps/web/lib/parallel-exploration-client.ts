@@ -1,4 +1,5 @@
 import * as z from './schema.ts';
+import {byokJsonHeaders} from './openai-byok-transport.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
 import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
@@ -17,15 +18,15 @@ export type PlanningResult={preparation:ParallelPreparation;binding:string|null;
 export function createParallelExplorationClient({store,fetchApi=fetch,canInspect}:{store:Store;fetchApi?:typeof fetch;canInspect:()=>boolean}) {
   let planning=false;
   const headers={'content-type':'application/json'};
-  function credential(preparation:ParallelPreparation,apiKey:string){
+  function credentialHeader(preparation:ParallelPreparation,apiKey:string):Record<string,string>{
     if(preparation.credentialSource==='byok'){
       if(!/^sk-[^\s]{20,300}$/.test(apiKey))throw Error('credential_unavailable');
-      return {apiKey};
+      return byokJsonHeaders(apiKey);
     }
     return {};
   }
   async function planRequest(preparation:ParallelPreparation,apiKey:string):Promise<PlanningResult>{
-    const response=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers,body:JSON.stringify({op:'poll',projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,requestId:preparation.planRequestId,context:preparation.context,...(preparation.visualInput===undefined?{}:{visualInput:preparation.visualInput}),...credential(preparation,apiKey)})});
+    const response=await fetchApi('/api/studio/exploration-batches/plan',{method:'POST',headers:{...headers,...credentialHeader(preparation,apiKey)},body:JSON.stringify({op:'poll',projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,requestId:preparation.planRequestId,context:preparation.context,...(preparation.visualInput===undefined?{}:{visualInput:preparation.visualInput})})});
     const result=planResponse.parse(await response.json());
     if(result.requestId!==undefined&&result.requestId!==preparation.planRequestId)throw Error('plan_mismatch');
     if(result.status==='completed'){

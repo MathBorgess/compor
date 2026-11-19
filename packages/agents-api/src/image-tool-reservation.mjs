@@ -21,10 +21,13 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
   function validCall(input) {
     return uuid.test(input?.projectId ?? '') && id(input?.sessionId, 'sess') && id(input?.turnId, 'turn') && isAgentCallId(input?.callId);
   }
+  function callParameters(input) {
+    if (!validCall(input) || !uuid.test(input.pieceId ?? '') || !uuid.test(input.attemptId ?? '') || !Number.isInteger(input.version) || input.version < 1 || input.version > 2147483647) throw new Error('invalid reservation');
+    return {p_project_id:input.projectId,p_piece_id:input.pieceId,p_piece_version:input.version,p_attempt_id:input.attemptId,p_session_id:input.sessionId,p_turn_id:input.turnId,p_call_id:input.callId};
+  }
   return {
     async reserve(input) {
-      if (!validCall(input) || !uuid.test(input.pieceId ?? '') || !uuid.test(input.attemptId ?? '') || !Number.isInteger(input.version) || input.version < 1 || input.version > 2147483647) throw new Error('invalid reservation');
-      const rows = await rpc('reserve_image_tool_call', input.actor, { p_project_id: input.projectId, p_piece_id: input.pieceId, p_piece_version: input.version, p_attempt_id: input.attemptId, p_session_id: input.sessionId, p_turn_id: input.turnId, p_call_id: input.callId });
+      const rows = await rpc('reserve_image_tool_call', input.actor, callParameters(input));
       const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
       if (!uuid.test(row?.reservation_id ?? '') || !['reserved', 'unknown'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'reserved')) throw new Error('reservation status unknown');
       return { id: row.reservation_id, state: row.state, isNew: row.is_new };
@@ -35,10 +38,14 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (result !== true) throw new Error('reservation status unknown');
     },
     async fenceUnsubmitted(input) {
-      if (!validCall(input) || !uuid.test(input.pieceId ?? '') || !uuid.test(input.attemptId ?? '') || !Number.isInteger(input.version) || input.version < 1 || input.version > 2147483647) throw new Error('invalid reservation');
-      const result = await rpc('fence_unsubmitted_image_tool_call', input.actor, {p_project_id:input.projectId,p_piece_id:input.pieceId,p_piece_version:input.version,p_attempt_id:input.attemptId,p_session_id:input.sessionId,p_turn_id:input.turnId,p_call_id:input.callId});
+      const result = await rpc('fence_unsubmitted_image_tool_call', input.actor, callParameters(input));
       if (!['fenced','unverified'].includes(result)) throw new Error('reservation status unknown');
       return {status:result};
+    },
+    async getWaitStatus(input) {
+      const status=await rpc('image_tool_wait_status', input.actor, callParameters(input));
+      if (!['ready','waiting_priority','waiting_planning','waiting_exploration','waiting_image','blocked','unverified'].includes(status)) throw new Error('reservation status unknown');
+      return {status};
     },
     async confirmClosedAttempt({actor,projectId,requestId}) {
       if (!uuid.test(projectId ?? '') || !uuid.test(requestId ?? '')) throw new Error('invalid attempt');

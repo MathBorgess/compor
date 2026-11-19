@@ -25,8 +25,10 @@ export function createReferenceSelectionCoordinator({store,client=createReferenc
  /** First observation does not publish or silently replace a previous baseline. */
  async function observe(scope:StudioScope):Promise<Result>{
   try{
+   if((await store.readReferenceAuthority(scope)).pending)return {status:'pending'};
+   const remote=await client.read(scope.projectId);
    const local=await store.readReferenceAuthority(scope);if(local.pending)return {status:'pending'};
-   const projection=referenceSelectionProjection(local.state),remote=await client.read(scope.projectId);
+   const projection=referenceSelectionProjection(local.state);
    if(JSON.stringify(await referenceSelectionPublic(projection))!==JSON.stringify(remote.state))return {status:'conflict'};
    await store.establishReferenceAuthority(scope,local.state.revision,remote.revision,projection);
    return {status:'ready',revision:remote.revision};

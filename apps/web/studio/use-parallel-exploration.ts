@@ -26,16 +26,20 @@ const fingerprint=(state:StudioState,idea:string)=>JSON.stringify({idea,brief:st
 
 /** Disabled unless the server explicitly supplies availability. A user gesture starts each session. */
 export function useParallelExploration(props:Props){
-  const [status,setStatus]=useState('Aguardando seu pedido.'),[progress,setProgress]=useState<ParallelProgress|null>(null),[completed,setCompleted]=useState(0),[phase,setPhase]=useState<'idle'|'generating'|'waiting'|'blocked'>('idle'),[countdown,setCountdown]=useState<number|null>(null),[paused,setPaused]=useState(false),[awaitingFeedback,setAwaitingFeedback]=useState(false),[legacyPending,setLegacyPending]=useState(false),[epochReady,setEpochReady]=useState(false),[pageVisible,setPageVisible]=useState(true);
+  const [status,setStatus]=useState('Aguardando seu pedido.'),[progress,setProgress]=useState<ParallelProgress|null>(null),[completed,setCompleted]=useState(0),[phase,setPhase]=useState<'idle'|'generating'|'waiting'|'blocked'>('idle'),[countdown,setCountdown]=useState<number|null>(null),[paused,setPaused]=useState(false),[awaitingFeedback,setAwaitingFeedback]=useState(false),[legacyPending,setLegacyPending]=useState(false),[pageVisible,setPageVisible]=useState(true);
+  const [epochStatus,setEpochStatus]=useState<'checking'|'ready'|'unavailable'>('checking');
+  const [epochCheck,setEpochCheck]=useState(0);
   const current=useRef(props),epoch=useRef<number|null>(null),run=useRef<{stop:()=>void;valid:()=>boolean}|null>(null),pendingStart=useRef(false);current.current=props;
-  const audience=props.state?audienceResolution(props.state):null;
-  const ready=audience?.status!=='conflict'&&Boolean(props.idea.trim()||props.state?.brief.offer.trim()||props.state?.brief.direction.trim());
+  const audienceConflict=props.state?audienceResolution(props.state).status==='conflict':false;
+  const ready=!audienceConflict&&Boolean(props.idea.trim()||props.state?.brief.offer.trim()||props.state?.brief.direction.trim());
   useEffect(()=>{
-    let live=true;epoch.current=null;setEpochReady(false);
+    let live=true;epoch.current=null;setEpochStatus('checking');
     if(!props.available||!props.visible||!pageVisible||!props.isAuthenticated())return;
-    void createParallelIntentClient().readEpoch(props.projectId).then(value=>{if(live){epoch.current=value;setEpochReady(true);}}).catch(()=>{if(live)setStatus('Não foi possível verificar a disponibilidade da exploração.');});
+    void createParallelIntentClient().readEpoch(props.projectId).then(value=>{
+      if(live){epoch.current=value;setEpochStatus('ready');}
+    }).catch(()=>{if(live)setEpochStatus('unavailable');});
     return()=>{live=false;};
-  },[props.available,props.visible,pageVisible,props.userId,props.projectId]);
+  },[props.available,props.visible,pageVisible,props.userId,props.projectId,epochCheck]);
   useEffect(()=>{if(run.current&&!run.current.valid()){run.current.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}});
   useEffect(()=>{const onHide=()=>run.current?.stop();window.addEventListener('pagehide',onHide);return()=>{window.removeEventListener('pagehide',onHide);run.current?.stop();};},[]);
   useEffect(()=>{const update=()=>{const visible=document.visibilityState==='visible'&&document.hasFocus();setPageVisible(visible);if(!visible&&run.current){run.current.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}};document.addEventListener('visibilitychange',update);window.addEventListener('blur',update);window.addEventListener('focus',update);update();return()=>{document.removeEventListener('visibilitychange',update);window.removeEventListener('blur',update);window.removeEventListener('focus',update);};},[]);
@@ -146,5 +150,5 @@ export function useParallelExploration(props:Props){
     }catch{if(active){stop();if(run.current?.stop===stop)run.current=null;setStatus('Não foi possível confirmar esta tentativa. Ela permanece preservada.');setPhase('blocked');}}
     finally{active=false;if(runtime.stopping)await runtime.stopping.catch(()=>{});if(runtime.freezing)await runtime.freezing.catch(()=>{});store.close();if(run.current?.stop===stop)run.current=null;pendingStart.current=false;}
   }
-  return {start,pause,status,progress,completed,phase,countdown,paused,awaitingFeedback,legacyPending,epochReady,ready,clearLegacyPending:()=>setLegacyPending(false)};
+  return {start,pause,status,progress,completed,phase,countdown,paused,awaitingFeedback,legacyPending,epochReady:epochStatus==='ready',epochStatus,recheckEpoch:()=>setEpochCheck(value=>value+1),ready,audienceConflict,clearLegacyPending:()=>setLegacyPending(false)};
 }

@@ -1,3 +1,4 @@
+import {byokJsonHeaders} from './openai-byok-transport.ts';
 import * as z from './schema.ts';
 import type {ParallelPreparation} from './parallel-exploration-journal.ts';
 import {parseVisualInputManifest} from '@compor/agents-api/visual-input-contract';
@@ -12,21 +13,22 @@ export type ParallelReplacementClaim=z.infer<typeof claimSchema>;
 
 /** Callers persist the claim before create and the submission marker before dispatch. Neither call retries. */
 export function createParallelReplacementClient(fetchApi:typeof fetch=fetch){
-  function credential(preparation:ParallelPreparation,key:string){
+  function credentialHeader(preparation:ParallelPreparation,key:string,marked=false):Record<string,string>{
     if(preparation.credentialSource==='byok'&&!/^sk-[^\s]{20,300}$/.test(key))throw Error('credential_unavailable');
-    return preparation.credentialSource==='byok'?{apiKey:key}:{};
+    if(preparation.credentialSource!=='byok')return {};
+    return marked?byokJsonHeaders(key):{'x-compor-openai-key':key};
   }
   async function create(preparation:ParallelPreparation,input:ParallelReplacementClaim,key:string,signal:AbortSignal,authority?:{requestId:string;headers:Record<string,string>}):Promise<number>{
     const claim=claimSchema.parse(input);if(claim.previousId===claim.requestId)throw Error('replacement_invalid');
     const visualInput=preparation.visualInput===undefined?undefined:parseVisualInputManifest(preparation.visualInput);
     if(authority&&visualInput)assertReferenceVisualCapability(preparation.userId,visualInput,authority.headers);
-    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers:{'content-type':'application/json',...authority?.headers},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),purpose:'replacement',position:claim.position,previousId:claim.previousId,context:preparation.context,expectedEpoch:claim.expectedEpoch,...(visualInput?{visualInput}:{}),...credential(preparation,key)})});
+    const response=await fetchApi('/api/studio/exploration-batches/intent',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...credentialHeader(preparation,key,true)},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,...(authority?{authorityRequestId:authority.requestId}:{}),purpose:'replacement',position:claim.position,previousId:claim.previousId,context:preparation.context,expectedEpoch:claim.expectedEpoch,...(visualInput?{visualInput}:{})})});
     if(!response.ok)throw Error('intent_unconfirmed');const receipt=created.parse(await response.json());
     if(receipt.epoch!==claim.expectedEpoch+1)throw Error('intent_unconfirmed');return receipt.epoch;
   }
   async function dispatch(preparation:ParallelPreparation,input:ParallelReplacementClaim,binding:string,key:string,signal:AbortSignal,snapshot?:SelectedVisualInput,authority?:{requestId:string;headers:Record<string,string>}):Promise<void>{
     const claim=claimSchema.parse(input);if(!binding||claim.previousId===claim.requestId||preparation.stage!=='executing'||preparation.plan===null)throw Error('replacement_invalid');
-    credential(preparation,key);
+    const credential=credentialHeader(preparation,key);
     let visual;
     if(preparation.visualInput!==undefined){
       const visualInput=parseVisualInputManifest(preparation.visualInput);
@@ -36,7 +38,7 @@ export function createParallelReplacementClient(fetchApi:typeof fetch=fetch){
     }else if(snapshot)throw Error('replacement_invalid');
     if(signal.aborted)throw Error('replacement_paused');
     if(authority&&visual)assertReferenceVisualCapability(preparation.userId,visual.visualInput,authority.headers);
-    const response=await fetchApi('/api/studio/exploration-batches/replace',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...(preparation.credentialSource==='byok'?{'x-compor-openai-key':key}:{})},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,planRequestId:preparation.planRequestId,context:preparation.context,plan:preparation.plan,planBinding:binding,position:claim.position,previousId:claim.previousId,requestId:claim.requestId,...visual})});
+    const response=await fetchApi('/api/studio/exploration-batches/replace',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...credential},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,planRequestId:preparation.planRequestId,context:preparation.context,plan:preparation.plan,planBinding:binding,position:claim.position,previousId:claim.previousId,requestId:claim.requestId,...visual})});
     if(!response.ok)throw Error('replacement_unconfirmed');
     const receipt=z.object({status:z.enum(['completed','unknown','rejected','running']),batchId:id,requestId:id,retryAutomatically:z.literal(false)}).parse(await response.json());
     if(receipt.batchId!==preparation.batchId||receipt.requestId!==claim.requestId)throw Error('replacement_unconfirmed');

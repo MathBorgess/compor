@@ -18,11 +18,11 @@ import ExplorationGallery from './studio/exploration-gallery.tsx';
 import './studio/style.css';
 import './studio/studio-shell.css';
 import './studio/studio-guided.css';
-function Screen(){const [selected,setSelected]=useState([]),[requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false);
+function Screen(){const [selected,setSelected]=useState([]),[requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false),[uploaded,setUploaded]=useState('');
  return <div className="compor-studio" data-guided="true"><div className="studio-body"><main className="studio-canvas-column">
  <ReferencePanel entry="preparation" projectTitle="Café Aurora" selectionCount={3} projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)} onRequestProposals={()=>setRequests(value=>value+1)} proposalsDisabled={requests>0}
  search={sourceControl=><section className="reference-exploration"><form>{sourceControl}<label>O que você quer explorar?<input type="search"/></label><button type="button">Buscar referências</button></form><p>Permita nesta sessão para carregar prévias.</p><button>Permitir nesta sessão</button></section>}
- upload={<label>Enviar suas imagens<input type="file" accept="image/png,image/jpeg" /></label>}
+ onUpload={files=>setUploaded(files[0].name)} uploadStatus={uploaded}
  proposals={<ExplorationGallery projectId="00000000-0000-4000-8000-000000000003" completed={0} selectedIds={selected} onUseReference={async imageId=>setSelected(items=>[...items,imageId])} onRemoveReference={async imageId=>setSelected(items=>items.filter(item=>item!==imageId))}/>}
  selection={<section className="reference-selection-tray"><h2>Sua seleção</h2><p>2 do projeto · 1 deste post</p></section>}
  conversation={<section className="studio-chat-panel"><div className="studio-chat-messages">Conversa preservada sobre as referências</div><form className="studio-chat-composer"><textarea aria-label="Mensagem ao Compor" /></form></section>}/>
@@ -54,8 +54,11 @@ for(const viewport of [{width:1440,height:1024},{width:960,height:768},{width:39
   assert.equal(await composer.isVisible(),false,'a conversa não reserva espaço na galeria');
   assert.equal(await page.getByRole('heading',{level:1}).count(),1);
   await page.getByLabel('O que você quer explorar?').fill('Café com luz natural');
-  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('upload');
-  await page.getByLabel('Enviar suas imagens').waitFor();
+  const filePicker=page.waitForEvent('filechooser');
+  await page.getByRole('button',{name:'Enviar imagem',exact:true}).click();
+  await (await filePicker).setFiles({name:'referência.png',mimeType:'image/png',buffer:Buffer.from([1])});
+  await page.getByText('referência.png',{exact:true}).waitFor();
+  assert.equal(await page.getByRole('combobox',{name:'Fonte',exact:true}).inputValue(),'upload');
   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');
   await page.getByRole('checkbox',{name:'Escolher imagem 1'}).waitFor();
   assert.equal(await page.locator('#requests').textContent(),'0','trocar fonte e consultar histórico não gera');
@@ -74,6 +77,7 @@ for(const viewport of [{width:1440,height:1024},{width:960,height:768},{width:39
   await page.getByRole('checkbox',{name:'Escolher imagem 1'}).click();
   await page.getByRole('checkbox',{name:'Escolher imagem 1',checked:true}).waitFor();
   assert.equal(await preview.evaluate(element=>getComputedStyle(element).borderTopColor),'rgb(18, 62, 171)','borda azul indica seleção sem esconder a imagem');
+  await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
   await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
   assert.equal(await page.locator('#requests').textContent(),'1');
   await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
