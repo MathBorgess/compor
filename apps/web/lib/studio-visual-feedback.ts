@@ -1,3 +1,4 @@
+import {explorationImageOutcomes} from './exploration-image-outcome.ts';
 import type { ActionInputByName } from '@compor/agents-api/studio-chat-tools';
 import type { ActionResult, StudioReference, StudioState } from './studio-domain.ts';
 import { readShownExplorations } from './shown-explorations.ts';
@@ -30,7 +31,7 @@ export async function recordGeneratedComment(state:StudioState,args:ActionInputB
     const params=new URLSearchParams({projectId:args.projectId,...(args.ordinal<2147483647?{beforeOrdinal:String(args.ordinal+1)}:{})});
     const response=await fetchApi(`/api/studio/explorations?${params}`,{cache:'no-store',signal});
     if(!response.ok)return {status:'unknown'};
-    const result=z.object({images:z.array(z.object({id:z.string().check(z.uuid()),project_id:z.string().check(z.uuid()),state:z.enum(['running','unknown','completed','rejected']),ordinal:z.number().check(z.int()).check(z.positive())})).check(z.maxLength(100))}).parse(await response.json());
+    const result=z.object({images:z.array(z.object({id:z.string().check(z.uuid()),project_id:z.string().check(z.uuid()),state:z.enum(explorationImageOutcomes),ordinal:z.number().check(z.int()).check(z.positive())})).check(z.maxLength(100))}).parse(await response.json());
     const found=result.images.filter(item=>item.ordinal===args.ordinal&&item.id===matches[0].id&&item.project_id===args.projectId&&item.state==='completed');
     if(found.length!==1)return {status:'completed',feedbackStatus:'reference_unavailable'};
     const saved=await fetchApi('/api/studio/explorations/signals',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({id:args.requestId,projectId:args.projectId,...(adjustment.context.conversationId&&adjustment.context.conversationId!=='references'?{pieceId:adjustment.context.conversationId}:{}),imageId:found[0].id,action:'comment',comment:quote,supersedes:null}),signal});

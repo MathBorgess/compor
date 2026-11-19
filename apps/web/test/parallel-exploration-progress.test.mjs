@@ -45,3 +45,16 @@ test('somente um recibo de reposição vinculado a recusa substitui o filho',()=
  assert.equal(replaced.children[1].requestId,id(9));assert.equal(replaced.children[1].status,'running');assert.deepEqual(replaced.wait,{mode:'none'});
  for(const bad of [{position:1,previousId:id(1),requestId:id(9),status:'running',revision:1},{position:2,previousId:id(2),requestId:id(1),status:'running',revision:1},{position:2,previousId:id(2),requestId:id(9),status:'running',revision:0}])assert.throws(()=>replaceRejectedParallelChild(state,bad,10,false));
 });
+test('retenção preserva o parecer sem contar como confirmação e admite uma reposição vinculada',()=>{
+ const held={requestId:id(2),position:2,status:'quality_held',qualityReason:'image_quality_inconclusive',revision:2};
+ const before=receipt(receipt(initial(),1,10),3,20);
+ const progress=observeParallelChild(before,held,30,true);
+ assert.equal(progress.children[1].qualityReason,held.qualityReason);
+ assert.deepEqual(progress.wait,{mode:'none'});
+ assert.equal(parallelWaitElapsed(progress,20000,gates),false);
+ assert.throws(()=>observeParallelChild(progress,{...held,qualityReason:'image_quality_rejected'},40,true));
+ assert.throws(()=>observeParallelChild(progress,{requestId:id(2),position:2,status:'completed',revision:3},40,true));
+ const replacement=replaceRejectedParallelChild(progress,{position:2,previousId:id(2),requestId:id(9),status:'completed',revision:2},50,true);
+ assert.equal(replacement.children[1].requestId,id(9));
+ assert.deepEqual(replacement.wait,{mode:'running',nextAt:15050});
+});

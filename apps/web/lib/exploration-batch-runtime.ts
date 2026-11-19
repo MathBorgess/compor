@@ -1,4 +1,4 @@
-import {createImageHandler} from '@compor/images-api';
+import {studioImagePipeline} from './studio-image-pipeline.ts';
 import {createExplorationPlannerBindings,validateExplorationContext,verifyExplorationPlan} from '@compor/agents-api/exploration-planner';
 import {deriveExplorationIntent} from './exploration-intent.ts';
 import {agentSigningKey} from './agent-config.ts';
@@ -20,7 +20,9 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
  if(process.env.COMPOR_PARALLEL_EXPLORATION_ENABLED!=='true'||process.env.COMPOR_PRIVATE_IMAGES_ENABLED!=='true'||!config||!secret||!prepared.apiKey)return null;
  const bindings=createExplorationPlannerBindings({secret,source:prepared.source,apiKey:prepared.apiKey});
  const referenceAuthority=createReferenceAuthorityStore(config);
+ const imagePipeline=studioImagePipeline();
  return createExplorationBatchRoute({
+  generationAvailable:imagePipeline!==null,
   appOrigin:config.app,
   visualEnabled:selectedVisualsAvailable(Boolean(config)),
   visualRequired:process.env.COMPOR_SELECTED_LOCAL_VISUALS_ENABLED==='true',
@@ -39,9 +41,10 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
   intentSecret:input=>{if(!validateExplorationContext(input.context))throw Error('invalid context');const scope={actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,intentId:input.intentId,context:input.context,...(input.visualInput?{visualInput:input.visualInput}:{})};if(input.purpose==='batch')return deriveExplorationIntent(bindings,{...scope,purpose:'batch'}).intentSecret;if(input.position===undefined||input.previousId===undefined)throw Error('invalid intent');return deriveExplorationIntent(bindings,{...scope,purpose:'replacement',position:input.position,previousId:input.previousId}).intentSecret;},
   store:createExplorationBatchStore(config),
   intentState:createExplorationIntentStore(config).state,
-  generate:async(actor,key,prompt,images)=>{
-   const handler=createImageHandler({authenticate:async()=>actor});
-   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,authorizeGeneration:true,images:images.map(({mime,data})=>({mime,data}))})}));
+  generate:async(actor,key,prompt,images,review)=>{
+   if(!imagePipeline)throw Error('image generation unavailable');
+   const handler=imagePipeline.createHandler(async()=>actor);
+   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,authorizeGeneration:true,images:images.map(({mime,data})=>({mime,data}))}),signal:review?.signal}),{authorizeReview:review?.authorizeReview});
    return decodeExplorationImage(response);
   },
  });

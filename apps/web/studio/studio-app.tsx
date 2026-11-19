@@ -9,6 +9,7 @@ import VariantCards from "./studio-variant-cards";
 import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
+import {imageReviewDisclosure} from './image-review-disclosure.ts';
 import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
 import {createStudioJourneyController} from '../lib/studio-journey-controller';
 import StudioNavigation from './studio-navigation';
@@ -1018,7 +1019,7 @@ function ProjectStudio({
         d.baseVersion !== args.baseVersion
       )
         throw Error("context_changed");
-      journey.editDraft({field:args.field,value:args.value});
+      journey.editDraft({field:args.field,value:args.value,captionOrigin:"agent"});
       return { status: "completed", local: true };
     },
     compor_adicionar_campo: async args => {
@@ -1512,8 +1513,8 @@ function ProjectStudio({
   })();
   const proposalsRunning=explorationRequested&&!exploration.paused&&!exploration.blocked&&!exploration.awaitingAnswer&&!exploration.awaitingFeedback;
   const proposalDisclosure=usingParallel&&selectedVisualsAvailable&&scopedReferences.some(reference=>reference.source)
-    ? `As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero.`
-    : undefined;
+    ? `As imagens selecionadas, ou cópias otimizadas, são enviadas à OpenAI no planejamento. Os uploads escolhidos são usados nas três imagens. ${referenceAuthorityEnabled?'O agente pode escolher quais referências externas autorizadas e imagens geradas selecionadas também usará. ':''}A sessão do agente mantém estado e não usa retenção zero. ${imageReviewDisclosure}`
+    : imageReviewDisclosure;
   const referencePanel=<ReferencePanel entry={preparing?'preparation':draft&&referenceScope!=='references'?'post':'project'} projectTitle={projectDetails.title} selectionCount={scopedReferences.length} selectionWaiting={Boolean(referenceWaits[referenceScope])} needsResponse={exploration.awaitingAnswer||exploration.awaitingFeedback} projectWide={referenceScope==='references'} continueDisabled={referenceTransition||referenceUploading}
     onUpload={files=>{void addFiles(files);}} uploadDisabled={referenceTransition||referenceUploading||selectionBlocked} uploadStatus={referenceUploading?'Adicionando imagens à seleção…':referenceUploadFeedback?.scope===referenceScope?referenceUploadFeedback.message:undefined} selectionStatus={authorityPanel} recovery={parallelRecovery}
     onRequestProposals={requestProposals} proposalsDisabled={referenceTransition||referenceUploading||selectionBlocked||Boolean(proposalBlock)||proposalsRunning} proposalBlock={proposalBlock} proposalDisclosure={proposalDisclosure} proposalsRunning={proposalsRunning} onPauseProposals={()=>{proposalRequest.current.sequence++;proposalRequest.current.pending=false;parallelGesture.current=null;exploration.pause();}} proposalPhase={exploration.phase} proposalProgress={exploration.progress} proposalStatus={referenceTransition?'Preservando a proposta para o post…':serialInspection?.scope===referenceScope&&proposalBlock?serialInspection.message:explorationRequested?exploration.status:undefined} onScope={!preparing&&draft?wide=>{if(referenceUploadLock.current)return;exploration.pause();setExplorationRequested(false);setReferenceScope(wide?'references':draft.pieceId);}:undefined}
@@ -1546,6 +1547,7 @@ function ProjectStudio({
           <label>Nome do post<input required maxLength={200} value={preparedName} placeholder="Ex.: Live gratuita — Porcentagem no ENEM" onChange={event=>changePreparation({name:event.target.value})}/></label>
           <PostSettings preparing value={preparedValue} legacyAction={s.brief.action} onChange={changePreparation}/>
           <p className="studio-hint">A chamada para ação é opcional.</p>
+          {initialPost&&canGenerateFirstPost&&<p className="studio-hint">{imageReviewDisclosure}</p>}
           <div className="guided-actions">
             <button type="button" className="studio-button-secondary" onClick={()=>{journey.cancelPreparation();showPosts();}}>Cancelar</button>
             <button type="submit" className={initialPost&&canGenerateFirstPost?'studio-button-secondary':'studio-button'} disabled={!validPostName}>{creatingPost?'Criando post…':'Continuar para criação'}</button>

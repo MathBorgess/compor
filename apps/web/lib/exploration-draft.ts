@@ -1,3 +1,4 @@
+import {explorationImageOutcomes} from './exploration-image-outcome.ts';
 import * as z from './schema.ts';
 import {explorationCandidateSchema,type StudioState} from './studio-domain.ts';
 import {getCurrentDraft,changeStudioState,StudioStateError} from './studio-state.ts';
@@ -6,7 +7,7 @@ import type {createStudioStorage} from './studio-storage.ts';
 
 type Candidate=z.infer<typeof explorationCandidateSchema>;
 type Repository=Pick<ReturnType<typeof createStudioStorage>,'getDraftAsset'|'putDraftAsset'>;
-const listing=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(['running','completed','unknown','rejected']),ordinal:z.number().check(z.int()).check(z.positive())})).check(z.maxLength(100)),nextBeforeOrdinal:z.optional(z.nullable(z.number().check(z.int()).check(z.positive())))});
+const listing=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(explorationImageOutcomes),ordinal:z.number().check(z.int()).check(z.positive())})).check(z.maxLength(100)),nextBeforeOrdinal:z.optional(z.nullable(z.number().check(z.int()).check(z.positive())))});
 
 export async function confirmedExploration(projectId:string,imageId:string,fetcher:typeof fetch=fetch,expectedOrdinal?:number):Promise<Candidate> {
   let cursor=expectedOrdinal===undefined?undefined:expectedOrdinal+1;

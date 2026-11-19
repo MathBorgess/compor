@@ -3,6 +3,7 @@ import {isAgentCallId} from './agent-call-id.mjs';
 import {AGENT_MODEL} from './agent-model.mjs';
 import {PERSONA_SKILL_INSTRUCTIONS} from './studio-persona-skill.mjs';
 import {CREATIVE_DIRECTION_INSTRUCTIONS} from './studio-direction-instructions.mjs';
+import {imagePromptSkills} from './image-prompt-skills.mjs';
 import {AGENT_STUDIO_TOOLS,SHORT_PROJECT_TITLE_LENGTH,parseStudioAction} from './studio-chat-tools.mjs';
 import {summarizeStudioItems} from './studio-item-trace.mjs';
 import {extractUserUrls,readUserPages} from './studio-page-reader.mjs';
@@ -112,11 +113,12 @@ function validateImages(images){
   return {id:image.id,mime:image.mime,data:image.data};
  });
 }
-function turnInstructions(body,{automatic,hasLinks,quick}){
+async function turnInstructions(body,{automatic,hasLinks,quick}){
  const selectedInContext=Array.isArray(body.context.references)?body.context.references:[];
  const hasReferences=body.visualImages?.length>0||body.referenceImages.some(image=>
   image.id!==body.context.baseImageId&&selectedInContext.some(reference=>reference?.id===image.id));
  const parts=[automatic?referenceInstructions:instructions,'Use o contexto atualizado do pedido em cada turno.'];
+ if(automatic)parts.push('Na recomendação, descreva uma escolha de composição que seria visível na peça e relacione-a a um detalhe informado do briefing. Identifique a hipótese quando esse vínculo depender de uma suposição.');
  if(body.referenceImages.length){
   parts.push('As imagens fora de visualInput pertencem a este pedido. A imagem-base serve à edição. Leia como referência somente o arquivo anexado que corresponde a uma referência selecionada em context.references. Mantenha a origem desconhecida quando ela não for informada.');
  }
@@ -124,6 +126,9 @@ function turnInstructions(body,{automatic,hasLinks,quick}){
  if(!automatic&&body.visualInput)parts.push('Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.');
  if(hasLinks)parts.push(linkTurnInstructions);
  if(quick)parts.push(quickReplyInstructions);
+ if(!automatic&&!hasLinks&&!quick&&body.context.pieceId&&body.conversationId!=='references'){
+  parts.push('Quando a pessoa pedir geração ou edição de arte, use as skills abaixo antes de compor o argumento prompt de generate_image. Aplique Criação para uma arte nova ou Edição ao modificar uma arte-base. Use Direção visual de campanha ao propor uma composição nova ou ao alterar sua direção. Mantenha a autorização e os textos literais do estúdio.',await imagePromptSkills('post'));
+ }
  return parts.join('\n');
 }
 function inputContent(body,includeHistory,sourcePages=[]){
@@ -342,7 +347,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
    let previous=null,sessionId,expiresAt,priorTurnId=null,initialInput=0,initialOutput=0;
    const hasLinks=!automatic&&extractUserUrls(body.message).length>0;
    const sourcePages=hasLinks?await readPages(body.message):[];
-   const agentInstructions=turnInstructions(body,{automatic,hasLinks,quick});
+   const agentInstructions=await turnInstructions(body,{automatic,hasLinks,quick});
    if(body.previousAttemptKey&&!hasLinks){d.phase='prior_get';const prior=await store.get({...scope,requestId:body.previousAttemptKey});if(prior?.state==='completed'&&Date.parse(prior.expiresAt)>now()+10000){
     d.phase='prior_binding';const verified=proof(scope,prior);d.phase='prior_lookup';const session=await get(verified.sessionId,key);d.phase='prior_validate';
     if(session.id!==verified.sessionId||session.status!=='idle'||!Array.isArray(session.required_actions)||session.required_actions.length)throw Error('previous session active');

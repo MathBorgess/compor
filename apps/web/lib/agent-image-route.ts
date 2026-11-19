@@ -4,6 +4,7 @@ import type {createImageToolApproval,createImageToolExecution,ImageVisualAuthori
 import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {visualInputDigest} from '@compor/agents-api/visual-input';
 import type {createImageToolResultSender} from '@compor/agents-api/image-tool-result';
+import {isImageQualityReason} from '@compor/agents-api/image-tool-reservation';
 const inputSchema=z.object({projectId:z.string(),pieceId:z.string(),attemptId:z.string(),requestId:z.string().optional(),version:z.number(),explicitApproval:z.literal(true),actionBinding:z.string(),apiKey:z.string().optional(),artworkInput:z.unknown().optional()});
 import { parseArtworkInput, MAX_ARTWORK_REQUEST_BYTES } from '@compor/agents-api/artwork-input';
 const uuid = (value:unknown):value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -38,10 +39,12 @@ export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,se
   if(!proof)return reply({error:'forbidden'},403);
   let storedAssetId, usageRecorded;
   try {
-   const execution=await execute({...context,actionBinding:proof,apiKey,artworkInput,explicitApproval:true,...(visualAuthority?{visualAuthority,signal:request.signal}:{})});
+   const execution=await execute({...context,actionBinding:proof,apiKey,artworkInput,explicitApproval:true,signal:request.signal,...(visualAuthority?{visualAuthority}:{})});
    if (execution?.status === 'invalid_prompt') return reply({error:'invalid_request'},400);
    if (execution?.status === 'busy' || execution?.status === 'blocked') return reply({status:execution.status},200);
    if('usageRecorded' in execution && typeof execution.usageRecorded==='boolean')usageRecorded=execution.usageRecorded;
+   if(execution.status==='quality_held'&&isImageQualityReason(execution.qualityReason)&&execution.retryAutomatically===false)
+     return reply({status:execution.status,qualityReason:execution.qualityReason,retryAutomatically:false,...(usageRecorded===undefined?{}:{usageRecorded})},200);
    if(execution?.status==='unknown' && uuid(execution.assetId))return reply({error:'result_unknown',retryAutomatically:false,assetId:execution.assetId,...(usageRecorded===undefined?{}:{usageRecorded})},502);
    if(execution?.status!=='completed' || !uuid(execution.executionId))return reply({error:'result_unknown',retryAutomatically:false},502);
    const output=z.object({assetId:z.string()}).parse(JSON.parse(execution.toolResult.output));

@@ -1,0 +1,29 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reserva-linha-secreta",
+      "partition": "holdout",
+      "provenance": {"kind": "synthetic", "source": "Caso construído para testar palavras com mais de um sentido e economia de elementos num feed."},
+      "input": {
+        "locale": "pt-BR",
+        "format": "feed orgânico no Instagram, imagem única 4:5",
+        "project": "Linha Secreta",
+        "request": "Vou apresentar a Linha Secreta, uma oficina de leitura de mapas narrativos para quem quer começar a escrever ficção. Cada dupla acha uma chave de leitura, a palavra que muda o sentido de um bilhete. Quero que no Instagram dê para entender por uma cena surreal mas simples o que a gente descobre. A arte pode ter só estes textos, cada um uma vez: “Linha Secreta” e “13 de setembro”. Quero estética de papel impresso em azul escuro e laranja, com um elemento central e espaço respirando. Na legenda, conte o que acontece na oficina e convide a salvar a data. Nenhum preço ou endereço divulgado.",
+        "turns": [],
+        "references": []
+      },
+      "expectations": {
+        "confirmedFacts": ["Linha Secreta, oficina de leitura de mapas narrativos para quem começa a escrever ficção.", "Uma dupla encontra uma chave de leitura, palavra que muda o sentido de um bilhete.", "13 de setembro.", "A arte só pode ter Linha Secreta e 13 de setembro, uma vez cada.", "A legenda convida a salvar a data."],
+        "unknowns": ["Preço, endereço, horários, inscrição e vagas."],
+        "creativeAnchors": ["Revelação de uma mudança de leitura demonstrada por um gesto no papel.", "Azul escuro e laranja, papel impresso, uma figura dominante, espaço livre.", "A legenda explica chave de leitura e como funciona a atividade."],
+        "forbiddenClaims": ["Preço", "Endereço", "Horário", "Oferta de vagas ou inscrição não informada"],
+        "visualChecks": ["Foco legível a 360 px.", "A ação no papel comunica revelação de significado; uma chave metálica sozinha não explica o conceito.", "A arte conserva os dois textos exatos e somente eles."]
+      },
+      "humanFeedback": null
+    }
+  ],
+  "replays": [],
+  "controls": [],
+  "assetSha256": {}
+}

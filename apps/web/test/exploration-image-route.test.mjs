@@ -5,6 +5,7 @@ import { decodeExplorationImage } from '../lib/exploration-image-runtime.ts';
 import { POST as explorationPost } from '../handlers/api/studio/explorations/route.ts';
 import { createHash } from 'node:crypto';
 import { createExplorationPrompt } from '@compor/agile-deliberation/exploration';
+import { createImageHandler } from '../../../packages/images-api/src/index.mjs';
 
 const project='00000000-0000-4000-8000-000000000001', requestId='00000000-0000-4000-8000-000000000002';
 const actor={userId:'00000000-0000-4000-8000-000000000003',token:'token'};
@@ -12,8 +13,8 @@ const key=`sk-${'x'.repeat(24)}`;
 function request(id=requestId,origin='http://localhost:3000') {
   return new Request('http://localhost:3000/api/studio/explorations',{method:'POST',headers:{origin,'content-type':'application/json','x-compor-openai-key':key},body:JSON.stringify({projectId:project,requestId:id,prompt:'Duas alternativas visuais'})});
 }
-function setup(generate=async()=>new Uint8Array([1,2,3])) {
-  const records=new Map(); let calls=0;
+function setup(generate=async()=>new Uint8Array([1,2,3]), options={}) {
+  const records=new Map(); let calls=0,writes=0;
   const store={
     async reserve(_actor,_project,id,digest,rejectionDigest) {
       const row=records.get(id);
@@ -24,10 +25,11 @@ function setup(generate=async()=>new Uint8Array([1,2,3])) {
     },
     async finish(_actor,_project,id,state){records.get(id).state=state;},
     async reject(_actor,_project,id,secret){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='rejected';},
-    async plan(){},async put(){},async list(){return [];},async read(){return new Response();},
+    async hold(_actor,_project,id,secret,reason){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='quality_held';row.qualityReason=reason;},
+    async plan(){},async put(){writes++;},async list(){return [];},async read(){return new Response();},
   };
-  const route=createExplorationImageRoute({appOrigin:'http://localhost:3000',resolveActor:async()=>actor,ownsProject:async()=>true,store,generate:async(...args)=>{calls++;return generate(...args);}});
-  return {route,records,calls:()=>calls};
+  const route=createExplorationImageRoute({appOrigin:'http://localhost:3000',resolveActor:async()=>actor,ownsProject:options.ownsProject??(async()=>true),generationAvailable:options.generationAvailable,store,generate:async(...args)=>{calls++;return generate(...args);}});
+  return {route,records,calls:()=>calls,writes:()=>writes};
 }
 test('repetição do mesmo identificador não gera outra imagem',async()=>{
   const f=setup(); const first=await f.route.post(request());
@@ -41,6 +43,40 @@ test('resultado incerto impede novas operações e repetição automática',asyn
   assert.deepEqual(await result.json(),{status:'unknown',requestId,retryAutomatically:false});
   const another=await f.route.post(request('00000000-0000-4000-8000-000000000004'));
   assert.equal((await another.json()).status,'blocked'); assert.equal(f.calls(),1);
+});
+test('revisão local inconclusiva retém a exploração serial antes da gravação', async()=>{
+  const imageBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
+  const handler=createImageHandler({authenticate:async()=>actor,fetch:async()=>Response.json({data:[{b64_json:imageBase64}]}),reviewCandidate:async()=>({decision:'unsure',findings:[]})});
+  const f=setup(async(_actor,apiKey,prompt)=>decodeExplorationImage(await handler(new Request('http://localhost/internal-image',{
+    method:'POST',body:JSON.stringify({apiKey,prompt,authorizeGeneration:true}),
+  }))));
+  const result=await f.route.post(request());
+  assert.equal(result.status,200);
+  assert.deepEqual(await result.json(),{status:'quality_held',requestId,qualityReason:'image_quality_inconclusive',retryAutomatically:false});
+  const replay=await f.route.post(request());assert.equal(replay.status,409);
+  assert.deepEqual(await replay.json(),{status:'quality_held',requestId,retryAutomatically:false});
+  assert.equal(f.records.get(requestId).qualityReason,'image_quality_inconclusive');
+  assert.equal(f.calls(),1);
+  assert.equal(f.writes(),0);
+});
+test('a autorização para revisão serial reconfirma projeto e pedido após o despacho',async()=>{
+ const incoming=request();let checks=0;
+ const f=setup(async(who,_key,_prompt,{signal,authorizeReview})=>{
+   assert.equal(who,actor);assert.equal(signal,incoming.signal);
+   assert.equal(await authorizeReview(),false);
+   return decodeExplorationImage(Response.json({error:'image_quality_inconclusive',retryAutomatically:false,usage:null},{status:503}));
+ },{ownsProject:async(who,id)=>{assert.equal(who,actor);assert.equal(id,project);return ++checks===1;}});
+ assert.deepEqual(await (await f.route.post(incoming)).json(),{status:'quality_held',requestId,qualityReason:'image_quality_inconclusive',retryAutomatically:false});
+ assert.equal(checks,2);assert.equal(f.writes(),0);
+});
+test('indisponibilidade da revisão obrigatória barra geração serial antes da reserva',async()=>{
+ const f=setup(undefined,{generationAvailable:false});
+ const original=request(),headers=new Headers(original.headers);headers.set('x-compor-exploration-request-id',requestId);
+ const result=await f.route.post(new Request(original,{headers}));
+ assert.equal(result.status,503);
+ assert.deepEqual(await result.json(),{status:'not_started',requestId,retryAutomatically:false});
+ assert.equal(f.records.size,0);assert.equal(f.calls(),0);
+ assert.equal((await f.route.get(new Request(`http://localhost:3000/test?projectId=${project}`))).status,200);
 });
 test('recusa comprovada encerra reserva, sem repetir automaticamente e sem expor prova',async()=>{
  let reject=true;

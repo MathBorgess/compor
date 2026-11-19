@@ -1,0 +1,131 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "partition": "holdout",
+      "input": {
+        "locale": "pt-BR",
+        "format": "feed orgânico no Instagram, imagem única 4:5",
+        "project": "Meu primeiro caderno",
+        "request": "Vamos fazer uma peça única para o feed do Instagram de uma oficina de encadernação à mão para iniciantes. O instante principal é quando a pessoa puxa a linha pela primeira costura e vê a lombada do próprio caderno tomar forma. Na arte, escreva somente “Meu primeiro caderno”. Use a referência Paleta só para escolher as cores. Use a referência Recorte só para compor a cena com o contorno recortado, no canto inferior direito. Na legenda, convide a salvar o post para lembrar da primeira costura. Não temos data ou local confirmado.",
+        "references": [
+          {
+            "id": "11111111-1111-4111-8111-111111111117",
+            "name": "Paleta",
+            "asset": "scripts/evals/qualidade-criativa/fixtures/encadernacao-paleta.png",
+            "selectedAttributes": [
+              "Somente a paleta de três cores."
+            ]
+          },
+          {
+            "id": "11111111-1111-4111-8111-111111111118",
+            "name": "Recorte",
+            "asset": "scripts/evals/qualidade-criativa/fixtures/encadernacao-recorte.png",
+            "selectedAttributes": [
+              "Somente o contorno diagonal recortado na borda inferior direita."
+            ]
+          }
+        ],
+        "turns": []
+      },
+      "expectations": {
+        "confirmedFacts": [
+          "Oficina de encadernação à mão para iniciantes.",
+          "A pessoa começa um caderno ao puxar a linha pela primeira costura.",
+          "Capa de uma peça única do feed 4:5.",
+          "Somente o título “Meu primeiro caderno” vai na arte."
+        ],
+        "unknowns": [
+          "Data, local e preço."
+        ],
+        "creativeAnchors": [
+          "A linha atravessa o papel e revela a formação da primeira costura na lombada.",
+          "As três cores vêm de Paleta: ameixa, creme e laranja.",
+          "A diagonal recortada da referência Recorte enquadra a ponta do caderno na parte inferior direita."
+        ],
+        "forbiddenClaims": [
+          "Data, preço, local ou inscrição inventados.",
+          "Alegação de uso de arquivos ausentes."
+        ],
+        "visualChecks": [
+          "A direção preserva a paleta ameixa, creme e laranja e não usa o azul ou o verde de Recorte como referência de cor.",
+          "A diagonal concreta de Recorte emoldura o caderno na borda inferior direita.",
+          "O título literal preserva legibilidade em prévia de feed de 360 px."
+        ]
+      },
+      "humanFeedback": null,
+      "id": "reserva-encadernacao-duas-referencias",
+      "provenance": {
+        "kind": "synthetic",
+        "source": "Duas referências gráficas sintéticas com funções distintas e paletas incompatíveis."
+      }
+    },
+    {
+      "partition": "holdout",
+      "input": {
+        "locale": "pt-BR",
+        "format": "feed orgânico no Instagram, imagem única 4:5",
+        "project": "Meu primeiro caderno",
+        "request": "Vamos fazer uma peça única para o feed do Instagram de uma oficina de encadernação à mão para iniciantes. O instante principal é quando a pessoa puxa a linha pela primeira costura e vê a lombada do próprio caderno tomar forma. Na arte, escreva somente “Meu primeiro caderno”. Use a referência Paleta só para escolher as cores. Use a referência Recorte só para compor a cena com o contorno recortado, no canto inferior direito. Na legenda, convide a salvar o post para lembrar da primeira costura. Não temos data ou local confirmado. Se Recorte não estiver disponível nessa conversa, siga com a descrição do contorno e diga que ainda não conferiu o arquivo.",
+        "references": [
+          {
+            "id": "11111111-1111-4111-8111-111111111117",
+            "name": "Paleta",
+            "asset": "scripts/evals/qualidade-criativa/fixtures/encadernacao-paleta.png",
+            "selectedAttributes": [
+              "Somente a paleta de três cores."
+            ]
+          },
+          {
+            "id": "11111111-1111-4111-8111-111111111118",
+            "name": "Recorte",
+            "asset": "scripts/evals/qualidade-criativa/fixtures/encadernacao-recorte.png",
+            "selectedAttributes": [
+              "Somente o contorno diagonal recortado na borda inferior direita."
+            ],
+            "attach": false
+          }
+        ],
+        "turns": []
+      },
+      "expectations": {
+        "confirmedFacts": [
+          "Oficina de encadernação à mão para iniciantes.",
+          "A pessoa começa um caderno ao puxar a linha pela primeira costura.",
+          "Capa de uma peça única do feed 4:5.",
+          "Somente o título “Meu primeiro caderno” vai na arte."
+        ],
+        "unknowns": [
+          "Data, local e preço.",
+          "Detalhes visuais de Recorte além do descrito pela pessoa."
+        ],
+        "creativeAnchors": [
+          "A linha atravessa o papel e revela a formação da primeira costura na lombada.",
+          "As três cores vêm de Paleta: ameixa, creme e laranja.",
+          "Use o canto inferior direito proposto no pedido e explicite a lacuna da referência Recorte."
+        ],
+        "forbiddenClaims": [
+          "Data, preço, local ou inscrição inventados.",
+          "Alegação de uso de arquivos ausentes.",
+          "Detalhes de imagem, cor ou textura atribuídos à segunda referência."
+        ],
+        "visualChecks": [
+          "A primeira referência orienta ameixa, creme e laranja.",
+          "A decisão de contorno segue somente a descrição escrita. Ausência da segunda referência fica explícita no briefing."
+        ]
+      },
+      "humanFeedback": null,
+      "id": "reserva-encadernacao-referencia-sem-origem",
+      "provenance": {
+        "kind": "synthetic",
+        "source": "Controle de ausência de pixels no contexto quando a proveniência da segunda referência é desconhecida."
+      }
+    }
+  ],
+  "replays": [],
+  "controls": [],
+  "assetSha256": {
+    "scripts/evals/qualidade-criativa/fixtures/encadernacao-paleta.png": "274df5d90d894bd7bda1cdc6ab5087ecc2a58523b5f82f1652810cfb142b9b25",
+    "scripts/evals/qualidade-criativa/fixtures/encadernacao-recorte.png": "e0c0b8fca711d368bbf32ef01c8c59e35d004a9c28fc3c9f62d165d84060f1ca"
+  }
+}

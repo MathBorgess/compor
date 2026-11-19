@@ -7,7 +7,7 @@ import {execFileSync} from 'node:child_process';
 export const ACTORS = Object.freeze({a:'11111111-1111-4111-8111-111111111111',b:'22222222-2222-4222-8222-222222222222'});
 export const SYNTHETIC_KEY = 'sk-compor-offline-synthetic-provider-fixture-key';
 // A valid synthetic 1x1 PNG; byte integrity is tested separately from aesthetics.
-export const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+jfusAAAAASUVORK5CYII=', 'base64');
+export const PNG = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
 const digest = bytes => createHash('sha256').update(bytes).digest('hex');
 
 export function tokenFor(secret, sub, role = 'authenticated') {

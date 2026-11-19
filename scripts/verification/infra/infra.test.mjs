@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { createHash } from 'node:crypto';
 import { readFile, mkdtemp, mkdir, copyFile, appendFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
@@ -9,7 +10,7 @@ import { FIXTURE_USERS, FIXTURE_OPENAI_KEY } from './stack.mjs';
 
 test('manifest refuses a changed migration instead of reporting the pinned schema', async t => {
   const expected = await verifyMigrations();
-  assert.equal(expected.migrations.length, 42);
+  assert.equal(expected.migrations.length, 44);
   const root = await mkdtemp(join(tmpdir(), 'compor-infra-migration-negative-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'supabase/migrations'), { recursive: true });
@@ -158,6 +159,63 @@ test('image reconciliation keeps the original reservation and fences only unclai
   assert.equal(await confirm(active), 'unverified', 'a mixed attempt cannot release its marker');
 });
 
+test('a post image hold settles only the proven execution and conserves the original scope', { timeout: 30_000 }, async t => {
+  const db = await createSyntheticDatabase(t);
+  const owner = FIXTURE_USERS.alice, other = FIXTURE_USERS.bob;
+  const request = '44444444-4444-4444-8444-444444444444';
+  const piece = '33333333-3333-4333-8333-333333333333';
+  const proof = '12'.repeat(32);
+  const digest = createHash('sha256').update(Buffer.from(proof,'hex')).digest('hex');
+  const denied = error => error.code === '42501';
+  const row = async (sql,args=[]) => (await db.query(sql,args)).rows[0];
+  const as = user => db.query("select set_config('request.jwt.claims',$1,false)",[JSON.stringify({role:'authenticated',sub:user})]);
+  await db.query('insert into auth.users(id) values ($1),($2)',[owner,other]);
+  await db.exec('set role authenticated');
+  await as(owner);
+  const {id:project} = await row("insert into public.projects(title) values ('Hold fixture') returning id");
+  await db.query("select public.create_project_post($1,$2,'Post fixture')",[project,piece]);
+  const content = JSON.stringify({headline:'',price:'',date:'',caption:'Synthetic',captionOrigin:'user'});
+  assert.equal((await row('select public.save_piece_version($1,$2,0,$3::jsonb) as value',[project,piece,content])).value.status,'saved');
+  const start = id => row('select public.reserve_studio_turn($1,$2,$3) as value',[project,id,'a'.repeat(64)]);
+  const {value:{turn:{attempt_id:attempt}}} = await start(request);
+  await db.query("select public.set_studio_turn_state($1,$2,'action_required','turn_test')",[project,request]);
+  await db.query("select public.start_usage_measurement_v3($1,$2,'agent',$2,'gpt-6.1-terra')",[project,attempt]);
+  const call = [project,piece,1,attempt,'sess_test','turn_test','exec_original'];
+  const {reservation_id:reservation} = await row('select * from public.reserve_image_tool_call($1,$2,$3,$4,$5,$6,$7)',call);
+  await db.query('select public.declare_image_generation_consent($1,true)',[reservation]);
+  const claim = value => row('select * from public.claim_post_image_execution_proven($1,$2)',[reservation,value]);
+  const execution = await claim(digest);
+  assert.equal(execution.is_new,true);
+  assert.equal((await claim('4'.repeat(64))).is_new,false,'a second caller cannot change the proof');
+  const hold = (secret=proof,reason='image_quality_rejected') => row('select public.hold_post_image_candidate($1,$2,$3) as value',[execution.execution_id,secret,reason]);
+  const closed = () => row('select public.confirm_closed_image_attempt($1,$2) as value',[project,request]);
+  await assert.rejects(db.query('select * from public.post_image_quality_claims'),denied);
+  await assert.rejects(hold('34'.repeat(32)),denied);
+  await as(other);
+  await assert.rejects(hold(),denied);
+  assert.equal((await closed()).value,'unverified');
+  await as(owner);
+  assert.equal((await closed()).value,'unverified');
+  await db.query('select public.mark_image_tool_execution_unknown($1)',[execution.execution_id]);
+  await db.query("select public.set_studio_turn_state($1,$2,'failed','turn_test')",[project,request]);
+  await db.query("select public.finish_agent_attempt($1,$2,'unknown')",[project,attempt]);
+  assert.equal((await closed()).value,'unverified','provider turn failure does not prove what happened to an image');
+  assert.equal((await hold()).value,true,'the original claimant can recover a settlement after uncertain delivery');
+  assert.equal((await hold()).value,true);
+  assert.equal((await hold(proof,'image_quality_inconclusive')).value,false);
+  assert.equal((await closed()).value,'image_quality_rejected');
+  assert.deepEqual(await claim(digest),{...execution,state:'quality_held',is_new:false});
+  assert.equal((await row('select public.fence_unsubmitted_image_tool_call($1,$2,$3,$4,$5,$6,$7) as value',call)).value,'unverified','a withheld candidate was dispatched');
+  await db.query('select public.mark_image_tool_execution_unknown($1)',[execution.execution_id]);
+  const assetPath=`${owner}/${project}/${piece}/1/${execution.asset_id}.png`;
+  assert.equal((await row('select count(*)::int as value from storage.objects')).value,0);
+  await db.query("insert into storage.objects(bucket_id,name) values ('compor-project-images',$1)",[assetPath]);
+  await assert.rejects(db.query('select public.complete_image_tool_execution($1)',[execution.execution_id]),denied);
+  await assert.rejects(db.query('select public.claim_image_tool_result_submission($1,$2,$3,$4,$5,$6,$7,$8)',[execution.execution_id,...call]),denied);
+  assert.equal((await row("select state from public.usage_measurements where attempt_id=$1 and part='agent'",[attempt])).state,'unknown');
+  assert.equal((await start('55555555-5555-4555-8555-555555555555')).value.status,'reserved');
+});
+
 test('a closed serial exploration preserves the uncertain receipt and releases other projects', { timeout: 30_000 }, async t => {
   const db = await createSyntheticDatabase(t);
   const owner = FIXTURE_USERS.alice;
@@ -231,4 +289,81 @@ test('a closed serial exploration preserves the uncertain receipt and releases o
   assert.equal((await claim()).state, 'running', 'foreground admission no longer counts the closed receipt');
   await db.exec('rollback');
   assert.deepEqual(await reserveNew(), { state: 'running', is_new: true }, 'a fresh ID in the other project is admitted');
+});
+
+test('exploration quality holds preserve receipts and admit only a proven explicit replacement', { timeout: 30_000 }, async t => {
+  const db = await createSyntheticDatabase(t);
+  const { createHash } = await import('node:crypto');
+  const owner = FIXTURE_USERS.alice;
+  const row = async (query, args = []) => (await db.query(query, args)).rows[0];
+  const as = user => db.query("select set_config('request.jwt.claims',$1,false)", [JSON.stringify({ role: 'authenticated', sub: user })]);
+  const digest = secret => createHash('sha256').update(Buffer.from(secret, 'hex')).digest('hex');
+  const id = n => `b0000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+  const proof = n => n.toString(16).padStart(64, '0');
+  const denied = error => error.code === '42501';
+  await db.query('insert into auth.users(id) values ($1),($2)', [owner, FIXTURE_USERS.bob]);
+  await db.exec('set role authenticated');
+  await as(owner);
+  const { id: project } = await row("insert into public.projects(title) values ('Synthetic quality holds') returning id");
+  const prompt = 'a'.repeat(64);
+  const path = image => `${owner}/${project}/${image}.png`;
+  const put = image => db.query("insert into storage.objects(bucket_id,name) values ('compor-exploration-images',$1)", [path(image)]);
+  const hold = (image, secret, reason = 'image_quality_rejected') => row('select public.hold_exploration_image_quality($1,$2,$3,$4) as value', [project, image, secret, reason]);
+  const complete = (image, secret) => row('select public.complete_exploration_image_proven($1,$2,$3) as value', [project, image, secret]);
+  const serial = (image, secret) => row('select * from public.reserve_exploration_image_batched_proven($1,$2,$3,$4,1,$5)', [project, image, prompt, id(2), digest(secret)]);
+  const receipt = image => row('select state,quality_reason,revision from public.exploration_images where id=$1', [image]);
+  assert.deepEqual(await serial(id(1), proof(1)), { state: 'running', is_new: true });
+  await assert.rejects(hold(id(1), proof(2)), denied);
+  await as(FIXTURE_USERS.bob);
+  await assert.rejects(hold(id(1), proof(1)), denied);
+  assert.equal(await receipt(id(1)), undefined);
+  await as(owner);
+  assert.equal((await hold(id(1), proof(1))).value, true);
+  assert.equal((await receipt(id(1))).quality_reason, 'image_quality_rejected');
+  assert.deepEqual(await serial(id(1), proof(2)), { state: 'quality_held', is_new: false });
+  await assert.rejects(hold(id(1), proof(1), 'image_quality_inconclusive'), denied);
+  await assert.rejects(put(id(1)), denied);
+  assert.deepEqual((await db.query('select name from storage.objects where name=$1', [path(id(1))])).rows, []);
+
+  assert.deepEqual(await serial(id(3), proof(3)), { state: 'running', is_new: true }, 'a fresh explicit ID may reuse the held slot');
+  await put(id(3));
+  await assert.rejects(hold(id(3), proof(3)), denied, 'holding a stored image cannot consume its proof');
+  assert.equal((await complete(id(3), proof(3))).value, true);
+
+  const batch = id(4), intentForBatch = id(5), planning = id(6), children = [id(7), id(8), id(9)];
+  const intentReserve = (intent, epoch, secret, purpose, position = null, previous = null) => row(
+    "select public.reserve_exploration_intent($1,null,$2,$3,$4,$5,$5,$6,$7,$8,$9) as value",
+    [project, batch, intent, epoch, prompt, digest(secret), purpose, position, previous],
+  );
+  assert.equal((await intentReserve(intentForBatch, 0, proof(5), 'batch')).value.status, 'reserved');
+  assert.equal((await row('select public.reserve_exploration_plan($1,null,$2,$3,$4,$5,$6,$7) as value', [project, batch, planning, prompt, digest(proof(6)), intentForBatch, proof(5)])).value.status, 'reserved');
+  await db.query("select public.bind_exploration_plan($1,$2,'valid-opaque-synthetic-binding',$3)", [project, planning, proof(6)]);
+  await db.query("select public.finish_exploration_plan($1,$2,'completed',$3)", [project, planning, proof(6)]);
+  assert.deepEqual(await row('select * from public.reserve_exploration_batch_proven($1,$2,null,$3,$4,$5,$6,$7,$8)',
+    [project, batch, prompt, children, children.map(() => prompt), [7, 8, 9].map(n => digest(proof(n))), intentForBatch, proof(5)]), { state: 'running', is_new: true });
+  await put(id(7));
+  await complete(id(7), proof(7));
+  await hold(id(8), proof(8), 'image_quality_inconclusive');
+  await db.query('select public.reject_exploration_image($1,$2,$3)', [project, id(9), proof(9)]);
+  const observe = async () => (await row('select public.get_exploration_batch($1,$2) as value', [project, batch])).value;
+  const partial = await observe();
+  assert.equal(partial.state, 'partial');
+  assert.equal(partial.completed_at, null);
+  assert.equal(partial.next_at, null);
+  assert.deepEqual(partial.images.map(image => [image.state, image.quality_reason]), [['completed', undefined], ['quality_held', 'image_quality_inconclusive'], ['rejected', undefined]]);
+
+  const replacement = (intent = id(10)) => row('select * from public.replace_rejected_exploration_batch_slot_proven($1,$2,2,$3,$4,$5,$6,$7,$8)',
+    [project, batch, id(8), id(11), prompt, digest(proof(11)), intent, proof(10)]);
+  assert.deepEqual(await replacement(), { state: 'revoked', is_new: false });
+  assert.equal((await intentReserve(id(10), 1, proof(10), 'replacement', 2, id(8))).value.status, 'reserved');
+  assert.deepEqual(await replacement(), { state: 'running', is_new: true });
+  assert.deepEqual(await replacement(), { state: 'running', is_new: false });
+  await hold(id(11), proof(11));
+  const after = await observe();
+  assert.equal(after.state, 'partial');
+  assert.equal(after.images[1].id, id(11));
+  assert.equal(after.images[1].replaces_image_id, id(8));
+  assert.equal(after.images[1].quality_reason, 'image_quality_rejected');
+  assert.equal((await receipt(id(8))).quality_reason, 'image_quality_inconclusive');
+  assert.deepEqual(after.images[0], partial.images[0]);
 });

@@ -1,0 +1,50 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reserva-roda-de-memorias",
+      "partition": "holdout",
+      "provenance": {"kind": "synthetic", "source": "Sondagem de pergunta de briefing antes da arte."},
+      "input": {
+        "locale": "pt-BR",
+        "format": "feed orgânico do Instagram",
+        "project": "Roda de Memórias",
+        "request": "Quero preparar, antes de pedir qualquer imagem, o próximo post orgânico para o feed do Instagram. É uma oficina em grupo de história oral para iniciantes. Eu queria que a peça mostrasse como a experiência é interativa e parecida com uma roda de conversa. Vamos definir a ideia e o formato do post primeiro.",
+        "turns": [],
+        "references": []
+      },
+      "expectations": {
+        "confirmedFacts": ["Oficina de história oral em grupo para iniciantes.", "Post no feed orgânico do Instagram.", "A pessoa quer definir a ideia e o formato antes da imagem."],
+        "unknowns": ["Interação concreta que o post deve mostrar.", "Programação, local e ação esperada."],
+        "creativeAnchors": ["Uma pergunta sobre o momento de troca a mostrar.", "Escolha entre uma imagem ou sequência com base no que precisa comunicar."],
+        "forbiddenClaims": ["Imagem gerada ou ação executada", "Detalhes inventados de programação", "Promessas de alcance"],
+        "visualChecks": ["Sem arte nesta etapa."]
+      },
+      "humanFeedback": null
+    },
+    {
+      "id": "reserva-roda-de-memorias-capa",
+      "partition": "holdout",
+      "provenance": {"kind": "synthetic", "source": "Sondagem de direção para capa e sequência declaradas pela pessoa."},
+      "input": {
+        "locale": "pt-BR",
+        "format": "carrossel orgânico do Instagram",
+        "project": "Roda de Memórias",
+        "request": "Quero um carrossel orgânico para o Instagram sobre uma oficina de história oral para iniciantes. O momento para mostrar é o grupo ouvir um trecho do primeiro relato, anotar o que surpreendeu e comparar as anotações em voz alta. A progressão é ouvir, anotar e conversar. Nesta etapa, proponha e prepare somente a capa, com uma cena que faça a gente querer ver a sequência. Deixe no briefing a função dos próximos slides. Não temos data nem local publicados.",
+        "turns": [],
+        "references": []
+      },
+      "expectations": {
+        "confirmedFacts": ["Carrossel orgânico para Instagram.", "O grupo ouve o primeiro relato, anota e discute.", "A pessoa solicitou somente a capa nesta etapa."],
+        "unknowns": ["Data, local e quantidade total exata de slides."],
+        "creativeAnchors": ["Gancho ligado à primeira escuta ou surpresa.", "Capa legível por si e progressão planejada."],
+        "forbiddenClaims": ["Carrossel completo gerado", "Data ou local inventados", "Engajamento garantido"],
+        "visualChecks": ["Prompt para uma imagem de capa, sem colagem com vários slides."]
+      },
+      "humanFeedback": null
+    }
+  ],
+  "replays": [],
+  "controls": [],
+  "assetSha256": {}
+}

@@ -46,6 +46,9 @@ export function createExplorationImageStore(config:AuthConfig, fetchApi:typeof f
     async reject(actor,projectId,requestId,secret) {
       if(await rpc(actor,'reject_exploration_image',{p_project_id:projectId,p_id:requestId,p_rejection_secret:secret})!==true)throw Error('unavailable');
     },
+    async hold(actor,projectId,requestId,secret,reason) {
+      if(await rpc(actor,'hold_exploration_image_quality',{p_project_id:projectId,p_id:requestId,p_rejection_secret:secret,p_quality_reason:reason})!==true)throw Error('unavailable');
+    },
     async resume(actor,projectId) {
       return z.enum(['resumed','not_paused','blocked']).parse(await rpc(actor,'resume_exploration_review',{p_project_id:projectId}));
     },
@@ -63,7 +66,7 @@ export function createExplorationImageStore(config:AuthConfig, fetchApi:typeof f
     },
     async list(actor,projectId,beforeOrdinal) {
       const url=new URL('/rest/v1/exploration_images',config.service);
-      for(const [key,value] of Object.entries({select:'id,project_id,state,created_at,ordinal,batch_id,batch_position',owner_id:`eq.${actor.userId}`,project_id:`eq.${projectId}`,order:'ordinal.desc',limit:'101'}))url.searchParams.set(key,value);
+      for(const [key,value] of Object.entries({select:'id,project_id,state,created_at,ordinal,batch_id,batch_position,quality_reason',owner_id:`eq.${actor.userId}`,project_id:`eq.${projectId}`,order:'ordinal.desc',limit:'101'}))url.searchParams.set(key,value);
       if(beforeOrdinal!==undefined)url.searchParams.set('ordinal',`lt.${beforeOrdinal}`);
       const response=await fetchApi(url,{headers:headers(actor),redirect:'error',signal:AbortSignal.timeout(5000)});
       if(!response.ok)throw Error('unavailable');

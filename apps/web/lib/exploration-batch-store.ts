@@ -1,11 +1,12 @@
+import {explorationImageOutcomes,explorationQualityReasons} from './exploration-image-outcome.ts';
 import {z} from 'zod';
 import type {Actor} from './agent-auth.ts';
 import type {AuthConfig} from './supabase.ts';
 import {createExplorationImageStore} from './exploration-image-store.ts';
 
-const reservation=z.array(z.strictObject({state:z.enum(['running','unknown','completed','rejected','busy','blocked','awaiting_feedback','cooldown','partial','conflict','revoked']),is_new:z.boolean()})).length(1);
+const reservation=z.array(z.strictObject({state:z.enum([...explorationImageOutcomes,'busy','blocked','awaiting_feedback','cooldown','partial','conflict','revoked']),is_new:z.boolean()})).length(1);
 const timestamp=z.string().max(100);
-const batch=z.strictObject({batch_id:z.string().uuid(),project_id:z.string().uuid(),piece_id:z.string().uuid().nullable(),plan_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['running','unknown','partial','completed']),created_at:timestamp,updated_at:timestamp,completed_at:timestamp.nullable(),next_at:timestamp.nullable(),closed_at:timestamp.nullable(),images:z.array(z.strictObject({id:z.string().uuid(),project_id:z.string().uuid(),prompt_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['running','unknown','completed','rejected']),ordinal:z.number().int().positive().safe(),revision:z.number().int().positive().safe(),batch_position:z.number().int().min(1).max(3),replaces_image_id:z.string().uuid().nullable(),created_at:timestamp,updated_at:timestamp})).length(3)});
+const batch=z.strictObject({batch_id:z.string().uuid(),project_id:z.string().uuid(),piece_id:z.string().uuid().nullable(),plan_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(['running','unknown','partial','completed']),created_at:timestamp,updated_at:timestamp,completed_at:timestamp.nullable(),next_at:timestamp.nullable(),closed_at:timestamp.nullable(),images:z.array(z.strictObject({id:z.string().uuid(),project_id:z.string().uuid(),prompt_digest:z.string().regex(/^[a-f0-9]{64}$/),state:z.enum(explorationImageOutcomes),quality_reason:z.enum(explorationQualityReasons).optional(),ordinal:z.number().int().positive().safe(),revision:z.number().int().positive().safe(),batch_position:z.number().int().min(1).max(3),replaces_image_id:z.string().uuid().nullable(),created_at:timestamp,updated_at:timestamp})).length(3)});
 type Reservation={state:z.infer<typeof reservation>[number]['state'];isNew:boolean};
 const id=z.string().uuid();
 type VisualAuthority={requestId:string;manifestDigest:string;consentSecret:string|null};
@@ -30,8 +31,8 @@ export function createExplorationBatchStore(config:AuthConfig,fetchApi:typeof fe
    const value=await rpc(actor,'get_exploration_batch',{p_project_id:projectId,p_batch_id:batchId});
    if(value===null)return null;
    const row=batch.parse(value);
-   if(row.batch_id!==batchId||row.project_id!==projectId||row.images.some(image=>image.project_id!==projectId)||new Set(row.images.map(image=>image.batch_position)).size!==3||new Set(row.images.map(image=>image.id)).size!==3)throw Error('invalid batch');
-   return {batchId:row.batch_id,projectId:row.project_id,pieceId:row.piece_id,state:row.state,completedAt:row.completed_at,nextAt:row.next_at,closedAt:row.closed_at,images:row.images.map(image=>({requestId:image.id,status:image.state,ordinal:image.ordinal,revision:image.revision,position:image.batch_position,replacesImageId:image.replaces_image_id}))};
+   if(row.batch_id!==batchId||row.project_id!==projectId||row.images.some(image=>image.project_id!==projectId||(image.state==='quality_held')!==Boolean(image.quality_reason))||new Set(row.images.map(image=>image.batch_position)).size!==3||new Set(row.images.map(image=>image.id)).size!==3)throw Error('invalid batch');
+   return {batchId:row.batch_id,projectId:row.project_id,pieceId:row.piece_id,state:row.state,completedAt:row.completed_at,nextAt:row.next_at,closedAt:row.closed_at,images:row.images.map(image=>({requestId:image.id,status:image.state,ordinal:image.ordinal,revision:image.revision,position:image.batch_position,replacesImageId:image.replaces_image_id,...(image.quality_reason?{qualityReason:image.quality_reason}:{})}))};
   },
   async reserveBatch(actor:Actor,value:BatchReservationInput):Promise<Reservation>{
    const authority=value.visualAuthority;if(authority&&!validAuthority(authority))throw Error('invalid visual authority');

@@ -1,0 +1,82 @@
+{
+  "case": "reserva-encadernacao-duas-referencias",
+  "baseCommit": "c911725",
+  "replayModel": "gpt-6.1-terra",
+  "judgeModel": "gpt-6.2-sol",
+  "scope": "diagnostico textual com PNGs de entrada",
+  "arms": {
+    "base": {
+      "instructionSha256": "a2cd167004501af5f3cfe8d2c7c8616fbdbaf32442fb050abdade8163fec7f5f",
+      "referencesSha256": [
+        "274df5d90d894bd7bda1cdc6ab5087ecc2a58523b5f82f1652810cfb142b9b25",
+        "e0c0b8fca711d368bbf32ef01c8c59e35d004a9c28fc3c9f62d165d84060f1ca"
+      ],
+      "artifactSha256": "4d591341b110828544267d8477a34fa67fb6f3568a3aa0dbad544fbc584df8b6"
+    },
+    "candidata-inicial": {
+      "instructionSha256": "d0d84a18093966bfc7fc21c67c9d003dff6f5d1917d25edc5806cc0c6bb006e0",
+      "referencesSha256": [
+        "274df5d90d894bd7bda1cdc6ab5087ecc2a58523b5f82f1652810cfb142b9b25",
+        "e0c0b8fca711d368bbf32ef01c8c59e35d004a9c28fc3c9f62d165d84060f1ca"
+      ],
+      "artifactSha256": "33062a76ddd157355f0070bac4753eb5853a28bd438e9f501733de03ac107e31"
+    },
+    "candidata-reteste": {
+      "instructionSha256": "97591225b818e3d62571909bf5483bd8aa93cb190bec9379f9ba20f6ad225bdb",
+      "referencesSha256": [
+        "274df5d90d894bd7bda1cdc6ab5087ecc2a58523b5f82f1652810cfb142b9b25",
+        "e0c0b8fca711d368bbf32ef01c8c59e35d004a9c28fc3c9f62d165d84060f1ca"
+      ],
+      "artifactSha256": "6eecbb549681d125ac1b526a49d26010ef1b05971ec901a034df689c4cc75ed8"
+    },
+    "referencia-ausente": {
+      "instructionSha256": "97591225b818e3d62571909bf5483bd8aa93cb190bec9379f9ba20f6ad225bdb",
+      "referencesSha256": [
+        "274df5d90d894bd7bda1cdc6ab5087ecc2a58523b5f82f1652810cfb142b9b25"
+      ],
+      "artifactSha256": "5f319e7e9a1311c5863e1fc414b1791b823cd41fcc02e977be59e48d61907a3c"
+    }
+  },
+  "judgeManifest": {
+    "datasetSha256": "7d344ce091cd7d8958106a8a4cbb21698c7c88d7d64a29901ded79ff46cd9ca8",
+    "rubricSha256": "d00a5f61da026852c6f6c1cd209486c8dcfb60ef63f5dd7e8b030e3a2bd5a415",
+    "artifactsSha256": "613861eb6fc6eb6b56e8ee7677e8bc6ce47b30657561f5b0eda748fcf3f61175"
+  },
+  "judgeContextCorrection": "Proporção 4:5 mantida como metadado de renderização. O pacote do juiz contém somente os dados aplicáveis ao briefing, com data e local em aberto.",
+  "judgeOrders": [
+    {
+      "order": "AB",
+      "promptSha256": "0e91576d250b28e13bbfeeeb8d719933a36a882bb0b757c97d75494892773615",
+      "answerSha256": "b20e18ffc2c0b9e7bc28d688f6366dd9fa9fbfa2340c69c2893ebb0db2031267",
+      "scores": {
+        "candidata": {
+          "briefing": 3,
+          "image": null,
+          "post": null
+        },
+        "base": {
+          "briefing": 2,
+          "image": null,
+          "post": null
+        }
+      }
+    },
+    {
+      "order": "BA",
+      "promptSha256": "8f28d9fa44ea83586a01c5ec399c5945f06e9a6fb0a05590a7d38f066f215a2e",
+      "answerSha256": "a94396c7937097781c397e6d1ad62b36d10859ac1c3107c5e281ccd35b42ac4d",
+      "scores": {
+        "base": {
+          "briefing": 2,
+          "image": null,
+          "post": null
+        },
+        "candidata": {
+          "briefing": 3,
+          "image": null,
+          "post": null
+        }
+      }
+    }
+  ]
+}

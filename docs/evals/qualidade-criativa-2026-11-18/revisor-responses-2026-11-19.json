@@ -1,0 +1,189 @@
+{
+  "date": "2026-11-19",
+  "mode": "responses_api",
+  "requestedModel": "gpt-6.2-sol",
+  "reasoning": "low",
+  "returnedModel": null,
+  "returnedModelNote": "O identificador retornado não foi preservado pelo filtro original de metadados.",
+  "generationTransport": "fixture",
+  "reviewTransport": "live",
+  "policySha256": "7ab35e3d3fc645c6c4e80d35a170ed1f5fc17c64910c73bddc4011b3df3ce042",
+  "samples": 6,
+  "distinctImages": 4,
+  "expectedMatches": 5,
+  "usage": {
+    "inputTokens": 9438,
+    "outputTokens": 844,
+    "cachedInputTokens": 0
+  },
+  "costEstimatedUsd": "0.027316",
+  "pricingSource": "https://developers.openai.com/api/docs/models/gpt-6.2-sol",
+  "latencyMs": {
+    "min": 2486,
+    "median": 4959.5,
+    "max": 6398
+  },
+  "rows": [
+    {
+      "id": "feira-conceito-especifico",
+      "imageSha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+      "textSha256": "cfc24776d87a692cd8004592f9330f519b229b2896ee975e5c693bab4e6525ee",
+      "expectedStatus": 200,
+      "expectedFinding": null,
+      "httpStatus": 200,
+      "appStatus": 200,
+      "released": true,
+      "matches": true,
+      "elapsedMs": 5497,
+      "usage": {
+        "input": 1567,
+        "output": 70,
+        "total": 1637,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": []
+    },
+    {
+      "id": "feira-polida-mas-generica",
+      "imageSha256": "fd4815d0af3858aed3cf252249c98309bc59e5793dc457482b0cc2db5b54d2cb",
+      "textSha256": "cfc24776d87a692cd8004592f9330f519b229b2896ee975e5c693bab4e6525ee",
+      "expectedStatus": 422,
+      "expectedFinding": "generic_direction",
+      "httpStatus": 200,
+      "appStatus": 422,
+      "released": false,
+      "matches": true,
+      "elapsedMs": 4422,
+      "usage": {
+        "input": 1567,
+        "output": 219,
+        "total": 1786,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": [
+        {
+          "code": "factual_fidelity",
+          "region": "Pote e fundo do cartaz",
+          "evidence": "O vidro não contém os 14 pontos em duas fileiras, a tampa não apresenta o friso fino e o fundo não mostra granulação perceptível. Uma moldura e quatro estrelas acrescentam ornamentos separados do pote."
+        },
+        {
+          "code": "generic_direction",
+          "region": "Interior do pote",
+          "evidence": "Sem os pontos que sugeririam um calendário, a ilustração não faz a ligação visual entre a compota e o dia 14. O mesmo pote poderia anunciar qualquer produto em conserva, em qualquer data."
+        }
+      ]
+    },
+    {
+      "id": "feira-data-contaminada",
+      "imageSha256": "65cc93bf760afc5b56b83533487b89d766e6633aaaafa8da484d483a6199614d",
+      "textSha256": "cfc24776d87a692cd8004592f9330f519b229b2896ee975e5c693bab4e6525ee",
+      "expectedStatus": 422,
+      "expectedFinding": "required_text",
+      "httpStatus": 200,
+      "appStatus": 200,
+      "released": true,
+      "matches": false,
+      "elapsedMs": 2486,
+      "usage": {
+        "input": 1567,
+        "output": 70,
+        "total": 1637,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": []
+    },
+    {
+      "id": "feira-pote-fundido",
+      "imageSha256": "a495636c22b4cea9f81f5990876becb6973a5d0f4eddb2fff3105e4ce8e8a184",
+      "textSha256": "cfc24776d87a692cd8004592f9330f519b229b2896ee975e5c693bab4e6525ee",
+      "expectedStatus": 422,
+      "expectedFinding": "visual_integrity",
+      "httpStatus": 200,
+      "appStatus": 422,
+      "released": false,
+      "matches": true,
+      "elapsedMs": 6398,
+      "usage": {
+        "input": 1567,
+        "output": 293,
+        "total": 1860,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": [
+        {
+          "code": "visual_integrity",
+          "region": "Centro e borda inferior direita do pote",
+          "evidence": "O arco creme, o polígono azulado e a barra ocre se sobrepõem de forma incoerente. A barra e o polígono ultrapassam a lateral do vidro e comprometem a leitura da silhueta."
+        },
+        {
+          "code": "factual_fidelity",
+          "region": "Corpo do pote",
+          "evidence": "Os quatorze pontos em duas fileiras estão ausentes. Há uma barra ocre no corpo que avança para fora do contorno, distinta do friso fino integrado à tampa."
+        },
+        {
+          "code": "generic_direction",
+          "region": "Motivo central",
+          "evidence": "O pote remete a compotas, mas os traços abstratos em seu interior não sugerem um calendário. A ilustração perde a ligação visual com o dia 14 e poderia acompanhar outra data sem alteração."
+        }
+      ]
+    },
+    {
+      "id": "data-aprovada-coincide",
+      "imageSha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+      "textSha256": "d33b2bcfd9725b31a8172a6c943cef1234649d66481a50156acbf59b1cc4b1a9",
+      "expectedStatus": 200,
+      "expectedFinding": null,
+      "httpStatus": 200,
+      "appStatus": 200,
+      "released": true,
+      "matches": true,
+      "elapsedMs": 6113,
+      "usage": {
+        "input": 1585,
+        "output": 70,
+        "total": 1655,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": []
+    },
+    {
+      "id": "data-aprovada-conflita",
+      "imageSha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+      "textSha256": "c8b8230d7a0de8f276ab548a9d59153c839e08e691f3a252120b8c349c514bf5",
+      "expectedStatus": 422,
+      "expectedFinding": "required_text",
+      "httpStatus": 200,
+      "appStatus": 422,
+      "released": false,
+      "matches": true,
+      "elapsedMs": 2751,
+      "usage": {
+        "input": 1585,
+        "output": 122,
+        "total": 1707,
+        "cached": 0,
+        "reasoning": 0
+      },
+      "findings": [
+        {
+          "code": "required_text",
+          "region": "Data abaixo do pote",
+          "evidence": "O cartaz exibe «14 de agosto», mas o texto literal aprovado é «15 de agosto»."
+        }
+      ]
+    }
+  ],
+  "localOcrDiagnostic": {
+    "engine": "Tesseract",
+    "language": "eng",
+    "pageSegmentationMode": 11,
+    "cleanDate": "14 de agosto",
+    "defectiveDate": "14 de agosfo"
+  },
+  "qualification": "failure_on_calibration_escape"
+}

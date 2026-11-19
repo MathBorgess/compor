@@ -27,15 +27,15 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','--webpack','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-50000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,1000));}
  const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[];
- let fence='unverified',closedFence='unverified';
+ let fence='unverified',closedFence='unverified',qualityReason=null,closedReason=null,chatFailed=false;
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body});
-  if(url.pathname==='/api/studio/chat')return route.fulfill({status:202,json:{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}});
-  if(url.pathname==='/api/agent/image')return route.fulfill({status:400,json:{status:'failed',error:'invalid_request'}});
+  if(url.pathname==='/api/studio/chat')return chatFailed?route.fulfill({status:200,json:{status:'failed'}}):route.fulfill({status:202,json:{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:'synthetic-binding',declineBinding:'synthetic-decline'}});
+  if(url.pathname==='/api/agent/image')return qualityReason?route.fulfill({status:200,json:{status:'quality_held',qualityReason,retryAutomatically:false}}):route.fulfill({status:400,json:{status:'failed',error:'invalid_request'}});
   if(url.pathname==='/api/agent/image/reconcile')return route.fulfill({status:200,json:{status:fence}});
-  if(url.pathname==='/api/agent/image/reconcile-closed')return route.fulfill({status:200,json:{status:closedFence}});
+  if(url.pathname==='/api/agent/image/reconcile-closed')return route.fulfill({status:200,json:closedReason?{status:'confirmed',outcome:'quality_held',qualityReason:closedReason}:{status:closedFence}});
   if(url.pathname==='/api/studio/action')return route.fulfill({status:200,json:{status:'completed',text:'Proposta recusada.'}});
   throw Error('unexpected API');
  });
@@ -69,5 +69,30 @@ export default function Fixture(){const[state,setState]=useState(initial),curren
  closedFence='confirmed';await page.getByRole('button',{name:'Verificar envio anterior'}).click();
  await page.getByText(/A tentativa terminou sem enviar imagem/).waitFor();assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),null);
  assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,1,'verificação de turno concluído não gera imagem');
+ const reset=async withSubmitted=>page.evaluate(({marker,requestId,pieceId,submitted,withSubmitted})=>{
+  localStorage.clear();sessionStorage.clear();sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId,baseVersion:2}}));
+  if(withSubmitted)localStorage.setItem(submitted,requestId);
+ },{marker,requestId,pieceId,submitted,withSubmitted});
+ qualityReason='image_quality_rejected';
+ await reset(false);await page.reload();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.getByText('A revisão de imagem reteve esta proposta. Seu post foi preservado.').waitFor();
+ assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),null);
+ assert.equal(await page.getByRole('button',{name:'Verificar envio anterior'}).count(),0);
+ assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,2);
+ closedReason='image_quality_inconclusive';chatFailed=true;
+ await reset(true);await page.reload();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+ await page.getByText('A revisão da imagem ficou inconclusiva. Seu post foi preservado.').waitFor();
+ assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),null);
+ assert.equal(calls.filter(c=>c.path==='/api/agent/image').length,2,'consulta da retenção não repete a geração');
+ await reset(true);
+ await page.evaluate(({marker,previousAttemptKey})=>sessionStorage.setItem(marker,JSON.stringify({requestId:null,previousAttemptKey})),{marker,previousAttemptKey:id(19)});
+ await page.reload();
+ await page.getByRole('button',{name:'Verificar envio anterior',exact:true}).click();
+ await page.getByText('A revisão da imagem ficou inconclusiva. Seu post foi preservado.').waitFor();
+ assert.equal(await page.evaluate(k=>JSON.parse(sessionStorage.getItem(k)).previousAttemptKey,marker),null,'a próxima conversa não retoma uma sessão que aguarda a arte retida');
+ assert.equal(await page.evaluate(k=>localStorage.getItem(k),submitted),null);
+ assert.equal(calls.filter(c=>c.path==='/api/images').length,0);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

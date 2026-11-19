@@ -101,7 +101,8 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
   const scope={projectId,revision:body.result.revision};
   switch(body.actionBinding){
    case 'new':assert.equal(body.result.status,'declined','o agente aguarda o nome e a confirmação antes de criar o post');return {status:'completed',text:'Dê um nome e confirme a criação do novo post.'};
-   case 'edit-one':return action('compor_salvar_versao',{...scope,requestId:id(13),pieceId:newPiece,baseVersion:0,expectedLatestVersion:0},'save-one');
+   case 'edit-one':return action('compor_editar_peca',{...scope,requestId:id(16),pieceId:newPiece,baseVersion:0,field:'caption',value:'A oficina começa com o barro na mesa.'},'caption');
+   case 'caption':return action('compor_salvar_versao',{...scope,requestId:id(13),pieceId:newPiece,baseVersion:0,expectedLatestVersion:0},'save-one');
    case 'save-one':return action('compor_editar_peca',{...scope,requestId:id(14),pieceId:newPiece,baseVersion:1,field:'headline',value:'Título novo refinado'},'edit-two');
    case 'edit-two':return action('compor_salvar_versao',{...scope,requestId:id(15),pieceId:newPiece,baseVersion:1,expectedLatestVersion:1},'save-two');
    case 'save-two':return consent();
@@ -127,7 +128,11 @@ test('chat cria e salva versões com confirmação; imagem usa snapshot novo aut
  await page.getByRole('button',{name:'Posts do projeto',exact:true}).click();await page.getByRole('button',{name:/^Post integrado .*Abrir post e conversa$/}).click();await openEditor(page);await page.getByText('Imagem integrada concluída.',{exact:true}).waitFor();await page.getByRole('img',{name:'Arte integral da versão selecionada',exact:true}).waitFor();
  const generated=calls.filter(call=>call.path==='/api/agent/image');assert.equal(generated.length,1);assert.equal(generated[0].ownCredential,true);assert.deepEqual(generated[0].body,{projectId,pieceId:newPiece,version:3,attemptId:id(80),actionBinding:'image-binding-one',explicitApproval:true,artworkInput:{literalText:{headline:'Título novo refinado',price:'',date:''},source:null,images:[]}});
  const fetched=calls.find(call=>call.path==='/api/images');assert.equal(fetched.query.pieceId,newPiece);assert.equal(fetched.query.version,'3');assert.equal(calls.filter(call=>call.path==='/api/pieces').length,3,'confirmar a geração preserva a origem e prepara uma versão nova');assert.equal(versions[0].content.headline,'Original preservado');assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),1,'Novo post mostra só os cards da nova peça');
- const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===5);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
+ const persisted=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===3&&value?.actionReceipts?.length===6);assert.equal(persisted.selection.pieceId,newPiece);assert.equal(persisted.adjustments[0].context.pieceId,originalPiece,'snapshot inicial permanece histórico e não determina o destino da imagem');assert.equal(persisted.adjustments[0].context.baseVersion,1);
+ for(const version of versions.filter(version=>version.piece_id===newPiece)){
+  assert.equal(version.content.caption,'A oficina começa com o barro na mesa.');
+  assert.equal(version.content.captionOrigin,'agent');
+ }
  assert.deepEqual(explorationPosts,[],'novo post explícito, refino e salvamento permanecem no editor sem iniciar descoberta');
  assert.equal(JSON.stringify(await stored(page)).includes(apiKey),false);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

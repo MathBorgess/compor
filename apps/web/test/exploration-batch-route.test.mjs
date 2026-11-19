@@ -4,6 +4,8 @@ import {createHash} from 'node:crypto';
 import {createExplorationBatchRoute} from '../lib/exploration-batch-route.ts';
 import {ExplorationBatchRejected} from '../lib/exploration-batch-coordinator.ts';
 import {ExplorationCredentialsRejected} from '../lib/exploration-image-route.ts';
+import {decodeExplorationImage} from '../lib/exploration-image-runtime.ts';
+import {createImageHandler} from '../../../packages/images-api/src/index.mjs';
 import {visualInputDigest} from '@compor/agents-api/visual-input';
 const id=n=>`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
 const actor={userId:id(1),token:'token-synthetic'},origin='https://compor.test',key='sk-synthetic_abcdefghijklmnopqrstuvwxyz';
@@ -15,11 +17,11 @@ function fixture({visualEnabled=false,visualRequired=false,authorizeVisualInput}
  reserveBatch:async(...args)=>{calls.push(['reserve',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  replaceRejected:async(...args)=>{calls.push(['replace',...args]);if(state.reservation.isNew)state.intent='consumed';return state.reservation;},
  plan:async(a,p,id,value)=>{calls.push(['plan',id,value]);if(state.planGate)await state.planGate.promise;if(state.planGates?.get(id))await state.planGates.get(id).promise;},put:async(a,p,id,bytes)=>{calls.push(['put',id,bytes.length]);},
- finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
+ finish:async(a,p,id,value,proof)=>{calls.push(['finish',id,value,proof]);},hold:async(a,p,id,proof,reason)=>{calls.push(['hold',id,proof,reason]);if(state.holdError)throw Error('lost receipt');},reject:async(a,p,id,proof)=>{calls.push(['reject',id,proof]);},
  };const route=createExplorationBatchRoute({appOrigin:origin,visualEnabled,visualRequired,
  prepareVisualAuthority:async input=>{calls.push(['authority',input]);if(state.authorityDenied)return null;if(input.visualInput.version===2&&input.visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')&&(!authorizeVisualInput||!await authorizeVisualInput(input)))return null;return {requestId:input.requestId,manifestDigest:visualInputDigest(input.visualInput),consentSecret:null};},
  checkVisualDispatch:async input=>{calls.push(['dispatchAuthority',input]);if(input.visualInput.version===2&&input.visualInput.entries.some(entry=>entry.inputOrigin!=='local-upload')&&authorizeVisualInput&&!await authorizeVisualInput(input))return false;return !state.intentError&&state.intent==='consumed'&&state.epoch===input.intentEpoch&&!state.dispatchDenied;},
- resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async input=>{state.lastVerify=input;return state.proof;},intentSecret:input=>{state.lastIntent=input;return 'a'.repeat(64);},intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch,revocationEpoch:state.intent==='revoked'?state.epoch:null};},store,generate:async(a,k,prompt,images)=>{calls.push(['generate',prompt,images]);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
+ resolveActor:async()=>actor,ownsProject:async()=>state.permitted,verifyPlan:async input=>{state.lastVerify=input;return state.proof;},intentSecret:input=>{state.lastIntent=input;return 'a'.repeat(64);},intentState:async(value)=>{calls.push(['intentState',value]);if(state.intentError)throw Error('private database detail');return state.intentResult??{state:state.intent,epoch:state.epoch,revocationEpoch:state.intent==='revoked'?state.epoch:null};},store,generate:async(a,k,prompt,images,options)=>{calls.push(['generate',prompt,images]);if(state.generate)return state.generate(a,k,prompt,images,options);if(state.instant)return new Uint8Array([1]);const d=deferred();pending.set(prompt,d);return d.promise;}});return {route,calls,pending,state};}
 const wait=async(predicate)=>{for(let i=0;i<100;i++){if(predicate())return;await new Promise(r=>setTimeout(r,1));}throw Error('condition not reached');};
 function visualFixture(){
  const bytes=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
@@ -68,6 +70,43 @@ test('reposição preserva mesmo digest visual e envia apenas o filho escolhido'
  const f=fixture({visualEnabled:true});f.state.instant=true;const response=await f.route.replace(request({...base,...visual,position:2,previousId:imageIds[1],requestId:id(8)}));
  assert.equal((await response.json()).status,'completed');assert.equal(f.calls.find(call=>call[0]==='replace')[2].promptDigest,original.promptDigests[1]);
  assert.deepEqual(f.calls.filter(call=>call[0]==='generate').map(call=>call[2]),[visual.referenceImages]);
+});
+test('revisão local retém somente os slots sem aprovação e também cobre a reposição', async()=>{
+ const imageBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
+ const handler=createImageHandler({
+  authenticate:async()=>actor,
+  fetch:async()=>Response.json({data:[{b64_json:imageBase64}]}),
+  reviewCandidate:async({prompt})=>prompt===plan.items[0].prompt?{decision:'approve',findings:[]}:{decision:'unsure',findings:[]},
+ });
+ const generate=async(_actor,apiKey,prompt)=>decodeExplorationImage(await handler(request({apiKey,prompt,authorizeGeneration:true})));
+ const batch=fixture();batch.state.generate=generate;
+ const result=await (await batch.route.post(request())).json();
+ assert.equal(result.status,'partial');
+ assert.equal(result.retryAutomatically,false);
+ assert.deepEqual(result.images.map(item=>item.status),['completed','quality_held','quality_held']);
+ assert.deepEqual(batch.calls.filter(call=>call[0]==='put').map(call=>call[1]),[body.imageIds[0]]);
+ assert.equal(batch.calls.filter(call=>call[0]==='generate').length,3);
+ const held=batch.calls.filter(call=>call[0]==='hold');
+ const {rejectionDigests}=batch.calls.find(call=>call[0]==='reserve')[2];
+ assert.deepEqual(held.map(([,id,proof,reason])=>[id,createHash('sha256').update(Buffer.from(proof,'hex')).digest('hex'),reason]),[
+  [body.imageIds[1],rejectionDigests[1],'image_quality_inconclusive'],
+  [body.imageIds[2],rejectionDigests[2],'image_quality_inconclusive'],
+ ]);
+ assert.ok(!batch.calls.some(call=>call[0]==='reject'));
+
+
+ const replacement=fixture(),{imageIds,...base}=body;replacement.state.generate=generate;
+ const replaced=await (await replacement.route.replace(request({...base,position:2,previousId:imageIds[1],requestId:id(8)}))).json();
+ assert.equal(replaced.status,'quality_held');
+ assert.equal(replaced.qualityReason,'image_quality_inconclusive');
+ assert.equal(replaced.retryAutomatically,false);
+ assert.equal(replacement.calls.filter(call=>call[0]==='generate').length,1);
+ assert.ok(!replacement.calls.some(call=>call[0]==='put'));
+ assert.ok(!replacement.calls.some(call=>call[0]==='reject'));
+ const unconfirmed=fixture();unconfirmed.state.generate=generate;unconfirmed.state.holdError=true;
+ const lost=await (await unconfirmed.route.replace(request({...base,position:2,previousId:imageIds[1],requestId:id(8)}))).json();
+ assert.equal(lost.status,'unknown');
+ assert.ok(!unconfirmed.calls.some(call=>call[0]==='put'));
 });
 test('v2 exige autorização das fontes e envia só a triagem assinada junto aos uploads',async()=>{
  const visual=visualFixture(),[local,external]=visual.visualInput.entries;

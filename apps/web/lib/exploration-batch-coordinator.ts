@@ -1,13 +1,16 @@
+import {ExplorationQualityHeld,type ExplorationQualityReason} from './exploration-image-outcome.ts';
+
 /** A definitive provider credential rejection, not a transport failure. */
 export class ExplorationBatchRejected extends Error {}
 
 export type ReservedExplorationChild = Readonly<{requestId:string;prompt:string;proof:string}>;
-export type ExplorationChildResult = Readonly<{requestId:string;status:'completed'|'rejected'|'unknown'}>;
+export type ExplorationChildResult = Readonly<{requestId:string;status:'completed'|'rejected'|'unknown'}|{requestId:string;status:'quality_held';qualityReason:ExplorationQualityReason}>;
 export type ExplorationBatchPorts = Readonly<{
   generate:(child:ReservedExplorationChild)=>Promise<Uint8Array>;
   put:(child:ReservedExplorationChild,bytes:Uint8Array)=>Promise<void>;
   finish:(child:ReservedExplorationChild,state:'completed'|'unknown')=>Promise<void>;
   reject:(child:ReservedExplorationChild)=>Promise<void>;
+  hold:(child:ReservedExplorationChild,reason:ExplorationQualityReason)=>Promise<void>;
 }>;
 
 const uuid=(value:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -23,15 +26,24 @@ export async function dispatchReservedExplorationBatch(children:readonly Reserve
   const items=children.map(({requestId,prompt,proof})=>Object.freeze({requestId,prompt,proof}));
   return Promise.all(items.map(async child=>{
     try {
-      const bytes=await ports.generate(child);
+      let bytes:Uint8Array;
+      try { bytes=await ports.generate(child); }
+      catch(error) {
+        if(error instanceof ExplorationQualityHeld) {
+          await ports.hold(child,error.reason);
+          return {requestId:child.requestId,status:'quality_held',qualityReason:error.reason} as const;
+        }
+        if(error instanceof ExplorationBatchRejected) {
+          await ports.reject(child);
+          return {requestId:child.requestId,status:'rejected'} as const;
+        }
+        throw error;
+      }
       if(!(bytes instanceof Uint8Array)||bytes.byteLength===0)throw Error('invalid_image');
       await ports.put(child,bytes);
       await ports.finish(child,'completed');
       return {requestId:child.requestId,status:'completed'} as const;
-    } catch(error) {
-      if(error instanceof ExplorationBatchRejected) {
-        try {await ports.reject(child);return {requestId:child.requestId,status:'rejected'} as const;} catch { /* A lost rejection receipt remains unknown. */ }
-      }
+    } catch {
       try {await ports.finish(child,'unknown');} catch { /* Preserve uncertainty if persistence also fails. */ }
       return {requestId:child.requestId,status:'unknown'} as const;
     }
