@@ -1,4 +1,5 @@
 import {AGENT_MODEL} from './agent-model.mjs';
+import {imagePromptSkills} from './image-prompt-skills.mjs';
 import {visualTriageInstructions} from './visual-triage-instructions.mjs';
 import {parseVisualInput} from './visual-input.mjs';
 import {MAX_VISUAL_REQUEST_BYTES} from './visual-input-contract.mjs';
@@ -11,7 +12,7 @@ const planningInstructions = [
  'Respeite os limites em unidades UTF-16 de cada campo. creativePrompt comporta até 4000, composition até 300, contrast até 300 e differenceFromOthers até 500. Use frases curtas e deixe margem nos resumos.',
 ].join(' ');
 
-function instructionsFor(visualInput) {
+async function instructionsFor(visualInput) {
  const instructions = [planningInstructions];
  if (visualInput) instructions.push(visualTriageInstructions);
  if (visualInput?.version === 2) {
@@ -19,6 +20,7 @@ function instructionsFor(visualInput) {
  } else {
   instructions.push('A raiz do JSON contém somente "version":1 e items (lista das três propostas).');
  }
+ instructions.push('Use as skills abaixo antes de escrever o creativePrompt de cada rota. Na exploração preserve o schema do plano e descreva a composição de uma imagem por item.',await imagePromptSkills('exploration'));
  return instructions.join('\n');
 }
 
@@ -44,7 +46,7 @@ export function createManagedExplorationPlanProvider({apiKey,fetch:fetchApi=glob
     }
     input=[{role:'user',content}];
    }else if(referenceImages!==undefined)throw Error('unbound visual input');
-   const body=JSON.stringify({agent:{model:AGENT_MODEL,instructions:instructionsFor(visualInput),reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[]},environment:{type:'none'},input,stream:false});
+   const body=JSON.stringify({agent:{model:AGENT_MODEL,instructions:await instructionsFor(visualInput),reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[]},environment:{type:'none'},input,stream:false});
    if(Buffer.byteLength(body)>MAX_VISUAL_REQUEST_BYTES)throw Error('provider request too large');
    const r=await fetchApi(ROOT,{method:'POST',headers,body,redirect:'error',signal:AbortSignal.timeout(15000)});
    const session=await readJson(r,256000);if(!identifier(session?.id,'sess'))throw Error('invalid session');return {sessionId:session.id};

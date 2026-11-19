@@ -1,5 +1,6 @@
 "use client";
 
+import {explorationImageOutcomes} from '../lib/exploration-image-outcome.ts';
 import { useEffect, useRef, useState } from "react";
 import * as z from '../lib/schema.ts';
 import ReferencePreview from './reference-preview';
@@ -9,7 +10,7 @@ const imagesSchema = z.object({
   images: z.array(z.object({
     id: z.string().check(z.uuid()),
     project_id: z.string().check(z.uuid()),
-    state: z.enum(["running", "unknown", "completed", "rejected"]),
+    state: z.enum(explorationImageOutcomes),
     created_at: z.string(),
     ordinal: z.optional(z.number().check(z.int()).check(z.positive())),
     batch_id: z.optional(z.nullable(z.string().check(z.uuid()))),
@@ -115,7 +116,7 @@ export default function ExplorationGallery({ projectId, completed, selectedIds, 
   function imageCard(item: ImageRecord) {
     const label = item.ordinal ? String(item.ordinal) : item.id, selected = selectedIds.includes(item.id);
     return <figure key={item.id} data-image-id={item.id} data-selected={selected ? "true" : undefined}>
-      {item.state === "completed" ? <><ReferencePreview src={`/api/studio/explorations/image?${new URLSearchParams({projectId,imageId:item.id})}`} title={`Imagem ${label}`}/><figcaption>Imagem {label}</figcaption><div className="reference-card-actions"><label className="reference-choice"><input type="checkbox" aria-label={`Escolher imagem ${label}`} checked={selected} disabled={selected&&!onRemoveReference} aria-disabled={Boolean(selecting)||undefined} onChange={()=>{if(selected)void removeImage(item.id);else void useImage(item.id,item.ordinal);}}/>{selecting===item.id?'Atualizando…':selected?'Escolhida':'Escolher'}</label><span className="reference-source" data-origin="generated">Gerada pelo Compor</span></div></> : <><p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : "Resultado não confirmado."}</p><figcaption>Imagem {label}</figcaption></>}
+      {item.state === "completed" ? <><ReferencePreview src={`/api/studio/explorations/image?${new URLSearchParams({projectId,imageId:item.id})}`} title={`Imagem ${label}`}/><figcaption>Imagem {label}</figcaption><div className="reference-card-actions"><label className="reference-choice"><input type="checkbox" aria-label={`Escolher imagem ${label}`} checked={selected} disabled={selected&&!onRemoveReference} aria-disabled={Boolean(selecting)||undefined} onChange={()=>{if(selected)void removeImage(item.id);else void useImage(item.id,item.ordinal);}}/>{selecting===item.id?'Atualizando…':selected?'Escolhida':'Escolher'}</label><span className="reference-source" data-origin="generated">Gerada pelo Compor</span></div></> : <><p role="status">{item.state === "running" ? "Geração em andamento." : item.state === "rejected" ? "Chave recusada; nenhuma imagem foi gerada." : item.state === "quality_held" ? "Proposta retida pela revisão de qualidade." : "Resultado não confirmado."}</p><figcaption>Imagem {label}</figcaption></>}
 
     </figure>;
   }

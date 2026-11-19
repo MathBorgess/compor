@@ -19,6 +19,8 @@ test('MCP encaminha chave pelo cabeçalho e usa conta autenticada sem expor segr
  try {
   const tool=(await client.listTools()).tools.find(item=>item.name==='generate_exploration_image');
   assert.ok(tool);assert.doesNotMatch(JSON.stringify(tool),/api.?key|sk-xxx/i);
+  assert.match(tool.description,/PNG gerado e o prompt à OpenAI com sua chave de revisão/);
+  assert.match(tool.description,/reter a imagem antes da entrega \(quality_held\)/);
   const result=await client.callTool({name:tool.name,arguments:args});
   assert.deepEqual(result.structuredContent,{status:'completed',requestId:args.requestId,imageId:args.requestId});
   assert.deepEqual(calls[0],[{actor:{userId:id(3)},token:'session-token'},args,key]);
@@ -60,6 +62,18 @@ test('MCP informa falha anterior à reserva e não repete automaticamente',async
   const result=await client.callTool({name:'generate_exploration_image',arguments:args});
   assert.deepEqual(result.structuredContent,{status:'not_started',requestId:args.requestId,retryAutomatically:false});
   assert.equal(calls,1);assert.doesNotMatch(JSON.stringify(result),/sk-xxx|session-token/);
+ } finally {await client.close();}
+});
+test('MCP preserva retenção por qualidade e o motivo sem devolver imagem',async()=>{
+ let calls=0;
+ const held={status:'quality_held',requestId:args.requestId,qualityReason:'image_quality_inconclusive',retryAutomatically:false};
+ const handle=createRemoteMcpHandler({authenticate:async()=>({userId:id(3)}),exploration:async()=>{calls++;return held;}});
+ const client=await connect(handle,{'x-compor-openai-key':key});
+ try {
+  const result=await client.callTool({name:'generate_exploration_image',arguments:args});
+  assert.deepEqual(result.structuredContent,held);
+  assert.equal(calls,1);
+  assert.doesNotMatch(JSON.stringify(result),/sk-xxx|session-token|imageId/);
  } finally {await client.close();}
 });
 test('MCP respeita a pausa compartilhada e retoma somente pela ferramenta explícita',async()=>{

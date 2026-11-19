@@ -1,3 +1,4 @@
+import {explorationQualityReasons} from '../../../lib/exploration-image-outcome.ts';
 import { createRemoteMcpHandler, createSupabaseAuthenticator, createSupabaseProjectStore, createSupabasePieceStore } from '@compor/remote-mcp';
 import { authConfig } from '../../../lib/supabase';
 import { explorationRuntime } from '../../../lib/exploration-image-runtime.ts';
@@ -30,11 +31,12 @@ async function handle(request:Request) {
           const service=explorationRuntime({userId:context.actor.userId,token:context.token});
           if(!service)return {status:'not_started' as const,requestId:input.requestId,retryAutomatically:false as const};
           const result=await service.post(new Request(new URL('/api/studio/explorations',config.app),{
-            method:'POST',headers:{origin:config.app,'content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':input.requestId},body:JSON.stringify(input),
+            method:'POST',headers:{origin:config.app,'content-type':'application/json','x-compor-openai-key':key,'x-compor-exploration-request-id':input.requestId},body:JSON.stringify(input),signal:request.signal,
           }));
           const parsed=z.discriminatedUnion('status',[
             z.strictObject({status:z.literal('completed'),requestId:z.string().uuid(),imageId:z.string().uuid()}),
             z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected','not_started']),requestId:z.string().uuid(),retryAutomatically:z.literal(false)}),
+            z.strictObject({status:z.literal('quality_held'),requestId:z.string().uuid(),qualityReason:z.enum(explorationQualityReasons).optional(),retryAutomatically:z.literal(false)}),
           ]).parse(await result.json());
           if(parsed.status==='not_started' && (![400,403,404,413,503].includes(result.status) || parsed.requestId.toLowerCase()!==input.requestId.toLowerCase()))throw Error('unavailable');
           return parsed;

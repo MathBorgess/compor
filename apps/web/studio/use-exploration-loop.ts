@@ -10,10 +10,13 @@ import { markBeforeDispatch } from "../lib/exploration-pending";
 import { BATCH_SIZE,pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
 import {readExplorationGate,readExplorationSignals,planningCriteria,planningFeedback} from '../lib/exploration-feedback.ts';
 import {postContext} from '../lib/studio-post-context.ts';
+import {explorationImageOutcomes,explorationQualityReasons} from '../lib/exploration-image-outcome.ts';
 
-const responseSchema = z.object({ status: z.enum(["completed", "running", "unknown", "busy", "blocked", "awaiting_feedback", "rejected", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()) });
+const responseSchema = z.object({ status: z.enum([...explorationImageOutcomes, "busy", "blocked", "awaiting_feedback", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()), qualityReason:z.optional(z.enum(explorationQualityReasons)) });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
-const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(["running", "unknown", "completed", "rejected"]) })).check(z.maxLength(100)) });
+const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(explorationImageOutcomes) })).check(z.maxLength(100)) });
+const qualityHeldMessage='Uma proposta foi retida pela revisão de qualidade. Peça novas propostas para retomar.';
+const qualityHeldKey=(userId:string)=>`compor-exploration-quality-held:${userId}`;
 
 type LoopProps = { conversationId?:string; userId: string; projectId: string; state: StudioState | null; getState: () => StudioState | null; hasApiKey: boolean; canUseAI?:boolean; credentialSource?:"default"|"byok"; credentialEpoch?:number; getApiKey: () => string; isAuthenticated: () => boolean; enabled: boolean; idea?:string;onCompleted?:(imageId:string,ordinal:number,conversationId:string,creationContext?:StudioState['drafts'][number]['creationContext'])=>Promise<void> };
 export type ExplorationProgress = {requestId:string;position:number;total:number;startedAt:number};
@@ -113,6 +116,7 @@ export function useExplorationLoop(props: LoopProps) {
           if(!active||cancel.signal.aborted)return;
           if (localStorage.getItem(rejectedKey) !== null) { stop("A chave foi recusada. Corrija a conexão e retome a exploração."); return; }
           if (localStorage.getItem(notStartedKey) !== null) { stop("Não foi possível iniciar a exploração. Verifique a conexão e retome quando estiver pronto."); return; }
+          if (localStorage.getItem(qualityHeldKey(props.userId)) !== null) { stop(qualityHeldMessage); return; }
           progress=readBatchProgress(localStorage,batchKey(props.projectId),sequenceKey(props.projectId),()=>crypto.randomUUID());
           const prior = localStorage.getItem(pendingKey);
           if (prior !== null) {
@@ -135,6 +139,13 @@ export function useExplorationLoop(props: LoopProps) {
             const rows = listSchema.parse(await response.json()).images;
             if(!active||!sameCredential())return;
             const match = rows.find(row => row.id === pending.requestId && row.project_id === pending.projectId);
+            if (match?.state === "quality_held") {
+              if (localStorage.getItem(pendingKey) !== prior) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              localStorage.setItem(qualityHeldKey(props.userId),pending.requestId);
+              localStorage.removeItem(pendingKey);
+              stop(qualityHeldMessage);
+              return;
+            }
             if (match?.state === "rejected") {
               // Persist the pause before removing the receipt: reload or another
               // tab must not restart the loop after a confirmed rejection.
@@ -240,6 +251,13 @@ export function useExplorationLoop(props: LoopProps) {
             // Aborting a request is not guaranteed to win the race with its
             // response. Other late results still require server reconciliation.
             if(!active||!sameCredential())return;
+            if (((response.status===200&&result.qualityReason)||response.status===409) && result.status === "quality_held" && result.requestId === requestId && result.retryAutomatically === false) {
+              if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              localStorage.setItem(qualityHeldKey(props.userId),requestId);
+              localStorage.removeItem(pendingKey);
+              stop(qualityHeldMessage);
+              return;
+            }
             if ((response.status === 401 || response.status === 409) && result.status === "rejected" && result.requestId === requestId && result.retryAutomatically === false) {
               if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
               localStorage.setItem(rejectedKey, "1");
@@ -310,7 +328,7 @@ export function useExplorationLoop(props: LoopProps) {
       } finally { resumeInFlight.current=false;setResuming(false); }
     }
     if(!stillCurrent())return;
-    try { if(question)localStorage.setItem(questionKey,question); }
+    try { if(question)localStorage.setItem(questionKey,question); localStorage.removeItem(qualityHeldKey(props.userId)); }
     catch { setStatus('Não foi possível retomar. Verifique o armazenamento deste navegador.');setBlocked(true);return; }
     resumeRequested.current=true;setResumedQuestion(question ? {key:questionKey,id:question} : null);setAwaitingFeedback(false);setBlocked(false);setPaused(false);setPhase('idle');
   }

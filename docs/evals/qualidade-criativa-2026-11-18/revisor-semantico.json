@@ -1,0 +1,257 @@
+{
+  "model": "gpt-6.2-sol",
+  "effort": "low",
+  "transport": "Codex para semântica, envelope da Responses simulado para validar o desfecho",
+  "baselinePolicyFileSha256": "fccccf969e20e8a2b78e3a051f427ecd41d65eff9d223b0c135b3f6ffb30ebcb",
+  "baselineNormalizedStatuses": {
+    "feira-pote-fundido": 422,
+    "feira-polida-mas-generica": 422,
+    "feira-conceito-especifico": 503,
+    "feira-data-contaminada": 503
+  },
+  "excludedRun": "A primeira tentativa consultou documentos de orientação da wiki por ferramenta herdada. Todos os pareceres dessa tentativa foram excluídos.",
+  "calibracao": {
+    "policyFileSha256": "ef9277eeda9e3e128a3d9d01deb0cc11885a61db7f9209b29338129767232c34",
+    "distinctImages": 4,
+    "matches": 6,
+    "rows": [
+      {
+        "id": "feira-pote-fundido",
+        "sha256": "a495636c22b4cea9f81f5990876becb6973a5d0f4eddb2fff3105e4ce8e8a184",
+        "expected": "reject",
+        "expectedFinding": "visual_integrity",
+        "status": 422,
+        "checks": {
+          "visual_integrity": "fail",
+          "required_text": "pass",
+          "factual_fidelity": "fail",
+          "generic_direction": "fail"
+        },
+        "findings": [
+          {
+            "code": "visual_integrity",
+            "region": "Centro e canto inferior direito do pote",
+            "evidence": "O arco creme, os traços angulares e a forma azul sobreposta se cruzam e invadem o contorno do pote, confundindo a leitura do vidro."
+          },
+          {
+            "code": "factual_fidelity",
+            "region": "Interior do pote e borda direita",
+            "evidence": "Faltam os quatorze pontos em duas fileiras, e uma faixa ocre atravessa o corpo do pote e se projeta para fora da borda direita."
+          },
+          {
+            "code": "generic_direction",
+            "region": "Motivo central",
+            "evidence": "O pote remete a compotas, mas os traços sobrepostos não evocam um calendário nem ligam o motivo à data. Com a troca do título e da data, a mesma ilustração serviria para outro evento sobre conservas."
+          }
+        ],
+        "match": true,
+        "promptSha256": "b27ae44cc4b1d64603b416b1c8010905268d83dd8cea770142f936624f1a6c0e",
+        "answerSha256": "aa4bfc218282be1e7122cab2d44124e03b15ec056cb6cd5831c8fdc09646afb7",
+        "toolCalls": 0
+      },
+      {
+        "id": "feira-polida-mas-generica",
+        "sha256": "fd4815d0af3858aed3cf252249c98309bc59e5793dc457482b0cc2db5b54d2cb",
+        "expected": "reject",
+        "expectedFinding": "generic_direction",
+        "status": 422,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "fail",
+          "generic_direction": "fail"
+        },
+        "findings": [
+          {
+            "code": "factual_fidelity",
+            "region": "Vidro e tampa do pote central",
+            "evidence": "O vidro traz apenas um reflexo vertical. Faltam os quatorze pontos em duas fileiras e o friso horizontal fino na tampa."
+          },
+          {
+            "code": "generic_direction",
+            "region": "Pote central e brilhos ao redor",
+            "evidence": "O pote com brilhos funciona como ícone de qualquer produto em conserva. Sem o motivo de calendário no vidro, a ilustração perde a ligação visual com o dia 14."
+          }
+        ],
+        "match": true,
+        "promptSha256": "b27ae44cc4b1d64603b416b1c8010905268d83dd8cea770142f936624f1a6c0e",
+        "answerSha256": "7d015f8fcfe14957c1b3281854e21240431fc64c6471f32974368fd42d8aff5b",
+        "toolCalls": 0
+      },
+      {
+        "id": "feira-conceito-especifico",
+        "sha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+        "expected": "approve",
+        "expectedFinding": null,
+        "status": 200,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [],
+        "match": true,
+        "promptSha256": "b27ae44cc4b1d64603b416b1c8010905268d83dd8cea770142f936624f1a6c0e",
+        "answerSha256": "387cfbd9ed0ad026bae4768004eaad1a8e3f9f3496cafe032d23621a868b49e2",
+        "toolCalls": 0
+      },
+      {
+        "id": "feira-data-contaminada",
+        "sha256": "65cc93bf760afc5b56b83533487b89d766e6633aaaafa8da484d483a6199614d",
+        "expected": "reject",
+        "expectedFinding": "required_text",
+        "status": 422,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "fail",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [
+          {
+            "code": "required_text",
+            "region": "Data abaixo do pote",
+            "evidence": "A peça exibe “14 de agosfo”. O texto exigido é “14 de agosto”."
+          }
+        ],
+        "match": true,
+        "promptSha256": "b27ae44cc4b1d64603b416b1c8010905268d83dd8cea770142f936624f1a6c0e",
+        "answerSha256": "d1575160c8e773c0efc63c1ce80109e953198c86b76bab3700f2a381709f1555",
+        "toolCalls": 0
+      },
+      {
+        "id": "data-aprovada-coincide",
+        "sha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+        "expected": "approve",
+        "expectedFinding": null,
+        "status": 200,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [],
+        "match": true,
+        "promptSha256": "b1bc5fdeb52a9e77f7509d30e7bee59a16a906c8f9e64df0c1be4ebbce83d56b",
+        "answerSha256": "387cfbd9ed0ad026bae4768004eaad1a8e3f9f3496cafe032d23621a868b49e2",
+        "toolCalls": 0
+      },
+      {
+        "id": "data-aprovada-conflita",
+        "sha256": "08d9ac44c51ef4ebfa69b31673880a0770a4bef6bb4c1b72f1214b9cd39d8be1",
+        "expected": "reject",
+        "expectedFinding": "required_text",
+        "status": 422,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "fail",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [
+          {
+            "code": "required_text",
+            "region": "Data abaixo do pote",
+            "evidence": "A peça exibe “14 de agosto”. A lista de textos aprovados exige “15 de agosto”."
+          }
+        ],
+        "match": true,
+        "promptSha256": "fafc4fd4116567b47a905b1f0ce3f8529d640de5ed932d454f600a34643e1aa7",
+        "answerSha256": "e91f4a821a4f614f8f822df7fb7a75f9d643449eeb68479c86773c0b0f8e90be",
+        "toolCalls": 0
+      }
+    ]
+  },
+  "reserva-de-estilos": {
+    "policyFileSha256": "ef9277eeda9e3e128a3d9d01deb0cc11885a61db7f9209b29338129767232c34",
+    "distinctImages": 4,
+    "matches": 4,
+    "rows": [
+      {
+        "id": "bordado-textura-tatil",
+        "sha256": "0040de0ac64eb2a809409bc00b7c96f69aa8e16ce58116a21deb54cadc2ed2bf",
+        "expected": "approve",
+        "expectedFinding": null,
+        "status": 200,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [],
+        "match": true,
+        "promptSha256": "56fe5cfea0f10a5a93283d4a077cc96e2f9da8273f4ca8a775fc350654e71b73",
+        "answerSha256": "387cfbd9ed0ad026bae4768004eaad1a8e3f9f3496cafe032d23621a868b49e2",
+        "toolCalls": 0
+      },
+      {
+        "id": "linha-sem-juncao",
+        "sha256": "e01320b39ee9f918ae91d8e56af219bd32e0ba4b9ca0b03870eb4b9a3cfbc63c",
+        "expected": "reject",
+        "expectedFinding": "factual_fidelity",
+        "status": 422,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "fail",
+          "generic_direction": "fail"
+        },
+        "findings": [
+          {
+            "code": "factual_fidelity",
+            "region": "Bilhete e chave no centro",
+            "evidence": "O papel aparece dobrado e em perspectiva, com uma fechadura recortada. A chave entra na fechadura, e a linha laranja reaparece no painel de trás. Falta a junção visível em que uma palavra sugerida no bilhete se destaca da folha e vira chave."
+          },
+          {
+            "code": "generic_direction",
+            "region": "Encontro da chave com a fechadura",
+            "evidence": "A chave entrando na fechadura comunica a abertura de um segredo e funcionaria em qualquer anúncio de mistério. Sem a transformação da palavra, o motivo perde a ideia específica de que ler uma palavra pode abrir uma nova interpretação."
+          }
+        ],
+        "match": true,
+        "promptSha256": "385d239d8d1f941ae4dcfcf2700d3bbe15e1ef1fed2afec7c419b1a9c00b7f18",
+        "answerSha256": "2fc6b3c69790123cae6f66d7a332fa8a6b57c88a11e9f99ec615c38677ba51fc",
+        "toolCalls": 0
+      },
+      {
+        "id": "linha-papel-escuro",
+        "sha256": "d81d48ec2918443b980e983af16723cddfb7583737f2a2135f991339d126d0a6",
+        "expected": "approve",
+        "expectedFinding": null,
+        "status": 200,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [],
+        "match": true,
+        "promptSha256": "385d239d8d1f941ae4dcfcf2700d3bbe15e1ef1fed2afec7c419b1a9c00b7f18",
+        "answerSha256": "387cfbd9ed0ad026bae4768004eaad1a8e3f9f3496cafe032d23621a868b49e2",
+        "toolCalls": 0
+      },
+      {
+        "id": "sombra-xerox-surreal",
+        "sha256": "e292f36da259a9bcf554f080c2476c0883b3f9b5748f6bc57603c26f26f3cbb7",
+        "expected": "approve",
+        "expectedFinding": null,
+        "status": 200,
+        "checks": {
+          "visual_integrity": "pass",
+          "required_text": "pass",
+          "factual_fidelity": "pass",
+          "generic_direction": "pass"
+        },
+        "findings": [],
+        "match": true,
+        "promptSha256": "ef5276bfd0cab6335ef842638a7e192d34726f74b427722b818bed4a5120b5ef",
+        "answerSha256": "387cfbd9ed0ad026bae4768004eaad1a8e3f9f3496cafe032d23621a868b49e2",
+        "toolCalls": 0
+      }
+    ]
+  }
+}

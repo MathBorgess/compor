@@ -7,18 +7,23 @@ type ArtworkInput=Awaited<ReturnType<typeof prepareArtworkInput>>;
 const usageSchema=z.object({input_tokens:z.optional(z.nullable(z.number())),output_tokens:z.optional(z.nullable(z.number()))});
 const traceSchema=z.object({functionCalls:z.optional(z.number()),outputs:z.optional(z.number()),omittedItems:z.optional(z.number()),items:z.optional(z.array(z.object({type:z.string(),schemaValid:z.optional(z.boolean()),errorClass:z.optional(z.string())})))});
 const common=z.object({error:z.optional(z.string()),errorCode:z.optional(z.string()),failurePhase:z.optional(z.string()),requestId:z.optional(z.string()),usage:z.optional(z.nullable(usageSchema)),itemTrace:z.optional(traceSchema),assetId:z.optional(z.string())});
+const imageQualityReasonSchema=z.enum(['image_quality_rejected','image_quality_inconclusive']);
 export const chatResponseSchema=z.discriminatedUnion('status',[
  // reply stays unknown here: lib/studio-quick-replies validates it and falls back to text.
  z.extend(common,{status:z.literal('completed'),text:z.optional(z.string()),reply:z.optional(z.unknown())}),
  z.extend(common,{status:z.literal('consent_required'),prompt:z.string(),proposal:z.optional(z.unknown()),attemptId:z.string(),imageActionId:z.optional(z.uuid()),actionBinding:z.string(),declineBinding:z.optional(z.string()),visualInputRequired:z.optional(z.literal(true))}),
  z.extend(common,{status:z.literal('action_required'),action:z.object({name:z.string(),args:z.unknown()}),actionBinding:z.string()}),
+ z.extend(common,{status:z.literal('quality_held'),qualityReason:imageQualityReasonSchema,retryAutomatically:z.literal(false)}).check(z.refine(value=>value.assetId===undefined)),
  z.extend(common,{status:z.enum(['running','failed','unknown','accepted'])}),
 ]);
 export const errorResponseSchema=z.extend(common,{status:z.optional(z.string())});
 export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.literal('failed'),error:z.literal('default_credential_unavailable'),failurePhase:z.literal('before_submission'),requestId:z.string().check(z.uuid()),retryAutomatically:z.literal(false)});
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
 export const pendingInspectionSchema=z.strictObject({status:z.enum(['running','action_required','completed','failed','unknown']),retryAutomatically:z.literal(false),error:z.optional(z.literal('provider_usage_limit'))}).check(z.refine(value=>value.error===undefined||value.status==='failed'));
-export const closedImageResponseSchema=z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.literal('failed_without_dispatch'))});
+export const closedImageResponseSchema=z.union([
+ z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.literal('failed_without_dispatch'))}),
+ z.strictObject({status:z.literal('confirmed'),outcome:z.literal('quality_held'),qualityReason:imageQualityReasonSchema}),
+]);
 export type PendingInspection=z.infer<typeof pendingInspectionSchema>;
 export type Usage=z.infer<typeof usageSchema>;
 export const imageContextSchema=z.object({pieceId:z.string(),baseVersion:z.number().check(z.int())});

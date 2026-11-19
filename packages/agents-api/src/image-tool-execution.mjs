@@ -1,5 +1,7 @@
+import {createHash,randomBytes} from 'node:crypto';
 import {isAgentCallId} from './agent-call-id.mjs';
 import { parseArtworkInput, artworkInputDigest, imageProposalDigest, validateArtworkForProposal, compileArtworkPrompt } from './artwork-input.mjs';
+import {isImageQualityReason} from './image-tool-reservation.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const unknown = () => ({ status: 'unknown', retryAutomatically: false });
@@ -26,22 +28,28 @@ export function createImageToolApproval({ bindings, ownsVersion } = {}) {
     } catch { return null; }
   };
 }
-export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, checkVisualAuthority, fetch: fetchApi = globalThis.fetch } = {}) {
+export function createImageToolExecution({ bindings, ownsVersion, reservations, imageHandler, imageStorageHandler, usage, appOrigin, checkVisualAuthority, qualityHoldEnabled=false, fetch: fetchApi = globalThis.fetch } = {}) {
   if (typeof bindings?.verifyApprovedAction !== 'function' || typeof ownsVersion !== 'function' || !['reserve','declareConsent','claimExecution','completeExecution','markExecutionUnknown'].every(k => typeof reservations?.[k] === 'function') || typeof imageHandler !== 'function' || typeof imageStorageHandler !== 'function' || typeof appOrigin !== 'string' || typeof fetchApi !== 'function') throw new TypeError('invalid dependencies');
   if (usage && (typeof usage.start !== 'function' || typeof usage.finish !== 'function')) throw new TypeError('invalid usage store');
+  if(qualityHoldEnabled&&typeof reservations.holdExecution!=='function')throw new TypeError('invalid quality hold store');
   return async ({ actor, projectId, pieceId, version, attemptId, actionBinding, apiKey, explicitApproval, artworkInput, visualAuthority, signal } = {}) => {
     if (!uuid(actor?.userId) || typeof actor?.token !== 'string' || !/^[^\s]{1,8192}$/.test(actor.token) || ![projectId,pieceId,attemptId].every(uuid) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647 || !/^sk-[^\s]{20,300}$/.test(apiKey ?? '') || explicitApproval !== true) return { status: 'rejected' };
     let action;
     try { action = bindings.verifyApprovedAction({token: actionBinding, userId: actor.userId, projectId, attemptId, pieceId, version}); } catch { return {status:'rejected'}; }
     if (!action || action.userId !== actor.userId || action.projectId !== projectId || action.attemptId !== attemptId || action.pieceId !== pieceId || action.version !== version || !/^sess_[A-Za-z0-9_-]{1,128}$/.test(action.sessionId ?? '') || !/^turn_[A-Za-z0-9_-]{1,128}$/.test(action.turnId ?? '') || !isAgentCallId(action.callId) || !/^[0-9a-f]{64}$/.test(action.proposalDigest ?? '') || !/^[0-9a-f]{64}$/.test(action.artworkDigest ?? '')) return {status:'rejected'};
     try { if (await ownsVersion({actor,projectId,pieceId,version}) !== true) return {status:'rejected'}; } catch { return unknown(); }
-    let prompt, input;
+    let prompt, input, requiredText = [];
     try {
       input = parseArtworkInput(artworkInput);
       if (artworkInputDigest(input) !== action.artworkDigest) return {status:'rejected'};
       if (input.visualInput && (!visualAuthority || typeof checkVisualAuthority!=='function' || !uuid(visualAuthority.requestId) || visualAuthority.manifestDigest!==action.visualInputDigest || (visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret)))) return {status:'rejected'};
       if (!input.visualInput && visualAuthority) return {status:'rejected'};
       if (input.source && (input.source.pieceId !== pieceId || input.source.version >= version || await ownsVersion({actor,projectId,pieceId,version:input.source.version}) !== true)) return {status:'rejected'};
+      if(qualityHoldEnabled){
+        const {headline,price,date,fields=[]}=input.literalText;
+        requiredText=[headline,price,date,...fields.map(field=>field.value)].filter(value=>value.trim().length>0);
+        if(requiredText.some(value=>!value.isWellFormed()))return {status:'invalid_prompt'};
+      }
     } catch { return {status:'rejected'}; }
     try {
       const response = await fetchApi(`https://api.openai.com/v1/agents/sessions/${encodeURIComponent(action.sessionId)}`, {headers:{Authorization:`Bearer ${apiKey}`,'OpenAI-Beta':'agents=v1'},redirect:'error',signal:AbortSignal.timeout(10000)});
@@ -62,11 +70,12 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (prompt.length > 8000) return {status:'invalid_prompt'};
     } catch { return unknown(); }
     let execution;
+    const qualitySecret=qualityHoldEnabled?randomBytes(32):null;
     try {
       const reservation = await reservations.reserve({actor,projectId,pieceId,version,attemptId,sessionId:action.sessionId,turnId:action.turnId,callId:action.callId});
       if (!uuid(reservation?.id) || reservation.state !== 'reserved') return unknown();
       await reservations.declareConsent({actor,reservationId:reservation.id,confirmed:true});
-      execution = await reservations.claimExecution({actor,reservationId:reservation.id,...(visualAuthority?{visualAuthority}:{})});
+      execution = await reservations.claimExecution({actor,reservationId:reservation.id,...(qualitySecret?{qualityDigest:createHash('sha256').update(qualitySecret).digest('hex')}:{}),...(visualAuthority?{visualAuthority}:{})});
       if (execution?.state === 'busy' || execution?.state === 'blocked') return {status:execution.state};
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
@@ -76,10 +85,30 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     try {
       if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
       if (visualAuthority && (signal?.aborted || await checkVisualAuthority({actor,projectId,pieceId,visualAuthority}) !== true || signal?.aborted)) throw Error('visual authority unavailable');
-      const image = await imageHandler(new Request(`${appOrigin}/internal-image`, {method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true})}));
-      if (!image.ok) throw new Error('generation uncertain');
-      const result = await image.json();
+      const imageRequest=new Request(`${appOrigin}/internal-image`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true}),signal:qualityHoldEnabled?signal:undefined});
+      async function authorizeReview(){
+        if(signal?.aborted)return false;
+        try{
+          const owned=visualAuthority
+            ?await checkVisualAuthority({actor,projectId,pieceId,visualAuthority})
+            :await ownsVersion({actor,projectId,pieceId,version});
+          return owned===true&&!signal?.aborted;
+        }
+        catch{return false;}
+      }
+      const review=qualityHoldEnabled?{authorizeReview,...(requiredText.length?{requiredText}:{})}:undefined;
+      const image=await imageHandler(imageRequest,review);
+      if(!image.ok&&(!qualitySecret||![422,503].includes(image.status)))throw Error('generation uncertain');
+      const result = image.ok?await image.json():JSON.parse(await boundedText(image.body,64*1024));
+      let qualityReason=image.ok?null:result?.error;
+      if(!image.ok&&(!isImageQualityReason(qualityReason)||result.retryAutomatically!==false||
+        image.status!==(qualityReason==='image_quality_rejected'?422:503)))throw Error('generation uncertain');
       if (usage) {measurementFinished=true; try {await usage.finish({...measurement,state:'completed',usage:result?.usage});usageRecorded=true;} catch { /* preserve image; measurement remains uncertain */ }}
+      if(image.ok&&qualityHoldEnabled&&!(await authorizeReview()))qualityReason='image_quality_inconclusive';
+      if(qualityReason){
+        await reservations.holdExecution({actor,executionId:execution.id,qualitySecret:qualitySecret.toString('hex'),qualityReason});
+        return {status:'quality_held',qualityReason,retryAutomatically:false,...(usage?{usageRecorded}:{})};
+      }
       if (typeof result?.imageBase64 !== 'string' || result.imageBase64.length > 12 * 1024 * 1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.imageBase64)) throw new Error('invalid image');
       const url = new URL('/internal-storage',appOrigin);
       for (const [k,v] of Object.entries({projectId,pieceId,version:String(version),assetId:execution.assetId})) url.searchParams.set(k,v);

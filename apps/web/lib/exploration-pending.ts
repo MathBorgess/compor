@@ -1,3 +1,4 @@
+import {explorationImageOutcomes} from './exploration-image-outcome.ts';
 /** Reserve a local marker only while the session is current and before the request is sent. */
 export function markBeforeDispatch(storage:Pick<Storage,'setItem'|'getItem'|'removeItem'>, key:string, value:string, current:()=>boolean):boolean {
   if (!current()) return false;
@@ -20,7 +21,7 @@ export async function inspectSerialPending({storage,userId,projectId,conversatio
   if(pending.conversationId!==conversationId)return 'Abra a conversa de origem para consultar a tentativa.';
   const response=await fetchApi(`/api/studio/explorations?${new URLSearchParams({projectId})}`,{cache:'no-store'});
   if(!response.ok)throw Error('inspection_unavailable');
-  const rows=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(['running','unknown','completed','rejected'])})).check(z.maxLength(100))}).parse(await response.json()).images;
+  const rows=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(explorationImageOutcomes)})).check(z.maxLength(100))}).parse(await response.json()).images;
   const row=rows.find(item=>item.id===pending.requestId&&item.project_id===projectId);
-  return row?.state==='completed'?'A tentativa anterior foi confirmada. O recibo permanece preservado.':row?.state==='rejected'?'A tentativa anterior foi recusada. O recibo permanece preservado.':'A tentativa anterior ainda não foi confirmada. O recibo permanece preservado.';
+  return row?.state==='completed'?'A tentativa anterior foi confirmada. O recibo permanece preservado.':row?.state==='rejected'?'A tentativa anterior foi recusada. O recibo permanece preservado.':row?.state==='quality_held'?'A proposta anterior foi retida pela revisão. O recibo permanece preservado.':'A tentativa anterior ainda não foi confirmada. O recibo permanece preservado.';
 }

@@ -1,10 +1,40 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { deflateSync } from 'node:zlib';
 import { createImageHandler } from '../src/index.mjs';
 
 const key = 'sk-test-secret-123456789012345';
-const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAAB';
+const png = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
 const request = body => new Request('http://localhost/image', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+
+function chunk(type, data = Buffer.alloc(0)) {
+  const bytes = Buffer.alloc(data.length + 12);
+  bytes.writeUInt32BE(data.length);
+  bytes.write(type, 4);
+  data.copy(bytes, 8);
+  let crc = 0xffffffff;
+  for (const byte of bytes.subarray(4, -4)) {
+    crc ^= byte;
+    for (let bit = 0; bit < 8; bit++) crc = (crc >>> 1) ^ ((crc & 1) ? 0xedb88320 : 0);
+  }
+  bytes.writeUInt32BE((crc ^ 0xffffffff) >>> 0, bytes.length - 4);
+  return bytes;
+}
+
+function stillImage(width, height, pixelData, interlace = 0) {
+  const header = Buffer.alloc(13);
+  header.writeUInt32BE(width, 0);
+  header.writeUInt32BE(height, 4);
+  header[8] = 8;
+  header[9] = 6;
+  header[12] = interlace;
+  return Buffer.concat([
+    Buffer.from('89504e470d0a1a0a', 'hex'),
+    chunk('IHDR', header),
+    chunk('IDAT', deflateSync(pixelData, { level: 0 })),
+    chunk('IEND'),
+  ]);
+}
 
 test('uma pessoa autenticada solicita uma arte integral explicitamente e recebe PNG', async () => {
   let calls = 0;
@@ -86,11 +116,49 @@ test('resposta excessiva do provedor é tratada como resultado desconhecido sem 
 });
 
 test('imagem PNG com vários megabytes é aceita dentro do limite documentado', async () => {
-  const image = Buffer.concat([Buffer.from([137, 80, 78, 71, 13, 10, 26, 10]), Buffer.alloc(4 * 1024 * 1024)]).toString('base64');
+  const image = stillImage(1024, 1280, Buffer.alloc((1024 * 4 + 1) * 1280)).toString('base64');
   const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => Response.json({ data: [{ b64_json: image }] }) });
   const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
   assert.equal(response.status, 200);
   assert.equal((await response.json()).imageBase64, image);
+});
+
+test('bloqueia PNG incompleto ou inválido antes da revisão e da entrega', async () => {
+  const bytes = Buffer.from(png, 'base64');
+  const brokenChecksum = Buffer.from(bytes);
+  brokenChecksum[32] ^= 1;
+  const invalidImages = [
+    bytes.subarray(0, 33),
+    bytes.subarray(0, -12),
+    brokenChecksum,
+    Buffer.concat([bytes, Buffer.from('fora do PNG')]),
+    Buffer.concat([bytes.subarray(0, 33), chunk('IDAT', Buffer.from('invalid')), chunk('IEND')]),
+    stillImage(2049, 1, Buffer.alloc(2049 * 4 + 1)),
+    stillImage(1, 1, Buffer.alloc(6)),
+    stillImage(1, 1, Buffer.from([5, 0, 0, 0, 0])),
+  ];
+  for (const invalid of invalidImages) {
+    const handler = createImageHandler({
+      authenticate: async () => ({ userId: 'user-1' }),
+      fetch: async () => Response.json({ data: [{ b64_json: invalid.toString('base64') }] }),
+      reviewCandidate: async () => assert.fail('uma imagem inválida chegou à revisão'),
+    });
+    const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+    assert.equal(response.status, 502);
+    assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
+  }
+});
+
+test('preserva os bytes de PNG entrelaçado válido', async () => {
+  // An Adam7 2×2 RGBA image has two one-pixel rows and one two-pixel row.
+  const imageBase64 = stillImage(2, 2, Buffer.alloc(5 + 5 + 9), 1).toString('base64');
+  const handler = createImageHandler({
+    authenticate: async () => ({ userId: 'user-1' }),
+    fetch: async () => Response.json({ data: [{ b64_json: imageBase64 }] }),
+  });
+  const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+  assert.equal(response.status, 200);
+  assert.equal((await response.json()).imageBase64, imageBase64);
 });
 
 test('credencial recusada e imagem inválida não expõem respostas do provedor', async () => {

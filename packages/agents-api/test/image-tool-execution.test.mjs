@@ -1,5 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import {createHash} from 'node:crypto';
 import { imageProposalDigest, artworkInputDigest } from '../src/artwork-input.mjs';
 import { createImageToolExecution, createImageToolApproval } from '../src/image-tool-execution.mjs';
 
@@ -10,22 +11,24 @@ const approvedClaim = {...claim,pieceId,version:1,artworkDigest:artworkInputDige
 function fixture(options = {}) {
   const calls = [], state = { claimed: false };
   const fn = createImageToolExecution({
-    bindings: { verifyApprovedAction: ({userId: u, pieceId: p, version: v}) => u === userId && p === pieceId && v === 1 ? {...approvedClaim,callId:options.callId??approvedClaim.callId} : null },
+    qualityHoldEnabled: Boolean(options.holdExecution),
+    bindings: { verifyApprovedAction: ({userId: u, pieceId: p, version: v}) => u === userId && p === pieceId && v === 1 ? {...approvedClaim,callId:options.callId??approvedClaim.callId,artworkDigest:artworkInputDigest(options.artworkInput)} : null },
     ownsVersion: async () => !options.accessRevoked,
     fetch: async () => { calls.push('lookup'); return Response.json({ id:'sess_a', status:'requires_action', required_actions:[{ type:'function_call', name:'generate_image', turn_id:'turn_a', call_id:options.pendingCallId??options.callId??'call_a', arguments:{prompt:options.prompt ?? prompt} }] }); },
     reservations: {
       reserve: async () => { calls.push('reserve'); return {id:reservationId,state:'reserved'}; },
       declareConsent: async () => { calls.push('consent'); },
-      claimExecution: async () => { calls.push('claim'); if (options.claimState) return {state:options.claimState}; if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
+      claimExecution: async input => { calls.push('claim'); options.claimed?.(input); if (options.claimState) return {state:options.claimState}; if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
+      ...(options.holdExecution?{holdExecution:options.holdExecution}:{}),
       markExecutionUnknown: async () => {calls.push('unknown');},
       completeExecution: async () => {calls.push('complete'); if(options.completeFail) throw Error(key);},
     },
-    imageHandler: async req => { calls.push('image'); assert.equal((await req.json()).apiKey,key); if(options.imageFail) throw Error(key); return Response.json({imageBase64:Buffer.from('image').toString('base64'),usage:options.imageUsage??null}); },
+    imageHandler: async (req,review) => { calls.push('image'); if(options.imageHandler)return options.imageHandler(req,review); assert.equal((await req.json()).apiKey,key); if(options.imageFail) throw Error(key); return Response.json({imageBase64:Buffer.from('image').toString('base64'),usage:options.imageUsage??null}); },
     imageStorageHandler: async req => {calls.push('storage'); assert.equal(new URL(req.url).searchParams.get('assetId'),assetId); if(options.storageFail) throw Error(key); return Response.json({status:'stored',assetId},{status:201});},
     usage: options.usage,
     appOrigin:'https://example.test',
   });
-  const input = {actor,projectId,pieceId,version:1,attemptId,actionBinding:'signed',apiKey:key,explicitApproval:true};
+  const input = {actor,projectId,pieceId,version:1,attemptId,actionBinding:'signed',apiKey:key,explicitApproval:true,...(options.artworkInput?{artworkInput:options.artworkInput}:{})};
   return {fn,input,calls};
 }
 test('atendimento único vincula sessão, declaração e asset e devolve tool_result', async()=>{
@@ -64,6 +67,63 @@ test('falhas após claim preservam resultado desconhecido sem repetir imagem',as
  for(const option of ['imageFail','storageFail','completeFail']) {const f=fixture({[option]:true}); const result=await f.fn(f.input); assert.equal(result.status,'unknown'); assert.ok(f.calls.includes('unknown')); assert.ok(!JSON.stringify(result).includes(key)); await f.fn(f.input); assert.equal(f.calls.filter(x=>x==='image').length,1);}
 });
 
+test('revisão local atesta a retenção paga antes do Storage e do tool_result', async () => {
+  const {createImageHandler}=await import('../../images-api/src/index.mjs');
+  const imageBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
+  const handler=createImageHandler({
+    authenticate:async()=>actor,
+    fetch:async()=>Response.json({data:[{b64_json:imageBase64}]}),
+    reviewCandidate:async()=>({decision:'reject',findings:[{code:'visual_integrity',region:'borda',evidence:'Peça corrompida na borda.'}]}),
+  });
+  const artworkInput={literalText:{headline:'Inscrição',price:'   ',date:'14 de agosto',fields:[
+    {id:'88888888-8888-4888-8888-888888888888',label:'Aviso',value:' Pague no dia ',origin:'user'},
+    {id:'99999999-9999-4999-8999-999999999999',label:'Local',value:' ',origin:'agent'},
+  ]},source:null,images:[]};
+  let digest;
+  const receipts=[],measurements=[];
+  const imageHandler=async(request,review)=>{
+    assert.deepEqual(review.requiredText,['Inscrição','14 de agosto',' Pague no dia ']);
+    assert.deepEqual(Object.keys(await request.clone().json()).sort(),['apiKey','authorizeGeneration','images','prompt']);
+    return handler(request,review);
+  };
+  const {fn,input,calls}=fixture({artworkInput,imageHandler,claimed:claim=>{digest=claim.qualityDigest;},holdExecution:async value=>{receipts.push(value);},usage:{start:async()=>true,finish:async value=>{measurements.push(value);}}});
+  assert.deepEqual(await fn(input),{status:'quality_held',qualityReason:'image_quality_rejected',retryAutomatically:false,usageRecorded:true});
+  assert.equal(receipts.length,1);
+  assert.equal(receipts[0].executionId,executionId);
+  assert.equal(receipts[0].qualityReason,'image_quality_rejected');
+  assert.equal(createHash('sha256').update(Buffer.from(receipts[0].qualitySecret,'hex')).digest('hex'),digest);
+  assert.deepEqual(measurements.map(record=>[record.part,record.state]),[['image','completed']]);
+  assert.ok(!calls.includes('storage')&&!calls.includes('complete')&&!calls.includes('unknown'));
+  await fn(input);
+  assert.equal(calls.filter(call=>call==='image').length,1);
+});
+
+test('falha ao gravar a retenção mantém incerteza sem entregar a imagem',async()=>{
+  const f=fixture({holdExecution:async()=>{throw Error('lost receipt');},imageHandler:async()=>Response.json({error:'image_quality_inconclusive',retryAutomatically:false,usage:null},{status:503})});
+  assert.deepEqual(await f.fn(f.input),{status:'unknown',retryAutomatically:false});
+  assert.ok(f.calls.includes('unknown'));
+  assert.ok(!f.calls.includes('storage')&&!f.calls.includes('complete'));
+});
+
+test('texto literal malformado é recusado antes de reservar uma revisão', async()=>{
+  const artworkInput={literalText:{headline:'Inscrição\uD800',price:'',date:''},source:null,images:[]};
+  const f=fixture({artworkInput,holdExecution:async()=>{}});
+  assert.deepEqual(await f.fn(f.input),{status:'invalid_prompt'});
+  assert.deepEqual(f.calls,[]);
+});
+
+test('cancelamento durante revisão retém uma candidata recebida mesmo se o adaptador simulado aprovar',async()=>{
+  const controller=new AbortController();
+  const f=fixture({holdExecution:async()=>{},imageHandler:async(req,{authorizeReview})=>{
+    assert.equal(await authorizeReview(),true);
+    controller.abort();
+    assert.equal(req.signal.aborted,true);
+    assert.equal(await authorizeReview(),false);
+    return Response.json({imageBase64:Buffer.from('discarded').toString('base64')});
+  }});
+  assert.deepEqual(await f.fn({...f.input,signal:controller.signal}),{status:'quality_held',qualityReason:'image_quality_inconclusive',retryAutomatically:false});
+  assert.ok(!f.calls.includes('storage'));
+});
 test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
  const {createImageHandler}=await import('../../images-api/src/index.mjs');
  const {createPrivateImageHandler}=await import('../../private-images/src/index.mjs');
@@ -76,7 +136,7 @@ test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
  const approve=createImageToolApproval({bindings,ownsVersion:async()=>true});
  const approved=await approve({actor,projectId,pieceId,version:1,attemptId,actionBinding:signed,explicitApproval:true});
  assert.ok(approved);
- const png=Buffer.alloc(33); Buffer.from([137,80,78,71,13,10,26,10]).copy(png); png.writeUInt32BE(13,8); png.write('IHDR',12); png.writeUInt32BE(1,16); png.writeUInt32BE(1,20);
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
  let images=0, saved=false, claimed=false,resultClaimed=false,events=0;
  const fakeFetch=async (target,init={})=>{
    const url=new URL(target);

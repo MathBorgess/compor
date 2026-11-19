@@ -126,7 +126,15 @@ export function selectVersion(state: StudioState, {pieceId,version,latestVersion
     next.selection={pieceId,baseVersion:version};
   });
 }
-export function editDraft(state: StudioState, {field,value}: {field:"headline"|"price"|"date"|"caption";value:string}) { return changeStudioState(state, next => { const draft=current(next); if (!['headline','price','date','caption'].includes(field)) fail(); draft.content[field]=value; if(field==='caption')draft.content.captionOrigin='user'; draft.dirty=true; }); }
+export function editDraft(state: StudioState, {field,value,captionOrigin='user'}: {field:"headline"|"price"|"date"|"caption";value:string;captionOrigin?:PieceContent['captionOrigin']}) {
+  return changeStudioState(state, next => {
+    const draft=current(next);
+    if (!['headline','price','date','caption'].includes(field)) fail();
+    if(field==='caption'&&(draft.content.caption!==value||captionOrigin==='user')) draft.content.captionOrigin=captionOrigin;
+    draft.content[field]=value;
+    draft.dirty=true;
+  });
+}
 export function setCreativeField(state: StudioState, field: CreativeField) { return changeStudioState(state, next => {
   const draft=current(next), fields=draft.content.fields ?? [];
   const index=fields.findIndex(item=>item.id.toLowerCase()===field.id.toLowerCase());

@@ -1,7 +1,7 @@
 import React, {type ReactNode} from 'react';
 import {parallelProgressSchema,type ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 
-const labels={unconfirmed:'Aguardando confirmação do lote',running:'Aguardando a imagem',unknown:'Resultado desconhecido',completed:'Imagem confirmada',rejected:'Envio recusado'} as const;
+const labels={unconfirmed:'Aguardando confirmação do lote',running:'Aguardando a imagem',unknown:'Resultado desconhecido',completed:'Imagem confirmada',rejected:'Envio recusado',quality_held:'Proposta retida pela revisão de qualidade'} as const;
 
 /** Presentational only: it neither observes the server nor starts or repeats work. */
 export function ParallelExplorationProgress({progress,renderConfirmedImage}:{progress:ParallelProgress;renderConfirmedImage?:(requestId:string)=>ReactNode}) {
@@ -17,6 +17,7 @@ export function ParallelExplorationProgress({progress,renderConfirmedImage}:{pro
     </li>)}</ol>
     {value.children.some(item=>item.status==='unknown')&&<p>Uma tentativa continua sem confirmação. Ela não será repetida automaticamente.</p>}
     {value.children.some(item=>item.status==='rejected')&&<p>Uma tentativa foi recusada. As outras propostas continuam preservadas.</p>}
+    {value.children.some(item=>item.status==='quality_held')&&<p>Você pode pedir a reposição de uma proposta retida. As imagens confirmadas permanecem disponíveis.</p>}
     {completed===3&&value.wait.mode!=='none'&&<p>As três imagens foram confirmadas. Aguarde o intervalo antes de continuar.</p>}
   </section></React.Fragment>;
 }

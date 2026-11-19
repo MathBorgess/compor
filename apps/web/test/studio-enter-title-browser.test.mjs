@@ -86,6 +86,7 @@ async function prepareFirstPost(page,idea){
  await button('Continuar').click();
  await page.getByRole('textbox',{name:'Quem você quer alcançar?',exact:true}).fill('Adultos iniciantes');
  await button('Continuar para a IA').click();
+ await page.getByText(/o Compor envia o PNG gerado e o prompt à OpenAI com a chave de revisão do Compor/).waitFor();
  await connectOwnOpenAiKey(page,apiKey);await button('Continuar para referências').click();
  await finishPreparation(page,{preparePost:false});
  return button;
@@ -96,6 +97,7 @@ test('Gerar primeiro post usa o contexto revisado sem uma segunda mensagem',{ski
  const button=await prepareFirstPost(page,idea);
  const generate=button('Gerar primeiro post');
  await generate.waitFor();assert.equal(await generate.isDisabled(),true);
+ await page.getByRole('region',{name:'Vamos preparar o primeiro post'}).getByText(/A imagem pode ser retida antes da entrega/).waitFor();
  assert.equal(await page.getByLabel('Nome do post',{exact:true}).inputValue(),'Oficina de cerâmica');
  const message=page.getByLabel('O que este post deve comunicar?',{exact:true});
  assert.equal(await message.inputValue(),'Oficina de cerâmica aos sábados');

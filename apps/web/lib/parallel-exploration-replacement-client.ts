@@ -1,3 +1,4 @@
+import {explorationImageOutcomes,explorationQualityReasons} from './exploration-image-outcome.ts';
 import {byokJsonHeaders} from './openai-byok-transport.ts';
 import * as z from './schema.ts';
 import type {ParallelPreparation} from './parallel-exploration-journal.ts';
@@ -40,8 +41,8 @@ export function createParallelReplacementClient(fetchApi:typeof fetch=fetch){
     if(authority&&visual)assertReferenceVisualCapability(preparation.userId,visual.visualInput,authority.headers);
     const response=await fetchApi('/api/studio/exploration-batches/replace',{method:'POST',headers:{'content-type':'application/json',...authority?.headers,...credential},signal,body:JSON.stringify({projectId:preparation.projectId,conversationId:preparation.conversationId,batchId:preparation.batchId,intentId:claim.intentId,planRequestId:preparation.planRequestId,context:preparation.context,plan:preparation.plan,planBinding:binding,position:claim.position,previousId:claim.previousId,requestId:claim.requestId,...visual})});
     if(!response.ok)throw Error('replacement_unconfirmed');
-    const receipt=z.object({status:z.enum(['completed','unknown','rejected','running']),batchId:id,requestId:id,retryAutomatically:z.literal(false)}).parse(await response.json());
-    if(receipt.batchId!==preparation.batchId||receipt.requestId!==claim.requestId)throw Error('replacement_unconfirmed');
+    const receipt=z.object({status:z.enum(explorationImageOutcomes),qualityReason:z.optional(z.enum(explorationQualityReasons)),batchId:id,requestId:id,retryAutomatically:z.literal(false)}).parse(await response.json());
+    if(receipt.batchId!==preparation.batchId||receipt.requestId!==claim.requestId||(receipt.status==='quality_held')!==(receipt.qualityReason!==undefined))throw Error('replacement_unconfirmed');
   }
   return {create,dispatch};
 }

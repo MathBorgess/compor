@@ -13,7 +13,7 @@ As instalações usam `npm ci --ignore-scripts` e lockfiles versionados. Quando 
 
 O job de contratos executa explicitamente os testes offline do parser de migrations, do gerador de baseline e do workflow. Eles ficam em `scripts/tests/` e não são encontrados pelo `unittest discover` de `scripts`; o job usa um venv Python 3.12 e instala os wheels fixados por hash em `scripts/requirements-migration-tests.txt`. Isso não executa a migração nem valida o alvo de produção.
 
-O mesmo job verifica o dataset congelado da triagem visual, as métricas pareadas, os recibos e os juízes com casos sintéticos. Execute `sh scripts/evals/triagem-divergencia/check.sh` com Node 24 e Python com Pillow. No Ubuntu, o job instala `python3-pil` e chama `/usr/bin/python3`. Esses testes usam um provedor simulado e imagens de fixture.
+O mesmo job verifica o dataset congelado da triagem visual, as métricas pareadas, os recibos e os juízes com casos sintéticos. Execute `sh scripts/evals/triagem-divergencia/check.sh` com Node 24 e Python com Pillow. O comando `sh scripts/evals/qualidade-criativa/check.sh` confere o corpus de qualidade criativa, o vínculo das evidências e o caminho de revisão da imagem. No Ubuntu, o job instala `python3-pil` e chama `/usr/bin/python3`. Os testes usam um provedor simulado e imagens sintéticas.
 
 Os testes de sanitização do protótipo exigem `cwebp` e `dwebp` no `PATH`; o job instala e verifica ambos antes da suíte. O [pacote `webp` do Ubuntu 24.04](https://packages.ubuntu.com/noble/amd64/webp/filelist) fornece esses executáveis. Ausência dos codecs continua sendo falha, sem ignorar testes de pixels, transparência ou remoção de metadados.
 

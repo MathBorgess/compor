@@ -76,8 +76,8 @@ export function createExplorationPrompt(input) {
     ...(value.facts.length?[`Fatos da oferta: ${JSON.stringify(value.facts)}. Preserve literalmente os confirmados. Não apresente pendentes como fatos nem inclua os omitidos na arte.`]:[]),
     `Orientações aceitas pela pessoa: ${JSON.stringify(value.accepted)}. Orientações rejeitadas: ${JSON.stringify(value.rejected)}. Respeite essas escolhas acima da proposta de variação.`,
     `Sinais explícitos sobre imagens anteriores e seus planos, quando disponíveis: ${JSON.stringify(value.feedback)}. Use os comentários como contexto; uma escolha ou rejeição da imagem inteira não demonstra aprovação ou rejeição de todos os seus atributos.`,
-    `Proposta de exploração ${value.sequence + 1}: experimente ${composition}; ${contrast}. Busque uma leitura distinta das alternativas anteriores sem contrariar o contexto informado.`,
-    'Use formato retrato. Evite texto pequeno ou ilegível; não inclua marcas de terceiros. A imagem é uma hipótese visual para avaliação humana.',
+    `Proposta de exploração ${value.sequence + 1}: experimente ${composition}; ${contrast}. Use um detalhe do briefing para distinguir a imagem das alternativas. Respeite o contexto.`,
+    'Use retrato e tipografia legível. Confira grafia, junções e sombras. Evite marcas de terceiros. A imagem é uma hipótese visual.',
   ].join('\n');
   const original = {...(value.idea ? {ideia: value.idea} : {}), oferta: value.offer, publico: audience, objetivo: value.goal, direcao: value.direction};
   let prompt = renderPrompt(original);

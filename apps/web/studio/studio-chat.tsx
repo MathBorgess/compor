@@ -7,6 +7,7 @@ import {createPortal} from 'react-dom';
 import {conversationMessages} from '../lib/studio-workflow';
 import {useConversationDraft} from './use-conversation-draft';
 import {useObjectUrl} from './use-object-url.ts';
+import {imageReviewDisclosure} from './image-review-disclosure.ts';
 import {compiler as compileMarkdown} from "markdown-to-jsx";
 import {sha256Hex} from "../lib/browser-bytes.ts";
 import {
@@ -27,6 +28,7 @@ import {offerContext} from '../lib/studio-context.ts';
 import type {StudioContext} from '@compor/agents-api/studio-chat';
 import { imageRejectedBeforeDispatch,recordImageNotDispatched } from '../lib/image-dispatch-state.ts';
 import type { ImageWaitStatus } from '@compor/agents-api/image-tool-reservation';
+import type { ImageQualityReason } from '@compor/agents-api/image-tool-reservation';
 import {readReferenceAuthorityConsent} from '../lib/reference-authority-consent.ts';
 import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-api/visual-input-contract';
 import {assertReferenceVisualCapability,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
@@ -75,6 +77,9 @@ const imageWaitMessages={
   waiting_priority:'Outro pedido de imagem tem prioridade nesta conta.',
 } satisfies Record<Extract<ImageWaitStatus,`waiting_${string}`>,string>;
 const imageBlockedNotice='Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.';
+const imageQualityNotice=(reason:ImageQualityReason)=>reason==='image_quality_rejected'
+  ?'A revisão de imagem reteve esta proposta. Seu post foi preservado.'
+  :'A revisão da imagem ficou inconclusiva. Seu post foi preservado.';
 const chatPollDelay=(count:number)=>count<4?2000:count<9?4000:8000;
 type CredentialSource='default'|'byok';
 export type InitialPostRequest={
@@ -107,7 +112,7 @@ function imageReceiptFor(input:unknown,userId:string,projectId:string):ImageRece
  return value;
 }
 function inspectionSummary(data:ChatResponse):Inspection{
- const status=data.status==='accepted'?'unknown':data.status;
+ const status=data.status==='quality_held'?'failed':data.status==='accepted'?'unknown':data.status;
  const items=Array.isArray(data?.itemTrace?.items)?data.itemTrace.items.slice(0,24):[];
  return {status,authenticationRejected:status==='unknown'&&data?.errorCode==='provider_http_401',usage:data?.usage?{input_tokens:diagnosticCount(data.usage.input_tokens),output_tokens:diagnosticCount(data.usage.output_tokens)}:null,technical:data?.itemTrace?{functionCalls:diagnosticCount(data.itemTrace.functionCalls),outputs:diagnosticCount(data.itemTrace.outputs),omittedItems:diagnosticCount(data.itemTrace.omittedItems),validSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===true).length,invalidSchemas:items.filter(item=>item?.type==='function_call'&&item.schemaValid===false).length,errorClasses:[...new Set(items.filter(item=>item?.type==='function_call_output').map(item=>['timeout','unavailable','other'].includes(item.errorClass ?? '')?item.errorClass:null).filter((value):value is string=>typeof value==='string'))]}:null};
 }
@@ -445,9 +450,10 @@ export default function StudioChat({
       else if(result.status==='failed'){
         const closed=await readClosedImage(requestId);
         if(sequence!==inspectionSequence.current||!credentialIsCurrent())return;
-        if(closed?.outcome==='failed_without_dispatch'&&settleClosedAdjustment(requestId)){
+        if(closed?.outcome&&settleClosedAdjustment(requestId)){
           clearClosedSubmission(requestId);
-          setNotice('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
+          if(closed.outcome==='quality_held')forgetHeldImageSession();
+          setNotice(closed.outcome==='quality_held'?imageQualityNotice(closed.qualityReason):'A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
         }else setOrphanNotice('A consulta encontrou uma falha. Abra a aba original para recuperar o contexto antes de continuar. Nenhuma ação foi repetida.');
       }
       else if(result.status==='action_required')setOrphanNotice('Esta tentativa aguarda uma ação. Abra a aba original para recuperar o contexto; nenhuma ação foi executada.');
@@ -629,25 +635,36 @@ export default function StudioChat({
       timer.current = setTimeout(() => poll(requestId, count + 1), chatPollDelay(count));
       return;
     }
-    if (data.status === "failed") {
+    if (data.status === "failed" || data.status==='quality_held') {
       if(automatic) { try { completeReferenceRecord(requestId); } catch {} }
       settle(requestId, "failed");
       if(data.failurePhase!=='before_submission')previous.current=null;
       forgetPreparedImageTarget(requestId);
+      let qualityReason=data.status==='quality_held'?data.qualityReason:undefined;
       try{
         if(localStorage.getItem(imageSubmissionMarker)===requestId){
           setClosedImageAttempt(requestId);
-          const closed=await readClosedImage(requestId);
-          if(!credentialIsCurrent())return;
-          if(closed?.outcome==='failed_without_dispatch')clearClosedSubmission(requestId);
+          if(qualityReason)clearClosedSubmission(requestId);
+          else {
+            const closed=await readClosedImage(requestId);
+            if(!credentialIsCurrent())return;
+            if(closed?.outcome)clearClosedSubmission(requestId);
+            if(closed?.outcome==='quality_held')qualityReason=closed.qualityReason;
+          }
         }
       }catch{/* The marker remains available for an explicit verification. */}
+      if(qualityReason){
+        setImageAction(null);
+        setImageNeedsReconciliation(false);
+        setImageNeedsDecision(false);
+      }
       setPending(null);
       setPendingSource(null);
       remember(null);
       setBusy(false);
       setNotice(
-        data.error==='provider_usage_limit'
+        qualityReason?imageQualityNotice(qualityReason)
+          :data.error==='provider_usage_limit'
           ? credentialSource==='default'
             ? 'A IA do Compor está indisponível por limite de uso. Você pode conectar sua chave OpenAI ou continuar editando.'
             : 'A OpenAI informou que o limite de uso foi atingido. Verifique o faturamento e os limites da sua organização OpenAI.'
@@ -939,6 +956,12 @@ export default function StudioChat({
     if(version<1)return;
     setBusy(true);
     try {
+      const closed=await readClosedImage(action.requestId);
+      if(!mounted.current||!credentialIsCurrent())return;
+      if(closed?.outcome==='quality_held'){
+        await handle({status:'quality_held',qualityReason:closed.qualityReason,retryAutomatically:false},action.requestId);
+        return;
+      }
       const response=await fetch('/api/agent/image/reconcile',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,pieceId:action.context.pieceId,version,attemptId:action.attemptId,actionBinding:action.actionBinding})});
       const result:unknown=await response.json();
       if(!response.ok||!result||typeof result!=='object'||!('status' in result)||result.status!=='fenced')throw Error('unverified');
@@ -970,6 +993,10 @@ export default function StudioChat({
     setClosedImageAttempt(null);
     return true;
   }
+  function forgetHeldImageSession(){
+    previous.current=null;
+    remember(null);
+  }
   async function reconcileClosedImage(requestId:string,orphan=false) {
     if(busy||inspectionLock.current||pollLock.current||!credentialIsCurrent())return;
     const sequence=++inspectionSequence.current;
@@ -977,12 +1004,13 @@ export default function StudioChat({
     setBusy(true);
     try {
       const result=await readClosedImage(requestId);
-      if(!result||(orphan&&result.outcome!=='failed_without_dispatch'))throw Error('unverified');
+      if(!result||(orphan&&!result.outcome))throw Error('unverified');
       if(sequence!==inspectionSequence.current||!credentialIsCurrent())return;
-      const settled=result.outcome==='failed_without_dispatch'&&settleClosedAdjustment(requestId);
+      const settled=Boolean(result.outcome)&&settleClosedAdjustment(requestId);
       const cleared=clearClosedSubmission(requestId);
       if(!settled&&!cleared)throw Error('marker changed');
-      setNotice('A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
+      if(result.outcome==='quality_held')forgetHeldImageSession();
+      setNotice(result.outcome==='quality_held'?imageQualityNotice(result.qualityReason):'A tentativa terminou sem enviar imagem. Você pode pedir uma nova geração.');
     } catch {
       if(sequence===inspectionSequence.current&&credentialIsCurrent())setNotice('Não foi possível confirmar o envio. A tentativa continua preservada.');
     } finally {
@@ -1212,6 +1240,10 @@ export default function StudioChat({
         waitingImageRequest.current=action.requestId;
         throw Error(`${waitMessage} A espera foi pausada. Consulte esta tentativa para continuar.`);
       }
+      if(data.status==='quality_held'){
+        if(isCurrentScope())await handle(data,action.requestId);
+        return;
+      }
       if (data.assetId) {
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
         const { fetchPrivateImage } =
@@ -1414,6 +1446,7 @@ export default function StudioChat({
       {activeReading&&<aside className="studio-reference-question" aria-label="Decisão atual sobre referências">{readingCard(activeReading)}</aside>}
       </div>
       {conversationId&&ownedDraft.error&&<p role="status" className="studio-hint">{ownedDraft.error}</p>}
+      {canUseAI&&!readOnly&&!referenceWorkbench&&<p className="studio-hint">{imageReviewDisclosure}</p>}
       <form className="studio-chat-composer" onSubmit={send}>
         <img src="/studio/compor-avatar.svg" alt="" width="24" height="24" />
         {referenceWorkbench&&latestReference&&<span className="studio-reference-composer-context" title={`Última referência escolhida: ${lastReferenceTitle}. A conversa considera toda a seleção.`}>

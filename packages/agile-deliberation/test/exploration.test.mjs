@@ -9,6 +9,8 @@ test('contexto e escolhas explícitas orientam a referência, sem inventar prefe
  assert.ok(prompt.includes('"publico":"Pessoas iniciantes"'));
  assert.equal(prompt.includes('publico_da_persona'),false);assert.equal(prompt.includes('publico_ou_observacoes_do_briefing'),false);
  assert.match(prompt,/Orientações aceitas pela pessoa/);assert.match(prompt,/Orientações rejeitadas/);assert.match(prompt,/campos vazios como desconhecidos/);
+ assert.match(prompt,/Use um detalhe do briefing para distinguir a imagem/);
+ assert.match(prompt,/Confira grafia, junções e sombras/);
 });
 test('a sequência varia composição e pedido, sem repetir a mesma composição em chamadas consecutivas',()=>{
  const ideas=Array.from({length:100},(_,sequence)=>createExplorationPrompt({...input,sequence}));

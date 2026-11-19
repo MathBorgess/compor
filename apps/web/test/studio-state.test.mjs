@@ -33,6 +33,17 @@ test('navegar preserva rascunhos separados e base anterior não vira latest sile
  assert.equal(createPost(created,{pieceId:id(4)}),created,'mesma criação não cria outro rascunho');
 });
 
+test('a origem da legenda acompanha a edição manual e a proposta do agente',()=>{
+ const state=selected(),authored=getCurrentDraft(state).content.caption;
+ const repeated=editDraft(state,{field:'caption',value:authored,captionOrigin:'agent'});
+ assert.equal(getCurrentDraft(repeated).content.captionOrigin,'user');
+ const proposed=editDraft(repeated,{field:'caption',value:'Proposta do agente',captionOrigin:'agent'});
+ assert.equal(getCurrentDraft(proposed).content.captionOrigin,'agent');
+ const manual=editDraft(proposed,{field:'caption',value:'Legenda revisada pela pessoa'});
+ assert.equal(getCurrentDraft(manual).content.captionOrigin,'user');
+ assert.equal(getCurrentDraft(state).content.caption,authored);
+});
+
 test('reabrir uma versão sem edições reflete aprovação e revisão autoritativas do servidor',()=>{
  const original=selected(),approval={status:'approved',kind:'explicit',sourceVersion:2,at};
  let state=selectVersion(original,{pieceId:id(3),version:2,latestVersion:6,content,approval});

@@ -1,0 +1,28 @@
+{
+  "version": 1,
+  "cases": [
+    {
+      "id": "reserva-emenda-de-chuva",
+      "partition": "holdout",
+      "provenance": {"kind": "synthetic", "source": "Caso redigido após congelar a segunda candidata."},
+      "input": {
+        "locale": "pt-BR",
+        "format": "feed 4:5",
+        "project": "Emenda de Chuva",
+        "request": "Quero anunciar a bancada Emenda de Chuva. A gente avalia conserto de guarda-chuva pela foto que a pessoa enviar por mensagem. A ideia da arte é mostrar uma mão encostando a ponta de uma vareta solta no lugar de onde ela se soltou, junto à borda do tecido xadrez do guarda-chuva. Quero fotografia publicitária natural, só mãos e guarda-chuva numa mesa de madeira usada. Sem nenhum texto, logotipo ou rosto na arte. Não fale de preço nem prazo. Na legenda, quero que a pessoa saiba qual foto mandar.",
+        "turns": [],
+        "references": []
+      },
+      "expectations": {
+        "confirmedFacts": ["Nome informado: Emenda de Chuva.", "A pessoa pode enviar por mensagem a foto da vareta solta para avaliação de conserto.", "Sem texto, logotipo ou rosto na arte.", "Nenhum preço ou prazo foi informado."],
+        "unknowns": ["Valor, prazo, endereço e viabilidade de conserto de cada guarda-chuva."],
+        "creativeAnchors": ["Vareta solta em contato com encaixe legível na borda xadrez.", "Mãos e madeira usada dão contexto material de bancada.", "Legenda orienta a foto a enviar."],
+        "forbiddenClaims": ["Garantia de conserto", "Preços", "Prazos", "Endereço"],
+        "visualChecks": ["Contato plausível entre vareta, mão e tecido.", "Anatomia e união material coerentes.", "Ausência de texto, logo e rosto."]
+      },
+      "humanFeedback": null
+    }
+  ],
+  "replays": [],
+  "controls": []
+}

@@ -1,5 +1,6 @@
 "use client";
 
+import {isReplaceableExplorationOutcome} from '../lib/exploration-image-outcome.ts';
 import React, {useEffect,useRef,useState} from 'react';
 import {createParallelJournalStore,type ParallelPreparation} from '../lib/parallel-exploration-journal.ts';
 import {createParallelExplorationClient} from '../lib/parallel-exploration-client.ts';
@@ -87,7 +88,7 @@ export default function ParallelExplorationRecovery(props:Props){
             const client=createParallelExplorationClient({store,canInspect:inScope}),result=await client.inspectBatch(latest,Date.now,false);if(!inScope())throw Error('unavailable');
             journal=result.journal;replacement=journal.replacements?.at(-1);
             const image=result.snapshot.images.find(item=>item.position===replacement?.position);
-            if(replacement&&['prepared','submitted'].includes(replacement.state)&&image?.requestId===replacement.previousId&&image.status==='rejected'){
+            if(replacement&&['prepared','submitted'].includes(replacement.state)&&image?.requestId===replacement.previousId&&isReplaceableExplorationOutcome(image.status)){
               journal=await store.abandonReplacement(scope,journal.revision,{position:image.position,requestId:image.requestId,status:image.status,revision:image.revision});setProgress(journal.progress);setNotice('Reposição encerrada e preservada. Um novo pedido precisa ser explícito.');
             }else{setProgress(journal.progress);setNotice('A reposição possui recibo. Consulte o resultado antes de continuar.');}
             return;
@@ -121,8 +122,8 @@ export default function ParallelExplorationRecovery(props:Props){
   return <React.Fragment><section className="studio-exploration-recovery" aria-label="Tentativa paralela anterior">
     <p role="status">{!sameProject?'Há uma tentativa anterior em outro projeto. Abra o projeto de origem para consultá-la.':!sameConversation&&planningAttempt?'Há um planejamento em outra conversa deste projeto. Você pode consultar o planejamento original aqui.':!sameConversation?'Há uma tentativa anterior em outra conversa. Abra a conversa de origem para consultá-la.':'Há uma tentativa paralela anterior. Ela não será repetida automaticamente.'}</p>
     {sameProject&&sameConversation&&progress&&<ParallelExplorationProgress progress={progress}/>}
-    {props.replacementAvailable&&props.getReplacementContext&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.filter(item=>item.status==='rejected').map(item=><button key={item.requestId} type="button" disabled={busy||!props.allowReplacement||props.credentialSource!==preparation.credentialSource||progress.children.some(child=>!['completed','rejected'].includes(child.status))} onClick={()=>{void replace(item.position);}}>Repor proposta {item.position}</button>)}
-    {props.replacementAvailable&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.some(item=>item.status==='rejected')&&props.credentialSource!==preparation.credentialSource&&<p>Use a fonte e a chave originais para repor uma proposta; o plano não pode ser reutilizado com outra credencial.</p>}
+    {props.replacementAvailable&&props.getReplacementContext&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.filter(item=>isReplaceableExplorationOutcome(item.status)).map(item=><button key={item.requestId} type="button" disabled={busy||!props.allowReplacement||props.credentialSource!==preparation.credentialSource||progress.children.some(child=>child.status!=='completed'&&!isReplaceableExplorationOutcome(child.status))} onClick={()=>{void replace(item.position);}}>Repor proposta {item.position}</button>)}
+    {props.replacementAvailable&&sameProject&&sameConversation&&preparation?.stage==='executing'&&progress?.children.some(item=>isReplaceableExplorationOutcome(item.status))&&props.credentialSource!==preparation.credentialSource&&<p>Use a fonte e a chave originais para repor uma proposta; o plano não pode ser reutilizado com outra credencial.</p>}
     {canInspectAttempt&&<button type="button" disabled={busy} onClick={()=>{void inspect();}}>{busy?'Consultando…':'Consultar tentativa anterior'}</button>}
     {sameProject&&sameConversation&&preparation?.stage==='planned'&&props.onContinuePlan&&<><p>Para continuar o mesmo plano, use a fonte e a chave originais; o servidor confirma o vínculo antes da execução.</p><button type="button" disabled={busy||props.credentialSource!==preparation.credentialSource} onClick={props.onContinuePlan}>Continuar mesmo plano</button></>}
     {sameProject&&sameConversation&&preparation?.intentId&&['planning','planned','executing','failed'].includes(preparation.stage)&&<><p>O encerramento revoga a intenção. Se houver efeito ainda não confirmado, a tentativa continua bloqueada.</p><button type="button" disabled={busy} onClick={()=>{void archive();}}>Verificar encerramento da tentativa</button></>}

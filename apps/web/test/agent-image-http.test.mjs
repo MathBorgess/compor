@@ -35,7 +35,7 @@ test('fluxo HTTP com adaptadores reais e serviços simulados exige prova e evita
  const actionBinding=bindings.issueAction({userId:actor.userId,projectId,attemptId,sessionId:'sess_a',turnId:'turn_a',callId:'call_a',prompt});
  const reservationId='77777777-7777-4777-8777-777777777777',submissionId='88888888-8888-4888-8888-888888888888';
  let generationCount=0,postCount=0,claimed=false,saved=false;
- const png=Buffer.alloc(33);Buffer.from([137,80,78,71,13,10,26,10]).copy(png);png.writeUInt32BE(13,8);png.write('IHDR',12);png.writeUInt32BE(1,16);png.writeUInt32BE(1,20);
+ const png=Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==','base64');
  const fetch=async (target,init={})=>{
   const url=new URL(target),path=url.pathname;
   if(path==='/v1/agents/sessions/sess_a/events'){postCount++;return Response.json({}, {status:202});}
@@ -86,4 +86,15 @@ test('HTTP preserva o pacote revisado e recusa entradas remotas antes de aprovar
 test('prompt agregado inválido retorna recusa local antes de envio do resultado',async()=>{
  let sends=0;const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',execute:async()=>({status:'invalid_prompt'}),send:async()=>{sends++;}});
  const response=await handler(request());assert.equal(response.status,400);assert.deepEqual(await response.json(),{error:'invalid_request'});assert.equal(sends,0);
+});
+test('retenção confirmada encerra a rota sem asset nem retomada do modelo',async()=>{
+ let sends=0;
+ const qualityReason='image_quality_rejected';
+ const handler=createAgentImageRoute({appOrigin:'https://compor.test',resolveActor:async()=>actor,approve:async()=>'proof',
+   execute:async input=>{assert.ok(input.signal instanceof AbortSignal);return {status:'quality_held',qualityReason,retryAutomatically:false,usageRecorded:true};},
+   send:async()=>{sends++;throw Error('unexpected');}});
+ const result=await handler(request());
+ assert.equal(result.status,200);
+ assert.deepEqual(await result.json(),{status:'quality_held',qualityReason,retryAutomatically:false,usageRecorded:true});
+ assert.equal(sends,0);
 });

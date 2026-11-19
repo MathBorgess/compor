@@ -1,4 +1,5 @@
 import {isAgentCallId} from './agent-call-id.mjs';
+export const isImageQualityReason = value => ['image_quality_rejected','image_quality_inconclusive'].includes(value);
 // Not wired to image generation or a public route. Successful reservation is not consent.
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const id = (value, prefix) => typeof value === 'string' && new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(value) && !/sk-/i.test(value);
@@ -51,6 +52,7 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!uuid.test(projectId ?? '') || !uuid.test(requestId ?? '')) throw new Error('invalid attempt');
       const result=await rpc('confirm_closed_image_attempt',actor,{p_project_id:projectId,p_request_id:requestId});
       if (result==='failed_without_dispatch') return {status:'confirmed',outcome:result};
+      if (isImageQualityReason(result)) return {status:'confirmed',outcome:'quality_held',qualityReason:result};
       if (!['confirmed','unverified'].includes(result)) throw new Error('reservation status unknown');
       return {status:result};
     },
@@ -61,14 +63,20 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!uuid.test(row?.declaration_id ?? '') || typeof row?.is_new !== 'boolean') throw new Error('reservation status unknown');
       return { id: row.declaration_id, isNew: row.is_new };
     },
-    async claimExecution({ actor, reservationId, visualAuthority }) {
+    async claimExecution({ actor, reservationId, visualAuthority, qualityDigest }) {
       if (!uuid.test(reservationId ?? '')) throw new Error('invalid execution');
       if(visualAuthority&&(!uuid.test(visualAuthority.requestId??'')||!/^[a-f0-9]{64}$/.test(visualAuthority.manifestDigest)||(visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret))))throw new Error('invalid visual authority');
-      const rows = await rpc(visualAuthority?'claim_image_tool_execution_authorized':'claim_image_tool_execution', actor, { p_reservation_id: reservationId,...(visualAuthority?{p_authority_request_id:visualAuthority.requestId,p_manifest_digest:visualAuthority.manifestDigest,p_consent_secret:visualAuthority.consentSecret}:{}) });
+      if(qualityDigest!==undefined&&!/^[a-f0-9]{64}$/.test(qualityDigest))throw Error('invalid quality digest');
+      const name=qualityDigest?'claim_post_image_execution_proven':visualAuthority?'claim_image_tool_execution_authorized':'claim_image_tool_execution';
+      const rows = await rpc(name, actor, {p_reservation_id:reservationId,...(qualityDigest?{p_quality_digest:qualityDigest}:{}),...(visualAuthority?{p_authority_request_id:visualAuthority.requestId,p_manifest_digest:visualAuthority.manifestDigest,p_consent_secret:visualAuthority.consentSecret}:{})});
       const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
       if (['busy','blocked'].includes(row?.state) && row.execution_id === null && row.asset_id === null && row.is_new === false) return {state:row.state};
-      if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running', 'unknown', 'completed'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
+      if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running','unknown','completed','quality_held'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
       return { id: row.execution_id, assetId: row.asset_id, state: row.state, isNew: row.is_new };
+    },
+    async holdExecution({actor,executionId,qualitySecret,qualityReason}) {
+      if(!uuid.test(executionId??'')||!/^[a-f0-9]{64}$/.test(qualitySecret)||!isImageQualityReason(qualityReason))throw Error('invalid quality outcome');
+      if(await rpc('hold_post_image_candidate',actor,{p_execution_id:executionId,p_quality_secret:qualitySecret,p_quality_reason:qualityReason})!==true)throw Error('reservation status unknown');
     },
     async markExecutionUnknown({ actor, executionId }) {
       if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');

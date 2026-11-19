@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {mkdtempSync, readFileSync, rmSync} from 'node:fs';
+import {existsSync, mkdtempSync, readFileSync, rmSync} from 'node:fs';
 import {tmpdir} from 'node:os';
 import {join} from 'node:path';
 import {crc32, deflateSync} from 'node:zlib';
@@ -66,11 +66,16 @@ test('real image adapter binds the bytes, hashes the received file and reuses it
 test('bad PNG never closes a paid image as complete or submits it again',async()=>{
   const valid=studioPng(), badCrc=Buffer.from(valid);
   badCrc[29]^=1; // Corrupt the IHDR CRC while preserving the dimensions and every pixel.
-  const fixtures=[badCrc,valid.subarray(0,-5),studioPng({pixelRows:16}),studioPng({width:1023})];
+  const fixtures=[
+    {bytes:badCrc,adapterRejects:true},
+    {bytes:valid.subarray(0,-5),adapterRejects:true},
+    {bytes:studioPng({pixelRows:16}),adapterRejects:true},
+    {bytes:studioPng({width:1023}),adapterRejects:false},
+  ];
   const dir=mkdtempSync(join(tmpdir(),'compor-invalid-png-'));
   const ledger=openLedger(':memory:',{plans:60,images:60});
   try{
-    for(const [index,bytes] of fixtures.entries()){
+    for(const [index,{bytes,adapterRejects}] of fixtures.entries()){
       const id='bad/'+index;
       let calls=0;
       const params={ledger,id,prompt:'Synthetic brief',images:[],file:join(dir,index+'.png'),
@@ -78,8 +83,10 @@ test('bad PNG never closes a paid image as complete or submits it again',async()
           calls++;
           return Response.json({data:[{b64_json:bytes.toString('base64')}]});
         }};
-      await assert.rejects(imageSlot(params),/invalid_image_png/);
+      if(adapterRejects)assert.equal((await imageSlot(params)).state,'unknown');
+      else await assert.rejects(imageSlot(params),/invalid_image_png/);
       assert.equal(ledger.get(id).state,'unknown');
+      assert.equal(existsSync(params.file),false);
       assert.equal((await imageSlot(params)).state,'unknown');
       assert.equal(calls,1);
     }

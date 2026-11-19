@@ -124,6 +124,10 @@ jobs:
         env:
           COMPOR_EVAL_PYTHON: /usr/bin/python3
         run: sh scripts/evals/triagem-divergencia/check.sh
+      - name: Verify creative evaluation fixtures offline
+        env:
+          COMPOR_EVAL_PYTHON: /usr/bin/python3
+        run: sh scripts/evals/qualidade-criativa/check.sh
 
   web:
     name: Web types and behavior

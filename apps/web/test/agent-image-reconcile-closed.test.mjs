@@ -30,3 +30,9 @@ test('expõe encerramento confirmado sem despacho com tipo distinto do turno con
  const handler=createClosedImageReconciliation({appOrigin:'https://compor.test',resolveActor:async()=>actor,confirm:store.confirmClosedAttempt});
  assert.deepEqual(await (await handler(req())).json(),{status:'confirmed',outcome:'failed_without_dispatch'});
 });
+
+test('retenção após despacho tem recibo de encerramento próprio sem imagem',async()=>{
+ const store=createImageToolReservationStore({url:'https://supabase.test',anonKey:'sb_publishable_fixture',fetch:async()=>Response.json('image_quality_inconclusive')});
+ const handler=createClosedImageReconciliation({appOrigin:'https://compor.test',resolveActor:async()=>actor,confirm:store.confirmClosedAttempt});
+ assert.deepEqual(await (await handler(req())).json(),{status:'confirmed',outcome:'quality_held',qualityReason:'image_quality_inconclusive'});
+});

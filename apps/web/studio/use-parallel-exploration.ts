@@ -145,7 +145,7 @@ export function useParallelExploration(props:Props){
           if(last&&last.snapshot.images.some(image=>image.status==='unknown'))await dispatcher.stop();
           dispatcher=null;snapshotFingerprint=null;
           if(!valid())return;
-          if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus('Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
+          if(!last||last.snapshot.state!=='completed'||!last.progress.children.every(item=>item.status==='completed')){setStatus(last?.snapshot.state==='partial'&&last.snapshot.images.some(item=>item.status==='quality_held')?'Uma proposta foi retida pela revisão de qualidade. Consulte o lote para pedir reposição.':'Algumas propostas precisam de consulta. Nenhuma será repetida automaticamente.');setPhase('blocked');return;}
           nextEpoch=await finishWait(last.preparation);last=null;
         }
       });

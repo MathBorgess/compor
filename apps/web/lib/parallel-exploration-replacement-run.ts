@@ -1,3 +1,4 @@
+import {isReplaceableExplorationOutcome} from './exploration-image-outcome.ts';
 import {sha256Hex} from './browser-bytes.ts';
 import {createParallelJournalStore,type ParallelPreparation,type ParallelJournal} from './parallel-exploration-journal.ts';
 import {createParallelExplorationClient,type BatchSnapshot} from './parallel-exploration-client.ts';
@@ -69,7 +70,7 @@ export function createReplacementRun(options:Options){
         const observed=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(observed.snapshot,observed.journal);ensure();
         const child=observed.journal.progress.children.find(value=>value.position===position),last=observed.journal.replacements?.at(-1);
         const epoch=last?(last.revocationRequested?last.revocationConfirmed?last.revocationEpoch:undefined:last.intentEpoch):(preparation.revocationRequested?preparation.revocationConfirmed?preparation.revocationEpoch:undefined:preparation.intentEpoch);
-        if(!child||child.status!=='rejected'||epoch===undefined)throw Error('replacement_unavailable');
+        if(!child||!isReplaceableExplorationOutcome(child.status)||epoch===undefined)throw Error('replacement_unavailable');
         const next={position,previousId:child.requestId,requestId:crypto.randomUUID(),intentId:crypto.randomUUID(),expectedEpoch:epoch};
         let journal=await store.prepareReplacement(scope,observed.journal.revision,next);claim=next;ensure();
         const visualScope:VisualAuthorityScope={userId:preparation.userId,projectId:preparation.projectId,conversationId:preparation.conversationId,requestId:next.requestId,batchId:preparation.batchId,purpose:'replacement'};
@@ -83,9 +84,9 @@ export function createReplacementRun(options:Options){
         while(valid()){
           const value=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(value.snapshot,value.journal);ensure();
           const result=value.journal.progress.children.find(item=>item.position===position);
-          if(result?.requestId===next.requestId&&['completed','rejected','unknown'].includes(result.status)){
+          if(result?.requestId===next.requestId&&result.status!=='running'){
             if(result.status==='unknown')await stop();
-            onNotice(result.status==='completed'?'Reposição confirmada.':result.status==='rejected'?'A reposição foi recusada.':'O resultado da reposição permanece desconhecido.');return;
+            onNotice(result.status==='completed'?'Reposição confirmada.':result.status==='rejected'?'A reposição foi recusada.':result.status==='quality_held'?'A reposição foi retida pela revisão de qualidade.':'O resultado da reposição permanece desconhecido.');return;
           }
           if(settled){if(checkedAfterSettlement){onNotice('A reposição ainda não foi confirmada. Consulte a tentativa antes de continuar.');return;}checkedAfterSettlement=true;continue;}
           await sleep(2000);ensure();
