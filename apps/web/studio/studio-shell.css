@@ -1,5 +1,14 @@
 @import './fonts.css';
 
+.studio-loading {
+  display: grid;
+  place-items: center;
+  min-height: 100dvh;
+  background: #f4f0e5;
+  color: #2c2d2f;
+  font: 400 14px/1.45 'Compor DM Sans', sans-serif;
+}
+.studio-loading-overlay { position: fixed; inset: 0; z-index: 100; }
 .compor-studio {
   --studio-cream: #f4f0e5;
   --studio-cobalt: #123eab;

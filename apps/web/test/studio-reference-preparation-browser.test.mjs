@@ -40,19 +40,23 @@ test('referências no primeiro projeto recuperam seleção e intenção e aceita
 
  let savedProject,selectionAvailable=false,epochAvailable=false,revision=0;
  let state={version:1,references:[],projectReferenceIds:[],posts:[]};
+ let sessionCheck,sessionUser=user;
  const receipts=new Map(),requests=[],errors=[];
  page.on('pageerror',error=>errors.push(error.message));
  await page.route('**/*',async route=>{
   const request=route.request(),url=new URL(request.url());
   if(url.origin!==origin)return route.abort();
   const path=url.pathname;
-  if(path==='/auth/session')return route.fulfill({json:{state:'connected',userId:user}});
+  if(path==='/auth/session'){
+   if(sessionCheck)await sessionCheck.promise;
+   return route.fulfill({json:{state:'connected',userId:sessionUser}});
+  }
   if(!path.startsWith('/api/'))return route.continue();
   const body=request.method()==='POST'?request.postDataJSON():null;
   requests.push({path,op:body?.op});
   if(path==='/api/projects'){
    if(body){savedProject={id:project,title:body.title,revision:1};return route.fulfill({json:{project:savedProject}});}
-   return route.fulfill({json:{projects:savedProject?[savedProject]:[]}});
+   return route.fulfill({json:{projects:savedProject&&sessionUser===user?[savedProject]:[]}});
   }
   if(path==='/api/pieces')return route.fulfill({json:{versions:[]}});
   if(path==='/api/ai/credential-status')return route.fulfill({json:{defaultAvailable:false}});
@@ -106,10 +110,21 @@ test('referências no primeiro projeto recuperam seleção e intenção e aceita
   const context=canvas.getContext('2d');context.fillStyle='#123eab';context.fillRect(0,0,32,40);
   return canvas.toDataURL('image/png').split(',')[1];
  });
- const picker=page.waitForEvent('filechooser');
- await upload.click();
- await (await picker).setFiles({name:'referência sem chave.png',mimeType:'image/png',buffer:Buffer.from(image,'base64')});
- await page.getByText('Imagem adicionada à seleção.',{exact:true}).waitFor();
+ async function chooseDuringSessionCheck(name){
+  const picker=page.waitForEvent('filechooser');
+  await upload.click();
+  const chooser=await picker;
+  // Native file pickers return focus before delivering the chosen file.
+  sessionCheck=Promise.withResolvers();
+  const checking=page.waitForRequest(req=>new URL(req.url()).pathname==='/auth/session');
+  await page.evaluate(()=>window.dispatchEvent(new Event('focus')));
+  await checking;
+  await chooser.setFiles({name,mimeType:'image/png',buffer:Buffer.from(image,'base64')});
+ }
+ await chooseDuringSessionCheck('referência sem chave.png');
+ assert.equal(state.references.length,0,'o envio aguarda a confirmação da mesma conta');
+ sessionCheck.resolve();
+ assert.equal(await page.locator('.reference-upload-feedback').filter({hasNotText:'Adicionando imagens'}).innerText(),'Imagem adicionada à seleção.');
  assert.equal(state.references.length,1);
  assert.equal(state.references[0].inputOrigin,'local-upload');
  assert.equal(requests.filter(({path})=>path.endsWith('/intent')||path.endsWith('/plan')).length,0);
@@ -124,6 +139,23 @@ test('referências no primeiro projeto recuperam seleção e intenção e aceita
  epochAvailable=true;
  await button('Verificar disponibilidade').click();
  assert.equal(await page.getByRole('combobox',{name:'Fonte',exact:true}).inputValue(),'search');
+ await proposals.and(page.locator(':enabled')).waitFor();
+ const epochReads=()=>requests.filter(({path})=>path.endsWith('/intent/epoch')).length;
+ const beforeFocus=epochReads();
+ await page.evaluate(()=>{
+  Object.defineProperty(document,'hasFocus',{configurable:true,value:()=>false});
+  window.dispatchEvent(new Event('blur'));
+ });
+ await proposals.and(page.locator(':disabled')).waitFor();
+ sessionCheck=Promise.withResolvers();
+ const focusCheck=page.waitForRequest(req=>new URL(req.url()).pathname==='/auth/session');
+ await page.evaluate(()=>{delete document.hasFocus;window.dispatchEvent(new Event('focus'));});
+ await focusCheck;
+ assert.equal(epochReads(),beforeFocus);
+ sessionCheck.resolve();
+ await proposals.and(page.locator(':enabled')).waitFor();
+ assert.equal(epochReads(),beforeFocus+1,'a confirmação da mesma conta libera o botão com uma consulta');
+ assert.equal(requests.filter(({path})=>path.endsWith('/intent')||path.endsWith('/plan')).length,0);
  const planning=page.waitForRequest(request=>new URL(request.url()).pathname.endsWith('/plan'));
  await proposals.click();
  const plan=await planning,submission=plan.postDataJSON();
@@ -137,5 +169,25 @@ test('referências no primeiro projeto recuperam seleção e intenção e aceita
  await page.getByText('O planejamento ainda não foi confirmado. Nenhuma nova tentativa foi enviada.',{exact:true}).waitFor();
  assert.equal(requests.filter(({path,op})=>path.endsWith('/plan')&&op==='poll').length,1);
  assert.equal(requests.filter(({path,op})=>path.endsWith('/plan')&&op==='submit').length,1);
+ // A file chosen in the previous account must never be saved under either account.
+ await chooseDuringSessionCheck('arquivo da conta anterior.png');
+ sessionUser='00000000-0000-4000-8000-000000000003';
+ sessionCheck.resolve();
+ await page.getByLabel('Nome do projeto',{exact:true}).waitFor();
+ const stored=await page.evaluate(async()=>{
+  const db=await new Promise((resolve,reject)=>{
+   const open=indexedDB.open('compor-studio-v1');
+   open.onsuccess=()=>resolve(open.result);open.onerror=()=>reject(open.error);
+  });
+  try{
+   const entries=await new Promise((resolve,reject)=>{
+    const read=db.transaction('references').objectStore('references').getAll();
+    read.onsuccess=()=>resolve(read.result);read.onerror=()=>reject(read.error);
+   });
+   return Promise.all(entries.map(async entry=>({scope:entry.scope,name:entry.metadata.name,bytes:Array.from(new Uint8Array(await entry.file.arrayBuffer()))})));
+  }finally{db.close();}
+ });
+ assert.deepEqual(stored,[{scope:JSON.stringify([user,project]),name:'referência sem chave.png',bytes:[...Buffer.from(image,'base64')]}]);
+ assert.equal(requests.filter(({path,op})=>path.endsWith('/reference-authority/selection')&&op==='write').length,1);
  assert.deepEqual(errors,[]);
 });
