@@ -12,7 +12,7 @@ import { brandImages, entryCopy, entryDraftStorage } from "../lib/entry-content"
 const StudioApp = lazy(() => import("./studio-app"));
 export default function Workspace({ loginAvailable, localAuth = false, developerMode = false, parallelAvailable = false, selectedVisualsAvailable = false, selectedVisualsRequired = false, referenceAuthorityEnabled = false }: { loginAvailable: boolean; localAuth?: boolean; developerMode?: boolean; parallelAvailable?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityEnabled?:boolean }) {
   const [objective, setObjective] = useState("");
-  const [authState, setAuthState] = useState("checking");
+  const [authState, setAuthState] = useState(loginAvailable ? "checking" : "offline");
   const [authenticatedUser, setAuthenticatedUser] = useState<string | null>(null);
   const [account, setAccount] = useState<{label:string;local:boolean}|null>(null);
   const [signOutError, setSignOutError] = useState(false);
