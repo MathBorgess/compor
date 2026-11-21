@@ -28,15 +28,18 @@ export type PostCreationResult=
   | {status:'unknown'|'unavailable'};
 type SaveInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>;
 export type VersionImagePublication='published'|'absent'|'conflict'|'unknown';
+type PreparedVersionImage=
+  | {status:'ready';publish:(version:number)=>Promise<VersionImagePublication>}
+  | {status:'absent'|'image_unsupported'|'unknown'};
 type SavePorts={
   readVersions:()=>Promise<PieceVersion[]>;
   copyDraftAsset:ReturnType<typeof createStudioStorage>['copyDraftAsset'];
-  publishVersionImage?:(input:{userId:string;projectId:string;pieceId:string;version:number;source:DraftAssetAddress})=>Promise<VersionImagePublication>;
+  prepareVersionImage?:(input:{userId:string;projectId:string;pieceId:string;version:number;source:DraftAssetAddress})=>Promise<PreparedVersionImage>;
   newEventId:()=>string;
   onVersionsChanging:()=>void;
   onVersionSaved:(version:PieceVersion)=>void;
 };
-export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'unknown'|'inactive'};
+export type SaveResult={result:ActionResult;notice:'saved'|'recovered'|'conflict'|'image_unsupported'|'unknown'|'inactive'};
 
 export function createStudioJourneyController(port:StatePort) {
   const locks=port.locks??{creation:{current:false},save:{current:false}};
@@ -116,18 +119,20 @@ export function createStudioJourneyController(port:StatePort) {
     if(args?.pieceId&&(args.pieceId!==draft.pieceId||args.baseVersion!==draft.baseVersion||args.expectedLatestVersion!==draft.expectedLatestVersion))throw Error('context_changed');
     locks.save.current=true;
     const unknown=(notice:SaveResult['notice']='unknown'):SaveResult=>({result:{status:'unknown'},notice});
+    const source:DraftAssetAddress={pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'};
+    let prepared:PreparedVersionImage|undefined;
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
       // Generation saves the text first. Its image arrives afterwards and is the
       // first bytes of that version, rather than a copy of the previous artwork.
       if(!args?.operation){
-        if(options.publishVersionImage){
-          const published=await options.publishVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:version.version,source:{pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'}});
+        if(prepared?.status==='ready'){
+          const published=await prepared.publish(version.version);
           if(!sameScope(current))return unknown('inactive');
           if(published==='unknown')return unknown();
-        }else if(!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-          {pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'},
+        }else if(!options.prepareVersionImage&&!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
+          source,
           {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
       }
       if(!sameScope(current))return unknown('inactive');
@@ -145,6 +150,11 @@ export function createStudioJourneyController(port:StatePort) {
       if(!sameScope(current))return unknown('inactive');
       await port.flush();options.onVersionsChanging();
       if(!sameScope(current))return unknown('inactive');
+      if(!args?.operation&&options.prepareVersionImage){
+        prepared=await options.prepareVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:draft.expectedLatestVersion+1,source});
+        if(!sameScope(current))return unknown('inactive');
+        if(prepared.status==='image_unsupported'||prepared.status==='unknown')return unknown(prepared.status);
+      }
       const response=await fetchImpl('/api/pieces',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
         projectId:current.projectId,pieceId:draft.pieceId,expectedVersion:draft.expectedLatestVersion,baseVersion:draft.baseVersion,content:draft.content,
         ...(args?.operation?{operation:args.operation}:{}),...(args?.changedDimension?{changedDimension:args.changedDimension}:{}),

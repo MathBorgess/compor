@@ -6,8 +6,11 @@ export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 async function handle(method: 'GET' | 'POST', request: Request) {
+  if (process.env.COMPOR_PRIVATE_IMAGES_ENABLED !== 'true') {
+    return Response.json({error: 'private_images_disabled'}, {status: 503, headers: {'Cache-Control': 'no-store'}});
+  }
   const config = authConfig();
-  if (process.env.COMPOR_PRIVATE_IMAGES_ENABLED !== 'true' || !config) {
+  if (!config) {
     return Response.json({error: 'unavailable'}, {status: 503, headers: {'Cache-Control': 'no-store'}});
   }
   try {

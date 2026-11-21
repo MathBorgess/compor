@@ -213,7 +213,11 @@ test('salvar publica a imagem antes de adotar a versão e repetir usa o mesmo n�
   const f=fixture();await f.create();
   f.controller.editDraft({field:'caption',value:'Com imagem'});
   const published=[];
-  f.saving.publishVersionImage=async input=>{published.push(input.version);return published.length===1?'unknown':'published';};
+  f.saving.prepareVersionImage=async input=>({status:'ready',publish:async version=>{
+    assert.equal(version,input.version);
+    published.push(version);
+    return published.length===1?'unknown':'published';
+  }});
   assert.equal((await f.controller.saveCurrent(f.saving)).result.status,'unknown');
   assert.equal(getCurrentDraft(f.state).baseVersion,0);assert.equal(f.copied.length,0);assert.equal(published[0],1);
   const body=f.calls.find(call=>call.url==='/api/pieces').body;
@@ -227,11 +231,22 @@ test('salvar publica a imagem antes de adotar a versão e repetir usa o mesmo n�
 test('preparar geração não copia nem publica a imagem da versão anterior',async()=>{
   const f=fixture();await f.create();
   let published=0;
-  f.saving.publishVersionImage=async()=>{published++;return 'published';};
+  f.saving.prepareVersionImage=async()=>{published++;return {status:'absent'};};
   f.assets.set(`${id(3)}:0`,new Blob(['anterior']));
   const draft=getCurrentDraft(f.state);
   const outcome=await f.controller.saveCurrent(f.saving,{pieceId:draft.pieceId,baseVersion:draft.baseVersion,expectedLatestVersion:draft.expectedLatestVersion,operation:'create'});
   assert.equal(outcome.result.status,'completed');assert.equal(published,0);assert.equal(f.copied.length,0);assert.equal(f.assets.has(`${id(3)}:1`),false);
+});
+
+test('uma imagem incompatível ou uma leitura de vínculo indisponível não despacha a escrita da versão',async()=>{
+  const f=fixture();await f.create();
+  for(const status of ['image_unsupported','unknown']){
+    f.saving.prepareVersionImage=async()=>({status});
+    const outcome=await f.controller.saveCurrent(f.saving);
+    assert.equal(outcome.notice,status);
+  }
+  assert.equal(f.calls.filter(call=>call.url==='/api/pieces').length,0);
+  assert.equal(getCurrentDraft(f.state).baseVersion,0);
 });
 
 test('referências compartilhadas e locais mantêm escopo ao alternar posts',async()=>{

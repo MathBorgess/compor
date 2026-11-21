@@ -23,9 +23,10 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
-import {bindVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
+import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
 import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
 import {composeStudioPng} from '../lib/studio-compose.ts';
+import {studioImageDimensions} from '../lib/studio-image.ts';
 import {createReferenceSelectionCoordinator,type ReferenceAdoptionReview} from '../lib/reference-selection-coordinator.ts';
 import {assertReferenceVisualCapability,createReferenceVisualAuthority,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
@@ -971,21 +972,40 @@ function ProjectStudio({
           if(!storage)throw Error('storage_unavailable');
           return storage.copyDraftAsset(scope,source,target);
         },
-        publishVersionImage:async input=>{
+        prepareVersionImage:async input=>{
           const storage=local.storage.current;
-          if(!storage||input.userId!==userId||input.projectId!==project.id)return 'unknown';
+          if(!storage||input.userId!==userId||input.projectId!==project.id)return {status:'unknown'};
           const scope={userId:input.userId, projectId:input.projectId};
           const preview=input.source.baseVersion>=1?await storage.getDraftAsset(scope,{...input.source, kind:'preview'}):null;
           const source=preview??await storage.getDraftAsset(scope, input.source);
-          if(!source)return 'absent';
+          if(!source)return {status:'absent'};
+          const {projectId,pieceId,version}=input;
+          const link=await lookupVersionImage({projectId,pieceId,version});
+          if(link.status==='unknown')return {status:'unknown'};
+          if(link.status==='disabled')return {status:'ready',publish:async savedVersion=>{
+            await cacheSavedImage(pieceId,savedVersion,source.file);
+            return 'published';
+          }};
+          if(link.status==='enabled'&&link.assetId){
+            const query=new URLSearchParams({projectId,pieceId,version:String(version),assetId:link.assetId});
+            return {status:'ready',publish:async savedVersion=>{
+              const file=await fetchPrivateImage(query,{signal:AbortSignal.timeout(30000)});
+              await cacheSavedImage(pieceId,savedVersion,file);
+              return 'published';
+            }};
+          }
           let png:Blob;
-          try{png=await composeStudioPng({base:source.file});}
-          catch{return 'unknown';}
-          const published=await publishVersionPng({projectId:input.projectId, pieceId:input.pieceId, version:input.version, png});
-          if(published!=='published')return published;
-          try{await storage.putDraftAsset({...scope, pieceId:input.pieceId, baseVersion:input.version, kind:'base', file:png});}
-          catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')return 'unknown';}
-          return 'published';
+          try{
+            await studioImageDimensions(source.file,{maxDimension:2048,maxPixels:2048**2});
+            png=await composeStudioPng({base:source.file});
+          }catch{return {status:'image_unsupported'};}
+          if(png.size>4*1024*1024)return {status:'image_unsupported'};
+          return {status:'ready',publish:async savedVersion=>{
+            const published=await publishVersionPng({projectId,pieceId,version:savedVersion,png});
+            if(published.status==='unknown')return 'unknown';
+            await cacheSavedImage(pieceId,savedVersion,published.file);
+            return published.status;
+          }};
         },
         newEventId:()=>crypto.randomUUID(),
         onVersionsChanging:()=>{versionsReadSequence.current++;},
@@ -995,6 +1015,7 @@ function ProjectStudio({
         saved:'Nova versão salva.',
         recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
         conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
+        image_unsupported:'Seu rascunho foi preservado. Para salvar a versão, use uma imagem de até 2048 × 2048 pixels que resulte em um PNG de até 4 MB.',
         unknown:'O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',
         inactive:'',
       };
