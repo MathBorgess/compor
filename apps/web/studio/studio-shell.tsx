@@ -100,7 +100,7 @@ function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllPr
 }
 
 function ProjectRailButton({project, current, onOpen}: {project: Project; current: boolean; onOpen?: (project: Project) => void}) {
-  const name = useProjectNameDisclosure(project.title);
+  const name = useProjectNameDisclosure(project.title, {longPressOnTouch: true});
   return (
     <li>
       <button
@@ -110,7 +110,7 @@ function ProjectRailButton({project, current, onOpen}: {project: Project; curren
         aria-label={project.title}
         title={project.title}
         aria-current={current ? "page" : undefined}
-        onClick={() => { if (name.holdActivation()) return; if (!current) onOpen?.(project); }}
+        onClick={() => { if (name.consumeLongPress()) return; if (!current) onOpen?.(project); }}
       >
         {projectInitials(project.title)}
       </button>
@@ -387,7 +387,7 @@ export default function StudioShell({
       <a className="studio-skip" href={referenceWorkspace && compactReferences && !layoutC ? "#studio-floating-chat" : "#studio-main"}>
         Ir para o conteúdo
       </a>
-      {/* Barra fixa (ADR 0056): só a marca e a conta. Projetos ficam no trilho; o projeto atual, no menu lateral. */}
+      {/* Barra fixa (ADR 0056): marca e conta. No celular, o nome completo do projeto aberto fica nesta barra. */}
       <header className="studio-topbar" ref={barRef}>
         <div className="studio-topbar-start">
           {/* A marca leva à página inicial; dentro de um projeto, pelo onNavigate, que preserva o projeto antes de sair. */}
@@ -413,8 +413,8 @@ export default function StudioShell({
               height="17"
             />
           </a>
-          <h1 className="studio-visually-hidden">{projectTitle || stageTitles[stage] || "Estúdio"}</h1>
         </div>
+        <h1 className={projectId && projectTitle ? "studio-open-project" : "studio-visually-hidden"}>{projectTitle || stageTitles[stage] || "Estúdio"}</h1>
         <div className="studio-topbar-end">
           {fallbackActions}
           {canOpenStudio && !isStudio && onNavigate ? (

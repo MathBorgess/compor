@@ -39,13 +39,19 @@ function hideTip(tip: HTMLElement | null) {
   if (tip?.matches(":popover-open")) tip.hidePopover();
 }
 
-export function useProjectNameDisclosure(title: string) {
+const longPressMs = 500;
+
+export function useProjectNameDisclosure(title: string, {longPressOnTouch = false}: {longPressOnTouch?: boolean} = {}) {
   const tipRef = useRef<HTMLSpanElement>(null);
   const anchorRef = useRef<HTMLElement | null>(null);
   const titleRef = useRef(title);
   const touchGesture = useRef(false);
   const wasOpenAtPointerDown = useRef(false);
+  const longPressOnTouchRef = useRef(longPressOnTouch);
+  const longPressTimer = useRef<number | null>(null);
+  const suppressClick = useRef(false);
   titleRef.current = title;
+  longPressOnTouchRef.current = longPressOnTouch;
   const ref = useCallback((node: HTMLElement | null) => {
     anchorRef.current = node;
     // Trocar o botão focado, como ao renomear, não dispara blur. O popover manual fecha quando a âncora sai.
@@ -118,17 +124,55 @@ export function useProjectNameDisclosure(title: string) {
     return hold;
   }
 
+  function clearLongPress() {
+    if (longPressTimer.current !== null) {
+      window.clearTimeout(longPressTimer.current);
+      longPressTimer.current = null;
+    }
+  }
+
+  /** O toque longo do trilho não troca de projeto. */
+  function consumeLongPress() {
+    const suppress = suppressClick.current;
+    suppressClick.current = false;
+    return suppress;
+  }
+
   function handlers<T extends HTMLElement>() {
     return {
       ref: ref as (node: T | null) => void,
-      onFocus: () => { open(); },
+      onFocus: () => {
+        if (longPressOnTouchRef.current && window.matchMedia("(pointer: coarse)").matches) return;
+        open();
+      },
       onBlur: () => { hide(); },
       onPointerDown: (event: PointerEvent<T>) => {
         touchGesture.current = event.pointerType === "touch";
         wasOpenAtPointerDown.current = tipRef.current?.matches(":popover-open") ?? false;
+        if (longPressOnTouchRef.current && event.pointerType === "touch") {
+          suppressClick.current = false;
+          clearLongPress();
+          longPressTimer.current = window.setTimeout(() => {
+            longPressTimer.current = null;
+            suppressClick.current = true;
+            open();
+          }, longPressMs);
+          return;
+        }
         open();
       },
-      onPointerLeave: (event: PointerEvent<T>) => { close(event); },
+      onPointerUp: () => { clearLongPress(); },
+      onPointerCancel: () => { clearLongPress(); },
+      onPointerLeave: (event: PointerEvent<T>) => {
+        if (event.pointerType === "touch") {
+          clearLongPress();
+          return;
+        }
+        close(event);
+      },
+      onContextMenu: (event: {preventDefault: () => void}) => {
+        if (longPressOnTouchRef.current) event.preventDefault();
+      },
     };
   }
 
@@ -138,5 +182,5 @@ export function useProjectNameDisclosure(title: string) {
     </span>
   );
 
-  return {handlers, holdActivation, tooltip};
+  return {handlers, holdActivation, consumeLongPress, tooltip};
 }

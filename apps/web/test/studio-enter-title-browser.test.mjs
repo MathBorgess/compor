@@ -383,6 +383,33 @@ async function assertZoomLayout(page){
  });
  assert.deepEqual(problems,[]);
 }
+async function longPress(locator){
+ await locator.evaluate(element=>{
+  const rect=element.getBoundingClientRect();
+  element.dispatchEvent(new PointerEvent('pointerdown',{bubbles:true,cancelable:true,pointerType:'touch',pointerId:1,isPrimary:true,clientX:rect.left+rect.width/2,clientY:rect.top+rect.height/2,button:0,buttons:1}));
+  element.focus();
+ });
+ await locator.page().waitForTimeout(560);
+}
+async function endPress(locator){
+ await locator.evaluate(element=>{
+  const rect=element.getBoundingClientRect();
+  element.dispatchEvent(new PointerEvent('pointerup',{bubbles:true,cancelable:true,pointerType:'touch',pointerId:1,isPrimary:true,clientX:rect.left+rect.width/2,clientY:rect.top+rect.height/2,button:0,buttons:0}));
+  element.click();
+ });
+}
+async function assertTopName(page,title){
+ const name=page.locator('.studio-topbar h1');
+ assert.equal(await name.textContent(),title);
+ const shown=await name.evaluate(element=>{
+  const style=getComputedStyle(element),box=element.getBoundingClientRect();
+  return {ellipsis:style.textOverflow,wrap:style.whiteSpace,clipped:element.scrollWidth>element.clientWidth+1||element.scrollHeight>element.clientHeight+1,visible:box.width>8&&box.height>8&&style.visibility!=='hidden'&&Number(style.opacity)!==0};
+ });
+ assert.notEqual(shown.ellipsis,'ellipsis');
+ assert.equal(shown.wrap,'normal');
+ assert.equal(shown.clipped,false,JSON.stringify(shown));
+ assert.equal(shown.visible,true,'o nome completo do projeto aberto fica visível na barra do topo');
+}
 async function assertOnScreen(locator,label){
  await locator.scrollIntoViewIfNeeded();
  const box=await locator.boundingBox();
@@ -496,10 +523,15 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  await projectHeading(page,title).waitFor();
  const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
  await rail.tap();
- await assertTooltipOpen(rail,title);
+ assert.equal((await readNameTooltip(rail)).open,false,'um toque curto no trilho não abre o tooltip');
  assert.equal(await rail.getAttribute('aria-current'),'page');
  assert.equal(await rail.innerText(),'OC');
- await rail.evaluate(element=>element.blur());
+ await longPress(rail);
+ await assertTooltipOpen(rail,title);
+ await endPress(rail);
+ assert.equal(await rail.getAttribute('aria-current'),'page','o toque longo não troca o projeto aberto');
+ await page.keyboard.press('Escape');
+ assert.equal((await readNameTooltip(rail)).open,false,'Escape fecha o tooltip do trilho');
  await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
  const entry=renameProject(page);
  assert.equal(await entry.getAttribute('aria-label'),`Renomear projeto ${title}`);
@@ -516,19 +548,24 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  assert.equal(await cut(entry.locator('strong')),true,'o celular continua cortando só a apresentação');
  await assertFullNameOnFocus(entry,title);
  await page.getByRole('button',{name:'Recolher menu',exact:true}).click();
- await rail.focus();
+ await assertTopName(page,title);
+ await longPress(rail);
  await assertTooltipOpen(rail,title);
  await page.keyboard.press('Escape');
  const railClosed=await readNameTooltip(rail);
  assert.equal(railClosed.open,false,'Escape fecha o tooltip do trilho');
  assert.equal(railClosed.visible,false,'Escape fecha o tooltip do trilho');
  assert.equal(await rail.evaluate(element=>element===document.activeElement),true,'Escape não move o foco do trilho');
+ await endPress(rail);
  const other=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:'Café',exact:true});
  await other.tap();
- await assertTooltipOpen(other,'Café');
- assert.equal(await rail.getAttribute('aria-current'),'page','o primeiro toque num outro projeto mostra o nome e não navega');
- await other.tap();
  await projectHeading(page,'Café').waitFor();
+ assert.equal((await readNameTooltip(other)).open,false,'um toque troca de projeto sem abrir o tooltip');
+ await assertTopName(page,'Café');
+ await longPress(other);
+ await assertTooltipOpen(other,'Café');
+ await page.locator('#studio-main').tap();
+ assert.equal((await readNameTooltip(other)).open,false,'toque fora fecha o tooltip do trilho');
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
  assert.deepEqual(errors,[]);
 });
