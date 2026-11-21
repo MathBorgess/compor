@@ -109,7 +109,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
     hold:(child,reason)=>deps.store.hold(actor,input.projectId,child.requestId,child.proof,reason),
     ...(deps.store.fail?{fail:(child,reason,outcome)=>deps.store.fail?.(actor,input.projectId,child.requestId,child.proof,reason,outcome)??Promise.resolve()}:{}),
    });
-   return reply({status:results.some(x=>x.status==='unknown')?'unknown':results.some(x=>x.status==='failed'||isReplaceableExplorationOutcome(x.status))?'partial':'completed',batchId:input.batchId,images:results,retryAutomatically:false},200);
+   return reply({status:results.some(x=>x.status==='unknown')?'unknown':results.some(x=>isReplaceableExplorationOutcome(x.status))?'partial':'completed',batchId:input.batchId,images:results,retryAutomatically:false},200);
   },
   async replace(request:Request){
    if(request.method!=='POST')return reply({error:'method_not_allowed'},405);

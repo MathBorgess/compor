@@ -22,3 +22,17 @@ test('resultado desconhecido interrompe observação automática sem repetir efe
  await observeParallelBatch({inspect:async()=>{reads++;return{snapshot:{state:'unknown',images:[{status:'completed'},{status:'unknown'},{status:'running'}]},journal:{}};},isActive:()=>true,onObservation:()=>{seen++;},onUnavailable:()=>{throw Error('unexpected');},sleep:async()=>{throw Error('não deveria agendar');},intervalMs:1000});
  assert.equal(reads,1);assert.equal(seen,1);
 });
+test('falha persistida termina a observação do lote parcial sem nova consulta',async()=>{
+ let reads=0,sleeps=0;
+ const images=[{status:'completed'},{status:'failed'},{status:'completed'}];
+ await observeParallelBatch({
+  inspect:async()=>{reads++;return{snapshot:{state:'partial',images},journal:{}};},
+  isActive:()=>reads<2,
+  onObservation:({snapshot})=>assert.deepEqual(snapshot.images,images),
+  onUnavailable:()=>assert.fail('a consulta deveria funcionar'),
+  sleep:async()=>{sleeps++;},
+  intervalMs:1000,
+ });
+ assert.equal(reads,1);
+ assert.equal(sleeps,0);
+});

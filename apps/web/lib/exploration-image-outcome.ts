@@ -1,4 +1,5 @@
-export const explorationImageOutcomes=['running','unknown','completed','rejected','quality_held','failed'] as const;
+export const replaceableExplorationOutcomes=['rejected','quality_held','failed'] as const;
+export const explorationImageOutcomes=['running','unknown','completed',...replaceableExplorationOutcomes] as const;
 export const explorationClosureReasons=['provider_rejected_400','provider_rejected_429','result_unknown'] as const;
 export const explorationProviderOutcomes=['failure','retryable','unconfirmed'] as const;
 export type ExplorationClosureReason=(typeof explorationClosureReasons)[number];
@@ -26,6 +27,6 @@ export class ExplorationQualityHeld extends Error {
   }
 }
 
-export function isReplaceableExplorationOutcome(state:string):state is 'rejected'|'quality_held' {
-  return state==='rejected'||state==='quality_held';
+export function isReplaceableExplorationOutcome(state:string):state is (typeof replaceableExplorationOutcomes)[number] {
+  return replaceableExplorationOutcomes.some(outcome=>outcome===state);
 }

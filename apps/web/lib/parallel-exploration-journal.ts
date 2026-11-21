@@ -1,4 +1,4 @@
-import {isReplaceableExplorationOutcome} from './exploration-image-outcome.ts';
+import {isReplaceableExplorationOutcome,replaceableExplorationOutcomes} from './exploration-image-outcome.ts';
 import {validateCompletedExplorationPlan,validateExplorationContext} from '@compor/agents-api/exploration-plan-contract';
 import {validateVisualInputManifest, parseVisualInputManifest, visualInputMatchesProject} from '@compor/agents-api/visual-input-contract';
 import * as z from './schema.ts';
@@ -333,7 +333,7 @@ export function createParallelJournalStore({indexedDB=globalThis.indexedDB,name=
   /** Caller supplies the scoped authenticated status read after confirmed revocation. */
   async function abandonReplacement(scope:ParallelScope,expectedRevision:number,observation:ParallelObservation):Promise<ParallelJournal>{
     const address=scopeSchema.parse(scope);
-    const observed=z.strictObject({requestId:id,position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),status:z.enum(['rejected','quality_held']),revision:z.number().check(z.int()).check(z.positive()).check(z.maximum(Number.MAX_SAFE_INTEGER))}).parse(observation);
+    const observed=z.strictObject({requestId:id,position:z.number().check(z.int()).check(z.minimum(1)).check(z.maximum(3)),status:z.enum(replaceableExplorationOutcomes),revision:z.number().check(z.int()).check(z.positive()).check(z.maximum(Number.MAX_SAFE_INTEGER))}).parse(observation);
     return transaction('readwrite',(store,done,abort)=>{const request=store.get(key(address));request.onsuccess=()=>{try{
       const journal=parseParallelJournal(request.result),history=journal.replacements??[],current=history.at(-1),child=journal.progress.children.find(item=>item.position===observed.position);
       if(key(scopeFrom(journal))!==key(address)||journal.revision!==expectedRevision||!current||!['prepared','submitted'].includes(current.state)||!current.revocationConfirmed||current.position!==observed.position||current.previousId!==observed.requestId||!child||child.requestId!==current.previousId||child.status!==observed.status||observed.revision<child.revision)throw new ParallelJournalError('parallel_storage_conflict');

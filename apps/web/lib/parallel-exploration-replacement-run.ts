@@ -12,6 +12,13 @@ import type {VisualAuthorityScope} from './reference-visual-authority.ts';
 
 type Options={preparation:ParallelPreparation;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;position:number;key:string;allowed:()=>boolean;currentContext:()=>Promise<unknown>;currentReferences?:()=>Promise<StoredReference[]>;onSnapshot:(snapshot:BatchSnapshot,journal:ParallelJournal)=>Promise<void>;onNotice:(notice:string)=>void};
 const sleep=(ms:number)=>new Promise<void>(resolve=>setTimeout(resolve,ms));
+const replacementNotices={
+  completed:'Reposição confirmada.',
+  rejected:'A reposição foi recusada.',
+  quality_held:'A reposição foi retida pela revisão de qualidade.',
+  failed:'A imagem da reposição não chegou. Você pode pedir uma nova reposição.',
+  unknown:'O resultado da reposição permanece desconhecido.',
+} as const;
 
 async function matchesSelection(manifest:VisualInputManifest,references:StoredReference[]):Promise<boolean>{
   if(!Array.isArray(references)||references.length!==manifest.entries.length)return false;
@@ -84,9 +91,9 @@ export function createReplacementRun(options:Options){
         while(valid()){
           const value=await client.inspectBatch(preparation,Date.now,false);ensure();await onSnapshot(value.snapshot,value.journal);ensure();
           const result=value.journal.progress.children.find(item=>item.position===position);
-          if(result?.requestId===next.requestId&&result.status!=='running'){
+          if(result?.requestId===next.requestId&&result.status!=='running'&&result.status!=='unconfirmed'){
             if(result.status==='unknown')await stop();
-            onNotice(result.status==='completed'?'Reposição confirmada.':result.status==='rejected'?'A reposição foi recusada.':result.status==='quality_held'?'A reposição foi retida pela revisão de qualidade.':'O resultado da reposição permanece desconhecido.');return;
+            onNotice(replacementNotices[result.status]);return;
           }
           if(settled){if(checkedAfterSettlement){onNotice('A reposição ainda não foi confirmada. Consulte a tentativa antes de continuar.');return;}checkedAfterSettlement=true;continue;}
           await sleep(2000);ensure();

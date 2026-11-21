@@ -40,8 +40,9 @@ export function createExplorationImageStore(config:AuthConfig, fetchApi:typeof f
       return {state:row.state,isNew:row.is_new};
     },
     async finish(actor,projectId,requestId,state,secret) {
-      const params={p_project_id:projectId,p_id:requestId};
-      if(await rpc(actor,state==='completed'?'complete_exploration_image_proven':'finish_exploration_image',state==='completed'?{...params,p_rejection_secret:secret}:{...params,p_state:state})!==true)throw Error('unavailable');
+      const params={p_project_id:projectId,p_id:requestId,p_rejection_secret:secret};
+      const name=state==='completed'?'complete_exploration_image_proven':'mark_exploration_image_unknown_proven';
+      if(await rpc(actor,name,params)!==true)throw Error('unavailable');
     },
     async reject(actor,projectId,requestId,secret) {
       if(await rpc(actor,'reject_exploration_image',{p_project_id:projectId,p_id:requestId,p_rejection_secret:secret})!==true)throw Error('unavailable');
