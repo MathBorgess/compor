@@ -366,6 +366,7 @@ test('pergunta do turno de seleção pausa a exploração até a pessoa responde
   await page.getByRole('button',{name:'Enviar →',exact:true}).click();
   await page.getByText('Uma aula de cerâmica. Para quem você quer divulgá-la?',{exact:true}).waitFor();
   await openSettings(page,'Referências');await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('compor');await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+  await page.getByRole('timer',{name:/Próximo lote em/}).waitFor({timeout:15000});
   await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
   const panel=page.getByRole('region',{name:'Buscar referências visuais'});
   await panel.getByLabel('O que você quer explorar?').fill('tipografia para aula');

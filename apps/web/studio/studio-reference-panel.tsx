@@ -7,7 +7,7 @@ type Props={
   selection:ReactNode;search:ReactNode|((sourceControl:ReactNode)=>ReactNode);proposals:ReactNode;conversation:ReactNode;
   onUpload:(files:File[])=>void;uploadDisabled?:boolean;uploadStatus?:string;
   onBack?:()=>void;onContinue?:()=>void;continueLabel?:string;continueDisabled?:boolean;
-  onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;
+  onRequestProposals?:()=>void;proposalsDisabled?:boolean;proposalsRunning?:boolean;proposalsLocked?:boolean;
   selectionStatus?:ReactNode;recovery?:ReactNode;proposalDisclosure?:string;proposalBlock?:{message:string;action?:{label:string;run:()=>void}};
   onPauseProposals?:()=>void;proposalStatus?:string;proposalPhase?:'idle'|'generating'|'waiting'|'blocked';
   proposalProgress?:ExplorationProgress|null;
@@ -24,7 +24,7 @@ function ProposalProgress({progress}:{progress:ExplorationProgress}) {
     <p role="timer" aria-live="off" aria-label="Tempo de espera da imagem">Tempo de espera: {duration}</p>
   </div>;
 }
-export default function ReferencePanel({projectWide,onScope,entry='post',projectTitle,selectionCount=0,selectionWaiting=false,needsResponse=false,selection,search,proposals,conversation,onUpload,uploadDisabled=false,uploadStatus,onBack,onContinue,continueLabel,continueDisabled=false,onRequestProposals,proposalsDisabled=false,proposalsRunning=false,selectionStatus,recovery,proposalDisclosure,proposalBlock,onPauseProposals,proposalStatus,proposalPhase='idle',proposalProgress}:Props) {
+export default function ReferencePanel({projectWide,onScope,entry='post',projectTitle,selectionCount=0,selectionWaiting=false,needsResponse=false,selection,search,proposals,conversation,onUpload,uploadDisabled=false,uploadStatus,onBack,onContinue,continueLabel,continueDisabled=false,onRequestProposals,proposalsDisabled=false,proposalsRunning=false,proposalsLocked=false,selectionStatus,recovery,proposalDisclosure,proposalBlock,onPauseProposals,proposalStatus,proposalPhase='idle',proposalProgress}:Props) {
   const [source,setSource]=useState<Source>('search'),[surface,setSurface]=useState<'gallery'|'conversation'>('gallery');
   const sourceId=useId(),conversationId=useId(),headingId=useId(),uploadHelpId=useId(),proposalHelpId=useId();
   const heading=useRef<HTMLHeadingElement>(null),conversationSection=useRef<HTMLElement>(null),conversationTrigger=useRef<HTMLButtonElement>(null),gallery=useRef<HTMLDivElement>(null);
@@ -38,6 +38,7 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
   },[surface]);
   function openConversation(){galleryScroll.current=window.scrollY;switching.current=true;setSurface('conversation');}
   function closeConversation(){switching.current=true;setSurface('gallery');}
+  const visibleProposalStatus=proposalStatus||(proposalsLocked?'Preparando três propostas…':undefined);
   const sourceControl=<label className="reference-source-control">Fonte<select aria-label="Fonte" name="source" aria-controls={sourceId} value={source} onChange={event=>setSource(event.target.value as Source)}><option value="search">Pinterest</option><option value="upload">Seus envios</option><option value="compor">Propostas do Compor</option></select></label>;
   return <section className="reference-workbench reference-step" data-source={source} data-surface={surface} data-phase={proposalPhase} data-selection-phase={selectionWaiting?'stabilizing':'idle'} aria-busy={continueDisabled} aria-labelledby={headingId}>
     {entry==='preparation'&&<nav className="reference-preparation-steps" aria-label="Preparação do projeto"><ol><li>Contexto concluído</li><li>IA revisada</li><li aria-current="step">Referências opcionais</li><li>Pedido</li></ol></nav>}
@@ -47,8 +48,8 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
       <p>Referências são opcionais. Escolha imagens ou continue sem elas.</p>
     </header>
     {selectionWaiting&&<p className="reference-workbench-status" role="status">Aguardando 5 segundos sem alterações ou digitação para verificar esta seleção.</p>}
-    {(proposalStatus||proposalsRunning)&&<div className="reference-exploration-status">{proposalPhase==='generating'&&proposalProgress?<ProposalProgress key={proposalProgress.requestId} progress={proposalProgress}/>:proposalStatus&&<p className="reference-workbench-status" role={proposalPhase==='waiting'?'timer':'status'} aria-live={proposalPhase==='waiting'?'off':'polite'}>{proposalStatus}</p>}{proposalsRunning&&onPauseProposals&&<button type="button" className="studio-button-secondary" onClick={onPauseProposals}>Pausar exploração</button>}</div>}
-    <div ref={gallery} className="reference-gallery-surface" hidden={surface!=='gallery'}>
+    {(visibleProposalStatus||proposalsRunning)&&<div className="reference-exploration-status">{proposalsLocked&&<progress aria-label="Carregando propostas" className="reference-proposal-loading"/>}{proposalPhase==='generating'&&proposalProgress?<ProposalProgress key={proposalProgress.requestId} progress={proposalProgress}/>:visibleProposalStatus&&<p className="reference-workbench-status" role={proposalPhase==='waiting'?'timer':'status'} aria-live={proposalPhase==='waiting'?'off':'polite'}>{visibleProposalStatus}</p>}{(proposalsRunning||proposalsLocked)&&onPauseProposals&&<button type="button" className="studio-button-secondary" onClick={onPauseProposals}>Pausar exploração</button>}</div>}
+    <div ref={gallery} className="reference-gallery-surface" inert={proposalsLocked} hidden={surface!=='gallery'}>
       <section className="reference-workbench-explore" aria-label="Explorar caminhos visuais">
         <div className="reference-workbench-actions">
           <button type="button" className="studio-button-secondary" disabled={uploadDisabled} aria-describedby={uploadHelpId} onClick={()=>filePicker.current?.click()}>Enviar imagem</button>
@@ -81,7 +82,7 @@ export default function ReferencePanel({projectWide,onScope,entry='post',project
       </footer>
       <details className="reference-workbench-selection"><summary>Revisar seleção e alcance</summary>{onScope&&<label className="guided-reference-scope">Aplicar referências a<select value={projectWide?'project':'post'} disabled={continueDisabled} onChange={event=>onScope(event.target.value==='project')}><option value="post">Só neste post</option><option value="project">Todo o projeto</option></select></label>}{selection}</details>
     </div>
-    <section ref={conversationSection} id={conversationId} tabIndex={-1} className="reference-workbench-conversation" aria-label="Conversa sobre estas referências" hidden={surface!=='conversation'}>
+    <section ref={conversationSection} id={conversationId} tabIndex={-1} className="reference-workbench-conversation" aria-label="Conversa sobre estas referências" inert={proposalsLocked} hidden={surface!=='conversation'}>
       <button type="button" className="studio-button-secondary reference-back-to-images" onClick={closeConversation}>Voltar às imagens</button>
       {conversation}
     </section>

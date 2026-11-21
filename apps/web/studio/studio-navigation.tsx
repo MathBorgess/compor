@@ -20,7 +20,7 @@ const paths={
   delete:'M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6',
 
 };
-export default function StudioNavigation({actions,projectTitle='',onRenameProject}:{actions:Action[];projectTitle?:string;onRenameProject?:(title:string)=>boolean|void|Promise<boolean|void>}) {
+export default function StudioNavigation({actions,projectTitle='',onRenameProject,locked=false}:{actions:Action[];locked?:boolean;projectTitle?:string;onRenameProject?:(title:string)=>boolean|void|Promise<boolean|void>}) {
   const [expanded,setExpanded]=useState(false);
   const [editing,setEditing]=useState(false),[draftTitle,setDraftTitle]=useState(projectTitle);
   const renameId=useId();
@@ -43,7 +43,7 @@ export default function StudioNavigation({actions,projectTitle='',onRenameProjec
   const renderAction=(action:Action)=><button key={action.id} type="button" aria-label={action.label} title={action.label} aria-current={action.current?'page':undefined} disabled={action.disabled} className={action.id==='save'?'studio-navigation-save':undefined} onClick={()=>{action.onClick();if(window.matchMedia('(max-width:800px)').matches)setExpanded(false);}}>
     <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths[action.id]}/></svg><span>{action.label}</span>
   </button>;
-  return <aside className="studio-navigation-shell" data-expanded={expanded}>
+  return <aside className="studio-navigation-shell" inert={locked} data-expanded={expanded}>
     <nav ref={root} className="studio-navigation" aria-label="Menu do projeto" onKeyDown={event=>{if(event.key==='Escape'&&expanded){event.preventDefault();setExpanded(false);toggle.current?.focus();}}}>
       <button ref={toggle} type="button" className="studio-navigation-toggle" aria-label={expanded?'Recolher menu':'Expandir menu'} title={expanded?'Recolher menu':'Expandir menu'} aria-expanded={expanded} aria-controls={id} onClick={()=>setExpanded(value=>!value)}>
         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16 M4 12h16 M4 18h16"/></svg><span>Menu do projeto</span>

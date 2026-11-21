@@ -12,6 +12,7 @@ export type StudioDrawer = "bases" | "marca" | null;
 export type StudioLayout = "b" | "c";
 export type StudioShellProps = {
   stage?: StudioStage;
+  navigationLocked?: boolean;
   projectId?: string;
   projectTitle?: string;
   projects?: Project[];
@@ -69,15 +70,16 @@ export function projectInitials(title: string) {
 }
 
 /** Option C (ADR 0056): every project one click away; the open one stays marked. */
-function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllProjects }: {
+function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllProjects, locked }: {
   projects: Project[];
   projectId: string;
   onOpenProject?: (project: Project) => void;
   onNewProject?: () => void;
   onAllProjects?: () => void;
+  locked: boolean;
 }) {
   return (
-    <nav className="studio-project-rail" aria-label="Projetos">
+    <nav className="studio-project-rail" aria-label="Projetos" inert={locked}>
       <div className="studio-project-rail-inner">
       {onAllProjects ? (
         <button type="button" className="studio-rail-home" aria-label="Todos os projetos" title="Todos os projetos" onClick={onAllProjects}>
@@ -125,6 +127,7 @@ function layoutKey(projectId: string) {
 
 export default function StudioShell({
   stage = "projects",
+  navigationLocked = false,
   projectId = "",
   projectTitle = "",
   projects = [],
@@ -388,7 +391,7 @@ export default function StudioShell({
         Ir para o conteúdo
       </a>
       {/* Barra fixa (ADR 0056): marca e conta. No celular, o nome completo do projeto aberto fica nesta barra. */}
-      <header className="studio-topbar" ref={barRef}>
+      <header className="studio-topbar" ref={barRef} inert={navigationLocked}>
         <div className="studio-topbar-start">
           {/* A marca leva à página inicial; dentro de um projeto, pelo onNavigate, que preserva o projeto antes de sair. */}
           <a
@@ -468,6 +471,7 @@ export default function StudioShell({
       <div className="studio-frame">
       {guided && projectId ? (
         <ProjectRail
+          locked={navigationLocked}
           projects={projects}
           projectId={projectId}
           onOpenProject={onOpenProject}
