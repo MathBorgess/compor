@@ -74,7 +74,9 @@ test('400, 429 e 500 encerram sem repetir a imagem nem reutilizar o pedido', asy
   for (const [status, closureReason, providerOutcome] of cases) {
     let phase = 'new';
     const failed = [];
+    let claimDigest;
     const f = fixture({
+      claimed: ({qualityDigest}) => { claimDigest ??= qualityDigest; },
       nextClaim: () => phase === 'new' ? (phase = 'replay', {id:executionId, assetId, state:'running', isNew:true}) : {id:executionId, assetId, state:'failed', isNew:false},
       failExecution: async input => { failed.push(input); },
       readExecutionClosure: async () => ({ closureReason, providerOutcome }),
@@ -83,6 +85,8 @@ test('400, 429 e 500 encerram sem repetir a imagem nem reutilizar o pedido', asy
     assert.deepEqual(await f.fn(f.input), { status:'failed', closureReason, providerOutcome, retryAutomatically:false });
     assert.equal(failed.length, 1);
     assert.equal(failed[0].executionId, executionId);
+    assert.match(failed[0].executionSecret, /^[a-f0-9]{64}$/);
+    assert.equal(createHash('sha256').update(Buffer.from(failed[0].executionSecret,'hex')).digest('hex'), claimDigest);
     assert.deepEqual(await f.fn(f.input), { status:'failed', closureReason, providerOutcome, retryAutomatically:false });
     assert.equal(f.calls.filter(call => call === 'image').length, 1);
     assert.equal(f.calls.includes('unknown'), false);
@@ -183,7 +187,7 @@ test('adaptadores HTTP concretos cooperam com provedores simulados',async()=>{
    if(url.pathname.includes('/storage/')) {saved=true;return Response.json({});}
    if(url.pathname.endsWith('/reserve_image_tool_call')) {assert.equal(JSON.parse(init.body).p_call_id,callId);return Response.json([{reservation_id:reservationId,state:'reserved',is_new:true}]);}
    if(url.pathname.endsWith('/declare_image_generation_consent')) return Response.json([{declaration_id:reservationId,is_new:true}]);
-   if(url.pathname.endsWith('/claim_image_tool_execution')) {const first=!claimed;claimed=true;return Response.json([{execution_id:executionId,asset_id:assetId,state:'running',is_new:first}]);}
+   if(url.pathname.endsWith('/claim_post_image_execution_proven')) {assert.match(JSON.parse(init.body).p_quality_digest,/^[a-f0-9]{64}$/);const first=!claimed;claimed=true;return Response.json([{execution_id:executionId,asset_id:assetId,state:'running',is_new:first}]);}
    if(url.pathname.endsWith('/complete_image_tool_execution')) {assert.ok(saved);return Response.json(true);}
    if(url.pathname.endsWith('/claim_image_tool_result_submission')){assert.equal(JSON.parse(init.body).p_call_id,callId);const first=!resultClaimed;resultClaimed=true;return Response.json([{submission_id:submissionId,asset_id:assetId,state:'sending',is_new:first}]);}
    if(url.pathname.endsWith('/finish_image_tool_result_submission'))return Response.json(true);

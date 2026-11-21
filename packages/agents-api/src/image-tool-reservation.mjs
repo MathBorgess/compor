@@ -51,7 +51,7 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
     async confirmClosedAttempt({actor,projectId,requestId}) {
       if (!uuid.test(projectId ?? '') || !uuid.test(requestId ?? '')) throw new Error('invalid attempt');
       const result=await rpc('confirm_closed_image_attempt',actor,{p_project_id:projectId,p_request_id:requestId});
-      if (result==='failed_without_dispatch') return {status:'confirmed',outcome:result};
+      if (result==='failed_without_dispatch' || result==='failed_image_attempt') return {status:'confirmed',outcome:result};
       if (isImageQualityReason(result)) return {status:'confirmed',outcome:'quality_held',qualityReason:result};
       if (!['confirmed','unverified'].includes(result)) throw new Error('reservation status unknown');
       return {status:result};
@@ -78,9 +78,11 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if(!uuid.test(executionId??'')||!/^[a-f0-9]{64}$/.test(qualitySecret)||!isImageQualityReason(qualityReason))throw Error('invalid quality outcome');
       if(await rpc('hold_post_image_candidate',actor,{p_execution_id:executionId,p_quality_secret:qualitySecret,p_quality_reason:qualityReason})!==true)throw Error('reservation status unknown');
     },
-    async failExecution({ actor, executionId, closureReason, providerOutcome }) {
-      if (!uuid.test(executionId ?? '') || !['provider_rejected_400','provider_rejected_429','result_unknown'].includes(closureReason) || !['failure','retryable','unconfirmed'].includes(providerOutcome)) throw new Error('invalid execution');
-      if (await rpc('fail_image_tool_execution', actor, { p_execution_id: executionId, p_closure_reason: closureReason, p_provider_outcome: providerOutcome }) !== true) throw new Error('reservation status unknown');
+    async failExecution({ actor, executionId, executionSecret, closureReason, providerOutcome }) {
+      const definitive = (closureReason==='provider_rejected_400' && providerOutcome==='failure')
+        || (['provider_rejected_429','result_unknown'].includes(closureReason) && providerOutcome==='retryable');
+      if (!uuid.test(executionId ?? '') || !/^[a-f0-9]{64}$/.test(executionSecret) || !definitive) throw new Error('invalid execution');
+      if (await rpc('fail_image_tool_execution', actor, { p_execution_id: executionId, p_secret: executionSecret, p_closure_reason: closureReason, p_provider_outcome: providerOutcome }) !== true) throw new Error('reservation status unknown');
     },
     async readExecutionClosure({ actor, executionId }) {
       if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');
@@ -89,8 +91,9 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (!['provider_rejected_400','provider_rejected_429','result_unknown'].includes(row?.closure_reason) || !['failure','retryable','unconfirmed'].includes(row?.provider_outcome)) throw new Error('reservation status unknown');
       return { closureReason: row.closure_reason, providerOutcome: row.provider_outcome };
     },
-    async closeUnconfirmed({ actor }) {
-      const result = await rpc('close_unconfirmed_image_work', actor, {});
+    async closeUnconfirmed({ actor, projectId }) {
+      if (!uuid.test(projectId ?? '')) throw new Error('invalid project');
+      const result = await rpc('close_unconfirmed_image_work', actor, { p_project_id: projectId });
       if (!['closed','already_closed'].includes(result)) throw new Error('reservation status unknown');
       return { status: result };
     },
@@ -101,9 +104,11 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       if (result.screen !== 'none' && (!uuid.test(result.projectId ?? '') || typeof result.projectTitle !== 'string' || typeof result.sameProject !== 'boolean')) throw new Error('reservation status unknown');
       return result;
     },
-    async markExecutionUnknown({ actor, executionId }) {
-      if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');
-      const result = await rpc('mark_image_tool_execution_unknown', actor, { p_execution_id: executionId });
+    async markExecutionUnknown({ actor, executionId, executionSecret }) {
+      if (!uuid.test(executionId ?? '') || (executionSecret!==undefined && !/^[a-f0-9]{64}$/.test(executionSecret))) throw new Error('invalid execution');
+      const result = await rpc('mark_image_tool_execution_unknown', actor, {
+        p_execution_id: executionId, ...(executionSecret ? { p_secret: executionSecret } : {}),
+      });
       if (result !== true) throw new Error('reservation status unknown');
     },
     async completeExecution({ actor, executionId }) {

@@ -31,13 +31,17 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  let startup='';const child=spawn(process.execPath,['node_modules/next/dist/bin/next','dev','-p',String(port),'-H','127.0.0.1'],{stdio:['ignore','pipe','pipe'],env:{...process.env,APP_ORIGIN:origin}});for(const stream of[child.stdout,child.stderr])stream.on('data',chunk=>{startup=(startup+chunk).slice(-6000);});t.after(async()=>{if(child.exitCode===null&&child.signalCode===null){child.kill('SIGTERM');await once(child,'exit');}});
  const until=Date.now()+30000;for(;;){try{if((await fetch(`${origin}/${basename(fixture)}`)).ok)break;}catch{}if(Date.now()>until)throw Error(`fixture indisponível: ${startup}`);await new Promise(resolve=>setTimeout(resolve,100));}
  const completedPollStarted=Promise.withResolvers(),releaseCompletedPoll=Promise.withResolvers(),completedPollDelivered=Promise.withResolvers();
- const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{releaseCompletedPoll.resolve();await browser.close();});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],imageReadiness='ready',holdCompletedPoll=false,stableProposal=false;
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(async()=>{releaseCompletedPoll.resolve();await browser.close();});const page=await browser.newPage();page.setDefaultTimeout(6000);const calls=[],errors=[],external=[];let polls=0,imageReplies=[],imageReadiness='ready',holdCompletedPoll=false,stableProposal=false,closureConfirmed=false,retryRejected=false;
  await isolateFixtureHmr(page,`/${basename(fixture)}`);
  await page.addInitScript(({marker,requestId})=>{if(sessionStorage.getItem(marker)===null)sessionStorage.setItem(marker,JSON.stringify({requestId,previousAttemptKey:null,imageProtocolVersion:1,imageContext:{pieceId:'00000000-0000-4000-8000-000000000004',baseVersion:2}}));},{marker,requestId});
  page.on('pageerror',error=>errors.push(error.message));page.on('request',request=>{if(!request.url().startsWith(origin))external.push(request.url());});
  await page.route('**/api/**',async route=>{
   const request=route.request(),url=new URL(request.url()),body=request.method()==='POST'?request.postDataJSON():null;calls.push({path:url.pathname,body,query:Object.fromEntries(url.searchParams)});
   if(url.pathname==='/api/studio/chat'){
+   if(body.op===undefined&&body.message==='Pode gerar a imagem de novo?'){
+    if(retryRejected)return route.fulfill({status:409,json:{status:'failed',error:'project_busy',failurePhase:'before_submission',requestId:body.requestId,retryAutomatically:false}});
+    return route.fulfill({json:{status:'completed',text:'Novo pedido recebido.'}});
+   }
    assert.equal(body.op,'poll');const first=++polls===1,held=!first&&holdCompletedPoll;
    if(held){holdCompletedPoll=false;completedPollStarted.resolve();await releaseCompletedPoll.promise;}
    await route.fulfill({status:202,json:first?{status:'consent_required',attemptId:id(12),prompt:'Proposta sintética',actionBinding:stableProposal?`renewed-binding-${calls.length}`:'synthetic-binding',declineBinding:'synthetic-decline',...(stableProposal?{imageActionId:id(13),proposal:{prompt:'Proposta sintética',operation:'edit',baseImageId:pieceId,referenceIds:[]}}:{})}:{status:'completed',text:staleText}});
@@ -47,10 +51,14 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
    assert.equal(Object.hasOwn(body,'apiKey'),false);
    assert.equal(request.headers()['x-compor-openai-key'],apiKey);
    assert.equal(request.headers()['content-type'],'application/vnd.compor.byok+json');
-   const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});
+   const next=imageReplies.shift();
+   if(next==='refused')return route.fulfill({json:{status:'failed',closureReason:'provider_rejected_429',providerOutcome:'retryable',retryAutomatically:false}});
+   if(next==='unknown')return route.fulfill({status:502,json:{error:'result_unknown',retryAutomatically:false}});
+   return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});
   }
   if(url.pathname==='/api/agent/image/hold')return route.fulfill({json:{screen:'result_unknown',sameProject:true,projectId,projectTitle:'Oficina sintética'}});
   if(url.pathname==='/api/agent/image/close')return route.fulfill({json:{status:'closed'}});
+  if(url.pathname==='/api/agent/image/reconcile-closed')return route.fulfill({json:closureConfirmed?{status:'confirmed',outcome:'failed_image_attempt'}:{status:'unverified'}});
   if(url.pathname==='/api/agent/image/status'){
    assert.deepEqual(Object.keys(body).sort(),['actionBinding','attemptId','pieceId','projectId','version']);
    assert.equal(request.headers()['x-compor-openai-key'],undefined,'consulta de prontidão não carrega credencial');
@@ -151,5 +159,35 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  polls=0;await page.reload();const beforeLegacy=calls.length;await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
  await page.getByText(/Esta tentativa começou antes da proteção de reenvio/).waitFor();
  assert.equal(calls.slice(beforeLegacy).filter(c=>c.path==='/api/agent/image').length,0,'tentativa antiga ambígua não pode disparar uma nova geração');
+ for(const imageResult of ['refused','unknown']){
+  await page.evaluate(()=>{localStorage.clear();sessionStorage.clear();});
+  polls=0;imageReplies=[imageResult];closureConfirmed=false;retryRejected=true;
+  await page.reload();
+  const retryStart=calls.length;
+  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
+  const retry=page.getByRole('button',{name:imageResult==='refused'?'Tentar de novo':'Encerrar e tentar de novo',exact:true});
+  const steps=()=>calls.slice(retryStart).filter(call=>call.body?.message==='Pode gerar a imagem de novo?'||['/api/agent/image','/api/agent/image/close','/api/agent/image/reconcile-closed'].includes(call.path));
+  const submitCalls=()=>steps().filter(call=>call.path==='/api/studio/chat');
+  await retry.click();
+  await page.getByText('Não foi possível confirmar o encerramento. Sua tentativa foi preservada.',{exact:true}).waitFor();
+  assert.equal(submitCalls().length,0,'sem confirmação exata não há novo pedido');
+  assert.equal(await page.evaluate(userId=>localStorage.getItem(`compor-image-submission:${userId}`),userId),requestId);
+  closureConfirmed=true;
+  await retry.click();
+  await page.getByText('Este pedido não foi enviado à OpenAI porque outro pedido deste projeto ainda precisa ser consultado. Seu trabalho foi preservado.',{exact:true}).waitFor();
+  assert.equal(await retry.isVisible(),true,'uma recusa anterior ao envio preserva a opção de retry');
+  assert.equal(await page.evaluate(userId=>localStorage.getItem(`compor-image-submission:${userId}`),userId),null);
+  assert.equal(await page.evaluate(requestId=>JSON.parse(sessionStorage.getItem('receipt-test-state')).adjustments.find(item=>item.id===requestId).status,requestId),'failed');
+  retryRejected=false;
+  await retry.click();
+  await page.getByText('Novo pedido recebido.',{exact:true}).waitFor();
+  await retry.waitFor({state:'detached'});
+  assert.equal(submitCalls().length,2);
+  assert.equal(new Set([requestId,...submitCalls().map(call=>call.body.requestId)]).size,3);
+  assert.ok(submitCalls().every(call=>!call.body.previousAttemptKey));
+  assert.equal(steps().filter(call=>call.path==='/api/agent/image').length,1,'retry explícito pede outro turno sem reenviar a geração antiga');
+  assert.ok(steps().filter(call=>call.path.endsWith('/reconcile-closed')).every(call=>call.body.requestId===requestId));
+  assert.equal(steps().filter(call=>call.path==='/api/agent/image/close').length,imageResult==='unknown'?3:0);
+ }
  assert.equal(await page.evaluate(()=>JSON.stringify([Object.entries(localStorage),Object.entries(sessionStorage)])).then(value=>value.includes('sk-synthetic')),false);assert.doesNotMatch(await page.locator('body').innerText(),/synthetic private error|sk-synthetic/);assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });

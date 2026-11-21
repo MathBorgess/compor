@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     if (!actor || !await ownsSupabaseProject({ config, actor, projectId })) return Response.json({ status: 'unverified' }, { status: 404, headers: { 'Cache-Control': 'no-store' } });
     const store = createImageToolReservationStore({ url: config.service, anonKey: config.key });
     if (!store.closeUnconfirmed) return Response.json({ status: 'unverified' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
-    return Response.json(await store.closeUnconfirmed({ actor }), { headers: { 'Cache-Control': 'no-store' } });
+    return Response.json(await store.closeUnconfirmed({ actor, projectId }), { headers: { 'Cache-Control': 'no-store' } });
   } catch {
     return Response.json({ status: 'unverified' }, { status: 503, headers: { 'Cache-Control': 'no-store' } });
   }

@@ -23,7 +23,7 @@ export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.litera
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
 export const pendingInspectionSchema=z.strictObject({status:z.enum(['running','action_required','completed','failed','unknown']),retryAutomatically:z.literal(false),error:z.optional(z.literal('provider_usage_limit'))}).check(z.refine(value=>value.error===undefined||value.status==='failed'));
 export const closedImageResponseSchema=z.union([
- z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.literal('failed_without_dispatch'))}),
+ z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.enum(['failed_without_dispatch','failed_image_attempt']))}),
  z.strictObject({status:z.literal('confirmed'),outcome:z.literal('quality_held'),qualityReason:imageQualityReasonSchema}),
 ]);
 export type PendingInspection=z.infer<typeof pendingInspectionSchema>;

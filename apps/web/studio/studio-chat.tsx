@@ -177,6 +177,7 @@ export default function StudioChat({
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
   const [imageScreen,setImageScreen]=useState<ImageAttemptScreen|null>(null);
+  const [imageRetry,setImageRetry]=useState<{requestId:string;scope:string;screen:ImageAttemptScreen}|null>(null);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
@@ -312,7 +313,7 @@ export default function StudioChat({
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
     activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setOrphanNotice('');
-    setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
+    setLastCompleted(null);setInspection(null);setInspecting(false);setImageScreen(null);setImageRetry(null);inspectionLock.current=false;
     actionCount.current.clear();
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
@@ -416,7 +417,9 @@ export default function StudioChat({
       throw Error('A IA do Compor está indisponível. A tentativa anterior continua preservada para consulta.');
     }
     if (path === "/api/agent/image" && response.status === 502 && envelope.error === "result_unknown")
-      return {status:"failed",closureReason:"result_unknown",providerOutcome:"unconfirmed",retryAutomatically:false};
+      return uuid(envelope.assetId)
+        ? {status:"unknown",assetId:envelope.assetId,retryAutomatically:false}
+        : {status:"failed",closureReason:"result_unknown",providerOutcome:"unconfirmed",retryAutomatically:false};
     if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
       return {status:"failed",error:"image_invalid_request"};
     if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
@@ -908,7 +911,7 @@ export default function StudioChat({
         ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
       },beforeDispatch);
       await handle(data, requestId);
-      return true;
+      return !(data.status==='failed' && data.failurePhase==='before_submission');
     } catch (e) {
       if(isCurrent&&prepared&&!submitted){
         try { settle(requestId,'failed'); } catch { /* The previous account or project may already be closed. */ }
@@ -1099,16 +1102,55 @@ export default function StudioChat({
     } catch { /* The local screen stays available. */ }
   }
   async function closeImageAttempt() {
+    if(!imageScreen?.sameProject||!credentialIsCurrent())throw Error('A tentativa anterior precisa ser confirmada.');
     const response = await fetch('/api/agent/image/close', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({projectId:state.projectId})});
     const body:unknown = await response.json().catch(()=>null);
     const status = body && typeof body === 'object' && 'status' in body ? body.status : null;
     if (!response.ok || (status !== 'closed' && status !== 'already_closed')) throw Error('Não foi possível encerrar esta tentativa.');
   }
   async function reserveNewImage(requestId:string) {
-    try { if (localStorage.getItem(imageSubmissionMarker)) localStorage.removeItem(imageSubmissionMarker); } catch { /* A missing marker still allows the new request. */ }
-    setImageScreen(null);
-    await submitText('Pode gerar a imagem de novo?', {fromComposer:false, requestId});
+    const screen=imageScreen;
+    const oldRequest=screen?.requestId;
+    if(!screen?.sameProject||!oldRequest||!credentialIsCurrent()||imageRetry||inspectionLock.current||pollLock.current||
+        (availability.current.pending && availability.current.pending!==oldRequest)) throw Error('A tentativa anterior precisa ser confirmada.');
+    inspectionLock.current=true;
+    try {
+      const closed=await readClosedImage(oldRequest);
+      if(!credentialIsCurrent()||closed?.outcome!=='failed_image_attempt')throw Error('A tentativa anterior precisa ser confirmada.');
+      const submission=localStorage.getItem(imageSubmissionMarker);
+      if(submission && submission!==oldRequest)throw Error('Outra tentativa precisa ser consultada.');
+      const settled=settleClosedAdjustment(oldRequest);
+      if(!settled&&!getState().adjustments.some(item=>item.id===oldRequest&&item.context.projectId===state.projectId&&item.context.conversationId===conversationId&&item.status==='failed'))throw Error('A tentativa mudou.');
+      await flush();
+      if(!credentialIsCurrent())return;
+      if(localStorage.getItem(imageSubmissionMarker)===oldRequest)clearClosedSubmission(oldRequest);
+      previous.current=null;
+      remember(null);
+      waitingImageRequest.current=null;
+      clearTimeout(timer.current);
+      setPending(null);
+      setPendingSource(null);
+      setImageAction(null);
+      setImageNeedsReconciliation(false);
+      setImageNeedsDecision(false);
+      setImageRetry({requestId,scope:scopeMarker,screen});
+    } finally {
+      if(credentialIsCurrent())inspectionLock.current=false;
+    }
   }
+  // Submit after the render has released the old turn from the submission guards.
+  useEffect(()=>{
+    if(!imageRetry)return;
+    setImageRetry(null);
+    if(imageRetry.scope!==scopeMarker||!credentialIsCurrent())return;
+    void submitText('Pode gerar a imagem de novo?', {fromComposer:false,requestId:imageRetry.requestId}).then(submitted=>{
+      if(!credentialIsCurrent())return;
+      if(submitted)setImageScreen(current=>current===imageRetry.screen?null:current);
+      else setNotice(current=>current||'Não foi possível enviar o novo pedido. Tente novamente.');
+    }).catch(()=>{
+      if(credentialIsCurrent())setNotice('Não foi possível enviar o novo pedido. Tente novamente.');
+    });
+  },[imageRetry,scopeMarker]);
   async function readImageWaitStatus(reservation:{projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string}):Promise<ImageWaitStatus> {
     const controller=new AbortController();
     request.current=controller;
@@ -1271,7 +1313,7 @@ export default function StudioChat({
         return;
       }
       if(data.status==='failed'&&data.closureReason&&data.retryAutomatically===false){
-        setImageScreen({reason:data.closureReason,sameProject:true});
+        setImageScreen({reason:data.closureReason,sameProject:true,requestId:action.requestId});
         if(data.closureReason==='result_unknown')void loadImageHold();
         setNotice('');
         setBusy(false);

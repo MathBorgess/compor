@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 
 export const imageAttemptCopy = {
   running: "Gerando a imagem. Isso pode levar até 2 minutos.",
@@ -21,6 +21,7 @@ export type ImageAttemptReason = "running_with_lease" | "provider_rejected_429" 
 export type ImageAttemptScreen = {
   reason: ImageAttemptReason;
   sameProject: boolean;
+  requestId?: string;
   projectTitle?: string;
   openHref?: string;
 };
@@ -68,12 +69,19 @@ export default function ImageAttemptNotice({
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [pending, setPending] = useState(false);
+  const [retryFailed, setRetryFailed] = useState(false);
+  const inFlight = useRef(false);
   async function primary() {
-    if (pending) return;
+    if (inFlight.current) return;
+    inFlight.current = true;
     setPending(true);
+    setRetryFailed(false);
     try {
       await runImageAttemptPrimary(screen.reason, { close: onClose, reserve: onReserve, createId });
+    } catch {
+      setRetryFailed(true);
     } finally {
+      inFlight.current = false;
       setPending(false);
     }
   }
@@ -95,6 +103,7 @@ export default function ImageAttemptNotice({
   return (
     <section className="image-attempt-notice" role="status" data-reason={screen.reason}>
       <p>{text}</p>
+      {retryFailed && <p>Não foi possível confirmar o encerramento. Sua tentativa foi preservada.</p>}
       {screen.reason === "running_with_lease" && <div className="image-attempt-progress" role="progressbar" aria-label={imageAttemptCopy.running} />}
       <div className="image-attempt-actions">
         {primaryLabel && <button type="button" className="studio-button image-attempt-primary" disabled={pending} onClick={() => { void primary(); }}>{primaryLabel}</button>}

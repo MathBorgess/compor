@@ -13,7 +13,7 @@ function closurePair(reason, outcome) {
 }
 function providerClosure(status, body) {
   const pair = closurePair(body?.closureReason, body?.providerOutcome);
-  if (!pair || body.error !== 'generation_not_produced' || body.retryAutomatically !== false) return null;
+  if (!pair || pair.providerOutcome === 'unconfirmed' || body.error !== 'generation_not_produced' || body.retryAutomatically !== false) return null;
   if (pair.closureReason === 'provider_rejected_400' && status !== 400) return null;
   if (pair.closureReason === 'provider_rejected_429' && status !== 429) return null;
   if (pair.closureReason === 'result_unknown' && status !== 503) return null;
@@ -84,12 +84,13 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (prompt.length > 8000) return {status:'invalid_prompt'};
     } catch { return unknown(); }
     let execution;
-    const qualitySecret=qualityHoldEnabled?randomBytes(32):null;
+    const executionProof = randomBytes(32);
+    const executionSecret = executionProof.toString('hex');
     try {
       const reservation = await reservations.reserve({actor,projectId,pieceId,version,attemptId,sessionId:action.sessionId,turnId:action.turnId,callId:action.callId});
       if (!uuid(reservation?.id) || reservation.state !== 'reserved') return unknown();
       await reservations.declareConsent({actor,reservationId:reservation.id,confirmed:true});
-      execution = await reservations.claimExecution({actor,reservationId:reservation.id,...(qualitySecret?{qualityDigest:createHash('sha256').update(qualitySecret).digest('hex')}:{}),...(visualAuthority?{visualAuthority}:{})});
+      execution = await reservations.claimExecution({actor,reservationId:reservation.id,qualityDigest:createHash('sha256').update(executionProof).digest('hex'),...(visualAuthority?{visualAuthority}:{})});
       if (execution?.state === 'busy' || execution?.state === 'blocked') return {status:execution.state};
       if (execution?.state === 'failed' && uuid(execution.id)) {
         const stored = typeof reservations.readExecutionClosure === 'function' ? await reservations.readExecutionClosure({actor, executionId: execution.id}) : {closureReason:'result_unknown', providerOutcome:'unconfirmed'};
@@ -128,10 +129,10 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
             try { await usage.finish({...measurement, state:'unknown', usage:null}); } catch { /* measurement remains uncertain */ }
           }
           if (typeof reservations.failExecution !== 'function') throw Error('generation uncertain');
-          await reservations.failExecution({actor, executionId: execution.id, closureReason: refused.closureReason, providerOutcome: refused.providerOutcome});
+          await reservations.failExecution({actor, executionId: execution.id, executionSecret, closureReason: refused.closureReason, providerOutcome: refused.providerOutcome});
           return {status:'failed', ...refused, retryAutomatically:false, ...(usage ? {usageRecorded:false} : {})};
         }
-        if (!qualitySecret || ![422, 503].includes(image.status)) throw Error('generation uncertain');
+        if (!qualityHoldEnabled || ![422, 503].includes(image.status)) throw Error('generation uncertain');
         result = payload;
       } else result = await image.json();
       let qualityReason=image.ok?null:result?.error;
@@ -140,7 +141,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       if (usage) {measurementFinished=true; try {await usage.finish({...measurement,state:'completed',usage:result?.usage});usageRecorded=true;} catch { /* preserve image; measurement remains uncertain */ }}
       if(image.ok&&qualityHoldEnabled&&!(await authorizeReview()))qualityReason='image_quality_inconclusive';
       if(qualityReason){
-        await reservations.holdExecution({actor,executionId:execution.id,qualitySecret:qualitySecret.toString('hex'),qualityReason});
+        await reservations.holdExecution({actor,executionId:execution.id,qualitySecret:executionSecret,qualityReason});
         return {status:'quality_held',qualityReason,retryAutomatically:false,...(usage?{usageRecorded}:{})};
       }
       if (typeof result?.imageBase64 !== 'string' || result.imageBase64.length > 12 * 1024 * 1024 || !/^[A-Za-z0-9+/]+={0,2}$/.test(result.imageBase64)) throw new Error('invalid image');
@@ -155,7 +156,7 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       return {status:'completed',executionId:execution.id,...(usage?{usageRecorded}:{}),toolResult:{type:'agent.session.input.tool_result',turn_id:action.turnId,call_id:action.callId,success:true,output:JSON.stringify({assetId:execution.assetId})}};
     } catch {
       if (usage && measurementStarted && !measurementFinished) {try {await usage.finish({...measurement,state:'unknown',usage:null});} catch { /* started remains uncertain */ }}
-      try { await reservations.markExecutionUnknown({actor,executionId:execution.id}); } catch { /* running/completed also prevent another claim */ }
+      try { await reservations.markExecutionUnknown({actor,executionId:execution.id,executionSecret}); } catch { /* running/completed also prevent another claim */ }
       return {...unknown(),...(storedAssetId ? {assetId:storedAssetId} : {}),...(usage?{usageRecorded}:{})};
     }
   };
