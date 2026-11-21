@@ -18,8 +18,10 @@ function fixture(options = {}) {
     reservations: {
       reserve: async () => { calls.push('reserve'); return {id:reservationId,state:'reserved'}; },
       declareConsent: async () => { calls.push('consent'); },
-      claimExecution: async input => { calls.push('claim'); options.claimed?.(input); if (options.claimState) return {state:options.claimState}; if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
+      claimExecution: async input => { calls.push('claim'); options.claimed?.(input); if (options.nextClaim) return options.nextClaim(); if (options.claimState) return {state:options.claimState}; if (state.claimed) return {id:executionId,assetId,state:'unknown',isNew:false}; state.claimed=true; return {id:executionId,assetId,state:'running',isNew:true}; },
       ...(options.holdExecution?{holdExecution:options.holdExecution}:{}),
+      ...(options.failExecution?{failExecution:async input=>{calls.push('fail');await options.failExecution(input);}}:{}),
+      ...(options.readExecutionClosure?{readExecutionClosure:options.readExecutionClosure}:{}),
       markExecutionUnknown: async () => {calls.push('unknown');},
       completeExecution: async () => {calls.push('complete'); if(options.completeFail) throw Error(key);},
     },
@@ -63,6 +65,40 @@ test('exec assinado não permite troca pelo ID de outra chamada nem por outra co
   assert.equal((await f.fn(f.input)).status,'rejected');assert.ok(!f.calls.includes('reserve'));assert.ok(!f.calls.includes('image'));
  }
 });
+test('400, 429 e 500 encerram sem repetir a imagem nem reutilizar o pedido', async () => {
+  const cases = [
+    [400, 'provider_rejected_400', 'failure'],
+    [429, 'provider_rejected_429', 'retryable'],
+    [503, 'result_unknown', 'retryable'],
+  ];
+  for (const [status, closureReason, providerOutcome] of cases) {
+    let phase = 'new';
+    const failed = [];
+    const f = fixture({
+      nextClaim: () => phase === 'new' ? (phase = 'replay', {id:executionId, assetId, state:'running', isNew:true}) : {id:executionId, assetId, state:'failed', isNew:false},
+      failExecution: async input => { failed.push(input); },
+      readExecutionClosure: async () => ({ closureReason, providerOutcome }),
+      imageHandler: async () => Response.json({ error:'generation_not_produced', closureReason, providerOutcome, retryAutomatically:false }, { status }),
+    });
+    assert.deepEqual(await f.fn(f.input), { status:'failed', closureReason, providerOutcome, retryAutomatically:false });
+    assert.equal(failed.length, 1);
+    assert.equal(failed[0].executionId, executionId);
+    assert.deepEqual(await f.fn(f.input), { status:'failed', closureReason, providerOutcome, retryAutomatically:false });
+    assert.equal(f.calls.filter(call => call === 'image').length, 1);
+    assert.equal(f.calls.includes('unknown'), false);
+  }
+});
+
+test('timeout depois do claim marca incerteza e não repete a imagem', async () => {
+  const f = fixture({ imageHandler: async () => { throw Object.assign(new Error('timeout'), { name:'TimeoutError' }); } });
+  assert.deepEqual(await f.fn(f.input), { status:'unknown', retryAutomatically:false });
+  assert.equal(f.calls.filter(call => call === 'image').length, 1);
+  assert.equal(f.calls.filter(call => call === 'unknown').length, 1);
+  assert.equal(f.calls.includes('fail'), false);
+  await f.fn(f.input);
+  assert.equal(f.calls.filter(call => call === 'image').length, 1);
+});
+
 test('falhas após claim preservam resultado desconhecido sem repetir imagem',async()=>{
  for(const option of ['imageFail','storageFail','completeFail']) {const f=fixture({[option]:true}); const result=await f.fn(f.input); assert.equal(result.status,'unknown'); assert.ok(f.calls.includes('unknown')); assert.ok(!JSON.stringify(result).includes(key)); await f.fn(f.input); assert.equal(f.calls.filter(x=>x==='image').length,1);}
 });

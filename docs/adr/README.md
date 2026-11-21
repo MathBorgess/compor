@@ -88,5 +88,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0073](0073-referencias-e-primeiro-pedido.md) | aceito | Ações visíveis em Referências e primeiro pedido a partir dos dados do projeto |
 | [0074](0074-consulta-limitada-de-prontidao-da-imagem.md) | implementado localmente | Espera limitada, consulta da reserva sem chave ou anexos e BYOK em cabeçalho |
 | [0075](0075-revisao-de-candidatas-a-imagem.md) | candidata integrada e desligada por padrão | Parecer visual antes da entrega e retenção vinculada à tentativa |
+| [0076](0076-saida-de-falha-de-imagem.md) | implementado localmente; migration remota não aplicada | Recusa e falha do provedor deixam de travar a conta; incerteza tem prazo e encerramento explícito |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

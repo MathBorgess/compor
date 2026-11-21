@@ -71,12 +71,35 @@ export function createImageToolReservationStore({ url, anonKey, fetch: fetchApi 
       const rows = await rpc(name, actor, {p_reservation_id:reservationId,...(qualityDigest?{p_quality_digest:qualityDigest}:{}),...(visualAuthority?{p_authority_request_id:visualAuthority.requestId,p_manifest_digest:visualAuthority.manifestDigest,p_consent_secret:visualAuthority.consentSecret}:{})});
       const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
       if (['busy','blocked'].includes(row?.state) && row.execution_id === null && row.asset_id === null && row.is_new === false) return {state:row.state};
-      if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running','unknown','completed','quality_held'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
+      if (!uuid.test(row?.execution_id ?? '') || !uuid.test(row?.asset_id ?? '') || !['running','unknown','completed','quality_held','failed'].includes(row?.state) || typeof row?.is_new !== 'boolean' || (row.is_new && row.state !== 'running')) throw new Error('reservation status unknown');
       return { id: row.execution_id, assetId: row.asset_id, state: row.state, isNew: row.is_new };
     },
     async holdExecution({actor,executionId,qualitySecret,qualityReason}) {
       if(!uuid.test(executionId??'')||!/^[a-f0-9]{64}$/.test(qualitySecret)||!isImageQualityReason(qualityReason))throw Error('invalid quality outcome');
       if(await rpc('hold_post_image_candidate',actor,{p_execution_id:executionId,p_quality_secret:qualitySecret,p_quality_reason:qualityReason})!==true)throw Error('reservation status unknown');
+    },
+    async failExecution({ actor, executionId, closureReason, providerOutcome }) {
+      if (!uuid.test(executionId ?? '') || !['provider_rejected_400','provider_rejected_429','result_unknown'].includes(closureReason) || !['failure','retryable','unconfirmed'].includes(providerOutcome)) throw new Error('invalid execution');
+      if (await rpc('fail_image_tool_execution', actor, { p_execution_id: executionId, p_closure_reason: closureReason, p_provider_outcome: providerOutcome }) !== true) throw new Error('reservation status unknown');
+    },
+    async readExecutionClosure({ actor, executionId }) {
+      if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');
+      const rows = await rpc('image_execution_closure', actor, { p_execution_id: executionId });
+      const row = Array.isArray(rows) && rows.length === 1 ? rows[0] : null;
+      if (!['provider_rejected_400','provider_rejected_429','result_unknown'].includes(row?.closure_reason) || !['failure','retryable','unconfirmed'].includes(row?.provider_outcome)) throw new Error('reservation status unknown');
+      return { closureReason: row.closure_reason, providerOutcome: row.provider_outcome };
+    },
+    async closeUnconfirmed({ actor }) {
+      const result = await rpc('close_unconfirmed_image_work', actor, {});
+      if (!['closed','already_closed'].includes(result)) throw new Error('reservation status unknown');
+      return { status: result };
+    },
+    async getAccountHold({ actor, projectId }) {
+      if (!uuid.test(projectId ?? '')) throw new Error('invalid reservation');
+      const result = await rpc('image_account_hold', actor, { p_project_id: projectId });
+      if (!result || typeof result !== 'object' || !['none','running_with_lease','result_unknown'].includes(result.screen)) throw new Error('reservation status unknown');
+      if (result.screen !== 'none' && (!uuid.test(result.projectId ?? '') || typeof result.projectTitle !== 'string' || typeof result.sameProject !== 'boolean')) throw new Error('reservation status unknown');
+      return result;
     },
     async markExecutionUnknown({ actor, executionId }) {
       if (!uuid.test(executionId ?? '')) throw new Error('invalid execution');

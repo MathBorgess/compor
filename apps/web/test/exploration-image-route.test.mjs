@@ -2,6 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { createExplorationImageRoute, ExplorationCredentialsRejected } from '../lib/exploration-image-route.ts';
 import { decodeExplorationImage } from '../lib/exploration-image-runtime.ts';
+import { ExplorationProviderClosed } from '../lib/exploration-image-outcome.ts';
 import { POST as explorationPost } from '../handlers/api/studio/explorations/route.ts';
 import { createHash } from 'node:crypto';
 import { createExplorationPrompt } from '@compor/agile-deliberation/exploration';
@@ -26,6 +27,7 @@ function setup(generate=async()=>new Uint8Array([1,2,3]), options={}) {
     async finish(_actor,_project,id,state){records.get(id).state=state;},
     async reject(_actor,_project,id,secret){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='rejected';},
     async hold(_actor,_project,id,secret,reason){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='quality_held';row.qualityReason=reason;},
+    async fail(_actor,_project,id,secret,closureReason,providerOutcome){const row=records.get(id);assert.equal(createHash('sha256').update(Buffer.from(secret,'hex')).digest('hex'),row.rejectionDigest);row.state='failed';row.closureReason=closureReason;row.providerOutcome=providerOutcome;},
     async plan(){},async put(){writes++;},async list(){return [];},async read(){return new Response();},
   };
   const route=createExplorationImageRoute({appOrigin:'http://localhost:3000',resolveActor:async()=>actor,ownsProject:options.ownsProject??(async()=>true),generationAvailable:options.generationAvailable,store,generate:async(...args)=>{calls++;return generate(...args);}});
@@ -44,6 +46,21 @@ test('resultado incerto impede novas operações e repetição automática',asyn
   const another=await f.route.post(request('00000000-0000-4000-8000-000000000004'));
   assert.equal((await another.json()).status,'blocked'); assert.equal(f.calls(),1);
 });
+test('recusa classificada encerra o pedido e o mesmo id não gera outra imagem', async () => {
+  let generated = 0;
+  const f = setup(async () => { generated++; if (generated === 1) throw new ExplorationProviderClosed('provider_rejected_429', 'retryable'); return new Uint8Array([1, 2, 3]); });
+  const refused = await f.route.post(request());
+  assert.equal(refused.status, 200);
+  assert.deepEqual(await refused.json(), { status: 'failed', requestId, closureReason: 'provider_rejected_429', providerOutcome: 'retryable', retryAutomatically: false });
+  const replay = await f.route.post(request());
+  assert.equal(replay.status, 409);
+  assert.equal((await replay.json()).status, 'failed');
+  assert.equal(f.calls(), 1);
+  const next = await f.route.post(request('00000000-0000-4000-8000-000000000004'));
+  assert.equal((await next.json()).status, 'completed');
+  assert.equal(f.calls(), 2);
+});
+
 test('revisão local inconclusiva retém a exploração serial antes da gravação', async()=>{
   const imageBase64='iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR4AWJiYGBgAAAAAP//XRcpzQAAAAZJREFUAwAADwADJDd96QAAAABJRU5ErkJggg==';
   const handler=createImageHandler({authenticate:async()=>actor,fetch:async()=>Response.json({data:[{b64_json:imageBase64}]}),reviewCandidate:async()=>({decision:'unsure',findings:[]})});

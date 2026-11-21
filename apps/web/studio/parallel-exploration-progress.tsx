@@ -1,7 +1,7 @@
 import React, {type ReactNode} from 'react';
 import {parallelProgressSchema,type ParallelProgress} from '../lib/parallel-exploration-progress.ts';
 
-const labels={unconfirmed:'Aguardando confirmação do lote',running:'Aguardando a imagem',unknown:'Resultado desconhecido',completed:'Imagem confirmada',rejected:'Envio recusado',quality_held:'Proposta retida pela revisão de qualidade'} as const;
+const labels={unconfirmed:'Aguardando confirmação do lote',running:'Aguardando a imagem',unknown:'Resultado desconhecido',completed:'Imagem confirmada',rejected:'Envio recusado',quality_held:'Proposta retida pela revisão de qualidade',failed:'A imagem não chegou.'} as const;
 
 /** Presentational only: it neither observes the server nor starts or repeats work. */
 export function ParallelExplorationProgress({progress,renderConfirmedImage}:{progress:ParallelProgress;renderConfirmedImage?:(requestId:string)=>ReactNode}) {

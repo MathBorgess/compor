@@ -12,6 +12,17 @@ function json(data, status) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
 }
 
+// A finished HTTP error is not a lost response. 400 closes as refusal.
+// 429 is retryable and still not generated. 5xx is retryable and unconfirmed.
+// Timeouts throw and stay unknown in the catch below.
+export function classifiedProviderFailure(status) {
+  if (status === 401 || status === 403 || status === 408) return null;
+  if (status === 429) return { status: 429, body: { error: 'generation_not_produced', closureReason: 'provider_rejected_429', providerOutcome: 'retryable', retryAutomatically: false } };
+  if (status >= 500) return { status: 503, body: { error: 'generation_not_produced', closureReason: 'result_unknown', providerOutcome: 'retryable', retryAutomatically: false } };
+  if (status >= 400) return { status: 400, body: { error: 'generation_not_produced', closureReason: 'provider_rejected_400', providerOutcome: 'failure', retryAutomatically: false } };
+  return null;
+}
+
 function imageInputs(value = []) {
   if (!Array.isArray(value) || value.length > 21) throw Error('invalid images');
   let total = 0;
@@ -61,6 +72,8 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
         redirect: 'error', signal: AbortSignal.timeout(120_000),
       });
       if (response.status === 401 || response.status === 403) return json({ error: 'openai_credentials_rejected' }, response.status);
+      const refused = classifiedProviderFailure(response.status);
+      if (refused) return json(refused.body, refused.status);
       if (!response.ok) return json({ error: 'generation_result_unknown', retryAutomatically: false }, 502);
       const result = JSON.parse(await limitedText(response.body, MAX_RESPONSE));
       const image = result?.data?.[0]?.b64_json;

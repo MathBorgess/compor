@@ -145,6 +145,8 @@ O estúdio mantém o destino de uma imagem associado à chamada original do agen
 
 Em `busy`, o estúdio consulta a reserva em `/api/agent/image/status` com intervalos crescentes e máximo de quatro consultas. A rota exige identidade e prova da ação; não usa chave OpenAI, anexos ou chamadas ao fornecedor. A RPC distingue planejamento, imagem em execução, prioridade e resultado incerto. Só a admissão da rota de imagem pode despachar. A própria chave usa `x-compor-openai-key` nas requisições do navegador que precisam de credencial. O corpo legado permanece compatível. Ver [ADR 0074](adr/0074-consulta-limitada-de-prontidao-da-imagem.md).
 
+Uma resposta HTTP definitiva do provedor de imagem não fica mais em `unknown`. Recusa 400 encerra como falha; 429 e 5xx ficam classificados como retentáveis e também encerram o pedido, sem repetir a chamada. Timeout e morte da função continuam incertos, com prazo de lease e encerramento explícito que não cria outra reserva nem chama o provedor. A tela distingue geração dentro do prazo, recusa e resultado incerto; a mensagem de imagem retida pela revisão permanece a do [ADR 0075](adr/0075-revisao-de-candidatas-a-imagem.md). Ver [ADR 0076](adr/0076-saida-de-falha-de-imagem.md). A migration `20261119000045` só entra no repositório: aplicá-la no banco remoto depende de autorização do Matheus.
+
 Uma decisão explícita da pessoa pode encerrar administrativamente uma exploração serial incerta de um projeto já excluído. O estado `closed_unknown` libera a espera da conta e conserva o recibo e o resultado incerto. O contrato HTTP serial mantém `unknown` e o mesmo ID fica impedido de iniciar outra geração. Ver [ADR 0070](adr/0070-encerramento-de-exploracao-serial-incerta.md).
 
 ## MCP
