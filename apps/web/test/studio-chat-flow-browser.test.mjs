@@ -71,8 +71,16 @@ async function app(t,{defaultAvailable=false}={}){
    if(!handler)throw Error(`chamada inesperada ${url.pathname}`);return route.fulfill({status:202,json:await handler(body)});
   }
   if(url.pathname==='/api/agent/image'){const body=request.postDataJSON();calls.push({path:url.pathname,body,ownCredential:request.headers()['x-compor-openai-key']===apiKey});return route.fulfill({json:{status:'accepted',assetId:id(90)}});}
-  if(url.pathname==='/api/images'){calls.push({path:url.pathname,query:Object.fromEntries(url.searchParams)});return route.fulfill({contentType:'image/png',body:png});}
+  if(url.pathname==='/api/images'){
+    calls.push({path:url.pathname,method:request.method(),query:Object.fromEntries(url.searchParams)});
+    if(request.method()==='POST')return route.fulfill({status:201,json:{status:'stored',assetId:url.searchParams.get('assetId')}});
+    return route.fulfill({contentType:'image/png',body:png});
+  }
   if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
+  if(url.pathname==='/api/piece-version-images'){
+    if(request.method()==='GET')return route.fulfill({json:{assetId:null}});
+    return route.fulfill({json:{status:'bound',assetId:request.postDataJSON().assetId}});
+  }
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });
@@ -154,7 +162,11 @@ test('dimensão da proposta prepara variante sem aprovação e conserva a imagem
  const state=await eventually(()=>stored(page),value=>value?.selection?.baseVersion===2);
  assert.deepEqual(state.drafts.find(draft=>draft.pieceId===originalPiece&&draft.baseVersion===2).approval,{status:'unapproved'});
  await page.getByRole('region',{name:'Variantes deste post',exact:true}).scrollIntoViewIfNeeded();
- await page.getByRole('img',{name:'Arte da versão 1',exact:true}).waitFor();await page.getByRole('img',{name:'Arte da versão 2',exact:true}).waitFor();
+ await page.getByRole('img',{name:'Arte da versão 2',exact:true}).waitFor();
+ await page.getByText('Imagem da versão 1 ainda não disponível neste navegador.',{exact:true}).waitFor();
+ const preserved=await page.evaluate(async ({userId,projectId,pieceId})=>{const db=await new Promise((resolve,reject)=>{const request=indexedDB.open('compor-studio-v1');request.onsuccess=()=>resolve(request.result);request.onerror=()=>reject(request.error);});try{const read=kind=>new Promise((resolve,reject)=>{const key=JSON.stringify([JSON.stringify([userId,projectId]),pieceId,1,kind]);const request=db.transaction('draftAssets').objectStore('draftAssets').get(key);request.onsuccess=()=>resolve(request.result?.file?.size??null);request.onerror=()=>reject(request.error);});return {base:await read('base'),preview:await read('preview')};}finally{db.close();}},{userId,projectId,pieceId:originalPiece});
+ assert.equal(preserved.base,null,'a variante não grava a arte nova sobre a versão anterior');
+ assert.ok(preserved.preview>100,'a imagem-base anterior permanece no rascunho da versão 1');
  assert.equal(await page.getByRole('region',{name:'Variantes deste post',exact:true}).getByRole('article').count(),2);
  assert.equal(versions[0].metadata.approval.status,'approved');
  const collapse=page.getByRole('button',{name:'Recolher conversa',exact:true});if(await collapse.isVisible())await collapse.click();
@@ -428,7 +440,7 @@ test('falha ao copiar imagem para versão recuperada não troca a seleção nem 
  const before=await eventually(()=>stored(page),s=>s?.drafts?.some(d=>d.content.headline==='Arte preservada'));const draft=before.drafts.find(d=>d.pieceId===before.selection.pieceId&&d.baseVersion===0);
  versions.push({project_id:projectId,piece_id:draft.pieceId,version:1,content:draft.content,created_at:'2026-11-06T12:00:00.000Z',metadata:{baseVersion:null,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}}});
  await page.route('**/api/pieces',async route=>route.request().method()==='POST'?route.fulfill({status:409,json:{status:'conflict',currentVersion:1}}):route.fallback());
- await page.evaluate(()=>{const add=IDBObjectStore.prototype.add;IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return add.apply(this,args);};});
+ await page.evaluate(()=>{const add=IDBObjectStore.prototype.add,put=IDBObjectStore.prototype.put;IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return add.apply(this,args);};IDBObjectStore.prototype.put=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return put.apply(this,args);};});
  await page.getByRole('button',{name:'Salvar versão',exact:true}).click();await page.getByText('O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',{exact:true}).waitFor();
  assert.equal((await stored(page)).selection.baseVersion,0);assert.deepEqual(Buffer.from(await assetBytes(page,draft.pieceId,0)),image);assert.equal(await assetBytes(page,draft.pieceId,1),null);assert.deepEqual(errors,[]);
 });

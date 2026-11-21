@@ -45,7 +45,7 @@ test('fluxo HTTP com adaptadores reais e serviços simulados exige prova e evita
   if(path.includes('/storage/v1/object/')){saved=true;return Response.json({});}
   if(path.endsWith('/reserve_image_tool_call'))return Response.json([{reservation_id:reservationId,state:'reserved',is_new:true}]);
   if(path.endsWith('/declare_image_generation_consent'))return Response.json([{declaration_id:reservationId,is_new:true}]);
-  if(path.endsWith('/claim_image_tool_execution')){let first=!claimed;claimed=true;return Response.json([{execution_id:executionId,asset_id:assetId,state:'running',is_new:first}]);}
+  if(path.endsWith('/claim_post_image_execution_proven')){assert.match(JSON.parse(init.body).p_quality_digest,/^[a-f0-9]{64}$/);let first=!claimed;claimed=true;return Response.json([{execution_id:executionId,asset_id:assetId,state:'running',is_new:first}]);}
   if(path.endsWith('/complete_image_tool_execution')){assert.equal(saved,true);return Response.json(true);}
   if(path.endsWith('/claim_image_tool_result_submission'))return Response.json([{submission_id:submissionId,asset_id:assetId,state:'sending',is_new:true}]);
   if(path.endsWith('/finish_image_tool_result_submission'))return Response.json(true);

@@ -76,6 +76,13 @@ test('MCP preserva retenção por qualidade e o motivo sem devolver imagem',asyn
   assert.doesNotMatch(JSON.stringify(result),/sk-xxx|session-token|imageId/);
  } finally {await client.close();}
 });
+test('MCP preserva recusa classificada sem transformar em resultado desconhecido',async()=>{
+ const failed={status:'failed',requestId:args.requestId,closureReason:'provider_rejected_429',providerOutcome:'retryable',retryAutomatically:false};
+ const handle=createRemoteMcpHandler({authenticate:async()=>({userId:id(3)}),exploration:async()=>failed});
+ const client=await connect(handle,{'x-compor-openai-key':key});
+ try { assert.deepEqual((await client.callTool({name:'generate_exploration_image',arguments:args})).structuredContent,failed); }
+ finally { await client.close(); }
+});
 test('MCP respeita a pausa compartilhada e retoma somente pela ferramenta explícita',async()=>{
  let resumed=0;
  const handle=createRemoteMcpHandler({authenticate:async()=>({userId:id(3)}),exploration:async()=>({status:'awaiting_feedback',requestId:args.requestId,retryAutomatically:false}),explorationResume:async(context,input)=>{assert.equal(context.actor.userId,id(3));assert.equal(input.projectId,args.projectId);resumed++;return 'resumed';}});

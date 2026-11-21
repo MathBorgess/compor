@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { authClient, authConfig } from './supabase.ts';
 import { ownsSupabaseProject, resolveSupabaseActor } from './agent-auth.ts';
 import { createExplorationImageRoute, ExplorationCredentialsRejected } from './exploration-image-route.ts';
-import { ExplorationQualityHeld, explorationQualityReasons } from './exploration-image-outcome.ts';
+import { ExplorationProviderClosed, ExplorationQualityHeld, explorationClosureReasons, explorationProviderOutcomes, explorationQualityReasons } from './exploration-image-outcome.ts';
 import { createExplorationImageStore } from './exploration-image-store.ts';
 import type { Actor } from './agent-auth.ts';
 
@@ -14,6 +14,12 @@ export async function decodeExplorationImage(response:Response):Promise<Buffer> 
     if(response.status===401 || response.status===403) {
       const value:unknown=await response.json().catch(()=>null);
       if(z.strictObject({error:z.literal('openai_credentials_rejected')}).safeParse(value).success)throw new ExplorationCredentialsRejected();
+    }
+    if(response.status!==401 && response.status!==403) {
+      const closed=z.strictObject({error:z.literal('generation_not_produced'),closureReason:z.enum(explorationClosureReasons),providerOutcome:z.enum(explorationProviderOutcomes),retryAutomatically:z.literal(false)}).safeParse(await response.clone().json().catch(()=>null));
+      if(closed.success && ((response.status===400&&closed.data.closureReason==='provider_rejected_400'&&closed.data.providerOutcome==='failure')||(response.status===429&&closed.data.closureReason==='provider_rejected_429'&&closed.data.providerOutcome==='retryable')||(response.status===503&&closed.data.closureReason==='result_unknown'&&closed.data.providerOutcome==='retryable'))) {
+        throw new ExplorationProviderClosed(closed.data.closureReason,closed.data.providerOutcome);
+      }
     }
     if(response.status===422 || response.status===503) {
       const value:unknown=await response.json().catch(()=>null);

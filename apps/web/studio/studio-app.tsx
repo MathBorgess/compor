@@ -1,6 +1,7 @@
 "use client";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
+import {useProjectNameDisclosure} from "./project-name-tooltip";
 import PersonaStep from "./persona-step";
 import StudioDirection from "./studio-direction";
 import StudioEditor from "./studio-editor";
@@ -22,6 +23,10 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
+import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
+import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
+import {composeStudioPng} from '../lib/studio-compose.ts';
+import {studioImageDimensions} from '../lib/studio-image.ts';
 import {createReferenceSelectionCoordinator,type ReferenceAdoptionReview} from '../lib/reference-selection-coordinator.ts';
 import {assertReferenceVisualCapability,createReferenceVisualAuthority,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
@@ -84,6 +89,18 @@ const lastProjectKey=(userId:string)=>`compor:last-project:${userId}`;
 const createdDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'});
 function formatCreated(value?:string){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':createdDate.format(date);}
 function newestProject(projects:Project[]){return projects.reduce<Project|undefined>((best,project)=>!best||(project.created_at??'')>=(best.created_at??'')?project:best,undefined);}
+function ResumeProjectTitle({title}:{title:string}) {
+  const name=useProjectNameDisclosure(title);
+  return <><h2 {...name.handlers()} id="resume-title" title={title}>{title}</h2>{name.tooltip}</>;
+}
+function ProjectListCard({project,disabled,deleteDisabled,onOpen,onDelete}:{project:Project;disabled:boolean;deleteDisabled:boolean;onOpen:()=>void;onDelete:()=>void}) {
+  const name=useProjectNameDisclosure(project.title);
+  return <div className="studio-project-entry">
+    <button {...name.handlers()} className="studio-project-card" title={project.title} disabled={disabled} onClick={event=>{if(name.holdActivation(event.detail))return;onOpen();}}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>
+    {name.tooltip}
+    <button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={deleteDisabled} onClick={onDelete}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button>
+  </div>;
+}
 const settingsSections=[['context','Contexto'],['ai','IA'],['references','Referências'],['direction','Marca e direção'],['materials','Materiais e versões'],['history','Histórico anterior']] as const;
 
 export default function StudioApp({
@@ -344,7 +361,7 @@ export default function StudioApp({
         <div className="studio-home-resume-art" aria-hidden="true"><span/><span/><span/></div>
         <div className="studio-home-resume-body">
           <p className="studio-home-eyebrow">{resume.opened?'Aberto por último':'Mais recente'}</p>
-          <h2 id="resume-title" title={resume.project.title}>{resume.project.title}</h2>
+          <ResumeProjectTitle title={resume.project.title}/>
           {resume.created&&<p className="studio-home-meta">Criado em {resume.created}</p>}
           <button type="button" className="studio-button" disabled={state==='deleting'} onClick={() => openProject(resume.project)}>Continuar projeto</button>
         </div>
@@ -353,7 +370,7 @@ export default function StudioApp({
         <h2>{hasProjects?'Todos os projetos':'Seus projetos'}</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => openProject(project)}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{void requestDeletion(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+          {projects.map(project => <ProjectListCard key={project.id} project={project} disabled={state==='deleting'} deleteDisabled={state!=='ready'||!project.revision} onOpen={() => openProject(project)} onDelete={() => {void requestDeletion(project);}} />)}
         </div>
       </section>
       <section className="studio-starter" aria-labelledby="starter-title">
@@ -755,43 +772,69 @@ function ProjectStudio({
       if(!published)urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
     };
   }, [referenceManifest, project.id, userId]);
+  async function workingImage(pieceId:string, baseVersion:number) {
+    const storage=local.storage.current;
+    if(!storage)return null;
+    const scope={userId, projectId:project.id};
+    if(baseVersion>=1){
+      const preview=await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'preview'});
+      if(preview)return preview.file;
+    }
+    return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
+  }
+  async function cacheSavedImage(pieceId:string, version:number, file:Blob) {
+    const storage=local.storage.current;
+    if(!storage||version<1)return;
+    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', file});}
+    catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')throw error;}
+  }
+  async function canonicalImage(pieceId:string, version:number) {
+    const assetId=await readVersionImage({projectId:project.id, pieceId, version});
+    if(!assetId)return null;
+    const blob=await fetchPrivateImage(new URLSearchParams({projectId:project.id, pieceId, version:String(version), assetId}));
+    await cacheSavedImage(pieceId, version, blob);
+    return blob;
+  }
   useEffect(() => {
     setBase(null);
     const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
     let live = true;
-    local.storage.current
-      .getDraftAsset(
-        { userId, projectId: project.id },
-        {
-          pieceId: draft.pieceId,
-          baseVersion: draft.baseVersion,
-          kind: "base",
-        },
-      )
-      .then((value) => {
-        if (live && loadGeneration===baseLoadGeneration.current && value) setBase(value.file);
+    const pieceId=draft.pieceId, baseVersion=draft.baseVersion;
+    workingImage(pieceId, baseVersion)
+      .then(async file=>{
+        if(!live||loadGeneration!==baseLoadGeneration.current)return;
+        if(file){setBase(file);return;}
+        if(baseVersion<1)return;
+        const remote=await canonicalImage(pieceId, baseVersion);
+        if(live&&loadGeneration===baseLoadGeneration.current&&remote)setBase(remote);
       })
       .catch(() => {
-        if (live)
-          setNotice("Não foi possível recuperar a imagem local desta versão.");
+        if (live&&loadGeneration===baseLoadGeneration.current)
+          setNotice("Não foi possível recuperar a imagem desta versão.");
       });
     return () => {
       live = false;
     };
   }, [draft?.pieceId, draft?.baseVersion]);
-  async function useBase({ blob, pieceId, version,creationContext }:ImageSelection) {
+  async function useBase({ blob, pieceId, version, assetId, creationContext }:ImageSelection) {
     baseLoadGeneration.current++;
     try {
       if(!local.storage.current)throw Error("Armazenamento indisponível.");
-      await local.storage.current.putDraftAsset({
-        userId,
-        projectId: project.id,
-        pieceId,
-        baseVersion: version,
-        kind: "base",
-        file: blob,
-      });
+      const storage=local.storage.current;
+      const scope={userId, projectId:project.id};
+      let shown=blob;
+      if(assetId&&version>=1){
+        const bound=await bindVersionImage({projectId:project.id, pieceId, version, assetId});
+        if(bound==='unknown')throw Error('vínculo indisponível');
+        if(bound==='conflict'){
+          const existing=await storage.getDraftAsset(scope,{pieceId, baseVersion:version, kind:'base'});
+          if(!existing)throw Error('imagem já vinculada');
+          shown=existing.file;
+        }else await cacheSavedImage(pieceId, version, blob);
+      }else{
+        await storage.putDraftAsset({...scope, pieceId, baseVersion:version, kind:version>=1?'preview':'base', file:blob});
+      }
       if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));await local.flush();}
       const current = getCurrentDraft(local.get());
       if (
@@ -799,7 +842,7 @@ function ProjectStudio({
         current?.pieceId === pieceId &&
         current.baseVersion === version
       )
-        setBase(blob);
+        setBase(shown);
       else if (active.current)
         setNotice("A imagem está preservada no rascunho da versão de origem.");
       return true;
@@ -929,6 +972,41 @@ function ProjectStudio({
           if(!storage)throw Error('storage_unavailable');
           return storage.copyDraftAsset(scope,source,target);
         },
+        prepareVersionImage:async input=>{
+          const storage=local.storage.current;
+          if(!storage||input.userId!==userId||input.projectId!==project.id)return {status:'unknown'};
+          const scope={userId:input.userId, projectId:input.projectId};
+          const preview=input.source.baseVersion>=1?await storage.getDraftAsset(scope,{...input.source, kind:'preview'}):null;
+          const source=preview??await storage.getDraftAsset(scope, input.source);
+          if(!source)return {status:'absent'};
+          const {projectId,pieceId,version}=input;
+          const link=await lookupVersionImage({projectId,pieceId,version});
+          if(link.status==='unknown')return {status:'unknown'};
+          if(link.status==='disabled')return {status:'ready',publish:async savedVersion=>{
+            await cacheSavedImage(pieceId,savedVersion,source.file);
+            return 'published';
+          }};
+          if(link.status==='enabled'&&link.assetId){
+            const query=new URLSearchParams({projectId,pieceId,version:String(version),assetId:link.assetId});
+            return {status:'ready',publish:async savedVersion=>{
+              const file=await fetchPrivateImage(query,{signal:AbortSignal.timeout(30000)});
+              await cacheSavedImage(pieceId,savedVersion,file);
+              return 'published';
+            }};
+          }
+          let png:Blob;
+          try{
+            await studioImageDimensions(source.file,{maxDimension:2048,maxPixels:2048**2});
+            png=await composeStudioPng({base:source.file});
+          }catch{return {status:'image_unsupported'};}
+          if(png.size>4*1024*1024)return {status:'image_unsupported'};
+          return {status:'ready',publish:async savedVersion=>{
+            const published=await publishVersionPng({projectId,pieceId,version:savedVersion,png});
+            if(published.status==='unknown')return 'unknown';
+            await cacheSavedImage(pieceId,savedVersion,published.file);
+            return published.status;
+          }};
+        },
         newEventId:()=>crypto.randomUUID(),
         onVersionsChanging:()=>{versionsReadSequence.current++;},
         onVersionSaved:version=>setVersions(items=>[...items.filter(item=>item.piece_id!==version.piece_id||item.version!==version.version),version]),
@@ -937,6 +1015,7 @@ function ProjectStudio({
         saved:'Nova versão salva.',
         recovered:'Recuperamos a versão que já havia sido salva. Seu rascunho foi preservado; solicite a geração novamente.',
         conflict:'Outra versão foi salva. Seu rascunho foi preservado; consulte o histórico antes de continuar.',
+        image_unsupported:'Seu rascunho foi preservado. Para salvar a versão, use uma imagem de até 2048 × 2048 pixels que resulte em um PNG de até 4 MB.',
         unknown:'O resultado do salvamento é desconhecido. Seu rascunho continua nesta aba; consulte as versões antes de repetir.',
         inactive:'',
       };
@@ -1275,7 +1354,14 @@ function ProjectStudio({
               event.target.value = "";
             }} />
           </label>},
-        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />},
+        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={async version=>{
+          const storage=local.storage.current;
+          if(!storage)return null;
+          const localImage=await storage.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'});
+          if(localImage)return localImage;
+          const remote=await canonicalImage(version.piece_id, version.version);
+          return remote?{file:remote}:null;
+        }} onUseImage={useBase} />},
       ]}
       draft={draft}
       brief={s.brief}
@@ -1374,9 +1460,16 @@ function ProjectStudio({
       initialPostRequest={initialPostRequest&&initialPostRequest.pieceId===conversationId?initialPostRequest:undefined}
       connection={<p className="studio-hint">{canUseProjectAI?sourceLabel:'Escolha uma IA nas configurações para conversar, ou continue no editor sem IA.'}</p>}
 
-      loadBase={async ({pieceId,baseVersion}) => local.storage.current?.getDraftAsset(
-        {userId,projectId:project.id},{pieceId,baseVersion,kind:'base'},
-      )}
+      loadBase={async ({pieceId,baseVersion}) => {
+        const storage=local.storage.current;
+        if(!storage)return null;
+        const scope={userId,projectId:project.id};
+        if(baseVersion>=1){
+          const preview=await storage.getDraftAsset(scope,{pieceId,baseVersion,kind:'preview'});
+          if(preview)return preview;
+        }
+        return storage.getDraftAsset(scope,{pieceId,baseVersion,kind:'base'});
+      }}
       loadReference={async (id) =>
         local.storage.current?.getReference(
           { userId, projectId: project.id },

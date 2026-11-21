@@ -5,7 +5,7 @@ export const HERO_TITLE =
   "O post de divulgação do seu curso, pronto. Sem inventar nada sobre a sua oferta.";
 
 export const HERO_SUBTITLE =
-  "Você conta o que está vendendo. O Compor entrega a arte limpa, o seu texto editável e a legenda para colar.";
+  "Você conta o que está vendendo. O Compor entrega o post pronto, com o texto na arte, e a legenda para colar.";
 
 export const PAGE_TITLE = "Compor — O post de divulgação do seu curso, pronto.";
 
@@ -26,11 +26,11 @@ export const STEPS = [
   },
   {
     title: "Seu post, com os seus dados",
-    body: "Receba o post com a arte limpa e o texto em camadas.",
+    body: "Receba a arte com o texto aplicado e a legenda separada.",
   },
   {
-    title: "Preço e data ajustados, sem gerar de novo",
-    body: "Ajuste o preço, a data ou o texto.",
+    title: "Confira antes de baixar",
+    body: "Se o preço, a data ou o texto não estiverem certos, corrija e gere de novo.",
   },
 ] as const;
 

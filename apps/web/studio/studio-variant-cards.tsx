@@ -76,7 +76,13 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
     if(!candidate?.decoded||candidate.scope!==scope||recovering)return;
     const current=sequence.current,selected=candidate;localSequence.current++;setRecovering(true);
     try{
-      if(await onUseImage({blob:selected.blob,pieceId:version.piece_id,version:version.version})&&current===sequence.current){setAsset({scope,blob:selected.blob});setCandidate(null);setRecovery(false);setNotice('Imagem recuperada nesta versão.');}
+      if(await onUseImage({blob:selected.blob,pieceId:version.piece_id,version:version.version})&&current===sequence.current){
+        const saved=await loader.current(version);
+        if(current!==sequence.current)return;
+        setAsset(saved?{scope,blob:saved.file}:null);
+        setCandidate(null);setRecovery(false);
+        setNotice(saved?'A versão salva mantém sua imagem. A escolha ficou no rascunho.':'A imagem ficou no rascunho. A versão salva não foi alterada.');
+      }
     }catch{if(current===sequence.current)setNotice('Não foi possível preservar esta imagem.');}
     finally{if(current===sequence.current)setRecovering(false);}
   }

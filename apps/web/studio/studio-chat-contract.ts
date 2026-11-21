@@ -6,7 +6,9 @@ type ArtworkInput=Awaited<ReturnType<typeof prepareArtworkInput>>;
 
 const usageSchema=z.object({input_tokens:z.optional(z.nullable(z.number())),output_tokens:z.optional(z.nullable(z.number()))});
 const traceSchema=z.object({functionCalls:z.optional(z.number()),outputs:z.optional(z.number()),omittedItems:z.optional(z.number()),items:z.optional(z.array(z.object({type:z.string(),schemaValid:z.optional(z.boolean()),errorClass:z.optional(z.string())})))});
-const common=z.object({error:z.optional(z.string()),errorCode:z.optional(z.string()),failurePhase:z.optional(z.string()),requestId:z.optional(z.string()),usage:z.optional(z.nullable(usageSchema)),itemTrace:z.optional(traceSchema),assetId:z.optional(z.string())});
+const closureReasonSchema=z.enum(['provider_rejected_400','provider_rejected_429','result_unknown']);
+const providerOutcomeSchema=z.enum(['failure','retryable','unconfirmed']);
+const common=z.object({error:z.optional(z.string()),errorCode:z.optional(z.string()),failurePhase:z.optional(z.string()),requestId:z.optional(z.string()),usage:z.optional(z.nullable(usageSchema)),itemTrace:z.optional(traceSchema),assetId:z.optional(z.string()),closureReason:z.optional(closureReasonSchema),providerOutcome:z.optional(providerOutcomeSchema),retryAutomatically:z.optional(z.literal(false))});
 const imageQualityReasonSchema=z.enum(['image_quality_rejected','image_quality_inconclusive']);
 export const chatResponseSchema=z.discriminatedUnion('status',[
  // reply stays unknown here: lib/studio-quick-replies validates it and falls back to text.
@@ -21,7 +23,7 @@ export const defaultCredentialNotSubmittedSchema=z.strictObject({status:z.litera
 export type ChatResponse=z.infer<typeof chatResponseSchema>;
 export const pendingInspectionSchema=z.strictObject({status:z.enum(['running','action_required','completed','failed','unknown']),retryAutomatically:z.literal(false),error:z.optional(z.literal('provider_usage_limit'))}).check(z.refine(value=>value.error===undefined||value.status==='failed'));
 export const closedImageResponseSchema=z.union([
- z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.literal('failed_without_dispatch'))}),
+ z.strictObject({status:z.literal('confirmed'),outcome:z.optional(z.enum(['failed_without_dispatch','failed_image_attempt']))}),
  z.strictObject({status:z.literal('confirmed'),outcome:z.literal('quality_held'),qualityReason:imageQualityReasonSchema}),
 ]);
 export type PendingInspection=z.infer<typeof pendingInspectionSchema>;

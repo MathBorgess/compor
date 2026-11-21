@@ -40,6 +40,7 @@ import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
 import { chatResponseSchema, pendingInspectionSchema, closedImageResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type PendingInspection, type ImageAction, type ImageContext, type ImageReceipt, preparedImageTargetSchema, type PreparedImageTarget, type Usage, type Inspection } from './studio-chat-contract';
+import ImageAttemptNotice, { type ImageAttemptScreen } from './image-attempt-notice';
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 function matchesImageText(draft:StudioState['drafts'][number],input:NonNullable<ImageAction['artworkInput']>) {
   const text=input.literalText;
@@ -73,15 +74,22 @@ const imageWaitDelays=[2500,5000,7500,10000] as const;
 const imageWaitMessages={
   waiting_planning:'Um planejamento de referências ainda está em andamento. Abra Referências para consultar a tentativa original.',
   waiting_exploration:'Uma imagem de exploração ainda está em andamento na sua conta.',
-  waiting_image:'Outra imagem de post ainda está em andamento na sua conta.',
   waiting_priority:'Outro pedido de imagem tem prioridade nesta conta.',
-} satisfies Record<Extract<ImageWaitStatus,`waiting_${string}`>,string>;
-const imageBlockedNotice='Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.';
+} satisfies Record<Exclude<Extract<ImageWaitStatus,`waiting_${string}`>,'waiting_image'>,string>;
 const imageQualityNotice=(reason:ImageQualityReason)=>reason==='image_quality_rejected'
   ?'A revisão de imagem reteve esta proposta. Seu post foi preservado.'
   :'A revisão da imagem ficou inconclusiva. Seu post foi preservado.';
 const chatPollDelay=(count:number)=>count<4?2000:count<9?4000:8000;
 type CredentialSource='default'|'byok';
+type ImageReservation = {projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string};
+type UndispatchedImage = {action:ImageAction; reservation:ImageReservation; revision:number; ready:boolean};
+type StudioImageScreen = ImageAttemptScreen & {undispatched?:UndispatchedImage};
+type ImageHold = {screen:'none'} | {
+  screen:'running_with_lease'|'result_unknown';
+  sameProject:boolean;
+  projectId:string;
+  projectTitle:string;
+};
 export type InitialPostRequest={
   pieceId:string;
   credentialSource:CredentialSource;
@@ -177,6 +185,8 @@ export default function StudioChat({
   function setMessage(value:string){setMessageState(value);if(onMessageDraftChange)onMessageDraftChange(value);else if(conversationId)ownedDraft.setValue(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
+  const [imageScreen,setImageScreen]=useState<StudioImageScreen|null>(null);
+  const [imageRetry,setImageRetry]=useState<{requestId:string;scope:string;screen:ImageAttemptScreen}|null>(null);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
@@ -312,7 +322,7 @@ export default function StudioChat({
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
     preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
     activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setOrphanNotice('');
-    setLastCompleted(null);setInspection(null);setInspecting(false);inspectionLock.current=false;
+    setLastCompleted(null);setInspection(null);setInspecting(false);setImageScreen(null);setImageRetry(null);inspectionLock.current=false;
     actionCount.current.clear();
     try {
       const submitted=localStorage.getItem(imageSubmissionMarker);
@@ -415,6 +425,10 @@ export default function StudioChat({
       if(credentialSource==='default'&&fresh&&proof.success&&proof.data.requestId===body.requestId)return proof.data;
       throw Error('A IA do Compor está indisponível. A tentativa anterior continua preservada para consulta.');
     }
+    if (path === "/api/agent/image" && response.status === 502 && envelope.error === "result_unknown")
+      return uuid(envelope.assetId)
+        ? {status:"unknown",assetId:envelope.assetId,retryAutomatically:false}
+        : {status:"failed",closureReason:"result_unknown",providerOutcome:"unconfirmed",retryAutomatically:false};
     if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
       return {status:"failed",error:"image_invalid_request"};
     if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
@@ -473,6 +487,7 @@ export default function StudioChat({
   }
   async function handle(data:ChatResponse, requestId:string, count = 0):Promise<void> {
     if (!mounted.current || !credentialIsCurrent()) return;
+    const blockedScreen=imageScreen?.undispatched?.action.requestId===requestId?imageScreen:null;
     if (readOnly && (data.status === 'action_required' || data.status === 'consent_required')) {
       setBusy(false);
       setNotice('Este pedido pertence ao histórico anterior. Seus dados foram preservados; consulte o resultado antes de fazer um novo pedido na conversa do post.');
@@ -484,6 +499,7 @@ export default function StudioChat({
       setBusy(false);setNotice('A resposta precisa ser consultada antes de continuar.');return;
     }
     if (data.status === "completed") {
+      if(blockedScreen)setImageScreen(current=>current===blockedScreen?null:current);
       const record=automatic?referenceRecord():null;
       const current=automatic?getState():null;
       const valid=!automatic||Boolean(record&&current&&record.requestId===requestId&&record.fingerprint===referenceFingerprint(current)&&record.epoch===readReferenceRound(current)?.epoch&&record.context===await contextDigest(current));
@@ -572,12 +588,37 @@ export default function StudioChat({
         return;
       }
       if(preparedTarget&&!artworkInput&&!canPrepareTransport){
+        if(blockedScreen)setImageScreen(current=>current===blockedScreen?null:current);
         setImageNeedsReconciliation(true);setImageNeedsDecision(false);setBusy(false);
         setNotice('Não foi possível reconstruir o material da proposta. Verifique o envio anterior.');
         return;
       }
       setImageNeedsReconciliation(false);setImageNeedsDecision(false);
       if (artworkInput) {
+        const undispatched=blockedScreen?.undispatched;
+        if(blockedScreen&&undispatched){
+          const original=undispatched.action;
+          const matchesOriginal=action.attemptId===original.attemptId&&action.imageActionId===original.imageActionId&&
+            context.pieceId===original.context.pieceId&&context.baseVersion===original.context.baseVersion&&
+            (preparedTarget?.version??context.baseVersion)===undispatched.reservation.version&&
+            sourceFingerprint===original.sourceFingerprint&&JSON.stringify(proposal)===JSON.stringify(original.proposal)&&
+            getState().revision===undispatched.revision;
+          setImageAction(null);
+          setBusy(false);
+          if(!matchesOriginal){
+            setImageScreen(current=>current===blockedScreen?null:current);
+            setNotice('A proposta mudou. Consulte os dados do pedido antes de gerar.');
+          } else if(action.actionBinding!==original.actionBinding) {
+            const actionBinding=action.actionBinding;
+            setImageScreen(current=>current===blockedScreen?{...blockedScreen,undispatched:{
+              ...undispatched,
+              action:{...original,actionBinding},
+              reservation:{...undispatched.reservation,actionBinding},
+              ready:false,
+            }}:current);
+          }
+          return;
+        }
         if(!availability.current.hasApiKey){setBusy(false);setNotice('Comece a criar com IA para continuar esta proposta. Nenhuma imagem foi enviada.');return;}
         if (imageProtocol.current===null) {
           setImageAction(null);
@@ -593,6 +634,11 @@ export default function StudioChat({
       return;
     }
     if (data.status === "action_required") {
+      if(blockedScreen){
+        setBusy(false);
+        setNotice('A consulta ainda não confirmou a proposta de imagem.');
+        return;
+      }
       if(!availability.current.hasApiKey){setBusy(false);setNotice('Comece a criar com IA para continuar esta solicitação. Nenhuma nova ação foi executada.');return;}
       const n = actionCount.current.get(requestId) ?? 0;
       if (n >= 12) {
@@ -636,6 +682,7 @@ export default function StudioChat({
       return;
     }
     if (data.status === "failed" || data.status==='quality_held') {
+      if(blockedScreen)setImageScreen(current=>current===blockedScreen?null:current);
       if(automatic) { try { completeReferenceRecord(requestId); } catch {} }
       settle(requestId, "failed");
       if(data.failurePhase!=='before_submission')previous.current=null;
@@ -793,7 +840,7 @@ export default function StudioChat({
       }
     })();
   },[initialPostRequest]);
-  type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void;isCurrent?:()=>boolean};
+  type SubmitOptions={fromComposer:boolean;requestId?:string;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void;isCurrent?:()=>boolean};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,options:SubmitOptions) {
     if (referenceAuthorityBlocked || visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()||options.isCurrent?.()===false) return false;
@@ -804,12 +851,12 @@ export default function StudioChat({
       return await submitLocked(text,options);
     } finally { submitLock.current=false; }
   }
-  async function submitLocked(text:string,{fromComposer,quickReply,onPrepared,isCurrent}:SubmitOptions) {
+  async function submitLocked(text:string,{fromComposer,requestId:requestedId,quickReply,onPrepared,isCurrent}:SubmitOptions) {
     onUseAI?.();
     setNotice("");
     setBusy(true);
     imageProtocol.current=2;
-    const requestId = crypto.randomUUID(), userMessageId = crypto.randomUUID();
+    const requestId = requestedId && uuid(requestedId) ? requestedId : crypto.randomUUID(), userMessageId = crypto.randomUUID();
     const visualMode=selectedVisualsAvailable;
     const visualIsCurrent=()=>!availability.current.visualUnavailable&&availability.current.selectedVisualsAvailable===visualMode;
     let prepared = false,
@@ -906,7 +953,7 @@ export default function StudioChat({
         ...(quickReply ? { quickReply } : previous.current ? { previousAttemptKey: previous.current } : {}),
       },beforeDispatch);
       await handle(data, requestId);
-      return true;
+      return !(data.status==='failed' && data.failurePhase==='before_submission');
     } catch (e) {
       if(isCurrent&&prepared&&!submitted){
         try { settle(requestId,'failed'); } catch { /* The previous account or project may already be closed. */ }
@@ -976,7 +1023,7 @@ export default function StudioChat({
   }
   async function readClosedImage(requestId:string) {
     try{
-      const response=await fetch('/api/agent/image/reconcile-closed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,requestId})});
+      const response=await fetch('/api/agent/image/reconcile-closed',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({projectId:state.projectId,requestId}),signal:AbortSignal.timeout(5000)});
       return response.ok?closedImageResponseSchema.parse(await response.json()):null;
     }catch{return null;}
   }
@@ -1085,7 +1132,152 @@ export default function StudioChat({
     }
     await sendImage(action);
   }
-  async function readImageWaitStatus(reservation:{projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string}):Promise<ImageWaitStatus> {
+  async function readImageHold():Promise<ImageHold|null> {
+    try {
+      const response = await fetch('/api/agent/image/hold', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({projectId:state.projectId}),signal:AbortSignal.timeout(5000)});
+      if (!response.ok) return null;
+      const body:unknown = await response.json();
+      if (!body || typeof body !== 'object' || !('screen' in body)) return null;
+      if (body.screen==='none') return {screen:'none'};
+      if ((body.screen!=='running_with_lease'&&body.screen!=='result_unknown')||
+          !('projectId' in body)||!uuid(body.projectId)||!('projectTitle' in body)||typeof body.projectTitle!=='string'||
+          !('sameProject' in body)||body.sameProject!==(body.projectId===state.projectId)) return null;
+      return {screen:body.screen,sameProject:body.sameProject,projectId:body.projectId,projectTitle:body.projectTitle};
+    } catch { return null; }
+  }
+  function showElsewhereHold(expected:StudioImageScreen, hold:ImageHold|null) {
+    if (!credentialIsCurrent() || !hold || hold.screen==='none' || hold.sameProject) return;
+    setImageScreen(current=>current===expected
+      ? {reason:hold.screen, sameProject:false, projectTitle:hold.projectTitle, openHref:`/projetos/${hold.projectId}`}
+      : current);
+  }
+  function showImageScreen(screen:StudioImageScreen) {
+    setImageScreen(screen);
+    if(screen.reason==='result_unknown')void readImageHold().then(hold=>showElsewhereHold(screen,hold));
+  }
+  async function closeImageAttempt() {
+    if(!imageScreen?.sameProject||!credentialIsCurrent())throw Error('A tentativa anterior precisa ser confirmada.');
+    const response = await fetch('/api/agent/image/close', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({projectId:state.projectId}),signal:AbortSignal.timeout(5000)});
+    const body:unknown = await response.json().catch(()=>null);
+    const status = body && typeof body === 'object' && 'status' in body ? body.status : null;
+    if (!response.ok || (status !== 'closed' && status !== 'already_closed')) throw Error('Não foi possível encerrar esta tentativa.');
+  }
+  async function releaseFailedImage(screen:StudioImageScreen) {
+    const oldRequest=screen.requestId;
+    if(!screen.sameProject||!oldRequest||!credentialIsCurrent()||imageRetry||inspectionLock.current||pollLock.current||
+        (availability.current.pending && availability.current.pending!==oldRequest)) throw Error('A tentativa anterior precisa ser confirmada.');
+    const sequence=++inspectionSequence.current;
+    inspectionLock.current=true;
+    try {
+      const closed=await readClosedImage(oldRequest);
+      if(!credentialIsCurrent()||closed?.outcome!=='failed_image_attempt')throw Error('A tentativa anterior precisa ser confirmada.');
+      const submission=localStorage.getItem(imageSubmissionMarker);
+      if(submission && submission!==oldRequest)throw Error('Outra tentativa precisa ser consultada.');
+      const settled=settleClosedAdjustment(oldRequest);
+      if(!settled&&!getState().adjustments.some(item=>item.id===oldRequest&&item.context.projectId===state.projectId&&item.context.conversationId===conversationId&&item.status==='failed'))throw Error('A tentativa mudou.');
+      await flush();
+      if(!credentialIsCurrent()||sequence!==inspectionSequence.current)throw Error('A tentativa mudou.');
+      const currentSubmission=localStorage.getItem(imageSubmissionMarker);
+      if(currentSubmission&&currentSubmission!==oldRequest)throw Error('Outra tentativa precisa ser consultada.');
+      if(currentSubmission===oldRequest)clearClosedSubmission(oldRequest);
+      previous.current=null;
+      remember(null);
+      waitingImageRequest.current=null;
+      clearTimeout(timer.current);
+      setPending(null);
+      setPendingSource(null);
+      setImageAction(null);
+      setImageNeedsReconciliation(false);
+      setImageNeedsDecision(false);
+    } finally {
+      if(sequence===inspectionSequence.current)inspectionLock.current=false;
+    }
+  }
+  async function reserveNewImage(requestId:string) {
+    if(!imageScreen)throw Error('A tentativa anterior precisa ser confirmada.');
+    await releaseFailedImage(imageScreen);
+    setImageRetry({requestId,scope:scopeMarker,screen:imageScreen});
+  }
+  async function adjustImageDescription() {
+    if(imageScreen?.reason!=='provider_rejected_400')return;
+    await releaseFailedImage(imageScreen);
+    if(!credentialIsCurrent())return;
+    setImageScreen(current=>current===imageScreen?null:current);
+    setNotice('');
+    composerRef.current?.focus();
+  }
+  function checkUndispatchedImage(screen:StudioImageScreen, image:UndispatchedImage) {
+    if(!credentialIsCurrent()||availability.current.pending!==image.action.requestId||
+        attemptSource.current!==credentialSource)throw Error('A tentativa mudou.');
+    const snapshot=getState(), selected=getCurrentDraft(snapshot);
+    if(snapshot.revision!==image.revision||selected?.pieceId!==image.reservation.pieceId||
+        selected.baseVersion!==image.reservation.version) {
+      setImageScreen(current=>current===screen?null:current);
+      setNotice('O contexto mudou. Consulte a mesma proposta antes de gerar.');
+      throw Error('A tentativa mudou.');
+    }
+    if(localStorage.getItem(imageSubmissionMarker))throw Error('Outra tentativa precisa ser consultada.');
+  }
+  async function advanceUndispatchedImage(screen:StudioImageScreen, image:UndispatchedImage) {
+    if(inspectionLock.current||pollLock.current||availability.current.busy)throw Error('A tentativa anterior precisa ser confirmada.');
+    checkUndispatchedImage(screen,image);
+    const sequence=++inspectionSequence.current;
+    inspectionLock.current=true;
+    setInspecting(true);
+    try {
+      if(!image.ready){
+        const hold=await readImageHold();
+        checkUndispatchedImage(screen,image);
+        if(hold&&hold.screen!=='none'&&!hold.sameProject) {
+          showElsewhereHold(screen,hold);
+          throw Error('O bloqueio pertence a outro projeto.');
+        }
+        if(hold?.screen==='result_unknown') {
+          await closeImageAttempt();
+          checkUndispatchedImage(screen,image);
+        }
+      }
+      // The same authorization can expire while the confirmation is on screen.
+      const readiness=await readImageWaitStatus(image.reservation);
+      checkUndispatchedImage(screen,image);
+      const ready=readiness==='ready';
+      if(ready!==image.ready)setImageScreen(current=>current===screen?{...screen,undispatched:{...image,ready}}:current);
+      if(!ready)throw Error('A proposta ainda não está pronta.');
+    } finally {
+      if(sequence===inspectionSequence.current){
+        inspectionLock.current=false;
+        setInspecting(false);
+      }
+    }
+    if(!image.ready)return;
+    if(!availability.current.hasApiKey||!canUseAI||availability.current.readOnly||
+        availability.current.visualUnavailable)throw Error('A geração não está disponível neste contexto.');
+    if(waitingImageRequest.current===image.action.requestId)waitingImageRequest.current=null;
+    setBusy(true);
+    setImageScreen(current=>current===screen?null:current);
+    try {
+      await confirmImage(image.action);
+    } catch (error) {
+      if(credentialIsCurrent()){
+        setBusy(false);
+        setNotice(errorMessage(error));
+      }
+    }
+  }
+  // Submit after the render has released the old turn from the submission guards.
+  useEffect(()=>{
+    if(!imageRetry)return;
+    setImageRetry(null);
+    if(imageRetry.scope!==scopeMarker||!credentialIsCurrent())return;
+    void submitText('Pode gerar a imagem de novo?', {fromComposer:false,requestId:imageRetry.requestId}).then(submitted=>{
+      if(!credentialIsCurrent())return;
+      if(submitted)setImageScreen(current=>current===imageRetry.screen?null:current);
+      else setNotice(current=>current||'Não foi possível enviar o novo pedido. Tente novamente.');
+    }).catch(()=>{
+      if(credentialIsCurrent())setNotice('Não foi possível enviar o novo pedido. Tente novamente.');
+    });
+  },[imageRetry,scopeMarker]);
+  async function readImageWaitStatus(reservation:ImageReservation):Promise<ImageWaitStatus> {
     const controller=new AbortController();
     request.current=controller;
     const timeout=setTimeout(()=>controller.abort(),5000);
@@ -1199,11 +1391,19 @@ export default function StudioChat({
       const clearUndispatched=()=>{
         if (localStorage.getItem(imageSubmissionMarker) === action.requestId) localStorage.removeItem(imageSubmissionMarker);
       };
+      const showUndispatched=()=>{
+        clearUndispatched();
+        waitingImageRequest.current=action.requestId;
+        showImageScreen({reason:'result_unknown',sameProject:true,undispatched:{action,reservation,revision:savedRevision,ready:false}});
+        setNotice('');
+        setBusy(false);
+      };
       const waitingIsCurrent=()=>{
         if(!isCurrentScope())return false;
         if (!credentialIsCurrent() || !availability.current.hasApiKey || (credentialSource==='byok'&&!getApiKey()) || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
         return true;
       };
+      if(waitingImageRequest.current!==action.requestId)setImageScreen({reason:'running_with_lease',sameProject:true});
       let data:ChatResponse=waitingImageRequest.current===action.requestId
         ?{status:'failed',error:'image_busy'}
         :await dispatchImage();
@@ -1218,14 +1418,22 @@ export default function StudioChat({
           const readiness=await readImageWaitStatus(reservation);
           if(!waitingIsCurrent())return;
           if(readiness==='unverified')throw Error('Não foi possível verificar a prontidão. Consulte a mesma tentativa antes de continuar.');
-          if(readiness==='blocked')throw Error(imageBlockedNotice);
+          if(readiness==='blocked'){
+            showUndispatched();
+            return;
+          }
           if(readiness==='ready'){
             waitingImageRequest.current=null;
             data=await dispatchImage();
             break;
           }
-          waitMessage=imageWaitMessages[readiness];
-          setNotice(waitMessage);
+          if(readiness==='waiting_image'){
+            setImageScreen({reason:'running_with_lease',sameProject:true});
+            setNotice('');
+          } else if(readiness==='waiting_planning'||readiness==='waiting_exploration'||readiness==='waiting_priority'){
+            waitMessage=imageWaitMessages[readiness];
+            setNotice(waitMessage);
+          }
         }
       }
       if (data.status === 'failed' && data.error === 'image_invalid_request') {
@@ -1234,9 +1442,18 @@ export default function StudioChat({
         setNotice('Esta requisição não enviou a imagem e o post salvo foi preservado. Verifique a tentativa antes de continuar.');
         return;
       }
-      if(data.status==='failed'&&(data.error==='image_busy'||data.error==='image_blocked')){
+      if(data.status==='failed'&&data.closureReason&&data.retryAutomatically===false){
+        showImageScreen({reason:data.closureReason,sameProject:true,requestId:action.requestId});
+        setNotice('');
+        setBusy(false);
+        return;
+      }
+      if(data.status==='failed'&&data.error==='image_blocked'){
+        showUndispatched();
+        return;
+      }
+      if(data.status==='failed'&&data.error==='image_busy'){
         clearUndispatched();
-        if(data.error==='image_blocked')throw Error(imageBlockedNotice);
         waitingImageRequest.current=action.requestId;
         throw Error(`${waitMessage} A espera foi pausada. Consulte esta tentativa para continuar.`);
       }
@@ -1245,6 +1462,7 @@ export default function StudioChat({
         return;
       }
       if (data.assetId) {
+        setImageScreen(null);
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
         const { fetchPrivateImage } =
           await import("../lib/private-image-fetch.ts");
@@ -1262,6 +1480,7 @@ export default function StudioChat({
             blob: image,
             pieceId: target.pieceId,
             version: target.version,
+            assetId: data.assetId,
             creationContext:{postContext:getState().adjustments.find(item=>item.id===action.requestId)?.context.postContext??postContext(getState(),target.pieceId),references:getState().adjustments.find(item=>item.id===action.requestId)?.context.references.filter(reference=>action.proposal.referenceIds.includes(reference.id))??[]},
           })!==true)throw Error('image application unconfirmed');
         if(!isCurrentScope())return;
@@ -1273,12 +1492,14 @@ export default function StudioChat({
       if(isCurrentScope())await poll(action.requestId,0,true);
     } catch (e) {
       if (isCurrentScope()) {
+        setImageScreen(screen => screen?.reason === 'running_with_lease' ? null : screen);
         setBusy(false);
         setNotice(imageApplied?"A imagem foi adicionada à nova versão, mas não foi possível guardar sua confirmação neste navegador. Consulte a mesma tentativa.":imageAvailable?"A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.":errorMessage(e));
       }
     }
   }
   const currentDraft=getCurrentDraft(state);
+  const undispatched=imageScreen?.undispatched;
   const visibleMessages=conversationMessages(state,conversationId);
   const readingContext={fingerprint:referenceSet,epoch:readReferenceRound(state)?.epoch,context:currentContext?.value===referenceContextValue?currentContext.digest:null};
   const activeReading=referenceWorkbench?[...quickReplies].reverse().find(entry=>['active','checking'].includes(quickReplyStatus(entry,visibleMessages,readingContext).kind)):undefined;
@@ -1362,6 +1583,11 @@ export default function StudioChat({
         </div>}
         {explorationRecovery}
         {sourceMismatch && pendingSource && <p role="status" className="studio-hint">{sourceNotice(pendingSource)}</p>}
+        {imageScreen && <ImageAttemptNotice screen={imageScreen} developerMode={developerMode}
+          onContinueEditing={()=>composerRef.current?.focus()} onAdjustDescription={adjustImageDescription}
+          onClose={closeImageAttempt} onReserve={reserveNewImage} undispatched={undispatched
+            ? {ready:undispatched.ready,advance:()=>advanceUndispatchedImage(imageScreen,undispatched)}
+            : undefined}/>}
         {notice && !sourceMismatch && (
           <p role="status" className="studio-hint">
             {notice}
@@ -1411,7 +1637,7 @@ export default function StudioChat({
           <button
             type="button"
             className="studio-button-secondary"
-            disabled={!canUseAI||sourceMismatch}
+            disabled={!canUseAI||sourceMismatch||inspecting}
             onClick={() => poll(pending)}
           >
             Consultar esta tentativa

@@ -68,6 +68,15 @@ async function app(t){
   }
   if(url.pathname==='/api/studio/action'){calls.push({path:url.pathname,body:request.postDataJSON()});return route.fulfill({json:{status:'completed',text:'Novo post preparado no navegador.'}});}
   if(url.pathname==='/api/image-assets'){calls.push({path:url.pathname,method:request.method()});return route.fulfill({json:{assets:[],nextCursor:null}});}
+  if(url.pathname==='/api/piece-version-images'){
+    calls.push({path:url.pathname,method:request.method()});
+    if(request.method()==='GET')return route.fulfill({json:{assetId:null}});
+    return route.fulfill({json:{status:'bound',assetId:request.postDataJSON().assetId}});
+  }
+  if(url.pathname==='/api/images'&&request.method()==='POST'){
+    calls.push({path:url.pathname,method:'POST',query:Object.fromEntries(url.searchParams)});
+    return route.fulfill({status:201,json:{status:'stored',assetId:url.searchParams.get('assetId')}});
+  }
   if(url.pathname.startsWith('/api/')){calls.push({path:url.pathname});return route.fulfill({status:500,json:{error:'unexpected_test_operation'}});}
   return route.continue();
  });
@@ -201,7 +210,10 @@ test('Workspace preserva conversa, marcações e referências e exporta a arte i
  assert.deepEqual([...(await readFile(await(await converted).path())).subarray(0,8)],[137,80,78,71,13,10,26,10],'a replacement JPEG is composed at download time');
  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,1);assert.equal(calls.filter(call=>call.path==='/api/studio/action').length,1);
  assert.equal(calls.some(call=>call.path==='/api/studio/explorations'),false,'novo post explicitamente pedido abre o editor sem iniciar exploração');
- assert.equal(calls.some(call=>['/api/agent/image','/api/images'].includes(call.path)),false);assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
+ assert.equal(calls.some(call=>call.path==='/api/agent/image'),false,'exportar e revisar não geram imagem');
+ assert.equal(calls.filter(call=>call.path==='/api/images'&&call.method==='POST').length,1,'salvar a versão envia o PNG uma vez');
+ assert.equal(calls.filter(call=>call.path==='/api/piece-version-images'&&call.method==='POST').length,1,'salvar grava o vínculo da versão');
+ assert.deepEqual(external,[]);assert.deepEqual(errors,[]);
  assert.deepEqual(revokedImages,[],'switching versions, references and previews never revokes a URL still rendered by an image');
  await page.getByRole('button',{name:'Todos os projetos',exact:true}).click();await page.waitForFunction(()=>window.liveObjectUrls.size===0);
 });

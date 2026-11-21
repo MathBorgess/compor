@@ -11,6 +11,7 @@ import {createExplorationPlannerRoute} from '../../apps/web/lib/exploration-plan
 import {createExplorationPlannerStore} from '../../apps/web/lib/exploration-planner-store.ts';
 import {createExplorationBatchRoute} from '../../apps/web/lib/exploration-batch-route.ts';
 import {createExplorationBatchStore} from '../../apps/web/lib/exploration-batch-store.ts';
+import {ExplorationProviderClosed} from '../../apps/web/lib/exploration-image-outcome.ts';
 import {createExplorationRecoveryStatusRoute} from '../../apps/web/lib/exploration-recovery-status-route.ts';
 import {createExplorationParallelResumeRoute} from '../../apps/web/lib/exploration-parallel-resume-route.ts';
 import {createExplorationParallelResumeStore} from '../../apps/web/lib/exploration-parallel-resume-store.ts';
@@ -32,6 +33,11 @@ async function fixture(t){
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000034_exploration_revocable_intents.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000035_exploration_revocation_epoch.sql',import.meta.url),'utf8'));
  await db.exec(await readFile(new URL('../../supabase/migrations/20261117000036_exploration_parallel_review.sql',import.meta.url),'utf8'));
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261118000044_exploration_image_quality_hold.sql',import.meta.url),'utf8'));
+ // The exploration fixture stubs post execution tables. The admission function
+ // also checks and expires those rows, so it needs their production timestamps.
+ await db.exec('alter table public.image_tool_executions add column created_at timestamptz default now(), add column updated_at timestamptz default now()');
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261119000045_image_attempt_closure.sql',import.meta.url),'utf8'));
  await db.query('insert into auth.users values($1),($2)',[owner,other]);await db.query('insert into projects(id,owner_id) values($1,$2)',[projectId,owner]);
  await db.query('insert into project_posts(project_id,piece_id,name) values($1,$2,$3)',[projectId,pieceId,'Post sintético']);
  await db.exec('set role authenticated');
@@ -52,10 +58,10 @@ async function fixture(t){
     if(path.startsWith('/storage/v1/object/compor-exploration-images/')){
      const name=path.split('/compor-exploration-images/')[1];await db.query('insert into storage.objects(bucket_id,name) values($1,$2)',['compor-exploration-images',name]);return Response.json({});
     }
-    const allow=new Set(['get_exploration_intent_epoch','reserve_exploration_intent','revoke_exploration_intent','get_exploration_intent_state','reserve_exploration_plan','get_exploration_plan','bind_exploration_plan','finish_exploration_plan','reserve_exploration_batch_proven','get_exploration_batch','complete_exploration_image_proven','finish_exploration_image','reject_exploration_image','resume_exploration_parallel_review','get_exploration_parallel_review']);
+    const allow=new Set(['get_exploration_intent_epoch','reserve_exploration_intent','revoke_exploration_intent','get_exploration_intent_state','reserve_exploration_plan','get_exploration_plan','bind_exploration_plan','finish_exploration_plan','reserve_exploration_batch_proven','get_exploration_batch','complete_exploration_image_proven','mark_exploration_image_unknown_proven','reject_exploration_image','fail_exploration_image','replace_rejected_exploration_batch_slot_proven','resume_exploration_parallel_review','get_exploration_parallel_review']);
     if(!path.startsWith('/rest/v1/rpc/')||!allow.has(name))throw Error('unexpected route');
     const value=JSON.parse(options.body),names=Object.keys(value);if(names.some(n=>!/^p_[a-z_]+$/.test(n)))throw Error('unexpected argument');
-    const args=names.map((n,i)=>`${n} => $${i+1}`).join(','),table=name==='reserve_exploration_batch_proven';
+    const args=names.map((n,i)=>`${n} => $${i+1}`).join(','),table=name==='reserve_exploration_batch_proven'||name==='replace_rejected_exploration_batch_slot_proven';
     const result=await db.query(table?`select * from public.${name}(${args})`:`select public.${name}(${args}) as value`,names.map(n=>value[n]));
     return Response.json(table?result.rows:result.rows[0].value);
    }catch{return Response.json({error:'synthetic_database_error'},{status:400});}
@@ -65,7 +71,7 @@ async function fixture(t){
  return {db,fetchApi,calls,holdReserve:promise=>{pauseReserve=promise;},holdResume:promise=>{pauseResume=promise;}};
 }
 
-test('adapters reais, JSON PostgREST simulado e migrations preservam intenção e recibos', {timeout:60000},async t=>{
+test('adapters e migrations preservam intenção, falha e recibos durante a reposição explícita', {timeout:60000},async t=>{
  const f=await fixture(t),bindings=createExplorationPlannerBindings({secret:Buffer.alloc(32,7),source:'byok',apiKey:key});
  const intentStore=createExplorationIntentStore(config,f.fetchApi),batchStore=createExplorationBatchStore(config,f.fetchApi);
  const auth={appOrigin:origin,apiKey:key,bindings,allowCreate:true,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId};
@@ -74,13 +80,19 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  assert.deepEqual(await (await statusRoute.plan(mk(statusScope))).json(),{status:'absent',...statusScope});
  assert.deepEqual(await (await statusRoute.batch(mk({projectId,batchId}))).json(),{status:'absent',projectId,batchId});
  const intentRoute=createExplorationIntentRoute({...auth,store:intentStore});
- let starts=0,images=0;
+ let starts=0,images=0,failedPrompt=null;
  const provider={create:async()=>{starts++;return{sessionId:'sess_bridge'};},get:async()=>({status:'completed',turnId:'turn_bridge',plan:{version:1,items:[1,2,3].map(i=>({position:i,creativePrompt:`Caminho ${i}`,composition:`Composição ${i}`,contrast:`Contraste ${i}`,differenceFromOthers:`Diferença ${i}`}))}})};
  const plannerFor=intent=>createExplorationPlanner({store:createExplorationPlannerStore(config,f.fetchApi,intent),bindings,provider,authorize:async({actor:a,projectId:p})=>a.userId===owner&&p===projectId});
  const plannerRoute=createExplorationPlannerRoute({...auth,allowSubmit:true,plannerFor});
  const batchRoute=createExplorationBatchRoute({appOrigin:origin,resolveActor:async()=>actor,ownsProject:async(a,p)=>a.userId===owner&&p===projectId,
   verifyPlan:async value=>verifyExplorationPlan({bindings,input:{actor,projectId:value.projectId,conversationId:value.conversationId,batchId:value.batchId,requestId:value.requestId,context:value.context},plan:value.plan,token:value.token}),
-  intentSecret:value=>deriveExplorationIntent(bindings,{...value,purpose:'batch'}).intentSecret,intentState:intentStore.state,store:batchStore,generate:async()=>{images++;return png;}});
+  intentSecret:value=>deriveExplorationIntent(bindings,value).intentSecret,
+  intentState:intentStore.state,store:batchStore,
+  generate:async(_actor,_key,prompt)=>{
+   images++;
+   if(prompt===failedPrompt){failedPrompt=null;throw new ExplorationProviderClosed('provider_rejected_429','retryable');}
+   return png;
+  }});
  const initialEpoch=await intentRoute.epoch(mk({projectId}));assert.deepEqual(await initialEpoch.json(),{epoch:0});
  const initial=await intentRoute.create(mk({...inputs,intentId,purpose:'batch',expectedEpoch:0,apiKey:key}));assert.deepEqual(await initial.json(),{status:'created',epoch:1});
  const submit=await plannerRoute(mk({...inputs,intentId,requestId,op:'submit',apiKey:key}));assert.equal((await submit.json()).status,'running');
@@ -88,7 +100,8 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const plannerStatus=await (await statusRoute.plan(mk(statusScope))).json();assert.deepEqual(plannerStatus,{status:'completed',...statusScope});assert.doesNotMatch(JSON.stringify(plannerStatus),/binding|digest|sess_bridge/);
  assert.equal((await statusRoute.plan(mk({...statusScope,conversationId:'references'}))).status,503);
  const pollAgain=await plannerRoute(mk({...inputs,requestId,op:'poll',apiKey:key}));assert.equal((await pollAgain.json()).status,'completed');assert.equal(starts,1);
- const execute={...inputs,intentId,planRequestId:requestId,plan:out.plan,planBinding:out.planBinding,imageIds:[id(21),id(22),id(23)]},headers={'x-compor-openai-key':key};
+ const planInput={...inputs,planRequestId:requestId,plan:out.plan,planBinding:out.planBinding};
+ const execute={...planInput,intentId,imageIds:[id(21),id(22),id(23)]},headers={'x-compor-openai-key':key};
  assert.equal((await batchRoute.post(mk({...execute,context:{...context,idea:'Alterado'}},headers))).status,403);assert.equal(images,0);
  let release;const gate=new Promise(resolve=>{release=resolve;});f.holdReserve(gate);
  const pending=batchRoute.post(mk(execute,headers));while(!f.calls.includes('reserve_exploration_batch_proven'))await new Promise(resolve=>setTimeout(resolve,1));
@@ -98,10 +111,32 @@ test('adapters reais, JSON PostgREST simulado e migrations preservam intenção 
  const fresh=await intentRoute.create(mk({...inputs,intentId:freshIntentId,purpose:'batch',expectedEpoch:2,apiKey:key}));assert.deepEqual(await fresh.json(),{status:'created',epoch:3});
  assert.deepEqual(await (await intentRoute.state(mk({projectId,intentId}))).json(),{state:'revoked',epoch:3,revocationEpoch:2});
  assert.deepEqual(await (await intentRoute.revoke(mk({projectId,intentId,expectedEpoch:1}))).json(),{status:'revoked',epoch:3,revocationEpoch:2});
- const completed=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal((await completed.json()).status,'completed');assert.equal(images,3);
+ failedPrompt=out.plan.items[1].prompt;
+ const partial=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));
+ assert.equal((await partial.json()).status,'partial');
+ const before=await batchStore.getBatch(actor,projectId,batchId);
+ assert.deepEqual(before.images.map(image=>image.status),['completed','failed','completed']);
+ assert.equal(images,3);
+ const duplicate=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));
+ assert.equal(duplicate.status,409);
+ assert.equal(images,3);
+ const replacement={intentId:id(9),position:2,previousId:execute.imageIds[1],requestId:id(24)};
+ const {requestId:replacementId,...replacementIntent}=replacement;
+ const created=await intentRoute.create(mk({...inputs,...replacementIntent,purpose:'replacement',expectedEpoch:3,apiKey:key}));
+ assert.deepEqual(await created.json(),{status:'created',epoch:4});
+ const completed=await batchRoute.replace(mk({...planInput,...replacement},headers));
+ assert.deepEqual(await completed.json(),{status:'completed',batchId,requestId:replacementId,retryAutomatically:false});
+ assert.equal(images,4);
+ const replay=await batchRoute.replace(mk({...planInput,...replacement},headers));
+ assert.equal(replay.status,409);
+ assert.equal(images,4);
  const batch=await batchStore.getBatch(actor,projectId,batchId);assert.equal(batch.state,'completed');assert.deepEqual(batch.images.map(image=>image.status),['completed','completed','completed']);assert.equal(Date.parse(batch.nextAt)-Date.parse(batch.completedAt),15000);
+ assert.deepEqual(batch.images.map(image=>image.requestId),[execute.imageIds[0],replacementId,execute.imageIds[2]]);
+ assert.equal(batch.images[1].replacesImageId,execute.imageIds[1]);
+ const original=await f.db.query('select state,closure_reason from public.exploration_images where id=$1',[execute.imageIds[1]]);
+ assert.deepEqual(original.rows,[{state:'failed',closure_reason:'provider_rejected_429'}]);
  assert.equal((await (await statusRoute.batch(mk({projectId,batchId}))).json()).state,'completed');
- const duplicate=await batchRoute.post(mk({...execute,intentId:freshIntentId},headers));assert.equal(duplicate.status,409);assert.equal(images,3);assert.equal(starts,1);
+ assert.equal(starts,1);
  assert.equal(await batchStore.getBatch(otherActor,projectId,batchId),null,'RLS impede leitura por outra conta');
 });
 

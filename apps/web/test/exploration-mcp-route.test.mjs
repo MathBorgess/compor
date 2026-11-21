@@ -17,7 +17,7 @@ test('MCP usa o mesmo serviço autenticado, bloqueia projeto alheio e não regen
   if(path==='/rest/v1/projects')return Response.json(url.searchParams.get('id')===`eq.${project}`?[{id:project,owner_id:actor}]:[]);
   if(path.endsWith('/reserve_exploration_image_proven')){const body=JSON.parse(options.body);if(record)return Response.json([{state:record,is_new:false}]);assert.equal(body.p_id,requestId);record='running';return Response.json([{state:'running',is_new:true}]);}
   if(path.endsWith('/complete_exploration_image_proven')){record='completed';return Response.json(true);}
-  if(path.endsWith('/finish_exploration_image')){record=JSON.parse(options.body).p_state;return Response.json(true);}
+  if(path.endsWith('/mark_exploration_image_unknown_proven')){record='unknown';return Response.json(true);}
   if(path==='/v1/images/generations'){generations++;assert.equal(options.headers.Authorization,`Bearer ${key}`);return Response.json({data:[{b64_json:png.toString('base64')}]});}
   if(path.includes('/storage/v1/object/'))return options.method==='POST'?Response.json({}):new Response(png,{headers:{'content-type':'image/png'}});
   throw Error(`unexpected ${path}`);

@@ -15,6 +15,16 @@ test('resposta inválida ou falha do banco não autoriza reserva',async()=>{
   const store=createExplorationBatchStore(config,async()=>response);await assert.rejects(()=>store.reserveBatch(actor,reserve));
  }
 });
+test('a transição de resultado incerto envia a prova do filho pela RPC autenticada',async()=>{
+ const secret='a'.repeat(64);
+ const store=createExplorationBatchStore(config,async(url,init)=>{
+  assert.equal(new URL(url).pathname,'/rest/v1/rpc/mark_exploration_image_unknown_proven');
+  assert.equal(init.headers.authorization,'Bearer synthetic-session');
+  assert.deepEqual(JSON.parse(init.body),{p_project_id:id(2),p_id:id(5),p_rejection_secret:secret});
+  return Response.json(true);
+ });
+ await store.finish(actor,id(2),id(5),'unknown',secret);
+});
 test('reposição de recusada usa nova capacidade e escopo exatos',async()=>{
  let body;const store=createExplorationBatchStore(config,async(url,init)=>{assert.equal(new URL(url).pathname,'/rest/v1/rpc/replace_rejected_exploration_batch_slot_proven');body=JSON.parse(init.body);return Response.json([{state:'running',is_new:true}]);});
  const value={projectId:id(2),batchId:id(3),position:2,previousId:id(5),requestId:id(7),intentId:id(10),intentSecret:'9'.repeat(64),promptDigest:'b'.repeat(64),rejectionDigest:'d'.repeat(64)};

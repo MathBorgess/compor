@@ -3,6 +3,7 @@ import { NextRequest } from 'next/server';
 import { Readable } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 import type { ReadableStream as NodeWebStream } from 'node:stream/web';
+import { resolveAppOrigin } from './auth-config.ts';
 import { outgoingCookies, withRequestCookies } from './pages-request-cookies.ts';
 
 const validMethods = ['GET', 'HEAD', 'PUT', 'POST', 'DELETE', 'PATCH', 'OPTIONS'] as const;
@@ -51,15 +52,8 @@ function incomingBody(req: NextApiRequest) {
 function requestAddress(req: NextApiRequest, route: string) {
   // Keep the redirect origin independent of the incoming Host, forwarded headers and absolute target.
   const localOrigin = 'http://localhost' + (req.socket.localPort ? ':' + req.socket.localPort : '');
-  let base = localOrigin;
-  try {
-    const configured = new URL(process.env.APP_ORIGIN || localOrigin);
-    if (['https:', 'http:'].includes(configured.protocol) && !configured.username && !configured.password) {
-      base = configured.origin;
-    }
-  } catch { /* The application handler decides how to report a missing configuration. */ }
   const target = new URL(req.url || '/', localOrigin);
-  const url = new URL(base);
+  const url = new URL(resolveAppOrigin() ?? localOrigin);
   url.search = target.search;
   const dynamic = route.endsWith('/[operation]');
   const operation = dynamic ? decodeURIComponent(target.pathname.split('/').filter(Boolean).at(-1) || '') : '';
