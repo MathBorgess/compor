@@ -73,7 +73,7 @@ export function useProjectNameDisclosure(title: string, {longPressOnTouch = fals
       const tip = tipRef.current;
       const anchor = anchorRef.current;
       if (!tip?.matches(":popover-open") || !anchor) return;
-      if (document.activeElement !== anchor && !anchor.contains(document.activeElement)) return;
+      if (!touchGesture.current && !anchor.contains(document.activeElement)) return;
       event.preventDefault();
       event.stopPropagation();
       hideTip(tip);
@@ -115,8 +115,8 @@ export function useProjectNameDisclosure(title: string, {longPressOnTouch = fals
   }
 
   /** No toque, o primeiro gesto só revela o nome cortado. O seguinte ativa o controle. */
-  function holdActivation() {
-    if (!touchGesture.current) return false;
+  function holdActivation(clickCount: number) {
+    if (clickCount === 0 || !touchGesture.current) return false;
     const anchor = anchorRef.current;
     if (!anchor || !projectNameTruncated(anchor, titleRef.current)) return false;
     const hold = !wasOpenAtPointerDown.current;

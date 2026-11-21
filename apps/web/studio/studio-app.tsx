@@ -95,7 +95,7 @@ function ResumeProjectTitle({title}:{title:string}) {
 function ProjectListCard({project,disabled,deleteDisabled,onOpen,onDelete}:{project:Project;disabled:boolean;deleteDisabled:boolean;onOpen:()=>void;onDelete:()=>void}) {
   const name=useProjectNameDisclosure(project.title);
   return <div className="studio-project-entry">
-    <button {...name.handlers()} className="studio-project-card" title={project.title} disabled={disabled} onClick={()=>{if(name.holdActivation())return;onOpen();}}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>
+    <button {...name.handlers()} className="studio-project-card" title={project.title} disabled={disabled} onClick={event=>{if(name.holdActivation(event.detail))return;onOpen();}}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>
     {name.tooltip}
     <button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={deleteDisabled} onClick={onDelete}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button>
   </div>;
