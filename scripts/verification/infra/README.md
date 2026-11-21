@@ -1,7 +1,7 @@
 # Infraestrutura do verificador offline
 
 Este diretório prepara PostgreSQL 17 e PostgREST reais para o spike da issue 51.
-O banco recebe o baseline sintético de `baseline.sql` e as 32 migrations do app,
+O banco recebe o baseline sintético de `baseline.sql` e as migrations do app,
 sem reescrita. `migrations.json` fixa os nomes e bytes de cada migration; qualquer
 divergência bloqueia o início até uma atualização revisada do manifesto.
 

@@ -20,7 +20,7 @@ O adaptador de imagens deixa de tratar todo status diferente de 401/403 como res
 
 Cada execução nova recebe lease de 8 minutos, acima do `maxDuration` de 300 segundos da rota. O texto da tela continua dizendo “até 2 minutos”, que é o prazo visível da geração, não o lease de crash. Ao vencer, a linha deixa de responder `waiting_image` e passa a resultado incerto. `close_unconfirmed_image_work` encerra `unknown` e `running` fora do lease como `failed` / `result_unknown` / `unconfirmed`. Não insere reserva e não chama o provedor. Uma execução `failed` não pode ser concluída nem reutilizada: outra imagem exige outra reserva. “Tentar de novo” e “Encerrar e tentar de novo” são gestos explícitos e fazem essa reserva nova.
 
-A migration `20261119000045_image_attempt_closure.sql` não muda políticas de RLS. As funções novas recebem `execute` para `authenticated` no mesmo padrão das RPCs de imagem já existentes. Aplicar no banco remoto depende de autorização do Matheus e deve ocorrer sem geração em andamento, porque uma linha `running` antiga sem lease fica encerrável.
+A migration `20261119000045_image_attempt_closure.sql` não muda políticas de RLS. A falha definitiva e o registro de incerteza dentro do lease exigem a prova que o servidor gerou para a execução. O encerramento explícito fica restrito ao projeto; se a imagem já chegou ao Storage, a tentativa continua recuperável. Os pontos de entrada recebem `execute` para `authenticated`. As funções internas de expiração e encerramento ficam fora desse grant. Aplicar no banco remoto depende de autorização do Matheus e deve ocorrer sem geração em andamento, porque uma linha `running` antiga sem lease fica encerrável.
 
 ## Tela
 

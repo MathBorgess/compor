@@ -10,7 +10,7 @@ import { FIXTURE_USERS, FIXTURE_OPENAI_KEY } from './stack.mjs';
 
 test('manifest refuses a changed migration instead of reporting the pinned schema', async t => {
   const expected = await verifyMigrations();
-  assert.equal(expected.migrations.length, 44);
+  assert.equal(expected.migrations.length, 46);
   const root = await mkdtemp(join(tmpdir(), 'compor-infra-migration-negative-'));
   t.after(() => rm(root, { recursive: true, force: true }));
   await mkdir(join(root, 'supabase/migrations'), { recursive: true });
@@ -101,7 +101,9 @@ test('image reconciliation keeps the original reservation and fences only unclai
   const fence = args => db.query('select public.fence_unsubmitted_image_tool_call($1,$2,$3,$4,$5,$6,$7) as value', args).then(result => result.rows[0].value);
   const confirm = request => db.query('select public.confirm_closed_image_attempt($1,$2) as value', [project, request]).then(result => result.rows[0].value);
   const declare = reservation => db.query('select * from public.declare_image_generation_consent($1,true)', [reservation]);
-  const claim = reservation => db.query('select * from public.claim_image_tool_execution($1)', [reservation]).then(result => result.rows[0]);
+  const proof = '56'.repeat(32);
+  const digest = createHash('sha256').update(Buffer.from(proof, 'hex')).digest('hex');
+  const claim = reservation => db.query('select * from public.claim_post_image_execution_proven($1,$2)', [reservation, digest]).then(result => result.rows[0]);
   const unavailable = error => error.code === '42501';
 
   const request = '44444444-4444-4444-8444-444444444444';
@@ -153,7 +155,8 @@ test('image reconciliation keeps the original reservation and fences only unclai
   const execution = await claim(claimedReservation);
   assert.equal(execution.state, 'running');
   assert.equal(await fence([project, piece, 2, ...activeCall.slice(3)]), 'unverified', 'an execution takes precedence over the fence');
-  await db.query('select public.mark_image_tool_execution_unknown($1)', [execution.execution_id]);
+  await assert.rejects(db.query('select public.mark_image_tool_execution_unknown($1)', [execution.execution_id]), unavailable, 'a legacy caller cannot end an active lease');
+  await db.query('select public.mark_image_tool_execution_unknown($1,$2)', [execution.execution_id, proof]);
   assert.equal(await fence(activeCall), 'unverified', 'an unknown execution cannot become non-dispatch evidence');
   await finish(active, activeAttempt, 'completed');
   assert.equal(await confirm(active), 'unverified', 'a mixed attempt cannot release its marker');
@@ -196,7 +199,7 @@ test('a post image hold settles only the proven execution and conserves the orig
   assert.equal((await closed()).value,'unverified');
   await as(owner);
   assert.equal((await closed()).value,'unverified');
-  await db.query('select public.mark_image_tool_execution_unknown($1)',[execution.execution_id]);
+  await db.query('select public.mark_image_tool_execution_unknown($1,$2)',[execution.execution_id,proof]);
   await db.query("select public.set_studio_turn_state($1,$2,'failed','turn_test')",[project,request]);
   await db.query("select public.finish_agent_attempt($1,$2,'unknown')",[project,attempt]);
   assert.equal((await closed()).value,'unverified','provider turn failure does not prove what happened to an image');
@@ -206,7 +209,7 @@ test('a post image hold settles only the proven execution and conserves the orig
   assert.equal((await closed()).value,'image_quality_rejected');
   assert.deepEqual(await claim(digest),{...execution,state:'quality_held',is_new:false});
   assert.equal((await row('select public.fence_unsubmitted_image_tool_call($1,$2,$3,$4,$5,$6,$7) as value',call)).value,'unverified','a withheld candidate was dispatched');
-  await db.query('select public.mark_image_tool_execution_unknown($1)',[execution.execution_id]);
+  await assert.rejects(db.query('select public.mark_image_tool_execution_unknown($1,$2)',[execution.execution_id,proof]),denied);
   const assetPath=`${owner}/${project}/${piece}/1/${execution.asset_id}.png`;
   assert.equal((await row('select count(*)::int as value from storage.objects')).value,0);
   await db.query("insert into storage.objects(bucket_id,name) values ('compor-project-images',$1)",[assetPath]);
@@ -225,7 +228,8 @@ test('a closed serial exploration preserves the uncertain receipt and releases o
   const request = '77777777-7777-4777-8777-777777777777';
   const piece = '88888888-8888-4888-8888-888888888888';
   const promptDigest = 'a'.repeat(64);
-  const proofDigest = 'b'.repeat(64);
+  const proof = 'ab'.repeat(32);
+  const proofDigest = createHash('sha256').update(Buffer.from(proof, 'hex')).digest('hex');
   const row = async (query, values = []) => (await db.query(query, values)).rows[0];
   const denied = error => error.code === '42501';
   const invalidClosure = error => error.code === '23514';
@@ -239,7 +243,8 @@ test('a closed serial exploration preserves the uncertain receipt and releases o
   const reserveNew = () => row('select * from public.reserve_exploration_image_proven($1,$2,$3,$4)', [activeProject, newImage, promptDigest, proofDigest]);
   assert.deepEqual(await reserveOld(), { state: 'running', is_new: true });
   await db.query("insert into public.exploration_plans(image_id,project_id,composition,contrast) values ($1,$2,'Synthetic composition','Synthetic contrast')", [oldImage, deletedProject]);
-  await db.query("select public.finish_exploration_image($1,$2,'unknown')", [deletedProject, oldImage]);
+  await assert.rejects(db.query("select public.finish_exploration_image($1,$2,'unknown')", [deletedProject, oldImage]), denied);
+  await db.query('select public.mark_exploration_image_unknown_proven($1,$2,$3)', [deletedProject, oldImage, proof]);
 
   await db.query("select public.create_project_post($1,$2,'Synthetic post')", [activeProject, piece]);
   const content = JSON.stringify({ headline: '', price: '', date: '', caption: 'Synthetic', captionOrigin: 'user' });
