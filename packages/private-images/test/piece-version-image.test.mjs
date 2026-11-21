@@ -18,7 +18,7 @@ test('vínculo da versão é único, idempotente e isolado entre contas',async t
     create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;
     grant usage on schema auth,public to public;grant execute on function auth.uid() to public;
     create schema storage;create table storage.objects(id uuid primary key,bucket_id text not null,name text not null);`);
-  for(const name of ['20261103000000_projects.sql','20261103000001_piece_versions.sql','20261119000045_piece_version_image.sql'])
+  for(const name of ['20261103000000_projects.sql','20261103000001_piece_versions.sql','20261119000046_piece_version_image.sql'])
     await db.exec(await readFile(new URL(`../../../supabase/migrations/${name}`,import.meta.url),'utf8'));
   await db.query('insert into auth.users(id) values($1),($2)',[alice,bob]);
   await db.query("insert into public.projects(id,owner_id,title) values($1,$2,'Alice')",[project,alice]);

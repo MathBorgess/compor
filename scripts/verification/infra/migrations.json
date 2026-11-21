@@ -178,6 +178,14 @@
     {
       "name": "20261118000044_exploration_image_quality_hold.sql",
       "sha256": "a44de405dac61569b6d979e60203365bef0342134aaed25df183fa1c6aee342a"
+    },
+    {
+      "name": "20261119000045_image_attempt_closure.sql",
+      "sha256": "1976c3f2b91a7c9ba06ab066b36b745d786e6a703fb8bbd106a44904551782eb"
+    },
+    {
+      "name": "20261119000046_piece_version_image.sql",
+      "sha256": "1bb654e8a285313c4cf94e98d84ef47d78b71b33d3dbd71da63205ddbbceb682"
     }
   ]
 }

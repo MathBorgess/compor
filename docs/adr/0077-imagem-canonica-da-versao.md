@@ -12,7 +12,7 @@ No IndexedDB, a imagem `base` de uma versão salva (`baseVersion >= 1`) não é 
 
 ## O que permanece
 
-A listagem de outros arquivos da versão, a imutabilidade do Storage e a separação entre exportar e salvar continuam. Esta decisão não altera RLS existente nem políticas do bucket. A migration `20261119000045_piece_version_image.sql` fica no repositório e só deve ser aplicada com o ok do Matheus. Duas abas que disputam o estado local continuam no contrato anterior de revisão do IndexedDB; isso não faz parte deste vínculo.
+A listagem de outros arquivos da versão, a imutabilidade do Storage e a separação entre exportar e salvar continuam. Esta decisão não altera RLS existente nem políticas do bucket. A migration `20261119000046_piece_version_image.sql` fica no repositório e só deve ser aplicada com o ok do Matheus. Duas abas que disputam o estado local continuam no contrato anterior de revisão do IndexedDB; isso não faz parte deste vínculo.
 
 ## Prova
 
