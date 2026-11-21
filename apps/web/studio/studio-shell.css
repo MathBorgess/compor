@@ -39,6 +39,14 @@
 .studio-topbar { position: relative; z-index: 40; display: flex; flex-wrap: wrap; align-items: center; gap: 12px 16px; width: 100%; min-height: 64px; box-sizing: border-box; padding: 10px 16px; border-bottom: 1px solid var(--studio-line); background: var(--studio-cream); }
 .studio-topbar-start, .studio-topbar-end { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; min-width: 0; max-width: 100%; }
 .studio-topbar { flex-wrap: nowrap; justify-content: space-between; }
+.studio-open-project { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+@media (max-width: 800px) {
+  .compor-studio .studio-topbar { flex-wrap: wrap; align-items: flex-start; }
+  .compor-studio .studio-open-project {
+    position: static; width: 100%; height: auto; flex: 1 1 100%; margin: 0; overflow: visible; clip: auto;
+    white-space: normal; overflow-wrap: anywhere; text-overflow: clip; font-size: 16px; line-height: 1.3; font-weight: 700;
+  }
+}
 .studio-topbar-end { margin-left: auto; justify-content: flex-end; }
 .studio-brand { display: flex; align-items: center; gap: 8px; min-height: 40px; border-radius: 10px; color: inherit; text-decoration: none; }
 .studio-brand:focus-visible { outline: 3px solid var(--studio-cobalt); outline-offset: 3px; }
@@ -52,6 +60,13 @@
 .studio-project-trigger { display: inline-flex; align-items: center; gap: 6px; min-width: 0; max-width: 42vw; padding: 4px 2px; border: 0; background: transparent; color: var(--studio-ink); font: inherit; font-size: 18px; font-weight: 700; text-align: left; }
 .studio-project-trigger span[aria-hidden='true'] { color: var(--studio-cobalt); font-size: 12px; }
 .studio-truncate { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* Nome inteiro no foco e no toque. O atributo title continua só para o hover. */
+.studio-name-tooltip {
+  position: fixed; inset: auto; z-index: 80; box-sizing: border-box; width: max-content; max-width: min(26rem, calc(100vw - 16px));
+  margin: 0; padding: 8px 10px; border: 1px solid var(--studio-line); border-radius: 8px; background: white; color: var(--studio-ink);
+  font: 500 14px/1.4 'Compor DM Sans', 'DM Sans', sans-serif; white-space: normal; overflow-wrap: anywhere; pointer-events: none;
+  box-shadow: 0 8px 24px #2c2d2f29;
+}
 /* O nome do post fica sob o título sem entrar no fluxo: a barra e o título não mudam de altura nem de posição. */
 .studio-project-subtitle { position: absolute; top: calc(100% - 4px); left: 0; width: max-content; max-width: 42vw; margin: 0; padding-left: 2px; box-sizing: border-box; line-height: 15px; color: var(--studio-muted); font-size: 11px; overflow:hidden;text-overflow:ellipsis;white-space:nowrap; }
 .studio-menu-panel { position: absolute; z-index: 50; top: calc(100% + 8px); left: 0; display: grid; gap: 8px; width: min(320px, calc(100vw - 24px)); padding: 12px; border: 1px solid var(--studio-line); border-radius: 12px; background: white; }
@@ -150,6 +165,10 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
 .studio-visually-hidden { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
 .studio-chat-composer textarea { flex: 1; width: 100%; min-width: 0; min-height: 36px; height: 36px; padding: 8px 0; border: 0; background: white; color: var(--studio-ink); font: inherit; font-size: 14px; line-height: 20px; resize: none; }
 .compor-studio .studio-chat-composer .studio-button { display: grid; place-items: center; flex: none; width: 36px; height: 36px; min-height: 36px; padding: 0; border-radius: 10px; font-size: 18px; }
+/* No celular o Enter não envia: o botão é o único alvo e precisa dos 44 px de toque. */
+@media (max-width: 600px) {
+  .compor-studio .studio-chat-composer .studio-button { width: 44px; height: 44px; min-width: 44px; min-height: 44px; }
+}
 .studio-composer-actions > :last-child { min-width: 120px; }
 .studio-chat-composer .studio-hint { margin-top: 8px; }
 .studio-page-content { flex: 1; padding: 44px 40px; min-width: 0; }
@@ -249,6 +268,9 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
 .studio-project-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 20px; }
 .studio-project-card { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--studio-line); border-radius: 14px; background: white; text-align: left; color: var(--studio-ink); }
 .studio-project-card strong { font-size: 18px; }
+@media (pointer: coarse) {
+  .studio-project-card strong.studio-truncate { overflow: visible; text-overflow: unset; white-space: normal; }
+}
 .studio-project-card > span:last-child { color: var(--studio-cobalt); font-size: 13px; }
 .studio-project-art { display: grid; place-items: center; min-height: 110px; border-radius: 10px; background: var(--studio-blue-tint); color: var(--studio-cobalt); font-size: 48px; font-weight: 700; }
 .studio-project-create { padding-top: 24px; border-top: 1px solid var(--studio-line); }
