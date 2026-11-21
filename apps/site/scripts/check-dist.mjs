@@ -26,11 +26,11 @@ const text = files
 
 const required = [
   "O post de divulgação do seu curso, pronto. Sem inventar nada sobre a sua oferta.",
-  "Você conta o que está vendendo. O Compor entrega a arte limpa, o seu texto editável e a legenda para colar.",
+  "Você conta o que está vendendo. O Compor entrega o post pronto, com o texto na arte, e a legenda para colar.",
   "Criar meu post",
   "Conte o que você está vendendo",
   "Seu post, com os seus dados",
-  "Preço e data ajustados, sem gerar de novo",
+  "Confira antes de baixar",
   "Baixar o post",
   "Copiar a legenda",
   "Gerador genérico cria do zero. O Compor usa só o que você contou, e você edita tudo o que aparece no post.",
