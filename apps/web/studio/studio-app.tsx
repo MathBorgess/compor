@@ -22,6 +22,9 @@ import ReferenceExploration from "./reference-exploration";
 import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
+import {bindVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
+import {fetchPrivateImage} from '../lib/private-image-fetch.ts';
+import {composeStudioPng} from '../lib/studio-compose.ts';
 import {createReferenceSelectionCoordinator,type ReferenceAdoptionReview} from '../lib/reference-selection-coordinator.ts';
 import {assertReferenceVisualCapability,createReferenceVisualAuthority,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 import type {VisualInputManifest} from '@compor/agents-api/visual-input-contract';
@@ -755,43 +758,69 @@ function ProjectStudio({
       if(!published)urls.forEach(url=>{URL.revokeObjectURL(url);referenceUrls.current.delete(url);});
     };
   }, [referenceManifest, project.id, userId]);
+  async function workingImage(pieceId:string, baseVersion:number) {
+    const storage=local.storage.current;
+    if(!storage)return null;
+    const scope={userId, projectId:project.id};
+    if(baseVersion>=1){
+      const preview=await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'preview'});
+      if(preview)return preview.file;
+    }
+    return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
+  }
+  async function cacheSavedImage(pieceId:string, version:number, file:Blob) {
+    const storage=local.storage.current;
+    if(!storage||version<1)return;
+    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', file});}
+    catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')throw error;}
+  }
+  async function canonicalImage(pieceId:string, version:number) {
+    const assetId=await readVersionImage({projectId:project.id, pieceId, version});
+    if(!assetId)return null;
+    const blob=await fetchPrivateImage(new URLSearchParams({projectId:project.id, pieceId, version:String(version), assetId}));
+    await cacheSavedImage(pieceId, version, blob);
+    return blob;
+  }
   useEffect(() => {
     setBase(null);
     const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
     let live = true;
-    local.storage.current
-      .getDraftAsset(
-        { userId, projectId: project.id },
-        {
-          pieceId: draft.pieceId,
-          baseVersion: draft.baseVersion,
-          kind: "base",
-        },
-      )
-      .then((value) => {
-        if (live && loadGeneration===baseLoadGeneration.current && value) setBase(value.file);
+    const pieceId=draft.pieceId, baseVersion=draft.baseVersion;
+    workingImage(pieceId, baseVersion)
+      .then(async file=>{
+        if(!live||loadGeneration!==baseLoadGeneration.current)return;
+        if(file){setBase(file);return;}
+        if(baseVersion<1)return;
+        const remote=await canonicalImage(pieceId, baseVersion);
+        if(live&&loadGeneration===baseLoadGeneration.current&&remote)setBase(remote);
       })
       .catch(() => {
-        if (live)
-          setNotice("Não foi possível recuperar a imagem local desta versão.");
+        if (live&&loadGeneration===baseLoadGeneration.current)
+          setNotice("Não foi possível recuperar a imagem desta versão.");
       });
     return () => {
       live = false;
     };
   }, [draft?.pieceId, draft?.baseVersion]);
-  async function useBase({ blob, pieceId, version,creationContext }:ImageSelection) {
+  async function useBase({ blob, pieceId, version, assetId, creationContext }:ImageSelection) {
     baseLoadGeneration.current++;
     try {
       if(!local.storage.current)throw Error("Armazenamento indisponível.");
-      await local.storage.current.putDraftAsset({
-        userId,
-        projectId: project.id,
-        pieceId,
-        baseVersion: version,
-        kind: "base",
-        file: blob,
-      });
+      const storage=local.storage.current;
+      const scope={userId, projectId:project.id};
+      let shown=blob;
+      if(assetId&&version>=1){
+        const bound=await bindVersionImage({projectId:project.id, pieceId, version, assetId});
+        if(bound==='unknown')throw Error('vínculo indisponível');
+        if(bound==='conflict'){
+          const existing=await storage.getDraftAsset(scope,{pieceId, baseVersion:version, kind:'base'});
+          if(!existing)throw Error('imagem já vinculada');
+          shown=existing.file;
+        }else await cacheSavedImage(pieceId, version, blob);
+      }else{
+        await storage.putDraftAsset({...scope, pieceId, baseVersion:version, kind:version>=1?'preview':'base', file:blob});
+      }
       if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));await local.flush();}
       const current = getCurrentDraft(local.get());
       if (
@@ -799,7 +828,7 @@ function ProjectStudio({
         current?.pieceId === pieceId &&
         current.baseVersion === version
       )
-        setBase(blob);
+        setBase(shown);
       else if (active.current)
         setNotice("A imagem está preservada no rascunho da versão de origem.");
       return true;
@@ -928,6 +957,22 @@ function ProjectStudio({
           const storage=local.storage.current;
           if(!storage)throw Error('storage_unavailable');
           return storage.copyDraftAsset(scope,source,target);
+        },
+        publishVersionImage:async input=>{
+          const storage=local.storage.current;
+          if(!storage||input.userId!==userId||input.projectId!==project.id)return 'unknown';
+          const scope={userId:input.userId, projectId:input.projectId};
+          const preview=input.source.baseVersion>=1?await storage.getDraftAsset(scope,{...input.source, kind:'preview'}):null;
+          const source=preview??await storage.getDraftAsset(scope, input.source);
+          if(!source)return 'absent';
+          let png:Blob;
+          try{png=await composeStudioPng({base:source.file});}
+          catch{return 'unknown';}
+          const published=await publishVersionPng({projectId:input.projectId, pieceId:input.pieceId, version:input.version, png});
+          if(published!=='published')return published;
+          try{await storage.putDraftAsset({...scope, pieceId:input.pieceId, baseVersion:input.version, kind:'base', file:png});}
+          catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')return 'unknown';}
+          return 'published';
         },
         newEventId:()=>crypto.randomUUID(),
         onVersionsChanging:()=>{versionsReadSequence.current++;},
@@ -1275,7 +1320,14 @@ function ProjectStudio({
               event.target.value = "";
             }} />
           </label>},
-        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={version=>local.storage.current?.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'})??Promise.resolve(null)} onUseImage={useBase} />},
+        {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={async version=>{
+          const storage=local.storage.current;
+          if(!storage)return null;
+          const localImage=await storage.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'});
+          if(localImage)return localImage;
+          const remote=await canonicalImage(version.piece_id, version.version);
+          return remote?{file:remote}:null;
+        }} onUseImage={useBase} />},
       ]}
       draft={draft}
       brief={s.brief}
@@ -1374,9 +1426,16 @@ function ProjectStudio({
       initialPostRequest={initialPostRequest&&initialPostRequest.pieceId===conversationId?initialPostRequest:undefined}
       connection={<p className="studio-hint">{canUseProjectAI?sourceLabel:'Escolha uma IA nas configurações para conversar, ou continue no editor sem IA.'}</p>}
 
-      loadBase={async ({pieceId,baseVersion}) => local.storage.current?.getDraftAsset(
-        {userId,projectId:project.id},{pieceId,baseVersion,kind:'base'},
-      )}
+      loadBase={async ({pieceId,baseVersion}) => {
+        const storage=local.storage.current;
+        if(!storage)return null;
+        const scope={userId,projectId:project.id};
+        if(baseVersion>=1){
+          const preview=await storage.getDraftAsset(scope,{pieceId,baseVersion,kind:'preview'});
+          if(preview)return preview;
+        }
+        return storage.getDraftAsset(scope,{pieceId,baseVersion,kind:'base'});
+      }}
       loadReference={async (id) =>
         local.storage.current?.getReference(
           { userId, projectId: project.id },

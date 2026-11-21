@@ -54,6 +54,11 @@ test('IndexedDB real preserva estado e blobs por conta/projeto, recusa conflito 
   result.assetCopied=await repo.copyDraftAsset(scope,source,target)==='copied' && (await repo.getDraftAsset(scope,target)).file.size===png.size;
   await second.putDraftAsset({...scope,...otherTarget,file:jpeg});
   result.assetNotOverwritten=await repo.copyDraftAsset(scope,source,otherTarget)==='exists' && (await repo.getDraftAsset(scope,otherTarget)).file.type==='image/jpeg';
+  result.savedBaseImmutable=await expectError(repo.putDraftAsset({...scope,...target,file:jpeg}),'studio_draft_asset_exists');
+  result.savedBasePreserved=(await repo.getDraftAsset(scope,target)).file.size===png.size;
+  await repo.putDraftAsset({...scope,...target,kind:'preview',file:jpeg});
+  result.draftReceivesImage=(await repo.getDraftAsset(scope,{...target,kind:'preview'})).file.type==='image/jpeg';
+  result.draftLeavesSavedBase=(await repo.getDraftAsset(scope,target)).file.size===png.size;
   result.missingAsset=await repo.copyDraftAsset(other,source,target)==='missing';
   const originalAdd=IDBObjectStore.prototype.add;
   IDBObjectStore.prototype.add=function(...args){if(this.name==='draftAssets')throw new DOMException('synthetic quota','QuotaExceededError');return originalAdd.apply(this,args);};

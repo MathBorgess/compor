@@ -15,7 +15,7 @@ function setup({timeout=false,bodyMode=null,usage,sessionModel='gpt-6-astra',cal
   if(url.pathname.endsWith('/claim_image_tool_result_submission')){const first=!claimed;claimed=true;return Response.json([{submission_id:submissionId,asset_id:claimAssetId,state,is_new:first}]);}
   if(url.pathname.endsWith('/finish_image_tool_result_submission')){state=JSON.parse(options.body).p_state;return Response.json(true);}
   if(url.pathname.endsWith('/events')){
-    if(timeout) return new Promise((_,reject)=>{if(options.signal.aborted)reject(Error(apiKey));else options.signal.addEventListener('abort',()=>reject(Error(apiKey)),{once:true});});
+    if(timeout) return new Promise((_,reject)=>{const timer=setTimeout(()=>reject(Error(apiKey)),50);const abort=()=>{clearTimeout(timer);reject(Error(apiKey));};if(options.signal.aborted)abort();else options.signal.addEventListener('abort',abort,{once:true});});
     if(bodyMode) return new Response(new ReadableStream({start(){},cancel(){trace.push({path:'/cancel'});if(bodyMode==='reject')return Promise.reject(Error(apiKey));return new Promise(()=>{});}}),{status:202});
     return Response.json({}, {status:202});
   }

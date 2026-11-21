@@ -63,6 +63,7 @@ async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorati
   if(url.pathname==='/api/studio/explorations/signals'||url.pathname==='/api/studio/references/signals')return route.fulfill({json:{signals:[]}});
   if(url.pathname==='/api/studio/explorations/status')return route.fulfill({json:{status:'active'}});
   if(url.pathname==='/api/image-assets')return route.fulfill({json:{assets:[],nextCursor:null}});
+  if(url.pathname==='/api/piece-version-images')return route.fulfill({json:request.method()==='GET'?{assetId:null}:{status:'bound',assetId:request.postDataJSON()?.assetId??null}});
   if(url.pathname.startsWith('/api/'))throw Error(`API inesperada ${url.pathname}`);
   return route.continue();
  });

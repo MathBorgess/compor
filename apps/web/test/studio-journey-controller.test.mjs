@@ -209,6 +209,31 @@ test('contexto de ferramenta obsoleto e abertura de versão alheia falham sem ef
   assert.throws(()=>f.controller.openVersion({project_id:id(9),piece_id:id(3),version:1,content:getCurrentDraft(f.state).content},[]),/context_changed/);
 });
 
+test('salvar publica a imagem antes de adotar a versão e repetir usa o mesmo número',async()=>{
+  const f=fixture();await f.create();
+  f.controller.editDraft({field:'caption',value:'Com imagem'});
+  const published=[];
+  f.saving.publishVersionImage=async input=>{published.push(input.version);return published.length===1?'unknown':'published';};
+  assert.equal((await f.controller.saveCurrent(f.saving)).result.status,'unknown');
+  assert.equal(getCurrentDraft(f.state).baseVersion,0);assert.equal(f.copied.length,0);assert.equal(published[0],1);
+  const body=f.calls.find(call=>call.url==='/api/pieces').body;
+  f.versions.push({project_id:scope.projectId,piece_id:body.pieceId,version:1,content:body.content,metadata:{revision:1,baseVersion:null,approval:{status:'unapproved'}}});
+  f.setFetch(async()=>Response.json({status:'conflict'},{status:409}));
+  const repeated=await f.controller.saveCurrent(f.saving);
+  assert.equal(repeated.notice,'recovered');assert.equal(getCurrentDraft(f.state).baseVersion,1);
+  assert.deepEqual(published,[1,1]);assert.equal(f.copied.length,0);assert.equal(f.versions.length,1);
+});
+
+test('preparar geração não copia nem publica a imagem da versão anterior',async()=>{
+  const f=fixture();await f.create();
+  let published=0;
+  f.saving.publishVersionImage=async()=>{published++;return 'published';};
+  f.assets.set(`${id(3)}:0`,new Blob(['anterior']));
+  const draft=getCurrentDraft(f.state);
+  const outcome=await f.controller.saveCurrent(f.saving,{pieceId:draft.pieceId,baseVersion:draft.baseVersion,expectedLatestVersion:draft.expectedLatestVersion,operation:'create'});
+  assert.equal(outcome.result.status,'completed');assert.equal(published,0);assert.equal(f.copied.length,0);assert.equal(f.assets.has(`${id(3)}:1`),false);
+});
+
 test('referências compartilhadas e locais mantêm escopo ao alternar posts',async()=>{
   const f=fixture();await f.create();
   const shared={id:id(20),name:'shared.png',mime:'image/png',size:12,width:2,height:2};
