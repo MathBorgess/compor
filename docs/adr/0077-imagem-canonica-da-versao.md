@@ -8,6 +8,8 @@ Cada versão salva tem no máximo uma imagem canônica. A tabela `piece_version_
 
 No salvamento manual, o navegador envia o PNG da imagem atual para um `assetId` derivado da versão. Repetir encontra o objeto já gravado (`409 asset_exists`) e confirma o mesmo vínculo. Uma resposta perdida não adota a versão no navegador; a tentativa seguinte reconcilia o texto já salvo e publica a mesma imagem. A preparação de uma geração não copia a arte anterior para a versão nova: a imagem gerada, quando chega, é o primeiro vínculo daquela versão.
 
+Se o objeto já existe ou outra imagem foi vinculada, o estúdio lê os bytes que ficaram no Storage antes de atualizar o cache. Com imagens privadas desativadas, o estúdio salva a imagem apenas neste navegador. Com o envio ativo, o estúdio valida as dimensões, de até 2048 pixels por lado, e o tamanho do PNG, de até 4 MiB, antes de gravar a versão.
+
 No IndexedDB, a imagem `base` de uma versão salva (`baseVersion >= 1`) não é substituída. **Imagem-base** grava só o rascunho (`preview`, ou `base` enquanto a peça ainda está na v0). O quadro mostra o rascunho quando ele existe e, sem cópia local, o PNG do vínculo.
 
 ## O que permanece
