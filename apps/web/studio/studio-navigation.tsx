@@ -1,6 +1,7 @@
 "use client";
 
 import {useEffect,useId,useRef,useState} from 'react';
+import {useProjectNameDisclosure} from './project-name-tooltip';
 
 type Action = {
   id:'posts'|'project'|'post'|'review'|'save'|'delete';
@@ -25,6 +26,7 @@ export default function StudioNavigation({actions,projectTitle='',onRenameProjec
   const renameId=useId();
   useEffect(()=>{if(!expanded)setEditing(false);},[expanded]);
   const id=useId(),root=useRef<HTMLElement>(null),toggle=useRef<HTMLButtonElement>(null);
+  const projectName=useProjectNameDisclosure(projectTitle);
   useEffect(()=>{
     const compact=window.matchMedia('(max-width:800px)');
     const collapse=()=>{if(compact.matches)setExpanded(false);};
@@ -52,9 +54,10 @@ export default function StudioNavigation({actions,projectTitle='',onRenameProjec
           <label htmlFor={renameId} className="studio-visually-hidden">Renomear</label>
           <input id={renameId} value={draftTitle} maxLength={200} autoFocus onChange={event=>setDraftTitle(event.target.value)} onKeyDown={event=>{if(event.key==='Escape'){event.preventDefault();event.stopPropagation();setEditing(false);}}}/>
           <button type="submit" className="studio-rename-save" aria-label="Salvar nome" title="Salvar nome" disabled={!draftTitle.trim()}><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></button>
-        </form> : <button type="button" className="studio-navigation-project" aria-label={onRenameProject?`Renomear projeto ${projectTitle}`:projectTitle} title={onRenameProject?'Renomear projeto':projectTitle} disabled={!onRenameProject} onClick={()=>{setDraftTitle(projectTitle);setExpanded(true);setEditing(true);}}>
+        </form> : <button {...projectName.handlers()} type="button" className="studio-navigation-project" aria-label={onRenameProject?`Renomear projeto ${projectTitle}`:projectTitle} title={projectTitle} disabled={!onRenameProject} onClick={()=>{setDraftTitle(projectTitle);setExpanded(true);setEditing(true);}}>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d={paths.rename}/></svg><span><small>Projeto</small><strong>{projectTitle}</strong></span>
         </button> : null}
+      {projectName.tooltip}
       <div id={id} className="studio-navigation-actions">{actions.map(renderAction)}
       </div>
     </nav>

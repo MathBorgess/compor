@@ -28,8 +28,8 @@ before(async()=>{
 });
 after(async()=>{stopping.abort();try{await browser?.close();}finally{await stopApp(server);}});
 
-async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorations=false,landingIdea=''}={}){
- const context=await browser.newContext({viewport:{width:1440,height:1000},hasTouch:touch});t.after(()=>context.close());
+async function studio(t,{touch=false,projects=[],createDelay=0,completeExplorations=false,landingIdea='',zoom=1}={}){
+ const context=await browser.newContext({viewport:{width:Math.round(1440/zoom),height:Math.round(1000/zoom)},...(zoom===1?{}:{deviceScaleFactor:zoom}),hasTouch:touch});t.after(()=>context.close());
  await context.addCookies([sessionCookie(origin)]);
  const page=await context.newPage();page.setDefaultTimeout(15000);
  if(landingIdea)await page.addInitScript(({userId,idea})=>sessionStorage.setItem(`compor-objective:user:${userId}`,idea),{userId,idea:landingIdea});
@@ -322,6 +322,197 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
  const firstBatch=explorations.filter(call=>call.projectId===projects[0].id);assert.equal(firstBatch.length,3);assert.ok(firstBatch.every(call=>call.prompt.includes(firstIdea)&&!call.prompt.includes(secondIdea)));
  await closeSettings(page);await message.fill('Post sobre cerâmica');await message.press('Enter');await page.getByText('Resposta sintética.',{exact:true}).waitFor();
  assert.deepEqual(chats.map(call=>[call.projectId,call.message]),[[projects[1].id,'Post sobre gravura'],[projects[0].id,'Post sobre cerâmica']]);
+ assert.deepEqual(errors,[]);
+});
+
+async function readNameTooltip(control){
+ return control.evaluate(element=>{
+  const tip=document.getElementById(element.getAttribute('aria-describedby')||'');
+  if(!tip)return {missing:true};
+  const style=getComputedStyle(tip),box=tip.getBoundingClientRect(),view=document.documentElement;
+  return {
+   text:tip.textContent,open:tip.matches(':popover-open'),role:tip.getAttribute('role'),fontSize:parseFloat(style.fontSize),
+   clipped:tip.scrollWidth>tip.clientWidth+1||tip.scrollHeight>tip.clientHeight+1,
+   visible:box.width>8&&box.height>8&&style.visibility!=='hidden'&&Number(style.opacity)!==0,
+   inside:box.top>=-1&&box.left>=-1&&box.bottom<=view.clientHeight+1&&box.right<=view.clientWidth+1,
+  };
+ });
+}
+async function assertTooltipOpen(control,title){
+ const tip=await readNameTooltip(control);
+ assert.equal(tip.text,title);
+ assert.equal(tip.role,'tooltip');
+ assert.equal(tip.open,true);
+ assert.equal(tip.visible,true,'o nome completo precisa estar visível, não só no atributo title');
+ assert.equal(tip.clipped,false,JSON.stringify(tip));
+ assert.equal(tip.inside,true,JSON.stringify(tip));
+ assert.ok(tip.fontSize>=14,JSON.stringify(tip));
+ assert.equal(await control.evaluate(element=>element===document.activeElement),true,'o foco permanece no controle do nome');
+}
+async function assertFullNameOnFocus(control,title){
+ const closed=await readNameTooltip(control);
+ assert.notEqual(closed.missing,true);
+ assert.equal(closed.open,false);
+ assert.equal(closed.visible,false,'antes do foco o nome não aparece só porque existe um title de hover');
+ await control.scrollIntoViewIfNeeded();
+ await control.focus();
+ await assertTooltipOpen(control,title);
+ await control.evaluate(element=>element.blur());
+ const hidden=await readNameTooltip(control);
+ assert.equal(hidden.open,false);
+ assert.equal(hidden.visible,false);
+}
+async function assertZoomLayout(page){
+ const problems=await page.evaluate(()=>{
+  const view=document.documentElement,found=[];
+  if(view.scrollWidth>view.clientWidth+1)found.push(`rolagem horizontal ${view.scrollWidth}>${view.clientWidth}`);
+  const root=document.querySelector('.compor-studio');
+  for(const el of root?.querySelectorAll('button, a, input, textarea, select')??[]){
+   if(!(el instanceof HTMLElement)||el.closest('[hidden]')||el.closest('details:not([open])'))continue;
+   const style=getComputedStyle(el);
+   if(style.display==='none'||style.visibility==='hidden'||(el.checkVisibility&&!el.checkVisibility({checkOpacity:true,checkVisibilityCSS:true})))continue;
+   const box=el.getBoundingClientRect();
+   if(box.width<8||box.height<8)continue;
+   const labelled=el.getAttribute('aria-labelledby');
+   const labelledText=labelled?labelled.split(/\s+/).map(id=>document.getElementById(id)?.textContent||'').join(' ').trim():'';
+   const named=el.getAttribute('aria-label')||labelledText||el.innerText.trim()||el.getAttribute('title')||(el.labels?[...el.labels].map(label=>label.textContent||'').join('').trim():'')||'';
+   if(!named&&box.top<view.clientHeight&&box.bottom>0&&box.left<view.clientWidth&&box.right>0)found.push(`sem nome ${el.tagName}.${String(el.className).split(' ')[0]} ${el.outerHTML.slice(0,140)}`);
+   if((box.left>=view.clientWidth||box.right<=0)&&style.position==='fixed')found.push(`fixo fora da largura ${el.tagName}.${String(el.className).split(' ')[0]}`);
+  }
+  return found;
+ });
+ assert.deepEqual(problems,[]);
+}
+async function assertOnScreen(locator,label){
+ await locator.scrollIntoViewIfNeeded();
+ const box=await locator.boundingBox();
+ const view=await locator.page().evaluate(()=>({w:innerWidth,h:innerHeight}));
+ assert.ok(box&&box.width>=24&&box.height>=24&&box.x<view.w&&box.x+box.width>0&&box.y<view.h&&box.y+box.height>0,`${label} ${JSON.stringify({box,view})}`);
+}
+
+test('zoom de 200% mantém o Enter, o título legível e o layout',{skip,timeout:90000},async t=>{
+ const title=longIdea;
+ const {page,idea,posts,chats,errors,external}=await studio(t,{zoom:2,createDelay:800});
+ assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight,devicePixelRatio]),[720,500,2]);
+ await assertOnScreen(idea,'nome do projeto');
+ await idea.fill(title);await idea.press('Enter');
+ await page.getByRole('button',{name:'Criando projeto…',exact:true}).waitFor();await idea.press('Enter');
+ await projectHeading(page,title).waitFor();
+ assert.deepEqual(posts,[{title}],'o Enter no zoom cria o projeto uma vez e preserva o título inteiro');
+ await assertZoomLayout(page);
+ const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
+ await assertOnScreen(rail,'projeto no trilho');
+ await assertFullNameOnFocus(rail,title);
+ const message=await connectKey(page);
+ const projectName=renameProject(page);
+ assert.equal(await projectName.locator('strong').textContent(),title,'o zoom não corta o título armazenado');
+ await assertFullNameOnFocus(projectName,title);
+ await assertOnScreen(message,'mensagem');
+ await message.fill('Mensagem com zoom');await message.press('Enter');
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ await message.press('Enter');
+ assert.deepEqual(chats.map(chat=>chat.message),['Mensagem com zoom'],'o Enter no zoom envia uma vez pelo mesmo caminho do botão');
+ const send=page.getByRole('button',{name:'Enviar →',exact:true});
+ await assertOnScreen(send,'enviar');
+ await assertZoomLayout(page);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('zoom de 400% mantém o título inteiro, legível e sem quebra de layout',{skip,timeout:90000},async t=>{
+ const title=longIdea;
+ const {page,idea,posts,errors,external}=await studio(t,{zoom:4});
+ assert.deepEqual(await page.evaluate(()=>[innerWidth,innerHeight,devicePixelRatio]),[360,250,4]);
+ await assertOnScreen(idea,'nome do projeto');
+ await idea.fill(title);await idea.press('Enter');
+ await projectHeading(page,title).waitFor();
+ assert.deepEqual(posts,[{title}]);
+ await assertZoomLayout(page);
+ const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
+ await assertFullNameOnFocus(rail,title);
+ assert.equal(await rail.getAttribute('aria-label'),title);
+ assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+});
+
+test('renomear o projeto não dispara geração de imagem nem nova versão',{skip,timeout:90000},async t=>{
+ const {page,idea,renames,actions,explorations,chats,errors}=await studio(t);
+ const mutations=[];
+ page.on('request',request=>{
+  const url=new URL(request.url());
+  if(url.origin!==origin||request.method()==='GET'||request.method()==='HEAD')return;
+  mutations.push(`${request.method()} ${url.pathname}`);
+ });
+ await idea.fill(longIdea);await idea.press('Enter');
+ await connectKey(page);
+ const before=mutations.length;
+ assert.equal(explorations.length,0);assert.equal(actions.length,0);assert.equal(chats.length,0);
+ await renameProject(page).click();
+ await page.getByLabel('Renomear',{exact:true}).fill('Cerâmica aos sábados');
+ await page.getByRole('button',{name:'Salvar nome',exact:true}).click();
+ await projectHeading(page,'Cerâmica aos sábados').waitFor();
+ await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,300)));
+ const added=mutations.slice(before);
+ const generation=added.filter(call=>/\/api\/(?:pieces|image-assets|studio\/(?:action|explorations|exploration))/.test(call));
+ assert.deepEqual(generation,[],`renomear chamou geração: ${added.join(', ')}`);
+ assert.ok(added.includes('PATCH /api/projects'),added.join(', ')||'nenhuma mutação');
+ assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);
+ assert.equal(actions.length,0);assert.equal(explorations.length,0);assert.equal(chats.length,0);
+ assert.deepEqual(errors,[]);
+});
+
+test('o nome completo truncado fica acessível no foco do teclado e no toque',{skip,timeout:90000},async t=>{
+ const title='Oficina de cerâmica para iniciantes aos sábados de manhã no ateliê do bairro, com vagas limitadas, material incluso e café no intervalo';
+ const {page,errors}=await studio(t,{touch:true,projects:[{id:id(71),title:'Café',revision:1,created_at:'2026-11-01T00:00:00.000Z'},{id:id(70),title,revision:1,created_at:'2026-11-02T00:00:00.000Z'}]});
+ const card=page.getByRole('button',{name:`${title} Abrir projeto`,exact:true});
+ const resume=page.getByRole('heading',{level:2,name:title,exact:true});
+ const cut=locator=>locator.evaluate((element,expected)=>{const style=getComputedStyle(element);return style.textOverflow==='ellipsis'&&style.whiteSpace==='nowrap'&&element.scrollWidth>element.clientWidth&&element.textContent===expected;},title);
+ assert.equal(await card.getAttribute('title'),title);
+ assert.equal(await cut(card.locator('strong')),true,'o card corta só a apresentação');
+ await assertFullNameOnFocus(card,title);
+ await resume.scrollIntoViewIfNeeded();
+ const resumeBefore=await readNameTooltip(resume);
+ if(resumeBefore.open)await resume.evaluate(element=>element.blur());
+ await resume.tap();
+ await assertTooltipOpen(resume,title);
+ assert.equal(await page.getByRole('button',{name:'Continuar projeto',exact:true}).isVisible(),true,'o toque no nome truncado não troca de tela');
+ await resume.evaluate(element=>element.blur());
+ await card.click();
+ await projectHeading(page,title).waitFor();
+ const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
+ await rail.tap();
+ await assertTooltipOpen(rail,title);
+ assert.equal(await rail.getAttribute('aria-current'),'page');
+ assert.equal(await rail.innerText(),'OC');
+ await rail.evaluate(element=>element.blur());
+ await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
+ const entry=renameProject(page);
+ assert.equal(await entry.getAttribute('aria-label'),`Renomear projeto ${title}`);
+ assert.equal(await cut(entry.locator('strong')),true);
+ await assertFullNameOnFocus(entry,title);
+ await page.setViewportSize({width:390,height:844});
+ await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
+ assert.equal(await cut(entry.locator('strong')),true,'o celular continua cortando só a apresentação');
+ await assertFullNameOnFocus(entry,title);
+ await page.keyboard.press('Escape');
+ await rail.tap();
+ await assertTooltipOpen(rail,title);
+ assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
+ assert.deepEqual(errors,[]);
+});
+
+test('no celular o botão de enviar tem alvo de toque de pelo menos 44 px',{skip,timeout:90000},async t=>{
+ const {page,idea,errors}=await studio(t,{touch:true});
+ await page.setViewportSize({width:390,height:844});
+ await idea.fill('Oficina de cerâmica');
+ await page.getByRole('button',{name:'Criar projeto e continuar',exact:true}).click();
+ const message=await connectKey(page);
+ await message.fill('Primeira mensagem no celular');
+ await page.getByRole('button',{name:/^(Criar post|Enviar →)$/,exact:true}).click();
+ await page.getByText('Resposta sintética.',{exact:true}).waitFor();
+ await message.fill('Segunda mensagem');
+ const send=page.locator('.guided-conversation:not([hidden])').getByRole('button',{name:'Enviar →',exact:true});
+ await send.scrollIntoViewIfNeeded();
+ const box=await send.boundingBox();
+ assert.ok(box&&box.width>=44&&box.height>=44,`alvo de envio ${JSON.stringify(box)}`);
  assert.deepEqual(errors,[]);
 });
 

@@ -3,6 +3,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import type { Project } from "./studio-ui-types";
 import AccountMenu from "./account-menu";
+import {useProjectNameDisclosure} from "./project-name-tooltip";
 
 const assets = "/studio/";
 export type StudioTab = "post" | "moodboard" | "direction" | "facts" | "history";
@@ -85,18 +86,7 @@ function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllPr
       ) : null}
       <ul>
         {projects.map(project => (
-          <li key={project.id}>
-            <button
-              type="button"
-              className="studio-rail-project"
-              aria-label={project.title}
-              title={project.title}
-              aria-current={project.id === projectId ? "page" : undefined}
-              onClick={() => { if (project.id !== projectId) onOpenProject?.(project); }}
-            >
-              {projectInitials(project.title)}
-            </button>
-          </li>
+          <ProjectRailButton key={project.id} project={project} current={project.id === projectId} onOpen={onOpenProject} />
         ))}
       </ul>
       {onNewProject ? (
@@ -106,6 +96,26 @@ function ProjectRail({ projects, projectId, onOpenProject, onNewProject, onAllPr
       ) : null}
       </div>
     </nav>
+  );
+}
+
+function ProjectRailButton({project, current, onOpen}: {project: Project; current: boolean; onOpen?: (project: Project) => void}) {
+  const name = useProjectNameDisclosure(project.title);
+  return (
+    <li>
+      <button
+        {...name.handlers()}
+        type="button"
+        className="studio-rail-project"
+        aria-label={project.title}
+        title={project.title}
+        aria-current={current ? "page" : undefined}
+        onClick={() => { if (!current) onOpen?.(project); }}
+      >
+        {projectInitials(project.title)}
+      </button>
+      {name.tooltip}
+    </li>
   );
 }
 

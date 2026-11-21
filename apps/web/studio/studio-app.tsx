@@ -1,6 +1,7 @@
 "use client";
 import { lazy, Suspense, useCallback, useEffect, useRef, useState, type ReactNode, type FormEvent } from "react";
 import StudioShell, { StudioPanel, type StudioStage, type StudioDrawer } from "./studio-shell";
+import {useProjectNameDisclosure} from "./project-name-tooltip";
 import PersonaStep from "./persona-step";
 import StudioDirection from "./studio-direction";
 import StudioEditor from "./studio-editor";
@@ -84,6 +85,18 @@ const lastProjectKey=(userId:string)=>`compor:last-project:${userId}`;
 const createdDate=new Intl.DateTimeFormat('pt-BR',{day:'numeric',month:'long',year:'numeric'});
 function formatCreated(value?:string){if(!value)return '';const date=new Date(value);return Number.isNaN(date.getTime())?'':createdDate.format(date);}
 function newestProject(projects:Project[]){return projects.reduce<Project|undefined>((best,project)=>!best||(project.created_at??'')>=(best.created_at??'')?project:best,undefined);}
+function ResumeProjectTitle({title}:{title:string}) {
+  const name=useProjectNameDisclosure(title);
+  return <><h2 {...name.handlers()} id="resume-title" title={title} tabIndex={0}>{title}</h2>{name.tooltip}</>;
+}
+function ProjectListCard({project,disabled,deleteDisabled,onOpen,onDelete}:{project:Project;disabled:boolean;deleteDisabled:boolean;onOpen:()=>void;onDelete:()=>void}) {
+  const name=useProjectNameDisclosure(project.title);
+  return <div className="studio-project-entry">
+    <button className="studio-project-card" title={project.title} disabled={disabled} onClick={onOpen} {...name.handlers()}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button>
+    {name.tooltip}
+    <button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={deleteDisabled} onClick={onDelete}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button>
+  </div>;
+}
 const settingsSections=[['context','Contexto'],['ai','IA'],['references','Referências'],['direction','Marca e direção'],['materials','Materiais e versões'],['history','Histórico anterior']] as const;
 
 export default function StudioApp({
@@ -344,7 +357,7 @@ export default function StudioApp({
         <div className="studio-home-resume-art" aria-hidden="true"><span/><span/><span/></div>
         <div className="studio-home-resume-body">
           <p className="studio-home-eyebrow">{resume.opened?'Aberto por último':'Mais recente'}</p>
-          <h2 id="resume-title" title={resume.project.title}>{resume.project.title}</h2>
+          <ResumeProjectTitle title={resume.project.title}/>
           {resume.created&&<p className="studio-home-meta">Criado em {resume.created}</p>}
           <button type="button" className="studio-button" disabled={state==='deleting'} onClick={() => openProject(resume.project)}>Continuar projeto</button>
         </div>
@@ -353,7 +366,7 @@ export default function StudioApp({
         <h2>{hasProjects?'Todos os projetos':'Seus projetos'}</h2>
         {state === "loading" && <p role="status">Carregando seus projetos…</p>}{state === "ready" && projects.length===0 && <p>Seus projetos aparecerão aqui. Comece com uma ideia acima.</p>}
         <div className="studio-project-grid">
-          {projects.map(project => <div className="studio-project-entry" key={project.id}><button className="studio-project-card" title={project.title} disabled={state==='deleting'} onClick={() => openProject(project)}><strong id={`project-title-${project.id}`} className="studio-truncate">{project.title}</strong><span>Abrir projeto</span></button><button type="button" className="studio-project-delete" title="Excluir projeto" aria-label="Excluir projeto" aria-describedby={`project-title-${project.id}`} disabled={state!=='ready'||!project.revision} onClick={()=>{void requestDeletion(project);}}><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false"><path d="M3 6h18M9 6V4h6v2M5 6l1 14h12l1-14M10 10v6M14 10v6"/></svg></button></div>)}
+          {projects.map(project => <ProjectListCard key={project.id} project={project} disabled={state==='deleting'} deleteDisabled={state!=='ready'||!project.revision} onOpen={() => openProject(project)} onDelete={() => {void requestDeletion(project);}} />)}
         </div>
       </section>
       <section className="studio-starter" aria-labelledby="starter-title">
