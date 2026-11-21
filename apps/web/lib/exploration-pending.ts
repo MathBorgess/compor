@@ -23,5 +23,6 @@ export async function inspectSerialPending({storage,userId,projectId,conversatio
   if(!response.ok)throw Error('inspection_unavailable');
   const rows=z.object({images:z.array(z.object({id:z.uuid(),project_id:z.uuid(),state:z.enum(explorationImageOutcomes)})).check(z.maxLength(100))}).parse(await response.json()).images;
   const row=rows.find(item=>item.id===pending.requestId&&item.project_id===projectId);
+  if(row?.state==='failed')return 'A imagem da tentativa anterior não chegou. O recibo permanece preservado.';
   return row?.state==='completed'?'A tentativa anterior foi confirmada. O recibo permanece preservado.':row?.state==='rejected'?'A tentativa anterior foi recusada. O recibo permanece preservado.':row?.state==='quality_held'?'A proposta anterior foi retida pela revisão. O recibo permanece preservado.':'A tentativa anterior ainda não foi confirmada. O recibo permanece preservado.';
 }

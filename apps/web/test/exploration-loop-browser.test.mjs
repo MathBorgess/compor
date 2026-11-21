@@ -45,6 +45,33 @@ test('exploração sequencial protege abas, recarga, desconexão e resultado inc
   await a.reload();await a.getByText(/exploração anterior ainda não foi confirmada/i).waitFor();
   assert.equal(posts.length,3,'recarregar não repete chamada nem inicia novo ID após resultado incerto');
   await context.close();
+  const failedContext=await browser.newContext();await referenceSignals(failedContext);
+  const failedRequests=[];
+  await failedContext.route('**/api/studio/explorations**',async route=>{
+    const request=route.request(),path=new URL(request.url()).pathname;
+    if(path.endsWith('/status'))return route.fulfill({json:{status:'active'}});
+    if(path.endsWith('/signals'))return route.fulfill({json:{signals:[]}});
+    if(request.method()==='GET')return route.fulfill({json:{images:failedRequests.map(requestId=>({id:requestId,project_id:projectId,state:'failed'}))}});
+    const {requestId}=request.postDataJSON();failedRequests.push(requestId);
+    if(failedRequests.length===1)return route.abort('failed');
+    return route.fulfill({json:{status:'failed',requestId,closureReason:'provider_rejected_429',providerOutcome:'retryable',retryAutomatically:false}});
+  });
+  const failedPage=await failedContext.newPage();await failedPage.goto(`${origin}/exploration-loop-test`);
+  await failedPage.getByText(/não foi possível confirmar a exploração/i).waitFor();
+  const markerKey=`compor-exploration-pending:${userId}`;
+  const failedNotice=failedPage.getByText('A imagem não chegou. Você pode tentar de novo.',{exact:true});
+  for(let reload=0;reload<2;reload++){
+    await failedPage.reload();await failedNotice.waitFor();
+    assert.equal(failedRequests.length,1,'recarregar consulta o recibo de falha sem novo envio');
+    assert.equal(await failedPage.evaluate(key=>JSON.parse(localStorage.getItem(key)).requestId,markerKey),failedRequests[0]);
+  }
+  await failedPage.getByRole('button',{name:'Retomar'}).click();
+  await until(()=>failedRequests.length,n=>n===2);await failedNotice.waitFor();
+  assert.equal(failedRequests.length,2,'retomada explícita envia uma única nova tentativa');
+  assert.notEqual(failedRequests[1],failedRequests[0]);
+  await failedPage.reload();await failedNotice.waitFor();
+  assert.equal(failedRequests.length,2,'falha confirmada na resposta também exige novo gesto após recarga');
+  await failedContext.close();
   const c=await browser.newContext();await referenceSignals(c);const calls=[];let release;const waiting=new Promise(resolve=>{release=resolve;});
   await c.route('**/api/studio/explorations**',async route=>{
     if(new URL(route.request().url()).pathname.endsWith('/status'))return route.fulfill({json:{status:'active'}});
