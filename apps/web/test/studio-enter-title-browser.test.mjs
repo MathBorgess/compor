@@ -327,7 +327,7 @@ test('ideias de dois projetos da mesma conta sobrevivem reload e orientam chat e
 
 async function readNameTooltip(control){
  return control.evaluate(element=>{
-  const tip=document.getElementById(element.getAttribute('aria-describedby')||'');
+  const tip=element.parentElement?.querySelector(':scope > .studio-name-tooltip');
   if(!tip)return {missing:true};
   const style=getComputedStyle(tip),box=tip.getBoundingClientRect(),view=document.documentElement;
   return {
@@ -430,6 +430,14 @@ test('zoom de 400% mantém o título inteiro, legível e sem quebra de layout',{
  const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
  await assertFullNameOnFocus(rail,title);
  assert.equal(await rail.getAttribute('aria-label'),title);
+ const message=await connectKey(page);
+ const projectName=renameProject(page);
+ assert.equal(await projectName.locator('strong').textContent(),title,'o zoom de 400% não corta o título armazenado');
+ await assertFullNameOnFocus(projectName,title);
+ await assertOnScreen(message,'mensagem');
+ const send=page.getByRole('button',{name:/^(Criar post|Enviar →)$/,exact:true});
+ await assertOnScreen(send,'enviar');
+ await assertZoomLayout(page);
  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
 });
 
@@ -451,9 +459,7 @@ test('renomear o projeto não dispara geração de imagem nem nova versão',{ski
  await projectHeading(page,'Cerâmica aos sábados').waitFor();
  await page.evaluate(()=>new Promise(resolve=>setTimeout(resolve,300)));
  const added=mutations.slice(before);
- const generation=added.filter(call=>/\/api\/(?:pieces|image-assets|studio\/(?:action|explorations|exploration))/.test(call));
- assert.deepEqual(generation,[],`renomear chamou geração: ${added.join(', ')}`);
- assert.ok(added.includes('PATCH /api/projects'),added.join(', ')||'nenhuma mutação');
+ assert.deepEqual(added,['PATCH /api/projects'],'renomear só atualiza o projeto; /api/agent/image e /api/studio/chat ficam de fora');
  assert.deepEqual(renames.map(rename=>rename.title),['Cerâmica aos sábados']);
  assert.equal(actions.length,0);assert.equal(explorations.length,0);assert.equal(chats.length,0);
  assert.deepEqual(errors,[]);
@@ -466,15 +472,26 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  const resume=page.getByRole('heading',{level:2,name:title,exact:true});
  const cut=locator=>locator.evaluate((element,expected)=>{const style=getComputedStyle(element);return style.textOverflow==='ellipsis'&&style.whiteSpace==='nowrap'&&element.scrollWidth>element.clientWidth&&element.textContent===expected;},title);
  assert.equal(await card.getAttribute('title'),title);
- assert.equal(await cut(card.locator('strong')),true,'o card corta só a apresentação');
- await assertFullNameOnFocus(card,title);
+ const cardTitle=card.locator('strong');
+ assert.equal(await cardTitle.evaluate(element=>element.textContent),title);
+ assert.equal(await cardTitle.evaluate(element=>{const style=getComputedStyle(element);return style.whiteSpace!=='nowrap'&&element.scrollWidth<=element.clientWidth+1&&element.scrollHeight<=element.clientHeight+1;}),true,'no toque o card mostra o nome inteiro antes de navegar');
  await resume.scrollIntoViewIfNeeded();
  const resumeBefore=await readNameTooltip(resume);
  if(resumeBefore.open)await resume.evaluate(element=>element.blur());
  await resume.tap();
  await assertTooltipOpen(resume,title);
+ await page.keyboard.press('Escape');
+ const afterEscape=await readNameTooltip(resume);
+ assert.equal(afterEscape.open,false,'Escape fecha o tooltip');
+ assert.equal(afterEscape.visible,false,'Escape fecha o tooltip');
+ assert.equal(await resume.evaluate(element=>element===document.activeElement),true,'Escape não move o foco');
+ await resume.tap();
+ await assertTooltipOpen(resume,title);
+ await page.locator('.studio-starter').tap();
+ const afterOutside=await readNameTooltip(resume);
+ assert.equal(afterOutside.open,false,'toque fora fecha o tooltip');
+ assert.equal(afterOutside.visible,false,'toque fora fecha o tooltip');
  assert.equal(await page.getByRole('button',{name:'Continuar projeto',exact:true}).isVisible(),true,'o toque no nome truncado não troca de tela');
- await resume.evaluate(element=>element.blur());
  await card.click();
  await projectHeading(page,title).waitFor();
  const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
@@ -498,9 +515,20 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
  assert.equal(await cut(entry.locator('strong')),true,'o celular continua cortando só a apresentação');
  await assertFullNameOnFocus(entry,title);
- await page.keyboard.press('Escape');
- await rail.tap();
+ await page.getByRole('button',{name:'Recolher menu',exact:true}).click();
+ await rail.focus();
  await assertTooltipOpen(rail,title);
+ await page.keyboard.press('Escape');
+ const railClosed=await readNameTooltip(rail);
+ assert.equal(railClosed.open,false,'Escape fecha o tooltip do trilho');
+ assert.equal(railClosed.visible,false,'Escape fecha o tooltip do trilho');
+ assert.equal(await rail.evaluate(element=>element===document.activeElement),true,'Escape não move o foco do trilho');
+ const other=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:'Café',exact:true});
+ await other.tap();
+ await assertTooltipOpen(other,'Café');
+ assert.equal(await rail.getAttribute('aria-current'),'page','o primeiro toque num outro projeto mostra o nome e não navega');
+ await other.tap();
+ await projectHeading(page,'Café').waitFor();
  assert.ok(await page.evaluate(()=>document.documentElement.scrollWidth<=document.documentElement.clientWidth+1));
  assert.deepEqual(errors,[]);
 });

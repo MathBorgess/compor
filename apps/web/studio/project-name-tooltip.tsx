@@ -1,6 +1,6 @@
 "use client";
 
-import {useCallback, useId, useRef, type PointerEvent, type ReactNode} from "react";
+import {useCallback, useEffect, useRef, type PointerEvent, type ReactNode} from "react";
 
 /** O atributo title só aparece no hover. O foco do teclado e o toque precisam de um tooltip visível. */
 function projectNameTruncated(anchor: HTMLElement, title: string) {
@@ -35,28 +35,66 @@ function placeProjectNameTooltip(anchor: HTMLElement, tip: HTMLElement) {
   tip.style.top = `${Math.round(top)}px`;
 }
 
+function hideTip(tip: HTMLElement | null) {
+  if (tip?.matches(":popover-open")) tip.hidePopover();
+}
+
 export function useProjectNameDisclosure(title: string) {
-  const describedBy = useId();
   const tipRef = useRef<HTMLSpanElement>(null);
   const anchorRef = useRef<HTMLElement | null>(null);
+  const titleRef = useRef(title);
+  const touchGesture = useRef(false);
+  const wasOpenAtPointerDown = useRef(false);
+  titleRef.current = title;
   const ref = useCallback((node: HTMLElement | null) => {
     anchorRef.current = node;
     // Trocar o botão focado, como ao renomear, não dispara blur. O popover manual fecha quando a âncora sai.
     if (node) return;
-    const tip = tipRef.current;
-    if (tip?.matches(":popover-open")) tip.hidePopover();
+    hideTip(tipRef.current);
+  }, []);
+
+  useEffect(() => {
+    function outside(event: Event) {
+      const tip = tipRef.current;
+      const anchor = anchorRef.current;
+      if (!tip?.matches(":popover-open") || !anchor) return;
+      const target = event.target;
+      if (target instanceof Node && (anchor.contains(target) || tip.contains(target))) return;
+      hideTip(tip);
+    }
+    function onKey(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      const tip = tipRef.current;
+      const anchor = anchorRef.current;
+      if (!tip?.matches(":popover-open") || !anchor) return;
+      if (document.activeElement !== anchor && !anchor.contains(document.activeElement)) return;
+      event.preventDefault();
+      event.stopPropagation();
+      hideTip(tip);
+    }
+    function onScroll() {
+      hideTip(tipRef.current);
+    }
+    document.addEventListener("pointerdown", outside, true);
+    document.addEventListener("keydown", onKey, true);
+    window.addEventListener("scroll", onScroll, true);
+    return () => {
+      document.removeEventListener("pointerdown", outside, true);
+      document.removeEventListener("keydown", onKey, true);
+      window.removeEventListener("scroll", onScroll, true);
+    };
   }, []);
 
   function hide() {
-    const tip = tipRef.current;
-    if (tip?.matches(":popover-open")) tip.hidePopover();
+    hideTip(tipRef.current);
   }
 
   function open() {
     const anchor = anchorRef.current;
     const tip = tipRef.current;
-    if (!anchor || !tip || !anchor.isConnected || !title.trim()) return;
-    if (!projectNameTruncated(anchor, title)) {
+    const current = titleRef.current;
+    if (!anchor || !tip || !anchor.isConnected || !current.trim()) return;
+    if (!projectNameTruncated(anchor, current)) {
       hide();
       return;
     }
@@ -70,22 +108,35 @@ export function useProjectNameDisclosure(title: string) {
     hide();
   }
 
+  /** No toque, o primeiro gesto só revela o nome cortado. O seguinte ativa o controle. */
+  function holdActivation() {
+    if (!touchGesture.current) return false;
+    const anchor = anchorRef.current;
+    if (!anchor || !projectNameTruncated(anchor, titleRef.current)) return false;
+    const hold = !wasOpenAtPointerDown.current;
+    if (!hold) touchGesture.current = false;
+    return hold;
+  }
+
   function handlers<T extends HTMLElement>() {
     return {
       ref: ref as (node: T | null) => void,
-      "aria-describedby": describedBy,
       onFocus: () => { open(); },
       onBlur: () => { hide(); },
-      onPointerDown: () => { open(); },
+      onPointerDown: (event: PointerEvent<T>) => {
+        touchGesture.current = event.pointerType === "touch";
+        wasOpenAtPointerDown.current = tipRef.current?.matches(":popover-open") ?? false;
+        open();
+      },
       onPointerLeave: (event: PointerEvent<T>) => { close(event); },
     };
   }
 
   const tooltip: ReactNode = (
-    <span ref={tipRef} id={describedBy} popover="manual" role="tooltip" className="studio-name-tooltip">
+    <span ref={tipRef} popover="manual" role="tooltip" className="studio-name-tooltip">
       {title}
     </span>
   );
 
-  return {handlers, tooltip};
+  return {handlers, holdActivation, tooltip};
 }

@@ -260,6 +260,9 @@ form.studio-chat-composer { display: flex; align-items: center; gap: 12px; }
 .studio-project-grid { display: grid; grid-template-columns: repeat(auto-fit,minmax(230px,1fr)); gap: 20px; }
 .studio-project-card { display: grid; gap: 12px; padding: 18px; border: 1px solid var(--studio-line); border-radius: 14px; background: white; text-align: left; color: var(--studio-ink); }
 .studio-project-card strong { font-size: 18px; }
+@media (pointer: coarse) {
+  .studio-project-card strong.studio-truncate { overflow: visible; text-overflow: unset; white-space: normal; }
+}
 .studio-project-card > span:last-child { color: var(--studio-cobalt); font-size: 13px; }
 .studio-project-art { display: grid; place-items: center; min-height: 110px; border-radius: 10px; background: var(--studio-blue-tint); color: var(--studio-cobalt); font-size: 48px; font-weight: 700; }
 .studio-project-create { padding-top: 24px; border-top: 1px solid var(--studio-line); }

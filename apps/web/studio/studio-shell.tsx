@@ -110,7 +110,7 @@ function ProjectRailButton({project, current, onOpen}: {project: Project; curren
         aria-label={project.title}
         title={project.title}
         aria-current={current ? "page" : undefined}
-        onClick={() => { if (!current) onOpen?.(project); }}
+        onClick={() => { if (name.holdActivation()) return; if (!current) onOpen?.(project); }}
       >
         {projectInitials(project.title)}
       </button>
