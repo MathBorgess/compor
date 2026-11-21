@@ -26,7 +26,7 @@ export default function StudioNavigation({actions,projectTitle='',onRenameProjec
   const renameId=useId();
   useEffect(()=>{if(!expanded)setEditing(false);},[expanded]);
   const id=useId(),root=useRef<HTMLElement>(null),toggle=useRef<HTMLButtonElement>(null);
-  const projectName=useProjectNameDisclosure(projectTitle);
+  const projectName=useProjectNameDisclosure(projectTitle,{escapeHandledByParent:expanded});
   useEffect(()=>{
     const compact=window.matchMedia('(max-width:800px)');
     const collapse=()=>{if(compact.matches)setExpanded(false);};

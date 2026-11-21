@@ -41,7 +41,10 @@ function hideTip(tip: HTMLElement | null) {
 
 const longPressMs = 500;
 
-export function useProjectNameDisclosure(title: string, {longPressOnTouch = false}: {longPressOnTouch?: boolean} = {}) {
+export function useProjectNameDisclosure(
+  title: string,
+  {longPressOnTouch = false, escapeHandledByParent = false}: {longPressOnTouch?: boolean; escapeHandledByParent?: boolean} = {},
+) {
   const tipRef = useRef<HTMLSpanElement>(null);
   const anchorRef = useRef<HTMLElement | null>(null);
   const titleRef = useRef(title);
@@ -74,9 +77,11 @@ export function useProjectNameDisclosure(title: string, {longPressOnTouch = fals
       const anchor = anchorRef.current;
       if (!tip?.matches(":popover-open") || !anchor) return;
       if (!touchGesture.current && !anchor.contains(document.activeElement)) return;
-      event.preventDefault();
-      event.stopPropagation();
       hideTip(tip);
+      if (!escapeHandledByParent) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
     }
     function onScroll() {
       hideTip(tipRef.current);
@@ -89,7 +94,7 @@ export function useProjectNameDisclosure(title: string, {longPressOnTouch = fals
       document.removeEventListener("keydown", onKey, true);
       window.removeEventListener("scroll", onScroll, true);
     };
-  }, []);
+  }, [escapeHandledByParent]);
 
   function hide() {
     hideTip(tipRef.current);

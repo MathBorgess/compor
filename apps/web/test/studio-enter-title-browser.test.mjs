@@ -543,8 +543,15 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  assert.equal(await page.locator('.studio-name-tooltip:popover-open').count(),0,'o tooltip fecha quando o botão do nome dá lugar ao formulário');
  await page.keyboard.press('Escape');
  await entry.waitFor();
+ await entry.focus();
+ await assertTooltipOpen(entry,title);
+ await page.keyboard.press('Escape');
+ const expandMenu=page.getByRole('button',{name:'Expandir menu',exact:true});
+ assert.equal(await expandMenu.getAttribute('aria-expanded'),'false');
+ assert.equal(await expandMenu.evaluate(element=>element===document.activeElement),true);
+ assert.equal((await readNameTooltip(entry)).open,false,'Escape fecha o tooltip junto com o menu expandido');
  await page.setViewportSize({width:390,height:844});
- await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
+ await expandMenu.click();
  assert.equal(await cut(entry.locator('strong')),true,'o celular continua cortando só a apresentação');
  await assertFullNameOnFocus(entry,title);
  await page.getByRole('button',{name:'Recolher menu',exact:true}).click();
