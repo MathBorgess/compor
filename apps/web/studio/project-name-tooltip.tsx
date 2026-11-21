@@ -41,6 +41,10 @@ export function useProjectNameDisclosure(title: string) {
   const anchorRef = useRef<HTMLElement | null>(null);
   const ref = useCallback((node: HTMLElement | null) => {
     anchorRef.current = node;
+    // Trocar o botão focado, como ao renomear, não dispara blur. O popover manual fecha quando a âncora sai.
+    if (node) return;
+    const tip = tipRef.current;
+    if (tip?.matches(":popover-open")) tip.hidePopover();
   }, []);
 
   function hide() {

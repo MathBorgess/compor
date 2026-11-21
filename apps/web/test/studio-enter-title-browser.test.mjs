@@ -488,6 +488,12 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  assert.equal(await entry.getAttribute('aria-label'),`Renomear projeto ${title}`);
  assert.equal(await cut(entry.locator('strong')),true);
  await assertFullNameOnFocus(entry,title);
+ await entry.focus();
+ await entry.click();
+ await page.getByLabel('Renomear',{exact:true}).waitFor();
+ assert.equal(await page.locator('.studio-name-tooltip:popover-open').count(),0,'o tooltip fecha quando o botão do nome dá lugar ao formulário');
+ await page.keyboard.press('Escape');
+ await entry.waitFor();
  await page.setViewportSize({width:390,height:844});
  await page.getByRole('button',{name:'Expandir menu',exact:true}).click();
  assert.equal(await cut(entry.locator('strong')),true,'o celular continua cortando só a apresentação');
