@@ -29,6 +29,7 @@ export function useParallelExploration(props:Props){
   const [status,setStatus]=useState('Aguardando seu pedido.'),[progress,setProgress]=useState<ParallelProgress|null>(null),[completed,setCompleted]=useState(0),[phase,setPhase]=useState<'idle'|'generating'|'waiting'|'blocked'>('idle'),[countdown,setCountdown]=useState<number|null>(null),[paused,setPaused]=useState(false),[awaitingFeedback,setAwaitingFeedback]=useState(false),[legacyPending,setLegacyPending]=useState(false),[pageVisible,setPageVisible]=useState(true);
   const [epochStatus,setEpochStatus]=useState<'checking'|'ready'|'unavailable'>('checking');
   const [epochCheck,setEpochCheck]=useState(0);
+  const [running,setRunning]=useState(false);
   const current=useRef(props),epoch=useRef<number|null>(null),run=useRef<{stop:()=>void;valid:()=>boolean}|null>(null),pendingStart=useRef(false);current.current=props;
   const audienceConflict=props.state?audienceResolution(props.state).status==='conflict':false;
   const ready=!audienceConflict&&Boolean(props.idea.trim()||props.state?.brief.offer.trim()||props.state?.brief.direction.trim());
@@ -46,13 +47,14 @@ export function useParallelExploration(props:Props){
   useEffect(()=>{const onHide=()=>run.current?.stop();window.addEventListener('pagehide',onHide);return()=>{window.removeEventListener('pagehide',onHide);run.current?.stop();};},[]);
   useEffect(()=>{const update=()=>{const visible=document.visibilityState==='visible'&&document.hasFocus();setPageVisible(visible);if(!visible&&run.current){run.current.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}};document.addEventListener('visibilitychange',update);window.addEventListener('blur',update);window.addEventListener('focus',update);update();return()=>{document.removeEventListener('visibilitychange',update);window.removeEventListener('blur',update);window.removeEventListener('focus',update);};},[]);
 
-  function pause(){pendingStart.current=false;run.current?.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}
+  function pause(){run.current?.stop();setPaused(true);setPhase('idle');setCountdown(null);setStatus('Exploração pausada.');}
   async function start(){
     if(props.selectedVisualsRequired&&!props.selectedVisualsAvailable){setStatus('O envio das imagens selecionadas está indisponível.');return;}
     if(pendingStart.current||run.current||!props.available||!props.visible||!pageVisible||!props.hasApiKey||!props.isAuthenticated()||!ready)return;
     const capturedEpoch=epoch.current;
     if(capturedEpoch===null){setStatus('Não foi possível verificar a intenção. Atualize a tela antes de pedir propostas.');return;}
     pendingStart.current=true;
+    setRunning(true);
     setPaused(false);
     setLegacyPending(false);
     setPhase('generating');
@@ -70,7 +72,7 @@ export function useParallelExploration(props:Props){
     const stop=()=>{if(!active)return;active=false;const stoppedAt=Date.now();if(dispatcher)runtime.stopping=dispatcher.stop();if(last){const scope={userId:last.preparation.userId,projectId:last.preparation.projectId,batchId:last.preparation.batchId};runtime.freezing=(async()=>{const journal=await store.load(scope);if(journal)await store.update(scope,journal.revision,{kind:'pause',now:stoppedAt});})();}};run.current={stop,valid};
     async function requireGate(allowResume:boolean){
       const status=await readExplorationGate(identity.projectId);if(!valid())throw Error('paused');
-      if(status==='active')return 'active' as const;
+      if(status==='active'){setAwaitingFeedback(false);return 'active' as const;}
       if(!allowResume){setAwaitingFeedback(true);setStatus('Aguardando sua decisão sobre as propostas.');return 'blocked' as const;}
       return 'resume' as const;
     }
@@ -101,6 +103,7 @@ export function useParallelExploration(props:Props){
         epoch.current=nextEpoch;
         setCountdown(null);
         setPhase('idle');
+        setStatus('Verificando as condições para gerar propostas…');
       }
       return nextEpoch;
     }
@@ -150,7 +153,7 @@ export function useParallelExploration(props:Props){
         }
       });
     }catch{if(active){stop();if(run.current?.stop===stop)run.current=null;setStatus('Não foi possível confirmar esta tentativa. Ela permanece preservada.');setPhase('blocked');}}
-    finally{active=false;if(runtime.stopping)await runtime.stopping.catch(()=>{});if(runtime.freezing)await runtime.freezing.catch(()=>{});store.close();if(run.current?.stop===stop)run.current=null;pendingStart.current=false;}
+    finally{active=false;if(runtime.stopping)await runtime.stopping.catch(()=>{});if(runtime.freezing)await runtime.freezing.catch(()=>{});store.close();if(run.current?.stop===stop)run.current=null;pendingStart.current=false;setRunning(false);}
   }
-  return {start,pause,status,progress,completed,phase,countdown,paused,awaitingFeedback,legacyPending,epochReady:epochStatus==='ready',epochStatus,recheckEpoch:()=>setEpochCheck(value=>value+1),ready,audienceConflict,clearLegacyPending:()=>setLegacyPending(false)};
+  return {start,pause,running,status,progress,completed,phase,countdown,paused,awaitingFeedback,legacyPending,epochReady:epochStatus==='ready',epochStatus,recheckEpoch:()=>setEpochCheck(value=>value+1),ready,audienceConflict,clearLegacyPending:()=>setLegacyPending(false)};
 }

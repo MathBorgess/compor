@@ -52,7 +52,14 @@ export default function ParallelExplorationRecovery(props:Props){
     const client=createParallelExplorationClient({store,canInspect:inScope});
     try{
       if(preparation.stage==='planning'||preparation.stage==='planned'){
-        const result=await client.inspectPlan(preparation,current.current.getApiKey());if(!inScope())return;
+        // Revocation may have advanced the saved revision since the panel opened.
+        const latest=await store.loadPreparation(preparation.userId);
+        if(!inScope())return;
+        if(!latest||latest.projectId!==preparation.projectId||latest.conversationId!==preparation.conversationId||
+          latest.batchId!==preparation.batchId||latest.planRequestId!==preparation.planRequestId||
+          latest.intentId!==preparation.intentId||latest.credentialSource!==preparation.credentialSource||
+          (latest.stage!=='planning'&&latest.stage!=='planned'))throw Error('unavailable');
+        const result=await client.inspectPlan(latest,current.current.getApiKey());if(!inScope())return;
         setPreparation(result.preparation);
         setNotice(result.status==='completed'?'Plano recuperado. A execução permanece pausada.':result.status==='failed'?'O planejamento anterior terminou sem um plano.':'O planejamento ainda não foi confirmado. Nenhuma nova tentativa foi enviada.');
       }else if(preparation.stage==='executing'){

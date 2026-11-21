@@ -19,18 +19,25 @@ import './studio/style.css';
 import './studio/studio-shell.css';
 import './studio/studio-guided.css';
 function Screen(){const [selected,setSelected]=useState([]),[requests,setRequests]=useState(0),[scope,setScope]=useState(false),[returned,setReturned]=useState(false),[uploaded,setUploaded]=useState('');
+ const [proposalStage,setProposalStage]=useState('idle'),[pauses,setPauses]=useState(0);
+ const simulateProposals=location.search==='?simulate-proposals';
+ const proposalsLocked=proposalStage==='planning'||proposalStage==='generating';
  return <div className="compor-studio" data-guided="true"><div className="studio-body"><main className="studio-canvas-column">
- <ReferencePanel entry="preparation" projectTitle="Café Aurora" selectionCount={3} projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)} onRequestProposals={()=>setRequests(value=>value+1)} proposalsDisabled={requests>0}
+ <ReferencePanel entry="preparation" projectTitle="Café Aurora" selectionCount={3} projectWide={scope} onScope={setScope} continueLabel="Voltar ao post" onContinue={()=>setReturned(true)}
+ onRequestProposals={()=>{setRequests(value=>value+1);if(simulateProposals)setProposalStage('planning');}} proposalsDisabled={!simulateProposals&&requests>0}
+ proposalsLocked={proposalsLocked} proposalsRunning={proposalsLocked} onPauseProposals={()=>{setPauses(value=>value+1);setProposalStage('idle');}}
+ proposalPhase={proposalStage==='generating'?'generating':'idle'} proposalStatus={proposalStage==='generating'?'Recebemos 1 de 3 imagens.':undefined}
  search={sourceControl=><section className="reference-exploration"><form>{sourceControl}<label>O que você quer explorar?<input type="search"/></label><button type="button">Buscar referências</button></form><p>Permita nesta sessão para carregar prévias.</p><button>Permitir nesta sessão</button></section>}
  onUpload={files=>setUploaded(files[0].name)} uploadStatus={uploaded}
  proposals={<ExplorationGallery projectId="00000000-0000-4000-8000-000000000003" completed={0} selectedIds={selected} onUseReference={async imageId=>setSelected(items=>[...items,imageId])} onRemoveReference={async imageId=>setSelected(items=>items.filter(item=>item!==imageId))}/>}
  selection={<section className="reference-selection-tray"><h2>Sua seleção</h2><p>2 do projeto · 1 deste post</p></section>}
  conversation={<section className="studio-chat-panel"><div className="studio-chat-messages">Conversa preservada sobre as referências</div><form className="studio-chat-composer"><textarea aria-label="Mensagem ao Compor" /></form></section>}/>
  <output id="requests">{requests}</output><output id="returned">{String(returned)}</output>
+ {simulateProposals&&<div><button type="button" onClick={()=>setProposalStage('planning')}>Simular planejamento</button><button type="button" onClick={()=>setProposalStage('generating')}>Simular geração parcial</button><button type="button" onClick={()=>setProposalStage('idle')}>Simular lote concluído</button><output id="pauses">{pauses}</output></div>}
  </main></div></div>;
 }createRoot(document.getElementById('root')).render(<Screen/>);`;
 
-async function fixture(t,viewport){
+async function fixture(t,viewport,query=''){
  const bundle=await build({stdin:{contents:source,loader:'jsx',resolveDir:fileURLToPath(new URL('../',import.meta.url))},bundle:true,write:false,outdir:'/tmp/compor-reference-workbench',format:'esm',platform:'browser',target:'es2022',jsx:'automatic',external:['/studio/*'],define:{'process.env.NODE_ENV':'"test"'}});
  const script=bundle.outputFiles.find(file=>file.path.endsWith('.js')).text,css=bundle.outputFiles.find(file=>file.path.endsWith('.css')).text;
  const server=createServer((req,res)=>{if(req.url==='/fixture.js'){res.setHeader('content-type','text/javascript');res.end(script);}else if(req.url==='/fixture.css'){res.setHeader('content-type','text/css');res.end(css);}else {res.setHeader('content-type','text/html');res.end('<!doctype html><html lang="pt-BR"><head><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="stylesheet" href="/fixture.css"></head><body style="margin:0"><div id="root"></div><script type="module" src="/fixture.js"></script></body></html>');}});
@@ -41,11 +48,63 @@ async function fixture(t,viewport){
  const errors=[];page.on('pageerror',error=>errors.push(error.message));t.after(()=>assert.deepEqual(errors,[]));
  await page.route('**/api/studio/explorations?*',route=>route.fulfill({json:{images:[1,2,3].map(ordinal=>({id:`00000000-0000-4000-8000-${String(ordinal).padStart(12,'0')}`,project_id:'00000000-0000-4000-8000-000000000003',ordinal,state:'completed',created_at:'2026-11-15T12:00:00.000Z',batch_id:'00000000-0000-4000-8000-000000000004',batch_position:ordinal})),nextBeforeOrdinal:null}}));
  await page.route('**/api/studio/explorations/image?*',route=>route.fulfill({contentType:'image/png',body:Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAIAAACQd1PeAAAADElEQVR4nGP4z8AAAAMBAQDJ/pLvAAAAAElFTkSuQmCC','base64')}));
- await page.goto('http://127.0.0.1:'+server.address().port);
+ await page.goto('http://127.0.0.1:'+server.address().port+'/'+query);
  return page;
 }
 const options={skip:!browserPath||!existsSync(browserPath),timeout:30000};
 
+test('planejamento e geração bloqueiam referências e preservam o estado ao concluir ou pausar',options,async t=>{
+ const page=await fixture(t,{width:1440,height:1024},'?simulate-proposals');
+ const search=page.getByLabel('O que você quer explorar?');
+ await search.fill('Café com luz natural');
+ await page.getByRole('button',{name:'Pedir 3 propostas',exact:true}).click();
+
+ const status=page.locator('.reference-exploration-status').getByRole('status');
+ const pause=page.getByRole('button',{name:'Pausar exploração',exact:true});
+ await status.waitFor();
+ assert.ok((await status.textContent()).trim(),'o planejamento exibe uma mensagem mesmo antes da primeira resposta');
+ assert.equal(await pause.isEnabled(),true);
+ const gallery=page.locator('.reference-gallery-surface');
+ const controls=gallery.locator('button, input, select, summary');
+ assert.ok(await controls.count()>10);
+ assert.equal(await controls.evaluateAll(elements=>elements.every(element=>Boolean(element.closest('[inert]')))),true);
+ await pause.focus();
+ assert.equal(await pause.evaluate(element=>document.activeElement===element),true);
+ const upload=gallery.locator('button').filter({hasText:'Enviar imagem'});
+ await upload.focus();
+ assert.equal(await upload.evaluate(element=>document.activeElement===element),false,'um controle inerte não recebe foco');
+ const proposals=gallery.locator('button').filter({hasText:'Pedir 3 propostas'});
+ await proposals.scrollIntoViewIfNeeded();
+ const position=await proposals.boundingBox();
+ assert.ok(position);
+ await page.mouse.click(position.x+position.width/2,position.y+position.height/2);
+ assert.equal(await page.locator('#requests').textContent(),'1','um segundo clique no botão inerte não repete o pedido');
+
+ await page.getByRole('button',{name:'Simular geração parcial'}).click();
+ await status.filter({hasText:'Recebemos 1 de 3 imagens.'}).waitFor();
+ assert.equal(await controls.evaluateAll(elements=>elements.every(element=>Boolean(element.closest('[inert]')))),true,'uma imagem parcial não libera o lote');
+ assert.equal(await pause.isEnabled(),true);
+
+ await page.getByRole('button',{name:'Simular lote concluído'}).click();
+ await page.getByRole('checkbox',{name:'Escolher imagem 1'}).click();
+ await page.getByRole('checkbox',{name:'Escolher imagem 1',checked:true}).waitFor();
+ assert.equal(await page.getByRole('combobox',{name:'Fonte',exact:true}).inputValue(),'compor');
+ await page.getByRole('combobox',{name:'Fonte',exact:true}).selectOption('search');
+ assert.equal(await search.inputValue(),'Café com luz natural');
+ await page.getByRole('button',{name:'Comentar seleção',exact:true}).click();
+ const composer=page.getByRole('textbox',{name:'Mensagem ao Compor'});
+ await composer.fill('Quero aproveitar as cores.');
+
+ await page.getByRole('button',{name:'Simular planejamento'}).click();
+ const conversation=page.locator('.reference-workbench-conversation');
+ assert.equal(await conversation.locator('textarea').evaluate(element=>Boolean(element.closest('[inert]'))),true);
+ assert.equal(await conversation.locator('button').evaluate(element=>Boolean(element.closest('[inert]'))),true);
+ await pause.click();
+ await composer.waitFor();
+ assert.equal(await page.locator('#pauses').textContent(),'1');
+ assert.equal(await composer.inputValue(),'Quero aproveitar as cores.');
+ assert.equal(await page.locator('#requests').textContent(),'1');
+});
 
 for(const viewport of [{width:1440,height:1024},{width:960,height:768},{width:390,height:844},{width:320,height:640},{width:390,height:400}]){
  test('galeria focada preserva fonte, consulta e conversa em '+viewport.width+'×'+viewport.height,options,async t=>{

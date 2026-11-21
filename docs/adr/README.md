@@ -91,5 +91,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0076](0076-saida-de-falha-de-imagem.md) | implementado localmente; migration remota não aplicada | Recusa e falha do provedor deixam de travar a conta; incerteza tem prazo e encerramento explícito |
 | [0077](0077-imagem-canonica-da-versao.md) | implementado localmente; migration não aplicada | Vínculo imutável versão→imagem, salvamento idempotente e rascunho local separado |
 | [0078](0078-origem-de-preview-vercel.md) | implementação local | Origem e callback de Preview vinculados ao deployment do Compor |
+| [0079](0079-bancada-bloqueada-durante-o-lote.md) | accepted | Progresso da exploração, bloqueio da bancada por lote e retomada explícita de plano |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

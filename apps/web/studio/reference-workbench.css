@@ -66,6 +66,7 @@
 .reference-step .studio-previous-explorations { flex-basis:100%; }
 .reference-step .studio-previous-explorations summary { min-height:44px;padding-block:10px;cursor:pointer; }
 .reference-step .reference-exploration-status { display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:16px;margin-block:24px;padding:16px;border:1px solid var(--studio-line);border-radius:10px; }
+.reference-proposal-loading { width:48px;height:8px;accent-color:var(--studio-cobalt); }
 .reference-proposal-progress { display:grid;gap:8px;flex:1 1 260px; }
 .reference-proposal-progress > p { margin:0; }
 .reference-proposal-progress [role='timer'] { font-variant-numeric:tabular-nums;color:var(--studio-muted); }
