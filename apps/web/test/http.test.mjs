@@ -3,6 +3,18 @@ import assert from "node:assert/strict";
 import { spawn } from "node:child_process";
 import { once } from "node:events";
 import { createServer } from "node:net";
+import { resolveAppOrigin } from "../lib/auth-config.ts";
+
+const productionOrigin = 'https://compor-ai.vercel.app';
+const branchAlias = 'compor-git-preview-math-ai2.vercel.app';
+const previewHosts = ['compor-a1b2c3d4e-math-ai2.vercel.app', 'compor-z9y8x7w6v-math-ai2.vercel.app'];
+const previewEnv = {
+  VERCEL: '1',
+  VERCEL_ENV: 'preview',
+  VERCEL_PROJECT_ID: 'prj_48C8lO4W6WdEMScyAfZRSnkvN6QS',
+  VERCEL_BRANCH_URL: branchAlias,
+  APP_ORIGIN: productionOrigin,
+};
 
 async function freePort() {
   const server = createServer();
@@ -90,3 +102,61 @@ test('início OAuth usa destino fixo e recusa origem externa', async (t) => {
   assert.equal(callback.status, 303);
   assert.equal(callback.headers.get('location'), '/?login=erro');
 });
+
+test('somente Preview do projeto Compor usa o hostname canônico do deployment', () => {
+  const env = { ...previewEnv, VERCEL_URL: previewHosts[0] };
+  assert.equal(resolveAppOrigin(env), `https://${previewHosts[0]}`);
+  for (const invalid of [
+    { VERCEL: undefined },
+    { VERCEL_PROJECT_ID: 'prj_outro' },
+    { VERCEL_URL: undefined },
+    { VERCEL_URL: branchAlias },
+    { VERCEL_URL: 'compor-ai.vercel.app' },
+    { VERCEL_URL: 'compor-a1b2c3d4e-other.vercel.app' },
+    { VERCEL_URL: `${previewHosts[0]}.example.test` },
+    { VERCEL_URL: `${previewHosts[0]}:443` },
+    { VERCEL_URL: `${previewHosts[0]}/auth/callback` },
+    { VERCEL_URL: `https://${previewHosts[0]}` },
+    { VERCEL_URL: `user@${previewHosts[0]}` },
+    { VERCEL_URL: `${previewHosts[0]}\n` },
+  ]) assert.equal(resolveAppOrigin({ ...env, ...invalid }), null);
+
+  assert.equal(resolveAppOrigin({ ...env, APP_ORIGIN: undefined, VERCEL_ENV: 'production' }), null);
+  assert.equal(resolveAppOrigin({ ...env, VERCEL_ENV: 'production' }), productionOrigin);
+  assert.equal(resolveAppOrigin({ ...env, VERCEL_ENV: 'development', APP_ORIGIN: 'http://127.0.0.1:3000' }), 'http://127.0.0.1:3000');
+  assert.equal(resolveAppOrigin({ APP_ORIGIN: 'http://external.test' }), null);
+});
+
+for (const [index, host] of previewHosts.entries()) {
+  test(`Preview ${index + 1} emite apenas seu callback de OAuth e recusa origem cruzada`, async t => {
+    const { port } = await startServer(t, {
+      ...previewEnv,
+      VERCEL_URL: host,
+      SUPABASE_URL: 'https://example.supabase.co',
+      SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_publictest',
+    });
+    const endpoint = `http://127.0.0.1:${port}/auth/sign-in`;
+    const signIn = origin => fetch(endpoint, {
+      method: 'POST',
+      headers: { Origin: origin, Host: 'external.test', 'X-Forwarded-Host': branchAlias, 'X-Forwarded-Proto': 'http' },
+      redirect: 'manual',
+    });
+
+    for (const rejected of [productionOrigin, `https://${previewHosts[1 - index]}`, `https://${branchAlias}`, 'https://external.test']) {
+      const response = await signIn(rejected);
+      assert.equal(response.status, 403);
+      assert.equal(response.headers.get('location'), null);
+    }
+
+    const origin = `https://${host}`;
+    const response = await signIn(origin);
+    assert.equal(response.status, 303);
+    const destination = new URL(response.headers.get('location'));
+    assert.equal(destination.origin, 'https://example.supabase.co');
+    assert.equal(destination.pathname, '/auth/v1/authorize');
+    assert.equal(destination.searchParams.get('provider'), 'google');
+    assert.equal(destination.searchParams.get('redirect_to'), `${origin}/auth/callback`);
+    assert.match(response.headers.get('set-cookie'), /code-verifier/);
+    assert.doesNotMatch(response.headers.get('set-cookie'), /;\s*Domain=/i);
+  });
+}
