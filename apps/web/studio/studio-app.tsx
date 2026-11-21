@@ -87,7 +87,7 @@ function formatCreated(value?:string){if(!value)return '';const date=new Date(va
 function newestProject(projects:Project[]){return projects.reduce<Project|undefined>((best,project)=>!best||(project.created_at??'')>=(best.created_at??'')?project:best,undefined);}
 function ResumeProjectTitle({title}:{title:string}) {
   const name=useProjectNameDisclosure(title);
-  return <><h2 {...name.handlers()} id="resume-title" title={title} tabIndex={0}>{title}</h2>{name.tooltip}</>;
+  return <><h2 {...name.handlers()} id="resume-title" title={title}>{title}</h2>{name.tooltip}</>;
 }
 function ProjectListCard({project,disabled,deleteDisabled,onOpen,onDelete}:{project:Project;disabled:boolean;deleteDisabled:boolean;onOpen:()=>void;onDelete:()=>void}) {
   const name=useProjectNameDisclosure(project.title);

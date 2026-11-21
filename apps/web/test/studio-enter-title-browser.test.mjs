@@ -338,7 +338,7 @@ async function readNameTooltip(control){
   };
  });
 }
-async function assertTooltipOpen(control,title){
+async function assertTooltipOpen(control,title,{focus=true}={}){
  const tip=await readNameTooltip(control);
  assert.equal(tip.text,title);
  assert.equal(tip.role,'tooltip');
@@ -347,7 +347,7 @@ async function assertTooltipOpen(control,title){
  assert.equal(tip.clipped,false,JSON.stringify(tip));
  assert.equal(tip.inside,true,JSON.stringify(tip));
  assert.ok(tip.fontSize>=14,JSON.stringify(tip));
- assert.equal(await control.evaluate(element=>element===document.activeElement),true,'o foco permanece no controle do nome');
+ if(focus)assert.equal(await control.evaluate(element=>element===document.activeElement),true,'o foco permanece no controle do nome');
 }
 async function assertFullNameOnFocus(control,title){
  const closed=await readNameTooltip(control);
@@ -502,24 +502,22 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  const cardTitle=card.locator('strong');
  assert.equal(await cardTitle.evaluate(element=>element.textContent),title);
  assert.equal(await cardTitle.evaluate(element=>{const style=getComputedStyle(element);return style.whiteSpace!=='nowrap'&&element.scrollWidth<=element.clientWidth+1&&element.scrollHeight<=element.clientHeight+1;}),true,'no toque o card mostra o nome inteiro antes de navegar');
- await resume.scrollIntoViewIfNeeded();
- const resumeBefore=await readNameTooltip(resume);
- if(resumeBefore.open)await resume.evaluate(element=>element.blur());
+ assert.equal(await resume.getAttribute('tabindex'),null);
+ assert.equal(await resume.evaluate(element=>element.tabIndex),-1);
+ await page.locator('.studio-brand').focus();
+ for(let step=0;step<20;step++){
+  assert.notEqual(await page.evaluate(()=>document.activeElement?.id),'resume-title','Tab não para no título do resumo');
+  await page.keyboard.press('Tab');
+ }
+ assert.notEqual(await page.evaluate(()=>document.activeElement?.id),'resume-title','Tab não para no título do resumo');
  await resume.tap();
- await assertTooltipOpen(resume,title);
- await page.keyboard.press('Escape');
- const afterEscape=await readNameTooltip(resume);
- assert.equal(afterEscape.open,false,'Escape fecha o tooltip');
- assert.equal(afterEscape.visible,false,'Escape fecha o tooltip');
- assert.equal(await resume.evaluate(element=>element===document.activeElement),true,'Escape não move o foco');
- await resume.tap();
- await assertTooltipOpen(resume,title);
+ await assertTooltipOpen(resume,title,{focus:false});
  await page.locator('.studio-starter').tap();
  const afterOutside=await readNameTooltip(resume);
  assert.equal(afterOutside.open,false,'toque fora fecha o tooltip');
  assert.equal(afterOutside.visible,false,'toque fora fecha o tooltip');
  assert.equal(await page.getByRole('button',{name:'Continuar projeto',exact:true}).isVisible(),true,'o toque no nome truncado não troca de tela');
- await card.click();
+ await card.tap();
  await projectHeading(page,title).waitFor();
  const rail=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:title,exact:true});
  await rail.tap();
@@ -558,6 +556,14 @@ test('o nome completo truncado fica acessível no foco do teclado e no toque',{s
  assert.equal(await rail.evaluate(element=>element===document.activeElement),true,'Escape não move o foco do trilho');
  await endPress(rail);
  const other=page.getByRole('navigation',{name:'Projetos',exact:true}).getByRole('button',{name:'Café',exact:true});
+ await longPress(other);
+ await assertTooltipOpen(other,'Café');
+ assert.equal(await rail.getAttribute('aria-current'),'page','toque longo num projeto que não está aberto só mostra o nome');
+ assert.equal(await page.locator('.studio-topbar h1').textContent(),title);
+ await endPress(other);
+ assert.equal(await rail.getAttribute('aria-current'),'page','o clique depois do toque longo não troca de projeto');
+ await page.keyboard.press('Escape');
+ assert.equal((await readNameTooltip(other)).open,false,'Escape fecha o tooltip do outro projeto');
  await other.tap();
  await projectHeading(page,'Café').waitFor();
  assert.equal((await readNameTooltip(other)).open,false,'um toque troca de projeto sem abrir o tooltip');
