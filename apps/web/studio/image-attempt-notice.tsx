@@ -11,6 +11,8 @@ export const imageAttemptCopy = {
   retry: "Tentar de novo",
   adjust: "Ajustar descrição",
   closeAndRetry: "Encerrar e tentar de novo",
+  confirm: "Confirmar geração de imagem",
+  ready: "A proposta original está pronta para sua confirmação.",
   details: "Ver detalhes da tentativa",
   detailsBody: "A tentativa ficou sem uma imagem confirmada. O post continua salvo.",
   open: "Abrir",
@@ -57,27 +59,29 @@ export default function ImageAttemptNotice({
   onAdjustDescription,
   onClose,
   onReserve,
+  undispatched,
   createId = () => crypto.randomUUID(),
 }: {
   screen: ImageAttemptScreen;
   developerMode?: boolean;
   onContinueEditing: () => void;
-  onAdjustDescription: () => void;
+  onAdjustDescription: () => void | Promise<void>;
   onClose: () => Promise<void>;
   onReserve: (requestId: string) => Promise<void>;
+  undispatched?: { ready: boolean; advance: () => Promise<void> };
   createId?: () => string;
 }) {
   const [detailsOpen, setDetailsOpen] = useState(false);
   const [pending, setPending] = useState(false);
   const [retryFailed, setRetryFailed] = useState(false);
   const inFlight = useRef(false);
-  async function primary() {
+  async function perform(operation: () => void | Promise<unknown>) {
     if (inFlight.current) return;
     inFlight.current = true;
     setPending(true);
     setRetryFailed(false);
     try {
-      await runImageAttemptPrimary(screen.reason, { close: onClose, reserve: onReserve, createId });
+      await operation();
     } catch {
       setRetryFailed(true);
     } finally {
@@ -93,11 +97,13 @@ export default function ImageAttemptNotice({
       </section>
     );
   }
-  const text = screen.reason === "running_with_lease" ? imageAttemptCopy.running
+  const text = undispatched?.ready ? imageAttemptCopy.ready
+    : screen.reason === "running_with_lease" ? imageAttemptCopy.running
     : screen.reason === "provider_rejected_429" ? imageAttemptCopy.rejected429
     : screen.reason === "provider_rejected_400" ? imageAttemptCopy.rejected400
     : imageAttemptCopy.uncertain;
-  const primaryLabel = screen.reason === "result_unknown" ? imageAttemptCopy.closeAndRetry
+  const primaryLabel = undispatched?.ready ? imageAttemptCopy.confirm
+    : screen.reason === "result_unknown" ? imageAttemptCopy.closeAndRetry
     : screen.reason === "running_with_lease" ? null
     : imageAttemptCopy.retry;
   return (
@@ -106,9 +112,11 @@ export default function ImageAttemptNotice({
       {retryFailed && <p>Não foi possível confirmar o encerramento. Sua tentativa foi preservada.</p>}
       {screen.reason === "running_with_lease" && <div className="image-attempt-progress" role="progressbar" aria-label={imageAttemptCopy.running} />}
       <div className="image-attempt-actions">
-        {primaryLabel && <button type="button" className="studio-button image-attempt-primary" disabled={pending} onClick={() => { void primary(); }}>{primaryLabel}</button>}
+        {primaryLabel && <button type="button" className="studio-button image-attempt-primary" disabled={pending} onClick={() => {
+          void perform(undispatched?.advance ?? (() => runImageAttemptPrimary(screen.reason, { close: onClose, reserve: onReserve, createId })));
+        }}>{primaryLabel}</button>}
         {screen.reason === "running_with_lease" && <button type="button" className="studio-button-secondary" onClick={onContinueEditing}>{imageAttemptCopy.continueEditing}</button>}
-        {screen.reason === "provider_rejected_400" && <button type="button" className="studio-button-secondary" onClick={onAdjustDescription}>{imageAttemptCopy.adjust}</button>}
+        {screen.reason === "provider_rejected_400" && <button type="button" className="studio-button-secondary" disabled={pending} onClick={() => { void perform(onAdjustDescription); }}>{imageAttemptCopy.adjust}</button>}
         {screen.reason === "result_unknown" && <button type="button" className="studio-button-secondary" aria-expanded={detailsOpen} onClick={() => setDetailsOpen(open => !open)}>{imageAttemptCopy.details}</button>}
       </div>
       {screen.reason === "result_unknown" && detailsOpen && <div className="image-attempt-details">
