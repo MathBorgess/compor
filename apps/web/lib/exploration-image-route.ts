@@ -2,7 +2,7 @@ import { createHash, randomBytes } from 'node:crypto';
 import { z } from 'zod';
 import type { Actor } from './agent-auth.ts';
 import { explorationPlanSchema,type ExplorationPlan } from './generated-feedback-contract.ts';
-import { ExplorationQualityHeld, explorationImageOutcomes, explorationQualityReasons, type ExplorationImageOutcome, type ExplorationQualityReason, type ExplorationReviewOptions } from './exploration-image-outcome.ts';
+import { ExplorationProviderClosed, ExplorationQualityHeld, explorationImageOutcomes, explorationQualityReasons, type ExplorationClosureReason, type ExplorationImageOutcome, type ExplorationProviderOutcome, type ExplorationQualityReason, type ExplorationReviewOptions } from './exploration-image-outcome.ts';
 
 const id = z.string().uuid();
 const batchSchema=z.strictObject({id,position:z.number().int().min(1).max(3)});
@@ -20,6 +20,7 @@ export type ExplorationStore = {
   finish: (actor:Actor, projectId:string, requestId:string, state:'unknown'|'completed', secret:string)=>Promise<void>;
   reject: (actor:Actor, projectId:string, requestId:string, secret:string)=>Promise<void>;
   hold: (actor:Actor, projectId:string, requestId:string, secret:string, reason:ExplorationQualityReason)=>Promise<void>;
+  fail?: (actor:Actor, projectId:string, requestId:string, secret:string, closureReason:ExplorationClosureReason, providerOutcome:ExplorationProviderOutcome)=>Promise<void>;
   put: (actor:Actor, projectId:string, requestId:string, bytes:Uint8Array)=>Promise<void>;
   list: (actor:Actor, projectId:string, beforeOrdinal?:number)=>Promise<ExplorationImageRecord[]>;
   read: (actor:Actor, projectId:string, requestId:string)=>Promise<Response>;
@@ -90,6 +91,11 @@ export function createExplorationImageRoute(deps:Dependencies) {
         let bytes:Uint8Array;
         try { bytes=await deps.generate(actor,key,data.prompt,{signal:request.signal,authorizeReview}); }
         catch(error) {
+          if(error instanceof ExplorationProviderClosed) {
+            if(typeof deps.store.fail!=='function')throw error;
+            await deps.store.fail(actor,data.projectId,data.requestId,rejectionSecret.toString('hex'),error.closureReason,error.providerOutcome);
+            return reply({status:'failed',requestId:data.requestId,closureReason:error.closureReason,providerOutcome:error.providerOutcome,retryAutomatically:false},200);
+          }
           if(error instanceof ExplorationQualityHeld) {
             await deps.store.hold(actor,data.projectId,data.requestId,rejectionSecret.toString('hex'),error.reason);
             return reply({status:'quality_held',requestId:data.requestId,qualityReason:error.reason,retryAutomatically:false},200);

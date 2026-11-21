@@ -89,6 +89,13 @@
 .studio-badge { display: inline-flex; align-items: center; flex: none; min-height: 26px; padding: 5px 6px; border-radius: 6px; background: white; color: var(--studio-muted); font-size: 11px; white-space: nowrap; }
 .compor-studio :is(.studio-button, .studio-button-secondary) { display: inline-flex; justify-content: center; align-items: center; min-height: 40px; padding: 9px 18px; border: 1px solid var(--studio-cobalt); border-radius: 10px; background: var(--studio-cobalt); color: white; text-decoration: none; text-align: center; font-size: 14px; font-weight: 500; line-height: 20px; }
 .compor-studio .studio-button-yellow { border-color: var(--studio-yellow); background: var(--studio-yellow); color: var(--studio-ink); }
+.image-attempt-notice { display: grid; gap: 10px; padding: 12px; border: 1px solid var(--studio-line, #dedfd9); border-radius: 12px; background: #f4f0e5; color: #2c2d2f; }
+.image-attempt-notice p { margin: 0; }
+.image-attempt-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.image-attempt-notice :is(button, a) { min-height: 44px; }
+.image-attempt-notice .image-attempt-primary { border-color: #f6d550; background: #f6d550; color: #2c2d2f; }
+.image-attempt-notice .studio-button-secondary { background: #fff; color: #2c2d2f; border: 1px solid #dedfd9; }
+.image-attempt-progress { height: 4px; border-radius: 999px; background: #dedfd9; }
 .compor-studio .studio-button-secondary { background: white; color: var(--studio-ink); border-color: var(--studio-line); }
 .compor-studio .studio-button-quiet { color: var(--studio-cobalt); background: transparent; border-color: transparent; }
 .studio-save-status { color: var(--studio-muted); font-size: 11px; }

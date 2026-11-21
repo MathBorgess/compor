@@ -5,6 +5,20 @@ import {isImageQualityReason} from './image-tool-reservation.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const unknown = () => ({ status: 'unknown', retryAutomatically: false });
+function closurePair(reason, outcome) {
+  if (reason === 'provider_rejected_400' && outcome === 'failure') return { closureReason: reason, providerOutcome: outcome };
+  if (reason === 'provider_rejected_429' && outcome === 'retryable') return { closureReason: reason, providerOutcome: outcome };
+  if (reason === 'result_unknown' && (outcome === 'retryable' || outcome === 'unconfirmed')) return { closureReason: reason, providerOutcome: outcome };
+  return null;
+}
+function providerClosure(status, body) {
+  const pair = closurePair(body?.closureReason, body?.providerOutcome);
+  if (!pair || body.error !== 'generation_not_produced' || body.retryAutomatically !== false) return null;
+  if (pair.closureReason === 'provider_rejected_400' && status !== 400) return null;
+  if (pair.closureReason === 'provider_rejected_429' && status !== 429) return null;
+  if (pair.closureReason === 'result_unknown' && status !== 503) return null;
+  return pair;
+}
 async function boundedText(stream, limit) {
   if (!stream) throw new Error('missing body');
   const reader = stream.getReader(), chunks = []; let size = 0;
@@ -77,6 +91,11 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       await reservations.declareConsent({actor,reservationId:reservation.id,confirmed:true});
       execution = await reservations.claimExecution({actor,reservationId:reservation.id,...(qualitySecret?{qualityDigest:createHash('sha256').update(qualitySecret).digest('hex')}:{}),...(visualAuthority?{visualAuthority}:{})});
       if (execution?.state === 'busy' || execution?.state === 'blocked') return {status:execution.state};
+      if (execution?.state === 'failed' && uuid(execution.id)) {
+        const stored = typeof reservations.readExecutionClosure === 'function' ? await reservations.readExecutionClosure({actor, executionId: execution.id}) : {closureReason:'result_unknown', providerOutcome:'unconfirmed'};
+        const pair = closurePair(stored?.closureReason, stored?.providerOutcome);
+        return pair ? {status:'failed', ...pair, retryAutomatically:false} : unknown();
+      }
       if (!uuid(execution?.id) || !uuid(execution?.assetId) || execution.state !== 'running' || execution.isNew !== true) return unknown();
     } catch { return unknown(); }
     let measurementStarted=false, measurementFinished=false, usageRecorded=false;
@@ -98,8 +117,23 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
       }
       const review=qualityHoldEnabled?{authorizeReview,...(requiredText.length?{requiredText}:{})}:undefined;
       const image=await imageHandler(imageRequest,review);
-      if(!image.ok&&(!qualitySecret||![422,503].includes(image.status)))throw Error('generation uncertain');
-      const result = image.ok?await image.json():JSON.parse(await boundedText(image.body,64*1024));
+      let result = null;
+      if (!image.ok) {
+        let payload = null;
+        try { payload = JSON.parse(await boundedText(image.body, 64 * 1024)); } catch { payload = null; }
+        const refused = providerClosure(image.status, payload);
+        if (refused) {
+          if (usage && measurementStarted && !measurementFinished) {
+            measurementFinished = true;
+            try { await usage.finish({...measurement, state:'unknown', usage:null}); } catch { /* measurement remains uncertain */ }
+          }
+          if (typeof reservations.failExecution !== 'function') throw Error('generation uncertain');
+          await reservations.failExecution({actor, executionId: execution.id, closureReason: refused.closureReason, providerOutcome: refused.providerOutcome});
+          return {status:'failed', ...refused, retryAutomatically:false, ...(usage ? {usageRecorded:false} : {})};
+        }
+        if (!qualitySecret || ![422, 503].includes(image.status)) throw Error('generation uncertain');
+        result = payload;
+      } else result = await image.json();
       let qualityReason=image.ok?null:result?.error;
       if(!image.ok&&(!isImageQualityReason(qualityReason)||result.retryAutomatically!==false||
         image.status!==(qualityReason==='image_quality_rejected'?422:503)))throw Error('generation uncertain');

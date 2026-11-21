@@ -201,6 +201,7 @@ export function createRemoteMcpHandler({ authenticate, projectStore, pieceStore,
           const result=z.discriminatedUnion('status',[
             z.strictObject({status:z.literal('completed'),requestId:uuid,imageId:uuid}),
             z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected','not_started']),requestId:uuid,retryAutomatically:z.literal(false)}),
+            z.strictObject({status:z.literal('failed'),requestId:uuid,closureReason:z.enum(['provider_rejected_400','provider_rejected_429','result_unknown']),providerOutcome:z.enum(['failure','retryable','unconfirmed']),retryAutomatically:z.literal(false)}),
             z.strictObject({status:z.literal('quality_held'),requestId:uuid,qualityReason:z.enum(['image_quality_rejected','image_quality_inconclusive']).optional(),retryAutomatically:z.literal(false)}),
           ]).parse(value);
           if(result.requestId.toLowerCase()!==args.requestId.toLowerCase())throw Error();

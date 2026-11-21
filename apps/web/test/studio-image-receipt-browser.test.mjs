@@ -49,6 +49,8 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
    assert.equal(request.headers()['content-type'],'application/vnd.compor.byok+json');
    const next=imageReplies.shift();return route.fulfill(next?{status:200,json:{status:next}}:{status:202,json:{status:'accepted',assetId}});
   }
+  if(url.pathname==='/api/agent/image/hold')return route.fulfill({json:{screen:'result_unknown',sameProject:true,projectId,projectTitle:'Oficina sintética'}});
+  if(url.pathname==='/api/agent/image/close')return route.fulfill({json:{status:'closed'}});
   if(url.pathname==='/api/agent/image/status'){
    assert.deepEqual(Object.keys(body).sort(),['actionBinding','attemptId','pieceId','projectId','version']);
    assert.equal(request.headers()['x-compor-openai-key'],undefined,'consulta de prontidão não carrega credencial');
@@ -103,7 +105,7 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  await page.evaluate(()=>window.__releaseImage());
  await page.getByText(staleText,{exact:true}).waitFor();
  await page.evaluate(()=>{sessionStorage.clear();localStorage.clear();});polls=0;imageReplies=['blocked'];await page.reload();const beforeBlocked=calls.length;
- await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText(/Uma geração anterior tem resultado incerto/).waitFor();
+ await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();await page.getByText('Não conseguimos confirmar se a imagem foi gerada. Seu post foi preservado.',{exact:true}).waitFor();
  assert.equal(await page.evaluate(user=>localStorage.getItem(`compor-image-submission:${user}`),userId),null,'bloqueio anterior não marca esta requisição como enviada');
  await page.waitForTimeout(1800);assert.equal(calls.slice(beforeBlocked).filter(c=>c.path==='/api/agent/image').length,1,'resultado desconhecido anterior não é repetido automaticamente');
  const targetKey=`compor-image-target:${userId}:${projectId}:${requestId}`;
@@ -120,7 +122,7 @@ return <main><button onClick={()=>change(s=>selectDraft(s,{pieceId:'${otherPiece
  stableProposal=true;polls=0;imageReplies=['blocked'];await page.reload();
  const beforePrepared=calls.length;
  await page.getByRole('button',{name:'Consultar esta tentativa',exact:true}).click();
- await page.getByText(/Uma geração anterior tem resultado incerto/).waitFor();
+ await page.getByText('Não conseguimos confirmar se a imagem foi gerada. Seu post foi preservado.',{exact:true}).waitFor();
  const prepared=JSON.parse(await page.evaluate(key=>localStorage.getItem(key),targetKey));
  assert.deepEqual({...prepared,artworkDigest:prepared.artworkDigest.length},{actionId:id(13),pieceId,sourceVersion:2,version:3,artworkDigest:64});
  const first=()=>calls.slice(beforePrepared).filter(c=>c.path==='/api/agent/image');

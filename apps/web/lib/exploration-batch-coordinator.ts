@@ -1,16 +1,17 @@
-import {ExplorationQualityHeld,type ExplorationQualityReason} from './exploration-image-outcome.ts';
+import {ExplorationProviderClosed,ExplorationQualityHeld,type ExplorationClosureReason,type ExplorationProviderOutcome,type ExplorationQualityReason} from './exploration-image-outcome.ts';
 
 /** A definitive provider credential rejection, not a transport failure. */
 export class ExplorationBatchRejected extends Error {}
 
 export type ReservedExplorationChild = Readonly<{requestId:string;prompt:string;proof:string}>;
-export type ExplorationChildResult = Readonly<{requestId:string;status:'completed'|'rejected'|'unknown'}|{requestId:string;status:'quality_held';qualityReason:ExplorationQualityReason}>;
+export type ExplorationChildResult = Readonly<{requestId:string;status:'completed'|'rejected'|'unknown'}|{requestId:string;status:'quality_held';qualityReason:ExplorationQualityReason}|{requestId:string;status:'failed';closureReason:ExplorationClosureReason;providerOutcome:ExplorationProviderOutcome}>;
 export type ExplorationBatchPorts = Readonly<{
   generate:(child:ReservedExplorationChild)=>Promise<Uint8Array>;
   put:(child:ReservedExplorationChild,bytes:Uint8Array)=>Promise<void>;
   finish:(child:ReservedExplorationChild,state:'completed'|'unknown')=>Promise<void>;
   reject:(child:ReservedExplorationChild)=>Promise<void>;
   hold:(child:ReservedExplorationChild,reason:ExplorationQualityReason)=>Promise<void>;
+  fail?:(child:ReservedExplorationChild,closureReason:ExplorationClosureReason,providerOutcome:ExplorationProviderOutcome)=>Promise<void>;
 }>;
 
 const uuid=(value:string)=>/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
@@ -36,6 +37,10 @@ export async function dispatchReservedExplorationBatch(children:readonly Reserve
         if(error instanceof ExplorationBatchRejected) {
           await ports.reject(child);
           return {requestId:child.requestId,status:'rejected'} as const;
+        }
+        if(error instanceof ExplorationProviderClosed && ports.fail) {
+          await ports.fail(child,error.closureReason,error.providerOutcome);
+          return {requestId:child.requestId,status:'failed',closureReason:error.closureReason,providerOutcome:error.providerOutcome} as const;
         }
         throw error;
       }

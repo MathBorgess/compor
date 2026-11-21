@@ -40,6 +40,7 @@ import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
 import { chatResponseSchema, pendingInspectionSchema, closedImageResponseSchema, errorResponseSchema, defaultCredentialNotSubmittedSchema, chatMarkerSchema, receiptSchema, type ChatResponse, type PendingInspection, type ImageAction, type ImageContext, type ImageReceipt, preparedImageTargetSchema, type PreparedImageTarget, type Usage, type Inspection } from './studio-chat-contract';
+import ImageAttemptNotice, { type ImageAttemptScreen } from './image-attempt-notice';
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 function matchesImageText(draft:StudioState['drafts'][number],input:NonNullable<ImageAction['artworkInput']>) {
   const text=input.literalText;
@@ -73,10 +74,8 @@ const imageWaitDelays=[2500,5000,7500,10000] as const;
 const imageWaitMessages={
   waiting_planning:'Um planejamento de referências ainda está em andamento. Abra Referências para consultar a tentativa original.',
   waiting_exploration:'Uma imagem de exploração ainda está em andamento na sua conta.',
-  waiting_image:'Outra imagem de post ainda está em andamento na sua conta.',
   waiting_priority:'Outro pedido de imagem tem prioridade nesta conta.',
-} satisfies Record<Extract<ImageWaitStatus,`waiting_${string}`>,string>;
-const imageBlockedNotice='Uma geração anterior tem resultado incerto. Consulte essa tentativa antes de gerar outra imagem.';
+} satisfies Record<Exclude<Extract<ImageWaitStatus,`waiting_${string}`>,'waiting_image'>,string>;
 const imageQualityNotice=(reason:ImageQualityReason)=>reason==='image_quality_rejected'
   ?'A revisão de imagem reteve esta proposta. Seu post foi preservado.'
   :'A revisão da imagem ficou inconclusiva. Seu post foi preservado.';
@@ -177,6 +176,7 @@ export default function StudioChat({
   function setMessage(value:string){setMessageState(value);if(onMessageDraftChange)onMessageDraftChange(value);else if(conversationId)ownedDraft.setValue(value);}
   const [imageReceipt,setImageReceipt]=useState<ImageReceipt|null>(null);
   const [imageNeedsReconciliation,setImageNeedsReconciliation]=useState(false);
+  const [imageScreen,setImageScreen]=useState<ImageAttemptScreen|null>(null);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
@@ -415,6 +415,8 @@ export default function StudioChat({
       if(credentialSource==='default'&&fresh&&proof.success&&proof.data.requestId===body.requestId)return proof.data;
       throw Error('A IA do Compor está indisponível. A tentativa anterior continua preservada para consulta.');
     }
+    if (path === "/api/agent/image" && response.status === 502 && envelope.error === "result_unknown")
+      return {status:"failed",closureReason:"result_unknown",providerOutcome:"unconfirmed",retryAutomatically:false};
     if (path === "/api/agent/image" && imageRejectedBeforeDispatch(response.status,envelope.error))
       return {status:"failed",error:"image_invalid_request"};
     if (path === "/api/agent/image" && response.ok && (envelope.status === "busy" || envelope.status === "blocked"))
@@ -793,7 +795,7 @@ export default function StudioChat({
       }
     })();
   },[initialPostRequest]);
-  type SubmitOptions={fromComposer:boolean;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void;isCurrent?:()=>boolean};
+  type SubmitOptions={fromComposer:boolean;requestId?:string;quickReply?:{version:1;intent:'agree'|'prefer'};onPrepared?:(userMessageId:string)=>void;isCurrent?:()=>boolean};
   /** The composer and quick replies share this path. A quick reply never sends or clears the draft. */
   async function submitText(text:string,options:SubmitOptions) {
     if (referenceAuthorityBlocked || visualUnavailable || readOnly || !text.trim() || !canUseAI || busy || pending || localBlocked || submitLock.current || availability.current.busy || availability.current.pending || availability.current.localBlocked || inspectionLock.current||!credentialIsCurrent()||options.isCurrent?.()===false) return false;
@@ -804,12 +806,12 @@ export default function StudioChat({
       return await submitLocked(text,options);
     } finally { submitLock.current=false; }
   }
-  async function submitLocked(text:string,{fromComposer,quickReply,onPrepared,isCurrent}:SubmitOptions) {
+  async function submitLocked(text:string,{fromComposer,requestId:requestedId,quickReply,onPrepared,isCurrent}:SubmitOptions) {
     onUseAI?.();
     setNotice("");
     setBusy(true);
     imageProtocol.current=2;
-    const requestId = crypto.randomUUID(), userMessageId = crypto.randomUUID();
+    const requestId = requestedId && uuid(requestedId) ? requestedId : crypto.randomUUID(), userMessageId = crypto.randomUUID();
     const visualMode=selectedVisualsAvailable;
     const visualIsCurrent=()=>!availability.current.visualUnavailable&&availability.current.selectedVisualsAvailable===visualMode;
     let prepared = false,
@@ -1085,6 +1087,28 @@ export default function StudioChat({
     }
     await sendImage(action);
   }
+  async function loadImageHold() {
+    try {
+      const response = await fetch('/api/agent/image/hold', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({projectId:state.projectId})});
+      if (!response.ok) return;
+      const body:unknown = await response.json();
+      if (!body || typeof body !== 'object' || !('screen' in body) || !('sameProject' in body)) return;
+      const hold = body as {screen?:string;sameProject?:boolean;projectTitle?:string;projectId?:string};
+      if (hold.sameProject !== false || (hold.screen !== 'running_with_lease' && hold.screen !== 'result_unknown') || typeof hold.projectTitle !== 'string' || !uuid(hold.projectId)) return;
+      setImageScreen({reason:hold.screen, sameProject:false, projectTitle:hold.projectTitle, openHref:`/projetos/${hold.projectId}`});
+    } catch { /* The local screen stays available. */ }
+  }
+  async function closeImageAttempt() {
+    const response = await fetch('/api/agent/image/close', {method:'POST', headers:{'content-type':'application/json'}, body:JSON.stringify({projectId:state.projectId})});
+    const body:unknown = await response.json().catch(()=>null);
+    const status = body && typeof body === 'object' && 'status' in body ? body.status : null;
+    if (!response.ok || (status !== 'closed' && status !== 'already_closed')) throw Error('Não foi possível encerrar esta tentativa.');
+  }
+  async function reserveNewImage(requestId:string) {
+    try { if (localStorage.getItem(imageSubmissionMarker)) localStorage.removeItem(imageSubmissionMarker); } catch { /* A missing marker still allows the new request. */ }
+    setImageScreen(null);
+    await submitText('Pode gerar a imagem de novo?', {fromComposer:false, requestId});
+  }
   async function readImageWaitStatus(reservation:{projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string}):Promise<ImageWaitStatus> {
     const controller=new AbortController();
     request.current=controller;
@@ -1204,6 +1228,7 @@ export default function StudioChat({
         if (!credentialIsCurrent() || !availability.current.hasApiKey || (credentialSource==='byok'&&!getApiKey()) || getState().revision !== savedRevision) throw Error("O contexto mudou enquanto aguardávamos. Consulte a mesma proposta antes de gerar.");
         return true;
       };
+      if(waitingImageRequest.current!==action.requestId)setImageScreen({reason:'running_with_lease',sameProject:true});
       let data:ChatResponse=waitingImageRequest.current===action.requestId
         ?{status:'failed',error:'image_busy'}
         :await dispatchImage();
@@ -1218,14 +1243,25 @@ export default function StudioChat({
           const readiness=await readImageWaitStatus(reservation);
           if(!waitingIsCurrent())return;
           if(readiness==='unverified')throw Error('Não foi possível verificar a prontidão. Consulte a mesma tentativa antes de continuar.');
-          if(readiness==='blocked')throw Error(imageBlockedNotice);
+          if(readiness==='blocked'){
+            clearUndispatched();
+            setImageScreen({reason:'result_unknown',sameProject:true});
+            void loadImageHold();
+            setBusy(false);
+            return;
+          }
           if(readiness==='ready'){
             waitingImageRequest.current=null;
             data=await dispatchImage();
             break;
           }
-          waitMessage=imageWaitMessages[readiness];
-          setNotice(waitMessage);
+          if(readiness==='waiting_image'){
+            setImageScreen({reason:'running_with_lease',sameProject:true});
+            setNotice('');
+          } else if(readiness==='waiting_planning'||readiness==='waiting_exploration'||readiness==='waiting_priority'){
+            waitMessage=imageWaitMessages[readiness];
+            setNotice(waitMessage);
+          }
         }
       }
       if (data.status === 'failed' && data.error === 'image_invalid_request') {
@@ -1234,9 +1270,22 @@ export default function StudioChat({
         setNotice('Esta requisição não enviou a imagem e o post salvo foi preservado. Verifique a tentativa antes de continuar.');
         return;
       }
+      if(data.status==='failed'&&data.closureReason&&data.retryAutomatically===false){
+        setImageScreen({reason:data.closureReason,sameProject:true});
+        if(data.closureReason==='result_unknown')void loadImageHold();
+        setNotice('');
+        setBusy(false);
+        return;
+      }
       if(data.status==='failed'&&(data.error==='image_busy'||data.error==='image_blocked')){
         clearUndispatched();
-        if(data.error==='image_blocked')throw Error(imageBlockedNotice);
+        if(data.error==='image_blocked'){
+          setImageScreen({reason:'result_unknown',sameProject:true});
+          void loadImageHold();
+          setNotice('');
+          setBusy(false);
+          return;
+        }
         waitingImageRequest.current=action.requestId;
         throw Error(`${waitMessage} A espera foi pausada. Consulte esta tentativa para continuar.`);
       }
@@ -1245,6 +1294,7 @@ export default function StudioChat({
         return;
       }
       if (data.assetId) {
+        setImageScreen(null);
         if(!uuid(data.assetId))throw Error("A referência da imagem não pôde ser confirmada.");
         const { fetchPrivateImage } =
           await import("../lib/private-image-fetch.ts");
@@ -1273,6 +1323,7 @@ export default function StudioChat({
       if(isCurrentScope())await poll(action.requestId,0,true);
     } catch (e) {
       if (isCurrentScope()) {
+        setImageScreen(screen => screen?.reason === 'running_with_lease' ? null : screen);
         setBusy(false);
         setNotice(imageApplied?"A imagem foi adicionada à nova versão, mas não foi possível guardar sua confirmação neste navegador. Consulte a mesma tentativa.":imageAvailable?"A imagem foi gerada, mas não foi possível confirmar sua aplicação à nova versão. Consulte as imagens dessa versão para recuperá-la; não haverá nova geração automática.":errorMessage(e));
       }
@@ -1362,6 +1413,7 @@ export default function StudioChat({
         </div>}
         {explorationRecovery}
         {sourceMismatch && pendingSource && <p role="status" className="studio-hint">{sourceNotice(pendingSource)}</p>}
+        {imageScreen && <ImageAttemptNotice screen={imageScreen} developerMode={developerMode} onContinueEditing={()=>composerRef.current?.focus()} onAdjustDescription={()=>composerRef.current?.focus()} onClose={closeImageAttempt} onReserve={reserveNewImage}/>}
         {notice && !sourceMismatch && (
           <p role="status" className="studio-hint">
             {notice}

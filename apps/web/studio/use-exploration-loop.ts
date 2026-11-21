@@ -10,9 +10,9 @@ import { markBeforeDispatch } from "../lib/exploration-pending";
 import { BATCH_SIZE,pendingSchema,readBatchProgress,recordBatchCompletion,nextBatch,freezeBatchWait,resumeBatchWait,reviewBatchProgress,resumeAfterFeedback,selectedExplorationKey,type BatchProgress } from "../lib/exploration-batch";
 import {readExplorationGate,readExplorationSignals,planningCriteria,planningFeedback} from '../lib/exploration-feedback.ts';
 import {postContext} from '../lib/studio-post-context.ts';
-import {explorationImageOutcomes,explorationQualityReasons} from '../lib/exploration-image-outcome.ts';
+import {explorationClosureReasons,explorationImageOutcomes,explorationProviderOutcomes,explorationQualityReasons} from '../lib/exploration-image-outcome.ts';
 
-const responseSchema = z.object({ status: z.enum([...explorationImageOutcomes, "busy", "blocked", "awaiting_feedback", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()), qualityReason:z.optional(z.enum(explorationQualityReasons)) });
+const responseSchema = z.object({ status: z.enum([...explorationImageOutcomes, "busy", "blocked", "awaiting_feedback", "not_started"]), requestId: z.string().check(z.uuid()), retryAutomatically: z.optional(z.boolean()), qualityReason:z.optional(z.enum(explorationQualityReasons)), closureReason:z.optional(z.enum(explorationClosureReasons)), providerOutcome:z.optional(z.enum(explorationProviderOutcomes)) });
 const resumeSchema=z.object({status:z.enum(['resumed','not_paused','blocked'])});
 const listSchema = z.object({ images: z.array(z.object({ id: z.string().check(z.uuid()), project_id: z.string().check(z.uuid()), state: z.enum(explorationImageOutcomes) })).check(z.maxLength(100)) });
 const qualityHeldMessage='Uma proposta foi retida pela revisão de qualidade. Peça novas propostas para retomar.';
@@ -281,6 +281,12 @@ export function useExplorationLoop(props: LoopProps) {
               progress={...progress,awaitingFeedback:true};
               localStorage.setItem(batchKey(props.projectId),JSON.stringify(progress));
               if(active){setAwaitingFeedback(true);setPhase('idle');setCountdown(null);}
+              return;
+            }
+            if (response.ok && result.status === "failed" && result.requestId === requestId && result.retryAutomatically === false) {
+              if (localStorage.getItem(pendingKey) !== marker) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }
+              localStorage.removeItem(pendingKey);
+              stop("A imagem não chegou. Você pode tentar de novo.");
               return;
             }
             if (!response.ok || result.status !== "completed" || result.requestId !== requestId) { stop("O resultado da exploração não foi confirmado. A sequência foi interrompida."); return; }

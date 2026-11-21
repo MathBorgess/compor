@@ -174,6 +174,32 @@ test('credencial recusada e imagem inválida não expõem respostas do provedor'
   assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
 });
 
+test('400, 429 e 500 do provedor são classificados sem segunda chamada', async () => {
+  const cases = [
+    [400, 400, { error: 'generation_not_produced', closureReason: 'provider_rejected_400', providerOutcome: 'failure', retryAutomatically: false }],
+    [429, 429, { error: 'generation_not_produced', closureReason: 'provider_rejected_429', providerOutcome: 'retryable', retryAutomatically: false }],
+    [500, 503, { error: 'generation_not_produced', closureReason: 'result_unknown', providerOutcome: 'retryable', retryAutomatically: false }],
+    [502, 503, { error: 'generation_not_produced', closureReason: 'result_unknown', providerOutcome: 'retryable', retryAutomatically: false }],
+  ];
+  for (const [providerStatus, status, body] of cases) {
+    let calls = 0;
+    const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => { calls++; return new Response('erro sintético', { status: providerStatus }); } });
+    const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+    assert.equal(response.status, status);
+    assert.deepEqual(await response.json(), body);
+    assert.equal(calls, 1);
+  }
+});
+
+test('timeout do provedor continua resultado desconhecido e não repete a chamada', async () => {
+  let calls = 0;
+  const handler = createImageHandler({ authenticate: async () => ({ userId: 'user-1' }), fetch: async () => { calls++; throw Object.assign(new Error('timeout'), { name: 'TimeoutError' }); } });
+  const response = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true }));
+  assert.equal(response.status, 502);
+  assert.deepEqual(await response.json(), { error: 'generation_result_unknown', retryAutomatically: false });
+  assert.equal(calls, 1);
+});
+
 test('edição envia os pixels originais em multipart na ordem aprovada, sem URLs remotas',async()=>{
  const originals=[Buffer.from(png,'base64'),Buffer.concat([Buffer.from(png,'base64'),Buffer.from([1,2,3])])];
  let calls=0;

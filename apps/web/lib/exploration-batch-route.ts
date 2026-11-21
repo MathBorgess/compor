@@ -6,7 +6,7 @@ import type {VisualInputManifest,VisualReferenceImage} from '@compor/agents-api/
 import type {Actor} from './agent-auth.ts';
 import type {IntentStore} from './exploration-intent-route.ts';
 import {ExplorationCredentialsRejected} from './exploration-image-route.ts';
-import {ExplorationQualityHeld,explorationImageOutcomes,isReplaceableExplorationOutcome,type ExplorationQualityReason,type ExplorationReviewOptions} from './exploration-image-outcome.ts';
+import {ExplorationProviderClosed,ExplorationQualityHeld,explorationImageOutcomes,isReplaceableExplorationOutcome,type ExplorationClosureReason,type ExplorationProviderOutcome,type ExplorationQualityReason,type ExplorationReviewOptions} from './exploration-image-outcome.ts';
 import {dispatchReservedExplorationBatch,ExplorationBatchRejected} from './exploration-batch-coordinator.ts';
 
 const id=z.string().uuid();
@@ -29,6 +29,7 @@ type BatchStore={
  finish:(actor:Actor,projectId:string,requestId:string,state:'completed'|'unknown',secret:string)=>Promise<void>;
  reject:(actor:Actor,projectId:string,requestId:string,secret:string)=>Promise<void>;
  hold:(actor:Actor,projectId:string,requestId:string,secret:string,reason:ExplorationQualityReason)=>Promise<void>;
+ fail?:(actor:Actor,projectId:string,requestId:string,secret:string,closureReason:ExplorationClosureReason,providerOutcome:ExplorationProviderOutcome)=>Promise<void>;
 };
 type Dependencies={appOrigin:string;generationAvailable?:boolean;visualEnabled?:boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[],review:ExplorationReviewOptions)=>Promise<Uint8Array>};
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
@@ -106,8 +107,9 @@ export function createExplorationBatchRoute(deps:Dependencies){
     finish:(child,state)=>deps.store.finish(actor,input.projectId,child.requestId,state,child.proof),
     reject:child=>deps.store.reject(actor,input.projectId,child.requestId,child.proof),
     hold:(child,reason)=>deps.store.hold(actor,input.projectId,child.requestId,child.proof,reason),
+    ...(deps.store.fail?{fail:(child,reason,outcome)=>deps.store.fail?.(actor,input.projectId,child.requestId,child.proof,reason,outcome)??Promise.resolve()}:{}),
    });
-   return reply({status:results.some(x=>x.status==='unknown')?'unknown':results.some(x=>isReplaceableExplorationOutcome(x.status))?'partial':'completed',batchId:input.batchId,images:results,retryAutomatically:false},200);
+   return reply({status:results.some(x=>x.status==='unknown')?'unknown':results.some(x=>x.status==='failed'||isReplaceableExplorationOutcome(x.status))?'partial':'completed',batchId:input.batchId,images:results,retryAutomatically:false},200);
   },
   async replace(request:Request){
    if(request.method!=='POST')return reply({error:'method_not_allowed'},405);
@@ -147,6 +149,7 @@ export function createExplorationBatchRoute(deps:Dependencies){
     catch(error){
      if(error instanceof ExplorationQualityHeld){await deps.store.hold(actor,input.projectId,input.requestId,proof,error.reason);return reply({status:'quality_held',batchId:input.batchId,requestId:input.requestId,qualityReason:error.reason,retryAutomatically:false},200);}
      if(error instanceof ExplorationCredentialsRejected){await deps.store.reject(actor,input.projectId,input.requestId,proof);return reply({status:'rejected',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},200);}
+     if(error instanceof ExplorationProviderClosed && deps.store.fail){await deps.store.fail(actor,input.projectId,input.requestId,proof,error.closureReason,error.providerOutcome);return reply({status:'failed',batchId:input.batchId,requestId:input.requestId,closureReason:error.closureReason,providerOutcome:error.providerOutcome,retryAutomatically:false},200);}
      throw error;
     }
     await deps.store.put(actor,input.projectId,input.requestId,bytes);

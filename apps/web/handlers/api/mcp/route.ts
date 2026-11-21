@@ -36,6 +36,7 @@ async function handle(request:Request) {
           const parsed=z.discriminatedUnion('status',[
             z.strictObject({status:z.literal('completed'),requestId:z.string().uuid(),imageId:z.string().uuid()}),
             z.strictObject({status:z.enum(['running','unknown','busy','blocked','awaiting_feedback','rejected','not_started']),requestId:z.string().uuid(),retryAutomatically:z.literal(false)}),
+            z.strictObject({status:z.literal('failed'),requestId:z.string().uuid(),closureReason:z.enum(['provider_rejected_400','provider_rejected_429','result_unknown']),providerOutcome:z.enum(['failure','retryable','unconfirmed']),retryAutomatically:z.literal(false)}),
             z.strictObject({status:z.literal('quality_held'),requestId:z.string().uuid(),qualityReason:z.enum(explorationQualityReasons).optional(),retryAutomatically:z.literal(false)}),
           ]).parse(await result.json());
           if(parsed.status==='not_started' && (![400,403,404,413,503].includes(result.status) || parsed.requestId.toLowerCase()!==input.requestId.toLowerCase()))throw Error('unavailable');

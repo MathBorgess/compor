@@ -45,6 +45,11 @@ export function createAgentImageRoute({appOrigin,resolveActor,approve,execute,se
    if('usageRecorded' in execution && typeof execution.usageRecorded==='boolean')usageRecorded=execution.usageRecorded;
    if(execution.status==='quality_held'&&isImageQualityReason(execution.qualityReason)&&execution.retryAutomatically===false)
      return reply({status:execution.status,qualityReason:execution.qualityReason,retryAutomatically:false,...(usageRecorded===undefined?{}:{usageRecorded})},200);
+   if(execution.status==='failed'&&execution.retryAutomatically===false&&(
+     (execution.closureReason==='provider_rejected_400'&&execution.providerOutcome==='failure')
+     ||(execution.closureReason==='provider_rejected_429'&&execution.providerOutcome==='retryable')
+     ||(execution.closureReason==='result_unknown'&&(execution.providerOutcome==='retryable'||execution.providerOutcome==='unconfirmed'))
+   )) return reply({status:'failed',closureReason:execution.closureReason,providerOutcome:execution.providerOutcome,retryAutomatically:false,...(usageRecorded===undefined?{}:{usageRecorded})},200);
    if(execution?.status==='unknown' && uuid(execution.assetId))return reply({error:'result_unknown',retryAutomatically:false,assetId:execution.assetId,...(usageRecorded===undefined?{}:{usageRecorded})},502);
    if(execution?.status!=='completed' || !uuid(execution.executionId))return reply({error:'result_unknown',retryAutomatically:false},502);
    const output=z.object({assetId:z.string()}).parse(JSON.parse(execution.toolResult.output));
