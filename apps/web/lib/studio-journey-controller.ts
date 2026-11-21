@@ -4,7 +4,7 @@ import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePiece
 import {cancelPostPreparation,completePostPreparation,startPostPreparation,updateLegacyPostName,updatePostPreparation,updateWorkflow} from './studio-workflow';
 import {selectScopedReference,unselectScopedReference,updatePostContext} from './studio-post-context';
 import type {ActionResult,DraftContext,PostContext,StudioState} from './studio-domain';
-import type {createStudioStorage} from './studio-storage';
+import type {DraftAssetAddress, createStudioStorage} from './studio-storage';
 import type {ImageProposal} from '@compor/agents-api/image-proposal';
 
 type Lock={current:boolean};
@@ -27,9 +27,11 @@ export type PostCreationResult=
   | {status:'superseded';post:PostRecord}
   | {status:'unknown'|'unavailable'};
 type SaveInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>;
+export type VersionImagePublication='published'|'absent'|'conflict'|'unknown';
 type SavePorts={
   readVersions:()=>Promise<PieceVersion[]>;
   copyDraftAsset:ReturnType<typeof createStudioStorage>['copyDraftAsset'];
+  publishVersionImage?:(input:{userId:string;projectId:string;pieceId:string;version:number;source:DraftAssetAddress})=>Promise<VersionImagePublication>;
   newEventId:()=>string;
   onVersionsChanging:()=>void;
   onVersionSaved:(version:PieceVersion)=>void;
@@ -117,9 +119,17 @@ export function createStudioJourneyController(port:StatePort) {
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
-      if(!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-        {pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'},
-        {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+      // Generation saves the text first. Its image arrives afterwards and is the
+      // first bytes of that version, rather than a copy of the previous artwork.
+      if(!args?.operation){
+        if(options.publishVersionImage){
+          const published=await options.publishVersionImage({userId:current.userId,projectId:current.projectId,pieceId:draft.pieceId,version:version.version,source:{pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'}});
+          if(!sameScope(current))return unknown('inactive');
+          if(published==='unknown')return unknown();
+        }else if(!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
+          {pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'},
+          {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+      }
       if(!sameScope(current))return unknown('inactive');
       if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}
       change(value=>recordSavedVersion(value,{

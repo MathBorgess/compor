@@ -1312,6 +1312,7 @@ export default function StudioChat({
             blob: image,
             pieceId: target.pieceId,
             version: target.version,
+            assetId: data.assetId,
             creationContext:{postContext:getState().adjustments.find(item=>item.id===action.requestId)?.context.postContext??postContext(getState(),target.pieceId),references:getState().adjustments.find(item=>item.id===action.requestId)?.context.references.filter(reference=>action.proposal.referenceIds.includes(reference.id))??[]},
           })!==true)throw Error('image application unconfirmed');
         if(!isCurrentScope())return;
