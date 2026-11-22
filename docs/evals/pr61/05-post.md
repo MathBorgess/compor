@@ -76,5 +76,28 @@ A suíte legada (`--suite legacy`, 5 casos 4:5 em `cases.json` e `rubrica.md`) p
 
 - **Casos e divisão:** [casos-estendidos.json](../../../scripts/evals/pr61/post/casos-estendidos.json) traz 8 casos sintéticos (5 de desenvolvimento e 3 reservados) distribuídos entre post único, carrossel (4–5 lâminas), coleção editorial (3 fotos) e story vertical 9:16 (`864x1536`), cada qual com `brandVoice` (`tone`, `examples`, `avoid`) e fatos confirmados.
 - **Rubrica estendida:** [rubrica-estendida.md](../../../scripts/evals/pr61/post/rubrica-estendida.md) soma `adequacaoAoPerfil` e `sinergiaLegenda` (quando há `caption.txt`) às dimensões universais, adiciona `coesaoVisual` e `progressaoOuRitmo` para carrossel/coleção e `zonasSeguras` (painel comparativo 360 px com guia 15% topo / 25% base / 16% lateral direita) para story. O portão factual também reprova `cliche_ou_evitar`.
-- **Verificação automatizada offline:** `python3 -m unittest discover -s scripts/evals/pr61/post -p "test_*.py" -v` valida o empacotamento cego, a tira horizontal de múltiplas lâminas, o painel de zonas seguras do story, a coerência das falhas críticas e a retenção dos casos reservados sem realizar chamadas pagas.
-- **Estado das rodadas reais:** nenhuma rodada paga com provedor real foi disparada para `--suite extended`; a execução com `judge.py --suite extended` e a comparação contra o baseline dependem de autorização explícita. Ver [ADR 0080](../../adr/0080-skills-criativas-copy-e-modos-de-post.md) e [Curadoria de skills criativas](../../creative-skills-curation.md).
+- **Verificação automatizada offline:** `python3 -m unittest discover -s scripts/evals/pr61/post -p "test_*.py" -v` e `node --test scripts/evals/pr61/post/run-extended.test.mjs` validam o executor, o empacotamento cego, a tira horizontal de múltiplas lâminas, o painel de zonas seguras do story, a coerência das falhas críticas e a retenção dos casos reservados sem realizar chamadas pagas.
+- **Rodadas reais executadas em 22/11/2026 (revisão `cc8e538`):** comparadas duas rodadas completas (`8` casos, `19` imagens por rodada, `0` casos incompletos) geradas via [run-extended.mjs](../../../scripts/evals/pr61/post/run-extended.mjs) (`gpt-6.1-terra` + `gpt-image-2.6-flare`) e julgadas em sessões cegas independentes pelo `gpt-6.2-sol` (Codex CLI `0.166.0`, `0` ferramentas; sessões `01a20303-3a68-7ab3-897a-c67c1c59c28e` e `01a20305-d2ad-74b0-bbbf-5d4a5e5000eb`). PNGs e recibos individuais permanecem fora do Git em diretório privado local. [Respostas completas, divisões, hashes e uso por rodada](../../../scripts/evals/pr61/post/rodadas-estendidas-reais.json) · [ADR 0080](../../adr/0080-skills-criativas-copy-e-modos-de-post.md) · [Curadoria de skills criativas](../../creative-skills-curation.md)
+
+| Rodada | Braço | Prontas no desenvolvimento | Prontas na reserva | Falhas críticas (`cliche_ou_evitar`/fatos) | Sem pixels | Tokens planner (`gpt-6.1-terra`) | Tokens imagem (`gpt-image-2.6-flare`) |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0 | `baseline` (sem skills criativas nem Capa Âncora) | 1 de 5 | 2 de 3 | 0 | 0 | 35.181 | 37.529 |
+| 1 | `candidate` (`compor-creative-skills.v1` + Capa Âncora) | 0 de 5 | 2 de 3 | 0 | 0 | 46.880 | 63.624 |
+
+| Dimensão (8 casos combinados) | R0 `baseline` `[0 / 1 / 2]` | R1 `candidate` `[0 / 1 / 2]` | Delta em nota 2 |
+| --- | :---: | :---: | ---: |
+| `gancho` | `0 / 0 / 8` | `0 / 0 / 8` | `0` |
+| `adequacaoAoPerfil` | `0 / 0 / 8` | `0 / 0 / 8` | `0` |
+| `coesaoVisual` (carrossel/coleção) | `0 / 0 / 4` | `0 / 0 / 4` | `0` |
+| `sinergiaLegenda` (6 casos com legenda) | `0 / 1 / 5` | `0 / 0 / 6` | **`+1`** |
+| `progressaoOuRitmo` (carrossel/coleção) | `0 / 2 / 2` | `0 / 1 / 3` | **`+1`** |
+| `zonasSeguras` (story 9:16) | `2 / 0 / 0` | `1 / 1 / 0` | `0` (reduziu notas `0`) |
+| `leitura` (360 px) | `0 / 1 / 7` | `0 / 3 / 5` | **`-2`** |
+| `adequacao` | `0 / 2 / 6` | `0 / 3 / 5` | **`-1`** |
+
+**Conclusão da primeira comparação R0 vs R1:** o grupo reservado empatou em `2/3` peças prontas (`single` e `collection` prontos em ambas; `story` bloqueado em `zonasSeguras`) e a candidata caiu de `1/5` para `0/5` no desenvolvimento, portanto `compor-creative-skills.v1` **não demonstrou ganho líquido no proxy estrito** na primeira rodada. Apesar de melhorar `sinergiaLegenda` (`6/6` nota 2), `progressaoOuRitmo` (`3/4` nota 2) e reduzir invasões em `zonasSeguras`, o diagnóstico literal do juiz isolou três ajustes acionáveis para uma eventual `v2`:
+1. **Leitura a 360 px (`-2`):** frases *open loop* e parágrafos explicativos geraram blocos comprimidos ou corpo pequeno em coluna estreita (`ext-single-cafe-dev`, `ext-carousel-ux-dev`, `ext-carousel-enem-dev`); as skills precisam fixar teto duro de palavras/linhas por bloco e vetar texto pequeno em colunas estreitas ou inclinadas.
+2. **Zonas seguras no Story 9:16:** citar apenas o limite literal (`15%`/`25%`/`16%`) levou o modelo de imagem a encostar ou cruzar a borda (`ext-story-oficina-dev`, `ext-story-lancamento-res`), e uma tarja `"Acesse o link"` competiu visualmente com a figurinha nativa; a instrução precisa pedir margem interna conservadora (`20%` topo, `30%` base, `22%` lateral direita) e vetar tarjas/caixas em torno de chamadas de link.
+3. **Abertura de coleção (`adequacao`):** o minimalismo extremo omitiu o verbo de ação na capa (`"Barro Vivo · Sábado às 10h"` sem `"Vendas abrem"` em `ext-collection-ceramica-dev`).
+
+*Nota de protocolo:* ao consolidar o relatório `--rounds 2`, os três casos reservados de `casos-estendidos.json` foram expostos nesta análise; uma eventual Rodada 2 sobre estes mesmos casos deve declarar exposição da reserva ou introduzir um novo conjunto reservado antes de qualquer promoção definitiva.
