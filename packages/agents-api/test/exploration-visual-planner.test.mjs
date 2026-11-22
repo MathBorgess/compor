@@ -118,7 +118,7 @@ test('o pedido ao provedor distingue texto, uploads v1 e triagem v2 preservando 
   assert.ok(body.agent.instructions.includes('Compare os três pares'));
   assert.match(body.agent.instructions,/Skill direcao-visual-de-campanha@1\.2\.0/);
   assert.match(body.agent.instructions,/Skill preparar-prompt-de-arte@1\.1\.0/);
-  assert.match(body.agent.instructions,/Skill formatos-instagram@1\.0\.0/);
+  assert.match(body.agent.instructions,/Skill formatos-instagram@1\.1\.0/);
   assert.match(body.agent.instructions,/antes de escrever o creativePrompt de cada rota/);
   assert.match(body.agent.instructions,/preserve o schema do plano e descreva a composição de uma imagem por item/);
   assert.match(body.agent.instructions,/## Criação/);

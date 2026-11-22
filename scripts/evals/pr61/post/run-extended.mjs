@@ -213,7 +213,6 @@ export async function buildPlannerRequest(testCase, arm) {
     'Aplique integralmente as skills criativas, a skill dedicada de copy na imagem e a skill do formato ativo antes de escrever o plano.',
     'Em `brandVoice.avoid`, trate cada expressão como estritamente PROIBIDA tanto nos textos das imagens (`headline`, `body`, `prompt`) quanto na `caption`.',
     'Em `carousel` e `collection`, planeje a Lâmina 1 como Capa Âncora visual cuja paleta, tipografia, luz e sistema gráfico serão herdados pelas lâminas 2..N.',
-    'Em `story` (9:16), mantenha o topo 15%, a base 25% e a lateral direita 16% livres de textos essenciais e nunca desenhe botões ou stickers falsos.',
     promptSkills,
     bundle.instructions,
     OUTPUT_CONTRACT,

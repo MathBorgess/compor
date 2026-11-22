@@ -9,10 +9,10 @@ const userId=id(1),projectId=id(2),pieceId=id(3),attemptId=id(4),assetId=id(5),r
 const actor={userId,token:'synthetic-token'},apiKey=`sk-${'x'.repeat(30)}`;
 const proposal={prompt:'Arte de teste',operation:'create',baseImageId:null,referenceIds:[]};
 function packet(length) {
- const fields=Array.from({length:20},(_,n)=>({id:id(100+n),label:`Campo ${n}`,value:'',origin:'user'}));
+ const fields=Array.from({length:20},(_,n)=>({id:id(100+n),label:`Campo ${String(n).padStart(2,'0')} ${'L'.repeat(65)}`,value:'a',origin:'user'}));
  const input={literalText:{headline:'Título\n"especial" 🖌️',price:'',date:'',fields},source:null,images:[]};
  let remaining=length-compileArtworkPrompt(proposal,input).length;
- for(const field of fields){const count=Math.min(500,remaining);field.value='x'.repeat(count);remaining-=count;}
+ for(const field of fields){const count=Math.min(499,remaining);field.value='a'+'x'.repeat(count);remaining-=count;}
  assert.equal(remaining,0);assert.equal(compileArtworkPrompt(proposal,input).length,length);
  return input;
 }

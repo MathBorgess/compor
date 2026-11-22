@@ -62,7 +62,7 @@ test('buildPlannerRequest isola baseline sem skills vs candidate com catalogo cr
 
   const candidate = await buildPlannerRequest(storyCase, 'candidate');
   assert.deepEqual(candidate.skillIds, ['creative-core.v1', 'on-image-copy.v1', 'story-vertical.v1']);
-  assert.equal(candidate.catalogVersion, 'compor-creative-skills.v1');
+  assert.equal(candidate.catalogVersion, 'compor-creative-skills.v2');
   assert.match(candidate.instructions, /brandVoice\.avoid/);
   assert.ok(JSON.parse(candidate.input).brandVoice.avoid.length > 0);
 });
