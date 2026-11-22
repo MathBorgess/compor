@@ -177,8 +177,10 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path, help='diretório privado da bancada')
     parser.add_argument('--suite', choices=('legacy', 'extended'), default='legacy', help='suíte do marco 5 (padrão: legacy)')
-    parser.add_argument('--rounds', type=int, default=4, choices=(2, 3, 4), help='quantidade de rodadas comparadas (padrão: 4)')
+    parser.add_argument('--rounds', type=int, default=4, choices=(2, 3, 4, 5, 6), help='quantidade de rodadas comparadas (padrão: 4)')
     args = parser.parse_args()
+    if args.suite == 'legacy' and args.rounds != 4:
+        parser.error('a suíte legada exige exatamente 4 rodadas')
     root = args.root.resolve()
     rounds = []
     if args.suite == 'extended':

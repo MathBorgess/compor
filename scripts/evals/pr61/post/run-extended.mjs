@@ -686,7 +686,7 @@ export async function runExtendedRound({
   caseFilter = null,
   onProgress = null,
 }) {
-  if (!Number.isInteger(round) || round < 0 || round > 3) throw Error(`invalid_round:${round}`);
+  if (!Number.isInteger(round) || round < 0 || round > 5) throw Error(`invalid_round:${round}`);
   if (arm !== 'baseline' && arm !== 'candidate') throw Error(`invalid_arm:${arm}`);
   if (typeof revision !== 'string' || !revision.trim()) throw Error('revision_required');
   if (typeof key !== 'string' || !/^sk-[^\s]{20,300}$/.test(key)) throw Error('invalid_api_key');

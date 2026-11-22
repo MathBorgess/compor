@@ -599,10 +599,12 @@ def _run_extended(root, round_dir, complete, round_index, fixtures_override, int
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path, help='diretório privado da bancada com cases.json')
-    parser.add_argument('round', type=int, choices=range(4))
+    parser.add_argument('round', type=int, choices=range(6))
     parser.add_argument('--suite', choices=('legacy', 'extended'), default='legacy', help='suíte do marco 5 (padrão: legacy)')
     parser.add_argument('--fixtures', type=Path, default=None, help='caminho opcional para o JSON de casos')
     args = parser.parse_args()
+    if args.suite == 'legacy' and args.round >= 4:
+        parser.error('a suíte legada aceita apenas rodadas de 0 a 3')
     root = args.root.resolve()
     round_dir = root / f'round-{args.round}'
     complete = json_file(round_dir / 'complete.json')

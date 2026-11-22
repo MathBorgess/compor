@@ -9,7 +9,7 @@ import { POST_STORY_SKILL } from './format-story.mjs';
 export { POST_FORMATS, FORMAT_SPECS, isPostFormat, normalizePostFormat, formatSpec, formatImageSize };
 export { CREATIVE_CORE_SKILL, ON_IMAGE_COPY_SKILL, POST_SINGLE_SKILL, POST_CAROUSEL_SKILL, POST_COLLECTION_SKILL, POST_STORY_SKILL };
 
-export const CREATIVE_SKILLS_CATALOG_VERSION = 'compor-creative-skills.v3';
+export const CREATIVE_SKILLS_CATALOG_VERSION = 'compor-creative-skills.v4';
 
 const FORMAT_SKILLS = Object.freeze({
   single: POST_SINGLE_SKILL,
