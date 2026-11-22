@@ -43,7 +43,7 @@ export const FORMAT_SPECS = Object.freeze({
     maxFrames: 1,
     defaultFrames: 1,
     multiFrame: false,
-    safeZonePrompt: 'Use formato vertical 9:16 (864x1536) para Instagram Stories / TikTok. Mantenha os 15% superiores (use ~20% de folga visual no topo), os 25% inferiores (área da UI) e os 16% da lateral direita (use ~20% de folga visual à direita) totalmente livres de texto crítico ou logotipos. Alinhe o bloco de texto à esquerda dentro dos ~75% esquerdos, com linhas curtas. Quando houver link ou interação nativa, use uma linha curta de texto solto sobre o fundo (sem retângulo, pílula, tarja ou moldura que imite botão) logo acima de uma faixa lisa e desimpedida posicionada acima dos 25% inferiores para a figurinha nativa.',
+    safeZonePrompt: 'Use formato vertical 9:16 (864x1536) para Instagram Stories / TikTok. Mantenha os 15% superiores (use ~20% de folga visual no topo), os 25% inferiores (área da UI) e os 16% da lateral direita (deixe ~25% a 30% livres à direita) totalmente livres de texto crítico ou logotipos. Mantenha toda a tipografia alinhada à esquerda estritamente dentro dos dois terços esquerdos (~68% da largura), ajustando a escala de palavras longas para nunca cruzar os 70% horizontais. Quando houver link ou interação nativa, use 1 linha curta de texto solto sobre o fundo (sem retângulo, pílula, tarja ou moldura que imite botão) acima de uma faixa horizontal completamente lisa e vazia entre ~60% e ~74% da altura (acima dos 25% inferiores) para a figurinha nativa — mantenha objetos, mãos e ilustrações fora dessa faixa de pouso.',
   }),
 });
 
