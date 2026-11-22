@@ -7,12 +7,11 @@ import StudioDirection from "./studio-direction";
 import StudioEditor from "./studio-editor";
 import StudioReview from "./studio-review";
 import VariantCards from "./studio-variant-cards";
-import type { ImageProposal } from '@compor/agents-api/image-proposal';
 import { useStudioState } from "./use-studio-state";
 import {PreparationSteps,ProjectQuestions,ProjectAI,ProjectPosts,GuidedWorkspace,GuidedArtPreview} from './studio-guided';
 import {imageReviewDisclosure} from './image-review-disclosure.ts';
 import {updateWorkflow,conversationMessages,postIds,removePostFromList,prepareReferenceWorkspace} from '../lib/studio-workflow';
-import {createStudioJourneyController} from '../lib/studio-journey-controller';
+import {createStudioJourneyController,type SaveDraftInput} from '../lib/studio-journey-controller';
 import StudioNavigation from './studio-navigation';
 import {postMutationSchema,postNameSchema,type PostRecord} from '../lib/post-catalog';
 import PostSettings from './studio-post-settings';
@@ -80,7 +79,7 @@ import StudioAssets from "./studio-assets";
 import * as z from '../lib/schema.ts';
 import { projectsSchema, projectResponseSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
 import { versionsSchema, versionSchema } from '../lib/studio-piece-contract';
-import type { StudioState, StudioReference, ActionResult, DraftContext } from '../lib/studio-domain';
+import type { StudioState, StudioReference, ActionResult } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
@@ -855,10 +854,10 @@ function ProjectStudio({
         }).catch(() => null);
         return stored ? [frame.id, stored.file] as const : null;
       })).then(entries => {
-        if (!live || loadGeneration !== baseLoadGeneration.current) return;
+        if (!live) return;
         const map: Record<string, Blob> = {};
         for (const entry of entries) if (entry) map[entry[0]] = entry[1];
-        setFrameBlobs(map);
+        setFrameBlobs(current => ({ ...map, ...current }));
       }).catch(() => {});
     }
     return () => {
@@ -1042,7 +1041,7 @@ function ProjectStudio({
     confirmResolver.current = null;
     setDialog(null);
   }
-  async function saveCurrent(args?:DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>):Promise<ActionResult> {
+  async function saveCurrent(args?:SaveDraftInput):Promise<ActionResult> {
     if(!getCurrentDraft(local.get())||saveLock.current)throw Error("save_unavailable");
     setSaving(true);setNotice("");
     try {

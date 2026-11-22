@@ -51,6 +51,10 @@ test('salvar versão pela fronteira MCP preserva histórico, conflito e isolamen
       const result=await alice.callTool({name:'save_piece_version',arguments:{projectId:project,pieceId:piece,expectedVersion:3,content:{...content,fields}}});
       assert.equal(result.isError,true);
     }
+    const storyWrite = { ...args, expectedVersion: 3, content: { ...content, format: 'story' } };
+    const rejected = await alice.callTool({ name: 'save_piece_version', arguments: storyWrite });
+    assert.equal(rejected.isError, true);
+    await assert.rejects(() => pieceStore.save({ actor: { userId: 'alice' }, token: 'alice-token' }, storyWrite));
     assert.equal(versions.length,3);
   } finally { await alice.close(); await bob.close(); }
 });

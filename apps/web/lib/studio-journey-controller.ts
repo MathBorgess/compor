@@ -26,7 +26,7 @@ export type PostCreationResult=
   | {status:'created';post:PostRecord;retained:RetainedProposal}
   | {status:'superseded';post:PostRecord}
   | {status:'unknown'|'unavailable'};
-type SaveInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>;
+export type SaveDraftInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>&{frameId?:string};
 export type VersionImagePublication='published'|'absent'|'conflict'|'unknown';
 type PreparedVersionImage=
   | {status:'ready';publish:(version:number)=>Promise<VersionImagePublication>}
@@ -121,37 +121,41 @@ export function createStudioJourneyController(port:StatePort) {
     finally {locks.creation.current=false;}
   }
 
-  async function saveCurrent(options:SavePorts,args?:SaveInput):Promise<SaveResult> {
+  async function saveCurrent(options:SavePorts,args?:SaveDraftInput):Promise<SaveResult> {
     const current=port.getState(),selected=getCurrentDraft(current);
     if(!selected||locks.save.current)throw Error('save_unavailable');
     const draft=selected;
     if(args?.pieceId&&(args.pieceId!==draft.pieceId||args.baseVersion!==draft.baseVersion||args.expectedLatestVersion!==draft.expectedLatestVersion))throw Error('context_changed');
+    const targetFrame=args?.frameId===undefined?undefined:draft.content.frames?.find(frame=>frame.id===args.frameId);
+    if(args?.frameId!==undefined&&(!args.operation||!targetFrame))throw Error('context_changed');
     locks.save.current=true;
     const unknown=(notice:SaveResult['notice']='unknown'):SaveResult=>({result:{status:'unknown'},notice});
+    const assetScope={userId:current.userId,projectId:current.projectId};
     const source:DraftAssetAddress={pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'};
     let prepared:PreparedVersionImage|undefined;
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
-      // Generation saves the text first. Its image arrives afterwards and is the
-      // first bytes of that version, rather than a copy of the previous artwork.
+      const destination={...source,baseVersion:version.version};
       if(!args?.operation){
         if(prepared?.status==='ready'){
           const published=await prepared.publish(version.version);
           if(!sameScope(current))return unknown('inactive');
           if(published==='unknown')return unknown();
         }else if(!options.prepareVersionImage&&!args?.changedDimension){
-          await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-            source,
-            {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+          await options.copyDraftAsset(assetScope,source,destination);
         }
-        if(!args?.changedDimension){
-          for(const frame of version.content.frames??[]){
-            await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-              {pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base',frameId:frame.id},
-              {pieceId:draft.pieceId,baseVersion:version.version,kind:'base',frameId:frame.id});
-          }
+      }
+      // Other frames carry forward; the target slot must stay free for its new image.
+      if(targetFrame||(!args?.operation&&!args?.changedDimension)){
+        for(const frame of version.content.frames??[]){
+          if(frame.id!==targetFrame?.id)await options.copyDraftAsset(assetScope,{...source,frameId:frame.id},{...destination,frameId:frame.id});
         }
+      }
+      if(targetFrame&&targetFrame.position>1){
+        // The anchor can also be an older version-level image or a working preview.
+        await options.copyDraftAsset(assetScope,source,destination);
+        if(source.baseVersion>=1)await options.copyDraftAsset(assetScope,{...source,kind:'preview'},{...destination,kind:'preview'});
       }
       if(!sameScope(current))return unknown('inactive');
       if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}

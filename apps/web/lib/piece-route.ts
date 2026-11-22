@@ -6,9 +6,8 @@ import type {createProjectPieceStore} from './piece-store.ts';
 const reply = (data:unknown, status = 200) => Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
 const uuid = (value:unknown):value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 function validContent(value:PieceContent) {
-  return value && typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 5 &&
-    (['headline', 'price', 'date', 'caption'] as const).every(k => typeof value[k] === 'string' && value[k].length <= (k === 'caption' ? 4000 : k === 'headline' ? 500 : 100)) &&
-    ['user', 'agent'].includes(value.captionOrigin);
+  return value.headline.length <= 500 && value.price.length <= 100 && value.date.length <= 100 && value.caption.length <= 4000 &&
+    (value.frames === undefined || value.format === 'carousel' || value.format === 'collection');
 }
 async function parseBody(request:Request):Promise<unknown> {
   if (!request.body) throw new Error();

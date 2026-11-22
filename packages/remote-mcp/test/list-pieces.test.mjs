@@ -52,6 +52,46 @@ test('lista peças mais recentes, com cursor por peça e paginação mesmo com m
   } finally { await client.close(); }
 });
 
+test('listas MCP incluem versões com formatos do estúdio sem expor seus campos internos', async () => {
+  const piece = pieceId(1);
+  const legacy = row(piece, 1);
+  const story = row(piece, 2);
+  const carousel = row(piece, 3);
+  let rows = [legacy, { ...story, content: { ...story.content, format: 'story' } }, {
+    ...carousel,
+    content: {
+      ...carousel.content,
+      format: 'carousel',
+      visualInvariants: 'Fundo creme',
+      frames: [1, 2].map(position => ({
+        id: pieceId(position + 1), position, role: 'quadro', headline: 'Arte', body: '', visualCue: '', assetId: null,
+      })),
+    },
+  }];
+  const client = await clientFor(async request => {
+    const sort = new URL(request).searchParams.get('order');
+    return Response.json(sort === 'version.asc' ? rows : [...rows].reverse());
+  });
+  try {
+    const historyCall = { name: 'list_piece_versions', arguments: { projectId: project, pieceId: piece } };
+    const summaryCall = { name: 'list_pieces', arguments: { projectId: project } };
+    const history = await client.callTool(historyCall);
+    assert.deepEqual(history.structuredContent.versions.map(version => version.content), [legacy.content, story.content, carousel.content]);
+    const summary = await client.callTool(summaryCall);
+    assert.deepEqual(summary.structuredContent, {
+      pieces: [{ pieceId: piece, latestVersion: 3, headline: carousel.content.headline, createdAt: carousel.created_at }],
+      nextCursor: piece,
+    });
+
+    rows = [{ ...carousel, content: { ...rows[2].content, unexpected: 'não divulgar' } }];
+    for (const call of [historyCall, summaryCall]) {
+      const result = await client.callTool(call);
+      assert.equal(result.isError, true);
+      assert.doesNotMatch(JSON.stringify(result), /não divulgar/);
+    }
+  } finally { await client.close(); }
+});
+
 test('nega resposta de outro dono ou projeto sem divulgar dados privados', async () => {
   for (const bad of [row(pieceId(1), 1, 'bob'), { ...row(pieceId(1), 1), project_id: pieceId(2) }]) {
     const client = await clientFor(async () => Response.json([bad]));

@@ -46,9 +46,10 @@ export function createProjectPieceStore({ url, anonKey, fetchImpl = fetch }:Stor
     async save(context:StoreContext, input:SavePieceInput) {
       if (input.baseVersion === undefined) {
         if(input.operation!==undefined||input.changedDimension!==undefined)throw Error('image metadata requires a version base');
-        return upstream.save(context, input);
+        const { format, visualInvariants, frames } = input.content;
+        if (format === undefined && visualInvariants === undefined && frames === undefined) return upstream.save(context, input);
       }
-      const { projectId, pieceId, expectedVersion, baseVersion, content } = input;
+      const { projectId, pieceId, expectedVersion, baseVersion = expectedVersion, content } = input;
       const imageMetadata=input.operation!==undefined||input.changedDimension!==undefined;
       const result = mutation(await rpc(imageMetadata?'save_piece_version_v3':'save_piece_version_v2', context, { p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_base_version: baseVersion, p_content: content,...(imageMetadata?{p_operation:input.operation??null,p_changed_dimension:input.changedDimension??null}:{}) }), projectId, pieceId, 'saved');
       if (result.status === 'saved' && (result.version.version !== expectedVersion + 1 || result.version.metadata.baseVersion !== (baseVersion || null))) throw Error('invalid response');

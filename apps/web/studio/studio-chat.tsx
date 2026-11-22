@@ -34,8 +34,9 @@ import {parseVisualInputManifest,type VisualInputManifest} from '@compor/agents-
 import {assertReferenceVisualCapability,type VisualAuthorityScope} from '../lib/reference-visual-authority.ts';
 
 import { parseStudioAction } from '@compor/agents-api/studio-chat-tools';
-import type { StudioState, AdjustmentResult, RequestStatus, DraftContext, StoredImage, ActionResult } from '../lib/studio-domain';
+import type { StudioState, AdjustmentResult, RequestStatus, StoredImage, ActionResult } from '../lib/studio-domain';
 import { createStudioTools } from '../lib/studio-tools';
+import type { SaveDraftInput } from '../lib/studio-journey-controller';
 import { uuid, errorMessage, type ImageSelection } from './studio-ui-types';
 import { parseTasteReply, quickReplyKey, readQuickReplies, rememberQuickReply, recordQuickReplyAnswer, quickReplyStatus, quickReplyMessage, QUICK_REPLY_ADJUST_PREFIX, type QuickReplyEntry, type QuickReplyOption } from '../lib/studio-quick-replies.ts';
 import TasteReadingCard from './studio-taste-reading';
@@ -168,7 +169,7 @@ export default function StudioChat({
   createVisualAuthoritySnapshot,
   visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:SaveDraftInput)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -1392,7 +1393,14 @@ export default function StudioChat({
       }
       setImageAction(null);
       if (!preparedTarget && typeof prepareImageVersion === "function") {
-        const saved = await prepareImageVersion({pieceId: draft.pieceId, baseVersion: draft.baseVersion, expectedLatestVersion: draft.expectedLatestVersion,operation:action.proposal.operation,...(action.proposal.changedDimension?{changedDimension:action.proposal.changedDimension}:{})});
+        const saved = await prepareImageVersion({
+          pieceId: draft.pieceId,
+          baseVersion: draft.baseVersion,
+          expectedLatestVersion: draft.expectedLatestVersion,
+          operation: action.proposal.operation,
+          ...(action.proposal.changedDimension ? { changedDimension: action.proposal.changedDimension } : {}),
+          ...(action.artworkInput.frame ? { frameId: action.artworkInput.frame.id } : {}),
+        });
         if (!saved || saved.status !== "completed" || saved.pieceId !== draft.pieceId || typeof saved.version!=="number" || !Number.isSafeInteger(saved.version) || saved.version <= draft.baseVersion) throw Error("Não foi possível preparar a nova versão. Confira o histórico antes de tentar novamente.");
         target = {pieceId: saved.pieceId, version: saved.version};
         if (!isCurrentScope()) return;
@@ -1524,7 +1532,7 @@ export default function StudioChat({
             blob: image,
             pieceId: target.pieceId,
             version: target.version,
-            ...(action.proposal.frameId ? { frameId: action.proposal.frameId } : {}),
+            ...(artworkInput.frame ? { frameId: artworkInput.frame.id } : {}),
             assetId: data.assetId,
             creationContext:{postContext:getState().adjustments.find(item=>item.id===action.requestId)?.context.postContext??postContext(getState(),target.pieceId),references:getState().adjustments.find(item=>item.id===action.requestId)?.context.references.filter(reference=>action.proposal.referenceIds.includes(reference.id))??[]},
           })!==true)throw Error('image application unconfirmed');

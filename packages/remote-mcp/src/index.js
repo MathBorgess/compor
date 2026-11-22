@@ -94,6 +94,14 @@ const pieceVersionSchema = z.strictObject({
   project_id: uuid, piece_id: uuid, version: z.number().int().positive(),
   content: pieceContentSchema, created_at: z.string(),
 });
+// Studio-only content is stored in the same rows and stays outside the MCP contract.
+const readablePieceVersionSchema = pieceVersionSchema.extend({
+  content: pieceContentSchema.extend({
+    format: z.unknown().optional(),
+    visualInvariants: z.unknown().optional(),
+    frames: z.unknown().optional(),
+  }).transform(({ format, visualInvariants, frames, ...content }) => content),
+});
 
 /** Calls a transactional RPC and reads with both owner filtering and RLS. */
 export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
@@ -125,7 +133,7 @@ export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
       let previousId = after ?? '';
       let previousVersion = 0;
       for (const { projects, ...row } of rows) {
-        const version = pieceVersionSchema.parse(row);
+        const version = readablePieceVersionSchema.parse(row);
         if (projects?.owner_id !== context.actor.userId || version.project_id !== projectId ||
             version.piece_id < previousId || (version.piece_id === previousId && (!previousVersion || version.version >= previousVersion))) {
           throw new Error('Resposta inválida do serviço de peças.');
@@ -142,7 +150,7 @@ export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
     },
     async save(context, { projectId, pieceId, expectedVersion, content }) {
       const result = await query(new URL('/rest/v1/rpc/save_piece_version', base), context, {
-        p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_content: content,
+        p_project_id: projectId, p_piece_id: pieceId, p_expected_version: expectedVersion, p_content: pieceContentSchema.parse(content),
       });
       if (result?.status === 'not_found') return { status: 'not_found' };
       if (result?.status === 'conflict' && Number.isSafeInteger(result.currentVersion) && result.currentVersion >= 0) {
@@ -164,7 +172,7 @@ export function createSupabasePieceStore({ url, anonKey, fetchImpl = fetch }) {
       const rows = await query(endpoint, context);
       if (!Array.isArray(rows)) throw new Error('Resposta inválida do serviço de peças.');
       return rows.map(({ projects, ...row }) => {
-        const version = pieceVersionSchema.parse(row);
+        const version = readablePieceVersionSchema.parse(row);
         if (projects?.owner_id !== context.actor.userId || version.project_id !== projectId || version.piece_id !== pieceId) throw new Error('Resposta inválida do serviço de peças.');
         return version;
       });
