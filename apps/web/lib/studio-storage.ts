@@ -1,11 +1,11 @@
 import * as z from './schema.ts';
 import {referenceSchema, type StudioReference, type StudioState, type StudioScope} from './studio-domain.ts';
-export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview'}
+export interface DraftAssetAddress {pieceId:string;baseVersion:number;kind:'base'|'preview';frameId?:string}
 export interface DraftAssetMetadata extends DraftAssetAddress {mime:string;size:number;width:number;height:number}
 export interface StoredReference {metadata:StudioReference;file:Blob}
 export interface StoredDraftAsset {metadata:DraftAssetMetadata;file:Blob}
 interface StoredRecord {key:string;scope:string;metadata:StudioReference|DraftAssetMetadata;file:Blob}
-const assetMetadataSchema=z.strictObject({pieceId:z.string(),baseVersion:z.number(),kind:z.enum(['base','preview']),mime:z.string(),size:z.number(),width:z.number(),height:z.number()});
+const assetMetadataSchema=z.strictObject({pieceId:z.string(),baseVersion:z.number(),kind:z.enum(['base','preview']),frameId:z.optional(z.string()),mime:z.string(),size:z.number(),width:z.number(),height:z.number()});
 const recordSchema=z.object({key:z.string(),scope:z.string(),metadata:z.union([referenceSchema,assetMetadataSchema]),file:z.instanceof(Blob)});
 function parseRecord(input:unknown):StoredRecord {const value=recordSchema.safeParse(input);if(!value.success)throw new StudioStorageError('studio_storage_corrupt');return value.data;}
 function parseRecords(input:unknown):StoredRecord[]{if(!Array.isArray(input))throw new StudioStorageError('studio_storage_corrupt');return input.map(parseRecord);}
@@ -21,10 +21,15 @@ export class StudioStorageError extends Error {
 const uuid = (value:unknown):value is string => typeof value==='string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(value);
 function scopeOf({userId,projectId}: Partial<StudioScope>={}) { if(!uuid(userId)||!uuid(projectId))throw new StudioStorageError('studio_storage_invalid');return JSON.stringify([userId,projectId]); }
 const referenceKey = (scope:string,id:string) => {if(!uuid(id))throw new StudioStorageError('studio_storage_invalid');return JSON.stringify([scope,id]);};
-function draftAddress(scope:string,{pieceId,baseVersion,kind}:Partial<DraftAssetAddress>={}) {if(!uuid(pieceId)||typeof baseVersion!=='number'||!Number.isSafeInteger(baseVersion)||baseVersion<0||(kind!=='base'&&kind!=='preview'))throw new StudioStorageError('studio_storage_invalid');return{key:JSON.stringify([scope,pieceId,baseVersion,kind]),pieceId,baseVersion,kind};}
+function draftAddress(scope:string,{pieceId,baseVersion,kind,frameId}:Partial<DraftAssetAddress>={}) {if(!uuid(pieceId)||typeof baseVersion!=='number'||!Number.isSafeInteger(baseVersion)||baseVersion<0||(kind!=='base'&&kind!=='preview')||(frameId!==undefined&&!uuid(frameId)))throw new StudioStorageError('studio_storage_invalid');return{key:frameId===undefined?JSON.stringify([scope,pieceId,baseVersion,kind]):JSON.stringify([scope,pieceId,baseVersion,kind,frameId]),pieceId,baseVersion,kind,...(frameId===undefined?{}:{frameId})};}
 const storageError = (error: unknown) => error instanceof StudioStorageError ? error : new StudioStorageError(error instanceof Error && error.name==='QuotaExceededError'?'studio_storage_quota':'studio_storage_unavailable');
 const metadataValid = (value: StudioReference) => value && Object.getPrototypeOf(value)===Object.prototype && referenceSchema.safeParse(value).success && uuid(value.id) && typeof value.name==='string' && value.name.length>0 && value.name.length<=200 && !/sk-[A-Za-z0-9_-]{20,}/.test(value.name) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size>0 && value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
-const assetMetadataValid = (value: DraftAssetMetadata) => value && Object.getPrototypeOf(value)===Object.prototype && Object.keys(value).sort().join(',')==='baseVersion,height,kind,mime,pieceId,size,width' && uuid(value.pieceId) && Number.isSafeInteger(value.baseVersion)&&value.baseVersion>=0 && ['base','preview'].includes(value.kind) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size)&&value.size>0&&value.size<=STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width)&&value.width>0 && Number.isSafeInteger(value.height)&&value.height>0 && value.width*value.height<=40_000_000;
+const assetMetadataValid = (value: DraftAssetMetadata) => {
+  if (!value || Object.getPrototypeOf(value) !== Object.prototype) return false;
+  const sortedKeys = Object.keys(value).sort().join(',');
+  if (sortedKeys !== 'baseVersion,height,kind,mime,pieceId,size,width' && sortedKeys !== 'baseVersion,frameId,height,kind,mime,pieceId,size,width') return false;
+  return uuid(value.pieceId) && (value.frameId === undefined || uuid(value.frameId)) && Number.isSafeInteger(value.baseVersion) && value.baseVersion >= 0 && ['base','preview'].includes(value.kind) && ['image/png','image/jpeg'].includes(value.mime) && Number.isSafeInteger(value.size) && value.size > 0 && value.size <= STUDIO_LIMITS.referenceBytes && Number.isSafeInteger(value.width) && value.width > 0 && Number.isSafeInteger(value.height) && value.height > 0 && value.width * value.height <= 40_000_000;
+};
 const recordValid = (record: StoredRecord,asset=false) => record && (asset?("pieceId" in record.metadata && assetMetadataValid(record.metadata)):("id" in record.metadata && metadataValid(record.metadata))) && record.file instanceof Blob && record.file.size===record.metadata.size && record.file.type===record.metadata.mime;
 
 function checkGlobalBudget(references:StoredRecord[],assets:StoredRecord[],replacementKey:string|null,newSize:number) {
@@ -247,7 +252,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
         const dimensions=await studioImageDimensions(file);
         image=await decodeImage(file);
         if(!await studioImageDimensionsMatch(file,dimensions,image))throw Error();
-        metadata={pieceId:address.pieceId,baseVersion:address.baseVersion,kind:address.kind,mime:file.type,size:file.size,width:image.width,height:image.height};
+        metadata={pieceId:address.pieceId,baseVersion:address.baseVersion,kind:address.kind,...(address.frameId===undefined?{}:{frameId:address.frameId}),mime:file.type,size:file.size,width:image.width,height:image.height};
         if(!assetMetadataValid(metadata))throw Error();
       }catch{throw new StudioStorageError('studio_draft_asset_invalid');}
       finally{try{image?.close();}catch{}}
@@ -268,7 +273,7 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
     const scopeKey=scopeOf(scope),address=draftAddress(scopeKey,input);
     return transaction(['draftAssets'],'readonly',(tx,done,fail)=>{
       const request=tx.objectStore('draftAssets').get(address.key);
-      request.onsuccess=()=>{const raw:unknown=request.result;if(raw===undefined){done(null);return;}let value;try{value=parseRecord(raw);}catch(error){fail(error);return;}if(value.scope!==scopeKey||!("pieceId" in value.metadata)||!recordValid(value,true)||value.metadata.pieceId!==address.pieceId||value.metadata.baseVersion!==address.baseVersion||value.metadata.kind!==address.kind){fail(new StudioStorageError('studio_storage_corrupt'));return;}done({metadata:Object.freeze({...value.metadata}),file:value.file});};
+      request.onsuccess=()=>{const raw:unknown=request.result;if(raw===undefined){done(null);return;}let value;try{value=parseRecord(raw);}catch(error){fail(error);return;}if(value.scope!==scopeKey||!("pieceId" in value.metadata)||!recordValid(value,true)||value.metadata.pieceId!==address.pieceId||value.metadata.baseVersion!==address.baseVersion||value.metadata.kind!==address.kind||value.metadata.frameId!==address.frameId){fail(new StudioStorageError('studio_storage_corrupt'));return;}done({metadata:Object.freeze({...value.metadata}),file:value.file});};
     });
   }
   // Preserve an existing destination, including one written by another tab.
@@ -283,12 +288,12 @@ export function createStudioStorage({indexedDB=globalThis.indexedDB, name='compo
         let references:StoredRecord[]|undefined,records:StoredRecord[]|undefined;
         const copy=()=>{if(!references||!records)return;try{
           const original=records.find(record=>record.key===from.key),existing=records.find(record=>record.key===to.key);
-          const matches=(record:StoredRecord,address:ReturnType<typeof draftAddress>)=>record.scope===scopeKey && 'pieceId' in record.metadata && recordValid(record,true) && record.metadata.pieceId===address.pieceId && record.metadata.baseVersion===address.baseVersion && record.metadata.kind===address.kind;
+          const matches=(record:StoredRecord,address:ReturnType<typeof draftAddress>)=>record.scope===scopeKey && 'pieceId' in record.metadata && recordValid(record,true) && record.metadata.pieceId===address.pieceId && record.metadata.baseVersion===address.baseVersion && record.metadata.kind===address.kind && record.metadata.frameId===address.frameId;
           if(existing){if(!matches(existing,to))throw new StudioStorageError('studio_storage_corrupt');done('exists');return;}
           if(!original){done('missing');return;}
           if(!matches(original,from)||!('pieceId' in original.metadata))throw new StudioStorageError('studio_storage_corrupt');
           checkGlobalBudget(references,records,null,original.file.size);
-          store.add({key:to.key,scope:scopeKey,metadata:{...original.metadata,baseVersion:to.baseVersion},file:original.file});done('copied');
+          store.add({key:to.key,scope:scopeKey,metadata:{...original.metadata,baseVersion:to.baseVersion,...(to.frameId===undefined?{}:{frameId:to.frameId})},file:original.file});done('copied');
         }catch(error){fail(error);}};
         refs.onsuccess=()=>{try{references=parseRecords(refs.result);copy();}catch(error){fail(error);}};
         assets.onsuccess=()=>{try{records=parseRecords(assets.result);copy();}catch(error){fail(error);}};

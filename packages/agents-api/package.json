@@ -118,6 +118,11 @@
       "types": "./src/exploration-plan-contract.d.ts",
       "import": "./src/exploration-plan-contract.mjs",
       "default": "./src/exploration-plan-contract.mjs"
+    },
+    "./creative-skills": {
+      "types": "./src/creative-skills/index.d.ts",
+      "import": "./src/creative-skills/index.mjs",
+      "default": "./src/creative-skills/index.mjs"
     }
   },
   "scripts": {

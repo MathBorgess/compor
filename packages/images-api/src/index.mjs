@@ -7,6 +7,7 @@ const MAX_REQUEST = 3 * 1024 * 1024;
 const MAX_RESPONSE = 12 * 1024 * 1024;
 const endpoint = 'https://api.openai.com/v1/images';
 const MAX_INPUT_IMAGES_BYTES = 2 * 1024 * 1024;
+export const SUPPORTED_IMAGE_SIZES = Object.freeze(['1024x1280', '864x1536']);
 
 function json(data, status) {
   return Response.json(data, { status, headers: { 'Cache-Control': 'no-store' } });
@@ -54,10 +55,12 @@ export function createImageHandler({ authenticate, fetch: fetchApi = globalThis.
     if (reviewCandidate && requiredText !== undefined && (!Array.isArray(requiredText) || requiredText.length > 23
       || !Array.from(requiredText).every(text => typeof text === 'string' && text.length <= 500
         && text.trim() && text.isWellFormed() && !text.includes(body.apiKey)))) return json({ error: 'invalid_request' }, 400);
+    const size = body.size === undefined ? '1024x1280' : body.size;
+    if (typeof size !== 'string' || !SUPPORTED_IMAGE_SIZES.includes(size)) return json({ error: 'invalid_request' }, 400);
     let images;
     try { images = imageInputs(body.images); } catch { return json({ error: 'invalid_request' }, 400); }
     try {
-      const options = {model: 'gpt-image-2.6-flare', prompt: body.prompt, size: '1024x1280', quality: 'auto', output_format: 'png', n: 1};
+      const options = {model: 'gpt-image-2.6-flare', prompt: body.prompt, size, quality: 'auto', output_format: 'png', n: 1};
       let payload, headers = {Authorization: `Bearer ${body.apiKey}`};
       if (images.length) {
         payload = new FormData();

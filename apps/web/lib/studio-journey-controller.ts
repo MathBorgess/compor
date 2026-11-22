@@ -1,9 +1,9 @@
 import {postMutationSchema,postNameSchema,type PostRecord} from './post-catalog';
 import {savedVersionSchema,type PieceVersion} from './studio-piece-contract';
-import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePieceContent,selectVersion,updateBrief} from './studio-state';
+import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePieceContent,selectVersion,setPostFormat,updateBrandVoice,updateBrief} from './studio-state';
 import {cancelPostPreparation,completePostPreparation,startPostPreparation,updateLegacyPostName,updatePostPreparation,updateWorkflow} from './studio-workflow';
 import {selectScopedReference,unselectScopedReference,updatePostContext} from './studio-post-context';
-import type {ActionResult,DraftContext,PostContext,StudioState} from './studio-domain';
+import type {ActionResult,BrandVoice,DraftContext,PostContext,PostFormat,StudioState} from './studio-domain';
 import type {DraftAssetAddress, createStudioStorage} from './studio-storage';
 import type {ImageProposal} from '@compor/agents-api/image-proposal';
 
@@ -26,7 +26,7 @@ export type PostCreationResult=
   | {status:'created';post:PostRecord;retained:RetainedProposal}
   | {status:'superseded';post:PostRecord}
   | {status:'unknown'|'unavailable'};
-type SaveInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>;
+export type SaveDraftInput=DraftContext&Partial<Pick<ImageProposal,'operation'|'changedDimension'>>&{frameId?:string};
 export type VersionImagePublication='published'|'absent'|'conflict'|'unknown';
 type PreparedVersionImage=
   | {status:'ready';publish:(version:number)=>Promise<VersionImagePublication>}
@@ -66,13 +66,22 @@ export function createStudioJourneyController(port:StatePort) {
     });
   }
 
-  function changePreparation(patch:Partial<PostContext&{name:string}>) {
+  function changePreparation(patch:Partial<PostContext&{name:string;format:PostFormat;targetFrameCount:number}>) {
     return change(value=>{
       if(value.workflow.pendingPost)return updatePostPreparation(value,patch);
       const draft=getCurrentDraft(value);
       if(!draft)return value;
-      const next=updatePostContext(value,draft.pieceId,patch);
-      return 'name' in patch?updateLegacyPostName(next,draft.pieceId,patch.name??''):next;
+      const contextPatch:Partial<PostContext>={};
+      if(patch.objective!==undefined)contextPatch.objective=patch.objective;
+      if(patch.message!==undefined)contextPatch.message=patch.message;
+      if(patch.action!==undefined)contextPatch.action=patch.action;
+      let next=Object.keys(contextPatch).length?updatePostContext(value,draft.pieceId,contextPatch):value;
+      if('name' in patch)next=updateLegacyPostName(next,draft.pieceId,patch.name??'');
+      if(patch.format!==undefined||patch.targetFrameCount!==undefined){
+        const currentFormat=next.posts[draft.pieceId]?.format??draft.content.format??'single';
+        next=setPostFormat(next,draft.pieceId,patch.format??currentFormat,patch.targetFrameCount);
+      }
+      return next;
     });
   }
 
@@ -112,28 +121,41 @@ export function createStudioJourneyController(port:StatePort) {
     finally {locks.creation.current=false;}
   }
 
-  async function saveCurrent(options:SavePorts,args?:SaveInput):Promise<SaveResult> {
+  async function saveCurrent(options:SavePorts,args?:SaveDraftInput):Promise<SaveResult> {
     const current=port.getState(),selected=getCurrentDraft(current);
     if(!selected||locks.save.current)throw Error('save_unavailable');
     const draft=selected;
     if(args?.pieceId&&(args.pieceId!==draft.pieceId||args.baseVersion!==draft.baseVersion||args.expectedLatestVersion!==draft.expectedLatestVersion))throw Error('context_changed');
+    const targetFrame=args?.frameId===undefined?undefined:draft.content.frames?.find(frame=>frame.id===args.frameId);
+    if(args?.frameId!==undefined&&(!args.operation||!targetFrame))throw Error('context_changed');
     locks.save.current=true;
     const unknown=(notice:SaveResult['notice']='unknown'):SaveResult=>({result:{status:'unknown'},notice});
+    const assetScope={userId:current.userId,projectId:current.projectId};
     const source:DraftAssetAddress={pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base'};
     let prepared:PreparedVersionImage|undefined;
     async function adopt(version:PieceVersion,recovered:boolean):Promise<SaveResult> {
       if(!sameScope(current))return unknown('inactive');
       if(version.project_id!==current.projectId||version.piece_id!==draft.pieceId||version.version!==draft.expectedLatestVersion+1)throw Error('save_unconfirmed');
-      // Generation saves the text first. Its image arrives afterwards and is the
-      // first bytes of that version, rather than a copy of the previous artwork.
+      const destination={...source,baseVersion:version.version};
       if(!args?.operation){
         if(prepared?.status==='ready'){
           const published=await prepared.publish(version.version);
           if(!sameScope(current))return unknown('inactive');
           if(published==='unknown')return unknown();
-        }else if(!options.prepareVersionImage&&!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-          source,
-          {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+        }else if(!options.prepareVersionImage&&!args?.changedDimension){
+          await options.copyDraftAsset(assetScope,source,destination);
+        }
+      }
+      // Other frames carry forward; the target slot must stay free for its new image.
+      if(targetFrame||(!args?.operation&&!args?.changedDimension)){
+        for(const frame of version.content.frames??[]){
+          if(frame.id!==targetFrame?.id)await options.copyDraftAsset(assetScope,{...source,frameId:frame.id},{...destination,frameId:frame.id});
+        }
+      }
+      if(targetFrame&&targetFrame.position>1){
+        // The anchor can also be an older version-level image or a working preview.
+        await options.copyDraftAsset(assetScope,source,destination);
+        if(source.baseVersion>=1)await options.copyDraftAsset(assetScope,{...source,kind:'preview'},{...destination,kind:'preview'});
       }
       if(!sameScope(current))return unknown('inactive');
       if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}
@@ -189,6 +211,8 @@ export function createStudioJourneyController(port:StatePort) {
     cancelPreparation:()=>change(cancelPostPreparation),
     editDraft:(input:Parameters<typeof editDraft>[1])=>change(state=>editDraft(state,input)),
     updateBrief:(patch:Parameters<typeof updateBrief>[1])=>change(state=>updateBrief(state,patch)),
+    updateBrandVoice:(patch:Partial<BrandVoice>)=>change(state=>updateBrandVoice(state,patch)),
+    setPostFormat:(pieceId:string,format:PostFormat,frameCount?:number)=>change(state=>setPostFormat(state,pieceId,format,frameCount)),
     updateWorkflow:(patch:Parameters<typeof updateWorkflow>[1])=>change(state=>updateWorkflow(state,patch)),
     updatePostContext:(pieceId:string,patch:Partial<PostContext>)=>change(state=>updatePostContext(state,pieceId,patch)),
     selectReference:(reference:Parameters<typeof selectScopedReference>[1],scope:string)=>change(state=>selectScopedReference(state,reference,scope)),

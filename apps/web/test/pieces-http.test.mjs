@@ -43,6 +43,38 @@ test('lista versões com metadata pelo RPC autorizado e rejeita projeto divergen
   assert.doesNotMatch(await denied.text(), /Inscreva-se|fake-user-token/);
 });
 
+test('salva um Story sem base explícita usando a revisão esperada e preserva o formato', async () => {
+  const { createProjectPieceStore } = await import('../lib/piece-store.ts');
+  const story = { ...content, format: 'story' };
+  const row = { project_id: projectId, piece_id: pieceId, version: 2, content: story, created_at: '2026-11-21T00:00:00Z', metadata: {baseVersion:1,revision:0,approval:{status:'unapproved',kind:null,sourceVersion:null,at:null}} };
+  const store = createProjectPieceStore({ url: 'https://example.supabase.co', anonKey: 'sb_publishable_test', fetchImpl: async (url, options) => {
+    assert.equal(url.pathname, '/rest/v1/rpc/save_piece_version_v2');
+    assert.equal(options.headers.authorization, 'Bearer fake-user-token');
+    assert.deepEqual(JSON.parse(options.body), { p_project_id:projectId, p_piece_id:pieceId, p_expected_version:1, p_base_version:1, p_content:story });
+    return Response.json({status:'saved',version:row});
+  } });
+  const routes = createPieceRoutes({ appOrigin:'https://compor.test', resolveActor:async () => actor, ownsProject:async () => true, pieceStore:store });
+  const response = await routes.POST(request({ projectId, pieceId, expectedVersion:1, content:story }));
+  assert.equal(response.status, 200);
+  assert.deepEqual(await response.json(), { status:'saved', version:row });
+});
+
+test('aceita o plano de carrossel e rejeita lâminas em um Story antes de gravar', async () => {
+  const frames = [1, 2, 3].map(position => ({
+    id:`22222222-2222-4222-8222-22222222222${position}`,
+    position, role:'', headline:'', body:'', visualCue:'', assetId:null,
+  }));
+  const carousel = { ...content, format:'carousel', visualInvariants:'Mesma tipografia', frames };
+  const calls = [];
+  const routes = createPieceRoutes({ appOrigin:'https://compor.test', resolveActor:async () => actor, ownsProject:async () => true, pieceStore:{
+    save:async (_context, input) => { calls.push(input); return {status:'saved'}; },
+  } });
+  const version = { projectId, pieceId, expectedVersion:1, baseVersion:1 };
+  assert.equal((await routes.POST(request({ ...version, content:carousel }))).status, 200);
+  assert.equal((await routes.POST(request({ ...version, content:{ ...carousel, format:'story' } }))).status, 400);
+  assert.deepEqual(calls, [{ ...version, content:carousel }]);
+});
+
 test('base explícita e aprovação usam contratos distintos sem aceitar aprovação inventada',async()=>{
  let saved,approved;
  const routes=createPieceRoutes({appOrigin:'https://compor.test',resolveActor:async()=>actor,ownsProject:async()=>true,pieceStore:{

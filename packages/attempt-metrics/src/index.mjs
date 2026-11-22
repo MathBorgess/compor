@@ -1,14 +1,15 @@
 import { randomUUID } from 'node:crypto';
 
 const pricingVersion = 'openai-public-2026-11-03';
+const allowedImageSizes = ['1024x1024', '1024x1280', '864x1536'];
 const nonnegativeInteger = value => Number.isSafeInteger(value) && value >= 0 && value <= 100_000_000;
 
 export function createAttempt({ kind, model, image, clock = () => performance.now() }) {
   if (!((kind === 'agent' && model === 'gpt-6-astra') || (kind === 'image' && ['gpt-image-2.5-flare', 'gpt-image-2.6-flare'].includes(model))) || typeof clock !== 'function') throw new TypeError('invalid attempt configuration');
-  if (kind === 'image' && (image?.size !== '1024x1024' || !['auto', 'low'].includes(image?.quality))) throw new TypeError('invalid image configuration');
+  if (kind === 'image' && (!allowedImageSizes.includes(image?.size) || !['auto', 'low'].includes(image?.quality))) throw new TypeError('invalid image configuration');
   const startedAt = clock();
   if (!Number.isFinite(startedAt)) throw new TypeError('invalid clock');
-  let record = { id: randomUUID(), kind, model, ...(kind === 'image' ? { image: { size: '1024x1024', quality: image.quality } } : {}), state: 'started', durationMs: null, usage: null, estimatedCost: null, infrastructureCost: null };
+  let record = { id: randomUUID(), kind, model, ...(kind === 'image' ? { image: { size: image.size, quality: image.quality } } : {}), state: 'started', durationMs: null, usage: null, estimatedCost: null, infrastructureCost: null };
   function snapshot() { return structuredClone(record); }
   function complete(usage) {
     if (record.state !== 'started') throw new Error('attempt already finished');

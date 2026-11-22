@@ -22,6 +22,13 @@ export function createParallelDispatcher(options:Options){
   const commandAbort=new AbortController();
   const stillAllowed=()=>active&&allowed();
   const ensure=()=>{if(!stillAllowed())throw Error('parallel_paused');};
+  const abortableSleep=(ms:number)=>new Promise<void>(resolve=>{
+    if(commandAbort.signal.aborted){resolve();return;}
+    let settled=false;
+    const finish=()=>{if(settled)return;settled=true;commandAbort.signal.removeEventListener('abort',finish);resolve();};
+    commandAbort.signal.addEventListener('abort',finish,{once:true});
+    void sleep(ms).then(finish,finish);
+  });
   const credentialHeader=(value:ParallelPreparation,key:string):Record<string,string>=>value.credentialSource==='byok'?{'x-compor-openai-key':key}:{};
   function authorityScope(value:ParallelPreparation):VisualAuthorityScope{return {userId:value.userId,projectId:value.projectId,conversationId:value.conversationId,requestId:value.planRequestId,batchId:value.batchId,purpose:'parallel'};}
   async function authority(value:ParallelPreparation){
@@ -55,14 +62,14 @@ export function createParallelDispatcher(options:Options){
     current=snapshot?await store.createBeforePlanningWithVisual(preparation,snapshot):await store.createBeforePlanning(preparation);ensure();
     if(snapshot&&options.createVisualAuthoritySnapshot){await options.createVisualAuthoritySnapshot(authorityScope(current),snapshot.manifest);ensure();}
     const intentAuthority=await authority(current);ensure();
-    const intentEpoch=await intents.create(current,apiKey,intentAuthority);ensure();
+    const intentEpoch=await intents.create(current,apiKey,intentAuthority,commandAbort.signal);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:intentEpoch});ensure();
     if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     current=await store.updatePreparation(current.userId,current.revision,{kind:'plan_submitted'});ensure();
     onPlanning('planning');
     let plan=await readPlan(current,apiKey,'submit');
     while(plan.status==='running'&&stillAllowed()){
-      await sleep(3000);ensure();plan=await readPlan(current,apiKey,'poll');
+      await abortableSleep(3000);ensure();plan=await readPlan(current,apiKey,'poll');
     }
     ensure();
     if(plan.status!=='completed'||!plan.planBinding)throw Error('plan_unconfirmed');
@@ -84,7 +91,7 @@ export function createParallelDispatcher(options:Options){
     const executionAuthority=await authority(attempt);ensure();
     if(executionAuthority&&visual)assertReferenceVisualCapability(attempt.userId,visual,executionAuthority.headers);
     const command=fetchApi('/api/studio/exploration-batches/execute',{method:'POST',headers:{...headers,...executionAuthority?.headers,...credentialHeader(attempt,apiKey)},signal:commandAbort.signal,body:JSON.stringify({projectId:attempt.projectId,conversationId:attempt.conversationId,batchId:attempt.batchId,intentId:attempt.intentId,planRequestId:attempt.planRequestId,context:attempt.context,plan:attempt.plan,planBinding:binding,imageIds:attempt.imageIds,...(visual?{visualInput:visual,referenceImages:images}:{})})}).catch(()=>null);
-    const observation=observeParallelBatch({inspect:()=>recovery.inspectBatch(attempt,now,visible),isActive:()=>active&&canInspect(),onObservation:onSnapshot,onUnavailable,sleep,intervalMs:3000});
+    const observation=observeParallelBatch({inspect:()=>recovery.inspectBatch(attempt,now,visible),isActive:()=>active&&canInspect(),onObservation:onSnapshot,onUnavailable,sleep:abortableSleep,intervalMs:3000});
     // Stopping observation must not hold the account lock until an already
     // dispatched server request returns. Its outcome remains in the journal.
     void command;
@@ -112,7 +119,7 @@ export function createParallelDispatcher(options:Options){
     const scope={userId:latest.userId,projectId:latest.projectId,batchId:latest.batchId};
     current=await store.reissuePlannedIntent(scope,latest.revision,newIntentId,latest.revocationEpoch);ensure();
     const resumedAuthority=await authority(current);ensure();
-    const createdEpoch=await intents.create(current,apiKey,resumedAuthority);ensure();
+    const createdEpoch=await intents.create(current,apiKey,resumedAuthority,commandAbort.signal);ensure();
     current=await store.updatePreparation(current.userId,current.revision,{kind:'intent_confirmed',epoch:createdEpoch});ensure();
     if(options.beforePlan){await options.beforePlan(current,commandAbort.signal);ensure();}
     await executePlanned(current,recovered.binding,apiKey);

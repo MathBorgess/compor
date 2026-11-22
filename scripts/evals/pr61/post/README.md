@@ -17,3 +17,24 @@ python3 scripts/evals/pr61/post/report.py "$bancada"
 ```
 
 O relatório combinado exige as quatro rodadas completas, resultados correspondentes e versões idênticas de casos e rubrica. A unidade de comparação é a arte disponível. O marcador de prontidão é um proxy restrito à peça visual. O relatório identifica pixels ausentes e o grupo reservado tem apenas dois casos. O ensaio não confirma desejo humano de publicar, qualidade da legenda, preservação de versão ou efeito sobre uma população de criadores.
+
+## Suíte estendida (`--suite extended`)
+
+Para avaliar as skills criativas curadas, a skill dedicada de `copy-na-imagem` (`on-image-copy.v1`), o perfil de voz (`brandVoice`) e os quatro modos nativos do Instagram (`single` 4:5, `carousel` 4:5, `collection` 4:5 e `story` 9:16), a bancada inclui uma suíte aditiva que preserva integralmente a suíte legada (`--suite legacy`, padrão):
+
+- **Casos sintéticos:** `casos-estendidos.json` (8 casos: 5 em `desenvolvimento` e 3 em `reserva`, cobrindo os 4 formatos, fatos confirmados e restrições `brandVoice.avoid`).
+- **Rubrica estendida:** `rubrica-estendida.md` (dimensões universais `gancho`, `adequacaoAoPerfil`, `leitura`, `adequacao` e `sinergiaLegenda` quando `caption.txt` estiver presente; condicionais `coesaoVisual` e `progressaoOuRitmo` para carrossel/coleção; `zonasSeguras` para story 9:16 com painel comparativo 360 px limpo + guia 15%/25%/16%).
+- **Portão crítico de voz e fatos:** além de `omissao`, `alteracao`, `inventado` e `texto_proibido`, registra `cliche_ou_evitar` quando a arte ou a legenda viola `brandVoice.avoid` ou usa clichês proibidos. Qualquer lâmina ausente em carrossel/coleção mantém o caso como `sem_pixels`.
+
+```sh
+# 1. Gerar rodada 0 (baseline) e rodada 1 (candidata) com chave em memória via clipboard (macOS) ou --key-stdin:
+node scripts/evals/pr61/post/run-extended.mjs --root "$bancada" --round 0 --arm baseline --confirm-paid-run
+node scripts/evals/pr61/post/run-extended.mjs --root "$bancada" --round 1 --arm candidate --confirm-paid-run
+
+# 2. Julgar e consolidar relatório (Codex autenticado via ChatGPT, sem API key):
+python3 scripts/evals/pr61/post/judge.py "$bancada" 0 --suite extended
+python3 scripts/evals/pr61/post/judge.py "$bancada" 1 --suite extended
+python3 scripts/evals/pr61/post/report.py "$bancada" --suite extended --rounds 2
+```
+
+O teste unitário offline do executor (`node --test scripts/evals/pr61/post/run-extended.test.mjs`) valida isolamento de diretório privado, injeção de skills/âncora e compatibilidade com `judge.py` sem credenciais. Os resultados de desenvolvimento vão atomicamente para `round-N/judge-5-extended.json` e os reservados ficam retidos em `juiz-visual-retido/extended-round-N.json` até o fechamento das rodadas comparadas (`juiz-visual-estendido.md` e `juiz-visual-estendido.json`). A execução real com provedor pago continua exigindo autorização explícita.

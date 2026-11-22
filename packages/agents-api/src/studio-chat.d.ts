@@ -7,12 +7,15 @@ import type {StudioBindings} from './studio-chat-bindings.js';
 import type {StudioEventName,StudioEventMetadata} from './studio-telemetry.js';
 import type {ActionInputByName} from './studio-chat-tools.js';
 import type {VisualInputManifest} from './visual-input-contract.js';
+import type {PostFormat} from './creative-skills/index.js';
 export interface StudioOfferFact {id:string;label:string;value:string;status:'confirmed'|'pending'|'omitted'}
 export type StudioAudienceResolution={status:'resolved';value:string}|{status:'conflict';brief:string;persona:string};
 export interface StudioPostContext {objective:string;message:string;action:string}
+export interface StudioBrandVoice {tone:string;examples:string;avoid:string}
+export interface StudioContextFrame {id:string;position:number;role:string;headline:string;body:string;visualCue:string;hasImage:boolean}
 export interface StudioPendingInspectionRequest {op:'inspect_pending';projectId:string;requestId:string;apiKey:string;conversationId?:string}
 export type StudioPendingInspectionResponse={status:'failed';retryAutomatically:false;error?:'provider_usage_limit'}|{status:'running'|'action_required'|'completed'|'unknown';retryAutomatically:false};
-export interface StudioContext {postContext?:StudioPostContext;revision:number;projectTitleProvisional?:boolean;offerFacts?:StudioOfferFact[];audienceResolution?:StudioAudienceResolution;[key:string]:unknown}
+export interface StudioContext {postContext?:StudioPostContext;postFormat?:PostFormat;brandVoice?:StudioBrandVoice;frames?:StudioContextFrame[];activeFrameId?:string|null;anchorImageId?:string|null;revision:number;projectTitleProvisional?:boolean;offerFacts?:StudioOfferFact[];audienceResolution?:StudioAudienceResolution;[key:string]:unknown}
 export type DurableAction=(ProjectScope & {name:'compor_renomear_projeto';args:ActionInputByName['compor_renomear_projeto'];result:{status:'completed';title:string}})|(ProjectScope & {name:'compor_salvar_versao';args:ActionInputByName['compor_salvar_versao'];result:{status:'completed';pieceId:string;version:number}});
 type StudioVisualAuthority={pieceId:string|null;manifestDigest:string;consentSecret:string|null};
 type StudioVisualScope=ProjectScope & {requestId:string;conversationId?:string};

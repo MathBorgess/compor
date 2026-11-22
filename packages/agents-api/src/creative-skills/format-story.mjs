@@ -1,0 +1,14 @@
+export const POST_STORY_SKILL = Object.freeze({
+  id: 'story-vertical.v1',
+  version: '4.0.0',
+  format: 'story',
+  chat: [
+    'Skill story-vertical.v1 (Story Vertical 9:16 · 864x1536 · Instagram Stories / TikTok):',
+    '1. Leitura em até 2 segundos com gancho específico: telas verticais são consumidas em ritmo rápido (Stories e TikTok). Use uma ideia única, gancho curto (2 a 5 palavras) e impacto imediato — menos texto que um post de feed. Nunca use um rótulo genérico de status ("Carrinho aberto", "Inscrições abertas", "Lançamento", "Novidade") como manchete principal: a manchete deve nomear a situação/dor concreta do público ou o objeto específico da oferta, deixando o status apenas como sub-rótulo discreto quando necessário.',
+    '2. Anatomia e zonas seguras 9:16 (Instagram Stories + TikTok): mantenha os 15% superiores (planeje ~20% de folga visual no topo), os 25% inferiores (UI de resposta/legenda) e os 16% da lateral direita (planeje ~25% a 30% de folga visual à direita) totalmente livres de texto crítico e logotipos. Restrinja TODA a tipografia aos dois terços esquerdos (~65% a 68% da largura, alinhada à esquerda), reduzindo o corpo de palavras longas para nunca cruzar os 70% horizontais. Concentre manchete curta (2 a 5 palavras) e dados obrigatórios agrupados em no máximo 2 linhas curtas na faixa de 20% a 55% da altura (não centralize linhas largas nem empilhe múltiplas pílulas).',
+    '3. Zoneamento da cena e interatividade nativa sem botão falso: quando o objetivo envolver link, enquete ou caixa de perguntas nativa, reserve uma faixa horizontal completamente lisa, calma e livre de objetos densos entre ~56% e ~74% da altura (ainda ACIMA dos 25% da base): no topo dessa faixa (~56%–60%, alinhado à esquerda nos 68% esquerdos), escreva 1 linha curta orientando o próximo passo em texto tipográfico solto (sem caixa, retângulo, pílula, tarja ou moldura, respeitando brandVoice.avoid), com seta fina opcional apontando para o espaço liso imediatamente abaixo (~61%–74%) destinado à figurinha nativa. Declare explicitamente no prompt a região da cena ou objeto visual principal fora dessa faixa de pouso — por exemplo, na lateral direita, na porção superior/fundo suave ou na base decorativa abaixo dos 75% — para que mãos, produtos ou ilustrações não invadam o espaço da figurinha.',
+  ].join(' '),
+  planner: [
+    'Formato story 9:16 (864x1536): composição vertical de leitura em até 2 segundos, com ~20% de folga no topo (acima dos 15%), base 25% livre para UI e ~25% de folga à direita (acima dos 16%); toda tipografia alinhada à esquerda dentro dos dois terços esquerdos (~68%), e faixa horizontal lisa e desimpedida entre ~60% e ~74% (acima dos 25% inferiores) para figurinha nativa, com a cena visual posicionada fora dessa faixa e sem botões ou tarjas falsas.',
+  ].join(' '),
+});

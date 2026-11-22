@@ -1,0 +1,213 @@
+[
+  {
+    "id": "ext-single-cafe-dev",
+    "format": "single",
+    "expectedFrames": 1,
+    "captionIncluded": true,
+    "context": {
+      "idea": "Assinatura semanal de café em grãos recém-torrado",
+      "offer": "Torra fresca toda terça, envio em 24h em São Paulo por R$ 79/mês",
+      "audience": "Quem faz café coado em casa e cansou de grão velho de mercado",
+      "goal": "Conversão direta para a assinatura pelo link da bio",
+      "direction": "Editorial limpo, luz natural lateral, foco no grão e na data da torra",
+      "brandVoice": {
+        "tone": "Direto, técnico sem esnobismo e concreto",
+        "examples": "Café sem data de torra no pacote já chegou velho na sua cozinha.",
+        "avoid": "destrave, revolucione, experiência sensorial única"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Marca", "value": "Torra Clara SP", "status": "confirmed" },
+        { "id": "f2", "label": "Preço", "value": "R$ 79/mês", "status": "confirmed" },
+        { "id": "f3", "label": "Torra", "value": "Torra toda terça", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "desenvolvimento",
+      "allowedCopy": ["Torra Clara SP", "R$ 79/mês", "Torra toda terça", "link da bio"]
+    }
+  },
+  {
+    "id": "ext-carousel-enem-dev",
+    "format": "carousel",
+    "expectedFrames": 5,
+    "captionIncluded": true,
+    "context": {
+      "idea": "Por que alunos erram porcentagem no ENEM mesmo sabendo a fórmula",
+      "offer": "Carrossel educativo de autoridade convidando para a aula aberta de quinta às 19h",
+      "audience": "Estudantes de 17 a 20 anos prestando ENEM que travam na interpretação do enunciado",
+      "goal": "Aumentar salvamentos e levar interessados a comentar AULA para receber o link",
+      "direction": "Tipografia editorial forte em fundo papel off-white com marca-texto azul cobalto",
+      "brandVoice": {
+        "tone": "Claro, didático e sem enrolação de cursinho",
+        "examples": "Você não errou a conta. Você calculou a porcentagem em cima do número errado.",
+        "avoid": "segredo revelado, hack infalível, não é sobre X, é sobre Y"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Aula", "value": "Quinta às 19h", "status": "confirmed" },
+        { "id": "f2", "label": "CTA", "value": "Comente AULA", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "desenvolvimento",
+      "allowedCopy": ["Quinta às 19h", "Comente AULA"]
+    }
+  },
+  {
+    "id": "ext-collection-ceramica-dev",
+    "format": "collection",
+    "expectedFrames": 3,
+    "captionIncluded": true,
+    "context": {
+      "idea": "Nova fornada limitada de canecas em grés esmaltado à mão",
+      "offer": "Coleção de 3 fotos editoriais apresentando a fornada de sábado no Ateliê Barro Vivo",
+      "audience": "Pessoas que compram objetos autorais para casa e valorizam textura artesanal",
+      "goal": "Despertar desejo estético e avisar a abertura das vendas sábado às 10h",
+      "direction": "Fotografia editorial quente em luz de janela, grão fino, texto apenas na foto 1",
+      "brandVoice": {
+        "tone": "Calmo, sensorial e enxuto, sem linguagem promocional agressiva",
+        "examples": "Três dias de forno para chegar nesse azul-cinza fosco.",
+        "avoid": "última chance, corra, imperdível, transforme sua casa"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Ateliê", "value": "Barro Vivo", "status": "confirmed" },
+        { "id": "f2", "label": "Abertura", "value": "Sábado às 10h", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "desenvolvimento",
+      "allowedCopy": ["Barro Vivo", "Sábado às 10h"]
+    }
+  },
+  {
+    "id": "ext-story-oficina-dev",
+    "format": "story",
+    "expectedFrames": 1,
+    "captionIncluded": false,
+    "context": {
+      "idea": "Abertura das inscrições da Oficina de Xilogravura de sábado",
+      "offer": "Oficina presencial de xilogravura dia 28/11 das 14h às 17h, 8 vagas, R$ 140",
+      "audience": "Ilustradores e iniciantes em artes gráficas em Curitiba",
+      "goal": "Levar ao adesivo de link nativo no Story",
+      "direction": "Contraste preto de tinta gráfica sobre creme quente, área inferior central livre para figurinha de link",
+      "brandVoice": {
+        "tone": "Objetivo, caloroso e com vocabulário de oficina",
+        "examples": "Goiva na mão, bloco de madeira e primeira impressão pronta no fim da tarde.",
+        "avoid": "destrave sua criatividade, oportunidade única"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Data", "value": "28/11 · 14h às 17h", "status": "confirmed" },
+        { "id": "f2", "label": "Preço", "value": "R$ 140", "status": "confirmed" },
+        { "id": "f3", "label": "Vagas", "value": "8 vagas", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "desenvolvimento",
+      "allowedCopy": ["28/11 · 14h às 17h", "R$ 140", "8 vagas"]
+    }
+  },
+  {
+    "id": "ext-carousel-ux-dev",
+    "format": "carousel",
+    "expectedFrames": 4,
+    "captionIncluded": true,
+    "context": {
+      "idea": "3 motivos pelos quais anúncios somem no feed de 360px",
+      "offer": "Post de autoridade da consultoria Traço Claro sobre leitura mobile",
+      "audience": "Fundadores e social media managers que produzem criativos no Canva",
+      "goal": "Autoridade e salvamento (sem chamada comercial)",
+      "direction": "Editorial brutalista limpo, contraste preto/branco com acento laranja, diagramas comparativos",
+      "brandVoice": {
+        "tone": "Analítico, cirúrgico e fundamentado em evidência visual",
+        "examples": "Se a frase principal exige zoom a 360px, o anúncio já perdeu o segundo decisivo.",
+        "avoid": "game-changer, vire a chave, segredo do algoritmo"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Marca", "value": "Traço Claro", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "desenvolvimento",
+      "allowedCopy": ["Traço Claro"]
+    }
+  },
+  {
+    "id": "ext-single-mentoria-res",
+    "format": "single",
+    "expectedFrames": 1,
+    "captionIncluded": true,
+    "context": {
+      "idea": "Diagnóstico gratuito de 20 minutos para clínicas odontológicas",
+      "offer": "Revisão de agenda e retorno de pacientes com a Clínica Fluxo — 5 horários nesta semana",
+      "audience": "Dentistas donos de consultório com cadeira ociosa às terças e quartas",
+      "goal": "Enviar MENSAGEM com a palavra AGENDA no direct",
+      "direction": "Limpo, sóbrio, visual concreto ligado à agenda vazia vs preenchida, sem foto de banco de imagem sorrindo",
+      "brandVoice": {
+        "tone": "Pragmático, respeitoso e focado em operação real",
+        "examples": "Dois horários vazios na terça custam mais que uma campanha bem feita.",
+        "avoid": "escale ao infinito, fature 6 dígitos, destrave"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Marca", "value": "Clínica Fluxo", "status": "confirmed" },
+        { "id": "f2", "label": "Duração", "value": "20 minutos", "status": "confirmed" },
+        { "id": "f3", "label": "CTA", "value": "Envie AGENDA no direct", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "reserva",
+      "allowedCopy": ["Clínica Fluxo", "20 minutos", "Envie AGENDA no direct"]
+    }
+  },
+  {
+    "id": "ext-collection-padaria-res",
+    "format": "collection",
+    "expectedFrames": 3,
+    "captionIncluded": true,
+    "context": {
+      "idea": "Série de fotos do pão de fermentação natural saindo do forno",
+      "offer": "Fornada de domingo na Padaria Miolo — retirada das 8h às 12h",
+      "audience": "Moradores do bairro que buscam pão artesanal no fim de semana",
+      "goal": "Lembrar da fornada de domingo e estimular reserva pelo WhatsApp",
+      "direction": "Luz natural de manhã cedo, textura de crosta e miolo, paleta trigo e madeira, texto só na abertura",
+      "brandVoice": {
+        "tone": "Próximo, simples e de bairro",
+        "examples": "Forno ligado às cinco, crosta estalando às oito.",
+        "avoid": "experiência gastronômica, revolucione seu café da manhã"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Padaria", "value": "Padaria Miolo", "status": "confirmed" },
+        { "id": "f2", "label": "Horário", "value": "Domingo · 8h às 12h", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "reserva",
+      "allowedCopy": ["Padaria Miolo", "Domingo · 8h às 12h"]
+    }
+  },
+  {
+    "id": "ext-story-lancamento-res",
+    "format": "story",
+    "expectedFrames": 1,
+    "captionIncluded": false,
+    "context": {
+      "idea": "Aviso rápido de abertura de carrinho do Guia de Plantas de Sombra",
+      "offer": "Guia ilustrado digital em PDF com 40 espécies por R$ 49 até sexta",
+      "audience": "Moradores de apartamento com pouca luz natural",
+      "goal": "Clique no link nativo do Story",
+      "direction": "Botânico editorial luminoso, espaço limpo no terço inferior para figurinha de link sem botão falso",
+      "brandVoice": {
+        "tone": "Leve, prático e sem exageros",
+        "examples": "Nem toda planta precisa de sol direto para sobreviver na sala.",
+        "avoid": "transforme sua vida, oferta imperdível, clique no botão abaixo"
+      },
+      "offerFacts": [
+        { "id": "f1", "label": "Produto", "value": "Guia de Plantas de Sombra", "status": "confirmed" },
+        { "id": "f2", "label": "Espécies", "value": "40 espécies", "status": "confirmed" },
+        { "id": "f3", "label": "Preço", "value": "R$ 49 até sexta", "status": "confirmed" }
+      ]
+    },
+    "rubric": {
+      "split": "reserva",
+      "allowedCopy": ["Guia de Plantas de Sombra", "40 espécies", "R$ 49 até sexta"]
+    }
+  }
+]

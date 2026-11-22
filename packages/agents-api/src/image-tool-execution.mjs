@@ -2,6 +2,7 @@ import {createHash,randomBytes} from 'node:crypto';
 import {isAgentCallId} from './agent-call-id.mjs';
 import { parseArtworkInput, artworkInputDigest, imageProposalDigest, validateArtworkForProposal, compileArtworkPrompt } from './artwork-input.mjs';
 import {isImageQualityReason} from './image-tool-reservation.mjs';
+import { formatImageSize } from './creative-skills/formats.mjs';
 
 const uuid = value => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const unknown = () => ({ status: 'unknown', retryAutomatically: false });
@@ -105,7 +106,8 @@ export function createImageToolExecution({ bindings, ownsVersion, reservations, 
     try {
       if (usage) {if (await usage.start(measurement) !== true) throw Error('usage unavailable'); measurementStarted=true;}
       if (visualAuthority && (signal?.aborted || await checkVisualAuthority({actor,projectId,pieceId,visualAuthority}) !== true || signal?.aborted)) throw Error('visual authority unavailable');
-      const imageRequest=new Request(`${appOrigin}/internal-image`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true}),signal:qualityHoldEnabled?signal:undefined});
+      const imageSize = input.format ? formatImageSize(input.format) : undefined;
+      const imageRequest=new Request(`${appOrigin}/internal-image`,{method:'POST',headers:{'content-type':'application/json',authorization:`Bearer ${actor.token}`},body:JSON.stringify({apiKey,prompt,...(imageSize?{size:imageSize}:{}),images:input.images.map(({mime,data})=>({mime,data})),authorizeGeneration:true}),signal:qualityHoldEnabled?signal:undefined});
       async function authorizeReview(){
         if(signal?.aborted)return false;
         try{

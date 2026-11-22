@@ -25,7 +25,7 @@ const signedTurn={...body,visualInput,visualImages};
 const emptyVisualTurn={...body,visualInput:{...visualInput,entries:[]},visualImages:[]};
 const directionSkill=/Skill direcao-visual-de-campanha@1\.2\.0/;
 const promptSkill=/Skill preparar-prompt-de-arte@1\.1\.0/;
-const instagramSkill=/Skill formatos-instagram@1\.0\.0/;
+const instagramSkill=/Skill formatos-instagram@1\.1\.0/;
 
 test('sessão de análise preserva o formato de gosto e aplica às referências presentes a instrução do servidor',async()=>{
  const f=fixture(signedVisuals),note='Veja apenas a moldura vermelha escolhida por mim.';
@@ -307,7 +307,7 @@ test('o pedido de post completo leva direção, arte e proteção de legenda aut
  assert.match(instructions,/direção escolhida continua reconhecível no prompt depois da adaptação para o canal/);
  assert.match(instructions,instagramSkill);
  assert.match(instructions,/quando o pedido indicar Instagram ou um feed móvel/);
- assert.match(instructions,/uma única arte 4:5 por pedido/);
+ assert.match(instructions,/suporta post único 4:5, carrossel 4:5/);
  assert.match(instructions,/uma prévia de feed de cerca de 360 pixels de largura, quando estiver disponível/);
  assert.match(instructions,/O que as pessoas vão fazer juntas durante a oficina\?/);
  assert.match(instructions,/Se a pessoa já pediu a geração, prossiga e identifique qualquer dinâmica de participação proposta como hipótese criativa/);

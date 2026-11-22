@@ -28,7 +28,8 @@ function fixture(){
     readVersions:async()=>versions,
     copyDraftAsset:async(assetScope,source,target)=>{
       copied.push({scope:assetScope,source,target});
-      const key=address=>`${address.pieceId}:${address.baseVersion}`;
+      const key=address=>`${address.pieceId}:${address.baseVersion}${address.kind==='preview'?':preview':''}${address.frameId?`:${address.frameId}`:''}`;
+      if(assets.has(key(target)))return 'exists';
       if(!assets.has(key(source)))return 'missing';
       assets.set(key(target),assets.get(key(source)));return 'copied';
     },
@@ -236,6 +237,54 @@ test('preparar geração não copia nem publica a imagem da versão anterior',as
   const draft=getCurrentDraft(f.state);
   const outcome=await f.controller.saveCurrent(f.saving,{pieceId:draft.pieceId,baseVersion:draft.baseVersion,expectedLatestVersion:draft.expectedLatestVersion,operation:'create'});
   assert.equal(outcome.result.status,'completed');assert.equal(published,0);assert.equal(f.copied.length,0);assert.equal(f.assets.has(`${id(3)}:1`),false);
+});
+
+test('gerar ou editar uma lâmina preserva as outras e deixa livre somente o destino da nova arte',async()=>{
+  const f=fixture();await f.create();
+  const pieceId=id(3);
+  f.controller.setPostFormat(pieceId,'carousel',3);
+  const [anchor,second,third]=getCurrentDraft(f.state).content.frames;
+  const reserve=(frameId,operation,changedDimension)=>{
+    const {baseVersion,expectedLatestVersion}=getCurrentDraft(f.state);
+    return f.controller.saveCurrent(f.saving,{pieceId,baseVersion,expectedLatestVersion,frameId,operation,changedDimension});
+  };
+  assert.equal((await reserve(anchor.id,'create')).result.status,'completed');
+  const anchorImage=new Blob(['âncora']), secondImage=new Blob(['detalhe']), oldThirdImage=new Blob(['encerramento']);
+  f.assets.set(`${pieceId}:1:${anchor.id}`,anchorImage);
+  f.assets.set(`${pieceId}:1`,anchorImage);
+  assert.equal((await reserve(second.id,'create')).result.status,'completed');
+  assert.equal(f.assets.get(`${pieceId}:2:${anchor.id}`),anchorImage);
+  assert.equal(f.assets.get(`${pieceId}:2`),anchorImage);
+  f.assets.set(`${pieceId}:2:${second.id}`,secondImage);
+  f.assets.set(`${pieceId}:2:${third.id}`,oldThirdImage);
+  assert.equal((await reserve(third.id,'edit','composition')).result.status,'completed');
+  assert.equal(f.assets.get(`${pieceId}:3:${anchor.id}`),anchorImage);
+  assert.equal(f.assets.get(`${pieceId}:3:${second.id}`),secondImage);
+  assert.equal(f.assets.get(`${pieceId}:2:${third.id}`),oldThirdImage);
+  assert.equal(f.assets.has(`${pieceId}:3:${third.id}`),false);
+  f.reopen();
+  assert.equal(getCurrentDraft(f.state).baseVersion,3);
+});
+
+test('reconciliar a reserva de uma lâmina preserva cópias existentes e a prévia da âncora',async()=>{
+  const f=fixture();await f.create();
+  const pieceId=id(3);
+  f.controller.setPostFormat(pieceId,'collection',3);
+  await f.controller.saveCurrent(f.saving);
+  const {content,baseVersion,expectedLatestVersion}=getCurrentDraft(f.state);
+  const [,second,third]=content.frames;
+  const preview=new Blob(['prévia da abertura']), existing=new Blob(['detalhe da versão reservada']);
+  f.assets.set(`${pieceId}:1:preview`,preview);
+  f.assets.set(`${pieceId}:1:${second.id}`,new Blob(['detalhe anterior']));
+  f.assets.set(`${pieceId}:2:${second.id}`,existing);
+  f.versions.push({project_id:scope.projectId,piece_id:pieceId,version:2,content,metadata:{revision:1,baseVersion:1,approval:{status:'unapproved'},operation:'create'}});
+  f.setFetch(async()=>Response.json({status:'conflict'},{status:409}));
+  const result=await f.controller.saveCurrent(f.saving,{pieceId,baseVersion,expectedLatestVersion,frameId:third.id,operation:'create'});
+  assert.equal(result.notice,'recovered');
+  assert.equal(getCurrentDraft(f.state).baseVersion,2);
+  assert.equal(f.assets.get(`${pieceId}:2:${second.id}`),existing);
+  assert.equal(f.assets.get(`${pieceId}:2:preview`),preview);
+  assert.equal(f.assets.has(`${pieceId}:2:${third.id}`),false);
 });
 
 test('uma imagem incompatível ou uma leitura de vínculo indisponível não despacha a escrita da versão',async()=>{

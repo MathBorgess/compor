@@ -1,14 +1,20 @@
 import type {JsonSchema} from './contracts.js';
+import type {PostFormat} from './creative-skills/index.js';
 interface Scope {projectId:string;revision:number;requestId:string}
+export interface FramePlanInput {id?:string;position:number;role:string;headline:string;body:string;visualCue:string}
 export interface ActionInputByName {
  compor_contexto: Omit<Scope,'revision'> & {revision?:number};
  compor_editar_briefing: Scope & {field:'offer'|'audience'|'action'|'direction';value:string};
+ compor_editar_voz: Scope & {field:'tone'|'examples'|'avoid';value:string};
  compor_editar_persona: Scope & {field:'audience'|'situation'|'need'|'culturalReferences';value:string};
  compor_registrar_afirmacao_persona: Scope & {text:string;provenance:'hypothesis'|'creator_report'|'buyer_report'|'public_source';source?:string};
  compor_propor_criterio: Scope & {viewpoint:'creator'|'recipient';dimension:'visual'|'message';statement:string;example:string;counterexample:string;exampleReferenceId:string;counterexampleReferenceId:string;provenance:'hypothesis'|'creator_report'|'buyer_report'|'public_source';source:string;tension:string};
  compor_registrar_feedback_visual: Scope & {referenceId:string;action:'selected'|'rejected'|'comment';quote:string};
  compor_comentar_imagem_gerada: Scope & {ordinal:number;quote:string};
  compor_novo_post: Scope;
+ compor_definir_formato: Scope & {pieceId:string;format:PostFormat;frameCount?:number};
+ compor_definir_plano_laminas: Scope & {pieceId:string;baseVersion:number;visualInvariants:string;frames:FramePlanInput[]};
+ compor_editar_lamina: Scope & {pieceId:string;baseVersion:number;frameId:string;field:'role'|'headline'|'body'|'visualCue';value:string};
  compor_editar_peca: Scope & {pieceId:string;baseVersion:number;field:'headline'|'price'|'date'|'caption';value:string};
  compor_adicionar_campo: Scope & {pieceId:string;baseVersion:number;label:string};
  compor_abrir_versao: Scope & {pieceId:string;version:number};
