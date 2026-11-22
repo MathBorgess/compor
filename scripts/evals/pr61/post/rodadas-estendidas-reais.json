@@ -2826,6 +2826,711 @@
           "total_tokens": 53102
         }
       }
+    },
+    {
+      "suite": "extended",
+      "round": 4,
+      "revision": "2c96e22abc9cc53debb266c0787ab6c11d89ca64",
+      "judge": {
+        "model": "gpt-6.2-sol",
+        "thread": "01a203f0-9021-7ce0-aa8e-57b0abeb24aa",
+        "tools": 0
+      },
+      "rubricaSha256": "241558555310f920d15e829ed87017e38d91cc3355a43d0bd2691050ba938012",
+      "fixtureSha256": "ef132d2947b75ac9d48a384c6ec023b70f31115fed4be117cd3298466e2dade6",
+      "casos": {
+        "desenvolvimento": [
+          {
+            "id": "ext-carousel-enem-dev",
+            "format": "carousel",
+            "expectedFrames": 5,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“A conta começa no enunciado” liga a dificuldade com porcentagem no ENEM à interpretação. O marca-texto sobre a folha encena o primeiro passo."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Qual é o valor inicial?” e “O que a questão pede?” apresentam perguntas didáticas curtas. O exemplo de R$ 150 com 20% de desconto sustenta a explicação."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, as contas se leem numa linha. Os destaques de R$ 150, R$ 120 e AULA preservam a forma das letras e dos algarismos, separados dos ornamentos."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "A última lâmina informa “Quinta às 19h” e pede “Comente AULA”. A legenda explica que o comentário dá acesso ao link e pede o salvamento."
+                },
+                "sinergiaLegenda": {
+                  "nota": 2,
+                  "evidencia": "A legenda extrai do exemplo um método reutilizável, localizar o número de referência e a resposta pedida, e recomenda marcar os dois trechos do enunciado."
+                },
+                "coesaoVisual": {
+                  "nota": 2,
+                  "evidencia": "Papel creme, tipografia azul-marinho pesada e marcas em cobalto se repetem da capa ao fechamento. Folha, marca-texto e calculadora pertencem ao mesmo universo visual."
+                },
+                "progressaoOuRitmo": {
+                  "nota": 2,
+                  "evidencia": "A capa abre a dúvida, a segunda lâmina identifica o valor inicial, a terceira calcula o desconto e a quarta encontra o preço final. A quinta convida para a aula."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Aula: Quinta às 19h",
+                  "estado": "confirmado",
+                  "evidencia": "“Quinta às 19h” aparece na última lâmina."
+                },
+                {
+                  "fato": "CTA: Comente AULA",
+                  "estado": "confirmado",
+                  "evidencia": "“Comente AULA” aparece na última lâmina e na legenda."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "carousel",
+              "expectedFrames": 5,
+              "availableFrames": 5,
+              "includeCaption": true,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "O enunciado da lâmina 2 dá o preço e o percentual, e o que se pede só aparece na lâmina 4. Inclua “Qual é o preço após o desconto?” no enunciado inicial e confira a 360 px se o leitor consegue identificar o valor de referência e a resposta pedida antes de ver a solução."
+          },
+          {
+            "id": "ext-carousel-ux-dev",
+            "format": "carousel",
+            "expectedFrames": 4,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Por que anúncios somem?” e “3 motivos que aparecem no feed de 360px” enquadram um problema de leitura mobile. A seta laranja aponta para o único anúncio que se destaca entre os cartões cinza."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Quando letra e fundo têm tons próximos, a frase perde definição na tela” descreve uma causa observável, demonstrada pelos cartões lado a lado."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, os títulos, as explicações e o pedido de salvamento são legíveis. Setas e marcas laranja ficam fora das linhas de texto."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Salve para revisar seus criativos.” fecha a peça com um uso concreto para o conteúdo e atende ao objetivo de salvamento."
+                },
+                "sinergiaLegenda": {
+                  "nota": 2,
+                  "evidencia": "A legenda transforma os exemplos visuais em uma checagem no Canva antes da exportação e pede que se verifique a leitura sem zoom."
+                },
+                "coesaoVisual": {
+                  "nota": 2,
+                  "evidencia": "As quatro lâminas repetem títulos pretos pesados, fundo branco, cartões esquemáticos, acentos laranja e assinatura central no rodapé."
+                },
+                "progressaoOuRitmo": {
+                  "nota": 2,
+                  "evidencia": "A capa promete três motivos. As lâminas seguintes desenvolvem, em ordem, tamanho, contraste e hierarquia. A última fecha com o pedido de salvamento."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Marca: Traço Claro",
+                  "estado": "confirmado",
+                  "evidencia": "“Traço Claro” aparece no rodapé das quatro lâminas."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "carousel",
+              "expectedFrames": 4,
+              "availableFrames": 4,
+              "includeCaption": true,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "Na lâmina 2, os cartões mudam de tamanho e de quantidade de linhas, o que mistura duas variáveis. Use a mesma frase curta nos dois cartões e varie o tamanho das letras. A 360 px, confira se a diferença fica clara antes de ler a explicação."
+          },
+          {
+            "id": "ext-collection-ceramica-dev",
+            "format": "collection",
+            "expectedFrames": 3,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Canecas em grés esmaltado à mão” nomeia material e acabamento. O esmalte irregular já aparece na abertura e ganha um plano de detalhe próprio."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 0,
+                  "evidencia": "A arte usa termos concretos, mas a construção “deixa a superfície de cada caneca convidar o olhar a ficar um pouco mais” soa artificial e destoa do ritmo enxuto do perfil."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "Na abertura a 360 px, título, marca e horário ficam sobre a parede clara, acima das canecas e com espaçamento entre os blocos."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Vendas: Sábado às 10h” anuncia quando a compra abre. As imagens mostram a peça inteira, o acabamento e a escala na mão."
+                },
+                "sinergiaLegenda": {
+                  "nota": 1,
+                  "evidencia": "“Observe a textura, a borda e os encontros de cor” direciona o olhar para as fotos, mas a frase anterior alonga a ideia com uma abstração que enfraquece o tom enxuto."
+                },
+                "coesaoVisual": {
+                  "nota": 2,
+                  "evidencia": "As três lâminas mantêm luz quente de janela, paleta de creme e terracota e o mesmo acabamento salpicado com base de barro exposto."
+                },
+                "progressaoOuRitmo": {
+                  "nota": 2,
+                  "evidencia": "A abertura mostra a peça entre outras canecas, o close revela a borda e o esmalte, e o último plano mostra a caneca na mão. O texto fica só na primeira foto."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Ateliê: Barro Vivo",
+                  "estado": "confirmado",
+                  "evidencia": "“Barro Vivo” aparece entre o título e o horário."
+                },
+                {
+                  "fato": "Abertura: Sábado às 10h",
+                  "estado": "confirmado",
+                  "evidencia": "“Vendas: Sábado às 10h”."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "collection",
+              "expectedFrames": 3,
+              "availableFrames": 3,
+              "includeCaption": true,
+              "prontaNoProxy": false
+            },
+            "diagnostico": "A textura já está visível no close. Troque a abstração da legenda por uma observação como “De perto, dá para ver os pontinhos no esmalte e onde ele encontra o barro”. Leia em voz alta e confira se cada detalhe citado aparece na segunda foto."
+          },
+          {
+            "id": "ext-single-cafe-dev",
+            "format": "single",
+            "expectedFrames": 1,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Seu coado com torra semanal” liga o preparo em casa à frequência da torra. O close dos grãos mostra o produto e “Torra toda terça” dá precisão à promessa."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Torra toda terça · R$ 79/mês” e “Envio em 24h em São Paulo” usam dados concretos. A legenda trata da data de torra em termos cotidianos."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, manchete e dados aparecem em marrom escuro sobre áreas claras. Os grãos ocupam o centro, e o CTA branco sobre marrom tem contorno visual próprio."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Assine pelo link da bio” explicita a ação e o canal. O valor mensal aparece no bloco imediatamente acima."
+                },
+                "sinergiaLegenda": {
+                  "nota": 2,
+                  "evidencia": "A legenda orienta o leitor a procurar a data da torra no pacote e daí leva ao link de assinatura."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Marca: Torra Clara SP",
+                  "estado": "confirmado",
+                  "evidencia": "“Torra Clara SP” aparece em negrito abaixo dos grãos."
+                },
+                {
+                  "fato": "Preço: R$ 79/mês",
+                  "estado": "confirmado",
+                  "evidencia": "“Torra toda terça · R$ 79/mês”."
+                },
+                {
+                  "fato": "Torra: Torra toda terça",
+                  "estado": "confirmado",
+                  "evidencia": "“Torra toda terça · R$ 79/mês”."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "single",
+              "expectedFrames": 1,
+              "availableFrames": 1,
+              "includeCaption": true,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "O dia da torra divide uma linha com o preço, embora seja a prova concreta da promessa da manchete. Teste dar mais peso a “toda terça” e confira a 360 px se dia, mensalidade e CTA continuam distinguíveis numa passada."
+          },
+          {
+            "id": "ext-story-oficina-dev",
+            "format": "story",
+            "expectedFrames": 1,
+            "includeCaption": false,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Oficina de xilogravura” aparece junto de um bloco entalhado, uma goiva e marcas de tinta. A imagem identifica a prática anunciada."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Oficina de xilogravura” usa o nome preciso da prática. Data, horário, vagas e preço aparecem em duas linhas diretas, sobre uma composição que mostra os materiais da oficina."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, o preto sobre creme deixa título, dados e CTA legíveis. A goiva termina à direita do bloco de texto e as marcas de tinta ficam fora das letras."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Toque no link” indica o próximo passo e deixa uma área central livre logo abaixo para o adesivo nativo."
+                },
+                "zonasSeguras": {
+                  "nota": 2,
+                  "evidencia": "No painel com guia, nenhum texto toca a faixa superior, a base ou a lateral direita. A imagem da madeira cruza o guia e o CTA aparece em texto simples."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Data: 28/11 · 14h às 17h",
+                  "estado": "confirmado",
+                  "evidencia": "“28/11 · 14h às 17h”."
+                },
+                {
+                  "fato": "Preço: R$ 140",
+                  "estado": "confirmado",
+                  "evidencia": "“8 vagas · R$ 140”."
+                },
+                {
+                  "fato": "Vagas: 8 vagas",
+                  "estado": "confirmado",
+                  "evidencia": "“8 vagas · R$ 140”."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "story",
+              "expectedFrames": 1,
+              "availableFrames": 1,
+              "includeCaption": false,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "O espaço útil para o adesivo fica entre “Toque no link” e o limite da base. Insira a figurinha centralizada nesse intervalo e confira na prévia de 360 px se ela fica inteira dentro do guia, com folga em relação ao CTA."
+          }
+        ],
+        "reserva": [
+          {
+            "id": "ext-collection-padaria-res",
+            "format": "collection",
+            "expectedFrames": 3,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Fornada de domingo” dá um motivo e um dia para agir. O pão inteiro, fotografado com a crosta em destaque, mostra o produto da reserva."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Fornada de domingo” e “Reserve pelo WhatsApp” usam linguagem familiar de padaria de bairro. A legenda fala de mesa, crosta e miolo."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, manchete, marca e retirada aparecem em marrom sobre a parede clara. O CTA tem texto branco sobre marrom e fica acima da foto do pão."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Retirada · Domingo · 8h às 12h” informa quando buscar, e “Reserve pelo WhatsApp” diz como reservar."
+                },
+                "sinergiaLegenda": {
+                  "nota": 2,
+                  "evidencia": "A legenda leva o pão à mesa do fim de semana e chama atenção para crosta e miolo, detalhes que ganham destaque nas fotos internas."
+                },
+                "coesaoVisual": {
+                  "nota": 2,
+                  "evidencia": "As três fotos mantêm luz lateral quente, tons de trigo e madeira e foco no mesmo tipo de pão. A abertura concentra a tipografia."
+                },
+                "progressaoOuRitmo": {
+                  "nota": 2,
+                  "evidencia": "A sequência vai do pão inteiro ao close da crosta e termina na cena de mesa com o pão cortado e o miolo exposto. As duas fotos internas são livres de texto."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Padaria: Padaria Miolo",
+                  "estado": "confirmado",
+                  "evidencia": "“Padaria Miolo” aparece abaixo da manchete."
+                },
+                {
+                  "fato": "Horário: Domingo · 8h às 12h",
+                  "estado": "confirmado",
+                  "evidencia": "“Retirada · Domingo · 8h às 12h”."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "collection",
+              "expectedFrames": 3,
+              "availableFrames": 3,
+              "includeCaption": true,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "A legenda diz “Reserve sua fornada”, embora a foto e a oferta mostrem o pão daquela fornada. Use “Reserve seu pão pelo WhatsApp” e confira se um leitor identifica, só pela legenda, o que se reserva e por qual canal."
+          },
+          {
+            "id": "ext-single-mentoria-res",
+            "format": "single",
+            "expectedFrames": 1,
+            "includeCaption": true,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Sua agenda nas terças e quartas” recorta os dias de interesse. As duas colunas da agenda mostram blocos preenchidos e horários livres."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Revisão de agenda e retorno de pacientes” usa vocabulário de operação clínica. A legenda pede que o dentista identifique quando a cadeira costuma ficar vazia."
+                },
+                "leitura": {
+                  "nota": 1,
+                  "evidencia": "A 360 px, as três linhas de oferta ficam compactas entre a agenda e o CTA. A linha “Revisão de agenda e retorno de pacientes” se estende quase de margem a margem e pede uma leitura mais atenta."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "O CTA em branco sobre azul explicita o verbo, a palavra a enviar e o canal em “Envie AGENDA no direct”."
+                },
+                "sinergiaLegenda": {
+                  "nota": 2,
+                  "evidencia": "A pergunta “em quais horários a cadeira costuma ficar vazia?” dá ao leitor um ponto de partida para a revisão, além de retomar a ação no direct."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Marca: Clínica Fluxo",
+                  "estado": "confirmado",
+                  "evidencia": "“Clínica Fluxo” aparece no bloco da oferta e na assinatura."
+                },
+                {
+                  "fato": "Duração: 20 minutos",
+                  "estado": "confirmado",
+                  "evidencia": "“Diagnóstico gratuito de 20 minutos”."
+                },
+                {
+                  "fato": "CTA: Envie AGENDA no direct",
+                  "estado": "confirmado",
+                  "evidencia": "“Envie AGENDA no direct” aparece na faixa azul e na legenda."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "single",
+              "expectedFrames": 1,
+              "availableFrames": 1,
+              "includeCaption": true,
+              "prontaNoProxy": false
+            },
+            "diagnostico": "A agenda ocupa a maior parte do miolo e comprime os dados da oferta. Reduza um pouco a foto e aumente o espaçamento entre as três linhas. A 360 px, verifique se duração, escopo e disponibilidade são recuperáveis numa única passada."
+          },
+          {
+            "id": "ext-story-lancamento-res",
+            "format": "story",
+            "expectedFrames": 1,
+            "includeCaption": false,
+            "missingCaption": false,
+            "peca": {
+              "status": "avaliada",
+              "dimensoes": {
+                "gancho": {
+                  "nota": 2,
+                  "evidencia": "“Guia de Plantas de Sombra” nomeia a solução para quem tem pouca luz em casa. A planta junto à janela coloca a oferta numa cena doméstica reconhecível."
+                },
+                "adequacaoAoPerfil": {
+                  "nota": 2,
+                  "evidencia": "“Guia ilustrado digital em PDF · 40 espécies” descreve o conteúdo em linguagem prática. “Acesse pelo link” mantém o tom direto e sem exagero."
+                },
+                "leitura": {
+                  "nota": 2,
+                  "evidencia": "A 360 px, o texto verde escuro se mantém legível sobre a parede clara. Título, descrição, preço e CTA têm peso e espaçamento distintos."
+                },
+                "adequacao": {
+                  "nota": 2,
+                  "evidencia": "“Acesse pelo link” aponta para a ação pedida. A arte reserva espaço abaixo da frase para a figurinha nativa."
+                },
+                "zonasSeguras": {
+                  "nota": 2,
+                  "evidencia": "No painel com guia, título, descrição, preço e CTA ficam dentro do retângulo verde, afastados do topo, da base e da faixa direita. O CTA é texto simples."
+                }
+              },
+              "fidelidadeFactual": "fiel",
+              "fatos": [
+                {
+                  "fato": "Produto: Guia de Plantas de Sombra",
+                  "estado": "confirmado",
+                  "evidencia": "“Guia de Plantas de Sombra” aparece na manchete."
+                },
+                {
+                  "fato": "Espécies: 40 espécies",
+                  "estado": "confirmado",
+                  "evidencia": "“em PDF · 40 espécies”."
+                },
+                {
+                  "fato": "Preço: R$ 49 até sexta",
+                  "estado": "confirmado",
+                  "evidencia": "“R$ 49 até sexta” aparece em negrito."
+                }
+              ],
+              "falhasCriticas": [],
+              "format": "story",
+              "expectedFrames": 1,
+              "availableFrames": 1,
+              "includeCaption": false,
+              "prontaNoProxy": true
+            },
+            "diagnostico": "O CTA termina acima de uma faixa clara ainda dentro da área segura. Posicione a figurinha nativa nessa faixa e confira na prévia de 360 px se o adesivo inteiro cabe entre a frase e a zona de base."
+          }
+        ]
+      },
+      "grupos": {
+        "desenvolvimento": {
+          "casos": 5,
+          "disponiveis": 5,
+          "semPixels": 0,
+          "prontasNoProxy": 4,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": {
+              "avaliadas": 5,
+              "distribuicao": [
+                0,
+                0,
+                5
+              ]
+            },
+            "adequacaoAoPerfil": {
+              "avaliadas": 5,
+              "distribuicao": [
+                1,
+                0,
+                4
+              ]
+            },
+            "leitura": {
+              "avaliadas": 5,
+              "distribuicao": [
+                0,
+                0,
+                5
+              ]
+            },
+            "adequacao": {
+              "avaliadas": 5,
+              "distribuicao": [
+                0,
+                0,
+                5
+              ]
+            },
+            "sinergiaLegenda": {
+              "avaliadas": 4,
+              "distribuicao": [
+                0,
+                1,
+                3
+              ]
+            },
+            "coesaoVisual": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                0,
+                3
+              ]
+            },
+            "progressaoOuRitmo": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                0,
+                3
+              ]
+            },
+            "zonasSeguras": {
+              "avaliadas": 1,
+              "distribuicao": [
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "porFormato": {
+            "single": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 1,
+              "comFalhaCritica": 0
+            },
+            "carousel": {
+              "casos": 2,
+              "disponiveis": 2,
+              "semPixels": 0,
+              "prontasNoProxy": 2,
+              "comFalhaCritica": 0
+            },
+            "collection": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0
+            },
+            "story": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 1,
+              "comFalhaCritica": 0
+            }
+          }
+        },
+        "reserva": {
+          "casos": 3,
+          "disponiveis": 3,
+          "semPixels": 0,
+          "prontasNoProxy": 2,
+          "comFalhaCritica": 0,
+          "dimensoes": {
+            "gancho": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                0,
+                3
+              ]
+            },
+            "adequacaoAoPerfil": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                0,
+                3
+              ]
+            },
+            "leitura": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                1,
+                2
+              ]
+            },
+            "adequacao": {
+              "avaliadas": 3,
+              "distribuicao": [
+                0,
+                0,
+                3
+              ]
+            },
+            "sinergiaLegenda": {
+              "avaliadas": 2,
+              "distribuicao": [
+                0,
+                0,
+                2
+              ]
+            },
+            "coesaoVisual": {
+              "avaliadas": 1,
+              "distribuicao": [
+                0,
+                0,
+                1
+              ]
+            },
+            "progressaoOuRitmo": {
+              "avaliadas": 1,
+              "distribuicao": [
+                0,
+                0,
+                1
+              ]
+            },
+            "zonasSeguras": {
+              "avaliadas": 1,
+              "distribuicao": [
+                0,
+                0,
+                1
+              ]
+            }
+          },
+          "porFormato": {
+            "single": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 0,
+              "comFalhaCritica": 0
+            },
+            "collection": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 1,
+              "comFalhaCritica": 0
+            },
+            "story": {
+              "casos": 1,
+              "disponiveis": 1,
+              "semPixels": 0,
+              "prontasNoProxy": 1,
+              "comFalhaCritica": 0
+            }
+          }
+        }
+      },
+      "arm": "candidate",
+      "skillCatalogVersion": "compor-creative-skills.v4",
+      "models": {
+        "planner": "gpt-6.1-terra",
+        "image": "gpt-image-2.6-flare"
+      },
+      "providerUsage": {
+        "casesTotal": 8,
+        "casesComplete": 8,
+        "imagesTotal": 19,
+        "imagesComplete": 19,
+        "plannerCalls": 8,
+        "plannerTokens": {
+          "input_tokens": 45411,
+          "output_tokens": 4545,
+          "total_tokens": 49956
+        },
+        "imageTokens": {
+          "input_tokens": 25471,
+          "output_tokens": 27450,
+          "total_tokens": 52921
+        }
+      }
     }
   ]
 }
