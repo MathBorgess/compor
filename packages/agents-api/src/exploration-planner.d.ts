@@ -1,7 +1,8 @@
 import type {Actor} from './contracts.js';
 import type {VisualInputManifest,VisualReferenceImage} from './visual-input-contract.js';
+import type {PostFormat} from './creative-skills/index.js';
 export type PlannerFact={id:string;label:string;value:string;status:'confirmed'|'pending'|'omitted'};
-export type ExplorationPlannerContext={idea:string;offer:string;audience:string;goal:string;direction:string;offerFacts:PlannerFact[];accepted:string[];rejected:string[];feedback:Array<{action:'selected'|'rejected'|'comment';comment:string;composition:string;contrast:string}>};
+export type ExplorationPlannerContext={idea:string;offer:string;audience:string;goal:string;direction:string;offerFacts:PlannerFact[];accepted:string[];rejected:string[];feedback:Array<{action:'selected'|'rejected'|'comment';comment:string;composition:string;contrast:string}>;postFormat?:PostFormat;brandVoice?:{tone:string;examples:string;avoid:string}};
 export type ExplorationPlannerInput={actor:Actor;projectId:string;conversationId:string;batchId:string;requestId:string;context:ExplorationPlannerContext;visualInput?:VisualInputManifest;referenceImages?:readonly VisualReferenceImage[]};
 export type VisualAuthorizationInput=Pick<ExplorationPlannerInput,'actor'|'projectId'|'conversationId'> & {visualInput:VisualInputManifest;batchId?:string;requestId?:string;intentId?:string};
 export type ExplorationPlanItem={position:number;creativePrompt:string;composition:string;contrast:string;differenceFromOthers:string;prompt:string};

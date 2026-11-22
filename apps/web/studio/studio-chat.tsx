@@ -1,5 +1,5 @@
 "use client";
-import {conversationContext,postContext} from '../lib/studio-post-context';
+import {conversationContext,postContext,postFormatOf} from '../lib/studio-post-context';
 import {scheduleSelectionReading} from '../lib/selection-reading-timer';
 import { useEffect, useRef, useState, type RefObject, type ReactNode, type FormEvent } from "react";
 import {byokJsonHeaders} from '../lib/openai-byok-transport.ts';
@@ -44,7 +44,10 @@ import ImageAttemptNotice, { type ImageAttemptScreen } from './image-attempt-not
 const getCurrentDraft=(state:StudioState)=>state.drafts.find(item=>item.pieceId===state.selection?.pieceId&&item.baseVersion===state.selection.baseVersion)??null;
 function matchesImageText(draft:StudioState['drafts'][number],input:NonNullable<ImageAction['artworkInput']>) {
   const text=input.literalText;
-  return (['headline','price','date'] as const).every(field=>draft.content[field]===text[field])&&sameCreativeFields(draft.content.fields,text.fields);
+  const targetFrame=input.frame?draft.content.frames?.find(item=>item.id===input.frame?.id):undefined;
+  const expectedHeadline=targetFrame?(targetFrame.headline||draft.content.headline):draft.content.headline;
+  if(input.frame&&!targetFrame)return false;
+  return expectedHeadline===text.headline&&(['price','date'] as const).every(field=>draft.content[field]===text[field])&&sameCreativeFields(draft.content.fields,text.fields);
 }
 const diagnosticCount=(value:unknown)=>typeof value==='number'&&Number.isSafeInteger(value)&&value>=0&&value<=100000000?value:null;
 const referenceContext = (state:StudioState) => JSON.stringify({postContext:state.selection?postContext(state,state.selection.pieceId):undefined,brief:state.brief,persona:state.persona,...offerContext(state),direction:state.direction,selection:state.selection,draft:getCurrentDraft(state),marks:state.marks,references:state.references});
@@ -142,6 +145,9 @@ export default function StudioChat({
   prepareImageVersion,
   loadReference,
   loadBase,
+  loadAnchor,
+  activeFrameId = null,
+  externalPrompt = null,
   initialMessage = "",
   initialPostRequest,
   messageDraft,
@@ -162,7 +168,7 @@ export default function StudioChat({
   createVisualAuthoritySnapshot,
   visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext)=>Promise<StoredImage|null|undefined>;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:DraftContext&Pick<ImageProposal,'operation'|'changedDimension'>)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -314,8 +320,24 @@ export default function StudioChat({
     try{localStorage.removeItem(preparedImageKey(requestId));}catch{/* The exact action ID still scopes an old receipt. */}
   }
   function artworkOptions(snapshot:StudioState,draft:StudioState['drafts'][number],proposal:ImageProposal,visualSnapshot?:ImageAction['visualSnapshot']) {
-    return {proposal,draft,referenceIds:snapshot.references.map(item=>item.id),loadReference,loadBase:async()=>loadBase?.(draft),...(visualSnapshot?{visualSnapshot}:{})};
+    const format=postFormatOf(snapshot,draft.pieceId);
+    return {
+      proposal,
+      draft,
+      ...(format!=='single'?{format}:{}),
+      referenceIds:snapshot.references.map(item=>item.id),
+      loadReference,
+      loadBase:async(frameId?:string)=>loadBase?.({pieceId:draft.pieceId,baseVersion:draft.baseVersion,...(frameId?{frameId}:{})}),
+      loadAnchor:async(anchorFrameId:string)=>loadAnchor?.(draft,anchorFrameId),
+      ...(visualSnapshot?{visualSnapshot}:{}),
+    };
   }
+  const lastExternalNonce=useRef<number>(0);
+  useEffect(()=>{
+    if(!externalPrompt||externalPrompt.nonce<=lastExternalNonce.current)return;
+    lastExternalNonce.current=externalPrompt.nonce;
+    void submitText(externalPrompt.text,{fromComposer:false});
+  },[externalPrompt?.nonce]);
   useEffect(() => {
     mounted.current = true;
     const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
@@ -871,17 +893,22 @@ export default function StudioChat({
     }:undefined;
     try {
       const before = getState();
-      const selected=getCurrentDraft(before), storedBase=selected?await loadBase?.(selected):null;
+      const selected=getCurrentDraft(before), storedBase=selected?await loadBase?.({...selected,...(activeFrameId?{frameId:activeFrameId}:{})})??await loadBase?.(selected):null;
+      const beforeFormat=selected?postFormatOf(before,selected.pieceId):'single';
+      const orderedFrames=selected?.content.frames?[...selected.content.frames].sort((a,b)=>a.position-b.position):[];
+      const anchorFrame=(beforeFormat==='carousel'||beforeFormat==='collection')&&orderedFrames.length>0?orderedFrames[0]:null;
+      const storedAnchor=selected&&anchorFrame&&loadAnchor?await loadAnchor(selected,anchorFrame.id):null;
       assertInitialPostIsCurrent();
       if(!credentialIsCurrent()||!visualIsCurrent())return;
       if(!selected)throw Error("Selecione um post antes de conversar.");
       const feedback=before.references.length?await loadReadinessFeedback(before.projectId,before.references,fetch,conversationId==='references'?undefined:conversationId):{referenceFeedback:[],accountHints:[],availability:'available'};
       const baseId=storedBase?selected?.pieceId:null;
+      const anchorId=storedAnchor&&anchorFrame&&anchorFrame.id!==baseId?anchorFrame.id:null;
       const visuals=selectedVisualsAvailable?await prepareRequestVisuals(before,conversationId,requestId,loadReference,Boolean(createVisualAuthoritySnapshot)):null;
       assertInitialPostIsCurrent();
       if(visuals&&createVisualAuthoritySnapshot){if(!conversationId)throw Error('Abra a conversa para confirmar a seleção.');await createVisualAuthoritySnapshot({userId:state.userId,projectId:state.projectId,conversationId,requestId,batchId:null,purpose:'artwork'},visuals.visualInput);}
-      const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[])];
-      const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:loadReference(id),21);
+      const visualReferences=[...(selectedVisualsAvailable?[]:before.references),...(baseId?[{id:baseId}]:[]),...(anchorId?[{id:anchorId}]:[])];
+      const referenceImages=await referenceImagesForRequest(visualReferences,async id=>id===baseId?storedBase:id===anchorId?storedAnchor:loadReference(id),21);
       assertInitialPostIsCurrent();
       if(!credentialIsCurrent()||!visualIsCurrent())return;
       if (getState().revision !== before.revision)
@@ -912,6 +939,19 @@ export default function StudioChat({
       setBusy(true);
       if(fromComposer)setMessage("");
       const draft = getCurrentDraft(next),
+        draftFormat = postFormatOf(next, draft?.pieceId),
+        draftFrames = draft?.content.frames
+          ? [...draft.content.frames].sort((a, b) => a.position - b.position).map(frame => ({
+              id: frame.id,
+              position: frame.position,
+              role: frame.role,
+              headline: frame.headline,
+              body: frame.body,
+              visualCue: frame.visualCue,
+              hasImage: Boolean(frame.assetId || (frame.id === anchorId && storedAnchor)),
+            }))
+          : undefined,
+        hasVoice = Boolean(next.brandVoice && (next.brandVoice.tone.trim() || next.brandVoice.examples.trim() || next.brandVoice.avoid.trim())),
         {level, evidence, gaps, limitations} = assessReadiness({brief:next.brief,persona:next.persona,direction:next.direction,references:next.references,referenceFeedback:feedback.referenceFeedback}),
         context = {
           revision: next.revision,
@@ -921,6 +961,10 @@ export default function StudioChat({
           content: draft?.content ?? null,
           approval: draft?.approval ?? null,
           baseImageId: baseId,
+          ...(anchorId ? { anchorImageId: anchorId } : {}),
+          ...(draftFormat !== 'single' ? { postFormat: draftFormat } : {}),
+          ...(hasVoice && next.brandVoice ? { brandVoice: next.brandVoice } : {}),
+          ...(draftFrames ? { frames: draftFrames, activeFrameId: activeFrameId ?? draftFrames[0]?.id ?? null } : {}),
           brief: next.brief,
           ...offerContext(next),...(conversationId&&conversationId!=='references'?{postContext:postContext(next,conversationId)}:{}),
           persona: next.persona,
@@ -1480,6 +1524,7 @@ export default function StudioChat({
             blob: image,
             pieceId: target.pieceId,
             version: target.version,
+            ...(action.proposal.frameId ? { frameId: action.proposal.frameId } : {}),
             assetId: data.assetId,
             creationContext:{postContext:getState().adjustments.find(item=>item.id===action.requestId)?.context.postContext??postContext(getState(),target.pieceId),references:getState().adjustments.find(item=>item.id===action.requestId)?.context.references.filter(reference=>action.proposal.referenceIds.includes(reference.id))??[]},
           })!==true)throw Error('image application unconfirmed');

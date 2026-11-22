@@ -114,3 +114,131 @@ test('gesto explícito mostra recibos progressivos e espera entre duas rodadas',
  const extraContext=await browser.newContext(),extraPage=await extraContext.newPage();await extraPage.goto(`http://127.0.0.1:${server.address().port}/?visual-extra`);await extraPage.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);await extraPage.getByRole('button',{name:'Pedir propostas'}).click();await extraPage.getByText(/Referências externas ou geradas ainda não estão disponíveis/).waitFor();
  assert.equal((await extraPage.evaluate(()=>window.calls)).filter(call=>call.path.endsWith('/intent')||call.path.endsWith('/plan')||call.path.endsWith('/execute')).length,0);await extraContext.close();
 });
+
+test('pausa imediata durante espera, antes do despacho e no limite de 15s libera lock e impede segundo lote',{skip:!existsSync(browserPath),timeout:45000},async t=>{
+ const bundled=await build({stdin:{resolveDir:process.cwd(),sourcefile:'parallel-pause-fixture.tsx',loader:'tsx',contents:`
+  import React,{useState} from 'react';import {createRoot} from 'react-dom/client';
+  import {useParallelExploration} from './studio/use-parallel-exploration.ts';
+  import {createStudioState} from './lib/studio-state.ts';
+  import {validateExplorationPlan} from '@compor/agents-api/exploration-plan-contract';
+  const id=n=>'00000000-0000-4000-8000-'+String(n).padStart(12,'0');
+  const state=createStudioState({userId:id(1),projectId:id(2)}),key='sk-synthetic-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxx';
+  const mode=location.search.slice(1);
+  const batches=new Map();window.calls=[];window.intentAborted=false;
+  window.fetch=async(path,options)=>{
+   const body=JSON.parse(options.body);window.calls.push({path,body});
+   if(path.endsWith('/intent/epoch'))return Response.json({epoch:0});
+   if(path.endsWith('/intent')){
+    if(mode==='hold-intent'){
+     window.intentEntered=true;
+     return new Promise((resolve,reject)=>{
+      if(options.signal){
+       if(options.signal.aborted){window.intentAborted=true;reject(new DOMException('aborted','AbortError'));return;}
+       options.signal.addEventListener('abort',()=>{window.intentAborted=true;reject(new DOMException('aborted','AbortError'));},{once:true});
+      }
+      window.releaseIntent=()=>resolve(Response.json({status:'created',epoch:body.expectedEpoch+1}));
+     });
+    }
+    return Response.json({status:'created',epoch:body.expectedEpoch+1});
+   }
+   if(path.endsWith('/intent/revoke'))return Response.json({status:'revoked',epoch:2,revocationEpoch:2});
+   if(path==='/api/studio/explorations/status'){
+    if(mode==='pause-on-round2-gate'&&batches.size>=1){
+     window.round2GateEntered=true;
+     return new Promise((resolve,reject)=>{
+      if(options.signal){
+       options.signal.addEventListener('abort',()=>{window.round2GateAborted=true;reject(new DOMException('aborted','AbortError'));},{once:true});
+      }
+      window.releaseRound2Gate=()=>resolve(Response.json({status:'active'}));
+     });
+    }
+    return Response.json({status:'active'});
+   }
+   if(path.endsWith('/signals'))return Response.json({signals:[]});
+   if(path.endsWith('/plan')){
+    const plan=validateExplorationPlan({version:1,items:[1,2,3].map(position=>({position,creativePrompt:'caminho '+position,composition:'composição '+position,contrast:'contraste '+position,differenceFromOthers:'diferença '+position}))},body.context);
+    return Response.json({status:'completed',retryAutomatically:false,requestId:body.requestId,batchId:body.batchId,plan,planBinding:'synthetic-proof'});
+   }
+   if(path.endsWith('/execute')){batches.set(body.batchId,{ids:body.imageIds});return new Promise(()=>{});}
+   if(path==='/api/studio/exploration-batches/status'){
+    const batch=batches.get(body.batchId);
+    if(!batch)return Response.json({status:'absent',projectId:body.projectId,batchId:body.batchId});
+    return Response.json({batchId:body.batchId,projectId:body.projectId,pieceId:null,state:'completed',completedAt:null,nextAt:null,closedAt:null,images:batch.ids.map((requestId,index)=>({requestId,position:index+1,ordinal:index+1,status:'completed',revision:2,replacesImageId:null}))});
+   }
+   throw Error('unexpected '+path);
+  };
+  function Screen(){
+   const [studio]=useState(state);
+   const loop=useParallelExploration({userId:id(1),projectId:id(2),conversationId:'references',state:studio,getState:()=>studio,source:'byok',credentialEpoch:0,hasApiKey:true,getApiKey:()=>key,isAuthenticated:()=>true,available:true,visible:true,idea:'Oficina',onCompleted:async()=>{}});
+   window.loopState={running:loop.running,paused:loop.paused,phase:loop.phase,status:loop.status};
+   return <><button disabled={!loop.epochReady} onClick={()=>void loop.start()}>Pedir propostas</button><button onClick={loop.pause}>Pausar</button><p role={loop.phase==='waiting'?'timer':'status'}>{loop.status}</p></>;
+  }
+  createRoot(document.getElementById('root')).render(<Screen/>);
+ `},bundle:true,write:false,format:'esm',platform:'browser',target:'es2022'});
+ const server=createServer((request,response)=>{if(request.url==='/fixture.js'){response.setHeader('Content-Type','text/javascript');response.end(bundled.outputFiles[0].text);}else response.end('<!doctype html><div id="root"></div><script type="module" src="/fixture.js"></script>');});
+ await new Promise(resolve=>server.listen(0,'127.0.0.1',resolve));t.after(()=>{server.closeAllConnections();return new Promise(resolve=>server.close(resolve));});
+ const browser=await chromium.launch({executablePath:browserPath,headless:true});t.after(()=>browser.close());
+
+ // 1. Pausa durante espera de 15s sob relógio congelado deve encerrar imediatamente e liberar Web Lock
+ {
+  const context=await browser.newContext(),page=await context.newPage();
+  await page.clock.install({time:new Date('2026-11-21T20:45:00Z')});
+  await page.goto(`http://127.0.0.1:${server.address().port}/`);
+  await page.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);
+  await page.clock.pauseAt(new Date('2026-11-21T20:45:13Z'));
+  await page.getByRole('button',{name:'Pedir propostas'}).click();
+  await page.getByRole('timer').waitFor();
+  assert.match(await page.getByRole('timer').innerText(),/Próximo lote em 15s\./);
+  // Pausa com relógio congelado: não pode ficar preso em wait(1000) segurando o lock
+  await page.getByRole('button',{name:'Pausar'}).click();
+  await waitForPage(page,()=>window.loopState.running===false&&window.loopState.paused===true,'pausa durante espera deve liberar running imediatamente mesmo sem avançar relógio');
+  const lockFree=await page.evaluate(async()=>navigator.locks.request('compor-exploration:00000000-0000-4000-8000-000000000001',{ifAvailable:true},lock=>Boolean(lock)));
+  assert.equal(lockFree,true,'Web Lock da conta deve ser liberado imediatamente após pausar');
+  await page.clock.fastForward(45000);
+  const calls=await page.evaluate(()=>window.calls);
+  assert.equal(calls.filter(c=>c.path.endsWith('/execute')).length,1);
+  assert.equal(calls.filter(c=>c.path.endsWith('/plan')).length,1);
+  assert.equal(calls.filter(c=>c.path.endsWith('/intent')).length,1);
+  await context.close();
+ }
+
+ // 2. Pausa antes do despacho enquanto /intent está pendente aborta a requisição, revoga e não planeja/executa
+ {
+  const context=await browser.newContext(),page=await context.newPage();
+  await page.goto(`http://127.0.0.1:${server.address().port}/?hold-intent`);
+  await page.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);
+  await page.getByRole('button',{name:'Pedir propostas'}).click();
+  await waitForPage(page,()=>window.intentEntered===true,'/intent deve iniciar');
+  await page.getByRole('button',{name:'Pausar'}).click();
+  await waitForPage(page,()=>window.intentAborted===true,'/intent pendente deve ser abortado ao pausar');
+  await waitForPage(page,()=>window.loopState.running===false,'pausa durante /intent deve encerrar imediatamente');
+  await waitForPage(page,()=>window.calls.some(c=>c.path.endsWith('/intent/revoke')),'pausa durante /intent deve solicitar revogação');
+  const calls=await page.evaluate(()=>window.calls);
+  assert.equal(calls.filter(c=>c.path.endsWith('/plan')||c.path.endsWith('/execute')).length,0);
+  await context.close();
+ }
+
+ // 3. Pausa no limite exato da espera (14.999 ms e transição para rodada 2 aos 15.000 ms) impede segundo despacho
+ {
+  const context=await browser.newContext(),page=await context.newPage();
+  await page.clock.install({time:new Date('2026-11-21T20:45:00Z')});
+  await page.goto(`http://127.0.0.1:${server.address().port}/?pause-on-round2-gate`);
+  await page.waitForFunction(()=>document.querySelector('button')&&!document.querySelector('button').disabled);
+  await page.clock.pauseAt(new Date('2026-11-21T20:45:13Z'));
+  await page.getByRole('button',{name:'Pedir propostas'}).click();
+  await page.getByRole('timer').waitFor();
+  await page.clock.fastForward(14999);
+  assert.equal((await page.evaluate(()=>window.calls)).filter(c=>c.path.endsWith('/execute')).length,1);
+  await page.clock.fastForward(1);
+  await waitForPage(page,()=>window.round2GateEntered===true,'transição aos 15.000 ms entra na verificação da rodada 2');
+  await page.getByRole('button',{name:'Pausar'}).click();
+  await waitForPage(page,()=>window.round2GateAborted===true,'verificação da rodada 2 deve ser abortada imediatamente ao pausar');
+  await waitForPage(page,()=>window.loopState.running===false&&window.loopState.status==='Exploração pausada.','pausa na fronteira de 15s deve encerrar imediatamente');
+  await page.clock.fastForward(30000);
+  const calls=await page.evaluate(()=>window.calls);
+  assert.equal(calls.filter(c=>c.path.endsWith('/execute')).length,1,'pausa no limite de 15s impede segunda reserva de lote');
+  assert.equal(calls.filter(c=>c.path.endsWith('/plan')).length,1,'pausa no limite de 15s impede segundo planejamento');
+  assert.equal(calls.filter(c=>c.path.endsWith('/intent')).length,1,'pausa no limite de 15s impede segunda intenção');
+  await context.close();
+ }
+});

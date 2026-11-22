@@ -1,7 +1,8 @@
 import {changeStudioState,createPost,selectDraft,parseStudioState,StudioStateError,type StudioState,type StudioWorkflow} from './studio-state';
 import {emptyPostSettings} from './studio-post-context';
 import {postNameSchema} from './post-catalog';
-import {postContextSchema,type PostContext} from './studio-domain';
+import {postContextSchema,type PostContext,type PostFormat} from './studio-domain';
+import {buildDefaultFrames,clampFrameCount,postFormatOption} from './studio-post-formats';
 
 export function updateWorkflow(state:StudioState,patch:Partial<StudioWorkflow>) {
   return parseStudioState({...state,revision:state.revision+1,workflow:{...state.workflow,...patch}});
@@ -20,13 +21,22 @@ export function startPostPreparation(state:StudioState,pieceId:string,initialPro
   const name=initial?postNameSchema.safeParse(initialProjectTitle).data??'':'';
   const message=initial?postContextSchema.shape.message.safeParse(state.brief.offer).data??'':'';
   return changeStudioState(state,next=>{
-    next.workflow.pendingPost={pieceId,name,objective:'',message,action:'',...(initial?{initial:true as const}:{})};
+    next.workflow.pendingPost={pieceId,name,objective:'',message,action:'',format:'single',targetFrameCount:1,...(initial?{initial:true as const}:{})};
     next.workflow.view='prepare-post';
   });
 }
 
-export function updatePostPreparation(state:StudioState,patch:Partial<PostContext&{name:string}>) {
-  return changeStudioState(state,next=>{if(!next.workflow.pendingPost)throw new StudioStateError();Object.assign(next.workflow.pendingPost,patch);});
+export function updatePostPreparation(state:StudioState,patch:Partial<PostContext&{name:string;format:PostFormat;targetFrameCount:number}>) {
+  return changeStudioState(state,next=>{
+    if(!next.workflow.pendingPost)throw new StudioStateError();
+    const format=patch.format??next.workflow.pendingPost.format??'single';
+    const nextCount=patch.format!==undefined && patch.targetFrameCount===undefined
+      ? postFormatOption(format).defaultFrames
+      : patch.targetFrameCount!==undefined
+        ? clampFrameCount(format,patch.targetFrameCount)
+        : clampFrameCount(format,next.workflow.pendingPost.targetFrameCount);
+    Object.assign(next.workflow.pendingPost,patch,{format,targetFrameCount:nextCount});
+  });
 }
 export function cancelPostPreparation(state:StudioState){return changeStudioState(state,next=>{next.workflow.pendingPost=null;next.workflow.view='posts';});}
 export function updateLegacyPostName(state:StudioState,pieceId:string,name:string){return changeStudioState(state,next=>{next.posts[pieceId]={...emptyPostSettings(),...next.posts[pieceId],name};});}
@@ -35,9 +45,17 @@ export function completePostPreparation(state:StudioState) {
   const pending=state.workflow.pendingPost;
   if(pending){
     const name=postNameSchema.parse(pending.name);
+    const format:PostFormat=pending.format??'single';
+    const targetFrameCount=clampFrameCount(format,pending.targetFrameCount);
     const prepared={...state,workflow:{...state.workflow,pendingPost:null}};
     return changeStudioState(createPost(prepared,{pieceId:pending.pieceId}),next=>{
-      next.posts[pending.pieceId]={...emptyPostSettings(),name,objective:pending.objective,message:pending.message,action:pending.action};
+      next.posts[pending.pieceId]={...emptyPostSettings(),name,objective:pending.objective,message:pending.message,action:pending.action,format,targetFrameCount};
+      const draft=next.drafts.find(item=>item.pieceId===pending.pieceId&&item.baseVersion===0);
+      if(draft && format!=='single'){
+        draft.content.format=format;
+        const frames=buildDefaultFrames(format,targetFrameCount);
+        if(frames)draft.content.frames=frames;
+      }
       next.workflow.pendingPost=null;next.workflow.view='compose';
     });
   }

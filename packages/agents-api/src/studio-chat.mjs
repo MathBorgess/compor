@@ -4,6 +4,7 @@ import {AGENT_MODEL} from './agent-model.mjs';
 import {PERSONA_SKILL_INSTRUCTIONS} from './studio-persona-skill.mjs';
 import {CREATIVE_DIRECTION_INSTRUCTIONS} from './studio-direction-instructions.mjs';
 import {imagePromptSkills} from './image-prompt-skills.mjs';
+import {isPostFormat,normalizePostFormat,resolveCreativeSkillBundle} from './creative-skills/index.mjs';
 import {AGENT_STUDIO_TOOLS,SHORT_PROJECT_TITLE_LENGTH,parseStudioAction} from './studio-chat-tools.mjs';
 import {summarizeStudioItems} from './studio-item-trace.mjs';
 import {extractUserUrls,readUserPages} from './studio-page-reader.mjs';
@@ -92,9 +93,29 @@ function audienceResolutionValid(value,context){
  if(value.status==='resolved')return Object.keys(value).sort().join(',')==='status,value'&&safeText(value.value,4000)&&(brief===null||brief===value.value)&&(persona===null||persona===value.value);
  return value.status==='conflict'&&Object.keys(value).sort().join(',')==='brief,persona,status'&&safeText(value.brief,4000)&&safeText(value.persona,4000)&&Boolean(value.brief.trim())&&Boolean(value.persona.trim())&&value.brief!==value.persona&&brief===value.brief&&persona===value.persona;
 }
+function brandVoiceValid(value){
+ return Boolean(value)&&typeof value==='object'&&!Array.isArray(value)&&Object.keys(value).sort().join(',')==='avoid,examples,tone'&&['tone','examples','avoid'].every(key=>safeText(value[key],1000)&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value[key]));
+}
+function contextFramesValid(value){
+ if(!Array.isArray(value)||value.length>10)return false;
+ const ids=new Set(),positions=new Set();
+ return value.every(frame=>{
+  if(!frame||typeof frame!=='object'||Array.isArray(frame))return false;
+  const keys=Object.keys(frame);
+  if(keys.some(k=>!['id','position','role','headline','body','visualCue','hasImage'].includes(k))||!['id','position','role','headline','body','visualCue','hasImage'].every(k=>Object.hasOwn(frame,k)))return false;
+  if(!uuid(frame.id)||ids.has(frame.id.toLowerCase())||!Number.isSafeInteger(frame.position)||frame.position<1||frame.position>10||positions.has(frame.position)||typeof frame.hasImage!=='boolean')return false;
+  if(!safeText(frame.role,80)||/[\u0000-\u001f\u007f]/.test(frame.role)||!safeText(frame.headline,500)||!safeText(frame.body,1000)||!safeText(frame.visualCue,500)||/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(frame.headline+frame.body+frame.visualCue))return false;
+  ids.add(frame.id.toLowerCase());positions.add(frame.position);return true;
+ });
+}
 function contextValid(value){
  if(!value||typeof value!=='object'||Array.isArray(value)||!Number.isSafeInteger(value.revision)||value.revision<0)return false;
  if(value.projectTitleProvisional!==undefined&&typeof value.projectTitleProvisional!=='boolean')return false;
+ if(value.postFormat!==undefined&&!isPostFormat(value.postFormat))return false;
+ if(value.brandVoice!==undefined&&!brandVoiceValid(value.brandVoice))return false;
+ if(value.frames!==undefined&&!contextFramesValid(value.frames))return false;
+ if(value.activeFrameId!==undefined&&value.activeFrameId!==null&&!uuid(value.activeFrameId))return false;
+ if(value.anchorImageId!==undefined&&value.anchorImageId!==null&&!uuid(value.anchorImageId))return false;
  if(value.postContext!==undefined&&(!value.postContext||typeof value.postContext!=='object'||Array.isArray(value.postContext)||Object.keys(value.postContext).sort().join(',')!=='action,message,objective'||!['objective','message','action'].every(key=>safeText(value.postContext[key],4000)&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/.test(value.postContext[key]))))return false;
  if(value.offerFacts!==undefined&&!offerFactsValid(value.offerFacts))return false;
  if(value.audienceResolution!==undefined&&!audienceResolutionValid(value.audienceResolution,value))return false;
@@ -113,14 +134,15 @@ function validateImages(images){
   return {id:image.id,mime:image.mime,data:image.data};
  });
 }
-async function turnInstructions(body,{automatic,hasLinks,quick}){
+async function turnInstructions(body,{automatic,hasLinks,quick,skillBundle}){
  const selectedInContext=Array.isArray(body.context.references)?body.context.references:[];
  const hasReferences=body.visualImages?.length>0||body.referenceImages.some(image=>
-  image.id!==body.context.baseImageId&&selectedInContext.some(reference=>reference?.id===image.id));
+  image.id!==body.context.baseImageId&&image.id!==body.context.anchorImageId&&selectedInContext.some(reference=>reference?.id===image.id));
  const parts=[automatic?referenceInstructions:instructions,'Use o contexto atualizado do pedido em cada turno.'];
+ if(!automatic&&skillBundle)parts.push(skillBundle.instructions);
  if(automatic)parts.push('Na recomendação, descreva uma escolha de composição que seria visível na peça e relacione-a a um detalhe informado do briefing. Identifique a hipótese quando esse vínculo depender de uma suposição.');
  if(body.referenceImages.length){
-  parts.push('As imagens fora de visualInput pertencem a este pedido. A imagem-base serve à edição. Leia como referência somente o arquivo anexado que corresponde a uma referência selecionada em context.references. Mantenha a origem desconhecida quando ela não for informada.');
+  parts.push('As imagens fora de visualInput pertencem a este pedido. A imagem-base serve à edição e a âncora visual preserva a unidade de carrosséis/coleções. Leia como referência somente o arquivo anexado que corresponde a uma referência selecionada em context.references. Mantenha a origem desconhecida quando ela não for informada.');
  }
  if(hasReferences)parts.push('Use para essa leitura apenas os arquivos anexados a este turno. Metadados, nomes e comentários isolados não demonstram o conteúdo de uma imagem.',visualTriageInstructions);
  if(!automatic&&body.visualInput)parts.push('Inclua todos os IDs local-upload de visualInput em referenceIds; você pode escolher uma subsequência das demais referências já selecionadas, preservando a ordem. Nunca inclua IDs não selecionados.');
@@ -134,7 +156,10 @@ async function turnInstructions(body,{automatic,hasLinks,quick}){
 function inputContent(body,includeHistory,sourcePages=[]){
  const data={...(sourcePages.length?{sourcePages}:{}),...(body.op==='reference_selection'?{origin:'reference_selection',event:'A seleção de referências ficou estável.'}:{origin:'user',message:body.message,...(body.quickReply?{quickReply:{version:1,intent:body.quickReply.intent}}:{})}),projectId:body.projectId,context:body.context,requestId:body.requestId,...(body.visualInput?{visualInput:body.visualInput}:{}),...(includeHistory?{localConversation:body.history??[]}:{})};
  const content=[{type:'input_text',text:JSON.stringify(data)}];
- for(const image of body.referenceImages??[])content.push({type:'input_text',text:`${image.id===body.context.baseImageId?"Imagem-base da versão selecionada":"Referência visual local"} ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
+ for(const image of body.referenceImages??[]){
+  const label=image.id===body.context.baseImageId?'Imagem-base da versão selecionada':image.id===body.context.anchorImageId?'Lâmina 1 âncora visual da série':'Referência visual local';
+  content.push({type:'input_text',text:`${label} ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
+ }
  for(const image of body.visualImages??[])content.push({type:'input_text',text:`Referência selecionada ${image.id}`},{type:'input_image',image_url:`data:${image.mime};base64,${image.data}`});
  return [{role:'user',content}];
 }
@@ -146,7 +171,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   const startedAt=now(),d={requestId,phase};
   d.emit=(name,extra={})=>{
    if(typeof onEvent!=='function')return;
-   try{Promise.resolve(onEvent(name,{requestId:d.requestId,attemptId:d.attemptId,sessionId:d.sessionId,turnId:d.turnId,callId:d.callId,callIdAccepted:d.callIdAccepted,turnStatus:d.turnStatus,model:d.model,phase:d.phase,durationMs:Math.max(0,now()-startedAt),inputTokens:d.inputTokens,outputTokens:d.outputTokens,providerStatusCode:extra.providerStatusCode})).catch(()=>{});}catch{}
+   try{Promise.resolve(onEvent(name,{requestId:d.requestId,attemptId:d.attemptId,sessionId:d.sessionId,turnId:d.turnId,callId:d.callId,callIdAccepted:d.callIdAccepted,turnStatus:d.turnStatus,model:d.model,postFormat:d.postFormat,skillVersion:d.skillVersion,phase:d.phase,durationMs:Math.max(0,now()-startedAt),inputTokens:d.inputTokens,outputTokens:d.outputTokens,providerStatusCode:extra.providerStatusCode})).catch(()=>{});}catch{}
   };
   return d;
  }
@@ -317,7 +342,8 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     if(!scope.conversationId&&body.context.pieceId)return reply({error:'invalid_visual_input'},400);
     if(!visualInputMatchesProject(validated.visualInput,scope.projectId)||await authorizeVisualInput({actor,projectId:scope.projectId,conversationId:scope.conversationId,context:body.context,visualInput:validated.visualInput})!==true)return reply({error:'invalid_visual_input'},400);
     body.visualInput=validated.visualInput;body.visualImages=validated.referenceImages;
-    if(body.referenceImages.some(image=>image.id!==body.context.baseImageId)||body.referenceImages.length>1||body.visualImages.some(image=>image.id===body.context.baseImageId))return reply({error:'invalid_visual_input'},400);
+    const allowedLocal=new Set([body.context.baseImageId,body.context.anchorImageId].filter(Boolean));
+    if(body.referenceImages.some(image=>!allowedLocal.has(image.id))||body.referenceImages.length>allowedLocal.size||body.visualImages.some(image=>allowedLocal.has(image.id)))return reply({error:'invalid_visual_input'},400);
     visualClaim={visualInputDigest:visualInputDigest(body.visualInput),visualReferenceIds:body.visualInput.entries.map(entry=>entry.id),visualRequiredIds:body.visualInput.entries.filter(entry=>entry.inputOrigin==='local-upload').map(entry=>entry.id)};
     visualAuthority=await prepareVisualAuthority({...scope,visualInput:body.visualInput,consentHeader:request.headers.get('x-compor-reference-consent')});
     if(!visualAuthority||visualAuthority.manifestDigest!==visualClaim.visualInputDigest||visualAuthority.pieceId!==(scope.conversationId&&scope.conversationId!=='references'?scope.conversationId:null)||(visualAuthority.consentSecret!==null&&!/^[a-f0-9]{64}$/.test(visualAuthority.consentSecret)))return reply({error:'invalid_visual_input'},403);
@@ -345,9 +371,12 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
   let dispatched=false;
   try{
    let previous=null,sessionId,expiresAt,priorTurnId=null,initialInput=0,initialOutput=0;
+   const postFormat=normalizePostFormat(body.context.postFormat);
+   const skillBundle=resolveCreativeSkillBundle({format:postFormat,surface:'chat'});
+   d.postFormat=postFormat;d.skillVersion=skillBundle.catalogVersion;
    const hasLinks=!automatic&&extractUserUrls(body.message).length>0;
    const sourcePages=hasLinks?await readPages(body.message):[];
-   const agentInstructions=await turnInstructions(body,{automatic,hasLinks,quick});
+   const agentInstructions=await turnInstructions(body,{automatic,hasLinks,quick,skillBundle});
    if(body.previousAttemptKey&&!hasLinks){d.phase='prior_get';const prior=await store.get({...scope,requestId:body.previousAttemptKey});if(prior?.state==='completed'&&Date.parse(prior.expiresAt)>now()+10000){
     d.phase='prior_binding';const verified=proof(scope,prior);d.phase='prior_lookup';const session=await get(verified.sessionId,key);d.phase='prior_validate';
     if(session.id!==verified.sessionId||session.status!=='idle'||!Array.isArray(session.required_actions)||session.required_actions.length)throw Error('previous session active');
@@ -359,7 +388,7 @@ export function createStudioChatHandlers({appOrigin,resolveActor,ownsProject,own
     const sessionTools=session.agent?.tools;
     const toolsVerified=Array.isArray(sessionTools)&&sessionTools.length===expectedTools.size&&sessionTools.every(tool=>tool?.type==='function'&&expectedTools.has(tool.name))&&new Set(sessionTools.map(tool=>tool.name)).size===expectedTools.size;
     // Input events inherit session instructions and previous pixels. Only a signed,
-    // unchanged selection can reuse visual history. Legacy/base bytes have no selection digest.
+    // unchanged selection and matching format skills can reuse visual history.
     const sameSelection=verified.visualInputDigest===visualClaim?.visualInputDigest;
     if(session.agent.model===AGENT_MODEL&&toolsVerified&&session.agent.instructions===agentInstructions&&sameSelection&&!body.referenceImages.length){
      if(!identifier(prior.turnId,'turn'))throw Error('previous turn unknown');previous=prior;sessionId=verified.sessionId;priorTurnId=prior.turnId;expiresAt=prior.expiresAt;initialInput=count(session.usage?.input_tokens);initialOutput=count(session.usage?.output_tokens);

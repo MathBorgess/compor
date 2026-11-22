@@ -3,6 +3,7 @@ import {imagePromptSkills} from './image-prompt-skills.mjs';
 import {visualTriageInstructions} from './visual-triage-instructions.mjs';
 import {parseVisualInput} from './visual-input.mjs';
 import {MAX_VISUAL_REQUEST_BYTES} from './visual-input-contract.mjs';
+import {resolveCreativeSkillBundle} from './creative-skills/index.mjs';
 const ROOT='https://api.openai.com/v1/agents/sessions';
 const identifier=(x,prefix)=>typeof x==='string'&&new RegExp(`^${prefix}_[A-Za-z0-9_-]{1,128}$`).test(x)&&!/sk-/i.test(x);
 const planningInstructions = [
@@ -12,7 +13,7 @@ const planningInstructions = [
  'Respeite os limites em unidades UTF-16 de cada campo. creativePrompt comporta até 4000, composition até 300, contrast até 300 e differenceFromOthers até 500. Use frases curtas e deixe margem nos resumos.',
 ].join(' ');
 
-async function instructionsFor(visualInput) {
+async function instructionsFor(visualInput, postFormat) {
  const instructions = [planningInstructions];
  if (visualInput) instructions.push(visualTriageInstructions);
  if (visualInput?.version === 2) {
@@ -21,6 +22,8 @@ async function instructionsFor(visualInput) {
   instructions.push('A raiz do JSON contém somente "version":1 e items (lista das três propostas).');
  }
  instructions.push('Use as skills abaixo antes de escrever o creativePrompt de cada rota. Na exploração preserve o schema do plano e descreva a composição de uma imagem por item.',await imagePromptSkills('exploration'));
+ const skillBundle = resolveCreativeSkillBundle({ format: postFormat ?? 'single', surface: 'planner' });
+ instructions.push(skillBundle.instructions);
  return instructions.join('\n');
 }
 
@@ -46,7 +49,7 @@ export function createManagedExplorationPlanProvider({apiKey,fetch:fetchApi=glob
     }
     input=[{role:'user',content}];
    }else if(referenceImages!==undefined)throw Error('unbound visual input');
-   const body=JSON.stringify({agent:{model:AGENT_MODEL,instructions:await instructionsFor(visualInput),reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[]},environment:{type:'none'},input,stream:false});
+   const body=JSON.stringify({agent:{model:AGENT_MODEL,instructions:await instructionsFor(visualInput,context?.postFormat),reasoning:{effort:'low'},multi_agent:{enabled:false},tools:[]},environment:{type:'none'},input,stream:false});
    if(Buffer.byteLength(body)>MAX_VISUAL_REQUEST_BYTES)throw Error('provider request too large');
    const r=await fetchApi(ROOT,{method:'POST',headers,body,redirect:'error',signal:AbortSignal.timeout(15000)});
    const session=await readJson(r,256000);if(!identifier(session?.id,'sess'))throw Error('invalid session');return {sessionId:session.id};

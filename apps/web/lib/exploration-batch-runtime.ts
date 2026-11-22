@@ -41,10 +41,10 @@ export function explorationBatchRuntime(prepared:PreparedOpenAiRequest) {
   intentSecret:input=>{if(!validateExplorationContext(input.context))throw Error('invalid context');const scope={actor:input.actor,projectId:input.projectId,conversationId:input.conversationId,batchId:input.batchId,intentId:input.intentId,context:input.context,...(input.visualInput?{visualInput:input.visualInput}:{})};if(input.purpose==='batch')return deriveExplorationIntent(bindings,{...scope,purpose:'batch'}).intentSecret;if(input.position===undefined||input.previousId===undefined)throw Error('invalid intent');return deriveExplorationIntent(bindings,{...scope,purpose:'replacement',position:input.position,previousId:input.previousId}).intentSecret;},
   store:createExplorationBatchStore(config),
   intentState:createExplorationIntentStore(config).state,
-  generate:async(actor,key,prompt,images,review)=>{
+  generate:async(actor,key,prompt,images,review,size)=>{
    if(!imagePipeline)throw Error('image generation unavailable');
    const handler=imagePipeline.createHandler(async()=>actor);
-   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,authorizeGeneration:true,images:images.map(({mime,data})=>({mime,data}))}),signal:review?.signal}),{authorizeReview:review?.authorizeReview});
+   const response=await handler(new Request(`${config.app}/internal-image`,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({apiKey:key,prompt,...(size?{size}:{}),authorizeGeneration:true,images:images.map(({mime,data})=>({mime,data}))}),signal:review?.signal}),{authorizeReview:review?.authorizeReview});
    return decodeExplorationImage(response);
   },
  });

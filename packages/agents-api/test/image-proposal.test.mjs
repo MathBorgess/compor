@@ -4,10 +4,12 @@ import {parseImageProposal,serializeImageProposal,IMAGE_PROPOSAL_SCHEMA} from '.
 import {imageProposalDigest} from '../src/artwork-input.mjs';
 
 const proposal={prompt:'Uma direção visual sintética',operation:'create',baseImageId:null,referenceIds:[]};
+const frameId='aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 test('validador e schema público aceitam exatamente os mesmos nomes de campos',()=>{
- assert.deepEqual(Object.keys(IMAGE_PROPOSAL_SCHEMA.properties).sort(),['prompt','operation','baseImageId','referenceIds','changedDimension'].sort());
+ assert.deepEqual(Object.keys(IMAGE_PROPOSAL_SCHEMA.properties).sort(),['prompt','operation','baseImageId','referenceIds','changedDimension','format','frameId','frameIndex'].sort());
  for(const key of Object.keys(IMAGE_PROPOSAL_SCHEMA.properties)){
-  const value={...proposal,...(key==='changedDimension'?{changedDimension:'style'}:{})};
+  const extra=key==='changedDimension'?{changedDimension:'style'}:key==='format'?{format:'story'}:key==='frameId'?{format:'carousel',frameId}:key==='frameIndex'?{format:'carousel',frameId,frameIndex:1}:{};
+  const value={...proposal,...extra};
   assert.doesNotThrow(()=>parseImageProposal(value));
  }
  for(const key of ['apiKey','projectId','extra'])assert.throws(()=>parseImageProposal({...proposal,[key]:'valor'}));

@@ -3,6 +3,7 @@ import {z} from 'zod';
 import {parseVisualInput,parseSelectedVisualInput,visualInputDigest} from '@compor/agents-api/visual-input';
 import {MAX_VISUAL_REQUEST_BYTES,parseVisualInputManifest,visualInputMatchesProject} from '@compor/agents-api/visual-input-contract';
 import type {VisualInputManifest,VisualReferenceImage} from '@compor/agents-api/visual-input-contract';
+import {formatImageSize,type PostImageSize} from '@compor/agents-api/creative-skills';
 import type {Actor} from './agent-auth.ts';
 import type {IntentStore} from './exploration-intent-route.ts';
 import {ExplorationCredentialsRejected} from './exploration-image-route.ts';
@@ -31,7 +32,7 @@ type BatchStore={
  hold:(actor:Actor,projectId:string,requestId:string,secret:string,reason:ExplorationQualityReason)=>Promise<void>;
  fail?:(actor:Actor,projectId:string,requestId:string,secret:string,closureReason:ExplorationClosureReason,providerOutcome:ExplorationProviderOutcome)=>Promise<void>;
 };
-type Dependencies={appOrigin:string;generationAvailable?:boolean;visualEnabled?:boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[],review:ExplorationReviewOptions)=>Promise<Uint8Array>};
+type Dependencies={appOrigin:string;generationAvailable?:boolean;visualEnabled?:boolean;visualRequired?:boolean;resolveActor:()=>Promise<Actor|null>;ownsProject:(actor:Actor,projectId:string)=>Promise<boolean>;prepareVisualAuthority?:(input:VisualScope)=>Promise<VisualAuthority|null>;checkVisualDispatch?:(input:VisualScope & {authority:VisualAuthority;intentId:string;intentEpoch:number})=>Promise<boolean>;verifyPlan:(input:{actor:Actor;apiKey:string;projectId:string;conversationId:string;batchId:string;requestId:string;context:BatchInput['context'];plan:BatchInput['plan'];token:string;visualInput?:VisualInputManifest})=>Promise<boolean>;intentSecret:(input:{actor:Actor;projectId:string;conversationId:string;batchId:string;intentId:string;context:BatchInput['context'];purpose:'batch'|'replacement';position?:number;previousId?:string;visualInput?:VisualInputManifest})=>string;intentState:IntentStore['state'];store:BatchStore;generate:(actor:Actor,key:string,prompt:string,images:readonly VisualReferenceImage[],review:ExplorationReviewOptions,size?:PostImageSize)=>Promise<Uint8Array>};
 const reply=(value:unknown,status:number)=>Response.json(value,{status,headers:{'Cache-Control':'no-store'}});
 const hash=(value:string|Uint8Array)=>createHash('sha256').update(value).digest('hex');
 async function readBody(request:Request){
@@ -101,7 +102,8 @@ export function createExplorationBatchRoute(deps:Dependencies){
      // For visual requests, this single SQL observation checks both revocable
      // authorities; the subsequent network dispatch is not atomic with SQL.
      await authorizeReview();
-     try{return await deps.generate(actor,key,child.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview});}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}
+     const size=input.context.postFormat!==undefined?formatImageSize(input.context.postFormat):undefined;
+     try{return await (size!==undefined?deps.generate(actor,key,child.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview},size):deps.generate(actor,key,child.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview}));}catch(error){if(error instanceof ExplorationCredentialsRejected)throw new ExplorationBatchRejected();throw error;}
     },
     put:(child,bytes)=>deps.store.put(actor,input.projectId,child.requestId,bytes),
     finish:(child,state)=>deps.store.finish(actor,input.projectId,child.requestId,state,child.proof),
@@ -144,8 +146,9 @@ export function createExplorationBatchRoute(deps:Dependencies){
     if(request.signal.aborted)throw Error('aborted before dispatch');
     await deps.store.plan(actor,input.projectId,input.requestId,{composition:entry.composition,contrast:entry.contrast});
     await authorizeReview();
+    const size=input.context.postFormat!==undefined?formatImageSize(input.context.postFormat):undefined;
     let bytes:Uint8Array;
-    try{bytes=await deps.generate(actor,key,entry.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview});}
+    try{bytes=await (size!==undefined?deps.generate(actor,key,entry.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview},size):deps.generate(actor,key,entry.prompt,visual?.referenceImages??[],{signal:request.signal,authorizeReview}));}
     catch(error){
      if(error instanceof ExplorationQualityHeld){await deps.store.hold(actor,input.projectId,input.requestId,proof,error.reason);return reply({status:'quality_held',batchId:input.batchId,requestId:input.requestId,qualityReason:error.reason,retryAutomatically:false},200);}
      if(error instanceof ExplorationCredentialsRejected){await deps.store.reject(actor,input.projectId,input.requestId,proof);return reply({status:'rejected',batchId:input.batchId,requestId:input.requestId,retryAutomatically:false},200);}

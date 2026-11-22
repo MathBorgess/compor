@@ -16,8 +16,9 @@ function versionRow(input:unknown, projectId:string, pieceId?:string):PersistedV
   const row=versionSchema.parse(input);
   const content = row?.content;
   if (row?.project_id !== projectId || !uuid(row.piece_id) || pieceId && row.piece_id !== pieceId || !integer(row.version) || row.version < 1 || typeof row.created_at !== 'string' ||
-    !content || !['caption,captionOrigin,date,headline,price','caption,captionOrigin,date,fields,headline,price'].includes(Object.keys(content).sort().join(',')) || !(['headline', 'price', 'date', 'caption'] as const).every(k => typeof content[k] === 'string' && content[k].length <= (k === 'caption' ? 4000 : k === 'headline' ? 500 : 100)) ||
-    !['user', 'agent'].includes(content.captionOrigin) || !validMetadata(row.metadata, row.version)) throw Error('invalid response');
+    !content || Object.keys(content).some(k => !['headline','price','date','caption','captionOrigin','fields','format','visualInvariants','frames'].includes(k)) ||
+    !(['headline', 'price', 'date', 'caption'] as const).every(k => typeof content[k] === 'string' && content[k].length <= (k === 'caption' ? 4000 : k === 'headline' ? 500 : 100)) ||
+    !['user', 'agent'].includes(content.captionOrigin) || (content.frames !== undefined && content.format !== 'carousel' && content.format !== 'collection') || !validMetadata(row.metadata, row.version)) throw Error('invalid response');
   // PostgREST timestamps may use an offset and microseconds. Browser state uses
   // canonical ISO milliseconds so an already-persisted approval remains readable.
   const metadata={...row.metadata,approval:{...row.metadata.approval,at:row.metadata.approval.at===null?null:new Date(row.metadata.approval.at).toISOString()}};

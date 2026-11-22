@@ -1,11 +1,24 @@
 import {parseDirection,proposeCriterion,decideCriterion} from './studio-direction.ts';
-import type {CreativeCriterion,CreativeDecision,PostContext,StudioReference,StudioState} from './studio-domain.ts';
+import type {CreativeCriterion,CreativeDecision,PostContext,PostFormat,StudioReference,StudioState} from './studio-domain.ts';
 import {changeStudioState,StudioStateError} from './studio-state.ts';
+import {clampFrameCount} from './studio-post-formats.ts';
 
-export const emptyPostSettings=()=>({name:'',deleted:false,prepared:true,direction:{criteria:[] as CreativeCriterion[],decisions:[] as CreativeDecision[]},objective:'',message:'',action:'',referenceIds:[] as string[],excludedReferenceIds:[] as string[]});
+export const emptyPostSettings=()=>({name:'',deleted:false,prepared:true,format:'single' as PostFormat,targetFrameCount:1,direction:{criteria:[] as CreativeCriterion[],decisions:[] as CreativeDecision[]},objective:'',message:'',action:'',referenceIds:[] as string[],excludedReferenceIds:[] as string[]});
 export function postContext(state:StudioState,pieceId:string):PostContext {
   const post=state.posts[pieceId]??emptyPostSettings();
   return {objective:post.objective,message:post.message,action:post.action};
+}
+export function postFormatOf(state:StudioState,pieceId?:string|null):PostFormat {
+  if(!pieceId)return 'single';
+  const post=state.posts[pieceId];
+  if(post?.format)return post.format;
+  const draft=state.drafts.find(item=>item.pieceId===pieceId);
+  return draft?.content.format??'single';
+}
+export function postTargetFrameCountOf(state:StudioState,pieceId?:string|null):number {
+  const format=postFormatOf(state,pieceId);
+  const stored=pieceId?state.posts[pieceId]?.targetFrameCount:undefined;
+  return clampFrameCount(format,stored);
 }
 export function effectiveReferences(state:StudioState,scope?:string):StudioReference[] {
   if(scope===undefined)return state.references;

@@ -1,11 +1,15 @@
 import {validateVisualInputManifest,validateVisualReferenceSelection} from './visual-input-contract.mjs';
+import {isPostFormat} from './creative-skills/formats.mjs';
 const object=x=>Boolean(x)&&typeof x==='object'&&!Array.isArray(x);
 const exact=(x,keys)=>object(x)&&Object.keys(x).sort().join(',')===keys.slice().sort().join(',');
+const shape=(x,required,optional=[])=>object(x)&&required.every(k=>Object.hasOwn(x,k))&&Object.keys(x).every(k=>required.includes(k)||optional.includes(k));
 const safe=(value,max)=>typeof value==='string'&&value.length<=max&&!/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]|sk-[^\s]+/i.test(value);
 const text=(value,max)=>safe(value,max)&&value.trim().length>0;
 
 export function validateExplorationContext(context){
- if(!exact(context,['idea','offer','audience','goal','direction','offerFacts','accepted','rejected','feedback'])||!safe(context.idea,4000)||!safe(context.offer,4000)||!safe(context.audience,2000)||!safe(context.goal,2000)||!safe(context.direction,2000)||!Array.isArray(context.offerFacts)||context.offerFacts.length>20)return false;
+ if(!shape(context,['idea','offer','audience','goal','direction','offerFacts','accepted','rejected','feedback'],['postFormat','brandVoice'])||!safe(context.idea,4000)||!safe(context.offer,4000)||!safe(context.audience,2000)||!safe(context.goal,2000)||!safe(context.direction,2000)||!Array.isArray(context.offerFacts)||context.offerFacts.length>20)return false;
+ if(context.postFormat!==undefined&&!isPostFormat(context.postFormat))return false;
+ if(context.brandVoice!==undefined&&(!exact(context.brandVoice,['tone','examples','avoid'])||!['tone','examples','avoid'].every(k=>safe(context.brandVoice[k],1000))))return false;
  if(!context.idea.trim()&&!context.offer.trim()&&!context.direction.trim())return false;
  if(!['accepted','rejected'].every(k=>Array.isArray(context[k])&&context[k].length<=8&&context[k].every(v=>text(v,1000))))return false;
  if(!Array.isArray(context.feedback)||context.feedback.length>8||!context.feedback.every(f=>exact(f,['action','comment','composition','contrast'])&&['selected','rejected','comment'].includes(f.action)&&['comment','composition','contrast'].every(k=>safe(f[k],1000))))return false;

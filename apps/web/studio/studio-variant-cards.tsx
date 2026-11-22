@@ -10,6 +10,7 @@ import {useObjectUrl} from './use-object-url.ts';
 
 type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
 const labels={style:'Estilo',composition:'Composição',hook:'Gancho'};
+const formatLabels={single:'Post único 4:5',carousel:'Carrossel 4:5',collection:'Coleção 4:5',story:'Story 9:16'};
 
 export default function VariantCards(props:Props) {
   const groups=groupVariants(props.versions,props.pieceId);
@@ -26,6 +27,12 @@ function VariantCard({group,index,...props}:Props&{group:ReturnType<typeof group
   return <article className="studio-variant-card" data-selected={selected} aria-label={`Variante ${index+1}`}>
     <h3>{index===0?'Primeira direção':`Variante ${index+1}`}{group.dimension?` · ${labels[group.dimension]}`:''}</h3>
     <VersionImage {...props} version={group.latest} />
+    {group.latest.content.format && group.latest.content.format !== 'single' && (
+      <p className="studio-variant-format">
+        {formatLabels[group.latest.content.format]}
+        {group.latest.content.frames ? ` · ${group.latest.content.frames.length} lâminas` : ''}
+      </p>
+    )}
     <p>{group.latest.metadata?(group.latest.metadata.approval.status==='approved'?'Aprovada':'Aguardando aprovação')+' · ':''}Versão {group.latest.version}</p>
     <button type="button" aria-pressed={selected} onClick={()=>void props.onOpenVersion(group.latest)}>Abrir variante {index+1}</button>
     <label htmlFor={versionId}>Versões da variante {index+1}</label>

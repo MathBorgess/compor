@@ -186,6 +186,10 @@
     {
       "name": "20261119000046_piece_version_image.sql",
       "sha256": "1bb654e8a285313c4cf94e98d84ef47d78b71b33d3dbd71da63205ddbbceb682"
+    },
+    {
+      "name": "20261121000047_post_formats_and_frames.sql",
+      "sha256": "9229096628b2612800a1d619a94abb3e19b3cdc308d37c10b0875a01871af0ee"
     }
   ]
 }

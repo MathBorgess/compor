@@ -1,9 +1,9 @@
 import {postMutationSchema,postNameSchema,type PostRecord} from './post-catalog';
 import {savedVersionSchema,type PieceVersion} from './studio-piece-contract';
-import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePieceContent,selectVersion,updateBrief} from './studio-state';
+import {changeStudioState,editDraft,getCurrentDraft,recordSavedVersion,samePieceContent,selectVersion,setPostFormat,updateBrandVoice,updateBrief} from './studio-state';
 import {cancelPostPreparation,completePostPreparation,startPostPreparation,updateLegacyPostName,updatePostPreparation,updateWorkflow} from './studio-workflow';
 import {selectScopedReference,unselectScopedReference,updatePostContext} from './studio-post-context';
-import type {ActionResult,DraftContext,PostContext,StudioState} from './studio-domain';
+import type {ActionResult,BrandVoice,DraftContext,PostContext,PostFormat,StudioState} from './studio-domain';
 import type {DraftAssetAddress, createStudioStorage} from './studio-storage';
 import type {ImageProposal} from '@compor/agents-api/image-proposal';
 
@@ -66,13 +66,22 @@ export function createStudioJourneyController(port:StatePort) {
     });
   }
 
-  function changePreparation(patch:Partial<PostContext&{name:string}>) {
+  function changePreparation(patch:Partial<PostContext&{name:string;format:PostFormat;targetFrameCount:number}>) {
     return change(value=>{
       if(value.workflow.pendingPost)return updatePostPreparation(value,patch);
       const draft=getCurrentDraft(value);
       if(!draft)return value;
-      const next=updatePostContext(value,draft.pieceId,patch);
-      return 'name' in patch?updateLegacyPostName(next,draft.pieceId,patch.name??''):next;
+      const contextPatch:Partial<PostContext>={};
+      if(patch.objective!==undefined)contextPatch.objective=patch.objective;
+      if(patch.message!==undefined)contextPatch.message=patch.message;
+      if(patch.action!==undefined)contextPatch.action=patch.action;
+      let next=Object.keys(contextPatch).length?updatePostContext(value,draft.pieceId,contextPatch):value;
+      if('name' in patch)next=updateLegacyPostName(next,draft.pieceId,patch.name??'');
+      if(patch.format!==undefined||patch.targetFrameCount!==undefined){
+        const currentFormat=next.posts[draft.pieceId]?.format??draft.content.format??'single';
+        next=setPostFormat(next,draft.pieceId,patch.format??currentFormat,patch.targetFrameCount);
+      }
+      return next;
     });
   }
 
@@ -131,9 +140,18 @@ export function createStudioJourneyController(port:StatePort) {
           const published=await prepared.publish(version.version);
           if(!sameScope(current))return unknown('inactive');
           if(published==='unknown')return unknown();
-        }else if(!options.prepareVersionImage&&!args?.changedDimension)await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
-          source,
-          {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+        }else if(!options.prepareVersionImage&&!args?.changedDimension){
+          await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
+            source,
+            {pieceId:draft.pieceId,baseVersion:version.version,kind:'base'});
+        }
+        if(!args?.changedDimension){
+          for(const frame of version.content.frames??[]){
+            await options.copyDraftAsset({userId:current.userId,projectId:current.projectId},
+              {pieceId:draft.pieceId,baseVersion:draft.baseVersion,kind:'base',frameId:frame.id},
+              {pieceId:draft.pieceId,baseVersion:version.version,kind:'base',frameId:frame.id});
+          }
+        }
       }
       if(!sameScope(current))return unknown('inactive');
       if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}
@@ -189,6 +207,8 @@ export function createStudioJourneyController(port:StatePort) {
     cancelPreparation:()=>change(cancelPostPreparation),
     editDraft:(input:Parameters<typeof editDraft>[1])=>change(state=>editDraft(state,input)),
     updateBrief:(patch:Parameters<typeof updateBrief>[1])=>change(state=>updateBrief(state,patch)),
+    updateBrandVoice:(patch:Partial<BrandVoice>)=>change(state=>updateBrandVoice(state,patch)),
+    setPostFormat:(pieceId:string,format:PostFormat,frameCount?:number)=>change(state=>setPostFormat(state,pieceId,format,frameCount)),
     updateWorkflow:(patch:Parameters<typeof updateWorkflow>[1])=>change(state=>updateWorkflow(state,patch)),
     updatePostContext:(pieceId:string,patch:Partial<PostContext>)=>change(state=>updatePostContext(state,pieceId,patch)),
     selectReference:(reference:Parameters<typeof selectScopedReference>[1],scope:string)=>change(state=>selectScopedReference(state,reference,scope)),

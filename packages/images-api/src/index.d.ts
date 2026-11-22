@@ -1,3 +1,5 @@
+export type SupportedImageSize = '1024x1280' | '864x1536';
+export declare const SUPPORTED_IMAGE_SIZES: readonly SupportedImageSize[];
 type ImageCandidate = Readonly<{
   imageBase64: string;
   mediaType: 'image/png';

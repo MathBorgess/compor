@@ -1,7 +1,7 @@
 export const ARTWORK_TRANSPORT_BYTES = 2 * 1024 * 1024;
 
-export function artworkImageBudgets(sizes: readonly number[]): number[] {
-  let remaining = ARTWORK_TRANSPORT_BYTES, count = sizes.length;
+export function artworkImageBudgets(sizes: readonly number[], totalBytes = ARTWORK_TRANSPORT_BYTES): number[] {
+  let remaining = totalBytes, count = sizes.length;
   const budgets = [...sizes];
   for (const {size, index} of sizes.map((size, index) => ({size, index})).sort((a, b) => a.size - b.size)) {
     const budget = Math.min(size, Math.floor(remaining / count));

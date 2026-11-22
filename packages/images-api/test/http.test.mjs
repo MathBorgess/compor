@@ -218,3 +218,24 @@ test('edição envia os pixels originais em multipart na ordem aprovada, sem URL
  }
  assert.equal(calls,1);
 });
+
+test('aceita proporção 9:16 (864x1536) para Story e recusa tamanhos fora da lista fechada', async () => {
+  const sizesSeen = [];
+  const handler = createImageHandler({
+    authenticate: async () => ({ userId: 'user-1' }),
+    fetch: async (_url, options) => {
+      sizesSeen.push(JSON.parse(options.body).size);
+      return Response.json({ data: [{ b64_json: png }] });
+    },
+  });
+  const okStory = await handler(request({ apiKey: key, prompt: 'Story vertical', authorizeGeneration: true, size: '864x1536' }));
+  assert.equal(okStory.status, 200);
+  const okFeed = await handler(request({ apiKey: key, prompt: 'Feed 4:5', authorizeGeneration: true, size: '1024x1280' }));
+  assert.equal(okFeed.status, 200);
+  assert.deepEqual(sizesSeen, ['864x1536', '1024x1280']);
+  for (const invalidSize of ['1080x1920', '9:16', '1024x1024', '', null, 1280]) {
+    const res = await handler(request({ apiKey: key, prompt: 'Teste', authorizeGeneration: true, size: invalidSize }));
+    assert.equal(res.status, 400);
+  }
+  assert.equal(sizesSeen.length, 2);
+});

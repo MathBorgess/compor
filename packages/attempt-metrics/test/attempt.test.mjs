@@ -89,3 +89,13 @@ test('o modelo 2.6 tem estimativa própria e preserva suporte ao histórico 2.5'
     assert.equal(result.estimatedCost.pricingVersion, model === 'gpt-image-2.6-flare' ? 'openai-public-2026-11-04' : 'openai-public-2026-11-03');
   }
 });
+
+test('aceita tamanhos de produção 4:5 (1024x1280) e Story 9:16 (864x1536)', () => {
+  for (const size of ['1024x1280', '864x1536']) {
+    const result = createAttempt({ kind: 'image', model: 'gpt-image-2.6-flare', image: { size, quality: 'auto' }, clock: () => 0 })
+      .complete({ inputTextTokens: 16, inputImageTokens: 0, cachedInputTokens: 0, outputImageTokens: 196, serviceTier: 'standard' });
+    assert.deepEqual(result.image, { size, quality: 'auto' });
+    assert.equal(result.estimatedCost.amountUsd, 0.00596);
+  }
+  assert.throws(() => createAttempt({ kind: 'image', model: 'gpt-image-2.6-flare', image: { size: '1080x1920', quality: 'auto' }, clock: () => 0 }), /invalid image configuration/);
+});

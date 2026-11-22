@@ -5,7 +5,25 @@ import os
 import tempfile
 from pathlib import Path
 
-from judge import DIMENSIONS, json_file, write_once
+from judge import (
+    ALL_EXTENDED_DIMENSIONS,
+    DIMENSIONS,
+    VALID_FORMATS,
+    dimensions_for,
+    json_file,
+    write_once,
+)
+
+EXTENDED_DIM_LABELS = {
+    'gancho': 'Gancho',
+    'adequacaoAoPerfil': 'Perfil',
+    'leitura': 'Leitura',
+    'adequacao': 'Adequação',
+    'sinergiaLegenda': 'Legenda',
+    'coesaoVisual': 'Coesão',
+    'progressaoOuRitmo': 'Progressão/Ritmo',
+    'zonasSeguras': 'Zonas seguras',
+}
 
 
 def cell(value):
@@ -69,13 +87,122 @@ def render(rounds):
     return lines
 
 
+def render_extended(rounds):
+    lines = [
+        '# Marco 5 estendido. Julgamento independente de copy, perfil e multi-formato',
+        '',
+        'Pontuação de 0 a 2 nas dimensões universais (`gancho`, `adequacaoAoPerfil`, `leitura`, `adequacao`, e `sinergiaLegenda` quando há legenda) mais dimensões condicionais do formato (`coesaoVisual` e `progressaoOuRitmo` em carrossel/coleção; `zonasSeguras` em story 9:16). Uma peça conta como pronta no proxy quando preserva todos os fatos, respeita `brandVoice.avoid` e recebe nota 2 em todas as dimensões aplicáveis. O estudo avalia casos sintéticos cegos com um único juiz Codex por rodada; aceitação humana, desempenho em rede real e publicação permanecem fora do escopo.',
+        '',
+        '| Rodada | Grupo | Casos | Avaliados | Sem pixels | Prontos no proxy | Com falha crítica |',
+        '| --- | --- | ---: | ---: | ---: | ---: | ---: |',
+    ]
+    for run in rounds:
+        for split, summary in run['grupos'].items():
+            values = [
+                run['round'],
+                split,
+                *[summary[key] for key in ('casos', 'disponiveis', 'semPixels', 'prontasNoProxy', 'comFalhaCritica')],
+            ]
+            lines.append('| ' + ' | '.join(map(str, values)) + ' |')
+
+    lines.extend([
+        '',
+        '## Desempenho por formato (todas as divisões)',
+        '',
+        '| Rodada | Formato | Casos | Avaliados | Sem pixels | Prontos no proxy | Com falha crítica |',
+        '| --- | --- | ---: | ---: | ---: | ---: | ---: |',
+    ])
+    for run in rounds:
+        for fmt in VALID_FORMATS:
+            totals = {'casos': 0, 'disponiveis': 0, 'semPixels': 0, 'prontasNoProxy': 0, 'comFalhaCritica': 0}
+            for group in run['grupos'].values():
+                fmt_group = group.get('porFormato', {}).get(fmt)
+                if not fmt_group:
+                    continue
+                for key in totals:
+                    totals[key] += fmt_group[key]
+            if totals['casos']:
+                values = [run['round'], fmt, *[totals[key] for key in ('casos', 'disponiveis', 'semPixels', 'prontasNoProxy', 'comFalhaCritica')]]
+                lines.append('| ' + ' | '.join(map(str, values)) + ' |')
+
+    baseline = rounds[0]['grupos']['reserva']
+    final = rounds[-1]['grupos']['reserva']
+    holdout_count = final['casos']
+    if baseline['semPixels'] or final['semPixels']:
+        summary = 'A comparação de reserva entre a primeira e a última rodada ficou incompleta por falta de pixels.'
+    elif final['prontasNoProxy'] > baseline['prontasNoProxy'] and final['comFalhaCritica'] <= baseline['comFalhaCritica']:
+        summary = 'O grupo reservado melhorou no proxy entre a primeira e a última rodada, sem aumento de erros críticos.'
+    else:
+        summary = 'O grupo reservado deixou de demonstrar o ganho exigido entre a primeira e a última rodada.'
+    lines.extend(['', f'{summary} A comparação envolve {holdout_count} casos reservados.', ''])
+    if any(group['semPixels'] for run in rounds for group in run['grupos'].values()):
+        lines.extend(['A ausência de pixels (incluindo lâminas faltantes em carrossel ou coleção) é falha de cobertura da geração. O juiz se absteve de pontuar peças incompletas.', ''])
+
+    for run in rounds:
+        lines.extend([f"## Rodada {run['round']}", '', f"Revisão `{run['revision']}` · juiz `{run['judge']['model']}` · sessão `{run['judge']['thread']}`", ''])
+        for split, cases in run['casos'].items():
+            lines.extend([f'### Grupo de {split}', ''])
+            for case in cases:
+                piece = case['peca']
+                fmt = case['format']
+                expected_frames = case['expectedFrames']
+                include_caption = bool(case.get('includeCaption', False))
+                header = f"#### {case['id']} (`{fmt}` · {expected_frames} lâmina{'s' if expected_frames != 1 else ''})"
+                if piece['status'] == 'sem_pixels':
+                    status_text = f"Sem avaliação visual ({piece.get('availableFrames', 0)}/{expected_frames} lâminas disponíveis)."
+                else:
+                    status_text = 'Pronta no proxy.' if piece.get('prontaNoProxy') else 'Abaixo da régua no proxy.'
+                lines.extend([header, '', f"{status_text} {case['diagnostico']}", ''])
+                if case.get('missingCaption'):
+                    lines.extend(['Legenda esperada pelo caso não encontrada (`caption.txt` ausente); `sinergiaLegenda` omitida.', ''])
+                if piece['status'] == 'avaliada':
+                    dims = dimensions_for(fmt, include_caption)
+                    lines.extend(['| Dimensão | Nota | Evidência |', '| --- | ---: | --- |'])
+                    for dim in dims:
+                        rating = piece['dimensoes'][dim]
+                        lines.append(f"| {EXTENDED_DIM_LABELS.get(dim, dim)} (`{dim}`) | {rating['nota']} | {cell(rating['evidencia'])} |")
+                    lines.append(f"| Fidelidade factual | — | `{piece['fidelidadeFactual']}` |")
+                    lines.append('')
+                if interruption := case.get('interrupcao'):
+                    lines.extend([f"A execução registrou `{interruption['state']}` em `{interruption['stage']}`. Situação `{interruption['slots']}`.", ''])
+                for fact in piece.get('fatos', []):
+                    lines.append(f"- Fato · {fact['fato']} · {fact['estado']}. {fact['evidencia']}")
+                for failure in piece.get('falhasCriticas', []):
+                    lines.append(f"- Falha crítica ({failure['tipo']}) · {failure['trecho']}. {failure['justificativa']}")
+                lines.append('')
+    return lines
+
+
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('root', type=Path, help='diretório privado da bancada')
+    parser.add_argument('--suite', choices=('legacy', 'extended'), default='legacy', help='suíte do marco 5 (padrão: legacy)')
+    parser.add_argument('--rounds', type=int, default=4, choices=(2, 3, 4), help='quantidade de rodadas comparadas (padrão: 4)')
     args = parser.parse_args()
     root = args.root.resolve()
     rounds = []
-    for index in range(4):
+    if args.suite == 'extended':
+        for index in range(args.rounds):
+            folder = root / f'round-{index}'
+            complete = json_file(folder / 'complete.json')
+            published = json_file(folder / 'judge-5-extended.json')
+            held = json_file(root / 'juiz-visual-retido' / f'extended-round-{index}.json')
+            if not (
+                complete['round'] == held['round'] == published['round'] == index
+                and complete['revision'] == held['revision'] == published['revision']
+                and held['judge'] == published['judge']
+                and held.get('suite') == published.get('suite') == 'extended'
+                and published['casos'] == held['casos']['desenvolvimento']
+                and len(held['casos']['reserva']) >= 2
+            ):
+                raise ValueError('registro da rodada estendida não corresponde ao julgamento visual retido')
+            rounds.append(held)
+        if any((run['rubricaSha256'], run['fixtureSha256']) != (rounds[0]['rubricaSha256'], rounds[0]['fixtureSha256']) for run in rounds):
+            raise ValueError('rubrica e casos estendidos devem permanecer fixos nas rodadas comparadas')
+        write_once(root / 'juiz-visual-estendido.json', {'suite': 'extended', 'rodadas': rounds})
+        save_report(root / 'juiz-visual-estendido.md', render_extended(rounds))
+        return
+    for index in range(args.rounds):
         folder = root / f'round-{index}'
         complete = json_file(folder / 'complete.json')
         published = json_file(folder / 'judge-5.json')
