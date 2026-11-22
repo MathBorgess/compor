@@ -84,6 +84,22 @@ const imageQualityNotice=(reason:ImageQualityReason)=>reason==='image_quality_re
   ?'A revisão de imagem reteve esta proposta. Seu post foi preservado.'
   :'A revisão da imagem ficou inconclusiva. Seu post foi preservado.';
 const chatPollDelay=(count:number)=>count<4?2000:count<9?4000:8000;
+const chatPollWindowMs = 120_000;
+const chatPollPaused = 'A consulta automática foi pausada. Consulte esta tentativa para acompanhar o resultado.';
+
+function ChatWaitTime({ deadline }: { deadline: number }) {
+  const remaining = () => Math.max(0, Math.ceil((deadline - Date.now()) / 1000));
+  const [seconds, setSeconds] = useState(remaining);
+  useEffect(() => {
+    const update = () => setSeconds(Math.max(0, Math.ceil((deadline - Date.now()) / 1000)));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [deadline]);
+  const duration = seconds < 60 ? `${seconds}s` : `${Math.floor(seconds / 60)}min ${seconds % 60}s`;
+  return <small role="timer" aria-live="off">Limite de tempo da consulta automática em {duration}</small>;
+}
+
 type CredentialSource='default'|'byok';
 type ImageReservation = {projectId:string;pieceId:string;version:number;attemptId:string;actionBinding:string};
 type UndispatchedImage = {action:ImageAction; reservation:ImageReservation; revision:number; ready:boolean};
@@ -196,6 +212,7 @@ export default function StudioChat({
   const [imageRetry,setImageRetry]=useState<{requestId:string;scope:string;screen:ImageAttemptScreen}|null>(null);
   const [imageNeedsDecision,setImageNeedsDecision]=useState(false);
   const [closedImageAttempt,setClosedImageAttempt]=useState<string|null>(null);
+  const [chatWait, setChatWait] = useState<{ deadline: number; acknowledged: boolean } | null>(null);
   const [roundRevision,setRoundRevision]=useState(0);
   const [pendingSource,setPendingSource]=useState<CredentialSource|null>(null);
   const [orphanNotice,setOrphanNotice]=useState('');
@@ -343,7 +360,7 @@ export default function StudioChat({
     mounted.current = true;
     const changed=previousScope.current?.marker===marker&&(previousScope.current.source!==credentialSource||previousScope.current.epoch!==credentialEpoch);
     previousScope.current={marker,source:credentialSource,epoch:credentialEpoch};
-    preparationSequence.current++;setImageAction(null);setBusy(false);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
+    preparationSequence.current++;setImageAction(null);setBusy(false);setChatWait(null);setImageNeedsReconciliation(false);setImageNeedsDecision(false);
     activeMarker.current=scopeMarker;receiptRef.current=null;setImageReceipt(null);setPending(null);setPendingSource(null);setOrphanNotice('');
     setLastCompleted(null);setInspection(null);setInspecting(false);setImageScreen(null);setImageRetry(null);inspectionLock.current=false;
     actionCount.current.clear();
@@ -408,8 +425,8 @@ export default function StudioChat({
     return ()=>{window.removeEventListener('compor-reference-round-changed',changed);window.removeEventListener('storage',stored);};
   },[marker]);
   async function api(path:string, body:Record<string,unknown>,mode:'inspection'):Promise<PendingInspection>;
-  async function api(path:string, body:Record<string,unknown>,beforeDispatch?:()=>void):Promise<ChatResponse>;
-  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'|(()=>void)):Promise<ChatResponse|PendingInspection> {
+  async function api(path:string, body:Record<string,unknown>,beforeDispatch?:()=>void,pollTimeout?:AbortSignal):Promise<ChatResponse>;
+  async function api(path:string, body:Record<string,unknown>,mode?:'inspection'|(()=>void),pollTimeout?:AbortSignal):Promise<ChatResponse|PendingInspection> {
     if(!credentialIsCurrent())throw Error('A fonte da IA mudou. A tentativa anterior foi preservada.');
     if(!canUseAI)throw Error('A IA está indisponível. Você pode continuar editando.');
     const effect=path==='/api/agent/image'||path==='/api/studio/action'||path==='/api/studio/chat'&&body.op!=='poll'&&body.op!=='inspect_pending';
@@ -418,6 +435,8 @@ export default function StudioChat({
     const key = getApiKey?.();
     if (credentialSource==='byok'&&!key) throw Error("Conecte sua chave OpenAI para continuar.");
     const controller = new AbortController();
+    if (pollTimeout?.aborted) controller.abort();
+    else pollTimeout?.addEventListener('abort', () => controller.abort(), { once: true });
     request.current = controller;
     let authorityHeaders:Record<string,string>={};
     const artwork=body.artworkInput&&typeof body.artworkInput==='object'&&'visualInput' in body.artworkInput?body.artworkInput.visualInput:undefined;
@@ -508,8 +527,9 @@ export default function StudioChat({
       }),
     );
   }
-  async function handle(data:ChatResponse, requestId:string, count = 0):Promise<void> {
+  async function handle(data:ChatResponse, requestId:string, count = 0, deadline = Date.now() + chatPollWindowMs):Promise<void> {
     if (!mounted.current || !credentialIsCurrent()) return;
+    if (data.status !== 'running') setChatWait(null);
     const blockedScreen=imageScreen?.undispatched?.action.requestId===requestId?imageScreen:null;
     if (readOnly && (data.status === 'action_required' || data.status === 'consent_required')) {
       setBusy(false);
@@ -697,11 +717,16 @@ export default function StudioChat({
         actionBinding: data.actionBinding,
         result: { ...result, revision: getState().revision },
       });
-      return handle(next, requestId, count + 1);
+      return handle(next, requestId, count + 1, deadline);
     }
-    if (data.status === "running" && count < 20) {
+    if (data.status === "running") {
+      if (count >= 20 || Date.now() >= deadline) {
+        pauseChatPoll();
+        return;
+      }
       setNotice("");
-      timer.current = setTimeout(() => poll(requestId, count + 1), chatPollDelay(count));
+      setChatWait({ deadline, acknowledged: true });
+      scheduleChatPoll(requestId, count + 1, deadline, chatPollDelay(count));
       return;
     }
     if (data.status === "failed" || data.status==='quality_held') {
@@ -756,23 +781,48 @@ export default function StudioChat({
       "O resultado ainda não foi confirmado. Consulte a mesma tentativa antes de enviar outro pedido.",
     );
   }
-  async function poll(requestId:string, count = 0, afterImageConfirmation = false) {
+  function pauseChatPoll() {
+    clearTimeout(timer.current);
+    setChatWait(null);
+    setBusy(false);
+    setNotice(chatPollPaused);
+  }
+  function scheduleChatPoll(requestId: string, count: number, deadline: number, delay: number) {
+    clearTimeout(timer.current);
+    timer.current = setTimeout(() => {
+      if (credentialIsCurrent() && availability.current.pending === requestId) void poll(requestId, count, false, deadline);
+    }, Math.max(0, Math.min(delay, deadline - Date.now())));
+  }
+  async function poll(requestId:string, count = 0, afterImageConfirmation = false, deadline = Date.now() + chatPollWindowMs) {
     if (!credentialIsCurrent()||!canUseAI) return;
     const nested=afterImageConfirmation&&pollLock.current===requestId;
-    if(inspectionLock.current||(pollLock.current&&!nested)){if(count>0&&availability.current.pending===requestId)timer.current=setTimeout(()=>poll(requestId,count),chatPollDelay(count));return;}
+    const remaining = deadline - Date.now();
+    if(inspectionLock.current||(pollLock.current&&!nested)){
+      if(count>0&&remaining>0)scheduleChatPoll(requestId,count,deadline,chatPollDelay(count));
+      return;
+    }
     if(attemptSource.current!==credentialSource){setNotice(sourceNotice(attemptSource.current));return;}
+    if (remaining <= 0) { pauseChatPoll(); return; }
+    setNotice('');
+    setChatWait(current => current?.deadline === deadline ? current : { deadline, acknowledged: false });
     pollLock.current=requestId;setBusy(true);
+    const timeout = new AbortController();
+    const cutoff = setTimeout(() => timeout.abort(), remaining);
     try {
       const data = await api("/api/studio/chat", {
         op: "poll",
         projectId: state.projectId,
         requestId,
-      });
-      await handle(data, requestId, count);
+      }, undefined, timeout.signal).finally(() => clearTimeout(cutoff));
+      await handle(data, requestId, count, deadline);
     } catch (e) {
       if (credentialIsCurrent()) {
-        setBusy(false);
-        setNotice(errorMessage(e));
+        if (timeout.signal.aborted) pauseChatPoll();
+        else {
+          setChatWait(null);
+          setBusy(false);
+          setNotice(errorMessage(e));
+        }
       }
     } finally {if(!nested)pollLock.current=null;}
   }
@@ -1630,9 +1680,17 @@ export default function StudioChat({
             ) : <p>{item.text}</p>}
           </article>;
         })}
-        {busy && <div className="studio-message studio-thinking" role="status">
-          <span className="studio-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
-          <span>Compor está trabalhando…</span>
+        {busy && <div className="studio-message studio-thinking" data-following={Boolean(chatWait)}>
+          {chatWait ? <>
+            <div className="studio-thinking-copy">
+              <span role="status">{chatWait.acknowledged ? 'O agente está processando o pedido…' : 'Consultando o andamento do pedido…'}</span>
+              <ChatWaitTime deadline={chatWait.deadline} />
+            </div>
+            <div className="studio-thinking-track" role="progressbar" aria-label="Acompanhamento da tentativa"><span /></div>
+          </> : <>
+            <span className="studio-thinking-dots" aria-hidden="true"><i /><i /><i /></span>
+            <span role="status">Compor está trabalhando…</span>
+          </>}
         </div>}
         {explorationRecovery}
         {sourceMismatch && pendingSource && <p role="status" className="studio-hint">{sourceNotice(pendingSource)}</p>}

@@ -540,6 +540,67 @@ test('pedido incerto permanece sinalizado e recuperável com conversa minimizada
  assert.equal(calls.filter(call=>call.path==='/api/agent/image').length,0);
 });
 
+test('consulta lenta pausa no limite e recupera o mesmo pedido sem reenviar',{skip:!existsSync(browserPath),timeout:60000},async t=>{
+ const {page,origin,calls,flow,errors,external}=await app(t);
+ const latePoll=Promise.withResolvers(),latePollReleased=Promise.withResolvers();
+ let held=false;
+ flow.chat=body=>body.op==='poll'?{status:'completed',text:'Resposta sintética recuperada.'}:{status:'running'};
+ await page.route('**/api/studio/chat',async route=>{
+  const body=route.request().postDataJSON();
+  if(body.op!=='poll'||held)return route.fallback();
+  held=true;calls.push({path:'/api/studio/chat',body});
+  await latePoll.promise;
+  try{await route.fulfill({status:202,json:{status:'running'}});}catch{/* O navegador já encerrou a consulta antiga. */}
+  finally{latePollReleased.resolve();}
+ });
+ try{
+  await openOriginal(page,origin);
+  const now=Date.parse('2026-11-22T12:00:00Z');
+  await page.clock.install({time:new Date(now)});
+  await page.clock.pauseAt(new Date(now+1000));
+  const conversation=page.locator('.guided-conversation:not([hidden])');
+  const progress=conversation.getByRole('progressbar',{name:'Acompanhamento da tentativa'});
+  const countdown=conversation.getByRole('timer');
+  const paused=conversation.getByText('A consulta automática foi pausada. Consulte esta tentativa para acompanhar o resultado.',{exact:true});
+  const consult=conversation.getByRole('button',{name:'Consultar esta tentativa',exact:true});
+  await conversation.getByRole('textbox',{name:'Sua mensagem',exact:true}).fill('Planeje este post sintético.');
+  await conversation.getByRole('button',{name:'Enviar →',exact:true}).click();
+  await conversation.getByText('O agente está processando o pedido…',{exact:true}).waitFor();
+  await progress.waitFor();
+  assert.equal(await countdown.innerText(),'Limite de tempo da consulta automática em 2min 0s');
+  const {requestId}=calls.find(call=>call.path==='/api/studio/chat').body;
+
+  await page.clock.runFor(2000);
+  await eventually(()=>held,Boolean);
+  await page.clock.fastForward(117999);
+  assert.equal(await paused.isVisible(),false);
+  assert.equal(await consult.isVisible(),false);
+  assert.equal(await progress.isVisible(),true);
+  assert.equal(await countdown.innerText(),'Limite de tempo da consulta automática em 1s');
+  assert.equal(calls.filter(call=>call.path==='/api/studio/chat').length,2,'uma única consulta ainda espera resposta');
+
+  await page.clock.runFor(1);
+  await paused.waitFor();
+  await consult.waitFor();
+  const pending=await stored(page);
+  assert.ok(pending.adjustments.some(item=>item.id===requestId&&!['completed','failed'].includes(item.status)));
+  await consult.click();
+  const completed=conversation.getByText('Resposta sintética recuperada.',{exact:true});
+  await completed.waitFor();
+  await progress.waitFor({state:'hidden'});
+  latePoll.resolve();
+  await latePollReleased.promise;
+  await page.clock.fastForward(120000);
+  assert.equal(await completed.count(),1);
+
+  const chats=calls.filter(call=>call.path==='/api/studio/chat');
+  assert.deepEqual(chats.map(({body})=>({op:body.op,requestId:body.requestId,projectId:body.projectId,conversationId:body.conversationId})),
+   [undefined,'poll','poll'].map(op=>({op,requestId,projectId,conversationId:originalPiece})));
+  assert.equal(calls.some(call=>call.path==='/api/studio/action'||call.path==='/api/agent/image'),false);
+  assert.deepEqual(errors,[]);assert.deepEqual(external,[]);
+ }finally{latePoll.resolve();}
+});
+
 test('limite de uso do provedor é informado sem reenviar o pedido',{skip:!existsSync(browserPath),timeout:60000},async t=>{
  const {page,origin,calls,flow,errors,external}=await app(t);
  flow.chat=body=>body.op==='poll'?{status:'failed',error:'provider_usage_limit'}:{status:'running'};
