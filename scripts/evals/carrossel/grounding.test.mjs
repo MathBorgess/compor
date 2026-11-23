@@ -38,6 +38,16 @@ test('a mesma quantia em reais, ligada ao fato permitido, cumpre o contrato lite
   assert.equal(result.anchors[0].quote, 'R$ 99');
 });
 
+test('separa a pontuação da frase do valor inteiro ou decimal em reais', () => {
+  const facts = ['A atividade tem 8 vagas e custa R$ 140.', 'O caderno custa R$ 1.490,50.'];
+  const candidate = { slides: [{ id: 'capa', headline: 'Inscrição de R$ 140', body: 'O caderno custa R$ 1.490,50, com retirada.' }] };
+  const claims = [claim('headline', 'R$ 140'), claim('body', 'R$ 1.490,50', 'f2')];
+  assert.equal(inspectClaimLedger(candidate, claims, facts).status, 'pass');
+  const altered = { slides: [{ ...candidate.slides[0], headline: 'Inscrição de R$ 141' }] };
+  assert.deepEqual(inspectClaimLedger(altered, [claim('headline', 'R$ 141'), claims[1]], facts).issues.map(item => item.id),
+    ['CLAIM_ANCHOR', 'UNBOUND_RESULT']);
+});
+
 test('lê números em legendas, diagramas e listas, inclusive nomes de slot com posição', () => {
   const candidate = { slides: [{
     id: 'miolo', headline: 'Opções da oficina', listItems: ['R$ 81'],

@@ -1,5 +1,5 @@
 const claimSlot = /^(?:headline|body|figure|alt|kicker|source|listItems\.[0-6]|diagram\.(?:sample|labels\.[0-2]|items\.[0-2])|caption)$/;
-const resultNumber = /(?:R\$\s*\d[\d.,]*|\d[\d.,]*\s*(?:%|por cento|vezes\b|[×x](?!\s*\d|[\p{L}])|reais\b)|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b)/giu;
+const resultNumber = /(?:R\$\s*\d(?:[\d.,]*\d)?|\d[\d.,]*\s*(?:%|por cento|vezes\b|[×x](?!\s*\d|[\p{L}])|reais\b)|\b\d{1,2}\/\d{1,2}(?:\/\d{2,4})?\b)/giu;
 const personalResult = /\b(?:eu\s+)?(?:alcancei|aumentei|bati|cresci|dobrei|faturei|ganhei|reduzi|tripliquei|vendi)\s+(?:\S+\s+){0,5}\d[\d.,]*/giu;
 
 export function numberedFacts(facts) {
