@@ -2,6 +2,8 @@ import { resolveSupabaseActor, ownsSupabaseProject } from '../../../../../lib/ag
 import { createCarouselRenderRoute } from '../../../../../lib/carousel-render-route.ts';
 import { authClient, authConfig } from '../../../../../lib/supabase.ts';
 
+export const maxDuration = 90;
+
 export async function POST(request: Request) {
   const headers = { 'Cache-Control': 'private, no-store' };
   if (process.env.COMPOR_CAROUSEL_RENDER_ENABLED !== 'true') return Response.json({ error: 'not_found' }, { status: 404, headers });

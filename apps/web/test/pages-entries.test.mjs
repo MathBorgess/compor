@@ -9,7 +9,7 @@ test('cada implementação HTTP tem exatamente uma entrada Pages, a mesma URL p�
   const impl=resolve(root,'handlers'),entries=resolve(root,'pages/api');
   const sources=(await readdir(impl,{recursive:true})).filter(p=>p.endsWith('/route.ts'));
   const files=(await readdir(entries,{recursive:true})).filter(p=>p.endsWith('.ts'));
-  assert.equal(sources.length,50);assert.equal(files.length,50);
+  assert.equal(sources.length,51);assert.equal(files.length,51);
   const rewrites=await config.rewrites();
   const paths=new Set();
   for(const file of files) {
