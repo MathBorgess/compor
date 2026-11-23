@@ -180,6 +180,7 @@ export default function StudioChat({
   readOnly = false,
   allowReferenceAnalysis = true,
   onReferenceWait,
+  onRevealArt,
   intro = false,
   referenceWorkbench = false,
   selectedVisualsAvailable = false,
@@ -189,7 +190,7 @@ export default function StudioChat({
   createVisualAuthoritySnapshot,
   visualAuthorityHeaders,
   portalTarget,
-}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:SaveDraftInput)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
+}: { state:StudioState;projectRevision?:number;getState:()=>StudioState;change:(update:(state:StudioState)=>StudioState)=>StudioState|null;flush:()=>Promise<unknown>;tools:RefObject<ReturnType<typeof createStudioTools>|null>;hasApiKey:boolean;getApiKey:()=>string;credentialSource?:CredentialSource;credentialEpoch?:number;canUseAI?:boolean;onUseAI?:()=>void;onUseImage:(image:ImageSelection)=>Promise<boolean>;prepareImageVersion?:(context:SaveDraftInput)=>Promise<ActionResult>;loadReference:(id:string)=>Promise<StoredImage|null|undefined>;loadBase?:(context:ImageContext&{frameId?:string})=>Promise<StoredImage|null|undefined>;loadAnchor?:(context:ImageContext,anchorFrameId:string)=>Promise<StoredImage|null|undefined>;activeFrameId?:string|null;externalPrompt?:{text:string;nonce:number}|null;initialMessage?:string;initialPostRequest?:InitialPostRequest;messageDraft?:string;onMessageDraftChange?:(value:string)=>void;connection?:ReactNode;explorationRecovery?:ReactNode;developerMode?:boolean;conversationId?:string;readOnly?:boolean;allowReferenceAnalysis?:boolean;onReferenceWait?:(conversationId:string,waiting:boolean)=>void;onRevealArt?:()=>void;intro?:boolean;referenceWorkbench?:boolean;selectedVisualsAvailable?:boolean;selectedVisualsRequired?:boolean;referenceAuthorityBlocked?:boolean;checkReferenceAuthority?:()=>Promise<boolean>;createVisualAuthoritySnapshot?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<void>;visualAuthorityHeaders?:(scope:VisualAuthorityScope,manifest:VisualInputManifest)=>Promise<Record<string,string>>;portalTarget?:HTMLElement|null }) {
   const developerMode=process.env.NODE_ENV==='development'&&requestedDeveloperMode;
   const visualUnavailable=selectedVisualsRequired&&!selectedVisualsAvailable;
   const state=conversationContext(sourceState,conversationId);
@@ -1723,7 +1724,10 @@ export default function StudioChat({
           </p>
         )}
         {imageReceipt&&imageReceiptFor(imageReceipt,state.userId,state.projectId)&&state.selection?.pieceId===imageReceipt.pieceId&&state.selection?.baseVersion===imageReceipt.version&&(
-          <p role="status" className="studio-hint">Imagem gerada e adicionada a este post · versão {imageReceipt.version}.</p>
+          <div role="status" className="studio-hint studio-image-receipt">
+            <p>Imagem gerada e adicionada a este post · versão {imageReceipt.version}.</p>
+            {onRevealArt&&<button type="button" className="studio-button-secondary studio-reveal-art-button" onClick={onRevealArt}>Ver arte pronta →</button>}
+          </div>
         )}
         {imageAction && (carouselPlanAction ? (
           <div className="studio-hint" role="status">

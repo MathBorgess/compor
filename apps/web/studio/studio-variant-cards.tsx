@@ -8,7 +8,7 @@ import type {ImageSelection,PieceVersion} from './studio-ui-types';
 import AssetRecovery from './asset-recovery';
 import {useObjectUrl} from './use-object-url.ts';
 
-type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
+type Props={userId:string;projectId:string;pieceId:string;versions:PieceVersion[];selectedVersion:number;assetRevision?:Blob|number|null;onOpenVersion:(version:PieceVersion)=>void|Promise<void>;loadLocal:(version:PieceVersion)=>Promise<StoredImage|null|undefined>;onUseImage:(image:ImageSelection)=>Promise<boolean>};
 const labels={style:'Estilo',composition:'Composição',hook:'Gancho'};
 const formatLabels={single:'Post único 4:5',carousel:'Carrossel 4:5',collection:'Coleção 4:5',story:'Story 9:16'};
 
@@ -60,9 +60,19 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
   useEffect(()=>{
     if(!frame.current)return;
     if(!('IntersectionObserver' in window)){setVisible(true);return;}
-    const observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setVisible(true);observer.disconnect();}},{rootMargin:'240px'});
-    observer.observe(frame.current);return()=>observer.disconnect();
-  },[]);
+    let observer:IntersectionObserver|null=null;
+    const observe=()=>{
+      observer?.disconnect();
+      if(!frame.current)return;
+      if(frame.current.getBoundingClientRect().width>0){setVisible(true);return;}
+      observer=new IntersectionObserver(entries=>{if(entries.some(entry=>entry.isIntersecting)){setVisible(true);observer?.disconnect();}},{rootMargin:'240px'});
+      observer.observe(frame.current);
+    };
+    observe();
+    const resize=typeof ResizeObserver!=='undefined'?new ResizeObserver(()=>{if(!visible&&frame.current&&frame.current.getBoundingClientRect().width>0){setVisible(true);resize?.disconnect();observer?.disconnect();}}):null;
+    if(resize&&frame.current)resize.observe(frame.current);
+    return()=>{observer?.disconnect();resize?.disconnect();};
+  },[visible]);
   useEffect(()=>{
     if(!visible)return;
     let live=true;const serial=++localSequence.current;
@@ -97,7 +107,7 @@ function VersionImage({userId,projectId,version,assetRevision,loadLocal,onUseIma
     finally{if(current===sequence.current)setRecovering(false);}
   }
   return <div ref={frame} className="studio-variant-image">
-    {url?<img src={url} alt={`Arte da versão ${version.version}`} loading="lazy" />:!isLoaded?<p className="studio-hint">Carregando miniatura…</p>:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
+    {url?<img src={url} alt={`Arte da versão ${version.version}`} />:!isLoaded?<p className="studio-hint">Carregando miniatura…</p>:<p>Imagem da versão {version.version} ainda não disponível neste navegador.</p>}
     {!governed&&!blob&&isLoaded&&<button type="button" onClick={()=>setRecovery(value=>!value)}>Recuperar imagem da versão {version.version}</button>}
     {!governed&&recovery&&<AssetRecovery userId={userId} projectId={projectId} pieceId={version.piece_id} version={version.version} onSelect={assetId=>void select(assetId)} />}
     {!governed&&candidate&&candidate.scope===scope&&<div><p>Origem desconhecida. Confira a imagem antes de usá-la nesta versão.</p>{candidateUrl&&<img src={candidateUrl} alt={`Imagem recuperada para a versão ${version.version}`} onLoad={()=>setCandidate(value=>value===candidate?{...value,decoded:true}:value)} onError={()=>{setCandidate(null);setNotice('A imagem recuperada não pôde ser exibida.');}} />}<button type="button" disabled={!candidate.decoded||recovering} onClick={()=>void useCandidate()}>Usar imagem nesta versão</button></div>}

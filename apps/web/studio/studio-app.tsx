@@ -487,6 +487,7 @@ function ProjectStudio({
     [notice, setNotice] = useState(""),
     [saving, setSaving] = useState(false),
     [base, setBase] = useState<Blob|null>(null),
+    [previewVersions, setPreviewVersions] = useState<Record<string,boolean>>({}),
     [activeFrameId, setActiveFrameId] = useState<string|null>(null),
     [frameBlobs, setFrameBlobs] = useState<Record<string,Blob>>({}),
     [chatPromptRequest, setChatPromptRequest] = useState<{conversationId:string;text:string;nonce:number}|null>(null),
@@ -812,7 +813,10 @@ function ProjectStudio({
     const scope={userId, projectId:project.id};
     if(baseVersion>=1){
       const preview=await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'preview'});
-      if(preview)return preview.file;
+      if(preview){
+        if(active.current)setPreviewVersions(current=>current[`${pieceId}:${baseVersion}`]?current:{...current,[`${pieceId}:${baseVersion}`]:true});
+        return preview.file;
+      }
     }
     return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
   }
@@ -1025,6 +1029,7 @@ function ProjectStudio({
             } else await cacheSavedImage(pieceId, version, blob);
           } else {
             await storage.putDraftAsset({ ...scope, pieceId, baseVersion: version, kind: version >= 1 ? 'preview' : 'base', file: blob });
+            if(version>=1)setPreviewVersions(current=>({...current,[`${pieceId}:${version}`]:true}));
           }
         }
         if (targetDraft && targetFrame && assetId) {
@@ -1040,8 +1045,12 @@ function ProjectStudio({
         }else await cacheSavedImage(pieceId, version, blob);
       }else{
         await storage.putDraftAsset({...scope, pieceId, baseVersion:version, kind:version>=1?'preview':'base', file:blob});
+        if(version>=1)setPreviewVersions(current=>({...current,[`${pieceId}:${version}`]:true}));
       }
-      if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));await local.flush();}
+      if(local.get().drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version)){
+        local.change(value=>freezeCreationContext(value,pieceId,version,creationContext??{postContext:postContext(value,pieceId),references:[]}));
+        await local.flush();
+      }
       const current = getCurrentDraft(local.get());
       if (
         active.current &&
@@ -1795,7 +1804,7 @@ function ProjectStudio({
   const parallelRecovery=referencesOpen&&(!usingParallel||!explorationRequested||parallel.phase==='blocked'||parallel.paused||parallel.awaitingFeedback)&&<ParallelExplorationRecovery {...(referenceAuthorityEnabled?{createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} userId={userId} projectId={project.id} conversationId={referenceScope} credentialSource={credentialSource} credentialEpoch={credentialEpoch} replacementAvailable={usingParallel&&!visualUnavailable} allowReplacement={!referenceUploading&&usingParallel&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&canUseProjectAI&&parallel.ready&&Boolean(s&&!s.adjustments.some(item=>!['completed','failed'].includes(item.status)))} getReplacementReferences={getReplacementReferences} generationFingerprint={s?JSON.stringify({idea,post:referenceScope==='references'?null:postContext(s,referenceScope),brief:s.brief,persona:s.persona,direction:s.direction,offerFacts:s.offerFacts,references:s.references}):undefined} getReplacementContext={async()=>{const value=session.get();if(!value)throw Error('context_unavailable');const state=conversationContext(value,referenceScope);const currentIdea=referenceScope==='references'?idea:postContext(state,referenceScope).message||idea;return parallelExplorationContext(state,project.id,referenceScope,currentIdea);}} getApiKey={getApiKey} isAuthenticated={isAuthenticated} onCompleted={async (...args)=>{await onExplorationCompleted(...args);if(active.current)setRecoveredCompletions(value=>value+1);}} onContinuePlan={!pendingTurn&&!referenceUploading&&canUseProjectAI&&usingParallel&&!parallel.running&&!visualUnavailable&&(!referenceAuthorityEnabled||authorityStatus==='ready')&&parallel.ready&&parallel.epochReady?requestProposals:undefined}/>;
   const explorationRecovery=<>{!exploration.parallelBlocked&&(exploration.awaitingFeedback ? <div className="studio-message studio-exploration-recovery" data-role="assistant"><p>Mostrei duas rodadas de propostas. Você já está satisfeito com alguma delas? Conte o que achou ou peça mais opções.</p>{exploration.resumeError && <p role="alert">{exploration.resumeError}</p>}{hasApiKey && <button type="button" className="studio-button-secondary" disabled={exploration.resuming} onClick={requestProposals}>{exploration.resuming?'Retomando…':'Gerar mais propostas'}</button>}</div> : exploration.blocked ? <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" onClick={requestProposals}>Consultar e retomar</button>}</div> : exploration.awaitingAnswer && <div className="studio-exploration-recovery"><p role="status">{exploration.status}</p>{hasApiKey && <button type="button" className="studio-button-secondary" onClick={requestProposals}>Gerar mais propostas</button>}</div>)}</>;
   const renderChat = (conversationId:string|undefined,intro=false,readOnly=false,referenceWorkbench=false) => (
-    <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&!proposalsLocked&&conversationId===referenceScope} onReferenceWait={reportReferenceWait}
+    <StudioChat key={`${userId}:${project.id}:${conversationId??"legacy"}`} conversationId={conversationId} selectedVisualsAvailable={selectedVisualsAvailable} selectedVisualsRequired={selectedVisualsRequired} referenceAuthorityBlocked={referenceAuthorityEnabled&&authorityStatus!=='ready'} {...(referenceAuthorityEnabled?{checkReferenceAuthority,createVisualAuthoritySnapshot,visualAuthorityHeaders}:{})} portalTarget={conversationId===referenceScope&&referencesOpen?referenceChatTarget:null} intro={intro&&!(conversationId===referenceScope&&referenceChatTarget)} readOnly={readOnly} referenceWorkbench={referenceWorkbench||Boolean(conversationId===referenceScope&&referencesOpen)} allowReferenceAnalysis={referencesOpen&&!proposalsLocked&&conversationId===referenceScope} onReferenceWait={reportReferenceWait} onRevealArt={conversationId&&conversationId!=='references'?()=>setChatMinimized(true):undefined}
       state={s}
       projectRevision={projectDetails.revision}
       developerMode={developerMode}
@@ -1914,15 +1923,19 @@ function ProjectStudio({
         <StudioDirection direction={s.direction} references={references} onPropose={criterion => local.change(value => addCreativeCriterion(value, criterion))} onDecide={decision => local.change(value => recordCreativeDecision(value, decision))} />
       </>);
   const postTitle=(draft&&(s.posts[draft.pieceId]?.name||postRecords.find(post=>post.pieceId===draft.pieceId)?.name))||draft?.content.headline||`Post ${postIds(s).indexOf(draft?.pieceId??'')+1}`;
-  const postVersionLabel=draft?.approval.status==="approved"?"Aprovado":draft?.dirty?"Rascunho":draft?.baseVersion?`Versão ${draft.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Rascunho":"Rascunho";
+  const hasLocalPreview=Boolean(draft&&draft.baseVersion>=1&&previewVersions[`${draft.pieceId}:${draft.baseVersion}`]);
+  const isCleanSaved=Boolean(draft&&!draft.dirty&&!hasLocalPreview&&draft.baseVersion>=1&&!compositionPending);
+  const postVersionLabel=draft?.approval.status==="approved"?"★ Pronto para postar":isCleanSaved?`Salvo · v${draft?.baseVersion}`:draft?.creationContext?.explorationSource?"v0 · Em criação":"Em criação";
+  const hasReadyArt=Boolean(base||(activeFrames.length>0&&activeFrames.every(frame=>Boolean(visibleFrameBlobs[frame.id]))));
+  const hasReadyCaption=Boolean(draft?.content.caption?.trim());
   // ADR 0056: nome do post, versão e ações ficam no topo do próprio post; a barra superior é fixa.
   const artwork=(<div className="studio-post-workspace">
           <div className="studio-post-workspace-header">
-            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge">{postVersionLabel}</span>{draft&&<span className="studio-badge studio-badge-format">{activeFormatOption.label} · {activeFormatOption.ratioLabel}</span>}</div>
+            <div className="studio-post-identity"><h2 title={postTitle}>{postTitle}</h2><span className="studio-badge" data-status={draft?.approval.status==="approved"?"approved":isCleanSaved?"saved":"draft"}>{postVersionLabel}</span>{draft&&<span className="studio-badge studio-badge-format">{activeFormatOption.label} · {activeFormatOption.ratioLabel}</span>}<span className="studio-readiness-pills" aria-label="Prontidão do post"><span data-done={hasReadyArt?'true':undefined}>{hasReadyArt?'✓':'○'} Arte</span><span data-done={hasReadyCaption?'true':undefined}>{hasReadyCaption?'✓':'○'} Legenda</span><span data-done={isCleanSaved?'true':undefined}>{isCleanSaved?'✓':'○'} Salvo</span></span></div>
             <div className="studio-post-actions" role="toolbar" aria-label="Ações deste post"><button type="button" className="studio-button-secondary" aria-label="Escolher mais referências" title="Escolher mais referências" onClick={()=>{setReferenceScope(draft?.pieceId??'references');setDrawer(null);setSettings('references','post');}}><PostActionIcon path="M4 5h16v14H4zM4 15l4-4 4 4 3-3 5 5M15 9.5a1 1 0 1 0 0-.01"/>Referências</button>
             <button type="button" className="studio-button-secondary" aria-label="Configurações do Post" title="Configurações do Post" onClick={()=>setPostSettingsOpen(true)}><PostActionIcon path="M4 7h10M18 7h2M4 17h4M12 17h8M16 5v4M10 15v4"/>Configurações</button>
             <button type="button" className="studio-button-secondary" aria-label="Revisar post" title="Revisar post" disabled={s.workflow.view==='prepare-post'} onClick={()=>nextStage('review')}><PostActionIcon path="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12zM12 9a3 3 0 1 0 0 6 3 3 0 0 0 0-6"/>Revisar</button>
-            <button type="button" className="studio-button" aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':'Salvar'}</button></div></div>
+            <button type="button" className="studio-button" data-save-state={saving?'saving':isCleanSaved?'saved':'unsaved'} aria-label={saving?undefined:'Salvar versão'} aria-describedby={compositionPending?'studio-carousel-save-hint':undefined} title="Salvar versão" disabled={versionBusy||compositionPending||isCleanSaved||s.workflow.view==='prepare-post'} onClick={()=>{void saveCurrent();}}><PostActionIcon path="M5 4h11l3 3v13H5zM8 4v5h7V4M8 20v-6h8v6"/>{saving?'Salvando…':isCleanSaved?`Salvo · v${draft?.baseVersion} ✓`:'Salvar'}</button></div></div>
 
           {compositionPending&&<p id="studio-carousel-save-hint" className="studio-hint">{carouselSaveHint}</p>}
           <div className="guided-artwork-editor">

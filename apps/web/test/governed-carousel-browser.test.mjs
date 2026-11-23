@@ -533,7 +533,8 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
       assert.deepEqual(await canonical.json(), {assetId:null});
       const banner = legacyPage.getByText('Não foi possível verificar todas as lâminas desta versão.', {exact:true});
       await banner.waitFor();
-      await legacyButton('Salvar versão').and(legacyPage.locator(':enabled')).waitFor();
+      assert.equal(await legacyPage.locator('#studio-carousel-save-hint').count(), 0);
+      await legacyButton('Salvar versão').and(legacyPage.locator(':disabled')).waitFor();
       const priorReads = [...imageReads];
       assert.ok(priorReads.includes('/api/images'));
 

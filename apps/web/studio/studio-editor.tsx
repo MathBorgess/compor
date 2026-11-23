@@ -443,7 +443,7 @@ export default function StudioEditor({
       )}
       {wrapInspector(<>
         <div className="studio-copy-toolbar">
-          <p className="studio-hint">Estes textos orientam a próxima geração. Alterá-los não modifica os pixels da arte atual.</p>
+          <p className="studio-hint">Estes textos orientam a próxima geração. A arte atual só muda quando você pedir uma nova versão.</p>
           {onRefineCopy && (
             <button
               type="button"
@@ -558,12 +558,13 @@ export default function StudioEditor({
             }}>Adicionar campo</button>
           </div>
         </details>}
-        <label>
+        <label className="studio-caption-editor">
           Legenda
           <textarea
             value={draft.content.caption}
             maxLength={4000}
             rows={3}
+            placeholder="Escreva ou peça na conversa a legenda para copiar e colar na rede social…"
             onChange={(e) => onEdit?.("caption", e.target.value)}
           />
         </label>

@@ -167,7 +167,7 @@ export function createStudioJourneyController(port:StatePort) {
         if(source.baseVersion>=1)await options.copyDraftAsset(assetScope,{...source,kind:'preview'},{...destination,kind:'preview'});
       }
       if(!sameScope(current))return unknown('inactive');
-      if(!recovered){options.onVersionsChanging();options.onVersionSaved(version);}
+      options.onVersionsChanging();options.onVersionSaved(version);
       change(value=>recordSavedVersion(value,{
         pieceId:draft.pieceId,baseVersion:draft.baseVersion,version:version.version,content:version.content,
         ...(frameSnapshot?{sourceContent:draft.content}:{}),
