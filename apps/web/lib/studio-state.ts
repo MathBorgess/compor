@@ -259,7 +259,7 @@ export function pendingSelectionQuestion(state: StudioState, conversationId?:str
 }
 export function approveDraft(state: StudioState, {at,eventId}: {at:string;eventId:string}) { return changeStudioState(state, next => { const draft=current(next); if(!iso(at))fail();if(draft.baseVersion===0||draft.dirty)throw new StudioStateError('studio_unsaved_draft');draft.approval={status:'approved',kind:'explicit',sourceVersion:draft.baseVersion,at};event(next,'approval_explicit',null,eventId); }); }
 export function inheritApproval(approval: Approval, baseVersion: number): Approval { if(!approvalForBase(approval,baseVersion)||!integer(baseVersion))fail();return freeze(approval.status==='approved'?{status:'approved',kind:'inherited',sourceVersion:baseVersion,at:approval.at}:noApproval()); }
-export function recordSavedVersion(state: StudioState, {pieceId,baseVersion,version,content,eventId,approval}: {pieceId:string;baseVersion:number;version:number;content:PieceContent;eventId:string;approval?:Approval}) {
+export function recordSavedVersion(state: StudioState, {pieceId,baseVersion,version,content,sourceContent=content,eventId,approval}: {pieceId:string;baseVersion:number;version:number;content:PieceContent;sourceContent?:PieceContent;eventId:string;approval?:Approval}) {
   parseStudioState(state);
   if(approval!==undefined&&(!integer(version,1)||!approvalForBase(approval,version)))fail();
   const prior=state.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===version);
@@ -267,7 +267,7 @@ export function recordSavedVersion(state: StudioState, {pieceId,baseVersion,vers
   return changeStudioState(state,next=>{
     const draft=next.drafts.find(item=>item.pieceId===pieceId&&item.baseVersion===baseVersion);
     if(!draft||!integer(version,1)||version!==draft.expectedLatestVersion+1||!contentValid(content)||next.drafts.some(item=>item.pieceId===pieceId&&item.baseVersion===version))throw new StudioStateError('studio_version_conflict');
-    const unchanged=sameContent(draft.content,content),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(unchanged?content:draft.content),dirty:!unchanged,approval:approval===undefined?inheritApproval(draft.approval,baseVersion):clone(approval),creationContext:clone(draft.creationContext??{postContext:postContext(next,pieceId),references:[]})};
+    const unchanged=sameContent(draft.content,sourceContent),value={pieceId,baseVersion:version,expectedLatestVersion:version,content:clone(unchanged?content:draft.content),dirty:!unchanged,approval:approval===undefined?inheritApproval(draft.approval,baseVersion):clone(approval),creationContext:clone(draft.creationContext??{postContext:postContext(next,pieceId),references:[]})};
     next.drafts.push(value);
     if(unchanged)draft.dirty=false;
     if(next.selection&&sameDraft(next.selection,draft))next.selection={pieceId,baseVersion:version};

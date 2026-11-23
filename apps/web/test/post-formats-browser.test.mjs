@@ -6,6 +6,7 @@ import { createServer } from 'node:net';
 import { crc32 } from 'node:zlib';
 import { chromium } from 'playwright-core';
 import { waitForApp, stopApp } from './wait-for-app.mjs';
+import {mockPostCatalog} from './mock-post-catalog.mjs';
 import { sessionCookie } from './session-cookie.mjs';
 import { finishPreparation, openConversation, closeSettings } from './guided-navigation.mjs';
 
@@ -66,13 +67,14 @@ test('formatos, Voz da marca e download completo do carrossel funcionam sem gera
   const errors = [], calls = [];
   page.on('pageerror', error => errors.push(error.message));
   let projects = [];
-  const posts = [];
   const versions = [];
+  const privateImages = new Map();
+  const coverBindings = new Map();
+  let interrupted = false;
   let completeSave;
   const saveResponse = new Promise(resolve => { completeSave = resolve; });
-  await page.route('**/auth/session', route => route.fulfill({ json: { state: 'connected', userId: alice } }));
-  await page.route('**/api/**', async route => {
-    const request = route.request(), path = new URL(request.url()).pathname;
+  const routeApi = async route => {
+    const request = route.request(), {pathname:path, searchParams} = new URL(request.url());
     calls.push(path);
     if (path === '/api/projects') {
       if (request.method() === 'POST') {
@@ -81,31 +83,54 @@ test('formatos, Voz da marca e download completo do carrossel funcionam sem gera
       }
       return route.fulfill({ json: { projects } });
     }
-    if (path === '/api/posts') {
-      const body = request.postDataJSON();
-      const post = { projectId: body.projectId, pieceId: body.pieceId, name: body.name, deleted: false };
-      posts.push(post);
-      return route.fulfill({ json: { status: 'created', post } });
-    }
     if (path === '/api/ai/credential-status') return route.fulfill({ json: { defaultAvailable: false } });
     if (path === '/api/pieces') {
-      if (request.method() === 'GET') return route.fulfill({json:{versions, posts}});
+      if (request.method() === 'GET') return route.fulfill({json:{versions, posts:[...catalog.records.values()]}});
       await saveResponse;
       const body = request.postDataJSON();
-      const version = {project_id:project, piece_id:body.pieceId, version:body.expectedVersion + 1, content:body.content};
+      const latest = versions.filter(version => version.piece_id === body.pieceId).at(-1)?.version ?? 0;
+      if (latest !== body.expectedVersion) return route.fulfill({status:409, json:{status:'conflict', currentVersion:latest}});
+      const version = {
+        project_id:project, piece_id:body.pieceId, version:latest + 1, content:body.content,
+        metadata:{revision:1, baseVersion:body.baseVersion || null, approval:{status:'unapproved'}},
+      };
       versions.push(version);
       return route.fulfill({json:{status:'saved', version}});
     }
     if (path === '/api/piece-version-images') {
-      if (request.method() === 'GET') return route.fulfill({json:{assetId:null}});
-      return route.fulfill({json:{status:'bound', assetId:request.postDataJSON().assetId}});
+      if (request.method() === 'GET') {
+        const key = [searchParams.get('pieceId'), searchParams.get('version')].join('/');
+        return route.fulfill({json:{assetId:coverBindings.get(key) ?? null}});
+      }
+      const {pieceId, version, assetId} = request.postDataJSON();
+      coverBindings.set([pieceId, version].join('/'), assetId);
+      return route.fulfill({json:{status:'bound', assetId}});
     }
-    if (path === '/api/images' && request.method() === 'POST') {
-      const assetId = new URL(request.url()).searchParams.get('assetId');
+    if (path === '/api/images') {
+      const [projectId, pieceId, version, assetId] = ['projectId','pieceId','version','assetId'].map(key => searchParams.get(key));
+      assert.equal(projectId, project);
+      assert.equal(versions.some(item => item.piece_id === pieceId && String(item.version) === version), true);
+      const key = [pieceId, version, assetId].join('/');
+      if (request.method() === 'GET') {
+        const image = privateImages.get(key);
+        return image ? route.fulfill({contentType:'image/png', body:image}) : route.fulfill({status:404, json:{error:'not_found'}});
+      }
+      if (privateImages.has(key)) return route.fulfill({status:409, json:{error:'asset_exists'}});
+      if (!interrupted && privateImages.size === 2) {
+        interrupted = true;
+        return route.fulfill({status:502, json:{error:'result_unknown'}});
+      }
+      privateImages.set(key, request.postDataBuffer());
       return route.fulfill({status:201, json:{status:'stored', assetId}});
     }
     return route.fulfill({ status: 503, json: { error: 'unexpected' } });
-  });
+  };
+  async function installRoutes(target) {
+    await target.route('**/auth/session', route => route.fulfill({json:{state:'connected', userId:alice}}));
+    await target.route('**/api/**', routeApi);
+  }
+  await installRoutes(page);
+  const catalog = await mockPostCatalog(page);
 
   const button = name => page.getByRole('button', { name, exact: true });
   try {
@@ -205,10 +230,23 @@ test('formatos, Voz da marca e download completo do carrossel funcionam sem gera
     assert.equal(await button('Salvando…').isDisabled(), true);
     assert.equal(await archiveButton.isDisabled(), true);
     completeSave();
+    await page.getByRole('status').filter({hasText:'O resultado do salvamento é desconhecido.'}).waitFor();
+    assert.equal(versions.length, 1, 'o texto ficou na versão reservada');
+    assert.equal(privateImages.size, 2, 'interrompe publicações posteriores após resultado desconhecido');
+    await button('Salvar versão').click();
     await page.getByRole('status').filter({hasText:'Nova versão salva.'}).waitFor();
     assert.equal(versions.length, 1);
     assert.equal(versions[0].content.frames.length, 5);
     assert.equal(versions[0].content.caption, caption);
+    const savedPost = versions[0];
+    assert.equal(privateImages.size, 5, 'uma publicação privada para cada lâmina');
+    const savedIds = savedPost.content.frames.map(frame => frame.assetId);
+    assert.equal(new Set(savedIds).size, 5);
+    for (const frame of savedPost.content.frames) {
+      assert.match(frame.assetId, /^[\da-f]{8}-[\da-f]{4}-5[\da-f]{3}-[89ab][\da-f]{3}-[\da-f]{12}$/);
+      assert.deepEqual(privateImages.get([savedPost.piece_id, savedPost.version, frame.assetId].join('/')),
+        Buffer.from(assets[frame.position - 1], 'base64'));
+    }
     await page.setViewportSize({width:1440, height:950});
     await page.reload();
     await archiveButton.and(page.locator(':enabled')).waitFor();
@@ -219,6 +257,28 @@ test('formatos, Voz da marca e download completo do carrossel funcionam sem gera
     const savedEntries = readStoredZip(await readFile(await savedResult.path()));
     assert.deepEqual(savedEntries.map(entry => entry.file), entries.map(entry => entry.file));
     await button('Pedir ajuste no estúdio').click();
+
+    const fresh = await browser.newPage({viewport:{width:390,height:844}});
+    try {
+      await fresh.context().addCookies([sessionCookie(origin)]);
+      await installRoutes(fresh);
+      await fresh.goto(`${origin}/projetos/${project}/posts/${savedPost.piece_id}`);
+      const open = fresh.getByRole('button', {name:'Revisar post', exact:true});
+      await open.waitFor();
+      const minimize = fresh.getByRole('button', {name:'Minimizar conversa', exact:true});
+      if (await minimize.isVisible()) await minimize.click();
+      await open.click();
+      const freshExport = fresh.getByRole('button', {name:'Baixar carrossel em ZIP', exact:true});
+      await freshExport.and(fresh.locator(':enabled')).waitFor();
+      const freshDownload = fresh.waitForEvent('download');
+      await freshExport.click();
+      const archive = await freshDownload;
+      assert.equal(archive.suggestedFilename(), 'Carrossel de luz natural-v1.zip');
+      assert.deepEqual(readStoredZip(await readFile(await archive.path())), savedEntries);
+      assert.equal(privateImages.size, 5, 'reabrir e baixar não gravam ativos');
+    } finally {
+      await fresh.close();
+    }
 
     // 3. Criar novo post como Story 9:16 e alternar Guia de áreas seguras
     await button('Posts do projeto').click();

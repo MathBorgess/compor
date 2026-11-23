@@ -93,5 +93,6 @@ Para entender o código atual, comece pelo [mapa da arquitetura](../architecture
 | [0078](0078-origem-de-preview-vercel.md) | implementação local | Origem e callback de Preview vinculados ao deployment do Compor |
 | [0079](0079-bancada-bloqueada-durante-o-lote.md) | accepted | Progresso da exploração, bloqueio da bancada por lote e retomada explícita de plano |
 | [0080](0080-skills-criativas-copy-e-modos-de-post.md) | implementado localmente; migration não aplicada | Skills criativas em duas camadas, copy na imagem (`on-image-copy.v1`), quatro modos nativos (4:5 e 9:16), fluxo Capa Âncora e Marco 5 estendido |
+| [0081](0081-imagens-do-carrossel-na-versao-salva.md) | implementado e verificado localmente | PNGs por lâmina e versão, retomada de upload e ZIP recuperável em outro navegador |
 
 Mudanças posteriores não apagam registros anteriores. Registre a parte substituída, sua razão, a fonte da decisão e a evidência disponível. Não promova um status por inferência a partir da existência de código. Em especial, o uso atual da Agents API está documentado no ADR 0016, enquanto o status histórico do ADR 0011 permanece inalterado.

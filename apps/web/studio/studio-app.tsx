@@ -79,7 +79,7 @@ import StudioAssets from "./studio-assets";
 import * as z from '../lib/schema.ts';
 import { projectsSchema, projectResponseSchema, type Project, type PieceVersion, type ImageSelection } from './studio-ui-types';
 import { versionsSchema, versionSchema } from '../lib/studio-piece-contract';
-import type { StudioState, StudioReference, ActionResult } from '../lib/studio-domain';
+import type { StudioState, StudioReference, ActionResult, PieceFrame } from '../lib/studio-domain';
 import type { ActionInputByName, StudioActionName, StudioAction } from '@compor/agents-api/studio-chat-tools';
 const ParallelExplorationRecovery=lazy(()=>import('./parallel-exploration-recovery'));
 declare global { interface Document { readonly modelContext?: StudioModelContext } }
@@ -799,10 +799,10 @@ function ProjectStudio({
     }
     return (await storage.getDraftAsset(scope,{pieceId, baseVersion, kind:'base'}))?.file??null;
   }
-  async function cacheSavedImage(pieceId:string, version:number, file:Blob) {
+  async function cacheSavedImage(pieceId:string, version:number, file:Blob, frameId?:string) {
     const storage=local.storage.current;
     if(!storage||version<1)return;
-    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', file});}
+    try{await storage.putDraftAsset({userId, projectId:project.id, pieceId, baseVersion:version, kind:'base', frameId, file});}
     catch(error){if(!(error instanceof StudioStorageError)||error.code!=='studio_draft_asset_exists')throw error;}
   }
   async function canonicalImage(pieceId:string, version:number) {
@@ -812,7 +812,21 @@ function ProjectStudio({
     await cacheSavedImage(pieceId, version, blob);
     return blob;
   }
+  async function workingFrameImage(pieceId:string, baseVersion:number, frame:PieceFrame) {
+    const storage=local.storage.current;
+    if(!storage)return null;
+    const stored=await storage.getDraftAsset({userId,projectId:project.id}, {
+      pieceId,baseVersion,kind:'base',frameId:frame.id,
+    });
+    if(stored)return stored.file;
+    if(baseVersion<1||!frame.assetId)return null;
+    const {readSavedFrameImage}=await import('../lib/piece-version-frame-assets');
+    const file=await readSavedFrameImage({projectId:project.id,pieceId,version:baseVersion,frameId:frame.id,assetId:frame.assetId});
+    if(file)await cacheSavedImage(pieceId,baseVersion,file,frame.id).catch(()=>{});
+    return file;
+  }
   const draftFrameIds = (draft?.content.frames ?? []).map(frame => frame.id).join(',');
+  const draftFrameAssets = (draft?.content.frames ?? []).map(frame => frame.assetId ?? '').join(',');
   useEffect(() => {
     const frames = draft?.content.frames ?? [];
     if (!frames.length) {
@@ -828,8 +842,6 @@ function ProjectStudio({
     const loadGeneration=++baseLoadGeneration.current;
     if (!draft || !local.storage.current) return;
     let live = true;
-    const storage = local.storage.current;
-    const scope = { userId, projectId: project.id };
     const pieceId=draft.pieceId, baseVersion=draft.baseVersion;
     workingImage(pieceId, baseVersion)
       .then(async file=>{
@@ -845,25 +857,23 @@ function ProjectStudio({
       });
     const frames = draft.content.frames ?? [];
     if (frames.length) {
-      Promise.all(frames.map(async frame => {
-        const stored = await storage.getDraftAsset(scope, {
-          pieceId: draft.pieceId,
-          baseVersion: draft.baseVersion,
-          kind: "base",
-          frameId: frame.id,
-        }).catch(() => null);
-        return stored ? [frame.id, stored.file] as const : null;
+      Promise.allSettled(frames.map(async frame => {
+        const file=await workingFrameImage(pieceId,baseVersion,frame);
+        return {id:frame.id,file};
       })).then(entries => {
-        if (!live) return;
-        const map: Record<string, Blob> = {};
-        for (const entry of entries) if (entry) map[entry[0]] = entry[1];
-        setFrameBlobs(current => ({ ...map, ...current }));
-      }).catch(() => {});
+        if(!live)return;
+        const map:Record<string,Blob>={};
+        for(const entry of entries){
+          if(entry.status==='fulfilled'&&entry.value.file)map[entry.value.id]=entry.value.file;
+        }
+        setFrameBlobs(current=>({...map,...current}));
+        if(entries.some(entry=>entry.status==='rejected'))setNotice('Não foi possível verificar todas as lâminas desta versão.');
+      });
     }
     return () => {
       live = false;
     };
-  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds]);
+  }, [draft?.pieceId, draft?.baseVersion, draftFrameIds, draftFrameAssets]);
   async function useBase({ blob, pieceId, version, frameId, assetId, creationContext }:ImageSelection) {
     baseLoadGeneration.current++;
     try {
@@ -1056,11 +1066,46 @@ function ProjectStudio({
           const storage=local.storage.current;
           if(!storage||input.userId!==userId||input.projectId!==project.id)return {status:'unknown'};
           const scope={userId:input.userId, projectId:input.projectId};
+          const {projectId,pieceId,version}=input;
+          const frameLookup=!args&&input.content.format==='carousel'&&input.content.frames?.length
+            ? await lookupVersionImage({projectId,pieceId,version})
+            : null;
+          if(frameLookup?.status==='unknown')return {status:'unknown'};
+          if(frameLookup?.status==='enabled'){
+            const {prepareSavedFrameImages,publishSavedFrameImage}=await import('../lib/piece-version-frame-assets');
+            const baseVersion=input.source.baseVersion;
+            const prepared=await prepareSavedFrameImages({
+              version:{projectId,pieceId,version},
+              content:input.content,
+              readFrame:async frame=>{
+                const file=await workingFrameImage(pieceId,baseVersion,frame);
+                if(file)return file;
+                if(baseVersion>=1&&frame.assetId?.[14]==='5')throw Error('frame_image_unconfirmed');
+                if(frame.position!==1)return null;
+                return await workingImage(pieceId,baseVersion) ?? (baseVersion>=1?await canonicalImage(pieceId,baseVersion):null);
+              },
+            });
+            if(prepared.status!=='ready')return prepared;
+            return {status:'ready',content:prepared.content,publish:async savedVersion=>{
+              const firstFrame=prepared.content.frames.find(frame=>frame.position===1);
+              let cover:{assetId:string;file:Blob}|null=null;
+              for(const image of prepared.images){
+                const file=await publishSavedFrameImage(image);
+                if(!file)return 'unknown';
+                await cacheSavedImage(pieceId,savedVersion,file,image.address.frameId).catch(()=>{});
+                if(image.address.frameId===firstFrame?.id)cover={assetId:image.address.assetId,file};
+              }
+              if(cover){
+                if(await bindVersionImage({projectId,pieceId,version:savedVersion,assetId:cover.assetId})!=='published')return 'unknown';
+                await cacheSavedImage(pieceId,savedVersion,cover.file).catch(()=>{});
+              }
+              return 'published';
+            }};
+          }
           const preview=input.source.baseVersion>=1?await storage.getDraftAsset(scope,{...input.source, kind:'preview'}):null;
           const source=preview??await storage.getDraftAsset(scope, input.source);
           if(!source)return {status:'absent'};
-          const {projectId,pieceId,version}=input;
-          const link=await lookupVersionImage({projectId,pieceId,version});
+          const link=frameLookup??await lookupVersionImage({projectId,pieceId,version});
           if(link.status==='unknown')return {status:'unknown'};
           if(link.status==='disabled')return {status:'ready',publish:async savedVersion=>{
             await cacheSavedImage(pieceId,savedVersion,source.file);

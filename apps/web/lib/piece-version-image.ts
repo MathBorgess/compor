@@ -27,10 +27,8 @@ function formatUuid(bytes: Uint8Array) {
   return `${hex.slice(0, 8)}-${hex.slice(8, 12)}-${hex.slice(12, 16)}-${hex.slice(16, 20)}-${hex.slice(20)}`;
 }
 
-/** Stable asset id for one saved version. A repeat addresses the same object. */
-export async function versionImageAssetId(projectId: string, pieceId: string, version: number) {
-  if (!isUuid(projectId) || !isUuid(pieceId) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647) throw Error('invalid version image');
-  const name = new TextEncoder().encode(`compor-piece-version-image/${projectId.toLowerCase()}/${pieceId.toLowerCase()}/${version}`);
+export async function versionImageIdForName(binding: string) {
+  const name = new TextEncoder().encode(binding);
   const data = new Uint8Array(16 + name.length);
   data.set(parseUuid(versionImageNamespace));
   data.set(name, 16);
@@ -40,6 +38,12 @@ export async function versionImageAssetId(projectId: string, pieceId: string, ve
   const assetId = formatUuid(digest);
   if (!isUuid(assetId)) throw Error('invalid version image');
   return assetId;
+}
+
+/** Stable asset id for one saved version. A repeat addresses the same object. */
+export async function versionImageAssetId(projectId: string, pieceId: string, version: number) {
+  if (!isUuid(projectId) || !isUuid(pieceId) || !Number.isSafeInteger(version) || version < 1 || version > 2147483647) throw Error('invalid version image');
+  return versionImageIdForName(`compor-piece-version-image/${projectId.toLowerCase()}/${pieceId.toLowerCase()}/${version}`);
 }
 
 async function readJson(response: Response) {

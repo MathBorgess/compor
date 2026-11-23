@@ -3,6 +3,8 @@ const MAX_BYTES = 8 * 1024 * 1024;
 const MAX_HTTP_BYTES = 4 * 1024 * 1024;
 const PART_BYTES = 2 * 1024 * 1024;
 
+export class PrivateImageNotFound extends Error {}
+
 async function readBounded(stream:ReadableStream<Uint8Array>|null, limit:number) {
   if (!stream) throw Error('missing image');
   const reader=stream.getReader(),chunks=[];let length=0;
@@ -25,6 +27,7 @@ export async function fetchPrivateImage(query:URLSearchParams|string,{fetch:fetc
     const bytes=await readBounded(initial.body,MAX_HTTP_BYTES);if(!bytes.length)throw Error('empty image');
     return new Blob([bytes],{type:'image/png'});
   }
+  if(initial.status===404)throw new PrivateImageNotFound('image unavailable');
   if(initial.status!==413 || initial.headers.get('x-compor-chunked')!=='1')throw Error('image unavailable');
   let expectedSize:number|null=null,expectedHash:string|null=null,expectedParts:number|null=null;const chunks=[];
   for(let index=0;index<4;index++) {
