@@ -105,6 +105,15 @@ Para produzir o controle do C5, use C4 com `--control-only` e a suíte `--indepe
 
 Separe de seis a trinta pares para a calibração. Inclua ao menos dois pares sem defeitos críticos e dois com defeito crítico. Use revisão humana independente ou uma revisão independente pela rubrica com casos deliberadamente válidos e defeitos plantados. Congele o SHA-256 de `reference-labels.json` antes dos julgamentos. Mantenha a intenção do controle e os rótulos fora do contexto do juiz. O arquivo privado documenta a revisão com `{version: 1, split: "judge-calibration", reference: {kind, reviewerId, source}, cases}`. Use `human` ou `independent_rubric` em `kind`. Identifique o responsável e registre em `source` a origem verificável dos rótulos e dos defeitos.
 
+Em um caso sintético com `category_split` e associações já definidas no briefing, use `diagram-preflight` antes de congelar os rótulos. O arquivo privado tem `{version: 1, cases}`. Cada caso tem `id` e `sides`, com `A`, `B` ou ambos. Cada lado contém `plan: {file, sha256}` e `slides`. Cada entrada em `slides` contém `slideId`, `decision: {slot, quote}` e dois pares `panels: [{label, item}, {label, item}]`. Use `headline` ou `body` em `slot` e cite o trecho literal que ensina a decisão. Preencha os pares a partir da regra do briefing e vincule o plano pelo hash do JSON do renderer. Guarde esse arquivo fora do contexto do juiz.
+
+```sh
+node scripts/evals/carrossel/cli.mjs diagram-preflight \
+  --bundle "$LAB/diagram-preflight.json" --bundle-sha256 "$DIAGRAMAS_SHA256"
+```
+
+O comando verifica a associação de cada rótulo ao exemplo. A ordem das duas placas pode mudar. Uma lâmina sem expectativa fica `unchecked`. Para plantar uma associação errada, declare `--expect-mismatch caso:B:lamina` para aquele lado e ID de lâmina. A saída registra `expected_mismatch` apenas quando encontra a divergência declarada e preserva a presença da regra na cópia. A pré-verificação cobre associações explícitas. A revisão cega das imagens continua responsável por colocação, efeito visual e ambiguidades. Confira também os controles compartilhados em ambos os lados e a legibilidade das mesmas miniaturas que o juiz recebe.
+
 | Campo de cada caso | Conteúdo |
 | --- | --- |
 | `id`, `briefing`, `facts` | Identificador inédito, briefing sintético e lista de fatos. Use `judgeBriefing(caso)` como texto de entrada do juiz. |

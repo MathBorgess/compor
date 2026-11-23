@@ -1,5 +1,5 @@
 import { mkdir, realpath, writeFile } from 'node:fs/promises';
-import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { parseArgs } from 'node:util';
 import { calibrationFile, measureJudgeCalibration } from './calibration.mjs';
@@ -149,6 +149,29 @@ async function calibrationRunCommand(arguments_) {
   console.log(JSON.stringify(result));
 }
 
+async function diagramPreflightCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    bundle: { type: 'string' }, 'bundle-sha256': { type: 'string' },
+    'expect-mismatch': { type: 'string', multiple: true },
+  } });
+  const help = 'Use diagram-preflight --bundle <arquivo JSON privado> --bundle-sha256 <hash> [--expect-mismatch <caso>:A|B:<lâmina>].';
+  requireCondition(values.bundle && isDigest(values['bundle-sha256']), help);
+  const bundle = resolve(values.bundle);
+  requireOutsideRepository(await realpath(bundle));
+  const expectedMismatches = (values['expect-mismatch'] ?? []).map(value => {
+    const [caseId, side, slideId, extra] = value.split(':');
+    requireCondition(caseId && side && slideId && extra === undefined, help);
+    return { caseId, side, slideId };
+  });
+  const { inspectCalibrationDiagrams } = await import('./calibration-diagrams.mjs');
+  const report = await inspectCalibrationDiagrams({
+    directory: dirname(bundle), bundleFile: basename(bundle),
+    bundleSha256: values['bundle-sha256'], expectedMismatches,
+  });
+  console.log(JSON.stringify(report));
+  if (report.status !== 'pass') process.exitCode = 2;
+}
+
 async function artBatchCommand(arguments_) {
   const { values } = parseArgs({ args: arguments_, options: {
     cycle: { type: 'string' }, case: { type: 'string' }, evidence: { type: 'string' }, 'max-images': { type: 'string' },
@@ -177,8 +200,9 @@ try {
   else if (command === 'novelty') await noveltyCommand(arguments_);
   else if (command === 'calibrate') await calibrateCommand(arguments_);
   else if (command === 'calibration-run') await calibrationRunCommand(arguments_);
+  else if (command === 'diagram-preflight') await diagramPreflightCommand(arguments_);
   else if (command === 'art-batch') await artBatchCommand(arguments_);
-  else throw Error('Comandos: evaluate, render, novelty, calibrate, calibration-run e art-batch. Consulte scripts/evals/carrossel/README.md.');
+  else throw Error('Comandos: evaluate, render, novelty, calibrate, calibration-run, diagram-preflight e art-batch. Consulte scripts/evals/carrossel/README.md.');
 } catch (error) {
   console.error(error.message);
   process.exitCode = 1;
