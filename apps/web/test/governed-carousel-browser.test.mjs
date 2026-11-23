@@ -183,6 +183,10 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   const privateImages = new Map();
   const art = await sharp({create:{width:384,height:256,channels:3,background:'#123456'}}).png().toBuffer();
   let projects = [], catalog, interrupted = false, delayRender;
+  const compositionRejections = [
+    {error: 'invalid_plan', checks: [{id: 'HEADLINE_BUDGET', index: 2, status: 'fail', detail: 'Diagnóstico interno do render'}]},
+    {error: 'archive_too_large'},
+  ];
   async function mockApi(route) {
     const request = route.request();
     const {pathname, searchParams} = new URL(request.url());
@@ -213,6 +217,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
       }else{
         assert.ok(plan.slides.every(slide=>slide.artSha256===undefined));
       }
+      if (compositionRejections.length) return route.fulfill({status: 422, json: compositionRejections.shift()});
       const render = await mockComposition(plan);
       renders.push({plan, ...render});
       await delayRender?.();
@@ -290,6 +295,13 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   const compose = button('Compor lâminas'), exportZip = button('Baixar carrossel em ZIP'), save = button('Salvar versão');
   assert.equal(await exportZip.isDisabled(), true);
   assert.equal(await save.isDisabled(), true);
+  await compose.click();
+  await page.getByRole('status').filter({hasText:'Na lâmina 2, encurte a manchete para até 12 palavras.'}).waitFor();
+  assert.equal(renders.length, 0);
+  assert.equal(await exportZip.isDisabled(), true);
+  await compose.click();
+  await page.getByRole('status').filter({hasText:'O carrossel composto ultrapassou o limite do ZIP.'}).waitFor();
+  assert.equal(await exportZip.isDisabled(), true);
   await compose.click();
   await exportZip.and(page.locator(':enabled')).waitFor();
   assert.equal(renders.length, 1);
@@ -374,6 +386,21 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   assert.equal(renders.length,3,'reabrir não recompõe carrosséis salvos');
   const freshButton=name=>fresh.getByRole('button',{name,exact:true});
   await freshButton('Pedir ajuste no estúdio').click();
+  const versionsPanel=freshButton('Versões');
+  const readsBeforeHistory=reads.length;
+  if(await versionsPanel.getAttribute('aria-expanded')!=='true')await versionsPanel.click();
+  const history=fresh.getByRole('region',{name:'Variantes deste post',exact:true});
+  await history.getByRole('article',{name:'Variante 1',exact:true}).scrollIntoViewIfNeeded();
+  const historyCover=history.getByRole('img',{name:'Arte da versão 1',exact:true});
+  await historyCover.waitFor();
+  const coverDigest=await historyCover.evaluate(async image=>{
+    const response=await fetch(image.src);
+    const bytes=await crypto.subtle.digest('SHA-256',await response.arrayBuffer());
+    return Array.from(new Uint8Array(bytes),byte=>byte.toString(16).padStart(2,'0')).join('');
+  });
+  assert.equal(coverDigest,render.slides[0].sha256,'o histórico exibe os mesmos bytes do JPEG canônico da capa');
+  assert.ok(reads.slice(readsBeforeHistory).includes(saved.content.frames.find(frame=>frame.position===1).assetId));
+  assert.equal(await history.getByRole('button',{name:/Recuperar imagem da versão/}).count(),0);
   const freshHeadline=fresh.getByLabel('Manchete na imagem (gancho)',{exact:true});
   if (!await freshHeadline.isVisible()) await freshButton('Textos').click();
   await freshHeadline.fill('Fotografe com a janela ao lado');

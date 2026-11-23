@@ -40,6 +40,47 @@ export type ComposedCarousel = {
   images: {frameId:string;file:Blob;sha256:string}[];
 };
 
+class CarouselQualityError extends Error {}
+
+function rejectionNotice(data: unknown, slideCount: number) {
+  const fallback = 'Revise os textos e o plano das lâminas antes de compor novamente.';
+  if (!record(data)) return fallback;
+  if (data.error === 'archive_too_large') {
+    return 'O carrossel composto ultrapassou o limite do ZIP. Simplifique a arte ou reduza o número de lâminas.';
+  }
+  if ((data.error !== 'invalid_plan' && data.error !== 'quality_held') || !Array.isArray(data.checks)) return fallback;
+  for (const check of data.checks) {
+    if (!record(check)) continue;
+    if (check.id === 'CAPTION_BUDGET') return 'Encurte a legenda ou limite as hashtags a cinco antes de compor.';
+    const {index} = check;
+    if (typeof index !== 'number' || !Number.isInteger(index) || index < 1 || index > slideCount) continue;
+    const position = `Na lâmina ${index}, `;
+    switch (check.id) {
+      case 'HEADLINE': return position + 'preencha a manchete.';
+      case 'HEADLINE_BUDGET': return position + (index === 1
+        ? 'encurte a manchete para até 11 palavras e 65 caracteres.'
+        : 'encurte a manchete para até 12 palavras.');
+      case 'BODY_BUDGET': return position + 'reduza o corpo do texto a até 50 palavras e 480 caracteres.';
+      case 'S2_DEPENDENT_OPEN': return position + 'dê contexto à manchete para ela funcionar sozinha.';
+      case 'LAYOUT_OVERFLOW': case 'TEXT_COLLISION': case 'SAFE_ZONE': case 'TYPOGRAPHY':
+        return position + 'encurte os textos ou escolha um layout com mais espaço.';
+      case 'TEXT_CONTRAST': return position + 'troque a cor ou a imagem de fundo para dar mais contraste ao texto.';
+      case 'ASSET_DECODE': return position + 'confira o arquivo da arte ou tente compor novamente.';
+    }
+  }
+  return fallback;
+}
+
+export function carouselCompositionNotice(error: unknown) {
+  if (error instanceof CarouselQualityError) return error.message;
+  switch (error instanceof Error ? error.message : '') {
+    case 'carousel_art_missing': return 'Anexe novamente a arte da lâmina no estúdio para compor neste navegador.';
+    case 'carousel_art_too_large': return 'Reduza o tamanho dos arquivos de arte para compor.';
+    case 'carousel_renderer_busy': return 'O compositor está ocupado. Tente novamente em instantes.';
+    default: return 'Não foi possível concluir a composição. Confira o plano ou tente novamente.';
+  }
+}
+
 export async function composeCarousel(
   projectId: string,
   plan: NonNullable<ReturnType<typeof carouselPlanFor>>,
@@ -69,7 +110,10 @@ export async function composeCarousel(
     method:'POST', headers, body:form??json, signal, cache:'no-store',
   });
   if (response.status===413) throw Error('carousel_art_too_large');
-  if (response.status===422) throw Error('carousel_quality_held');
+  if (response.status===422) {
+    const data: unknown = await response.json().catch(() => null);
+    throw new CarouselQualityError(rejectionNotice(data, plan.slides.length));
+  }
   if (response.status===429) throw Error('carousel_renderer_busy');
   if (!response.ok || !response.headers.get('content-type')?.startsWith('multipart/form-data;') ||
     Number(response.headers.get('content-length'))>MAX_ARCHIVE_BYTES) throw Error('carousel_unavailable');

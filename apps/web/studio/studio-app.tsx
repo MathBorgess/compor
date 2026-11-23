@@ -24,7 +24,7 @@ import type { ExploredReference } from "../lib/reference-exploration-contract";
 import { recordReferenceSelection } from "../lib/reference-selection";
 import { StudioStorageError } from '../lib/studio-storage.ts';
 import {readSavedFrameImage,prepareSavedFrameImages,publishSavedFrameImage} from '../lib/piece-version-frame-assets';
-import {carouselArtId,carouselPreviewId,carouselPlanFor,composeCarousel} from '../lib/studio-carousel-client';
+import {carouselArtId,carouselCompositionNotice,carouselPreviewId,carouselPlanFor,composeCarousel} from '../lib/studio-carousel-client';
 import {sha256Hex} from '../lib/browser-bytes.ts';
 import {samePieceContent,setDraftCarouselArt,setDraftCarouselRender} from '../lib/studio-state.ts';
 import {bindVersionImage, lookupVersionImage, publishVersionPng, readVersionImage} from '../lib/piece-version-image.ts';
@@ -927,12 +927,7 @@ function ProjectStudio({
       await local.flush();
     }catch(error){
       if(isStudioActive()&&!controller.signal.aborted){
-        const code=error instanceof Error ? error.message : '';
-        setNotice(code==='carousel_quality_held'
-          ? 'A revisão encontrou problemas nas lâminas. Ajuste os textos ou o plano no estúdio antes de compor novamente.'
-          : code==='carousel_art_missing' ? 'Anexe novamente a arte da lâmina no estúdio para compor neste navegador.'
-          : code==='carousel_art_too_large' ? 'Reduza o tamanho dos arquivos de arte para compor.'
-          : 'Não foi possível concluir a composição. Confira o plano ou tente novamente.');
+        setNotice(carouselCompositionNotice(error));
       }
     }finally{
       if(carouselRequest.current===controller)carouselRequest.current=null;
@@ -1707,6 +1702,12 @@ function ProjectStudio({
         {id:"versions",label:"Versões",title:"Versões e variantes deste post",className:"guided-versions",content:draft && <VariantCards userId={userId} projectId={project.id} pieceId={draft.pieceId} versions={versions} selectedVersion={draft.baseVersion} assetRevision={base} onOpenVersion={openVersion} loadLocal={async version=>{
           const storage=local.storage.current;
           if(!storage)return null;
+          if(version.content.carouselPlan){
+            const cover=version.content.frames?.find(frame=>frame.position===1);
+            if(!cover?.assetId||version.project_id!==project.id||!isStudioActive())return null;
+            const jpeg=await workingFrameImage(version.piece_id,version.version,cover,version.content);
+            return jpeg&&isStudioActive()?{file:jpeg}:null;
+          }
           const localImage=await storage.getDraftAsset({userId,projectId:project.id},{pieceId:version.piece_id,baseVersion:version.version,kind:'base'});
           if(localImage)return localImage;
           const remote=await canonicalImage(version.piece_id, version.version);

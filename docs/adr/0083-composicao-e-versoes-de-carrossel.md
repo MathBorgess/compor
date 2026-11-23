@@ -10,6 +10,8 @@ Ao salvar, o CAS da peça grava `carouselPlan` e `carouselRender` junto aos IDs 
 
 Falhas parciais mantêm o rascunho da composição e permitem repetir a publicação com os mesmos endereços e bytes, após reconciliação do CAS. A revisão usa o tipo de cada artefato para o download individual e o ZIP. A autorização para compor é distinta da autorização para salvar e da solicitação de geração de imagem.
 
+O histórico de variantes usa a primeira lâmina JPEG vinculada à versão composta como miniatura. A leitura reaproveita a verificação de identidade e do digest pelas imagens da versão. A revisão traduz as recusas conhecidas de composição em instruções de ajuste. Relata a lâmina afetada quando o servidor identifica a posição e indica quando o conjunto ultrapassa o limite do ZIP.
+
 ## Evidência de habilitação
 
 Verificar atualização e descarte por troca do plano, validação física em Chromium, upload parcial, reabertura em outro navegador sem cache, ZIP JPEG e leitura dos PNGs legados. Em Linux, confirmar a abertura do Chromium empacotado e a execução no Preview. Gate 0 editorial, direção de arte limpa e promoção por avaliação continuam regidos pela especificação de carrosséis.

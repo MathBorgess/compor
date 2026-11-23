@@ -110,6 +110,13 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
   const invalidResponse = await post({ projectId, plan: invalid });
   assert.equal(invalidResponse.status, 422);
   assert.equal((await invalidResponse.json()).checks[0].id, 'LAYOUT');
+  const longHeadline = 'Uma manchete de capa com doze palavras precisa perder ao menos uma palavra';
+  const verbosePlan = { ...plan, slides: [{ ...plan.slides[0], headline: longHeadline }, ...plan.slides.slice(1)] };
+  const verboseResponse = await post({ projectId, plan: verbosePlan });
+  assert.equal(verboseResponse.status, 422);
+  const rejected = await verboseResponse.json();
+  assert.equal(rejected.error, 'invalid_plan');
+  assert.ok(rejected.checks.some(check => check.id === 'HEADLINE_BUDGET' && check.index === 1));
   const held = await post({ projectId, plan: { ...plan, mode: 'editorial_art' } });
   assert.equal(held.status, 422);
   const refusal = await held.json();
