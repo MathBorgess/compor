@@ -14,6 +14,8 @@ O histórico de variantes usa a primeira lâmina JPEG vinculada à versão compo
 
 O salvamento pelo botão da barra, pela revisão ou pela ferramenta do agente exige os JPEGs de todas as lâminas e o digest do plano final igual ao do recibo. A conferência ocorre antes da escrita da versão. O estúdio indica a revisão quando a edição exige nova composição. O rascunho permanece editável e a leitura continua aceitando versões históricas gravadas antes dos JPEGs.
 
+O adaptador PostgREST usa o schema estrito de conteúdo da peça para interpretar tanto a confirmação do salvamento quanto a listagem. Quando há recibo de composição, o adaptador rematerializa o plano a partir dos campos da versão e verifica o SHA-256 canônico. Um teste HTTP reproduziu a confirmação de escrita devolvida como 502 por uma lista de campos desatualizada no adaptador. Com o schema compartilhado, a mesma resposta retorna 200, a listagem devolve a versão composta junto das anteriores e um digest divergente bloqueia a leitura.
+
 ## Evidência de habilitação
 
 Verificar atualização e descarte por troca do plano, validação física em Chromium, upload parcial, reabertura em outro navegador sem cache, ZIP JPEG e leitura dos PNGs legados. Em Linux, confirmar a abertura do Chromium empacotado e a execução no Preview. Gate 0 editorial, direção de arte limpa e promoção por avaliação continuam regidos pela especificação de carrosséis.

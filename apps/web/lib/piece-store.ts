@@ -1,6 +1,9 @@
+import {createHash} from 'node:crypto';
 import {z} from 'zod';
 import {metadataSchema,versionSchema,type StoreOptions,type StoreContext,type PersistedVersion,type SavePieceInput,type ApprovePieceInput,type PieceMutation} from './web-contracts.ts';
 import { createSupabasePieceStore } from '@compor/remote-mcp';
+import {carouselPlanJson} from './carousel-plan-json.ts';
+import {carouselPlanFor} from './studio-carousel-client.ts';
 const uuid = (value:unknown):value is string => typeof value === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(value);
 const integer = (value:unknown):value is number => typeof value==='number' && Number.isSafeInteger(value) && value >= 0 && value <= 2147483647;
 function validMetadata(value:z.infer<typeof metadataSchema>, version:number) {
@@ -14,11 +17,16 @@ function validMetadata(value:z.infer<typeof metadataSchema>, version:number) {
 }
 function versionRow(input:unknown, projectId:string, pieceId?:string):PersistedVersion {
   const row=versionSchema.parse(input);
-  const content = row?.content;
-  if (row?.project_id !== projectId || !uuid(row.piece_id) || pieceId && row.piece_id !== pieceId || !integer(row.version) || row.version < 1 || typeof row.created_at !== 'string' ||
-    !content || Object.keys(content).some(k => !['headline','price','date','caption','captionOrigin','fields','format','visualInvariants','frames'].includes(k)) ||
+  const {content} = row;
+  if (row.project_id !== projectId || !uuid(row.piece_id) || pieceId && row.piece_id !== pieceId || !integer(row.version) || row.version < 1 || typeof row.created_at !== 'string' ||
     !(['headline', 'price', 'date', 'caption'] as const).every(k => typeof content[k] === 'string' && content[k].length <= (k === 'caption' ? 4000 : k === 'headline' ? 500 : 100)) ||
     !['user', 'agent'].includes(content.captionOrigin) || (content.frames !== undefined && content.format !== 'carousel' && content.format !== 'collection') || !validMetadata(row.metadata, row.version)) throw Error('invalid response');
+  if (content.carouselRender) {
+    const plan = carouselPlanFor(content);
+    if (!plan || createHash('sha256').update(carouselPlanJson(plan)).digest('hex') !== content.carouselRender.planSha256) {
+      throw Error('invalid response');
+    }
+  }
   // PostgREST timestamps may use an offset and microseconds. Browser state uses
   // canonical ISO milliseconds so an already-persisted approval remains readable.
   const metadata={...row.metadata,approval:{...row.metadata.approval,at:row.metadata.approval.at===null?null:new Date(row.metadata.approval.at).toISOString()}};
