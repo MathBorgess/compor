@@ -12,7 +12,7 @@ const resultStates = ['baseline', 'candidate', 'tie', 'abstain'];
 const dimensions = {
   cover: 'Promessa específica e legível na miniatura recortada da capa.',
   editorial: 'Fatos sustentados, ideias novas e exemplos concretos ao longo da coleção.',
-  artMessage: 'A arte contribui como prova, modelo visual ou metáfora complementar. Descreva o que se perde ao retirar a arte.',
+  artMessage: 'A arte contribui como prova, modelo visual ou metáfora complementar. Descreva o que se perde ao retirar a arte. Quando retirar a arte decorativa preserva toda a informação, limite a nota de artMessage a 2 e registre a decoração como defeito não crítico. Marque critical em artMessage quando a arte distorce evidência, induz uma interpretação errada do conteúdo ou oculta informação essencial. Identifique o dado ou a relação afetada.',
   hierarchy: 'Ordem de leitura, contraste e legibilidade num telefone.',
   rhythm: 'Coesão com variedade deliberada. Compare transições concretas e considere a repetição intencional em séries nativas.',
   reentry: 'A lâmina 2 isolada nomeia seu assunto e entrega uma ideia que pode ser compreendida sem a capa.',
