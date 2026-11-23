@@ -1,0 +1,130 @@
+import { usesDarkSurface } from './visuals.mjs';
+
+const SYMBOLS = {
+  flow: '<path d="M96 160h408m-48-44 48 44-48 44"/><circle cx="96" cy="160" r="42"/><circle cx="294" cy="160" r="40"/>',
+  balance: '<path d="M304 82v160m-96 0h192M110 118h388M155 118l-57 98h114zM453 118l-57 98h114z"/>',
+  steps: '<path d="M92 237h128v-63h128v-63h128"/><circle cx="92" cy="237" r="18"/><circle cx="476" cy="111" r="28"/>',
+  focus: '<circle cx="304" cy="160" r="102"/><circle cx="304" cy="160" r="54"/><path d="M304 34v58m0 136v58M178 160h58m136 0h58"/>',
+};
+
+const ESCAPE = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+
+function escape(value) {
+  return value.replace(/[&<>"']/g, character => ESCAPE[character]);
+}
+
+function makeHeadline({ headline, accentPhrase }) {
+  if (!accentPhrase) return escape(headline);
+  const start = headline.indexOf(accentPhrase);
+  const end = start + accentPhrase.length;
+  return escape(headline.slice(0, start)) + '<em data-ink>' + escape(accentPhrase) + '</em>' + escape(headline.slice(end));
+}
+
+function media(slide) {
+  if (slide.art) return '<div class="media"><img src="' + escape(slide.art) + '" alt=""></div>';
+  if (!slide.diagram) return '';
+  const { type, labels = [] } = typeof slide.diagram === 'string' ? { type: slide.diagram } : slide.diagram;
+  const diagram = '<svg viewBox="0 0 608 300" aria-hidden="true"><g fill="none" stroke="currentColor" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">' +
+    SYMBOLS[type] + '</g></svg>';
+  const labelList = labels.length ? '<ul class="diagram-labels" data-region="diagram-label">' +
+    labels.map(label => '<li>' + escape(label) + '</li>').join('') + '</ul>' : '';
+  return '<div class="media diagram">' + diagram + labelList + '</div>';
+}
+
+const CSS = `
+*{box-sizing:border-box}
+html,body{margin:0;padding:0;width:1080px;height:1350px}
+main{position:relative;isolation:isolate;display:grid;grid-template-rows:minmax(0,1fr) auto;width:1080px;height:1350px;overflow:hidden;background:var(--bg);color:var(--fg);padding:156px 88px 120px;font-family:DM Sans,Arial,sans-serif}
+.content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:30px;align-self:stretch;min-height:0}
+main h1,main p,main ul{margin:0}
+h1{font-size:var(--head,86px);line-height:1.14;font-weight:700;text-wrap:balance;white-space:pre-line;overflow-wrap:anywhere}
+.cover h1{font-size:var(--head,116px);line-height:1.10}
+em{font-style:normal;color:var(--ink)}
+.body{font-size:var(--body,46px);line-height:1.42;white-space:pre-line;overflow-wrap:anywhere}
+.kicker{font-size:31px;line-height:1.22;font-weight:700;letter-spacing:.075em;text-transform:uppercase;width:fit-content}
+.source{position:absolute;left:88px;bottom:120px;max-width:904px;font-size:24px;line-height:1.30;z-index:2;white-space:nowrap}
+.figure{font-size:var(--figure,188px);line-height:1.03;font-weight:700;letter-spacing:-.06em;font-variant-numeric:tabular-nums;color:var(--ink)}
+.media{width:100%;height:100%;min-height:0;overflow:hidden;display:block}
+.media img{width:100%;height:100%;object-fit:cover;display:block}
+.diagram{color:var(--ink);background:var(--bg);height:360px;display:flex;flex-direction:column;justify-content:center;overflow:visible}
+.diagram svg{width:100%;height:auto;min-height:0;max-height:300px}
+.diagram ul{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:0;list-style:none;font-size:32px;line-height:1.23;color:var(--fg);text-align:center}
+.diagram ul li{max-width:100%;overflow-wrap:anywhere}
+.hero_bleed .diagram ul{margin-top:-18px}
+.split_vertical .diagram ul{flex-direction:column}
+.hero_bleed .media{position:absolute;z-index:-2;inset:0}
+.hero_bleed.has-art::before{position:absolute;z-index:-1;inset:0;content:"";background:linear-gradient(180deg,transparent 3%,var(--scrim-low) 27%,var(--scrim-high) 46%,var(--bg) 91%)}
+.hero_bleed .content{justify-content:end;padding-bottom:88px}
+.split_horizontal{grid-template-rows:minmax(0,510px) minmax(0,1fr);gap:48px}
+.split_horizontal .content{justify-content:start}
+.split_vertical{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:42px}
+.split_vertical .content{grid-column:1;grid-row:1}
+.split_vertical .media{grid-column:2;grid-row:1;height:760px;align-self:center}
+.split_vertical h1,.comparison_dual h1{font-size:var(--head,72px)}
+.framed_plate{grid-template-rows:minmax(0,460px) minmax(0,1fr);gap:44px}
+.framed_plate .media{border:4px solid var(--ink);padding:12px}
+.framed_plate .content{justify-content:start}
+.stat_monument .content{border-top:6px solid var(--ink);margin-top:36px}
+.stat_monument .media{height:244px;width:46%;position:absolute;right:88px;bottom:200px;opacity:.18}
+.svg_diagram{grid-template-rows:minmax(0,380px) minmax(0,1fr);gap:40px}
+.svg_diagram .content{justify-content:start}
+.comparison_dual{grid-template-rows:minmax(0,400px) minmax(0,1fr);gap:38px}
+.comparison_dual .content{justify-content:start}
+.bento_grid .content{justify-content:start}
+.bento_grid .media{position:absolute;width:220px;height:180px;right:88px;bottom:180px}
+.artifact_proof{grid-template-rows:minmax(0,1fr) minmax(0,400px);gap:40px}
+.artifact_proof .media{grid-row:2;object-fit:contain}
+.artifact_proof .media img{object-fit:contain}
+.artifact_proof .content{grid-row:1}
+.typo_breather .content{border-left:10px solid var(--ink);padding-left:42px}
+.native_serial .content{justify-content:start;padding-top:144px}
+.native_serial .media{position:absolute;width:208px;height:180px;right:88px;bottom:174px}
+.cta_closing .content{justify-content:center;max-width:850px}
+.cta_closing .content::before{content:"";display:block;width:120px;height:8px;background:var(--ink)}
+.cta_closing .media{display:none}
+main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.svg_diagram,.comparison_dual,.artifact_proof){display:flex;align-items:stretch}
+main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.comparison_dual,.artifact_proof) .content{width:100%;justify-content:center}
+.list{display:grid;gap:16px;padding-left:1.15em;font-size:40px;line-height:1.34}
+.bento_grid .list{grid-template-columns:1fr 1fr;gap:18px;list-style:none;padding:0}
+.bento_grid .list li{border:2px solid var(--ink);padding:18px;font-size:38px;overflow-wrap:anywhere}
+.comparison_dual .list{display:flex;gap:30px;list-style:none;padding:0}
+.comparison_dual .list li{flex:1;border-top:3px solid var(--ink);padding-top:15px;overflow-wrap:anywhere}
+.bridge{z-index:3;position:absolute;right:0;top:606px;width:32px;height:5px;background:var(--ink)}
+.bridge.left{left:0;right:auto}
+.bridge.color_band_echo{height:34px}
+html.measure [data-region]{visibility:hidden}
+`;
+
+function fontRules(fonts) {
+  const rules = Object.entries(fonts).map(([weight, bytes]) =>
+    '@font-face{font-family:"DM Sans";font-style:normal;font-weight:' + weight +
+      ';font-display:block;src:url(data:font/ttf;base64,' + bytes.toString('base64') + ') format("truetype")}');
+  return rules.join('');
+}
+
+export function slideDocument(slide, { index, palette, fonts, fit = {}, scrim = 0.78, incoming }) {
+  const dark = usesDarkSurface(slide);
+  const bg = dark ? palette.dark : palette.light;
+  const fg = dark ? palette.light : palette.dark;
+  const ink = dark ? palette.accentOnDark : palette.accentOnLight;
+  const stats = slide.figure ? '<p class="figure" data-region="figure">' + escape(slide.figure) + '</p>' : '';
+  const content = '<div class="content">' +
+    (slide.kicker ? '<p class="kicker" data-region="kicker">' + escape(slide.kicker) + '</p>' : '') +
+    stats + '<h1 data-region="headline">' + makeHeadline(slide) + '</h1>' +
+    (slide.body ? '<p class="body" data-region="body">' + escape(slide.body) + '</p>' : '') +
+    (slide.listItems?.length ? '<ul class="list" data-region="list">' + slide.listItems.map(item => '<li>' + escape(item) + '</li>').join('') + '</ul>' : '') +
+    '</div>';
+  const source = slide.source ? '<p class="source" data-region="source">' + escape(slide.source) + '</p>' : '';
+  const decorative = (kind, edge) => kind ? '<div aria-hidden="true" class="bridge ' + kind + ' ' + edge + '"></div>' : '';
+  const parts = [`--bg:${bg}`, `--fg:${fg}`, `--ink:${ink}`, `--scrim-low:${bg}${Math.round(scrim * 0.52 * 255).toString(16).padStart(2,'0')}`, `--scrim-high:${bg}${Math.round(scrim * 255).toString(16).padStart(2,'0')}`];
+  if (fit.head) parts.push('--head:' + fit.head + 'px');
+  if (fit.body) parts.push('--body:' + fit.body + 'px');
+  if (fit.figure) parts.push('--figure:' + fit.figure + 'px');
+
+  return '<!doctype html><html lang="pt-BR"><meta charset="utf-8">' +
+    '<meta http-equiv="Content-Security-Policy" content="default-src \'none\'; img-src data:; style-src \'unsafe-inline\'; font-src data:">' +
+    '<style>' + fontRules(fonts) + CSS + '</style><main class="' + slide.layout +
+    (index === 1 ? ' cover' : '') + (slide.art ? ' has-art' : '') + (slide.art || slide.diagram ? ' has-media' : '') +
+    '" style="' + parts.join(';') + '">' + media(slide) + content + source +
+    decorative(incoming, 'left') + decorative(slide.bridge, 'right') + '</main></html>';
+}

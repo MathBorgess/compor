@@ -1,0 +1,102 @@
+import { mkdir, realpath, writeFile } from 'node:fs/promises';
+import { dirname, isAbsolute, join, relative, resolve, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { parseArgs } from 'node:util';
+import { evaluate } from './evaluate.mjs';
+import { formatVersion, isId, readDocument, readSuite, requireCondition } from './protocol.mjs';
+
+const repository = fileURLToPath(new URL('../../../', import.meta.url));
+
+function requireOutsideRepository(path) {
+  const local = relative(repository, resolve(path));
+  requireCondition(isAbsolute(local) || local === '..' || local.startsWith('..' + sep), 'Use um caminho externo ao repositório para a suíte privada, seus artefatos e relatório.');
+}
+
+async function privateSuite(path, kind, sha) {
+  requireCondition(path && sha, `Informe a suíte privada ${kind} e seu SHA-256 congelado.`);
+  requireOutsideRepository(await realpath(path));
+  return readSuite(path, kind, sha);
+}
+
+function checkUnique(cases) {
+  requireCondition(new Set(cases.map(testCase => testCase.id)).size === cases.length,
+    'Casos de desenvolvimento, reserva e confirmação independente precisam de IDs distintos.');
+}
+
+async function loadReferences(paths) {
+  const references = new Map();
+  for (const path of paths ?? []) {
+    const { value } = await readDocument(path);
+    requireCondition(value?.version === formatVersion
+      && Number.isInteger(value.cycle) && value.cycle >= 0 && value.cycle <= 4
+      && Array.isArray(value.cases) && !references.has(value.cycle),
+    'Cada controle deve ser um relatório válido de um ciclo distinto.');
+    references.set(value.cycle, value);
+  }
+  return references;
+}
+
+async function evaluateCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    cycle: { type: 'string' }, evidence: { type: 'string' }, output: { type: 'string' },
+    holdout: { type: 'string' }, 'holdout-sha256': { type: 'string' },
+    independent: { type: 'string' }, 'independent-sha256': { type: 'string' },
+    compare: { type: 'string', multiple: true }, 'control-only': { type: 'boolean' }, strict: { type: 'boolean' },
+  } });
+  requireCondition(/^[0-5]$/.test(values.cycle ?? '') && values.evidence && values.output,
+    'Use evaluate --cycle 0..5 --evidence <diretório> --output <relatório.json>.');
+  const cycle = Number(values.cycle);
+  const controlOnly = values['control-only'] === true;
+  requireCondition(cycle !== 5 || !controlOnly, 'C5 é a confirmação independente. Use C4 com --control-only para o controle.');
+  requireCondition(cycle >= 4 || controlOnly || (!values.holdout && !values.independent),
+    'Até C3, ajuste candidatos apenas no desenvolvimento. Para avaliar uma revisão já congelada, use --control-only.');
+  requireCondition(!values.independent || cycle === 5 || (cycle === 4 && controlOnly),
+    'A suíte independente pertence ao C5 e ao seu controle C4 já congelado.');
+  const dev = await readSuite(new URL('./dev-cases.json', import.meta.url), 'dev');
+  const readHoldout = cycle >= 4 && !controlOnly || Boolean(values.holdout);
+  const holdout = readHoldout ? await privateSuite(values.holdout, 'holdout', values['holdout-sha256']) : null;
+  const independent = cycle === 5 || values.independent
+    ? await privateSuite(values.independent, 'independent', values['independent-sha256']) : null;
+  checkUnique([...dev.cases, ...(holdout?.cases ?? []), ...(independent?.cases ?? [])]);
+  if (holdout || independent) {
+    requireOutsideRepository(await realpath(values.evidence));
+    requireOutsideRepository(join(await realpath(dirname(values.output)), 'report.json'));
+  }
+  const tests = independent ? independent.cases : [...dev.cases, ...(holdout?.cases ?? [])];
+  const references = await loadReferences(values.compare);
+  const result = await evaluate({
+    cycle, tests, evidenceRoot: resolve(values.evidence), references, controlOnly,
+    suiteDigests: { dev: dev.digest, holdout: holdout?.digest ?? null, independent: independent?.digest ?? null },
+  });
+  await writeFile(values.output, JSON.stringify(result, null, 2) + '\n', { flag: 'wx', mode: 0o600 });
+  console.log(JSON.stringify({ cycle, status: result.status, coverage: result.coverage, checks: result.checks }));
+  if (values.strict && result.status === 'insufficient_or_failed') process.exitCode = 2;
+}
+
+async function renderCommand(arguments_) {
+  const { values } = parseArgs({ args: arguments_, options: {
+    case: { type: 'string' }, first: { type: 'string' }, final: { type: 'string' },
+    'repair-reason': { type: 'string' }, evidence: { type: 'string' },
+  } });
+  requireCondition(isId(values.case) && values.first && values.evidence,
+    'Use render --case <id> --first <plano.json> --evidence <diretório>.');
+  const directory = resolve(values.evidence);
+  await mkdir(directory, { recursive: true, mode: 0o700 });
+  const { renderEvidence } = await import('./render-evidence.mjs');
+  const result = await renderEvidence({
+    caseId: values.case, firstPath: values.first, finalPath: values.final, repairReason: values['repair-reason'],
+    caseDirectory: join(directory, values.case), executablePath: process.env.BROWSER_EXECUTABLE_PATH,
+  });
+  console.log(JSON.stringify({ caseId: result.caseId, repair_count: result.repair_count, outcome: result.final.outcome }));
+  if (result.final.outcome !== 'delivered') process.exitCode = 2;
+}
+
+try {
+  const [command, ...arguments_] = process.argv.slice(2);
+  if (command === 'evaluate') await evaluateCommand(arguments_);
+  else if (command === 'render') await renderCommand(arguments_);
+  else throw Error('Comandos: evaluate e render. Consulte scripts/evals/carrossel/README.md.');
+} catch (error) {
+  console.error(error.message);
+  process.exitCode = 1;
+}
