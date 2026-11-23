@@ -87,11 +87,18 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
 
   const session = { access_token: token, refresh_token: 'mock-refresh', token_type: 'bearer', expires_at: 4102444800, expires_in: 3600, user: { id: user } };
   const cookie = 'sb-127-auth-token=base64-' + Buffer.from(JSON.stringify(session)).toString('base64url');
-  const post = (payload, headers) => fetch(origin + '/api/studio/carousel/render', {
-    method: 'POST',
-    headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json', ...headers },
-    body: JSON.stringify(payload),
-  });
+  const post = async (payload, headers) => {
+    try {
+      return await fetch(origin + '/api/studio/carousel/render', {
+        method: 'POST',
+        headers: { Cookie: cookie, Origin: origin, 'Content-Type': 'application/json', ...headers },
+        body: JSON.stringify(payload),
+        signal: AbortSignal.timeout(30_000),
+      });
+    } catch (error) {
+      throw Error('Falha HTTP na rota de composição.\n' + logs, { cause: error });
+    }
+  };
   assert.equal((await post({ projectId, plan }, { Origin: 'https://other.example' })).status, 403);
   assert.equal((await post({ projectId, plan }, { Cookie: '' })).status, 401);
   assert.deepEqual(requests, []);
