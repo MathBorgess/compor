@@ -93,7 +93,7 @@ function media(slide) {
 const CSS = `
 *{box-sizing:border-box}
 html,body{margin:0;padding:0;width:1080px;height:1350px}
-main{position:relative;isolation:isolate;display:grid;grid-template-rows:minmax(0,1fr) auto;width:1080px;height:1350px;overflow:hidden;background:var(--bg);color:var(--fg);padding:156px 88px 120px;font-family:DM Sans,Arial,sans-serif}
+main{--diagram-height:360px;position:relative;isolation:isolate;display:grid;grid-template-rows:minmax(0,1fr) auto;width:1080px;height:1350px;overflow:hidden;background:var(--bg);color:var(--fg);padding:156px 88px 120px;font-family:DM Sans,Arial,sans-serif}
 .content{position:relative;z-index:2;display:flex;flex-direction:column;justify-content:center;gap:30px;align-self:stretch;min-height:0}
 main h1,main p,main ul{margin:0}
 h1{font-size:var(--head,86px);line-height:1.14;font-weight:700;text-wrap:balance;white-space:pre-line;overflow-wrap:anywhere}
@@ -105,7 +105,7 @@ em{font-style:normal;color:var(--ink)}
 .figure{font-size:var(--figure,188px);line-height:1.03;font-weight:700;letter-spacing:-.06em;font-variant-numeric:tabular-nums;color:var(--ink)}
 .media{width:100%;height:100%;min-height:0;overflow:hidden;display:block}
 .media img{width:100%;height:100%;object-fit:cover;display:block}
-.diagram{color:var(--ink);background:var(--bg);height:360px;display:flex;flex-direction:column;justify-content:center;overflow:visible}
+.diagram{color:var(--ink);background:var(--bg);height:var(--diagram-height);display:flex;flex-direction:column;justify-content:center;overflow:visible}
 .diagram svg{width:100%;height:auto;min-height:0;max-height:300px}
 .diagram ul{display:flex;justify-content:center;gap:24px;flex-wrap:wrap;padding:0;list-style:none;font-size:32px;line-height:1.23;color:var(--fg);text-align:center}
 .diagram ul li{max-width:100%;overflow-wrap:anywhere}
@@ -122,6 +122,7 @@ em{font-style:normal;color:var(--ink)}
 .hero_bleed.has-art::before{position:absolute;z-index:-1;inset:0;content:"";background:linear-gradient(180deg,transparent 3%,var(--scrim-low) 27%,var(--scrim-high) 46%,var(--bg) 91%)}
 .hero_bleed .content{justify-content:end;padding-bottom:88px}
 .split_horizontal{--media-row:510px;grid-template-rows:minmax(0,var(--media-row)) minmax(0,1fr);gap:48px}
+.split_horizontal:not(.cover):has(>.diagram:not(.diagram-demonstration)){--media-row:var(--diagram-height)}
 .split_horizontal:has(>.diagram-demonstration){--media-row:360px;grid-template-rows:auto minmax(0,1fr)}
 .split_horizontal .content{justify-content:start}
 .split_vertical{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr);grid-template-rows:minmax(0,1fr);gap:42px}
@@ -147,6 +148,7 @@ em{font-style:normal;color:var(--ink)}
 .native_serial .content{justify-content:start;padding-top:144px}
 .native_serial .media{position:absolute;width:208px;height:180px;right:88px;bottom:174px}
 .native_serial:has(>.readability-matrix){grid-template-rows:max-content minmax(min-content,1fr);row-gap:24px;padding-bottom:188px}
+.native_serial:has(>.readability-matrix):not(.cover){--head:74px;--body:44px}
 .native_serial:has(>.readability-matrix)>.content{grid-row:1}
 .native_serial>.readability-matrix{position:static;grid-row:2;align-self:end;width:100%;height:min-content;display:grid;gap:11px;overflow:visible;
   grid-template-columns:210px repeat(2,minmax(0,1fr));grid-template-rows:auto repeat(3,92px)}
@@ -171,6 +173,7 @@ em{font-style:normal;color:var(--ink)}
   &>.diagram{height:100%;max-height:360px}
   &>.diagram-demonstration{min-height:max-content}
 }
+.cover:is(.split_horizontal,.framed_plate,.svg_diagram,.comparison_dual):has(>.diagram:not(.diagram-demonstration)){--head:108px}
 .cover.comparison_dual:has(>.diagram) h1{font-size:var(--head,116px)}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.svg_diagram,.comparison_dual,.artifact_proof){display:flex;align-items:stretch}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.comparison_dual,.artifact_proof) .content{width:100%;justify-content:center}

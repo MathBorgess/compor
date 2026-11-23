@@ -195,6 +195,21 @@ test('fechamento aceita demonstrações governadas sem abrir um slot de raster',
   })), /invalid_action/);
 });
 
+test('recusa diagramas básicos em novos fechamentos e conserva a leitura de receitas antigas', () => {
+  const plan = compositionPlan();
+  const closing = plan.frames.at(-1);
+  const parse = value => parseStudioAction('compor_definir_plano_laminas', value);
+  for (const diagram of ['flow', { type: 'focus', labels: ['Oferta'] }]) {
+    const composition = { ...closing.composition, diagram };
+    const frames = [...plan.frames.slice(0, -1), { ...closing, composition }];
+    assert.equal(isCarouselSlideComposition(composition), true);
+    assert.throws(() => parse({ ...plan, frames }), /invalid_action/);
+    const example = { ...plan.frames[1], composition: { ...plan.frames[1].composition, diagram } };
+    const allowed = { ...plan, frames: [plan.frames[0], example, closing] };
+    assert.deepEqual(parse(allowed), allowed);
+  }
+});
+
 test('matriz de legibilidade tem uma receita fechada para notas seriadas', () => {
   const plan = compositionPlan();
   const frame = plan.frames[1];

@@ -184,8 +184,10 @@ export function allowsCarouselSemanticDiagram(diagram, layout, hasRaster = false
 function validateComposedFrame({ composition, position, headline, body }, deck) {
   if (!isCarouselSlideComposition(composition, deck)) throw Error('invalid_action');
   const { layout, diagram, source, figure, listItems, kicker, accentPhrase } = composition;
-  const semantic = isSemanticDiagramType(diagram?.type);
-  const isDemonstration = typeof diagram === 'object' && !semantic && !diagramShapes.includes(diagram.type);
+  const diagramType = typeof diagram === 'string' ? diagram : diagram?.type;
+  const basicDiagram = diagramShapes.includes(diagramType);
+  const semantic = isSemanticDiagramType(diagramType);
+  const isDemonstration = typeof diagram === 'object' && !semantic && !basicDiagram;
   const titleBudget = position === 1 ? 11 : 12;
   if (!headline.trim() || headline.length > 160 || wordCount(headline) > titleBudget ||
       (position === 1 && Array.from(graphemeSegments.segment(headline)).length > 65) ||
@@ -193,6 +195,7 @@ function validateComposedFrame({ composition, position, headline, body }, deck) 
       body.length > 480 || wordCount(body) > 50 || (kicker && wordCount(kicker) > 8) ||
       (layout === 'svg_diagram' && !diagram) || (layout === 'stat_monument' && (!figure || !source)) ||
       (layout === 'bento_grid' && listItems?.length > 4) ||
+      (layout === 'cta_closing' && basicDiagram) ||
       (accentPhrase && (!headline.includes(accentPhrase) || wordCount(accentPhrase) > 3)) ||
       (isDemonstration && !demonstrationLayouts.includes(layout))) throw Error('invalid_action');
   if (semantic) return;

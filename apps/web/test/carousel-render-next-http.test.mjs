@@ -117,6 +117,15 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
   const rejected = await verboseResponse.json();
   assert.equal(rejected.error, 'invalid_plan');
   assert.ok(rejected.checks.some(check => check.id === 'HEADLINE_BUDGET' && check.index === 1));
+  const basicClosing = { ...plan, slides: [...plan.slides.slice(0, -1), { ...plan.slides.at(-1), diagram: 'steps' }] };
+  const basicClosingResponse = await post({ projectId, plan: basicClosing }, { Accept: 'multipart/form-data' });
+  assert.equal(basicClosingResponse.status, 422);
+  assert.match(basicClosingResponse.headers.get('content-type'), /^application\/json\b/);
+  assert.equal(basicClosingResponse.headers.get('content-disposition'), null);
+  const basicClosingRejection = await basicClosingResponse.json();
+  assert.deepEqual(Object.keys(basicClosingRejection).sort(), ['checks', 'error']);
+  assert.equal(basicClosingRejection.error, 'invalid_plan');
+  assert.ok(basicClosingRejection.checks.some(check => check.id === 'CTA_DIAGRAM' && check.index === plan.slides.length));
   const held = await post({ projectId, plan: { ...plan, mode: 'editorial_art' } });
   assert.equal(held.status, 422);
   const refusal = await held.json();

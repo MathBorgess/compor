@@ -117,6 +117,20 @@ test('arte raster não pode ocultar um diagrama nem ficar oculta no fechamento',
   assert.deepEqual(validateDeck(valid).map(check => check.id), ['ART_SLOT']);
 });
 
+test('fechamento recusa diagramas básicos antes de renderizar', async () => {
+  const plan = deck();
+  const closing = plan.slides[2];
+  assert.deepEqual(validateDeck(plan), []);
+
+  for (const diagram of ['focus', { type: 'flow', labels: ['Entrada', 'Revisão'] }]) {
+    plan.slides[2] = { ...closing, diagram };
+    const result = await renderDeckInMemory(plan, {});
+    assert.deepEqual(result.slides, []);
+    assert.deepEqual(result.artifacts, []);
+    assert.deepEqual(result.checks.map(({ id, index }) => ({ id, index })), [{ id: 'CTA_DIAGRAM', index: 3 }]);
+  }
+});
+
 test('matriz de leitura tem exemplo fixo e só ocupa a nota seriada sem raster em quatro ou mais lâminas', async () => {
   const diagram = { type: 'readability_matrix' };
   const native = { mode: 'native_serial', slides: [

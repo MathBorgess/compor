@@ -112,6 +112,9 @@ function slideIssues(slide, index, allowsMatrix) {
   if (slide.diagram !== undefined && !validDiagram) findings.push(issue('DIAGRAM', index, 'Diagrama não permitido.'));
   const matrix = slide.diagram?.type === 'readability_matrix';
   const demonstration = validDiagram && (matrix || demonstrationDiagrams.includes(slide.diagram?.type));
+  if (validDiagram && !demonstration && slide.layout === 'cta_closing') {
+    findings.push(issue('CTA_DIAGRAM', index, 'Mova o diagrama básico para uma lâmina de conteúdo ou remova-o do fechamento.'));
+  }
   const supportsDemonstration = matrix
     ? allowsMatrix && slide.layout === 'native_serial'
     : demonstrationLayouts.includes(slide.layout);

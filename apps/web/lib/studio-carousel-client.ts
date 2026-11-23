@@ -62,6 +62,7 @@ function rejectionNotice(data: unknown, slideCount: number) {
         : 'encurte a manchete para até 12 palavras.');
       case 'BODY_BUDGET': return position + 'reduza o corpo do texto a até 50 palavras e 480 caracteres.';
       case 'S2_DEPENDENT_OPEN': return position + 'dê contexto à manchete para ela funcionar sozinha.';
+      case 'CTA_DIAGRAM': return position + 'mova o diagrama para o miolo.';
       case 'LAYOUT_OVERFLOW': case 'TEXT_COLLISION': case 'SAFE_ZONE': case 'TYPOGRAPHY':
         return position + 'encurte os textos ou escolha um layout com mais espaço.';
       case 'TEXT_CONTRAST': return position + 'troque a cor ou a imagem de fundo para dar mais contraste ao texto.';

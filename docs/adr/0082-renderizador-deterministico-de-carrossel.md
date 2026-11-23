@@ -22,7 +22,11 @@ A migração `20261123000050` admite as duas formas no plano salvo e mantém a v
 
 Quando a última lâmina precisa demonstrar uma distinção pedida pelo briefing, `cta_closing` admite uma comparação governada na faixa superior. A manchete indica o que observar e o único pedido de interação ocupa o corpo em uma área própria. O painel recebe os mesmos slots, limites e gates dos outros arquétipos de comparação. A migração admite esse arranjo no plano salvo e o digest inclui a demonstração. No caso tipográfico, o fechamento usa apenas a área de texto.
 
-Nas capas com diagrama acima do texto, a grade reserva primeiro a altura intrínseca da cópia e a margem inferior de 180 px. A faixa do diagrama usa o espaço disponível até a altura preferida do arquétipo. A amostra de uma comparação semântica conserva a altura necessária aos seus rótulos. O split horizontal reserva 360 px para o diagrama de comparação. Em `comparison_dual`, a manchete de capa começa em 116 px, como nos demais arquétipos de capa.
+O planejador reserva `flow`, `balance`, `steps` e `focus` para as lâminas de conteúdo. Se um rascunho enviar uma dessas formas em `cta_closing`, o renderer retorna `CTA_DIAGRAM` com a posição da lâmina antes de gerar JPEGs. O estúdio indica onde mover o diagrama. Versões salvas continuam disponíveis com os JPEGs que já tinham sido conferidos.
+
+Nas capas com diagrama acima do texto, a grade reserva primeiro a altura intrínseca da cópia e a margem inferior de 180 px. A faixa do diagrama usa o espaço disponível até a altura preferida do arquétipo. A amostra de uma comparação semântica conserva a altura necessária aos seus rótulos. O split horizontal reserva 360 px para o diagrama de comparação. Em `comparison_dual` com comparação semântica, a manchete de capa usa 116 px.
+
+Capas com SVG básico em `split_horizontal`, `framed_plate`, `svg_diagram` ou `comparison_dual` começam com manchete de 108 px. O split horizontal do miolo reserva ao SVG básico seus 360 px de altura. Fotografias e comparações semânticas mantêm as medidas do seu arquétipo. A matriz nativa no miolo usa manchete de 74 px e corpo de 44 px para acomodar o quadro na zona de leitura. Esses tamanhos são os valores iniciais antes de medir e reparar o layout. Os gates e pisos existentes continuam em vigor.
 
 ## Matriz de legibilidade em notas
 

@@ -13,6 +13,7 @@ const require = createRequire(new URL('package.json', web));
 const executablePath = process.env.BROWSER_EXECUTABLE_PATH;
 const skip = executablePath ? false : 'Defina BROWSER_EXECUTABLE_PATH para rodar o canário Chromium.';
 const profile = 'compor-carousel-jpeg-4x5.v1';
+const denseCopy = Array(8).fill('Uma linha com quebra obrigatória.').join('\n');
 
 function slide(layout, headline, extra = {}) {
   return { id: layout, layout, headline, alt: 'Uma lâmina sintética de leitura em português.', ...extra };
@@ -291,10 +292,16 @@ test('capas com diagrama preservam a escala do texto dentro da margem segura', {
     readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
     readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
   ]);
-  for (const layout of ['svg_diagram', 'comparison_dual']) {
+  const covers = [
+    ['svg_diagram', '3 motivos para anúncios sumirem em 360px', 'Um guia visual para revisar criativos no feed mobile.'],
+    ['comparison_dual', '3 motivos para anúncios sumirem em 360px', 'Um guia visual para revisar criativos no feed mobile.'],
+    ['framed_plate', 'Organização da chegada para uma leitura confortável', 'Organize a recepção e confira por onde as pessoas entram e saem sem esbarrar na fila.'],
+    ['split_horizontal', 'Descontos sucessivos: guia para usar bases diferentes', 'Entenda como aplicar cada desconto ao preço que está valendo.'],
+  ];
+  for (const [layout, title, copy] of covers) {
     await t.test(layout, async () => {
-      const cover = slide(layout, '3 motivos para anúncios sumirem em 360px', {
-        body: 'Um guia visual para revisar criativos no feed mobile.',
+      const cover = slide(layout, title, {
+        id: 'capa', body: copy,
         diagram: { type: 'focus', labels: ['Feed', 'Anúncio'] },
       });
       const result = await renderDeckInMemory({
@@ -305,10 +312,43 @@ test('capas com diagrama preservam a escala do texto dentro da margem segura', {
       assert.deepEqual(first.firstChecks.filter(check => check.status === 'fail'), []);
       assert.deepEqual(first.repairs, []);
       const { headline, body } = first.checks.find(check => check.id === 'TYPOGRAPHY').observed;
-      assert.deepEqual({ headline, body }, { headline: 116, body: 46 });
+      assert.deepEqual({ headline, body }, { headline: 108, body: 46 });
       assert.ok(first.artAreaFraction >= 0.12);
     });
   }
+});
+
+test('split básico usa a altura da prova e recusa excesso de copy', { skip, timeout: 60_000 }, async t => {
+  const { chromium } = require('playwright-core');
+  const sharp = require('sharp');
+  const browser = await chromium.launch({ executablePath, headless: true });
+  t.after(() => browser.close());
+  const [regular, bold, art] = await Promise.all([
+    readFile(new URL('public/studio/dm-sans-regular.ttf', web)),
+    readFile(new URL('public/studio/dm-sans-bold.ttf', web)),
+    syntheticArt(sharp, '#ffffff', '#5a4032'),
+  ]);
+  const fonts = { 400: regular, 700: bold };
+  const diagram = slide('split_horizontal', 'Proteja a circulação durante a recepção', {
+    body: 'Após a divisão dos lugares, verifique a passagem entre as cadeiras e deixe à vista o caminho da saída. Confirme que os hóspedes conseguem passar sem pisar em cabos.',
+    diagram: { type: 'steps', labels: ['Chegada à sala', 'Separação dos grupos', 'Preparação da saída'] },
+  });
+  const makeDeck = item => ({ mode: 'editorial_art', slides: [demonstrationSlides[0], item, demonstrationSlides.at(-1)] });
+  const result = await renderDeckInMemory(makeDeck(diagram), { browser, sharp, fonts, repair: false });
+  const item = result.slides[1];
+  assert.deepEqual(item.checks.filter(check => check.status === 'fail'), []);
+  assert.deepEqual(item.repairs, []);
+  assert.deepEqual(item.checks.find(check => check.id === 'TYPOGRAPHY').observed,
+    { headline: 86, body: 46, figure: undefined, lines: 2 });
+  assert.equal(item.artAreaFraction, 904 * 360 / (1080 * 1350));
+
+  const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
+  t.after(() => page.close());
+  await page.setContent(slideDocument({ ...diagram, diagram: undefined, art }, { index: 2, palette: paletteFor(), fonts }));
+  assert.equal((await page.locator('.media').boundingBox()).height, 510);
+
+  const dense = await renderDeckInMemory(makeDeck({ ...diagram, body: denseCopy }), { browser, sharp, fonts });
+  assert.equal(dense.slides[1].checks.find(check => check.id === 'SAFE_ZONE').status, 'fail');
 });
 
 function effectiveContrast({ fill, opacity }, background) {
@@ -430,8 +470,8 @@ test('matriz de leitura mantém a série legível e distingue o espécime de bai
   const tokens = {light:'#F5F1E8', dark:'#24272B', accent:'#D65135'};
   const caption = 'Três notas para revisar um anúncio pequeno na tela do celular.';
   const alt = 'Três comparações da mesma oferta mostram texto maior, escurecimento das letras e um destaque em negrito para Oferta.';
-  const proof = slide('native_serial', 'Confira o que aparece primeiro', {
-    id: 'hierarquia', kicker: 'Nota 03', body: 'Compare a mesma oferta e observe qual elemento chama sua atenção primeiro.',
+  const proof = slide('native_serial', 'Veja a diferença entre título e descrição', {
+    id: 'hierarquia', kicker: 'Nota 03', body: 'No celular, confira se a chamada se destaca e se o endereço, a condição e a ação aparecem sem esforço.',
     alt, diagram: {type:'readability_matrix'},
   });
   const intro = [
@@ -454,6 +494,8 @@ test('matriz de leitura mantém a série legível e distingue o espécime de bai
       {browser,sharp,fonts,repair:false});
     assert.equal(result.slides.length, 5, JSON.stringify(result.checks));
     assert.ok(result.slides.every(item => item.firstChecks.every(check => check.status === 'pass') && item.checks.every(check => check.status === 'pass')));
+    const { headline, body } = result.slides[3].firstChecks.find(check => check.id === 'TYPOGRAPHY').observed;
+    assert.deepEqual({ headline, body }, { headline: 74, body: 44 });
     const cadence = result.checks.find(check => check.id === 'COLLECTION_CADENCE');
     assert.equal(cadence?.status, 'pass');
     assert.equal(cadence.observed.visualCoverage, 0.2);
@@ -504,4 +546,9 @@ test('matriz de leitura mantém a série legível e distingue o espécime de bai
     assert.deepEqual(equal.fragments.map(fragment => fragment.weight), [400, 400]);
     assert.deepEqual(weighted.fragments.map(fragment => fragment.weight), [700, 400]);
   }
+
+  const dense = await renderDeckInMemory({ mode: 'native_serial', tokens, caption,
+    slides: [...intro, { ...proof, body: denseCopy }, closing] }, { browser, sharp, fonts });
+  assert.equal(dense.slides[3].checks.find(check => check.id === 'LAYOUT_OVERFLOW').status, 'fail');
+  assert.equal(dense.slides[3].checks.find(check => check.id === 'SAFE_ZONE').status, 'fail');
 });

@@ -185,6 +185,7 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   let projects = [], catalog, interrupted = false, delayRender, versionWrites = 0;
   const compositionRejections = [
     {error: 'invalid_plan', checks: [{id: 'HEADLINE_BUDGET', index: 2, status: 'fail', detail: 'Diagnóstico interno do render'}]},
+    {error: 'invalid_plan', checks: [{id: 'CTA_DIAGRAM', index: 3, status: 'fail'}]},
     {error: 'archive_too_large'},
   ];
   async function mockApi(route) {
@@ -304,6 +305,9 @@ test('carrossel composto invalida prévia editada, salva os JPEGs exatos e reabr
   await page.getByRole('status').filter({hasText:'Na lâmina 2, encurte a manchete para até 12 palavras.'}).waitFor();
   assert.equal(renders.length, 0);
   assert.equal(await exportZip.isDisabled(), true);
+  await compose.click();
+  await page.getByRole('status').filter({hasText:'Na lâmina 3, mova o diagrama para o miolo.'}).waitFor();
+  assert.equal(await save.isDisabled(), true);
   await compose.click();
   await page.getByRole('status').filter({hasText:'O carrossel composto ultrapassou o limite do ZIP.'}).waitFor();
   assert.equal(await exportZip.isDisabled(), true);
