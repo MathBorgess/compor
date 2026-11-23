@@ -39,3 +39,14 @@ Em 23/11/2026, a Agents API executou 24 sessões distintas de `gpt-6.2-astra` em
 O gate reprovou a calibração. O único desacordo de preferência ocorreu no caso de empate, com um voto isolado pela candidata. Quatro classificações críticas extras apontaram a mesma seta entre duas categorias do mural, que podia representar transferência entre colunas. Duas apontaram triângulos na mesma orientação em um slide sobre posição invertida. As duas restantes apontaram a ausência da prova de rascunho em uma das capas. As primeiras seis observações expõem deficiências potenciais dos diagramas compartilhados, que a leitura de referência não marcou. O relatório mantém a comparação com os rótulos congelados.
 
 O SHA-256 dos rótulos foi `0d465a21aaa571494ea681224abd801bb232aa756b7cbe468bbeb694cdbc0493`. A rubrica da execução tem o digest `8ffaa85c31f1d542d21efea60338f66032fd4e2c3fa86a4fed8391c6545d5bb6`. O relatório verificável tem SHA-256 `9067070f304e27c2c3faaf3954bb0ce6a66019211589b28d62b1b6ce9a3764f3`. Rótulos, entradas e recibos foram preservados fora do Git. [Protocolo de calibração](../../scripts/evals/carrossel/README.md#calibração-do-juiz-visual)
+
+## Comparação das correções nos casos de desenvolvimento
+
+O Chromium renderizou as correções do mural e do zine com o código de `6084f63`. A comparação conservou as legendas e os cinco JPEGs das lâminas sem edição byte a byte. As duas coleções renderizadas passaram nos 56 checks por lâmina e nos quatro de coleção. Os casos foram escolhidos após o diagnóstico da calibração.
+
+| Caso | Correção observada | Julgamento cego nas duas ordens |
+| --- | --- | --- |
+| Mural da oficina | Dois exemplos em placas separadas para pedidos e dúvidas. | Preferiu a correção nas duas ordens. As duas sessões marcaram a seta original como defeito crítico de arte–mensagem e nenhuma marcou um defeito crítico na correção. |
+| Prova do zine | A capa mostra uma ilustração da folha de rascunho. A lâmina 3 compara a mesma amostra em pé e girada em 180°. | Preferiu a correção nas duas ordens e citou as mudanças na capa e na orientação. Arte–mensagem recebeu 2 e 2 no original, 4 e 5 na correção. |
+
+A Agents API produziu quatro recibos distintos de `gpt-6.2-astra` com a rubrica da calibração anterior. Os relatórios pareados do mural e do zine têm SHA-256 `68cc6b1de571d42b94d72cd95f45b891501b04c51bbebb04409a4e3b1852a73d` e `0ea597dbaea90c9c5ffd6a6d5c08d692d6015e83ebe9c34b91c36e0ef3d9705c`. A coorte de calibração anterior segue reprovada. Uma nova coorte calibrada ainda é necessária para abrir os casos reservados. [Diagramas governados](../adr/0082-renderizador-deterministico-de-carrossel.md#diagramas-de-categorias-e-orientação)
