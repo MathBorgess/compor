@@ -167,3 +167,30 @@ test('planejador e rascunho aplicam o mesmo contrato dos diagramas semânticos',
     assert.throws(() => parseStudioAction('compor_definir_plano_laminas', input), /invalid_action/);
   }
 });
+
+test('fechamento aceita demonstrações governadas sem abrir um slot de raster', () => {
+  const plan = compositionPlan();
+  const closing = plan.frames.at(-1);
+  const replaceClosing = composition => ({
+    ...plan, frames: [...plan.frames.slice(0, -1), { ...closing, composition }],
+  });
+  const proofs = [
+    { type: 'contrast', labels: ['Menos contraste', 'Mais contraste'], sample: 'Seu anúncio' },
+    { type: 'type_scale', labels: ['Texto pequeno', 'Texto ampliado'], sample: 'Seu anúncio' },
+    { type: 'hierarchy', labels: ['Tudo igual', 'Priorize o nome'], items: ['Nome', 'Preço', 'Local'] },
+    { type: 'category_split', labels: ['Na etiqueta', 'No aviso'], items: ['Nome e preço', 'Pagamento'] },
+    { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Seu anúncio' },
+  ];
+  for (const diagram of proofs) {
+    const composition = { ...closing.composition, diagram };
+    const input = replaceClosing(composition);
+    assert.equal(isCarouselSlideComposition(composition), true, diagram.type);
+    assert.deepEqual(parseStudioAction('compor_definir_plano_laminas', input), input);
+    assert.throws(() => parseStudioAction('compor_definir_plano_laminas', replaceClosing({
+      ...composition, artSha256: 'a'.repeat(64),
+    })), /invalid_action/);
+  }
+  assert.throws(() => parseStudioAction('compor_definir_plano_laminas', replaceClosing({
+    ...closing.composition, diagram: proofs[0], art: 'data:image/png;base64,aQ==',
+  })), /invalid_action/);
+});

@@ -43,10 +43,10 @@ function hierarchyExample(items, improved) {
     return `<rect x="${x}" y="${y}" width="${width}" height="${height}" rx="11" fill="var(--bg)" stroke="${outline}" stroke-width="${prominent ? 4 : 2}" stroke-opacity="${prominent ? 1 : 0.3}"/>${text}`;
   };
   if (!improved) {
-    return items.map((label, index) => tile(label, { x: 14 + index * 134, y: 52, width: 124, height: 88, size: 26, textWidth: 106 })).join('');
+    return items.map((label, index) => tile(label, { x: 14 + index * 134, y: 52, width: 124, height: 88, size: 32, textWidth: 106 })).join('');
   }
   return tile(primary, { x: 14, y: 14, width: 392, height: 99, size: 56, textWidth: 345, prominent: true }) +
-    secondary.map((label, index) => tile(label, { x: 14 + index * 203, y: 126, width: 189, height: 51, size: 26, textWidth: 160 })).join('');
+    secondary.map((label, index) => tile(label, { x: 14 + index * 203, y: 126, width: 189, height: 51, size: 32, textWidth: 160 })).join('');
 }
 
 function demonstrationSample(type, index, { items, sample }) {
@@ -135,6 +135,8 @@ em{font-style:normal;color:var(--ink)}
 .cta_closing .content{justify-content:center;max-width:850px}
 .cta_closing .content::before{content:"";display:block;width:120px;height:8px;background:var(--ink)}
 .cta_closing .media{display:none}
+.cta_closing:has(>.diagram-demonstration){grid-template-rows:minmax(0,360px) minmax(0,1fr);gap:38px}
+.cta_closing>.diagram-demonstration{display:grid;height:100%}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.svg_diagram,.comparison_dual,.artifact_proof){display:flex;align-items:stretch}
 main:not(.has-media):is(.split_horizontal,.split_vertical,.framed_plate,.comparison_dual,.artifact_proof) .content{width:100%;justify-content:center}
 .list{display:grid;gap:16px;padding-left:1.15em;font-size:40px;line-height:1.34}

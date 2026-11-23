@@ -76,6 +76,8 @@ Em C4 e C5, o planejador devolve as dez manchetes em `coverOptions` e a ordem em
 
 Cada snapshot guarda as medições em `cover-lab.json` e o plano original em `plan.json`. A leitura verifica os hashes, o vínculo com o plano do snapshot e recompõe o resultado antes de contar um deck entregue na cobertura de C4 e C5. Uma primeira passagem bloqueada conserva os mesmos documentos e códigos de falha. O registro do ranking documenta a escolha editorial do planejador. A comparação cega avalia o resultado visual.
 
+Quando `cta_closing` conclui uma demonstração exigida pelo briefing, a observação de novidade usa a manchete, os rótulos e a amostra ou os itens visíveis do diagrama. Em `category_split`, cada rótulo fica junto ao seu item, seguindo a ordem das placas. O corpo fica reservado ao CTA e o fechamento tipográfico segue excluído da medição de ganho.
+
 ## Reserva, confirmação e calibração
 
 A suíte pública contém dez casos de desenvolvimento. Um responsável que não ajuste os candidatos fornece a suíte de reserva de seis entradas como arquivo `{version: 1, split: "holdout", cases: [...]}`, com IDs inéditos. O campo `cases` segue `dev-cases.json`. Preserve seu SHA-256 antes da execução. Faça o mesmo com seis casos inéditos de confirmação e `split: "independent"`. Preserve a reserva e a confirmação fora do repositório e do contexto do gerador. Divulgue o que o ciclo atingiu depois de congelar as revisões comparadas. [Dwork et al., estudo sobre reuso de holdout](https://arxiv.org/abs/1506.02629)

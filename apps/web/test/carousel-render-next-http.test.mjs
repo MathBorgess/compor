@@ -177,7 +177,9 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
         diagram: { type: 'category_split', labels: ['Texto', 'Imagem'], items: ['Título', 'Desenho'] } },
       { id: 'orientacao', layout: 'comparison_dual', headline: 'Confira a orientação da página', alt: 'A palavra Página aparece em pé e de cabeça para baixo.',
         diagram: { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Página' } },
-      { id: 'final', layout: 'cta_closing', headline: 'Salve para a próxima impressão', alt: 'Convite para salvar a sequência.' },
+      { id: 'final', layout: 'cta_closing', headline: 'Destaque o título da página', body: 'Salve para a próxima impressão.',
+        alt: 'A comparação destaca o título e termina com o convite para salvar.',
+        diagram: { type: 'hierarchy', labels: ['Peso igual', 'Título em destaque'], items: ['Título', 'Página', 'Selo'] } },
     ],
   };
   const semanticResponse = await post({ projectId, plan: semanticPlan });
@@ -185,7 +187,7 @@ test('rota autenticada compõe o ZIP JPEG em Chromium e preserva os bytes do man
   const semanticFiles = storedMembers(Buffer.from(await semanticResponse.arrayBuffer()));
   const semanticManifest = JSON.parse(semanticFiles.get('qa-manifest.json'));
   assert.deepEqual(semanticManifest.final.slides.map(slide => slide.id), semanticPlan.slides.map(slide => slide.id));
-  for (const slide of semanticManifest.final.slides.slice(1, 3)) {
+  for (const slide of semanticManifest.final.slides.slice(1)) {
     assert.ok(slide.checks.every(check => check.status === 'pass'));
     assert.equal(createHash('sha256').update(semanticFiles.get(slide.file)).digest('hex'), slide.sha256);
   }

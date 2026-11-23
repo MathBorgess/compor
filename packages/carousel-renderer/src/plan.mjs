@@ -10,7 +10,7 @@ export const layouts = Object.freeze([
 export const modes = Object.freeze(['editorial_art', 'native_serial']);
 export const diagrams = Object.freeze(['flow', 'balance', 'steps', 'focus']);
 export const demonstrationDiagrams = Object.freeze(['contrast', 'type_scale', 'hierarchy', 'category_split', 'orientation']);
-export const demonstrationLayouts = Object.freeze(['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual']);
+export const demonstrationLayouts = Object.freeze(['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual', 'cta_closing']);
 
 const MODE_POLARITY = ['base', 'inverted'];
 const IMAGE = /^data:image\/(?:png|jpeg|webp);base64,[A-Za-z0-9+/]+={0,2}$/;

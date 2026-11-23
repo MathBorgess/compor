@@ -1,4 +1,4 @@
--- Validate the category comparison and orientation diagrams in saved compositions.
+-- Validate semantic diagrams and the closing demonstration in saved compositions.
 create or replace function public.compor_carousel_version_content_valid(p_content jsonb)
 returns boolean language plpgsql immutable security invoker set search_path='' as $function$
 declare
@@ -80,7 +80,7 @@ begin
           if diagram-array['type','labels']<>'{}'::jsonb
             or jsonb_array_length(diagram->'labels') not between 1 and 3 then return false; end if;
         elsif diagram_kind in ('contrast','type_scale','hierarchy','category_split','orientation') then
-          if slide->>'layout' not in ('split_horizontal','framed_plate','svg_diagram','comparison_dual')
+          if slide->>'layout' not in ('split_horizontal','framed_plate','svg_diagram','comparison_dual','cta_closing')
             or jsonb_array_length(diagram->'labels')<>2
             or (select count(distinct lower(value#>>'{}'))<>2 from jsonb_array_elements(diagram->'labels') v(value))
           then return false; end if;

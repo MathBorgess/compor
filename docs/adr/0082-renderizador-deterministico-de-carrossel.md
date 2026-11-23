@@ -20,6 +20,8 @@ O plano aceita `category_split` para duas categorias independentes, cada uma com
 
 A migração `20261123000050` admite as duas formas no plano salvo e mantém a validação dos formatos anteriores. Alterar os exemplos de categoria ou o texto da amostra exige nova composição antes de salvar os JPEGs. Os testes locais passaram pelo plano do estúdio, a rota autenticada com Chromium, o salvamento simulado e a recuperação do ZIP em um navegador sem cache. Os testes em PGlite verificaram a migração e o vínculo entre o diagrama salvo e o digest do plano.
 
+Quando a última lâmina precisa demonstrar uma distinção pedida pelo briefing, `cta_closing` admite uma comparação governada na faixa superior. A manchete indica o que observar e o único pedido de interação ocupa o corpo em uma área própria. O painel recebe os mesmos slots, limites e gates dos outros arquétipos de comparação. A migração admite esse arranjo no plano salvo e o digest inclui a demonstração. No caso tipográfico, o fechamento usa apenas a área de texto.
+
 ## Evidência para habilitação
 
 Executar o fluxo autenticado da rota em Linux no Preview da Vercel. Verificar o fechamento do Chromium em falha, os arquivos presentes no trace, o orçamento de tamanho do ZIP e o comportamento para planos recusados. Vínculo à versão e recuperação em outro navegador exigem mais uma verificação depois que o estúdio consumir esse contrato.

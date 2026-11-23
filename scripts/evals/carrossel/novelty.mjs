@@ -1,3 +1,4 @@
+import { demonstrationDiagrams, isDiagram } from '../../../packages/carousel-renderer/src/plan.mjs';
 import { requireCondition, sha256 } from './protocol.mjs';
 
 const segmenter = new Intl.Segmenter('pt-BR', { granularity: 'word' });
@@ -80,6 +81,11 @@ export function measureNovelty(slides) {
   };
 }
 
+function closingDemonstrationCopy({ type, labels, items, sample }) {
+  if (type === 'category_split') return labels.flatMap((label, index) => [label, items[index]]);
+  return [...labels, ...(items ?? [sample])];
+}
+
 export function reviewNovelty(plan, assessment) {
   const { model, inputSha256, slides } = assessment.value ?? {};
   requireCondition(model === 'text-embedding-3-small' && inputSha256 === plan.digest &&
@@ -88,7 +94,11 @@ export function reviewNovelty(plan, assessment) {
   const byId = new Map(slides.map(slide => [slide?.id, slide]));
   const items = plan.value.slides.map((slide, index) => {
     requireCondition(typeof slide?.id === 'string' && typeof slide.headline === 'string', 'Lâmina do plano inválida.');
-    const text = stripScaffold([slide.headline, slide.body, ...(slide.listItems ?? [])].filter(Boolean).join('\n'));
+    const finalClosing = slide.layout === 'cta_closing' && index === plan.value.slides.length - 1;
+    const demonstrates = finalClosing && demonstrationDiagrams.includes(slide.diagram?.type);
+    requireCondition(!demonstrates || isDiagram(slide.diagram), 'Demonstração do fecho inválida no plano de novidade.');
+    const copy = demonstrates ? closingDemonstrationCopy(slide.diagram) : [slide.body, ...(slide.listItems ?? [])];
+    const text = stripScaffold([slide.headline, ...copy].filter(Boolean).join('\n'));
     const observation = byId.get(slide.id);
     if (observation) {
       requireCondition(observation.textSha256 === sha256(text) && typeof observation.evidence === 'string' && observation.evidence.trim(),
@@ -96,7 +106,7 @@ export function reviewNovelty(plan, assessment) {
       byId.delete(slide.id);
     }
     return {
-      id: slide.id, text, role: slide.layout === 'cta_closing' && index === plan.value.slides.length - 1 ? 'cta'
+      id: slide.id, text, role: finalClosing && !demonstrates ? 'cta'
         : observation?.role === 'recap' && index === plan.value.slides.length - 2 ? 'recap' : undefined,
       embedding: observation?.embedding, gain: observation?.gain, cognitiveOperation: observation?.cognitiveOperation,
     };

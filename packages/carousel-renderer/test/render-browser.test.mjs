@@ -249,7 +249,10 @@ const demonstrationSlides = [
     id: 'orientation', polarity: 'inverted', body: 'Observe a forma das letras quando a leitura não é automática.',
     diagram: { type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Um café com leite' },
   }),
-  slide('cta_closing', 'Salve para revisar seu anúncio'),
+  slide('cta_closing', 'Um título puxa o olhar', {
+    body: 'Salve para revisar seu próximo anúncio.',
+    diagram: { type: 'hierarchy', labels: ['Peso igual', 'Título em destaque'], items: ['Título', 'Preço', 'Selo'] },
+  }),
 ];
 
 function effectiveContrast({ fill, opacity }, background) {
@@ -279,6 +282,7 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
   const failures = [...result.checks, ...result.slides.flatMap(item => item.checks)].filter(check => check.status !== 'pass');
   assert.deepEqual(failures, []);
   assert.ok(result.slides.slice(1, -1).every(item => item.artAreaFraction >= 0.12));
+  assert.ok(result.slides.at(-1).artAreaFraction >= 0.12);
   await verifyAssets(result, directory, sharp, ['contact-sheet.png', 'cover-grid.png']);
 
   const page = await browser.newPage({ viewport: { width: 1080, height: 1350 } });
@@ -287,6 +291,14 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
       if (!item.diagram) continue;
       await page.setContent(slideDocument(item, { index: index + 1, palette: paletteFor(tokens), fonts }));
       await page.evaluate(() => document.fonts.ready);
+      if (item.layout === 'cta_closing') {
+        const area = await page.locator('.diagram-demonstration').boundingBox();
+        const headline = await page.locator('main h1').boundingBox();
+        const action = page.locator('main .body');
+        assert.ok(area.y + area.height + 38 <= headline.y);
+        assert.ok((await action.boundingBox()).y >= headline.y + headline.height);
+        assert.equal(await action.textContent(), item.body);
+      }
       if (item.diagram.type === 'category_split' || item.diagram.type === 'orientation') {
         const panels = await page.locator('.diagram-panel').evaluateAll(figures => figures.map(figure => {
           const sample = figure.querySelector('[data-region="diagram-sample"]');
@@ -339,8 +351,8 @@ test('comparações mostram mudanças reais e rótulos legíveis nos JPEGs', { s
         assert.ok(effectiveContrast(left.text[0], left.background) < 4.5);
         assert.ok(effectiveContrast(right.text[0], right.background) >= 4.5);
       } else {
-        assert.deepEqual(left.text.map(sample => sample.size), [26, 26, 26]);
-        assert.deepEqual(right.text.map(sample => sample.size), [56, 26, 26]);
+        assert.deepEqual(left.text.map(sample => sample.size), [32, 32, 32]);
+        assert.deepEqual(right.text.map(sample => sample.size), [56, 32, 32]);
         assert.ok(right.text[0].y < right.text[1].y);
       }
     }

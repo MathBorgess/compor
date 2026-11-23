@@ -13,7 +13,7 @@ const compositionLayouts = [
   'comparison_dual', 'bento_grid', 'artifact_proof', 'typo_breather', 'native_serial', 'cta_closing',
 ];
 const diagramShapes = ['flow', 'balance', 'steps', 'focus'];
-const demonstrationLayouts = ['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual'];
+const demonstrationLayouts = ['split_horizontal', 'framed_plate', 'svg_diagram', 'comparison_dual', 'cta_closing'];
 const textList = (maxLength, minItems, maxItems) => ({ type: 'array', minItems, maxItems, items: string(maxLength) });
 const orientationLabels = ['Em pé', 'De cabeça para baixo'];
 const semanticDiagramSchemas = {

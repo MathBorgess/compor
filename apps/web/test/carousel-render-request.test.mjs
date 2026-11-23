@@ -84,7 +84,10 @@ test('preserva os slots semânticos canônicos e rejeita versões fora da receit
     {...category, items: ['Trocar', 'Medir', 'Montar']},
     {...category, sample: 'Trocar'},
   ]) assert.deepEqual(await read(bad), invalid);
-  assert.deepEqual(await read(category, {layout: 'cta_closing'}), invalid);
+  const closing = await read(category, {layout: 'cta_closing', body: 'Salve para a próxima oficina.'});
+  assert.ok(closing.ok);
+  assert.deepEqual(closing.plan.slides[0].diagram, category);
+  assert.deepEqual(await read(category, {layout: 'bento_grid'}), invalid);
   const rasterPlan = {...plan, slides: [{...artSlide, diagram: category}]};
   assert.deepEqual(await readCarouselRenderRequest(multipart([
     ['request', JSON.stringify({projectId, plan: rasterPlan})], ['art:arte', new Blob([raster], {type: 'image/png'})],

@@ -249,6 +249,12 @@ test('preserva diagramas anteriores e vincula os diagramas semânticos ao recibo
   orientation.carouselPlan.slides[1].diagram = {
     type: 'orientation', labels: ['Em pé', 'De cabeça para baixo'], sample: 'Margem de 1,5 mm',
   };
+  const closing = governedContent();
+  closing.carouselPlan.slides[2].diagram = {
+    type: 'hierarchy', labels: ['Peso igual', 'Título em destaque'], items: ['Título', 'Data', 'Local'],
+  };
+  closing.frames[2].headline = 'Dê destaque ao título';
+  closing.frames[2].body = 'Salve para revisar seu próximo anúncio.';
   await identify(db, alice);
   assert.equal((await save(db, 0, 0, legacyRendered)).status, 'saved');
   await assert.rejects(save(db, 1, 1, categories), { code: '22023' });
@@ -258,6 +264,7 @@ test('preserva diagramas anteriores e vincula os diagramas semânticos ao recibo
   await identify(db, alice);
   const categoriesRendered = renderedContent(categories);
   const orientationRendered = renderedContent(orientation);
+  const closingRendered = renderedContent(closing);
   const malformed = [
     [categories, { items: ['Trocar plantão'] }],
     [categories, { items: ['Sim', ' sim '] }],
@@ -287,8 +294,12 @@ test('preserva diagramas anteriores e vincula os diagramas semânticos ao recibo
 
   assert.deepEqual((await save(db, 1, 1, categoriesRendered)).version.content, categoriesRendered);
   assert.deepEqual((await save(db, 2, 2, orientationRendered)).version.content, orientationRendered);
+  const staleClosing = structuredClone(closingRendered);
+  staleClosing.carouselPlan.slides[2].diagram.items[0] = 'Oferta';
+  await assert.rejects(save(db, 3, 3, staleClosing), { code: '22023' });
+  assert.deepEqual((await save(db, 3, 3, closingRendered)).version.content, closingRendered);
   const { rows } = await db.query('select content from public.piece_versions where project_id=$1 order by version', [project]);
-  assert.deepEqual(rows.map(row => row.content), [legacyRendered, categoriesRendered, orientationRendered]);
+  assert.deepEqual(rows.map(row => row.content), [legacyRendered, categoriesRendered, orientationRendered, closingRendered]);
 });
 
 test('JSONB inválido em composição ou marcador retorna invalid_request sem criar versões', async t => {
