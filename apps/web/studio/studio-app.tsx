@@ -1970,7 +1970,20 @@ function ProjectStudio({
           }
           description="Confira arte, fatos e legenda antes de usar."
         >
-          <p className="studio-hint">{postTitle}</p><StudioReview title={projectDetails.title} draft={draft} base={base} format={activeFormat} frames={activeFrames} frameBlobs={frameBlobs} />
+          <p className="studio-hint">{postTitle}</p>
+          <StudioReview
+            title={projectDetails.title}
+            downloadTitle={postTitle}
+            draft={draft}
+            base={base}
+            format={activeFormat}
+            frames={activeFrames}
+            frameBlobs={frameBlobs}
+            saving={saving}
+            onSave={() => {
+              void saveCurrent().catch(() => setNotice('Não foi possível iniciar o salvamento desta versão.'));
+            }}
+          />
           <button onClick={() => nextStage("studio")}>
             Pedir ajuste no estúdio
           </button>
