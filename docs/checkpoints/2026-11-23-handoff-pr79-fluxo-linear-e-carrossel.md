@@ -34,8 +34,8 @@
 
 | Milestone | Status | Evidência / Verificação |
 | --- | --- | --- |
-| **M1 — 5 Adendos de ADR + `docs/architecture.md`** | **CONCLUÍDO** | Adendos redigidos em `docs/adr/0031`, `0044`, `0058`, `0073`, `0075`, `0077` + `docs/adr/README.md` + `docs/architecture.md`. |
-| **M2 — Baseline Bundle, Conflito PR #79 (`StudioChat`), Disclosure Compacto e Nome do 1º Post** | **CONCLUÍDO** | `npm run quality:lint` (**0 erros/warnings**), `npm run quality:typecheck` (**0 erros**), `node --test packages/agents-api/test/studio-chat.test.mjs` (**78/78 aprovados**, incluindo o novo teste de `carouselPlan`). Snapshot Turbopack `before-unify` salvo em `apps/web/.next/diagnostics/analyze`. |
+| **M1 — 5 Adendos de ADR + `docs/architecture.md` + Dossiê & Handoff** | **CONCLUÍDO (`0e7cad0`)** | Commit local `0e7cad0`. Adendos redigidos em `docs/adr/0031`, `0044`, `0058`, `0073`, `0075`, `0077` + `docs/adr/README.md` + `docs/architecture.md`. `npm run quality:test` (**115/115 aprovados**). |
+| **M2 — Baseline Bundle, Conflito PR #79 (`StudioChat`), Disclosure Compacto e Nome do 1º Post** | **CONCLUÍDO (`874d58d`)** | Commit local `874d58d`. `npm run quality:lint` (**0 erros/warnings**), `npm run quality:typecheck` (**0 erros**), `packages/agents-api/test/studio-chat.test.mjs` (**78/78 aprovados**), e os **3 testes de navegador do PR #79** (`studio-artwork-transport-browser.test.mjs`, `governed-carousel-browser.test.mjs`, `studio-credential-source-browser.test.mjs`) **100% aprovados com `todo: 0`**. Snapshot Turbopack `before-unify` salvo em `apps/web/.next/diagnostics/analyze`. |
 | **M3 — `<StudioReview>` Unificado, `StudioAssets` Passivo, `VariantCards` e Modal (`F10`)** | **PENDENTE (Próximo passo)** | Especificado na Seção 3.1 abaixo. |
 | **M4 — Estúdio Unificado (`<PostWorkspaceHeader>`), Split Legenda/Próxima Arte, Mobile `<= 800px` e `F05`** | **PENDENTE** | Especificado na Seção 3.2 abaixo. |
 | **M5 — Funil Ultralinear de 2 Telas, Referências (`F11`), Mural Visual (`F08`) e Refinamentos Persona** | **PENDENTE** | Especificado na Seção 3.3 abaixo. |
